@@ -178,12 +178,17 @@ final class RoomInTheCartUITests: XCTestCase {
         launch()
         tap(app.buttons["shop.addFirstList"])
         let original = app.textViews["ledgerImportText"]
+        let review = app.buttons["ledgerReviewImport"]
+        XCTAssertTrue(review.waitForExistence(timeout: 5))
+        let reviewPosition = review.frame.midY
         tap(original)
         let misspelling = "scalllions"
         original.typeText(misspelling + "\ncorn tortillas")
         let done = app.buttons["Done"]
-        tap(done)
-        tap(app.buttons["ledgerReviewImport"])
+        XCTAssertTrue(done.isHittable)
+        XCTAssertTrue(review.isEnabled)
+        XCTAssertEqual(review.frame.midY, reviewPosition, accuracy: 1)
+        review.tap()
         let commit = app.buttons["ledgerCommitImport"]
         XCTAssertTrue(commit.waitForExistence(timeout: 8))
         // SwiftUI exposes its vertically growing name input differently across supported iOS versions.

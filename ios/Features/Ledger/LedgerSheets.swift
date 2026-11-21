@@ -213,7 +213,8 @@ struct LedgerImportView: View {
                 }
             }.accessibilityIdentifier("ledgerImportForm")
                 .scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(ledgerText("Bring the list"))
-                .safeAreaInset(edge: .bottom, spacing: 0) {
+                .navigationBarTitleDisplayMode(preview == nil ? .inline : .automatic)
+                .safeAreaInset(edge: preview == nil ? .top : .bottom, spacing: 0) {
                     if let preview, let review, inputFocus == nil {
                         Group {
                             if preview.lines.count > 1, let shop {

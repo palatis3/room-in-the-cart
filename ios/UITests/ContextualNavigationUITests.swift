@@ -296,7 +296,8 @@ import UIKit
                 }
                 let bounds = app.frame
                 let viewport = captureForm.frame.intersection(app.windows.firstMatch.frame)
-                let top = max(viewport.minY, navigation.frame.maxY)
+                let review = app.buttons["ledgerReviewImport"]
+                let top = max(viewport.minY, navigation.frame.maxY, review.frame.maxY)
                 let bottom = keyboard.exists ? min(viewport.maxY, keyboard.frame.minY) : viewport.maxY
                 let content = CGRect(x: viewport.minX, y: top, width: viewport.width, height: max(0, bottom - top))
                     .insetBy(dx: 4, dy: 4)
