@@ -454,6 +454,7 @@ struct ShopView: View {
     @State private var showingStandingList = false
     @State private var showingFirstList = false
     @State private var showingPantry = false
+    @State private var showingComparison = false
     @Environment(\.pantryVoicePrompt) private var pantryVoicePrompt
     @EnvironmentObject private var pickup: PickupModel
     var body: some View {
@@ -467,6 +468,7 @@ struct ShopView: View {
                 .background(Theme.canvas.ignoresSafeArea(edges: .bottom))
                 .accessibilityHidden(true)
         }.workingSurface().navigationTitle(tr("Shop")).navigationBarTitleDisplayMode(.inline).settingsButton()
+            .navigationDestination(isPresented: $showingComparison) { ComparisonView() }
             .task { await model.refresh() }
             .onAppear { beganWithEmptyList = ledger.shop == nil }
             .onChange(of: ledger.ready) { _, ready in
@@ -649,8 +651,7 @@ struct ShopView: View {
                         .disabled(ledger.firstListStore == nil || ledger.saving || ledger.hasPendingSave)
                         .accessibilityIdentifier("shop.addFirstList")
                     Divider()
-                    NavigationLink { ComparisonView() } label: { ShopToolLabel(tr("Compare packs"), "arrow.left.arrow.right", chevron: true) }
-                        .accessibilityIdentifier("newComparison")
+                    comparisonLink(chevron: true)
                     Divider()
                     RestorableShoppingListLink { ShopToolLabel(ledgerText("Start pickup"), "cart", chevron: true) }
                         .accessibilityIdentifier("openPickupList")
@@ -670,14 +671,24 @@ struct ShopView: View {
         }
     }
 
+    @ViewBuilder private func comparisonLink(chevron: Bool) -> some View {
+        let label = ShopToolLabel(tr("Compare packs"), "arrow.left.arrow.right", chevron: chevron)
+        if #available(iOS 18, *) {
+            NavigationLink { ComparisonView() } label: { label }
+                .accessibilityIdentifier("newComparison")
+        } else {
+            Button { showingComparison = true } label: { label }
+                .accessibilityIdentifier("newComparison")
+        }
+    }
+
     private var secondaryShopTools: some View {
         VStack(alignment: .leading, spacing: 0) {
             if ledger.shop == nil {
                 Button { showingStandingList = true } label: { ShopToolLabel(shoppingText("Standing list"), "list.star") }
                     .disabled(!ledger.ready).accessibilityIdentifier("shop.standingList")
             } else {
-                NavigationLink { ComparisonView() } label: { ShopToolLabel(tr("Compare packs"), "arrow.left.arrow.right") }
-                    .accessibilityIdentifier("newComparison")
+                comparisonLink(chevron: false)
             }
             if canReviewCheckout {
                 NavigationLink { CheckOneChangeView() } label: {
