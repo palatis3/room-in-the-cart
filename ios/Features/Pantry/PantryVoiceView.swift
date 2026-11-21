@@ -96,6 +96,7 @@ private struct VoicePantryRow {
     }
     @State private var remainingReply: RemainingReply?
     @State private var restockIDs: Set<UUID> = []
+    @State private var recordedUseIDs: Set<UUID> = []
     @State private var working = false
     @State private var message: String?
 
@@ -135,9 +136,16 @@ private struct VoicePantryRow {
         WorkingForm {
             if !boundScope {
                 Text(pantryText("Unlock the authorized private workspace to view pantry food."))
-            } else if model.pending != nil {
-                Text(pantryText("The save result is uncertain. Retry the same reviewed change before starting another."))
-                Button(pantryText("Review pending save")) { dismiss() }
+            } else if let pending = model.pending {
+                if working || model.busy {
+                    ProgressView(pantryText("Saving your change…"))
+                        .accessibilityIdentifier("pantry.saveProgress")
+                } else {
+                    Text(pantryText(model.pendingWasCommitted || pending.acknowledgment != nil
+                        ? "Your change is saved. Retry to finish recovery."
+                        : "The save result is uncertain. Retry the same reviewed change before starting another."))
+                    Button(pantryText("Review pending save")) { dismiss() }
+                }
             } else if let saved {
                 savedSection(saved)
             } else {
@@ -187,9 +195,11 @@ private struct VoicePantryRow {
                         Text(pantryText("No pantry changes selected."))
                             .accessibilityIdentifier("pantry.voiceStatus")
                     } else {
-                        Button(pantryText("Preview pantry changes")) { Task { await prepare() } }.buttonStyle(PrimaryAction())
+                        Button(pantryText(confirmsSingleUse ? "Record one use" : "Preview pantry changes")) {
+                            Task { await prepare(confirmUse: confirmsSingleUse) }
+                        }.buttonStyle(PrimaryAction())
                             .disabled(!readyToReview)
-                            .accessibilityIdentifier("pantry.voicePreview")
+                            .accessibilityIdentifier(confirmsSingleUse ? "pantry.recordOneUse" : "pantry.voicePreview")
                     }
                 }
                 if startingLot == nil && (stage == .choices || stage == .review) {
@@ -526,12 +536,16 @@ private struct VoicePantryRow {
         remainingReply = nil
     }
 
+    private var confirmsSingleUse: Bool {
+        startingLot != nil && rows.count == 1 && rows[0].mode == .usedSome
+    }
+
     private var readyToReview: Bool {
         remainingReply == nil && !rows.isEmpty && rows.allSatisfy { $0.mode == .skip || $0.selection != nil } &&
         !working && authorized && model.canEdit && basis == model.snapshot?.state
     }
 
-    private func prepare() async {
+    private func prepare(confirmUse: Bool = false) async {
         guard readyToReview, let basis else { return }
         editing = false
         let selections = rows.compactMap(\.selection)
@@ -544,7 +558,14 @@ private struct VoicePantryRow {
         do {
             let result = try await model.reviewConsumption(selections, basis: basis)
             guard request == token, authorized, model.snapshot?.state == basis else { return }
-            review = result; message = nil
+            if confirmUse, confirmsSingleUse {
+                // The batch screen already names the food and explains the unknown remainder.
+                // Still bind the reviewed command and write to the same original inventory revision.
+                working = false
+                await save(result, returnToBatch: true)
+            } else {
+                review = result; message = nil
+            }
         } catch { handle(error, request: request) }
     }
 
@@ -590,7 +611,7 @@ private struct VoicePantryRow {
         }.disabled(working || !model.canEdit)
     }
 
-    private func save(_ review: PantryConsumptionReview) async {
+    private func save(_ review: PantryConsumptionReview, returnToBatch: Bool = false) async {
         guard authorized, !working, model.canEdit, basis == model.snapshot?.state else { return }
         let request = token
         working = true
@@ -598,11 +619,13 @@ private struct VoicePantryRow {
         do {
             try await model.saveConsumption(review)
             guard request == token, authorized else { return }
+            recordedUseIDs = Set(rows.filter { $0.reportsUse && $0.mode != .skip }.compactMap(\.lotID))
             restockIDs = Set(rows.filter { $0.mode == .all || ($0.mode == .remaining && $0.isLowEstimate) }.compactMap(\.lotID))
-            let selectedIDs = rows.filter { $0.mode == .remaining || $0.mode == .all }.compactMap(\.lotID)
+            let selectedIDs = rows.filter { $0.mode != .skip }.compactMap(\.lotID)
             saved = selectedIDs.compactMap { id in lots.first { $0.id == id } }
             savedRevision = model.snapshot?.state.revision
             draft = ""; resetReview()
+            if returnToBatch { dismiss() }
         } catch { handle(error, request: request) }
     }
 
@@ -621,7 +644,12 @@ private struct VoicePantryRow {
 
     private func savedSection(_ saved: [InventoryLot]) -> some View {
         Section {
-            Text(pantryText("Food saved on this device.")).accessibilityIdentifier("pantry.voiceSaved")
+            Label {
+                if saved.count == 1, let lot = saved.first, recordedUseIDs.contains(lot.id) {
+                    Text(pantryFormat("Recorded one use of %@.", lot.name))
+                } else { Text(pantryText("Food saved on this device.")) }
+            } icon: { Image(systemName: "checkmark.circle") }
+            .accessibilityIdentifier("pantry.voiceSaved")
             ForEach(Array(saved.enumerated()), id: \.element.id) { index, lot in
                 if let wording = lot.countWording {
                     Text(pantryFormat("%@ · Remaining estimate: %@", lot.name, wording))
@@ -733,6 +761,7 @@ extension PantryUsageHistoryRow {
     let lotID: UUID
     let origin: UUID
     let authorized: @MainActor () -> Bool
+    var showsLink = false
     @Environment(\.scenePhase) private var scene
     @State private var entries: [PantryUsageHistoryRow]?
     @State private var loadedRevision: Int64?
@@ -746,6 +775,31 @@ extension PantryUsageHistoryRow {
     }
 
     var body: some View {
+        Group {
+            if showsLink {
+                NavigationLink {
+                    PantryUsageHistoryView(model: model, lotID: lotID, origin: origin, authorized: authorized)
+                } label: {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(pantryText("Usage history")).font(.headline)
+                        if let revision, loadedRevision == revision, let latest = entries?.first {
+                            Text(pantryFormat(latest.kind == .some ? "Used some · %@" : "Last use: %@",
+                                              latest.occurredAt.formatted(date: .abbreviated, time: .shortened)))
+                                .font(.body).foregroundStyle(Theme.ink)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }.accessibilityIdentifier("pantry.usageHistory")
+            } else {
+                history.navigationTitle(pantryText("Usage history"))
+            }
+        }
+        .privacySensitive()
+        .task(id: revision) { await read() }
+        .onDisappear { entries = nil; loadedRevision = nil }
+    }
+
+    private var history: some View {
         WorkingForm {
             if revision == nil { Text(pantryText("Unlock the authorized private workspace to view pantry food.")) }
             else if loadedRevision == revision, let entries, let lot = model.snapshot?.lots.first(where: { $0.id == lotID }) {
@@ -781,10 +835,6 @@ extension PantryUsageHistoryRow {
                 Button(pantryText("Retry usage history")) { Task { await read() } }
             } else { ProgressView(pantryText("Working…")) }
         }
-        .navigationTitle(pantryText("Usage history"))
-        .privacySensitive()
-        .task(id: revision) { await read() }
-        .onDisappear { entries = nil; loadedRevision = nil }
     }
 
     private func read() async {

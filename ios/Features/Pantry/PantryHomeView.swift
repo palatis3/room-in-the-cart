@@ -18,6 +18,7 @@ struct PantryHomeView: View {
     var household: HouseholdModel?
     var holdsLoadedReview: () -> Bool = { false }
     var recoveredHistoryAccess: (@MainActor () -> Bool)? = nil
+    var initialSheet: Binding<PantrySheet?>? = nil
     @State private var sheet: PantrySheet?
     @State private var selectedLocation: InventoryLocation?
     @State private var selectedDigest: DigestSelection?
@@ -42,6 +43,12 @@ struct PantryHomeView: View {
                 }))
         }
         .navigationTitle(pantryText("My Pantry"))
+        .onChange(of: model.canEdit, initial: true) { _, ready in
+            if ready, accessAllowed, let initialSheet, let requested = initialSheet.wrappedValue {
+                initialSheet.wrappedValue = nil
+                sheet = requested
+            }
+        }
         .navigationDestination(isPresented: Binding(get: { selectedDigest != nil }, set: { if !$0 { selectedDigest = nil } })) {
             if let selectedDigest { PantryDigestList(model: selectedDigest.model, access: selectedDigest.access) }
         }
@@ -126,6 +133,7 @@ struct PantryHomeView: View {
                             let lots = snapshot.lots.filter { $0.location == location }.sorted {
                                 $0.name == $1.name ? $0.id.uuidString < $1.id.uuidString : $0.name.localizedStandardCompare($1.name) == .orderedAscending
                             }
+                            let names = Dictionary(grouping: lots, by: { $0.name.lowercased() })
                             if (selectedLocation == location || selectedLocation == nil && !lots.isEmpty) && !snapshot.lots.isEmpty {
                                 Section {
                                     if lots.isEmpty { Text(pantryText("No food recorded here.")).foregroundStyle(Theme.secondary) }
@@ -134,7 +142,8 @@ struct PantryHomeView: View {
                                             PantryLotEntryView(model: model, lotID: lot.id, accessAllowed: accessAllowed, offersTonight: offersTonight,
                                                                household: household, recoveredHistoryAccess: recoveredHistoryAccess)
                                         } label: {
-                                            PantryShelfLotLabel(lot: lot, availability: snapshot.availability.lots.first { $0.id == lot.id })
+                                            PantryShelfLotLabel(lot: lot, availability: snapshot.availability.lots.first { $0.id == lot.id },
+                                                                distinguishesBatches: (names[lot.name.lowercased()]?.count ?? 0) > 1)
                                         }
                                         .accessibilityIdentifier("pantry.lot.\(lot.id)")
                                         .accessibilityFocused($focusedLot, equals: lot.id)
@@ -361,6 +370,7 @@ struct PantryEntryPresentation: ViewModifier {
 private struct PantryShelfLotLabel: View {
     let lot: InventoryLot
     let availability: InventoryLotAvailability?
+    let distinguishesBatches: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
@@ -369,12 +379,13 @@ private struct PantryShelfLotLabel: View {
             if let availability, availability.issues.isEmpty, let held = availability.held, held.amount > .zero {
                 Text(pantryFormat("%@ reserved · %@ available", pantryQuantity(held), pantryQuantity(availability.free)))
                     .font(.subheadline).foregroundStyle(Theme.secondary)
-            } else if !onlyNeedsRecount(lot, availability), availability == nil || availability?.issues.isEmpty == false {
+            } else if availability == nil || (availability?.issues.isEmpty == false && availability?.issues != [.countUnknown]) {
                 Text(pantryText("Availability needs review. Unknown food is not counted as free."))
                     .font(.subheadline).foregroundStyle(Theme.warning)
             }
-            Text(pantryFormat("Batch %@", String(lot.id.uuidString.suffix(8))))
-                .font(.caption).foregroundStyle(Theme.secondary)
+            if distinguishesBatches {
+                Text(lot.packageBatchLabel).font(.caption).foregroundStyle(Theme.secondary)
+            }
         }
         .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
@@ -411,18 +422,16 @@ struct PantryLotSummary: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(12)
             .background(Theme.selection, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-            ViewThatFits(in: .horizontal) {
-                HStack(alignment: .top, spacing: 24) { allocation }.fixedSize(horizontal: true, vertical: false)
-                VStack(alignment: .leading, spacing: 10) { allocation }
-            }
-            if !canRecountForMeals, availabilityNeedsReview || availability == nil || availability?.issues.isEmpty == false {
+            if availabilityNeedsReview || availability == nil || availability?.issues.contains(where: { $0 != .countUnknown }) == true {
                 Label(pantryText("Availability needs review. Unknown food is not counted as free."), systemImage: "questionmark.circle")
                     .foregroundStyle(Theme.warning)
             }
-            Text(pantryFormat("Batch %@", String(lot.id.uuidString.suffix(8))))
-                .font(.footnote).foregroundStyle(Theme.secondary)
-            LabeledContent(pantryText("Last quantity confirmation"), value: lot.confirmedAt.formatted(date: .abbreviated, time: .shortened))
-                .font(.subheadline).foregroundStyle(Theme.secondary)
+            if canRecountForMeals || availabilityNeedsReview || availability?.held?.amount != .zero {
+                ViewThatFits(in: .horizontal) {
+                    HStack(alignment: .top, spacing: 24) { allocation }.fixedSize(horizontal: true, vertical: false)
+                    VStack(alignment: .leading, spacing: 10) { allocation }
+                }
+            }
         }
         .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
@@ -475,28 +484,34 @@ private struct PantryLotView: View {
                         .disabled(!model.canEdit || lot.count.quantity?.amount == .zero)
                         .accessibilityIdentifier("pantry.voiceUsedSome")
                         if let digestAccess, digestAccess.scope.origin == origin, digestAccess.authorized() {
-                            NavigationLink(pantryText("Usage history")) {
-                                PantryUsageHistoryView(model: model, lotID: lot.id, origin: origin, authorized: digestAccess.authorized)
-                            }.accessibilityIdentifier("pantry.usageHistory")
+                            PantryUsageHistoryView(model: model, lotID: lot.id, origin: origin,
+                                                  authorized: digestAccess.authorized, showsLink: true)
                         }
                     }
                 } else if let recoveredHistoryAccess, recoveredHistoryAccess(), let origin = model.snapshot?.state.workspaceID {
-                    NavigationLink(pantryText("Usage history")) {
-                        PantryUsageHistoryView(model: model, lotID: lot.id, origin: origin, authorized: recoveredHistoryAccess)
-                    }.accessibilityIdentifier("pantry.usageHistory")
+                    PantryUsageHistoryView(model: model, lotID: lot.id, origin: origin,
+                                          authorized: recoveredHistoryAccess, showsLink: true)
+                }
+                if let access = digestAccess, access.scope.origin == model.snapshot?.state.workspaceID, access.canPresent() {
+                    PantryPackageDateSection(model: model, lot: lot, access: access, store: PantryDigestStore.shared.packageDates)
+                    if lot.count.quantity?.amount != .zero {
+                        PantryCheckDayLink(model: model, access: access, lot: lot)
+                    }
                 }
                 Section {
-                    action("Have enough", .haveEnough)
-                    action("Some left", .someLeft)
-                    Button(pantryText("Recount food"), action: recount).frame(minHeight: 44)
-                        .accessibilityIdentifier("pantry.recount")
+                    Button(pantryText("Recount food"), action: recount)
+                        .frame(minHeight: 44).accessibilityIdentifier("pantry.recount")
+                    DisclosureGroup(pantryText("Update without a measurement")) {
+                        action("Have enough", .haveEnough)
+                        action("Some left", .someLeft)
+                        Text(pantryText("Have enough and Some left replace the old count with an unknown amount. Reservations stay protected and may need review."))
+                            .font(.subheadline)
+                    }.accessibilityIdentifier("pantry.unmeasuredCount")
+                } header: {
+                    Text(pantryText("Check what is left"))
                 } footer: {
-                    Text(pantryText("Have enough and Some left replace the old count with an unknown amount. Reservations stay protected and may need review."))
+                    Text(pantryText("Checking the amount does not record a use."))
                 }.disabled(!model.canEdit)
-                if let access = digestAccess, access.scope.origin == model.snapshot?.state.workspaceID, access.canPresent() {
-                    NavigationLink(pantryText("Add a date or reminder")) { PackageDateChoices(model: model, lot: lot, access: access) }
-                    PantryPackageDateSection(model: model, lot: lot, access: access, store: PantryDigestStore.shared.packageDates)
-                }
                 if let access = digestAccess, access.authorized(), access.scope.origin == lot.source.originID,
                    let doc = try? PantryDigestStore.shared.document(access.scope),
                    let seen = doc.presence?.first(where: { $0.lotID == lot.id }) {
@@ -514,10 +529,6 @@ private struct PantryLotView: View {
                     Text(pantryText("Review storage guidance for the new location."))
                 }
                 PantryLotFoodKeeperSection(model: model, lot: lot, accessAllowed: accessAllowed)
-                if let digestAccess, digestAccess.scope.origin == model.snapshot?.state.workspaceID, lot.count.quantity?.amount != .zero {
-                    NavigationLink(pantryText("Batch check date")) { PantryDigestDayEditor(model: model, access: digestAccess, lot: lot) }
-                        .accessibilityIdentifier("pantry.digest.checkDate")
-                }
                 if offersTonight, let originID = model.snapshot?.state.workspaceID {
                     NavigationLink(tonightText("Find meals that use this batch")) {
                         TonightEntry(batch: .init(originID: originID, lotID: lot.id))
@@ -536,6 +547,11 @@ private struct PantryLotView: View {
                     PantryPortionControls(model: model, lot: lot, allowSplit: !availabilityNeedsReview)
                     action("Used up", .usedUp).disabled(lot.count.quantity?.amount == .zero)
                 }.disabled(!model.canEdit)
+                DisclosureGroup(pantryText("Batch details")) {
+                    LabeledContent(pantryText("Batch"), value: String(lot.id.uuidString.suffix(8)))
+                    LabeledContent(pantryText(lot.count.quantity == nil ? "Last count update" : "Last quantity confirmation"),
+                                   value: lot.confirmedAt.formatted(date: .abbreviated, time: .shortened))
+                }
                 if let notice = model.notice { Text(pantryNotice(notice)).accessibilityFocused($resultFocused) }
             } else if !accessAllowed {
                 Text(pantryText("Unlock the authorized private workspace to view pantry food."))
@@ -589,14 +605,17 @@ private struct PantryFoodEditor: View {
                         if let reviewedFood {
                             LabeledContent(pantryText("Food identity"), value: reviewedFood.name)
                         } else {
-                            Picker(pantryText("Food identity"), selection: $existingFoodID) {
-                                Text(pantryText("New food identity")).tag(nil as UUID?)
-                                ForEach(foods) { food in
-                                    Text(food.name + " · " + food.foodID.uuidString.suffix(8)).tag(Optional(food.foodID))
+                            if !foods.isEmpty {
+                                Picker(pantryText("Food"), selection: $existingFoodID) {
+                                    Text(pantryText("New food")).tag(nil as UUID?)
+                                    ForEach(foods) { food in
+                                        Text(food.name + " · " + food.foodID.uuidString.suffix(8)).tag(Optional(food.foodID))
+                                    }
                                 }
                             }
                             if existingFoodID == nil {
-                                TextField(pantryText("Food name"), text: $name).focused($editing)
+                                workingTextField(pantryText("Food name"), text: $name).focused($editing)
+                                    .accessibilityLabel(pantryText("Food name"))
                                     .accessibilityIdentifier("pantry.foodName")
                             }
                         }
@@ -604,7 +623,9 @@ private struct PantryFoodEditor: View {
                             ForEach(InventoryLocation.allCases, id: \.self) { Text(pantryLocationName($0)).tag($0) }
                         }
                     } footer: {
-                        Text(pantryText("Choose an existing food only when it is the same product. This adds a separate physical batch; matching names are never merged automatically."))
+                        if !foods.isEmpty && reviewedFood == nil {
+                            Text(pantryText("Choose the same food to add another batch of it."))
+                        }
                     }
                 }
                 if let purchase {
@@ -617,7 +638,8 @@ private struct PantryFoodEditor: View {
                     }
                 }
                 Section {
-                    TextField(pantryText(purchase == nil ? "Confirmed amount" : "Amount remaining"), text: $amount).focused($editing)
+                    workingTextField(pantryText(purchase == nil ? "Amount, if known" : "Amount remaining"), text: $amount).focused($editing)
+                        .accessibilityLabel(pantryText(purchase == nil ? "Amount, if known" : "Amount remaining"))
                         .accessibilityIdentifier("pantry.amount")
                     if purchase != nil {
                         LabeledContent(pantryText("Unit"), value: pantryUnit(unit))
@@ -661,9 +683,15 @@ private struct PantryReviewView: View {
     var availabilityNeedsReview = false
     @Environment(\.dismiss) private var dismiss
     @State private var acknowledged = false
+    @State private var confirming = false
+    private var saving: Bool { confirming || (model.busy && model.pending != nil) }
+
     var body: some View {
         WorkingForm {
-            if accessAllowed, let review = model.review {
+            if accessAllowed && saving {
+                ProgressView(pantryText("Saving your change…"))
+                    .accessibilityIdentifier("pantry.saveProgress")
+            } else if accessAllowed, let review = model.review {
                 Section(pantryText("Proposed food record")) {
                     PantryLotSummary(lot: review.proposedLot,
                         availability: review.proposedAvailability.lots.first { $0.id == review.command.lotID },
@@ -721,8 +749,10 @@ private struct PantryReviewView: View {
                         Text(model.pendingWasCommitted ? pantryText("Your change is saved. Retry to finish recovery.") : pantryNotice(notice))
                     }
                 }
+            } else if accessAllowed && model.notice == .saved {
+                Text(pantryText("Food saved on this device."))
             } else { Text(pantryText("This review is unavailable. Return to My Pantry.")) }
-            if accessAllowed {
+            if accessAllowed && !saving {
                 if model.pending != nil {
                     Section {
                         if model.requiresFreshReview {
@@ -741,15 +771,21 @@ private struct PantryReviewView: View {
             }
 
         }
-        .navigationTitle(pantryText("Review pantry change"))
+        .navigationTitle(pantryText("Review food")).navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button(pantryText("Cancel")) { model.cancelReview(); dismiss() }
                     .disabled(model.busy || model.pending != nil)
             }
             ToolbarItem(placement: .confirmationAction) {
-                Button(pantryText("Confirm")) { Task { await model.confirmReview(acknowledgingReservations: acknowledged) } }
-                    .disabled(!accessAllowed || model.busy || model.pending != nil || model.review == nil || (!acknowledged && model.review?.affectedReservations.isEmpty == false))
+                Button(pantryText("Confirm")) {
+                    confirming = true
+                    Task {
+                        defer { confirming = false }
+                        await model.confirmReview(acknowledgingReservations: acknowledged)
+                    }
+                }
+                    .disabled(!accessAllowed || confirming || model.busy || model.pending != nil || model.review == nil || (!acknowledged && model.review?.affectedReservations.isEmpty == false))
                     .accessibilityIdentifier("pantry.confirm")
             }
         }

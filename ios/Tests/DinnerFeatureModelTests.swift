@@ -20,6 +20,31 @@ import CoreDomain
     }
 }
 @MainActor final class DinnerFeatureModelTests: XCTestCase {
+    func testDinnerPickupOpeningSeparatesLoadingFailureAndLostAccess() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        // A regular file in place of the parent directory produces a genuine open failure.
+        try Data().write(to: root)
+        let pickup = PickupModel(databaseURL: root.appendingPathComponent("pickup.sqlite"))
+        func state(authorized: Bool = true, retryAvailable: Bool = false) -> DinnerPickupOpeningState {
+            DinnerPickupOpeningState(pickup: pickup, authorized: authorized, retryAvailable: retryAvailable)
+        }
+
+        XCTAssertEqual(state(), .opening)
+        XCTAssertEqual(state(authorized: false), .denied)
+        let failure = pTr("Could not open saved pickups. Retry; existing records have not been replaced.")
+        XCTAssertEqual(state(retryAvailable: true), .failed(failure))
+        await pickup.load()
+        XCTAssertFalse(pickup.ready)
+        XCTAssertEqual(state(), .failed(failure))
+        XCTAssertEqual(state(authorized: false, retryAvailable: true), .denied)
+
+        try FileManager.default.removeItem(at: root)
+        await pickup.load()
+        XCTAssertTrue(pickup.ready)
+        XCTAssertEqual(state(), .ready)
+    }
+
     func testPrivateMealPreferenceSaveWithoutPickupReopensAndRejectsAnOlderEditor() async throws {
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: dir) }

@@ -18,6 +18,7 @@ private struct HouseholdPantryView: View {
     @StateObject private var model: HouseholdPantryModel
     @State private var sheet: Sheet?
     @State private var clearingRetry = false
+    private(set) var dates = ReceiptDateDisplay()
     private enum Sheet: Identifiable, Equatable {
         case receipt(HouseholdPantryPage), addition(HouseholdPantryPage), correction(HouseholdPantryPage, HouseholdPantryPage.Lot), grants, staples
         var id: Int {
@@ -92,7 +93,7 @@ private struct HouseholdPantryView: View {
                                         LabeledContent(ht("Previously confirmed"), value: checked.formatted())
                                     }
                                     if let evidence = lot.receiptEvidence {
-                                        Text(evidence.merchant + " · " + evidence.purchaseDay)
+                                        Text(evidence.merchant + " · " + dates.civilDay(evidence.purchaseDay, style: .abbreviated))
                                         HouseholdReceiptLineFacts(row: evidence.line)
                                     }
                                     PantryStorageFacts(storedAt: lot.storedAt, useFirstAt: lot.useFirstAt, tags: lot.exclusionTags)

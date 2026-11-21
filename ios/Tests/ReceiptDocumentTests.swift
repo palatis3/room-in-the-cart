@@ -80,6 +80,113 @@ import XCTest
         XCTAssertEqual(draft.lines.last?.printed?.kind, .adjustment)
     }
 
+    func testGardenMarketOCRLinksOnlyMatchingPrintedRowsAndLeavesReceiptUnconfirmed() async throws {
+        // The audit receipt separates the item and amount into distant printed columns.
+        let size = CGSize(width: 760, height: 560)
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let image = UIGraphicsImageRenderer(size: size, format: format).image { _ in
+            UIColor.white.setFill()
+            UIRectFill(CGRect(origin: .zero, size: size))
+            let attributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.monospacedSystemFont(ofSize: 32, weight: .regular), .foregroundColor: UIColor.black
+            ]
+            for (left, right, y) in [
+                ("GARDEN MARKET", "", 48.0), ("2026-11-20", "", 112.0),
+                ("BLACK BEANS", "$2.40", 210.0), ("CORN TORTILLAS", "$3.20", 296.0),
+                ("TOTAL", "$5.60", 390.0)
+            ] {
+                (left as NSString).draw(at: CGPoint(x: 36, y: y), withAttributes: attributes)
+                (right as NSString).draw(at: CGPoint(x: 595, y: y), withAttributes: attributes)
+            }
+        }
+        let document = try await ReceiptDocumentReader().extract(.init(data: XCTUnwrap(image.pngData()), kind: .image))
+        let page = try XCTUnwrap(document.pages.first)
+        let items = page.lines.filter { $0.text.contains("BLACK BEANS") || $0.text.contains("CORN TORTILLAS") }
+        XCTAssertEqual(items.count, 2)
+        let target = CaptureTarget(workspaceID: UUID(), containerID: UUID(), objectID: UUID(), revision: 1, kind: .receiptEvidence)
+        let expected = ["BLACK BEANS": "$2.40", "CORN TORTILLAS": "$3.20"]
+        for item in items {
+            let matchingName = try XCTUnwrap(expected.keys.first(where: { item.text.contains($0) }))
+            let amount = try XCTUnwrap(expected[matchingName])
+            let itemPosition = ExtractedReceiptDocument.Selection(page: page.id, line: item.id)
+            if item.text.contains(amount) {
+                // Vision can emit a whole printed row on other supported runtimes.
+                XCTAssertNil(document.amountAssociations[itemPosition])
+                let source = try document.source(target: target, merchant: "Garden Market", stage: .receipt,
+                                                 selection: [itemPosition], at: Date())
+                let draft = try ReceiptImportDraft(source: source)
+                XCTAssertEqual(draft.lines.first?.printed?.priceWording, amount)
+                XCTAssertTrue(draft.selectedLines.isEmpty)
+                XCTAssertEqual(draft.lines.first?.paid, "")
+                continue
+            }
+            let matched = try XCTUnwrap(document.amountAssociations[itemPosition], page.lines.map(\.text).joined(separator: " | "))
+            XCTAssertEqual(page.lines.first(where: { $0.id == matched.line })?.text, amount)
+            let source = try document.source(target: target, merchant: "Garden Market", stage: .receipt,
+                                             selection: [itemPosition], linkedAmountItems: [itemPosition], at: Date())
+            XCTAssertEqual(Set(source.receiptLines.map(\.originalText)), [matchingName, amount])
+            let draft = try ReceiptImportDraft(source: source)
+            let line = try XCTUnwrap(draft.lines.first)
+            XCTAssertEqual(draft.lines.count, 1)
+            XCTAssertEqual(line.name, matchingName)
+            XCTAssertEqual(line.original, matchingName + "\n" + amount)
+            XCTAssertEqual(line.printed?.priceWording, amount)
+            XCTAssertEqual(line.received, "")
+            XCTAssertEqual(line.usable, "")
+            XCTAssertEqual(line.paid, "")
+            XCTAssertFalse(draft.dateConfirmed)
+            XCTAssertTrue(draft.selectedLines.isEmpty)
+
+            let undone = try document.source(target: target, merchant: "Garden Market", stage: .receipt,
+                                             selection: [itemPosition], at: Date())
+            XCTAssertEqual(undone.documentLayoutID, source.documentLayoutID)
+            XCTAssertFalse(undone.originalText.contains(amount))
+            XCTAssertNil(try ReceiptImportDraft(source: undone).lines.first?.printed?.amount)
+        }
+        let totalRows = page.lines.filter { $0.text.contains("TOTAL") }
+        XCTAssertEqual(totalRows.count, 1)
+        XCTAssertNil(document.amountAssociations[.init(page: 1, line: try XCTUnwrap(totalRows.first).id)])
+    }
+
+    func testAmountLinksRejectMultiplePricesRatesTotalsAndNonmatchingRows() throws {
+        typealias Line = ReceiptDocumentPage.Line
+        func box(_ x: Double, _ y: Double) -> CGRect { .init(x: x, y: y, width: 0.18, height: 0.05) }
+        let left = box(0.06, 0.6), right = box(0.7, 0.6)
+        func document(_ lines: [Line], method: ReceiptAcquisition.DocumentLine.Method = .imageOCR) -> ExtractedReceiptDocument {
+            .init(digest: Data(repeating: 1, count: 32), pages: [.init(id: 1, method: method, lines: lines)])
+        }
+        let beans = Line(id: 1, text: "BLACK BEANS", bounds: left)
+        let amount = Line(id: 2, text: "$2.40", bounds: right)
+        let first = ExtractedReceiptDocument.Selection(page: 1, line: 1)
+        let second = ExtractedReceiptDocument.Selection(page: 1, line: 2)
+        XCTAssertEqual(document([beans, amount]).amountAssociations, [first: second])
+        let reversed = document([.init(id: 1, text: "$2.40", bounds: right), .init(id: 2, text: "BLACK BEANS", bounds: left)])
+        XCTAssertEqual(reversed.amountAssociations, [second: first])
+        XCTAssertTrue(document([beans, amount], method: .textFile).amountAssociations.isEmpty)
+        XCTAssertTrue(document([beans, amount, .init(id: 3, text: "$5.60", bounds: box(0.45, 0.6))]).amountAssociations.isEmpty)
+        XCTAssertTrue(document([beans, amount, .init(id: 3, text: "$2.40", bounds: right)]).amountAssociations.isEmpty)
+        XCTAssertTrue(document([beans, .init(id: 2, text: "$2.40", uncertain: true, bounds: right)]).amountAssociations.isEmpty)
+        XCTAssertTrue(document([beans, .init(id: 2, text: "$2.40", bounds: box(0.7, 0.49))]).amountAssociations.isEmpty)
+        for wording in ["TOTAL", "GRAND TOTAL", "SERVICE FEE", "CARD PAYMENT", "IMPORTE A PAGAR",
+                        "PRECIO UNITARIO", "BEANS 2 CT @ $1.20", "BEANS 2 FOR $1.20", "BEANS $1.20"] {
+            XCTAssertTrue(document([.init(id: 1, text: wording, bounds: left), amount]).amountAssociations.isEmpty, wording)
+        }
+        for wording in ["$2.40/kg", "-$2.40", "$2.40 $5.60", "2.40", "MXN $2.40"] {
+            XCTAssertTrue(document([beans, .init(id: 2, text: wording, bounds: right)]).amountAssociations.isEmpty, wording)
+        }
+
+        let target = CaptureTarget(workspaceID: UUID(), containerID: UUID(), objectID: UUID(), revision: 1, kind: .receiptEvidence)
+        XCTAssertThrowsError(try document([beans, amount]).source(target: target, merchant: "Garden Market", stage: .order,
+                                                                 selection: [first], linkedAmountItems: [first], at: Date()))
+        XCTAssertThrowsError(try document([beans, amount]).source(target: target, merchant: "Garden Market", stage: .receipt,
+                                                                 selection: [second], linkedAmountItems: [first], at: Date()))
+        let unlinked = try document([beans, amount]).source(target: target, merchant: "Garden Market", stage: .receipt,
+                                                           selection: [first, second], at: Date())
+        XCTAssertEqual(unlinked.receiptLines.map(\.originalText), ["BLACK BEANS", "$2.40"])
+        XCTAssertTrue(try ReceiptImportDraft(source: unlinked).selectedLines.isEmpty)
+    }
+
     func testSourceInspectorReturnsOnlyAnAvailableImagePage() async throws {
         let text = ReceiptDocumentBytes(data: Data("YOGURT $1.50".utf8), kind: .text)
         let typedImage = await ReceiptDocumentReader.originalPage(text, pageNumber: 1)
@@ -95,6 +202,45 @@ import XCTest
         XCTAssertNotNil(UIImage(data: bytes))
         let missingPage = await ReceiptDocumentReader.originalPage(input, pageNumber: 2)
         XCTAssertNil(missingPage)
+    }
+
+    func testPurchaseDateUsesAppLanguageAndKeepsTheChosenRegion() {
+        let usEnglish = Locale(identifier: "en_US@calendar=gregorian")
+        let spanish = ReceiptDateDisplay.displayLocale(regionLocale: usEnglish, appLanguage: "es")
+        XCTAssertEqual(spanish.language.languageCode?.identifier, "es")
+        XCTAssertEqual(spanish.region?.identifier, "US")
+        XCTAssertEqual(spanish.calendar.identifier, usEnglish.calendar.identifier)
+        let mexico = Locale(identifier: "es_MX")
+        XCTAssertEqual(ReceiptDateDisplay.displayLocale(regionLocale: mexico, appLanguage: "es"), mexico)
+    }
+
+    func testReceiptDateOnlyAndTimestampUseTheChosenCalendarAndZone() throws {
+        let locale = ReceiptDateDisplay.displayLocale(regionLocale: Locale(identifier: "en_US"), appLanguage: "es")
+        let zone = try XCTUnwrap(TimeZone(identifier: "America/Los_Angeles"))
+        let instant = try XCTUnwrap(ISO8601DateFormatter().date(from: "2026-11-20T02:03:00Z"))
+        let gregorian = Calendar(identifier: .gregorian)
+        let localDay = ReceiptDateDisplay.format(date: .long, time: .omitted, locale: locale, calendar: gregorian, timeZone: zone)
+        let utcDay = ReceiptDateDisplay.format(date: .long, time: .omitted, locale: locale, calendar: gregorian, timeZone: .gmt)
+        XCTAssertEqual(instant.formatted(localDay), "19 de noviembre de 2026")
+        XCTAssertEqual(instant.formatted(utcDay), "20 de noviembre de 2026")
+        let timestamp = ReceiptDateDisplay.format(date: .omitted, time: .shortened, locale: locale, calendar: gregorian, timeZone: zone)
+        XCTAssertTrue(instant.formatted(timestamp).contains("6:03") || instant.formatted(timestamp).contains("18:03"))
+
+        let buddhist = ReceiptDateDisplay.format(date: .long, time: .omitted, locale: locale,
+                                                calendar: Calendar(identifier: .buddhist), timeZone: zone)
+        XCTAssertTrue(instant.formatted(buddhist).contains("2569"))
+    }
+
+    func testSavedReceiptCivilDayDoesNotConvertToTheViewersTimeZone() throws {
+        let locale = Locale(identifier: "es_US")
+        let calendar = Calendar(identifier: .gregorian)
+        let west = try XCTUnwrap(TimeZone(identifier: "Pacific/Pago_Pago"))
+        let east = try XCTUnwrap(TimeZone(identifier: "Pacific/Kiritimati"))
+        for zone in [west, .gmt, east] {
+            XCTAssertEqual(ReceiptDateDisplay.civilDay("2026-11-19", locale: locale, calendar: calendar, zone: zone),
+                           "19 de noviembre de 2026")
+        }
+        XCTAssertEqual(ReceiptDateDisplay.civilDay("2026-02-30", locale: locale, calendar: calendar, zone: west), "2026-02-30")
     }
 
     func testSpanishWeightedReceiptKeepsDateAndPaidAmbiguitiesOutOfStock() throws {
@@ -165,7 +311,7 @@ import XCTest
         let input = ReceiptDocumentBytes(data: pdf(pages: 2, scannedLast: true), kind: .pdf)
         let extracted = try await ReceiptDocumentReader().extract(input)
         XCTAssertEqual(extracted.pages.map(\.method), [.pdfText, .pdfOCR])
-        XCTAssertEqual(extracted.pages.first?.lines.first?.text, "OATS")
+        XCTAssertEqual(extracted.pages.first?.lines.map(\.text), ["OATS", "FEE"])
         let scanned = try XCTUnwrap(extracted.pages.last?.lines.first?.text)
         XCTAssertTrue(scanned.uppercased().contains("BEANS"))
         let target = CaptureTarget(workspaceID: UUID(), containerID: UUID(), objectID: UUID(), revision: 1, kind: .receiptEvidence)
@@ -191,9 +337,35 @@ import XCTest
         XCTAssertEqual(first.lines.first?.treatment, .skip)
         XCTAssertFalse(first.dateConfirmed)
         let offline = try await ReceiptDocumentReader(recognize: { _ in throw CaptureFailure.onDeviceUnavailable }).extract(input)
-        XCTAssertEqual(offline.pages[0].lines.first?.text, "OATS")
+        XCTAssertEqual(offline.pages[0].lines.map(\.text), ["OATS", "FEE"])
         XCTAssertEqual(offline.pages[1].skipped, .unavailable)
         XCTAssertTrue(offline.pages[1].lines.isEmpty)
+    }
+
+    func testReceiptPDFPreservesInlinePriceAndSeparatesPrintedCharges() async throws {
+        let bounds = CGRect(x: 0, y: 0, width: 340, height: 400)
+        let bytes = UIGraphicsPDFRenderer(bounds: bounds).pdfData { context in
+            context.beginPage()
+            let attributes: [NSAttributedString.Key: Any] = [.font: UIFont.systemFont(ofSize: 18)]
+            for (wording, y) in [
+                ("GARDEN MARKET", 28.0), ("ROLLED OATS USD 2.40", 76.0),
+                ("SERVICE FEE USD 1.25", 119.0), ("TAX USD 0.42", 162.0)
+            ] {
+                (wording as NSString).draw(at: .init(x: 24, y: y), withAttributes: attributes)
+            }
+        }
+        let input = ReceiptDocumentBytes(data: bytes, kind: .pdf)
+        let document = try await ReceiptDocumentReader().extract(input)
+        XCTAssertEqual(document.digest, Data(SHA256.hash(data: bytes)))
+        let page = try XCTUnwrap(document.pages.first)
+        let printedRows = ["GARDEN MARKET", "ROLLED OATS USD 2.40", "SERVICE FEE USD 1.25", "TAX USD 0.42"]
+        XCTAssertEqual(page.method, .pdfText)
+        XCTAssertEqual(page.lines.map(\.text), printedRows)
+        XCTAssertEqual(page.lines.map(\.id), [1, 2, 3, 4])
+        XCTAssertTrue(document.amountAssociations.isEmpty)
+        let originalPage = try XCTUnwrap(PDFDocument(data: bytes)?.page(at: 0))
+        let flattened = try XCTUnwrap(originalPage.string).split(whereSeparator: \.isNewline).joined(separator: " ")
+        XCTAssertEqual(try ReceiptDocumentReader.pdfPrintedWording(flattened, page: originalPage), printedRows.joined(separator: "\n"))
     }
 
     func testSelectedReceiptCropEncodesOnlyTheReviewedPixelsAndLocallyReadsThem() async throws {

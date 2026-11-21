@@ -1,7 +1,7 @@
 import Foundation
 
-/// Quick entry accepts a bare product name. Quantities, list separators and
-/// qualifications belong in the existing review, which retains the original wording.
+/// Quick entry accepts a product name with an optional positive whole-item count.
+/// Measures, packs, qualifiers and multi-item wording use the shared list review.
 public enum QuickGrocery {
     private static let reviewWords: Set<String> = [
         "half", "quarter", "one", "two", "three", "four", "five", "dozen", "few", "some",
@@ -17,12 +17,11 @@ public enum QuickGrocery {
     public static func plainName(_ text: String) -> String? {
         guard text.utf8.count <= 512, !text.contains(where: \.isNewline) else { return nil }
         let name = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        let allowed = CharacterSet.letters.union(.nonBaseCharacters).union(CharacterSet(charactersIn: " -’'"))
         var amountTokens = ListQuantityParser.itemTokens(name.lowercased())
         guard (try? ListQuantityParser.takeAmount(from: &amountTokens, allowingWords: true)) == nil else { return nil }
         let words = name.lowercased().split { $0.isWhitespace || $0 == "-" }
         guard !words.isEmpty, words.count <= 8, name.first?.isLetter == true, name.last?.isLetter == true,
-              name.unicodeScalars.allSatisfy(allowed.contains),
+              name.unicodeScalars.allSatisfy(isNameScalar),
               words.allSatisfy({ word in
                   let token = String(word)
                   var unit = [token][...]
@@ -30,6 +29,16 @@ public enum QuickGrocery {
                       ListQuantityParser.takeUnit(from: &unit) == nil
               }) else { return nil }
         return name
+    }
+
+    private static func isNameScalar(_ scalar: Unicode.Scalar) -> Bool {
+        switch scalar.properties.generalCategory {
+        case .uppercaseLetter, .lowercaseLetter, .titlecaseLetter, .modifierLetter, .otherLetter,
+             .spacingMark, .nonspacingMark, .enclosingMark:
+            return true
+        default:
+            return scalar == " " || scalar == "-" || scalar == "’" || scalar == "'"
+        }
     }
 
     public static func recentNames(in workspace: LedgerWorkspace) -> [String] {
@@ -49,10 +58,27 @@ public enum QuickGrocery {
 
     /// Commit through the ordinary import receipt. An omitted quantity stays unknown.
     public static func stage(_ text: String, in shop: ShoppingLedger) throws -> StagedListImport? {
-        guard let name = plainName(text) else { return nil }
-        var preview = try shop.stageImport(text: name, maximumLines: 1)
-        guard preview.lines.count == 1, preview.lines[0].duplicateLineIDs.isEmpty else { return nil }
-        preview.lines[0].unresolvedReason = nil
+        guard text.utf8.count <= 512, !text.contains(where: \.isNewline) else { return nil }
+        let wording = text.trimmingCharacters(in: .whitespaces)
+        let fields = wording.split(maxSplits: 1, whereSeparator: \.isWhitespace)
+        guard let first = fields.first else { return nil }
+        var count: Int64?
+        if first.utf8.allSatisfy({ (48...57).contains($0) }) {
+            guard fields.count == 2, let amount = Int64(first), amount > 0,
+                  plainName(String(fields[1])) != nil else { return nil }
+            count = amount
+        } else if plainName(wording) == nil { return nil }
+
+        var preview = try shop.stageImport(text: wording, maximumLines: 1)
+        guard let row = preview.lines.first, preview.lines.count == 1, row.duplicateLineIDs.isEmpty,
+              row.originalPack == nil else { return nil }
+        if let count {
+            guard row.unresolvedReason == nil, row.quantity?.unit == .count,
+                  row.quantity?.amount == (try Rational(count)) else { return nil }
+        } else {
+            guard row.name == wording, row.quantity == nil else { return nil }
+            preview.lines[0].unresolvedReason = nil
+        }
         return preview
     }
 }

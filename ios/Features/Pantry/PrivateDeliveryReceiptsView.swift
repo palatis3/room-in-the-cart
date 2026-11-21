@@ -19,6 +19,7 @@ struct PrivateDeliveryReceiptsView: View {
     @State private var busy = false
     @State private var deleting = false
     @State private var generation = UUID()
+    private(set) var dates = ReceiptDateDisplay()
 
     private var authorized: Bool {
         model.canEdit && model.supportsReceiptAliases && model.permitsReceiptSource && model.snapshot?.state.workspaceID == target.workspaceID
@@ -96,8 +97,8 @@ struct PrivateDeliveryReceiptsView: View {
                 ForEach(PrivateDeliveryRevision.Kind.allCases, id: \.self) { Text($0.title).tag($0) }
             }
             TextField(pantryText("Final charge in USD"), text: value.total).keyboardType(.decimalPad)
-            optionalDate(pantryText("Purchase date on receipt"), value.purchaseDate)
-            optionalDate(pantryText("Delivery date on receipt"), value.deliveryDate)
+            optionalDate(pantryText("Purchase date on receipt"), identifier: "deliveryReceipt.purchaseDate", value.purchaseDate)
+            optionalDate(pantryText("Delivery date on receipt"), identifier: "deliveryReceipt.deliveryDate", value.deliveryDate)
             if let previous {
                 Text(pantryText("This order already has a private purchase.") + " " + previous.latest.merchant + " · " + amount(previous.latest))
             }
@@ -153,13 +154,11 @@ struct PrivateDeliveryReceiptsView: View {
         }
     }
 
-    private func optionalDate(_ title: String, _ value: Binding<Date?>) -> some View {
-        VStack {
-            Toggle(title, isOn: Binding(get: { value.wrappedValue != nil }, set: { value.wrappedValue = $0 ? Date() : nil }))
-            if value.wrappedValue != nil {
-                DatePicker(title, selection: Binding(get: { value.wrappedValue ?? Date() }, set: { value.wrappedValue = $0 }),
-                           in: ...Date(), displayedComponents: .date).labelsHidden()
-            }
+    @ViewBuilder private func optionalDate(_ title: String, identifier: String, _ value: Binding<Date?>) -> some View {
+        Toggle(title, isOn: Binding(get: { value.wrappedValue != nil }, set: { value.wrappedValue = $0 ? Date() : nil }))
+        if let selected = value.wrappedValue {
+            ReceiptDatePicker(title: title, identifier: identifier,
+                              date: Binding(get: { value.wrappedValue ?? selected }, set: { value.wrappedValue = $0 }))
         }
     }
 
@@ -171,10 +170,14 @@ struct PrivateDeliveryReceiptsView: View {
         }
         ForEach(history, id: \.revision) { entry in
             Section(entry.latest.kind.title) {
-                Text(entry.latest.importedAt, format: .dateTime.year().month().day().hour().minute())
-                    .accessibilityLabel(Text(pantryText("Imported on")) + Text(" ") + Text(entry.latest.importedAt, style: .date))
-                if let date = entry.latest.purchaseDate { LabeledContent(pantryText("Purchase date on receipt")) { Text(date, style: .date) } }
-                if let date = entry.latest.deliveryDate { LabeledContent(pantryText("Delivery date on receipt")) { Text(date, style: .date) } }
+                let imported = dates.timestamp(entry.latest.importedAt)
+                Text(imported).accessibilityLabel(Text(pantryText("Imported on")) + Text(" ") + Text(imported))
+                if let date = entry.latest.purchaseDate {
+                    LabeledContent(pantryText("Purchase date on receipt"), value: dates.purchaseDay(date))
+                }
+                if let date = entry.latest.deliveryDate {
+                    LabeledContent(pantryText("Delivery date on receipt"), value: dates.purchaseDay(date))
+                }
                 Text(amount(entry.latest))
                 if entry.latest.lines.isEmpty { Text(pantryText("Total only")) }
                 ForEach(entry.latest.lines) { line in

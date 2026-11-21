@@ -122,10 +122,22 @@ extension BudgetScope {
     }
 }
 
-func ledgerSourceLabel(_ contribution: LedgerContribution, shop: ShoppingLedger) -> String {
+extension ShoppingLedger {
+    var typedItemBatchIDs: Set<UUID> {
+        Set(importBatches.lazy.filter { batch in
+            batch.source == .typed && batch.preview.lines.count == 1 && batch.preview.lines[0].capture == nil
+        }.map(\.id))
+    }
+}
+
+func ledgerBatchSourceLabel(_ id: UUID, typedItemBatches: Set<UUID>) -> String {
+    typedItemBatches.contains(id) ? quickGroceryText("Typed item") : ledgerText("Imported list")
+}
+
+func ledgerSourceLabel(_ contribution: LedgerContribution, shop: ShoppingLedger, typedItemBatches: Set<UUID>? = nil) -> String {
     switch contribution.source {
     case .manual: return ledgerText("Manually added")
-    case .imported: return ledgerText("Imported list")
+    case .imported(let id): return ledgerBatchSourceLabel(id, typedItemBatches: typedItemBatches ?? shop.typedItemBatchIDs)
     case .meal(let id): return shop.mealOccurrences.first { $0.id == id }?.title ?? ledgerText("Dinner")
     case .protectedNeed(let purpose): return ledgerFormat("Protected: %@", purpose)
     }

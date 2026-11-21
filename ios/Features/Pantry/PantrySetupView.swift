@@ -22,6 +22,7 @@ struct PantrySetupView: View {
     @State private var phase: Phase = .loading
     @State private var generation = UUID()
     @State private var busy = false
+    @State private var initialSheet: PantrySheet?
 
     private enum Phase {
         case loading, staging, unavailable
@@ -59,7 +60,7 @@ struct PantrySetupView: View {
                     PantryHomeView(model: model, accessAllowed: true, offersTonight: true, offersStaplePrompts: true,
                                    household: household, holdsLoadedReview: {
                         pantryVoicePrompt?.holdsPresentation() == true && scope == original
-                    })
+                    }, initialSheet: $initialSheet)
                 }
             } else {
                 List {
@@ -69,7 +70,16 @@ struct PantrySetupView: View {
                     case .review(_, let review):
                         let startsEmpty = review.sourceCount == 0 && review.lotCount == 0 && review.reservationCount == 0 && review.issues.isEmpty
                         Section {
-                            if startsEmpty { applySetup(startsEmpty: true) }
+                            if startsEmpty && destination == .home {
+                                Button(pantryText("Add my first food")) {
+                                    Task { await perform(.apply, opening: .add) }
+                                }
+                                .buttonStyle(PrimaryAction()).accessibilityIdentifier("pantry.setup.firstFood")
+                                Button(pantryText("Review a receipt")) { Task { await perform(.apply, opening: .receipt) } }
+                                    .accessibilityIdentifier("pantry.setup.receipt")
+                                Button(pantryText("Other pantry options")) { Task { await perform(.apply) } }
+                                    .accessibilityIdentifier("pantry.setup.apply")
+                            } else if startsEmpty { applySetup(startsEmpty: true) }
                             VStack(alignment: .leading, spacing: 12) {
                                 if !startsEmpty { Text(pantryText("Set up My Pantry")).font(.title2.bold()) }
                                 Text(pantryText(startsEmpty ? "Add your first food by hand or review a receipt." : "Review the food and reservations from your saved pickups. You can add food by hand after setup."))
@@ -108,7 +118,7 @@ struct PantrySetupView: View {
                 if original == scope && model.phase != .accessDenied { return }
                 model.accessLost()
             }
-            generation = UUID(); phase = .loading; busy = false
+            generation = UUID(); phase = .loading; busy = false; initialSheet = nil
             if scope != nil { await perform(.inspect) }
         }
     }
@@ -135,8 +145,10 @@ struct PantrySetupView: View {
         .accessibilityValue(count.formatted())
     }
 
-    @MainActor private func perform(_ action: Action) async {
+    @MainActor private func perform(_ action: Action, opening sheet: PantrySheet? = nil) async {
         guard !busy, let original = scope else { return }
+        if action == .apply { initialSheet = sheet }
+        if action == .discard { initialSheet = nil }
         let token = generation
         let current = { @MainActor in generation == token && scope == original && !Task.isCancelled }
         busy = true

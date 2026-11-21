@@ -78,9 +78,11 @@ struct HouseholdReceiptLineFacts: View {
 
 struct HouseholdReceiptFacts: View {
     let receipt: HouseholdReceiptAcquisition
+    private(set) var dates = ReceiptDateDisplay()
+
     var body: some View {
         Text(receipt.merchant).font(.headline)
-        Text(receipt.purchaseDay)
+        Text(dates.civilDay(receipt.purchaseDay, zone: TimeZone(identifier: receipt.zone) ?? .gmt))
         if let reference = receipt.reference { Text(reference) }
         ForEach(receipt.lines, id: \.ordinal) { HouseholdReceiptLineFacts(row: $0) }
     }
@@ -134,7 +136,19 @@ struct HouseholdReceiptEntry: View {
                     if displayed.firstSectionDigest != nil {
                         Text(captureText("Enter the printed transaction reference for this multi-photo receipt. Use the same reference when retaking or extending it. If none is printed, add genuinely missing food separately in the household pantry."))
                     }
-                    TextField(displayed.firstSectionDigest == nil ? pantryText("Confirmed transaction reference, if printed") : captureText("Printed transaction reference (required)"), text: value.reference).focused($field, equals: "reference")
+                    let referenceTitle = displayed.firstSectionDigest == nil
+                        ? putawayText("Transaction reference (optional)")
+                        : captureText("Printed transaction reference (required)")
+                    WorkingField(referenceTitle) {
+                        TextField(referenceTitle, text: value.reference, prompt: Text(""))
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.never)
+                            .receiptInputChrome()
+                            .focused($field, equals: "reference")
+                            .accessibilityIdentifier("householdReceipt.transactionReference")
+                    }
+                    .contentShape(Rectangle())
+                    .simultaneousGesture(TapGesture().onEnded { field = "reference" })
                     ReceiptPurchaseDateFields(draft: value)
                 }
                 if let householdModel {

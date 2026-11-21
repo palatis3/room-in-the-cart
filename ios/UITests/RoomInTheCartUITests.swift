@@ -52,15 +52,37 @@ final class RoomInTheCartUITests: XCTestCase {
         launch()
         let field = element("quickGrocery.name")
         tap(field)
-        field.typeText("fresh milk")
+        field.typeText("Oats")
         XCUIDevice.shared.press(.home)
         app.activate()
         XCTAssertTrue(field.waitForExistence(timeout: 10))
-        XCTAssertEqual(field.value as? String, "fresh milk")
+        XCTAssertEqual(field.value as? String, "Oats")
         tap(app.buttons["quickGrocery.add"])
         let added = app.buttons["quickGrocery.undo"]
         XCTAssertTrue(added.waitForExistence(timeout: 10))
-        XCTAssertTrue(added.label.contains("fresh milk"))
+        XCTAssertTrue(added.label.contains("Oats"))
+        XCTAssertTrue(app.staticTexts["Added Oats to Pickup on this iPhone."].exists)
+        XCTAssertFalse(app.keyboards.firstMatch.exists)
+        tap(app.buttons["quickGrocery.viewList"])
+        let originalRow = app.buttons["Inspect Oats"]
+        XCTAssertTrue(originalRow.waitForExistence(timeout: 8))
+        let editID = originalRow.identifier.replacingOccurrences(of: "ledgerInspect-", with: "ledgerEditRow-")
+        originalRow.swipeLeft()
+        tap(app.buttons[editID])
+        let itemName = element("ledgerEditItemName")
+        XCTAssertEqual(itemName.label, "Item name")
+        tap(itemName)
+        itemName.coordinate(withNormalizedOffset: CGVector(dx: 0.98, dy: 0.5)).tap()
+        itemName.typeText(" (rolled)\n")
+        XCTAssertTrue(element("ledgerUnsavedItem").exists)
+        tap(app.buttons["Save item"])
+        tap(app.buttons["Inspect Oats (rolled)"])
+        XCTAssertTrue(app.buttons["Edit name and notes"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.staticTexts["Oats"].exists)
+        tap(app.navigationBars.buttons.firstMatch)
+        tap(app.buttons["Check Oats (rolled)"])
+        tap(element("ledgerRecentlyChecked"))
+        XCTAssertTrue(app.buttons["Reopen Oats (rolled)"].waitForExistence(timeout: 8))
     }
 
     func testReviewedQuickGroceryClearsOnlyAfterSavingToExistingPickup() {
@@ -95,14 +117,14 @@ final class RoomInTheCartUITests: XCTestCase {
         let undo = app.buttons["quickGrocery.undo"]
         XCTAssertTrue(undo.waitForExistence(timeout: 10))
         XCTAssertTrue(undo.label.contains("huevos"))
-        field.typeText("leche\n")
-        let milkUndo = app.buttons.matching(NSPredicate(format: "identifier == %@ AND label CONTAINS %@",
-                                                        "quickGrocery.undo", "leche")).firstMatch
-        XCTAssertTrue(milkUndo.waitForExistence(timeout: 10))
-        XCTAssertGreaterThanOrEqual(milkUndo.frame.width, 44)
-        XCTAssertGreaterThanOrEqual(milkUndo.frame.height, 44)
-        milkUndo.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.08)).tap()
-        XCTAssertTrue(milkUndo.waitForNonExistence(timeout: 10))
+        field.typeText("1 limón\n")
+        let lemonUndo = app.buttons.matching(NSPredicate(format: "identifier == %@ AND label CONTAINS %@",
+                                                        "quickGrocery.undo", "limón")).firstMatch
+        XCTAssertTrue(lemonUndo.waitForExistence(timeout: 10))
+        XCTAssertGreaterThanOrEqual(lemonUndo.frame.width, 44)
+        XCTAssertGreaterThanOrEqual(lemonUndo.frame.height, 44)
+        lemonUndo.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.08)).tap()
+        XCTAssertTrue(lemonUndo.waitForNonExistence(timeout: 10))
         tap(field)
         field.typeText("huevos\n")
         XCTAssertTrue(element("ledgerImportForm").waitForExistence(timeout: 10))
@@ -285,6 +307,7 @@ final class RoomInTheCartUITests: XCTestCase {
         openEmptyComparison()
         type([("itemName", "Fictional record to delete")])
         type([("needed", "2")])
+        tap(app.buttons["comparisonStockDisclosure"])
         type([("stock", "3")])
         compare()
         assertContains("No packs needed for this item.")
@@ -311,8 +334,22 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertEqual(app.buttons["newComparison"].label, "Compare packs")
         XCTAssertFalse(element("savedComparison").exists)
         openEmptyComparison()
-        enterComparison(item: "Family wraps", firstQuantity: "7 1/2", cap: "30")
+        enterComparison(item: "Family wraps", firstQuantity: "7 1/2", cap: "30", omitPriceFor: "b")
         compare()
+        let addPrice = app.buttons["bAddPrice"]
+        XCTAssertEqual(addPrice.label, "Add Pack B price")
+        XCTAssertFalse(app.buttons["aAddPrice"].exists)
+        tap(addPrice)
+        let price = app.textFields["bPrice"]
+        XCTAssertTrue(price.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["comparison.done.bPrice"].waitForExistence(timeout: 5))
+        price.typeText("2")
+        tap(app.buttons["comparison.updatePrice"])
+        XCTAssertTrue(price.waitForNonExistence(timeout: 5))
+        let unitSummary = element("aCostSummary")
+        revealFullyInComparison(unitSummary)
+        XCTAssertTrue(unitSummary.label.contains("$0.40 per 1 item"))
+        XCTAssertTrue(element("bCostSummary").label.contains("$0.3333 per 1 item"))
         let decision = app.descendants(matching: .any).matching(identifier: "comparisonDecision").firstMatch
         XCTAssertTrue(decision.waitForExistence(timeout: 5) && decision.isHittable)
         XCTAssertTrue(decision.label.contains("Pack B"))
@@ -350,8 +387,15 @@ final class RoomInTheCartUITests: XCTestCase {
     func testUnknownPackAmountRemainsUnresolvedAfterSaveAndRestart() throws {
         launch()
         openEmptyComparison()
-        enterComparison(item: "Unknown yield wraps", firstQuantity: nil)
+        enterComparison(item: "Unknown yield wraps", firstQuantity: nil, omitPriceFor: "a")
         compare()
+        XCTAssertFalse(app.buttons["bAddPrice"].exists)
+        tap(app.buttons["aAddPrice"])
+        let price = app.textFields["aPrice"]
+        XCTAssertTrue(app.buttons["comparison.done.aPrice"].waitForExistence(timeout: 5))
+        price.typeText("3")
+        tap(app.buttons["comparison.updatePrice"])
+        XCTAssertTrue(price.waitForNonExistence(timeout: 5))
         assertScope("Item-only comparison")
         assertContains("Usable amount in one pack: Not entered")
         // iOS 17 gives both the decorative Label image and its text this identifier.
@@ -430,6 +474,7 @@ final class RoomInTheCartUITests: XCTestCase {
         for entry in [("itemName", "Abuela’s tortillas"), ("needed", "12"), ("stock", "1 1/2"),
                       ("aQuantity", "8"), ("aPrice", "3"),
                       ("bQuantity", "6"), ("bPrice", "2")] {
+            if entry.0 == "stock" { tap(app.buttons["comparisonStockDisclosure"]) }
             type([entry])
         }
         compare()
@@ -842,13 +887,13 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(value.isEmpty || value == "Item name" || value == "Nombre del artículo", "Fresh form must not contain seeded food: \(value)")
     }
 
-    private func enterComparison(item: String, firstQuantity: String?, cap: String? = nil, groupPackFields: Bool = false) {
+    private func enterComparison(item: String, firstQuantity: String?, cap: String? = nil, groupPackFields: Bool = false, omitPriceFor: String? = nil) {
         type([("itemName", item)])
         type([("needed", "12")])
         for (prefix, quantity, price) in [("a", firstQuantity, "3"), ("b", "6", "2")] {
             var fields: [(id: String, text: String)] = []
             if let quantity { fields.append((prefix + "Quantity", quantity)) }
-            fields.append((prefix + "Price", price))
+            if prefix != omitPriceFor { fields.append((prefix + "Price", price)) }
             if groupPackFields { type(fields) }
             else { for field in fields { type([field]) } }
         }

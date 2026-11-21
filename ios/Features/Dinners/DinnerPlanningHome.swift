@@ -8,10 +8,15 @@ struct DinnerPlanningHome: View {
     @ObservedObject private var ledger: LedgerModel
     @StateObject private var model: DinnerFeatureModel
     @State private var startingPickup = false
+    var needsPantrySetup: Bool
+    let pickupOpening: DinnerPickupOpeningState
     init(ledger: LedgerModel, access: @escaping DinnerFeatureModel.AccessProvider,
          phase: @escaping (UUID) -> BasketPhase, ideaCatalog: [MealTemplate] = [], runtimeChanges: AnyPublisher<Void, Never>? = nil,
-         basketPrepAccess: @escaping () -> Bool = { false }, milestoneAccess: @escaping () -> Bool = { false }) {
+         basketPrepAccess: @escaping () -> Bool = { false }, milestoneAccess: @escaping () -> Bool = { false }, needsPantrySetup: Bool = false,
+         pickupOpening: DinnerPickupOpeningState = .ready) {
         self.ledger = ledger
+        self.pickupOpening = pickupOpening
+        self.needsPantrySetup = needsPantrySetup
         let model = DinnerFeatureModel(store: ledger, access: access, phase: phase, ideaCatalog: ideaCatalog,
             basketPrepAccess: basketPrepAccess, milestoneAccess: milestoneAccess)
         model.observe(ledger.objectWillChange)
@@ -19,7 +24,8 @@ struct DinnerPlanningHome: View {
         _model = StateObject(wrappedValue: model)
     }
     var body: some View {
-        DinnerWorkspaceView(model: model, startPickup: { startingPickup = true }) { LedgerSaveStatus(model: ledger) }
+        DinnerWorkspaceView(model: model, needsPantrySetup: needsPantrySetup, pickupOpening: pickupOpening,
+                            startPickup: { startingPickup = true }) { LedgerSaveStatus(model: ledger) }
             .sheet(isPresented: $startingPickup) { NavigationStack { LedgerNewShopView(model: ledger) } }
             .environment(\.timeZone, TimeZone(identifier: model.shop?.basis.timeZoneIdentifier ?? "") ?? .current)
             .task { await ledger.open() }
@@ -27,14 +33,69 @@ struct DinnerPlanningHome: View {
 }
 extension LedgerModel: DinnerWorkspaceStore {}
 
+/// A ready pickup still requires the feature's normal per-shop access checks.
+enum DinnerPickupOpeningState: Equatable {
+    case ready, opening, denied, pantryRecovery, failed(String)
+
+    @MainActor init(pickup: PickupModel, authorized: Bool, retryAvailable: Bool) {
+        if pickup.ready {
+            self = .ready
+        } else if !authorized {
+            self = .denied
+        } else if pickup.pantryRouteAvailable || pickup.pantryRestartAvailable {
+            self = .pantryRecovery
+        } else if let error = pickup.error {
+            self = .failed(error)
+        } else if retryAvailable {
+            self = .failed(pTr("Could not open saved pickups. Retry; existing records have not been replaced."))
+        } else {
+            self = .opening
+        }
+    }
+}
+
+private struct DinnerPickupOpeningStatus: View {
+    let state: DinnerPickupOpeningState
+    @EnvironmentObject private var pickup: PickupModel
+    @Environment(\.privatePantryRetry) private var retryPrivatePantry
+
+    var body: some View {
+        switch state {
+        case .ready:
+            EmptyView()
+        case .opening:
+            ProgressView(ledgerText("Opening your pickups…"))
+                .accessibilityIdentifier("dinner.openingPickup")
+        case .denied:
+            Text(dinnerText("Planning access changed or expired. Reconnect and review again."))
+        case .pantryRecovery:
+            NavigationLink(pantryText("My Pantry")) { AdultPantryTab() }
+        case .failed(let message):
+            Text(verbatim: message).foregroundStyle(Theme.error)
+            Button(pTr("Retry opening")) {
+                if let retryPrivatePantry { retryPrivatePantry() }
+                else { Task { await pickup.load() } }
+            }.accessibilityIdentifier("dinner.retryOpeningPickup")
+        }
+    }
+}
+
 struct DinnerWorkspaceView<SaveStatus: View>: View {
     @ObservedObject var model: DinnerFeatureModel
     @Environment(\.pickupLedger) private var liveLedger
     @Environment(\.dinnerHousehold) private var household
+    var needsPantrySetup = false
+    var pickupOpening: DinnerPickupOpeningState = .ready
     let startPickup: () -> Void
     @ViewBuilder let saveStatus: () -> SaveStatus
     @State private var weekStart = Date()
     @State private var showWeekGrid = false
+    private struct RecipeEditor: Identifiable {
+        let id = UUID()
+        let recipe: MealTemplate?
+    }
+    @State private var editingRecipe: RecipeEditor?
+    @State private var handoff: MealTemplate?
     var body: some View {
         List {
             Group {
@@ -48,16 +109,17 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                                     detail: tonightText("Free reusable dinner")) {
                                     Text(verbatim: first.title).font(.system(.title2, design: .serif, weight: .semibold))
                                 }
-                                DinnerManualRecipeLink(ledger: library, recipe: first, featured: true)
-                                    .buttonStyle(PrimaryAction())
+                                Button(dinnerText("Plan this dinner")) { handoff = first }
+                                    .buttonStyle(PrimaryAction()).accessibilityIdentifier("dinner.planSaved")
+                                recipeEditorButton(library, recipe: first, featured: true)
                             }.padding(.vertical, 6)
                             startPickupButton
                         }
                         Section {
                             ForEach(library.workspace.mealTemplates.dropFirst()) { recipe in
-                                DinnerManualRecipeLink(ledger: library, recipe: recipe)
+                                recipeEditorButton(library, recipe: recipe)
                             }
-                            DinnerManualRecipeLink(ledger: library)
+                            recipeEditorButton(library)
                         }
                     } else {
                         Section {
@@ -65,7 +127,7 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                                 DinnerTonightHeading(title: dinnerText(model.workspace.shops.isEmpty ? "No dinner planned" : "No pickup selected"),
                                     detail: dinnerText("You can save a recipe now and choose it for a pickup later.")) { EmptyView() }
                                 if let library = privateRecipeLibrary {
-                                    DinnerManualRecipeLink(ledger: library).buttonStyle(PrimaryAction())
+                                    recipeEditorButton(library).buttonStyle(PrimaryAction())
                                 }
                             }.padding(.vertical, 6)
                         }
@@ -81,11 +143,21 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                     } footer: {
                         Text(dinnerText("Start a pickup to plan dinners and review the groceries you’ll need."))
                     }
+                } else if pickupOpening != .ready {
+                    DinnerPickupOpeningStatus(state: pickupOpening)
                 } else if !model.accessAvailable {
                     Section { Text(dinnerText("Planning access changed or expired. Reconnect and review again.")) }
                 } else if let shop = model.shop {
                     Section {
                         DinnerTonightPlan(model: model, shop: shop)
+                        if let recipe = privateRecipeLibrary?.workspace.mealTemplates.first {
+                            Button { handoff = recipe } label: {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(dinnerText("Plan a saved dinner")).font(.headline)
+                                    Text(verbatim: recipe.title)
+                                }
+                            }.accessibilityIdentifier("dinner.planSaved")
+                        }
                         NavigationLink {
                             DinnerWeekView(model: model, shopID: shop.id, weekStart: $weekStart,
                                 showWeekGrid: $showWeekGrid, saveStatus: saveStatus)
@@ -137,6 +209,25 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                 Section { saveStatus() }
             }.listRowBackground(Theme.surface)
         }.workingSurface().navigationTitle(dinnerText("Dinners")).listStyle(.insetGrouped)
+        .sheet(item: $editingRecipe) { editor in
+            if let library = privateRecipeLibrary {
+                NavigationStack { DinnerPrivateRecipeEditor(ledger: library, recipe: editor.recipe) }
+            }
+        }
+        .sheet(item: $handoff) { recipe in NavigationStack { SavedDinnerHandoffView(recipe: recipe) } }
+    }
+
+    private func recipeEditorButton(_ ledger: LedgerModel, recipe: MealTemplate? = nil, featured: Bool = false) -> some View {
+        Button { editingRecipe = RecipeEditor(recipe: recipe) } label: {
+            if let recipe, featured {
+                Label(dinnerText("Edit saved recipe"), systemImage: "pencil")
+                    .accessibilityLabel(dinnerFormat("Edit saved recipe, %@", recipe.title))
+            } else if let recipe {
+                Text(verbatim: recipe.title).font(.system(.title3, design: .serif, weight: .semibold))
+            } else {
+                Label(dinnerText(ledger.workspace.mealTemplates.isEmpty ? "Save a familiar dinner" : "Replace Free reusable dinner"), systemImage: "book")
+            }
+        }.accessibilityIdentifier(recipe.map { "dinner.savedRecipe." + $0.id.uuidString } ?? "dinner.saveFirstRecipe")
     }
 
     private var privateRecipeLibrary: LedgerModel? {
@@ -152,7 +243,10 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
 
     private var tonightLink: some View {
         NavigationLink { TonightEntry() } label: {
-            Label(dinnerText("Find a dinner from the pantry"), systemImage: "carrot")
+            VStack(alignment: .leading, spacing: 4) {
+                Label(dinnerText("Find a dinner from the pantry"), systemImage: "carrot")
+                if needsPantrySetup { Text(dinnerText("Set up My Pantry to use food you have at home.")).font(.footnote).foregroundStyle(Theme.secondary) }
+            }
         }.accessibilityIdentifier("dinner.tonight")
     }
 }
@@ -598,37 +692,19 @@ private struct DinnerTableSetting: View {
 }
 
 /// A recipe can occupy the Free slot before the first pickup exists.
-private struct DinnerManualRecipeLink: View {
+private struct DinnerPrivateRecipeEditor: View {
     @ObservedObject var ledger: LedgerModel
-    var recipe: MealTemplate? = nil
-    var featured = false
+    let recipe: MealTemplate?
     @EnvironmentObject private var access: WorkspaceAccess
     @EnvironmentObject private var household: HouseholdModel
     @Environment(\.guardianChildCoordinator) private var child
     @Environment(\.scenePhase) private var scene
-    @State private var presenting = false
 
     var body: some View {
-        Button { presenting = true } label: {
-            if let recipe, featured {
-                Label(dinnerText("Edit saved recipe"), systemImage: "pencil")
-                    .accessibilityLabel(dinnerFormat("Edit saved recipe, %@", recipe.title))
-            } else if let recipe {
-                Text(verbatim: recipe.title).font(.system(.title3, design: .serif, weight: .semibold))
-                    .frame(minHeight: 44, alignment: .leading)
-            } else {
-                Label(dinnerText(ledger.workspace.mealTemplates.isEmpty ? "Save a familiar dinner" : "Replace Free reusable dinner"), systemImage: "book")
-            }
-        }
-        .accessibilityIdentifier(recipe.map { "dinner.savedRecipe." + $0.id.uuidString } ?? "dinner.saveFirstRecipe")
-        .sheet(isPresented: $presenting) {
-            NavigationStack {
-                TonightRecipeReview(ledger: ledger, source: nil, template: recipe) {
-                    guard scene == .active, UIApplication.shared.isProtectedDataAvailable,
-                          child?.presented != true, household.projection?.grantId == nil else { return nil }
-                    return CapturePrivateIdentity.current(access: access, household: household)
-                }
-            }
-        }
+        TonightRecipeReview(ledger: ledger, source: nil, template: recipe, currentIdentity: {
+            guard scene == .active, UIApplication.shared.isProtectedDataAvailable,
+                  child?.presented != true, household.projection?.grantId == nil else { return nil }
+            return CapturePrivateIdentity.current(access: access, household: household)
+        })
     }
 }

@@ -47,6 +47,8 @@ struct PantryReceiptDocuments: View {
     @State private var inspectedLine: ExtractedReceiptDocument.Selection?
     @State private var fileBytes: ReceiptDocumentBytes?
     @State private var selection = Set<ExtractedReceiptDocument.Selection>()
+    @State private var linkedAmountItems = Set<ExtractedReceiptDocument.Selection>()
+    @State private var storeFocusRequest: UUID?
     @State private var stage: ReceiptAcquisition.DocumentLine.Stage = .receipt
     @State private var merchant = ""
     @State private var confirmed = false
@@ -56,14 +58,38 @@ struct PantryReceiptDocuments: View {
     private var reviewsEvidenceOnly: Bool { reviewsPrivateReceipt && stage != .order }
 
     var body: some View {
+        ScrollViewReader { scroll in form(scroll) }
+    }
+
+    private func form(_ scroll: ScrollViewProxy) -> some View {
         WorkingForm {
             if let error { Text(error).accessibilityFocused($statusFocused).accessibilityIdentifier("receipt.document.status") }
             if job != nil {
                 ProgressView(pantryText("Reading receipt on this device"))
                 Button(pantryText("Cancel reading")) { cancel() }
             } else if let document {
+                let pairs = availableAmounts(document)
+                let linkedAmounts = Set(linkedAmountItems.compactMap { pairs[$0] })
+                let included = selection.union(linkedAmounts)
+                let storeIssue = receiptStoreIssue(merchant)
                 Section(pantryText("Receipt source")) {
-                    workingTextField(pantryText("Store or branch"), text: $merchant).focused($merchantFocused)
+                    let name = captureText("Store or receipt name (required)")
+                    WorkingField(name) {
+                        TextField(name, text: $merchant, prompt: Text(""))
+                            .receiptInputChrome()
+                            .focused($merchantFocused)
+                            .accessibilityIdentifier("receipt.document.store")
+                    }
+                    .id("receipt.document.store")
+                    .contentShape(Rectangle())
+                    .simultaneousGesture(TapGesture().onEnded { merchantFocused = true })
+                    .task(id: storeFocusRequest) {
+                        guard let request = storeFocusRequest else { return }
+                        await Task.yield()
+                        guard !Task.isCancelled, storeFocusRequest == request, authorize() else { return }
+                        merchantFocused = true
+                        storeFocusRequest = nil
+                    }
                     Picker(pantryText("Document type"), selection: $stage) {
                         ForEach(ReceiptAcquisition.DocumentLine.Stage.allCases, id: \.self) { Text(receiptStage($0)).tag($0) }
                     }
@@ -77,26 +103,11 @@ struct PantryReceiptDocuments: View {
                         else if page.lines.isEmpty { Text(pantryText("No readable lines on this page. You can type them in the receipt scanner.")) }
                         ForEach(page.lines.filter { !omittedLines.contains(.init(page: page.id, line: $0.id)) }) { line in
                             let position = ExtractedReceiptDocument.Selection(page: page.id, line: line.id)
-                            HStack(spacing: 12) {
-                                Toggle(isOn: Binding(get: { selection.contains(position) }, set: { include in
-                                    if include { selection.insert(position) } else { selection.remove(position) }
-                                    confirmed = false
-                                })) {
-                                    Text(line.text).font(.system(.body, design: .monospaced))
-                                }
-                                .disabled(!selection.contains(position) && selection.count >= 200)
-                                .accessibilityIdentifier("receipt.document.line.\(page.id).\(line.id)")
-                                Button {
-                                    merchantFocused = false
-                                    inspectedLine = position
-                                } label: {
-                                    Image(systemName: "text.magnifyingglass")
-                                        .frame(minWidth: 44, minHeight: 44)
-                                }
-                                .buttonStyle(.borderless)
-                                .accessibilityLabel(pantryFormat("Inspect printed line %@", line.id.formatted()))
-                                .accessibilityIdentifier("receipt.document.inspect.\(page.id).\(line.id)")
-                            }
+                            let priceLine = pairs[position].flatMap { price in page.lines.first { $0.id == price.line } }
+                            documentLine(line, at: position, attached: linkedAmounts.contains(position),
+                                         canInclude: included.contains(position) || included.count < 200,
+                                         suggestedAmount: priceLine,
+                                         canLink: priceLine.map { included.contains(.init(page: page.id, line: $0.id)) } == true || included.count < 200)
                         }
                     }
                 }
@@ -108,15 +119,29 @@ struct PantryReceiptDocuments: View {
                     if !reviewsEvidenceOnly {
                         Toggle(pantryText("I checked these printed lines and physically received food from this purchase."), isOn: $confirmed)
                     }
+                    if let storeIssue {
+                        Button {
+                            storeFocusRequest = UUID()
+                            scroll.scrollTo("receipt.document.store", anchor: .center)
+                        } label: {
+                            Label(storeIssue, systemImage: "exclamationmark.circle").frame(minHeight: 44, alignment: .leading)
+                        }
+                        .disabled(!authorize())
+                        .accessibilityIdentifier("receipt.document.storeIssue")
+                    } else if selection.isEmpty {
+                        Text(captureText("Select at least one printed line to continue.")).foregroundStyle(Theme.secondary)
+                    } else if !reviewsEvidenceOnly && !confirmed {
+                        Text(captureText("Confirm which printed lines you physically received to continue.")).foregroundStyle(Theme.secondary)
+                    }
                     Button(reviewsEvidenceOnly ? putawayText("Review selected lines") : pantryText("Review received food")) {
-                        guard authorize(), reviewsEvidenceOnly || confirmed else { return }
+                        guard authorize(), storeIssue == nil, reviewsEvidenceOnly || confirmed else { return }
                         do {
                             let source = try document.source(target: target, merchant: merchant.trimmingCharacters(in: .whitespacesAndNewlines),
-                                stage: stage, selection: selection, at: Date())
+                                stage: stage, selection: selection, linkedAmountItems: linkedAmountItems, at: Date())
                             onReview(source, openedShare)
                             dismiss()
                         } catch { show(error) }
-                    }.buttonStyle(PrimaryAction()).disabled(!authorize() || (!reviewsEvidenceOnly && !confirmed) || selection.isEmpty || merchant.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    }.buttonStyle(PrimaryAction()).disabled(!authorize() || (!reviewsEvidenceOnly && !confirmed) || selection.isEmpty || storeIssue != nil)
                         .accessibilityIdentifier("receipt.document.accept")
                     if let backToSections { Button(captureText("Back to receipt sections"), action: backToSections) }
                     if initialDocument == nil { Button(pantryText("Choose another document")) { cancel() } }
@@ -183,7 +208,7 @@ struct PantryReceiptDocuments: View {
             }
         }
         .onChange(of: merchant) { _, _ in confirmed = false }
-        .onChange(of: stage) { _, _ in confirmed = false }
+        .onChange(of: stage) { _, _ in confirmed = false; linkedAmountItems = [] }
         .onChange(of: scenePhase) { _, phase in if phase == .background { cancel() } }
         .alert(item: $discard) { item in
             Alert(title: Text(pantryText("Discard this shared receipt?")),
@@ -198,6 +223,62 @@ struct PantryReceiptDocuments: View {
         .onDisappear { cancel(); inbox = [] }
         .task { if let initialDocument { document = initialDocument } else { await loadInbox() } }
         .task { if let initialInput, document == nil, job == nil { start { initialInput } } }
+    }
+
+    private func availableAmounts(_ document: ExtractedReceiptDocument) -> [ExtractedReceiptDocument.Selection: ExtractedReceiptDocument.Selection] {
+        guard stage != .order else { return [:] }
+        return document.amountAssociations.filter { !omittedLines.contains($0.key) && !omittedLines.contains($0.value) }
+    }
+
+    private func documentLine(_ line: ReceiptDocumentPage.Line, at position: ExtractedReceiptDocument.Selection,
+                              attached: Bool, canInclude: Bool, suggestedAmount: ReceiptDocumentPage.Line?, canLink: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 12) {
+                if attached {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(line.text).font(.system(.body, design: .monospaced))
+                        Text(captureText("Linked as printed amount")).font(.subheadline).foregroundStyle(Theme.secondary)
+                    }.frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    Toggle(isOn: Binding(get: { selection.contains(position) }, set: { include in
+                        if include { selection.insert(position) }
+                        else { selection.remove(position); linkedAmountItems.remove(position) }
+                        confirmed = false
+                    })) {
+                        Text(line.text).font(.system(.body, design: .monospaced))
+                    }
+                    .disabled(!canInclude)
+                    .accessibilityIdentifier("receipt.document.line.\(position.page).\(line.id)")
+                }
+                Button {
+                    merchantFocused = false
+                    inspectedLine = position
+                } label: {
+                    Image(systemName: "text.magnifyingglass").frame(minWidth: 44, minHeight: 44)
+                }
+                .buttonStyle(.borderless)
+                .accessibilityLabel(pantryFormat("Inspect printed line %@", line.id.formatted()))
+                .accessibilityIdentifier("receipt.document.inspect.\(position.page).\(line.id)")
+            }
+            if selection.contains(position), let suggestedAmount {
+                let linked = linkedAmountItems.contains(position)
+                Text(String(format: captureText(linked ? "Possible line total linked to %@: %@" : "Possible line total for %@: %@"),
+                            line.text, suggestedAmount.text))
+                    .font(.subheadline)
+                Button {
+                    guard authorize() else { return }
+                    if linked { linkedAmountItems.remove(position) }
+                    else if canLink { linkedAmountItems.insert(position) }
+                    confirmed = false
+                } label: {
+                    Text(captureText(linked ? "Undo amount link" : "Link possible line total"))
+                        .frame(minHeight: 44, alignment: .leading)
+                }
+                .buttonStyle(.borderless)
+                .disabled(!authorize() || (!canLink && !linked))
+                .accessibilityIdentifier("receipt.document.amountLink.\(position.page).\(line.id)")
+            }
+        }
     }
 
     private func loadInbox() async {
@@ -233,8 +314,9 @@ struct PantryReceiptDocuments: View {
     private func cancel() {
         generation = UUID()
         job?.cancel(); job = nil
+        storeFocusRequest = nil
         inspectedLine = nil; fileBytes = nil
-        openedShare = nil; selection = []; document = nil; photo = nil; merchant = ""; confirmed = false; error = nil; stage = .receipt
+        openedShare = nil; selection = []; linkedAmountItems = []; document = nil; photo = nil; merchant = ""; confirmed = false; error = nil; stage = .receipt
     }
 
     private func show(_ failure: Error) {

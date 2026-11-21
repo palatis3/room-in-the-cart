@@ -170,6 +170,13 @@ public enum UnmarkedUTF16: String, Codable, Sendable {
 }
 
 public func decodePlainTextFile(_ bytes: Data, unmarkedUTF16: UnmarkedUTF16? = nil) -> String? {
+    if bytes.starts(with: [0xef, 0xbb, 0xbf]) {
+        // Interpret exactly one encoding marker even when Foundation's UTF-8
+        // decoder keeps it. The round trip rejects repaired invalid UTF-8.
+        let payload = bytes.dropFirst(3)
+        let wording = String(decoding: payload, as: UTF8.self)
+        return wording.utf8.elementsEqual(payload) ? wording : nil
+    }
     let hasMark = UnmarkedUTF16.hasMark(bytes)
     if hasMark || unmarkedUTF16 != nil {
         // Foundation can discard a trailing half of a UTF-16 code unit.

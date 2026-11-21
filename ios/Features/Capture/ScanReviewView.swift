@@ -41,6 +41,7 @@ import CoreDomain
     let authorize: () -> Bool
     let onReviewed: (ReviewedScan) -> Void
     let correctionScope: CaptureCorrectionScope?
+    private let focusReceiptText: Bool
     private var cameraPermission: SourceCameraPermission
     @StateObject private var model = ScanModel()
     @StateObject private var corrections = CaptureCorrectionsModel()
@@ -61,6 +62,7 @@ import CoreDomain
     @State private var ingredients: [CaptureLineDraft] = []
     @State private var reviewingIngredients = false
     @State private var error: String?
+    @State private var storeFocusRequest: UUID?
     @FocusState private var focusedField: InputField?
     @AccessibilityFocusState private var capturedWordingFocused: Bool
     @FocusState private var structuredFieldFocus: StructuredCaptureField?
@@ -69,15 +71,23 @@ import CoreDomain
 
     init(kind: ScanKind, target: CaptureTarget, initialLabel: String = "",
          correctionScope: CaptureCorrectionScope? = nil, recipeCameraScope: RecipeCameraPromptScope? = nil,
+         focusReceiptText: Bool = false,
          authorize: @escaping () -> Bool,
          onReviewed: @escaping (ReviewedScan) -> Void) {
         self.kind = kind; self.target = target; self.authorize = authorize; self.onReviewed = onReviewed
         self.correctionScope = correctionScope; _label = State(initialValue: initialLabel)
+        self.focusReceiptText = focusReceiptText
         cameraPermission = SourceCameraPermission(recipeScope: recipeCameraScope)
     }
     var body: some View {
         ScrollViewReader { scroll in
             scanForm(scroll)
+                .task {
+                    guard focusReceiptText, kind == .receipt, authorize() else { return }
+                    await Task.yield()
+                    guard !Task.isCancelled, authorize() else { return }
+                    focusSourceText(scroll)
+                }
                 .task(id: model.candidate != nil && !model.busy) {
                     guard model.candidate != nil, !model.busy else { return }
                     await Task.yield()
@@ -104,10 +114,14 @@ import CoreDomain
                     Section {
                         Text(failureText(failure))
                         if failure == .permissionDenied || failure == .unavailable {
-                            Button(captureText("Type item")) {
-                                scroll.scrollTo("scan.sourceEditor", anchor: .center)
-                                focusedField = .sourceText
-                            }.accessibilityIdentifier("scan.typeItem")
+                            if kind == .receipt {
+                                receiptPhotoPicker("Choose photo or screenshot")
+                                Button(captureText("Type receipt lines")) { focusSourceText(scroll) }
+                                    .accessibilityIdentifier("scan.receipt.recoveryType")
+                            } else {
+                                Button(captureText("Type item")) { focusSourceText(scroll) }
+                                    .accessibilityIdentifier("scan.typeItem")
+                            }
                         }
                     }
                 }
@@ -166,7 +180,7 @@ import CoreDomain
                         catch { self.error = captureText("Shorten the text or type the source again, then review.") }
                     }.disabled(!canReview || model.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 } else if kind == .receipt {
-                    receiptFields
+                    receiptFields(scroll)
                     captureControls
                 } else {
                     packageFields
@@ -240,6 +254,15 @@ import CoreDomain
         .onDisappear { if !showCamera { close() } }
     }
     private var canReview: Bool { authorize() && !model.closed && !model.busy && !loadingPhoto && !requestingCamera && model.candidate == nil }
+    private func focusSourceText(_ scroll: ScrollViewProxy) {
+        scroll.scrollTo("scan.sourceEditor", anchor: .center)
+        focusedField = .sourceText
+    }
+    private func receiptPhotoPicker(_ title: String) -> some View {
+        PhotosPicker(selection: $photo, matching: .images, preferredItemEncoding: .current) {
+            Text(captureText(title))
+        }.disabled(!canReview || !localPhotoConsent)
+    }
     private var pasteSourceButton: some View {
         PasteButton(payloadType: String.self) { values in
             Task { @MainActor in
@@ -260,9 +283,7 @@ import CoreDomain
                 .font(.footnote)
             Button(captureText("Take a photo for review")) { requestCamera() }.disabled(!canReview || !localPhotoConsent)
                 .accessibilityIdentifier("scan.camera")
-            PhotosPicker(selection: $photo, matching: .images, preferredItemEncoding: .current) {
-                Text(captureText("Choose one photo for review"))
-            }.disabled(!canReview || !localPhotoConsent)
+            receiptPhotoPicker("Choose one photo for review")
             if kind != .receipt { pasteSourceButton }
             if model.busy || loadingPhoto || requestingCamera { ProgressView(captureText("Preparing source for review…")) }
             Text(captureText("Saved photo references are smaller copies without location metadata. The app keeps them separate from your photo library."))
@@ -295,11 +316,27 @@ import CoreDomain
                 .accessibilityIdentifier("scan.reference.review")
         }
     }
-    private var receiptFields: some View {
-        Section(captureText("Receipt lines are evidence only")) {
+    private func receiptFields(_ scroll: ScrollViewProxy) -> some View {
+        let storeIssue = receiptStoreIssue(label)
+        let storeLabel = captureText("Store or receipt name (required)")
+        return Section(captureText("Receipt lines are evidence only")) {
             Text(captureText("Keep unreadable quantities or printed amounts unknown. These lines do not mark anything paid, received or usable."))
-            TextField(captureText("Source reference label"), text: $label)
-                .focused($focusedField, equals: .sourceLabel)
+            WorkingField(storeLabel) {
+                TextField(storeLabel, text: $label, prompt: Text(""))
+                    .receiptInputChrome()
+                    .focused($focusedField, equals: .sourceLabel)
+                    .accessibilityIdentifier("scan.receipt.store")
+            }
+            .id("scan.receipt.store")
+            .contentShape(Rectangle())
+            .simultaneousGesture(TapGesture().onEnded { focusedField = .sourceLabel })
+            .task(id: storeFocusRequest) {
+                guard let request = storeFocusRequest else { return }
+                await Task.yield()
+                guard !Task.isCancelled, storeFocusRequest == request, canReview else { return }
+                focusedField = .sourceLabel
+                storeFocusRequest = nil
+            }
             if receiptLines == nil {
                 Button(captureText("Review printed lines")) {
                     do { receiptLines = try ScanLimits.receiptLines(model.text, uncertain: Set(model.accepted?.uncertainLines ?? [])); error = nil }
@@ -319,15 +356,38 @@ import CoreDomain
                         .accessibilityIdentifier("scan.receipt.inspect.\(snapshot.id)")
                         TextField(captureText("Reviewed line wording"), text: row.reviewedText, axis: .vertical)
                             .focused($focusedField, equals: .receiptWording(snapshot.id))
-                        TextField(captureText("Quantity wording, unknown if blank"), text: row.quantityNote)
-                            .focused($focusedField, equals: .receiptQuantity(snapshot.id))
-                        TextField(captureText("Printed amount wording, unknown if blank"), text: row.priceNote)
-                            .focused($focusedField, equals: .receiptPrice(snapshot.id))
+                        let quantityLabel = captureText("Printed quantity (optional)")
+                        WorkingField(quantityLabel) {
+                            TextField(quantityLabel, text: row.quantityNote, prompt: Text(""))
+                                .receiptInputChrome()
+                                .focused($focusedField, equals: .receiptQuantity(snapshot.id))
+                        }
+                        let priceLabel = captureText("Printed amount (optional)")
+                        WorkingField(priceLabel) {
+                            TextField(priceLabel, text: row.priceNote, prompt: Text(""))
+                                .receiptInputChrome()
+                                .focused($focusedField, equals: .receiptPrice(snapshot.id))
+                        }
                     }
                 }
-                Toggle(captureText("I reviewed these lines as source evidence only."), isOn: $model.confirmed)
-                Button(captureText("Continue with reviewed reference")) { finishEvidence() }
-                    .disabled(!canReview || !model.confirmed || receiptLines?.isEmpty != false || label.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                Toggle(captureText("I checked the printed lines."), isOn: $model.confirmed)
+                if let storeIssue {
+                    Button {
+                        storeFocusRequest = UUID()
+                        scroll.scrollTo("scan.receipt.store", anchor: .center)
+                    } label: {
+                        Label(storeIssue, systemImage: "exclamationmark.circle")
+                            .frame(minHeight: 44, alignment: .leading)
+                    }
+                    .accessibilityIdentifier("scan.receipt.storeIssue")
+                    .disabled(!canReview)
+                } else if !model.confirmed {
+                    Text(captureText("Mark the printed lines as reviewed to continue."))
+                        .foregroundStyle(Theme.secondary)
+                }
+                Button(captureText("Review receipt details")) { finishEvidence() }
+                    .buttonStyle(PrimaryAction())
+                    .disabled(!canReview || !model.confirmed || receiptLines?.isEmpty != false || storeIssue != nil)
                     .accessibilityIdentifier("scan.receipt.review")
             }
         }
@@ -389,13 +449,18 @@ import CoreDomain
     }
     private func finishEvidence() {
         guard authorize() else { return }
+        if kind == .receipt, receiptStoreIssue(label) != nil { return }
         do {
             guard (kind == .receipt && target.kind == .receiptEvidence) || ((kind == .packageReference || kind == .barcode) && target.kind == .packageReference) else { throw ScanFailure.stale }
             let barcode = reviewedBarcode
             if kind == .barcode, barcode == nil { throw ScanFailure.needsReview }
             let record = try model.reviewed(target: target, label: label, barcode: barcode, receiptLines: receiptLines ?? [])
             onReviewed(.evidence(record)); dismiss()
-        } catch { self.error = captureText("Check the source, choose or type a code when scanning, and confirm the manual match. Nothing has been saved.") }
+        } catch {
+            self.error = kind == .receipt
+                ? captureText("Check the store name and the printed lines, then try again.")
+                : captureText("Check the source, choose or type a code when scanning, and confirm the manual match. Nothing has been saved.")
+        }
     }
     private var trimmedManualCode: String { manualCode.trimmingCharacters(in: .whitespacesAndNewlines) }
     private var reviewedBarcode: CapturedBarcode? {
@@ -443,13 +508,35 @@ import CoreDomain
         }
     }
     private func resetDerived() { barcodeID = nil; manualCode = ""; receiptLines = nil; recipe = nil; ingredients = []; matchedProduct = false; model.confirmed = false }
-    private func close() { permissionGeneration = UUID(); showCamera = false; photoTask?.cancel(); photoTask = nil; model.close(); corrections.invalidate(); resetDerived() }
+    private func close() {
+        permissionGeneration = UUID(); showCamera = false; storeFocusRequest = nil
+        photoTask?.cancel(); photoTask = nil; model.close(); corrections.invalidate(); resetDerived()
+    }
     private func failureText(_ value: ScanFailure) -> String {
         switch value {
         case .permissionDenied: return captureText("Camera permission was not granted. Type, paste or choose a photo instead.")
         case .tooLarge: return captureText("Choose a photo under 12 MB and 30 megapixels, and keep the text under 20,000 bytes and 200 lines.")
         default: return captureText("This capture is unavailable. Your typed draft is still usable; nothing has been added automatically.")
         }
+    }
+}
+
+func receiptStoreIssue(_ value: String) -> String? {
+    let name = value.trimmingCharacters(in: .whitespacesAndNewlines)
+    if name.isEmpty { return captureText("Enter the store or receipt name to continue.") }
+    if name.utf8.count > 256 || name.contains("\0") { return captureText("Enter a shorter store or receipt name.") }
+    return nil
+}
+
+extension View {
+    func receiptInputChrome() -> some View {
+        padding(.horizontal, 10)
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+            .overlay {
+                RoundedRectangle(cornerRadius: 8).strokeBorder(Theme.controlEdge)
+                    .allowsHitTesting(false).accessibilityHidden(true)
+            }
     }
 }
 
@@ -537,6 +624,9 @@ private struct ReceiptSectionCapture: View {
     @State private var job: Task<Void, Never>?
     @State private var generation = UUID()
     @State private var error: String?
+    @State private var cameraNeedsAlternative = false
+    @State private var typing = false
+    @State private var typedSource: SourceMediaRecord?
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scene
 
@@ -553,13 +643,20 @@ private struct ReceiptSectionCapture: View {
                     camera = false
                     switch result {
                     case .success(let data): read { ReceiptDocumentBytes(data: data, kind: .image) }
-                    case .failure: error = captureText("The camera is unavailable. Choose a photo or type the lines instead.")
+                    case .failure: showCameraRecovery()
                     case nil: break
                     }
                 }.ignoresSafeArea()
             }
+            .sheet(isPresented: $typing, onDismiss: finishTypedSource) {
+                NavigationStack {
+                    ScanReviewView(kind: .receipt, target: target, focusReceiptText: true, authorize: authorize) { result in
+                        if case .evidence(let source) = result, authorize(), source.target == target { typedSource = source }
+                    }
+                }
+            }
             .onChange(of: scene) { _, phase in if phase == .background { clear(); dismiss() } }
-            .onDisappear { if !camera && !picker { clear() } }
+            .onDisappear { if !camera && !picker && !typing { clear() } }
             .task {
                 if !didStart, authorize() {
                     didStart = true
@@ -602,6 +699,12 @@ private struct ReceiptSectionCapture: View {
                     .disabled(draft.hasUnresolvedOverlap).accessibilityIdentifier("receipt.sections.review")
             }
             if let error { Text(error).accessibilityIdentifier("receipt.sections.error") }
+            if cameraNeedsAlternative {
+                Button(captureText("Choose photo or screenshot")) { picker = true }
+                    .accessibilityIdentifier("receipt.cameraRecovery.photo")
+                Button(captureText("Type receipt lines")) { typing = true }
+                    .accessibilityIdentifier("receipt.cameraRecovery.type")
+            }
             if job != nil { ProgressView(captureText("Preparing source for review…")) }
         }
         .disabled(job != nil || !authorize())
@@ -647,7 +750,7 @@ private struct ReceiptSectionCapture: View {
                     openCamera(at: draft.sections.count)
                 }
             }
-            if start != .camera {
+            if start != .camera && !cameraNeedsAlternative {
                 Button(captureText(start == .sections ? "Choose next section from Photos" : "Choose photo or screenshot")) {
                     index = draft.sections.count; picker = true
                 }.accessibilityIdentifier("receipt.openSelectedPhoto")
@@ -670,8 +773,10 @@ private struct ReceiptSectionCapture: View {
             do {
                 try await cameraPermission.request(for: target)
                 guard !Task.isCancelled, token == generation, authorize() else { return }
+                error = nil
+                cameraNeedsAlternative = false
                 camera = true
-            } catch { if token == generation { self.error = captureText("The camera is unavailable. Choose a photo or type the lines instead.") } }
+            } catch { if !Task.isCancelled, token == generation { showCameraRecovery() } }
         }
     }
 
@@ -687,6 +792,7 @@ private struct ReceiptSectionCapture: View {
                 guard !Task.isCancelled, token == generation, authorize() else { return }
                 try draft.put(document, bytes: bytes.data.count, preview: ReceiptSectionDraft.preview(bytes.data), at: position)
                 error = nil
+                cameraNeedsAlternative = false
                 if start != .sections { beginReview() }
             } catch {
                 guard !Task.isCancelled, token == generation else { return }
@@ -702,8 +808,19 @@ private struct ReceiptSectionCapture: View {
         omitted = prepared.omitted
         review = prepared.document
     }
+    private func showCameraRecovery() {
+        error = captureText("The camera is unavailable. Choose a photo or type the lines instead.")
+        cameraNeedsAlternative = true
+    }
+    private func finishTypedSource() {
+        guard authorize(), let typedSource, typedSource.target == target else { return }
+        self.typedSource = nil
+        reviewed(typedSource)
+        dismiss()
+    }
     private func clear() {
         generation = UUID(); job?.cancel(); job = nil
         draft = ReceiptSectionDraft(); item = nil; omitted = []; review = nil; error = nil; camera = false
+        cameraNeedsAlternative = false; typing = false; typedSource = nil
     }
 }

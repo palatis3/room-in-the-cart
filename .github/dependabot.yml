@@ -18,6 +18,10 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 2
+    # Match the production Node major. Revisit this rule when upgrading the runtime.
+    ignore:
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
     groups:
       npm-minor-patch:
         patterns: ["*"]

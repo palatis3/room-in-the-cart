@@ -26,9 +26,7 @@ struct MembershipEntryView: View {
         Group {
             if !household.canOpenMembership || child?.presented == true {
                 Text(mtr("This view is unavailable.")).navigationTitle("")
-            } else if let session = household.membershipSession, let model = membership.model,
-                      session.householdID == model.context?.householdID,
-                      session.memberID == model.context?.purchaserID, !model.isStopped {
+            } else if let model = membership.model(for: household.membershipSession) {
                 MembershipView(model: model, household: household, onContinuePlanning: continuePlanning)
                     .id(ObjectIdentifier(model))
             } else {
@@ -48,6 +46,7 @@ struct MembershipEntryView: View {
                     }
                     Divider()
                     MembershipFreeTools()
+                    MembershipBenefits()
                     MembershipLegalLinks(configuration: .fromBundle())
                 }
                 .navigationTitle(tr("Household membership"))
@@ -63,16 +62,15 @@ struct MembershipEntryView: View {
             Text(tr("Choose your household first")).font(.title2.bold()).accessibilityAddTraits(.isHeader)
             householdSetup(mtr("Open adult household setup")).buttonStyle(PrimaryAction())
             freeButton.buttonStyle(MembershipReturnButtonStyle())
-            Text(mtr("Use the purchasing adult’s account and household to restore a purchase."))
+            Text(mtr("Select your household to check your planning access."))
         } else {
             Text(mtr("Free planning")).font(.title2.bold()).accessibilityAddTraits(.isHeader)
             freeButton.buttonStyle(PrimaryAction())
             if household.configured {
                 householdSetup(mtr("Saved adult account options")).buttonStyle(MembershipReturnButtonStyle())
-                Text(mtr("Email sign-in is unavailable. To restore a purchase, use a purchasing adult account already saved on this iPhone."))
+                Text(mtr("You can use an adult account already saved on this iPhone. Email sign-in is unavailable."))
             } else {
-                Text(mtr("Subscribing requires an adult account and a selected household. Household sign-in is unavailable on this iPhone."))
-                Text(mtr("Plan repeat weeks and compare dinner combinations using your own prices. Up to two named adults can plan."))
+                Text(mtr("Your private lists and dinners work without an account. Household sign-in is unavailable on this iPhone."))
             }
         }
     }

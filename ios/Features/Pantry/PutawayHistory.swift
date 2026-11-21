@@ -51,10 +51,12 @@ struct ReceiptIntactToggle: View {
 
 struct ReviewedReceiptHeading: View {
     let header: ReviewedReceiptHeader
+    private(set) var dates = ReceiptDateDisplay()
+
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(verbatim: header.merchant).font(.headline)
-            Text(header.date, format: .dateTime.year().month().day())
+            Text(dates.purchaseDay(header.date))
             if let reference = header.reference { Text(verbatim: reference) }
             if let cents = header.totalMinor {
                 LabeledContent(putawayText("Paid receipt total")) {

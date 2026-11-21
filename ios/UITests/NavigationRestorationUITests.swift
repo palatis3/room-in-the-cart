@@ -14,7 +14,7 @@ import XCTest
         XCTAssertTrue(tabs["Shop"].isSelected)
         tap(tabs["Pantry"])
         XCTAssertTrue(app.buttons["pantry.setup.apply"].waitForExistence(timeout: 10))
-        XCTAssertEqual(app.buttons["pantry.setup.apply"].label, "Start my pantry")
+        XCTAssertEqual(app.buttons["pantry.setup.firstFood"].label, "Add my first food")
         app.terminate()
         launch(reset: false)
         XCTAssertTrue(tabs["Pantry"].isSelected)
@@ -53,7 +53,7 @@ import XCTest
         XCTAssertTrue(inspect.wait(for: \.isHittable, toEqual: true, timeout: 8))
         XCTAssertGreaterThanOrEqual(inspect.frame.height, 44)
         inspect.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
-        let detail = app.navigationBars["Inspect ingredient"]
+        let detail = app.navigationBars["Item details"]
         XCTAssertTrue(detail.waitForExistence(timeout: 8))
         XCTAssertTrue(app.staticTexts["milk"].exists)
         tap(detail.buttons.firstMatch)
@@ -92,33 +92,32 @@ import XCTest
         tap(name)
         name.typeText(secondName)
         tap(app.buttons["ledgerCreateShop"])
-        XCTAssertTrue(app.navigationBars[secondName].waitForExistence(timeout: 8))
-        XCTAssertEqual(picker.label, secondName)
+        app.assertSelectedShoppingList(named: secondName)
         XCTAssertTrue(search.exists && search.value as? String == search.placeholderValue)
         app.terminate(); launch(reset: false)
-        XCTAssertTrue(app.navigationBars[secondName].waitForExistence(timeout: 8))
+        app.assertSelectedShoppingList(named: secondName)
+        capture("Second pickup restored after process relaunch")
         tap(picker)
         tap(app.buttons[firstName])
-        XCTAssertTrue(app.navigationBars[firstName].waitForExistence(timeout: 8))
-        XCTAssertEqual(picker.label, firstName)
+        app.assertSelectedShoppingList(named: firstName)
         app.terminate(); launch(reset: false)
-        XCTAssertTrue(app.navigationBars[firstName].waitForExistence(timeout: 8))
-        XCTAssertEqual(picker.label, firstName)
+        app.assertSelectedShoppingList(named: firstName)
     }
 
     func testKillRelaunchRestoresRecordsDetailAndIndependentShoppingList() {
         launch(reset: true)
         tap(element("openPickupList"))
-        app.renameSelectedPickup("Restoration Saturday pickup")
-        XCTAssertTrue(app.navigationBars["Restoration Saturday pickup"].waitForExistence(timeout: 8))
+        let pickupName = "Restoration Saturday pickup"
+        app.renameSelectedPickup(pickupName)
+        app.assertSelectedShoppingList(named: pickupName)
         tap(app.tabBars.buttons["Records"])
         tap(app.tabBars.buttons["Shop"])
-        XCTAssertTrue(app.navigationBars["Restoration Saturday pickup"].exists, "Changing tabs keeps the originating stack")
-        tap(app.navigationBars["Restoration Saturday pickup"].buttons["Shop"])
+        app.assertSelectedShoppingList(named: pickupName)
+        tap(app.navigationBars["Shopping list"].buttons["Shop"])
         tap(element("newComparison"))
-        fill("Restoration family wraps", into: "itemName")
-        fill("12", into: "needed"); fill("8", into: "aQuantity"); fill("3", into: "aPrice")
-        fill("6", into: "bQuantity"); fill("2", into: "bPrice")
+        fillComparisonField("Restoration family wraps", into: "itemName")
+        fillComparisonField("12", into: "needed"); fillComparisonField("8", into: "aQuantity"); fillComparisonField("3", into: "aPrice")
+        fillComparisonField("6", into: "bQuantity"); fillComparisonField("2", into: "bPrice")
         tap(element("compare")); tap(element("saveComparison"))
         tap(app.tabBars.buttons["Records"]); tap(element("savedComparison"))
         XCTAssertTrue(app.buttons["editComparison"].waitForExistence(timeout: 8))
@@ -133,17 +132,18 @@ import XCTest
         let back = app.navigationBars.buttons["Shop"]
         if back.exists { tap(back) }
         tap(element("openPickupList"))
-        XCTAssertTrue(app.navigationBars["Restoration Saturday pickup"].waitForExistence(timeout: 8))
+        app.assertSelectedShoppingList(named: pickupName)
         app.terminate(); launch(reset: false)
         XCTAssertTrue(app.tabBars.buttons["Shop"].isSelected)
-        XCTAssertTrue(app.navigationBars["Restoration Saturday pickup"].waitForExistence(timeout: 10))
+        app.assertSelectedShoppingList(named: pickupName)
         tap(app.tabBars.buttons["Records"])
         XCTAssertTrue(app.buttons["editComparison"].waitForExistence(timeout: 8), "Both explicit stacks survive the second process death")
+        XCTAssertTrue(app.staticTexts["Restoration family wraps"].exists)
         capture("Independent Shop and Records stacks restored")
     }
     func testKillRelaunchRestoresSelectedDinnersTabWithoutRestoringUnsavedComparison() {
         launch(reset: true)
-        tap(element("newComparison")); fill("Unsaved draft", into: "itemName")
+        tap(element("newComparison")); fillComparisonField("Unsaved draft", into: "itemName")
         tap(app.tabBars.buttons["Dinners"])
         app.terminate(); launch(reset: false)
         XCTAssertTrue(app.tabBars.buttons["Dinners"].isSelected)
@@ -172,10 +172,17 @@ import XCTest
     }
     private func element(_ id: String) -> XCUIElement { app.descendants(matching: .any).matching(identifier: id).firstMatch }
     private func tap(_ element: XCUIElement) { reveal(element); XCTAssertTrue(element.isHittable, element.debugDescription); element.tap() }
-    private func fill(_ text: String, into id: String) {
-        let field = element(id); tap(field); app.typeText(text)
-        let done = app.buttons["Done"]
-        if done.exists && done.isHittable { done.tap() }
+    private func fillComparisonField(_ text: String, into id: String) {
+        let field = element(id)
+        reveal(field)
+        field.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        let doneID = "comparison.done." + id
+        XCTAssertTrue(app.buttons[doneID].waitForExistence(timeout: 5), "Expected keyboard focus in " + id)
+        app.typeText(text)
+        XCTAssertEqual(field.value as? String, text)
+        XCTAssertTrue(app.waitForDoneAboveKeyboard(identifier: doneID))
+        app.buttons[doneID].tap()
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: doneID))
     }
     private func reveal(_ element: XCUIElement) {
         for _ in 0..<12 {
@@ -282,6 +289,14 @@ extension XCUIApplication {
         if dismissed.evaluate(with: nil) { return true }
         let ready = XCTNSPredicateExpectation(predicate: dismissed, object: nil)
         return XCTWaiter.wait(for: [ready], timeout: timeout) == .completed
+    }
+
+    func assertSelectedShoppingList(named name: String, file: StaticString = #filePath, line: UInt = #line) {
+        XCTAssertTrue(navigationBars["Shopping list"].waitForExistence(timeout: 8), file: file, line: line)
+        let selectedPickup = buttons.matching(NSPredicate(
+            format: "identifier == %@ AND label == %@", "ledgerShopPicker", name
+        )).firstMatch
+        XCTAssertTrue(selectedPickup.waitForExistence(timeout: 8), "Expected the selected pickup to be \(name)", file: file, line: line)
     }
 
     func renameSelectedPickup(_ title: String, file: StaticString = #filePath, line: UInt = #line) {

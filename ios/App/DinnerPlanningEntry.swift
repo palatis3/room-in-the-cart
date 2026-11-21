@@ -16,6 +16,7 @@ struct DinnerPlanningEntry: View {
     @EnvironmentObject private var access: WorkspaceAccess
     @EnvironmentObject private var membership: MembershipCoordinator
     @Environment(\.guardianChildCoordinator) private var child
+    @Environment(\.privatePantryRetry) private var retryPrivatePantry
 
     var body: some View {
         Group {
@@ -32,7 +33,10 @@ struct DinnerPlanningEntry: View {
                     runtimeChanges: runtimeChanges, milestoneAccess: permitsPrivatePlanning)
             } else {
                 DinnerPlanningHome(ledger: ledger, access: localAccess, phase: phase, ideaCatalog: DinnerPatternCatalog.patterns,
-                    runtimeChanges: runtimeChanges, basketPrepAccess: permitsPrivatePlanning, milestoneAccess: permitsPrivatePlanning)
+                    runtimeChanges: runtimeChanges, basketPrepAccess: permitsPrivatePlanning, milestoneAccess: permitsPrivatePlanning,
+                    needsPantrySetup: pickup.ready && !pickup.pantryIsActive,
+                    pickupOpening: DinnerPickupOpeningState(pickup: pickup, authorized: permitsPrivatePlanning(),
+                                                           retryAvailable: retryPrivatePantry != nil))
             }
         }
         .privacySensitive()

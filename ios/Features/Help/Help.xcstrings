@@ -1,6 +1,246 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Regional age checks": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regional age checks"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verificación de edad según la región"
+          }
+        }
+      }
+    },
+    "An export can include private notes and the names of people you shared with. Preview it before choosing a recipient.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An export can include private notes and the names of people you shared with. Preview it before choosing a recipient."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una exportación puede incluir notas privadas y los nombres de las personas con quienes compartiste contenido. Revisa la vista previa antes de elegir un destinatario."
+          }
+        }
+      }
+    },
+    "Your private lists, dinners, comparisons, capture reviews and pickup records stay on this iPhone. Joining a household keeps that work here.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your private lists, dinners, comparisons, capture reviews and pickup records stay on this iPhone. Joining a household keeps that work here."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus listas privadas, cenas, comparaciones, capturas revisadas y registros de recogida se guardan en este iPhone. Al unirte a un hogar, ese contenido permanece aquí."
+          }
+        }
+      }
+    },
+    "Open Household membership to refresh your planning access. The adult who bought the subscription manages it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Household membership to refresh your planning access. The adult who bought the subscription manages it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre Membresía del hogar para actualizar tu acceso a la planificación. El adulto que compró la suscripción se encarga de administrarla."
+          }
+        }
+      }
+    },
+    "Already paid? Open Household membership and choose Restore Purchases using the Apple account that bought it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already paid? Open Household membership and choose Restore Purchases using the Apple account that bought it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Ya pagaste? Abre Membresía del hogar y elige Restaurar compras con la cuenta de Apple con la que pagaste."
+          }
+        }
+      }
+    },
+    "Open Household membership to see the App Store price and renewal period for this offer.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Household membership to see the App Store price and renewal period for this offer."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre Membresía del hogar para ver el precio del App Store y el período de renovación de esta oferta."
+          }
+        }
+      }
+    },
+    "Open Household membership to check your current access.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Household membership to check your current access."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre Membresía del hogar para consultar tu acceso actual."
+          }
+        }
+      }
+    },
+    "Use your private shopping list, plan dinners by hand, save one dinner to use again and export your records. You buy groceries from the retailer.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use your private shopping list, plan dinners by hand, save one dinner to use again and export your records. You buy groceries from the retailer."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usa tu lista de compras privada, planifica tus cenas, guarda una para repetirla y exporta tus registros. Los alimentos se compran en la tienda."
+          }
+        }
+      }
+    },
+    "Before deleting, check which records are selected. Copies you already shared stay with their recipients. Account deletion is a separate choice in household settings.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Before deleting, check which records are selected. Copies you already shared stay with their recipients. Account deletion is a separate choice in household settings."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Antes de eliminar, revisa qué registros seleccionaste. Las personas con quienes compartiste copias las conservan. Para eliminar tu cuenta, ve a la configuración del hogar."
+          }
+        }
+      }
+    },
+    "For a readable copy, preview the records and any private details before you choose who gets it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For a readable copy, preview the records and any private details before you choose who gets it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para compartir una copia de lectura, revisa los registros y los datos privados antes de elegir a quién se la enviarás."
+          }
+        }
+      }
+    },
+    "Sharing or deleting copies": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sharing or deleting copies"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compartir o eliminar copias"
+          }
+        }
+      }
+    },
+    "Open Household requests in Settings to see which requests you can send or review.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Household requests in Settings to see which requests you can send or review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre Solicitudes del hogar en Configuración para ver qué solicitudes puedes enviar o revisar."
+          }
+        }
+      }
+    },
+    "You can shop on this iPhone without joining a household. Your existing private lists and dinners stay here when you join.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can shop on this iPhone without joining a household. Your existing private lists and dinners stay here when you join."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puedes usar este iPhone para hacer tus compras sin unirte a un hogar. Si te unes, tus listas y cenas privadas siguen aquí."
+          }
+        }
+      }
+    },
+    "Record recovery": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record recovery"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recuperar registros"
+          }
+        }
+      }
+    },
+    "Privacy on this iPhone": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacy on this iPhone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacidad en este iPhone"
+          }
+        }
+      }
+    },
     "About": {
       "localizations": {
         "en": {
@@ -2378,6 +2618,70 @@
           "stringUnit": {
             "state": "translated",
             "value": "Si consultas un código de barras en Open Food Facts, se envían a ese servicio el código, la versión de la app y el correo de soporte de la app. El servicio también ve tu dirección IP. Según su política de privacidad, conserva las direcciones IP de los visitantes y los registros de visitas durante tres años por motivos de seguridad, para realizar análisis técnicos y para medir la popularidad. Puedes ingresar el nombre del producto y el tamaño del paquete manualmente."
+          }
+        }
+      }
+    },
+    "On your old iPhone": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On your old iPhone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En tu iPhone anterior"
+          }
+        }
+      }
+    },
+    "In Records, open Recovery, exports and saved records. Choose your records and save the encrypted file. Keep the key separately.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Records, open Recovery, exports and saved records. Choose your records and save the encrypted file. Keep the key separately."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En Historial, abre Recuperación, exportaciones y registros guardados. Elige los registros y guarda el archivo cifrado. Guarda la clave por separado."
+          }
+        }
+      }
+    },
+    "On your new iPhone": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On your new iPhone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En tu nuevo iPhone"
+          }
+        }
+      }
+    },
+    "Open recovery in Records. Choose the file, enter the key and review the dates before importing. Your records open as separate copies.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open recovery in Records. Choose the file, enter the key and review the dates before importing. Your records open as separate copies."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre la opción de recuperación en Historial. Elige el archivo, introduce la clave y revisa las fechas antes de importar. Tus registros se abren como copias independientes."
           }
         }
       }

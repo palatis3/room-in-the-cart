@@ -98,14 +98,20 @@ extension SavedPayload {
                      tr("Confirmed usable amount at home") + ": " + original(inputs.confirmedAtHome),
                      tr("Protected portions within the total") + ": " + original(inputs.protectedAmount)]
         if inputs.itemCap != nil { lines.append(tr("Item spending limit (USD, optional)") + ": " + draft.cap) }
-        for (heading, offer, price, conversion, result) in [(tr("Pack A"), inputs.offerA, draft.aPrice, draft.aConversion, answer?.offerA),
-                                                            (tr("Pack B"), inputs.offerB, draft.bPrice, draft.bConversion, answer?.offerB)] {
+        let rates = normalizedRequest?.comparableUnitPrices
+        for (heading, offer, price, conversion, result, rate) in [
+            (tr("Pack A"), inputs.offerA, draft.aPrice, draft.aConversion, answer?.offerA, rates?.a),
+            (tr("Pack B"), inputs.offerB, draft.bPrice, draft.bConversion, answer?.offerB, rates?.b)
+        ] {
             lines += ["", offer.label.isEmpty ? heading : heading + " · " + offer.label,
                       tr("Usable amount in one pack") + ": " + original(offer.usableQuantity),
                       tr("Price for one pack (USD)") + ": " + (offer.price == nil ? missing : price)]
             if offer.confirmedConversion != nil, let conversion { lines.append(conversion.readableText()) }
             guard let result else { continue }
             lines.append(result.totalCost.map { message("Item cost to buy enough: %@", moneyText($0)) } ?? tr("Cost unresolved"))
+            if let rate, let unit = answer?.unit {
+                lines.append(comparisonUnitPriceText(rate, in: unit, locale: .current))
+            }
             lines += [result.wholePacksText, result.purchasedText(in: draft.unit), result.shortageText(in: draft.unit),
                       result.leftoverText(in: draft.unit), result.itemLimitText, result.unitCeilingText].compactMap { $0 }
             lines += result.issues.map(\.explanation)
@@ -129,6 +135,21 @@ extension CoreDomain.ComparisonResult {
         }
         return tr("Both options cost the same for this need.")
     }
+}
+
+/// One usable unit in the requested measure. Rates can be smaller than one cent.
+func comparisonUnitPriceText(_ cents: Rational, in unit: UnitOfMeasure, locale: Locale) -> String {
+    let style = Decimal.FormatStyle.Currency(code: "USD", locale: locale)
+        .precision(.fractionLength(2...4)).rounded(rule: .toNearestOrAwayFromZero)
+    let unitLabel = unit.comparisonLabel(for: .one)
+    if cents > .zero, cents.numerator <= (cents.denominator - 1) / 100 {
+        return message("Less than %@ per 1 %@", (Decimal(1) / 10_000).formatted(style), unitLabel)
+    }
+    let dollars = Decimal(cents.numerator) / Decimal(cents.denominator) / 100
+    // A reduced fraction in cents terminates within four dollar decimals
+    // precisely when its denominator divides 100.
+    let key = 100 % cents.denominator == 0 ? "%@ per 1 %@" : "About %@ per 1 %@"
+    return message(key, dollars.formatted(style), unitLabel)
 }
 
 extension OfferResult {
@@ -304,6 +325,10 @@ func amountText(_ value: Rational) -> String {
     return "\(value.numerator)/\(value.denominator)"
 }
 func moneyText(_ value: Money) -> String {
+    moneyText(value, locale: .current)
+}
+
+func moneyText(_ value: Money, locale: Locale) -> String {
     let amount = Decimal(value.minorUnits) / Decimal(100)
-    return amount.formatted(.currency(code: "USD"))
+    return amount.formatted(.currency(code: value.currency.rawValue).locale(locale))
 }

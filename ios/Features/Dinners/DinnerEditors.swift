@@ -28,6 +28,39 @@ private struct DinnerIdeaAcceptanceButtonStyle: ButtonStyle {
     }
 }
 
+extension View {
+    /// The visible caption and the text line form one input surface. A simultaneous
+    /// tap preserves the text field’s native insertion point and selection gestures.
+    func dinnerInputRow(_ focus: FocusState<String?>.Binding, field: String) -> some View {
+        contentShape(Rectangle())
+            .simultaneousGesture(TapGesture().onEnded { focus.wrappedValue = field })
+    }
+}
+
+/// The native switch handles thumb taps and drags. On small iOS 17 forms the
+/// displayed label can wrap far from the thumb, so give it its own tap target.
+struct DinnerRowToggleStyle: ToggleStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 0) {
+            Button { configuration.isOn.toggle() } label: {
+                configuration.label
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                    .padding(.trailing, 12)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            Toggle(isOn: configuration.$isOn) { EmptyView() }
+                .toggleStyle(.switch)
+                .labelsHidden()
+                .fixedSize()
+        }
+        .accessibilityRepresentation {
+            Toggle(isOn: configuration.$isOn) { configuration.label }
+                .toggleStyle(.switch)
+        }
+    }
+}
+
 enum DinnerEditorPurpose { case manual, reusable, idea }
 struct DinnerTemplateEditor: View {
     @ObservedObject var model: DinnerFeatureModel
@@ -88,6 +121,7 @@ struct DinnerTemplateEditor: View {
             editorForm
         }
         .navigationTitle(purpose == .manual ? dinnerText("Manual dinner") : purpose == .idea ? dinnerText("Dinner idea") : dinnerText("Reusable dinner"))
+        .navigationBarTitleDisplayMode(typeSize.isAccessibilitySize ? .inline : .automatic)
         .toolbar {
             if purpose == .idea, reviewed != nil, reviewedIdea != nil, !completed, inputFocus == nil {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -134,6 +168,9 @@ struct DinnerTemplateEditor: View {
                 Section(dinnerText("Review dinner")) {
                     Text(reviewed.title).font(.system(.title2, design: .serif, weight: .semibold))
                     Text(dinnerFormat("Servings: %@", reviewed.servings.description))
+                    if let minutes = reviewed.leadTimeMinutes {
+                        Text(tonightText("Preparation time") + " · " + Duration.seconds(minutes * 60).formatted(.units(allowed: [.minutes])))
+                    }
                     MealPreferenceIssues(result: MealEligibilityPolicy.evaluate(profile: model.mealPreferences, template: reviewed))
                     ForEach(reviewed.ingredients) { ingredient in
                         VStack(alignment: .leading) { Text(ingredient.name); Text(ingredient.reviewedAmountLabel) }
@@ -278,33 +315,35 @@ struct DinnerTemplateEditor: View {
 struct DinnerTemplateFields: View {
     @Binding var draft: DinnerTemplateDraft
     let focus: FocusState<String?>.Binding
+    @State private var showRecipeDetails = false
+    @State private var showPreferences = false
+
     var body: some View {
         Section(dinnerText("Dinner")) {
             WorkingField(dinnerText("Dinner name")) {
                 TextField(dinnerText("Dinner name"), text: $draft.title, prompt: Text(verbatim: "—"))
                     .focused(focus, equals: "title")
+                    .submitLabel(.next)
+                    .onSubmit { focus.wrappedValue = "servings" }
                     .accessibilityIdentifier("ledgerDinnerTitle")
             }
+            .dinnerInputRow(focus, field: "title")
             WorkingField(dinnerText("Total servings")) {
                 TextField(dinnerText("Total servings"), text: $draft.servings, prompt: Text(verbatim: "—"))
                     .focused(focus, equals: "servings")
                     .accessibilityIdentifier("ledgerDinnerServings")
                     .keyboardType(.numbersAndPunctuation).textInputAutocapitalization(.never).autocorrectionDisabled()
             }
-            workingTextField(dinnerText("Notes"), text: $draft.notes, axis: .vertical).focused(focus, equals: "notes")
-                .accessibilityLabel(dinnerText("Notes"))
-            workingTextField(dinnerText("Source URL, optional"), text: $draft.source).focused(focus, equals: "source")
-                .accessibilityLabel(dinnerText("Source URL, optional"))
-            workingTextField(dinnerText("Hard exclusions, one per line"), text: $draft.exclusions, axis: .vertical).focused(focus, equals: "exclusions")
-                .accessibilityLabel(dinnerText("Hard exclusions, one per line"))
-            workingTextField(dinnerText("Remaining lead time in minutes, optional"), text: $draft.lead).focused(focus, equals: "leadTime")
-                .keyboardType(.numberPad).textInputAutocapitalization(.never).autocorrectionDisabled()
-                .accessibilityLabel(dinnerText("Remaining lead time in minutes, optional"))
-            workingTextField(dinnerText("Completed steps, one per line"), text: $draft.completed, axis: .vertical).focused(focus, equals: "completed")
-                .accessibilityLabel(dinnerText("Completed steps, one per line"))
-        }
-        Section(dinnerText("Meal preference details")) {
-            MealEvidenceFields(draft: $draft.evidence)
+            .dinnerInputRow(focus, field: "servings")
+            DisclosureGroup(isExpanded: $showRecipeDetails) {
+                draftField(dinnerText("Notes"), value: $draft.notes, key: "notes")
+                draftField(dinnerText("Source URL, optional"), value: $draft.source, key: "source", axis: .horizontal)
+                draftField(tonightText("Ingredients to avoid, one per line"), value: $draft.exclusions, key: "exclusions")
+                draftField(tonightText("Minutes of prep remaining (optional)"), value: $draft.lead, key: "leadTime", axis: .horizontal)
+                    .keyboardType(.numberPad)
+                draftField(dinnerText("Completed steps, one per line"), value: $draft.completed, key: "completed")
+            } label: { Text(tonightText("Optional recipe details")) }
+            .disclosureGroupStyle(LabeledFormDisclosureStyle(label: tonightText("Optional recipe details"), identifier: "dinner.recipeDetails"))
         }
         Section(dinnerText("Ingredients")) {
             Text(dinnerText("Enter exact amounts or leave them unresolved. Count means individual units, not packs."))
@@ -313,15 +352,18 @@ struct DinnerTemplateFields: View {
                 let prefix = "ingredient.\(ingredient.id)."
                 VStack(alignment: .leading, spacing: 8) {
                     if let source = ingredient.originalWording { Text(verbatim: source).font(.subheadline).foregroundStyle(Theme.secondary) }
-                    ingredientField(dinnerText("Ingredient name"), value: row.name, key: prefix + "name")
-                    Toggle(tonightText("I checked this ingredient by hand"), isOn: row.checkedWithoutAmount)
+                    draftField(dinnerText("Ingredient name"), value: row.name, key: prefix + "name")
+                    Toggle(tonightText("Use without a measured amount"), isOn: row.checkedWithoutAmount)
+                        .toggleStyle(DinnerRowToggleStyle())
+                        .accessibilityLabel(ingredient.name.isEmpty ? tonightText("Use without a measured amount") :
+                            ingredient.name + ", " + tonightText("Use without a measured amount"))
                     if !ingredient.checkedWithoutAmount {
-                        ingredientField(dinnerText("Amount, optional"), value: row.amount, key: prefix + "amount", axis: .horizontal)
+                        draftField(dinnerText("Amount, optional"), value: row.amount, key: prefix + "amount", axis: .horizontal)
                         .keyboardType(.numbersAndPunctuation).textInputAutocapitalization(.never).autocorrectionDisabled()
                         DinnerUnitPicker(unit: row.unit)
-                    } else { Text(tonightText("Use without a measured amount.")).font(.footnote) }
-                    ingredientField(dinnerText("Ingredient notes"), value: row.notes, key: prefix + "notes")
-                    ingredientField(dinnerText("Ingredient exclusions, one per line"), value: row.exclusions, key: prefix + "exclusions")
+                    }
+                    draftField(dinnerText("Ingredient notes"), value: row.notes, key: prefix + "notes")
+                    draftField(dinnerText("Ingredient exclusions, one per line"), value: row.exclusions, key: prefix + "exclusions")
                     Button(role: .destructive) { draft.ingredients.removeAll { $0.id == ingredient.id } } label: {
                         Text(dinnerText("Remove ingredient"))
                             .fixedSize(horizontal: false, vertical: true)
@@ -333,6 +375,12 @@ struct DinnerTemplateFields: View {
                 }.padding(.vertical, 6)
             }
             Button(dinnerText("Add ingredient")) { draft.ingredients.append(DinnerIngredientDraft()) }.foregroundStyle(Theme.action).disabled(draft.ingredients.count >= 200)
+        }
+        Section {
+            DisclosureGroup(isExpanded: $showPreferences) {
+                MealEvidenceFields(draft: $draft.evidence, focus: focus)
+            } label: { Text(tonightText("Ingredients, brands and equipment (optional)")) }
+            .disclosureGroupStyle(LabeledFormDisclosureStyle(label: tonightText("Ingredients, brands and equipment (optional)"), identifier: "dinner.mealEvidence"))
         }
         Section(dinnerText("Serving groups")) {
             Text(dinnerText("Name each group explicitly. Protected groups keep their reviewed portions when guests change."))
@@ -357,7 +405,7 @@ struct DinnerTemplateFields: View {
         }
     }
 
-    private func ingredientField(_ title: String, value: Binding<String>, key: String, axis: Axis = .vertical) -> some View {
+    private func draftField(_ title: String, value: Binding<String>, key: String, axis: Axis = .vertical) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             // Keep the purpose visible when a value replaces the native prompt.
             // The editable field already exposes this same accessible name.
@@ -368,6 +416,7 @@ struct DinnerTemplateFields: View {
                 .focused(focus, equals: key)
                 .accessibilityLabel(title).accessibilityIdentifier(key)
         }
+        .dinnerInputRow(focus, field: key)
     }
 }
 struct DinnerUnitPicker: View {
@@ -448,12 +497,25 @@ struct DinnerLibraryView: View {
                     PrivateRecipeSearchField(query: $query)
                     if identity != nil { Toggle(tonightText("Show Cook soon only"), isOn: $pinnedOnly) }
                 }
+                if !earlier.isEmpty, identity != nil {
+                    Section(dinnerText("Saved recipes")) {
+                        ForEach(earlier) { template in
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text(verbatim: template.title).font(.system(.title2, design: .serif, weight: .semibold))
+                                DinnerServingNote(template: template)
+                                SavedDinnerHandoffLink(recipe: template)
+                                    .disabled(!model.paid && template.id != model.workspace.mealTemplates.first?.id)
+                            }
+                            pin(.reviewed(template.id))
+                        }
+                    }
+                }
                 if !filtering { libraryTools }
                 if filtering, accepted.isEmpty, earlier.isEmpty, imported.isEmpty,
                    identity == nil || sourceOwner == identity?.mealFeedbackOwner {
                     Text(tonightText("No matching recipes")).accessibilityIdentifier("dinner.recipeNoMatch")
                 }
-                if !filtering || !accepted.isEmpty {
+                if !accepted.isEmpty || (!filtering && earlier.isEmpty) {
                     Section(dinnerText("Accepted dinners")) {
                         if model.state.acceptedDinners.isEmpty { Text(dinnerText("No accepted dinners yet.")) }
                         ForEach(accepted) { dinner in
@@ -478,6 +540,10 @@ struct DinnerLibraryView: View {
                             if !isFreeReusable {
                                 Button(dinnerText("Use as Free reusable dinner")) { Task { _ = await model.selectFree(dinner.id) } }
                             }
+                            if identity != nil {
+                                SavedDinnerHandoffLink(recipe: dinner.template)
+                                    .disabled(!model.paid && !isFreeReusable)
+                            }
                             Button(dinnerText("Choose for this pickup")) { showPreview = model.choose(dinner, day: nil) }
                                 .disabled(!model.paid && !isFreeReusable).accessibilityIdentifier("ledgerChooseTemplate")
                             if planning?.id == dinner.id, let zone = model.shop?.basis.timeZoneIdentifier {
@@ -500,8 +566,8 @@ struct DinnerLibraryView: View {
                     }
                 }
                 if !earlier.isEmpty {
-                    Section(dinnerText("Earlier reusable dinners")) {
-                        Text(dinnerText("Review an earlier template before adding it to the accepted library."))
+                    Section(dinnerText("More recipe options")) {
+                        Text(dinnerText("Review a saved recipe to create another dinner version."))
                         ForEach(earlier) { template in
                             NavigationLink(template.title) { DinnerTemplateEditor(model: model, purpose: .reusable, initial: template) }
                             pin(.reviewed(template.id))

@@ -23,7 +23,9 @@ struct HelpCenterView: View {
             }
             Section(helpText("Using Room in the Cart")) {
                 ForEach(HelpTopic.allCases) { topic in
-                    NavigationLink { HelpArticleView(topic: topic) } label: { Text(topic.title) }
+                    NavigationLink { HelpArticleView(topic: topic) } label: {
+                        Text(topic.title).fixedSize(horizontal: false, vertical: true)
+                    }
                         .accessibilityIdentifier("help.topic." + topic.rawValue)
                 }
                 NavigationLink(helpText("Food storage guide")) { FoodKeeperLookupView() }
@@ -43,6 +45,13 @@ struct HelpCenterView: View {
 enum HelpTopic: String, CaseIterable, Identifiable {
     case list, pantry, dinners, records, comparison, handoff, household, shortcuts, membership
     var id: String { rawValue }
+    var navigationTitle: String {
+        switch self {
+        case .records: return helpText("Record recovery")
+        case .membership: return mtr("Membership")
+        default: return title
+        }
+    }
     var title: String {
         switch self {
         case .comparison: return helpText("Compare two packs")
@@ -59,6 +68,7 @@ enum HelpTopic: String, CaseIterable, Identifiable {
 }
 
 private struct HelpArticleView: View {
+    @EnvironmentObject private var household: HouseholdModel
     let topic: HelpTopic
     var body: some View {
         WorkingForm {
@@ -85,26 +95,79 @@ private struct HelpArticleView: View {
                 paragraph(helpText("Report placement separately. Record substitutions and the usable quantities that actually came home, then review meal shortages. Keep a pending credit pending until it posts; do not record a refund twice."))
                 paragraph(helpText("Prepare a dated cook instruction showing portions, what to set aside and what remains unresolved. Choose the recipient language and review any private wording. Marking a copy sent and reporting acknowledgment are separate actions."))
             case .household:
-                paragraph(helpText("In Settings, open Household requests to sign in. Your private lists and plans stay on this iPhone. You can use them without an account."))
+                paragraph(helpText("You can shop on this iPhone without joining a household. Your existing private lists and dinners stay here when you join."))
+                if household.configured {
+                    paragraph(helpText("Open Household requests in Settings to see which requests you can send or review."))
+                } else {
+                    paragraph(ht("Household sign-in is unavailable"))
+                }
                 paragraph(helpText("A request is received only after the household confirms it. If the response is uncertain, retry the same request. A contributor sees their own request and outcome; household budgets stay private."))
                 paragraph(helpText("Only the assigned shopper can commit a shared basket change. Another authorized adult can propose a change for review. A membership seat does not grant shopper authority or budget access."))
                 paragraph(helpText("A current cook view is limited to one shop, selected fields and its expiry. Manage or revoke it through household controls. A dated static message remains a separate copy. Child enrollment requires the configured guardian consent process."))
             case .records:
-                paragraph(helpText("In Records, open Recovery, exports and saved records. Choose one source to prepare and preview a readable cook copy. For a readable owner export, select your records and acknowledge the private data before preparing it. For encrypted recovery, save your key separately from the file. Choose where to save or share each copy."))
-                paragraph(helpText("To recover a file, review its source, date, identity, revision and conflicts before importing. A recovery copy opens separately from newer work. A malformed or unsupported file must not replace your saved records."))
-                paragraph(helpText("Deletion names its scope before confirmation. Deleting one record, recovered copies or the entire local ledger has different effects. Use undo only when it is offered. Account deletion is a separate household control; copies already exported or sent remain with their recipients."))
+                Section(helpText("On your old iPhone")) {
+                    paragraph(helpText("In Records, open Recovery, exports and saved records. Choose your records and save the encrypted file. Keep the key separately."))
+                }
+                Section(helpText("On your new iPhone")) {
+                    paragraph(helpText("Open recovery in Records. Choose the file, enter the key and review the dates before importing. Your records open as separate copies."))
+                }
+                Section(helpText("Sharing or deleting copies")) {
+                    paragraph(helpText("For a readable copy, preview the records and any private details before you choose who gets it."))
+                    paragraph(helpText("Before deleting, check which records are selected. Copies you already shared stay with their recipients. Account deletion is a separate choice in household settings."))
+                }
             case .shortcuts:
                 paragraph(helpText("Typed entry is always available. Camera, photo, barcode and speech capture create an editable preview. Review names, units, matches and amounts before saving; recognition is not a confirmed fact."))
                 paragraph(helpText("Device shortcuts in Settings contains optional share, widget and reminder tools. Review incoming shared text before adding it. Widgets use a narrow view and hide private notes and money."))
                 paragraph(helpText("Choose a specific reminder before allowing notifications. Check local time, quiet hours and expiry. Local reminders do not guarantee live household status while this iPhone is offline."))
             case .membership:
-                paragraph(helpText("Free covers an ordinary pickup, manual planning, one reusable dinner, saved records and exports. Household adds repeated planning tools for up to two named adults. Groceries are purchased from your retailer."))
-                paragraph(helpText("In Settings, open Household membership to see the App Store price and renewal period, restore a purchase or manage your subscription. You can keep planning for free."))
-                paragraph(helpText("Restore with the original purchasing account and household. A pending or unverified purchase adds no paid access. If delivery is uncertain, retry delivery or restore rather than buying again. Ending membership preserves permitted Free work."))
+                Section(mtr("Included with Free")) {
+                    paragraph(helpText("Use your private shopping list, plan dinners by hand, save one dinner to use again and export your records. You buy groceries from the retailer."))
+                }
+                Section(mtr("What Household adds")) {
+                    paragraph(mtr("Plan repeat weeks and compare dinner combinations using your own prices. Up to two named adults can plan."))
+                    MembershipHelpAccess()
+                }
             }
-        }.navigationTitle(topic.title).navigationBarTitleDisplayMode(.inline)
+        }.navigationTitle(topic.navigationTitle).navigationBarTitleDisplayMode(.inline)
     }
     private func paragraph(_ value: String) -> some View { Text(value).fixedSize(horizontal: false, vertical: true) }
+}
+
+private struct MembershipHelpAccess: View {
+    @EnvironmentObject private var household: HouseholdModel
+    @EnvironmentObject private var membership: MembershipCoordinator
+    @Environment(\.guardianChildCoordinator) private var child
+
+    var body: some View {
+        if household.canOpenMembership && child?.presented != true {
+            if let model = membership.model(for: household.membershipSession) {
+                MembershipHelpControls(model: model)
+            } else if !household.configured {
+                Text(mtr("Your private lists and dinners work without an account. Household sign-in is unavailable on this iPhone."))
+            } else if household.membershipSession == nil {
+                Text(mtr("Select your household to check your planning access."))
+            } else {
+                Text(helpText("Open Household membership to check your current access."))
+            }
+            NavigationLink(tr("Household membership")) { MembershipEntryView(household: household) }
+                .accessibilityIdentifier("help.openMembership")
+        }
+    }
+}
+
+private struct MembershipHelpControls: View {
+    @ObservedObject var model: MembershipModel
+
+    var body: some View {
+        if model.displayedAnnualOffer != nil {
+            Text(helpText("Open Household membership to see the App Store price and renewal period for this offer."))
+        }
+        if model.showsPurchaserControls {
+            Text(helpText("Already paid? Open Household membership and choose Restore Purchases using the Apple account that bought it."))
+        } else {
+            Text(helpText("Open Household membership to refresh your planning access. The adult who bought the subscription manages it."))
+        }
+    }
 }
 
 struct HelpPrivacyView: View {
@@ -113,11 +176,14 @@ struct HelpPrivacyView: View {
     var body: some View {
         WorkingForm {
             Section(helpText("Your private workspace")) {
-                Text(helpText("If Apple requires an age range and the regional check is enabled, the app asks whether you’ll share it. The app uses the response on this iPhone to decide whether to open your workspace. It keeps the check result in memory and sends no age range to your household."))
-                Text(helpText("Private comparisons, lists, dinners, capture reviews and pickup records are stored on this iPhone. Joining a household does not upload that existing work. An owner export can include private content and recipient history."))
+                Text(helpText("Your private lists, dinners, comparisons, capture reviews and pickup records stay on this iPhone. Joining a household keeps that work here."))
+                Text(helpText("An export can include private notes and the names of people you shared with. Preview it before choosing a recipient."))
                 Text(helpText("You can search the USDA FoodKeeper guide offline. In My Pantry, you can save a date to check food quality and choose a daily reminder. The reminder can appear on your Lock Screen. It asks you to open My Pantry and omits food names."))
                 Text(helpText("Optional pickup feedback stays in your local pickup record. It is not sent to an analytics service. You can turn the prompt off in Settings and remove a saved response from its pickup."))
                 Text(helpText("Optional household measurement is separate. With explicit consent, the service stores the response codes you review, the shop identity, eligible week and notice version, and can match membership status to study retention. Existing local feedback, grocery text, prices and member names are not sent. Manage or withdraw that consent in Settings."))
+            }
+            Section(helpText("Regional age checks")) {
+                Text(helpText("If Apple requires an age range and the regional check is enabled, the app asks whether you’ll share it. The app uses the response on this iPhone to decide whether to open your workspace. It keeps the check result in memory and sends no age range to your household."))
             }
             Section(helpText("When you connect or share")) {
                 Text(helpText("Account sign-in sends account information to the identity provider. Explicit household actions send the account, request, shop, budget or instruction fields needed for that action. The service checks the household, role and shop permissions."))
@@ -155,9 +221,7 @@ struct HelpPrivacyView: View {
                 Text(helpText("When Resend delivers a sign-in code, it processes the recipient’s email address and the message containing the code. If you email support, Cloudflare Email Routing forwards your address, message and any attachments to the operator’s Gmail inbox so the operator can respond."))
                 Text(helpText("This guide describes the app’s data controls. The operator’s privacy policy and terms are separate pages."))
                 if let url = configuration.privacyURL { Link(helpText("Privacy policy"), destination: url) }
-                else { Text(helpText("The privacy policy link is unavailable.")) }
                 if let url = configuration.termsURL { Link(helpText("Terms of use"), destination: url) }
-                else { Text(helpText("The terms link is unavailable.")) }
             }
         }.navigationTitle(helpText("Privacy and data"))
     }

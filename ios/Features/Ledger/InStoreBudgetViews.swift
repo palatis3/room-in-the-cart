@@ -165,9 +165,13 @@ struct CouponTermsSummary: View {
 
 struct CouponReceiptResult: View {
     let coupon: PinnedShopCoupon
+    private(set) var dates = ReceiptDateDisplay()
+
     var body: some View {
         if let receipt = coupon.receipt {
-            Text(shelfFormat("Receipt dated %@", ledgerMealDay(receipt.day))).font(.footnote)
+            let zone = TimeZone(identifier: receipt.day.timeZoneIdentifier) ?? .gmt
+            let date = dates.civilDay(receipt.day.iso8601, zone: zone, style: .complete)
+            Text(shelfFormat("Receipt dated %@", date + " · " + receipt.day.timeZoneIdentifier)).font(.footnote)
             Text(verbatim: receipt.itemWording).font(.footnote)
             Text(couponStatusLabel(coupon.terms.qualification(on: receipt.day, check: receipt.check)))
             switch receipt.discount {

@@ -39,6 +39,7 @@ struct PantryReceiptEntry: View {
     @State private var expandedLines = Set<UUID>()
     @State private var amountCorrection: ReceiptAmountCorrection?
     @State private var correctionRequest: UUID?
+    @State private var storeFocusRequest: UUID?
     @State private var receiptViewport = CGRect.null
     @State private var savedLotIDs: [UUID]?
     @State private var savedHeader: ReviewedReceiptHeader?
@@ -47,10 +48,11 @@ struct PantryReceiptEntry: View {
     @State private var targetID = UUID()
     @AccessibilityFocusState private var resultFocused: Bool
     @Environment(\.dismiss) private var dismiss
+    private(set) var dates = ReceiptDateDisplay()
 
     var body: some View {
         ScrollViewReader { proxy in
-            form.onChange(of: correctionRequest) { _, request in
+            form(proxy).onChange(of: correctionRequest) { _, request in
                 guard request != nil, let issue = amountCorrection else { return }
                 proxy.scrollTo(issue.focusKey, anchor: .center)
             }
@@ -58,7 +60,7 @@ struct PantryReceiptEntry: View {
         }
     }
 
-    private var form: some View {
+    private func form(_ proxy: ScrollViewProxy) -> some View {
         WorkingForm {
             if let message {
                 Text(message).accessibilityFocused($resultFocused).accessibilityIdentifier("receipt.status")
@@ -99,7 +101,7 @@ struct PantryReceiptEntry: View {
                     } else if let first = review.facts.first {
                         VStack(alignment: .leading, spacing: 3) {
                             Text(first.merchant).font(.headline)
-                            Text(first.purchaseDate, format: .dateTime.year().month().day())
+                            Text(dates.purchaseDay(first.purchaseDate))
                                 .font(.subheadline).foregroundStyle(Theme.secondary)
                             if let reference = first.transactionReference { Text(reference).font(.subheadline) }
                         }
@@ -170,6 +172,7 @@ struct PantryReceiptEntry: View {
                     guard draft?.draftID == displayed.draftID else { return }
                     draft = updated
                 })
+                let storeIssue = receiptStoreIssue(displayed.merchant)
                 if displayed.tracksPutaway {
                     ReceiptCouponReviewLink(source: .draftTerms, pickupID: displayed.savedPickup?.id, authorize: {
                         model.permitsReceiptSource && model.snapshot?.state.workspaceID == displayed.workspaceID &&
@@ -177,25 +180,57 @@ struct PantryReceiptEntry: View {
                     })
                 }
                 Section(pantryText("Receipt details")) {
-                    TextField(pantryText("Store or branch"), text: Binding(get: { value.wrappedValue.merchant }, set: {
-                        value.wrappedValue.clearAliases()
-                        value.wrappedValue.merchant = $0
-                    })).focused($field, equals: "merchant")
+                    let storeName = captureText("Store or receipt name (required)")
+                    WorkingField(storeName) {
+                        TextField(storeName, text: Binding(get: { value.wrappedValue.merchant }, set: {
+                            value.wrappedValue.clearAliases()
+                            value.wrappedValue.merchant = $0
+                        }), prompt: Text(""))
+                            .receiptInputChrome()
+                            .focused($field, equals: "merchant")
+                            .accessibilityIdentifier("receipt.store")
+                    }
+                    .id("receipt.store")
+                    .contentShape(Rectangle())
+                    .simultaneousGesture(TapGesture().onEnded { field = "merchant" })
+                    .task(id: storeFocusRequest) {
+                        guard let request = storeFocusRequest else { return }
+                        await Task.yield()
+                        guard !Task.isCancelled, storeFocusRequest == request,
+                              model.canEdit, draft?.draftID == displayed.draftID else { return }
+                        field = "merchant"
+                        storeFocusRequest = nil
+                    }
                     if model.supportsReceiptAliases {
                         ReceiptLanguagePicker(language: Binding(get: { value.wrappedValue.language }, set: {
                             value.wrappedValue.clearAliases()
                             value.wrappedValue.language = $0
                         }))
                     }
-                    TextField(pantryText("Confirmed transaction reference, if printed"), text: value.reference).focused($field, equals: "reference")
-                        .autocorrectionDisabled().textInputAutocapitalization(.never)
+                    let referenceTitle = putawayText("Transaction reference (optional)")
+                    WorkingField(referenceTitle) {
+                        TextField(referenceTitle, text: value.reference, prompt: Text(""))
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.never)
+                            .receiptInputChrome()
+                            .focused($field, equals: "reference")
+                            .accessibilityIdentifier("receipt.transactionReference")
+                    }
+                    .contentShape(Rectangle())
+                    .simultaneousGesture(TapGesture().onEnded { field = "reference" })
                     ReceiptPurchaseDateFields(draft: value)
+                        .id("receipt.purchaseDate")
                     if displayed.tracksPutaway {
-                        WorkingField(putawayText("Paid receipt total in USD, if known")) {
-                            TextField(putawayText("Paid receipt total in USD, if known"), text: value.receiptTotal)
-                                .keyboardType(.decimalPad).focused($field, equals: "receiptTotal")
+                        let totalTitle = putawayText("Paid receipt total in USD, if known")
+                        WorkingField(totalTitle) {
+                            TextField(totalTitle, text: value.receiptTotal, prompt: Text(""))
+                                .keyboardType(.decimalPad)
+                                .receiptInputChrome()
+                                .focused($field, equals: "receiptTotal")
                                 .accessibilityIdentifier("receipt.total")
                         }
+                        .contentShape(Rectangle())
+                        .simultaneousGesture(TapGesture().onEnded { field = "receiptTotal" })
                     }
                 }
                 if !model.receiptTrips.isEmpty {
@@ -234,9 +269,32 @@ struct PantryReceiptEntry: View {
                         receiptEditor(line, value: value, displayed: displayed, grouped: false)
                     }
                 }
+                if let storeIssue {
+                    Button {
+                        storeFocusRequest = UUID()
+                        proxy.scrollTo("receipt.store", anchor: .center)
+                    } label: {
+                        Label(storeIssue, systemImage: "exclamationmark.circle").frame(minHeight: 44, alignment: .leading)
+                    }.disabled(working || !model.canEdit)
+                        .accessibilityIdentifier("receipt.storeIssue")
+                } else if !displayed.dateConfirmed {
+                    Button {
+                        field = nil
+                        proxy.scrollTo("receipt.purchaseDate", anchor: .center)
+                    } label: {
+                        Label(putawayText("Check the purchase date to continue."), systemImage: "exclamationmark.circle")
+                            .frame(minHeight: 44, alignment: .leading)
+                    }.disabled(working || !model.canEdit)
+                        .accessibilityIdentifier("receipt.purchaseDateIssue")
+                } else if displayed.selectedLines.isEmpty {
+                    Text(putawayText("Choose what to include from at least one receipt line."))
+                        .foregroundStyle(Theme.secondary)
+                }
                 Button(displayed.tracksPutaway ? putawayText("Review selected lines") : pantryText("Review selected food")) {
+                    guard storeIssue == nil else { return }
                     prepare(value.wrappedValue)
-                }.buttonStyle(PrimaryAction()).disabled(working || !model.canEdit || !value.dateConfirmed.wrappedValue || !value.lines.wrappedValue.contains { $0.treatment != .skip })
+                }.buttonStyle(PrimaryAction())
+                    .disabled(working || !model.canEdit || storeIssue != nil || !displayed.dateConfirmed || displayed.selectedLines.isEmpty)
                 .accessibilityIdentifier("receipt.review")
             } else {
                 Section {
@@ -274,7 +332,7 @@ struct PantryReceiptEntry: View {
         .onChange(of: field) { _, focused in
             if focused != nil { correctionRequest = nil }
         }
-        .onDisappear { correctionRequest = nil }
+        .onDisappear { correctionRequest = nil; storeFocusRequest = nil }
         .scrollDismissesKeyboard(.interactively)
         .keyboardDoneAction(visible: field != nil, title: pantryText("Done"), identifier: "receipt.keyboardDone") { field = nil }
         .navigationTitle(pantryText("Review a receipt"))
@@ -487,6 +545,77 @@ struct PantryReceiptEntry: View {
     }
 }
 
+struct ReceiptDateDisplay: DynamicProperty {
+    @Environment(\.locale) private var regionLocale
+    @Environment(\.calendar) private var calendar
+    @Environment(\.timeZone) private var timeZone
+
+    var locale: Locale {
+        Self.displayLocale(regionLocale: regionLocale, appLanguage: Bundle.main.preferredLocalizations.first)
+    }
+
+    func purchaseDay(_ date: Date, style: Date.FormatStyle.DateStyle = .long) -> String {
+        date.formatted(Self.format(date: style, time: .omitted, locale: locale, calendar: calendar, timeZone: timeZone))
+    }
+
+    func civilDay(_ day: String, zone: TimeZone = .gmt, style: Date.FormatStyle.DateStyle = .long) -> String {
+        Self.civilDay(day, style: style, locale: locale, calendar: calendar, zone: zone)
+    }
+
+    func timestamp(_ date: Date) -> String {
+        date.formatted(Self.format(date: .abbreviated, time: .shortened, locale: locale, calendar: calendar, timeZone: timeZone))
+    }
+
+    static func displayLocale(regionLocale: Locale, appLanguage: String?) -> Locale {
+        guard let appLanguage,
+              let language = Locale(identifier: appLanguage).language.languageCode,
+              language != regionLocale.language.languageCode else { return regionLocale }
+        var components = Locale.Components(locale: regionLocale)
+        components.languageComponents.languageCode = language
+        components.languageComponents.script = Locale(identifier: appLanguage).language.script
+        return Locale(components: components)
+    }
+
+    static func format(date: Date.FormatStyle.DateStyle, time: Date.FormatStyle.TimeStyle,
+                       locale: Locale, calendar: Calendar, timeZone: TimeZone) -> Date.FormatStyle {
+        Date.FormatStyle(date: date, time: time, locale: locale, calendar: calendar, timeZone: timeZone)
+    }
+
+    static func civilDay(_ day: String, style: Date.FormatStyle.DateStyle = .long, locale: Locale,
+                         calendar: Calendar, zone: TimeZone) -> String {
+        let parts = day.split(separator: "-", omittingEmptySubsequences: false)
+        // Resolve a stored civil day in its source zone. A record without a source
+        // zone uses GMT as a calendar anchor, so the viewer's zone cannot move that day.
+        guard parts.count == 3,
+              let year = Int(parts[0]), let month = Int(parts[1]), let number = Int(parts[2]),
+              let saved = try? MealDay(year: year, month: month, day: number, timeZoneIdentifier: zone.identifier),
+              saved.iso8601 == day, let date = saved.date else { return day }
+        return date.formatted(format(date: style, time: .omitted, locale: locale, calendar: calendar, timeZone: zone))
+    }
+}
+
+struct ReceiptDatePicker: View {
+    let title: String
+    let identifier: String
+    @Binding var date: Date
+    private(set) var dates = ReceiptDateDisplay()
+    @State private var choosingDate = false
+
+    var body: some View {
+        let wording = dates.purchaseDay(date)
+        DisclosureGroup(isExpanded: $choosingDate) {
+            DatePicker(title, selection: $date, in: ...Date(), displayedComponents: .date)
+                .datePickerStyle(.graphical)
+                .environment(\.locale, dates.locale)
+                .onChange(of: date) { _, _ in choosingDate = false }
+        } label: {
+            LabeledContent(title, value: wording)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .disclosureGroupStyle(LabeledFormDisclosureStyle(label: title + ", " + wording, identifier: identifier))
+    }
+}
+
 struct ReceiptPurchaseDateFields: View {
     @Binding var draft: ReceiptImportDraft
 
@@ -496,7 +625,8 @@ struct ReceiptPurchaseDateFields: View {
         } else {
             Text(pantryText("Choose the purchase date from your receipt. An unclear date needs your review."))
         }
-        DatePicker(pantryText("Purchase date"), selection: $draft.selectedPurchaseDate, in: ...Date(), displayedComponents: .date)
+        ReceiptDatePicker(title: pantryText("Purchase date"), identifier: "receipt.purchaseDate",
+                          date: $draft.selectedPurchaseDate)
         Toggle(pantryText("I checked the purchase date."), isOn: $draft.dateConfirmed)
     }
 }
@@ -536,7 +666,9 @@ struct PantryReceiptLineEditor: View {
             }
             WorkingField(title) {
                 TextField(title, text: text, prompt: Text(""))
-                    .keyboardType(keyboard).focused(field, equals: focusKey)
+                    .keyboardType(keyboard)
+                    .receiptInputChrome()
+                    .focused(field, equals: focusKey)
                     .accessibilityIdentifier(identifier ?? title)
                     .onGeometryChange(for: UUID?.self) { geometry in
                         // Form rows are lazy. Wait for the editable field to reach the receipt's visible frame.
@@ -548,6 +680,8 @@ struct PantryReceiptLineEditor: View {
                         if let request { focusCorrection?(request) }
                     }
             }
+            .contentShape(Rectangle())
+            .simultaneousGesture(TapGesture().onEnded { field.wrappedValue = focusKey })
         }.id(focusKey)
     }
 
@@ -557,6 +691,16 @@ struct PantryReceiptLineEditor: View {
     }
 
     @ViewBuilder private var content: some View {
+        if ReceiptPrintedEvidence.isStandaloneAmount(line.original) {
+            Text(line.original).font(.system(.body, design: .monospaced)).textSelection(.enabled)
+            Text(putawayText("This amount has no linked item. Check the original receipt before using it."))
+                .font(.subheadline).foregroundStyle(Theme.secondary)
+        } else {
+            editableContent
+        }
+    }
+
+    @ViewBuilder private var editableContent: some View {
         if permitsPutaway {
             if !grouped, line.permitsIntactSelection(deliveries: lots), line.treatment == .skip || line.selectedIntact {
                 ReceiptIntactToggle(line: $line, lots: lots)
@@ -603,7 +747,7 @@ struct PantryReceiptLineEditor: View {
         Picker(pantryText("Receipt line action"), selection: $line.treatment) {
             Text(pantryText("Skip this line")).tag(ReceiptImportDraft.Treatment.skip)
             if !permitsPutaway || line.printed?.kind != .adjustment && line.printed?.kind != .date {
-                Text(pantryText("Add a separate physical batch")).tag(ReceiptImportDraft.Treatment.add)
+                Text(putawayText("Put this food away")).tag(ReceiptImportDraft.Treatment.add)
                 if permitsPutaway {
                     Text(putawayText("Ate this")).tag(ReceiptImportDraft.Treatment.eaten)
                     Text(putawayText("Kept some")).tag(ReceiptImportDraft.Treatment.keptSome)
@@ -693,7 +837,7 @@ struct PantryReceiptLineEditor: View {
                     LabeledContent(pantryText("Suggested storage to check"), value: pantryLocationName(storage))
                 } else if line.treatment == .keptSome { Text(putawayText("Choose where you put the remainder.")).font(.caption) }
                 else { Text(pantryText("Choose where you put this food. The initial selection is cupboard.")).font(.caption) }
-                Picker(pantryText("Storage"), selection: $line.location) {
+                Picker(putawayText("Destination in My Pantry"), selection: $line.location) {
                     ForEach(InventoryLocation.allCases, id: \.self) { Text(pantryLocationName($0)).tag($0) }
                 }.accessibilityIdentifier("receipt.storage.\(line.ordinal)")
             }
@@ -746,6 +890,7 @@ struct PantryReceiptHistory: View {
     @State private var price = ""
     @State private var correctionMessage: String?
     @Environment(\.dismiss) private var dismiss
+    private(set) var dates = ReceiptDateDisplay()
 
     var body: some View {
         List {
@@ -768,7 +913,7 @@ struct PantryReceiptHistory: View {
             ForEach(facts) { row in
                 VStack(alignment: .leading, spacing: 5) {
                     Text(row.name).font(.headline)
-                    Text(row.merchant + " · " + row.purchaseDate.formatted(date: .abbreviated, time: .omitted))
+                    Text(row.merchant + " · " + dates.purchaseDay(row.purchaseDate, style: .abbreviated))
                         .font(.subheadline).foregroundStyle(Theme.secondary)
                     Text(row.originalLine)
                         .font(.system(.body, design: .monospaced))
@@ -877,6 +1022,7 @@ private struct ReceiptPriceCorrection: View {
     let save: (Money?) -> Void
     @State private var confirmingUnknown = false
     @FocusState private var priceFocused: Bool
+    private(set) var dates = ReceiptDateDisplay()
 
     private var enteredTotal: Money? {
         guard let total = try? Money(decimal: price), total >= .zero else { return nil }
@@ -890,7 +1036,7 @@ private struct ReceiptPriceCorrection: View {
             Text(pantryFormat("Receipt revision %@", String(original.revision)))
             if let current = original.paidLineTotal { Text(pantryFormat("Paid line total %@", receiptMoney(current))) }
             else { Text(pantryText("Paid price unknown")) }
-            Text(original.merchant + " · " + original.purchaseDate.formatted(date: .abbreviated, time: .omitted))
+            Text(original.merchant + " · " + dates.purchaseDay(original.purchaseDate, style: .abbreviated))
             WorkingField(pantryText("Corrected paid line total in USD")) {
                 TextField(pantryText("Corrected paid line total in USD"), text: $price, prompt: Text(""))
                     .keyboardType(.decimalPad).focused($priceFocused)
@@ -933,6 +1079,7 @@ struct ReceiptTripDifferenceReview: View {
     let draft: ReceiptImportDraft
     @Binding var state: ReceiptTripReviewState
     @State private var editing: ReceiptImportDraft.Line?
+    private(set) var dates = ReceiptDateDisplay()
 
     private var selectable: [ReceiptImportDraft.Line] {
         draft.lines.filter(\.canComparePurchase)
@@ -987,7 +1134,7 @@ struct ReceiptTripDifferenceReview: View {
         return Picker(captureText("Planned shop"), selection: selection) {
             Text(captureText("Choose explicitly")).tag(nil as UUID?)
             ForEach(trips) { trip in
-                let date = trip.date.formatted(date: .abbreviated, time: .shortened)
+                let date = dates.timestamp(trip.date)
                 let label = [trip.branch, date, String(trip.id.uuidString.suffix(6))].joined(separator: " · ")
                 Text(label).tag(Optional(trip.id))
             }
