@@ -494,7 +494,7 @@ struct DinnerPreviewView: View {
                         Button(ledgerText("Done")) { finish() }.accessibilityIdentifier("dinner.schedule.done")
                     }
                 } else if let preview = model.preview, model.canReviewPreview,
-                          detailedReviewID != preview.id, model.canApply, let workspaceID = model.localIdeaWorkspaceID,
+                          detailedReviewID != preview.proposal.id, model.canApply, let workspaceID = model.localIdeaWorkspaceID,
                           let meal = preview.unchangedGroceriesForScheduleEdit(in: model.workspace, workspaceID: workspaceID) {
                     Section {
                         scheduleFacts(meal)
@@ -508,14 +508,14 @@ struct DinnerPreviewView: View {
                             guard let identity = model.editorIdentity else { return }
                             Task {
                                 if await model.applyPreview() {
-                                    saved = SavedSchedule(identity: identity, reviewID: preview.id, mealID: meal.id)
+                                    saved = SavedSchedule(identity: identity, reviewID: preview.proposal.id, mealID: meal.id)
                                 }
                             }
                         }.buttonStyle(PrimaryAction()).disabled(!model.canApply)
                             .accessibilityIdentifier("dinnerApply")
                     }
                     Section {
-                        Button(dinnerText("Show full review")) { detailedReviewID = preview.id }
+                        Button(dinnerText("Show full review")) { detailedReviewID = preview.proposal.id }
                             .accessibilityIdentifier("dinner.schedule.showFull")
                         Button(dinnerText("Cancel preview"), role: .cancel) { model.cancelPreview(); finish() }
                             .accessibilityIdentifier("dinnerCancelPreview")
