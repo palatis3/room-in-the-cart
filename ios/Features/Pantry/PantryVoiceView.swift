@@ -38,6 +38,9 @@ private struct VoicePantryRow {
             self.estimateLotID = nil
         }
         lotID = lot.id
+        // A spoken estimate initially has no batch. Bind it to the first choice
+        // so changing that choice requires reviewing the remainder again.
+        if !estimate.isEmpty { estimateLotID = lot.id }
         if let originalDimension = unit?.dimension ?? spokenDimension, originalDimension != lot.unit.dimension {
             // The number of pieces or cups cannot be carried into a weight or package count.
             amount = ""; unit = nil; spokenDimension = nil
@@ -291,6 +294,7 @@ private struct VoicePantryRow {
                 case .pieces(let n, _): row.mode = .amount; row.amount = n.description; row.spokenDimension = .count
                 case .all: row.mode = .all
                 case .someUsed: row.mode = .usedSome
+                case .someUsedWithRemaining(let observation): row.applyRemaining(observation)
                 case .unknown: break
                 }
                 return row
