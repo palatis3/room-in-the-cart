@@ -57,8 +57,10 @@ import XCTest
         XCTAssertTrue(detail.waitForExistence(timeout: 8))
         XCTAssertTrue(app.staticTexts["milk"].exists)
         tap(detail.buttons.firstMatch)
+        XCTAssertTrue(detail.waitForNonExistence(timeout: 8))
         let department = app.buttons["Department for milk"]
-        tap(department)
+        XCTAssertTrue(department.wait(for: \.isHittable, toEqual: true, timeout: 8), app.debugDescription)
+        department.tap()
         tap(app.buttons["Bakery"])
         let changed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Bakery"), object: department)
         XCTAssertEqual(XCTWaiter.wait(for: [changed], timeout: 5), .completed)

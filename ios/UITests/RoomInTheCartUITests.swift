@@ -220,10 +220,14 @@ final class RoomInTheCartUITests: XCTestCase {
             let onlyOne = language == "en" ? "Pickup · Selected: 1 · Skipped: 1" : "Recogida · Incluidos: 1 · Omitidos: 1"
             XCTAssertTrue(summary.waitForExistence(timeout: 10))
             XCTAssertEqual(summary.label, both)
-            let advisory = app.descendants(matching: .any)["ledgerImportRepeat-2"]
-            reveal(advisory)
+            // Scroll to the adjacent action. The notice is informative text and has no tap action.
+            let skipSecond = app.buttons["ledgerImportSkip-2"]
+            reveal(skipSecond)
+            let advisory = app.staticTexts["ledgerImportRepeat-2"]
+            XCTAssertTrue(advisory.waitForExistence(timeout: 5))
+            XCTAssertFalse(advisory.frame.isEmpty)
             XCTAssertEqual(advisory.label, language == "en" ? "Similar to line 1: 2 apples" : "Se parece a la línea 1: 2 manzanas")
-            tap(app.buttons["ledgerImportSkip-2"])
+            tap(skipSecond)
             XCTAssertEqual(summary.label, onlyOne)
             XCTAssertFalse(app.textFields["ledgerImportAmount-2"].exists)
             XCTAssertFalse(advisory.exists)

@@ -720,8 +720,11 @@ private struct LedgerImportRowView: View {
                 }
             }.buttonStyle(.borderless)
             if let similarLine {
-                Label(similarLine, systemImage: "text.magnifyingglass").font(.subheadline)
-                    .accessibilityIdentifier("ledgerImportRepeat-\(number)")
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Image(systemName: "text.magnifyingglass").accessibilityHidden(true)
+                    Text(verbatim: similarLine)
+                        .accessibilityIdentifier("ledgerImportRepeat-\(number)")
+                }.font(.subheadline)
             }
             if choice != .skip || line.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 rowFields
