@@ -4,6 +4,7 @@ import SwiftUI
 
 struct PantryPriceHistoryView: View {
     @ObservedObject var model: PantryModel
+    private(set) var dates = ReceiptDateDisplay()
     @Binding var startEntry: Bool
     @State private var page: PantryPricePage?
     @State private var rows: [PrivatePriceEvidence] = []
@@ -28,7 +29,7 @@ struct PantryPriceHistoryView: View {
                             Text(verbatim: row.name).font(.headline)
                             Text(verbatim: priceAmount(row)).font(.title3.weight(.semibold)).monospacedDigit()
                             Text(verbatim: priceSource(row)).font(.subheadline).foregroundStyle(Theme.secondary)
-                            Text(verbatim: row.store + " · " + ReceiptDateDisplay().purchaseDay(row.date))
+                            Text(verbatim: row.store + " · " + dates.purchaseDay(row.date))
                                 .font(.footnote).foregroundStyle(Theme.secondary)
                         }.padding(.vertical, 3)
                     }
@@ -87,6 +88,7 @@ struct PantryPriceHistoryView: View {
 
 private struct PantryPriceDetail: View {
     @ObservedObject var model: PantryModel
+    private(set) var dates = ReceiptDateDisplay()
     @EnvironmentObject private var household: HouseholdModel
     let row: PrivatePriceEvidence
     let state: InventoryState
@@ -115,7 +117,7 @@ private struct PantryPriceDetail: View {
                     if let variant = row.variant { Text(verbatim: variant) }
                     Text(verbatim: [row.store, row.branch].compactMap { $0 }.joined(separator: " · "))
                     if let mode = row.mode { Text(mode.ledgerLabel) }
-                    Text(verbatim: ReceiptDateDisplay().purchaseDay(row.date))
+                    Text(verbatim: dates.purchaseDay(row.date))
                     if let eligibility = row.eligibility { Text(verbatim: eligibility) }
                     if let tax = row.taxTreatment { Text(shelfTaxLabel(tax)) }
                     if case .paidReceipt(let source) = row.source {
@@ -174,6 +176,7 @@ private struct PantryPriceDetail: View {
 
 private struct PantryPriceRevisionView: View {
     @ObservedObject var model: PantryModel
+    private(set) var dates = ReceiptDateDisplay()
     let current: PrivatePriceEvidence
     let state: InventoryState
     @State private var revision: Int64 = 1
@@ -194,7 +197,7 @@ private struct PantryPriceRevisionView: View {
                     Text(verbatim: priceSource(record) + " · " + priceAmount(record))
                     Text(verbatim: [record.store, record.branch].compactMap { $0 }.joined(separator: " · "))
                     if let mode = record.mode { Text(mode.ledgerLabel) }
-                    Text(verbatim: ReceiptDateDisplay().purchaseDay(record.date))
+                    Text(verbatim: dates.purchaseDay(record.date))
                     if let pack = record.pack { Text(verbatim: packageLabel(pack)) }
                     if let terms = record.eligibility { Text(verbatim: terms) }
                     Text(verbatim: record.sourceText)
@@ -220,6 +223,7 @@ private struct PantryPriceRevisionView: View {
 
 private struct PantryComparablePrice: View {
     @ObservedObject var model: PantryModel
+    private(set) var dates = ReceiptDateDisplay()
     let price: PrivatePriceEvidence
     let state: InventoryState
     let unit: UnitOfMeasure
@@ -227,7 +231,7 @@ private struct PantryComparablePrice: View {
 
     var body: some View {
         VStack(alignment: .leading) {
-            Text(verbatim: price.store + " · " + ReceiptDateDisplay().purchaseDay(price.date))
+            Text(verbatim: price.store + " · " + dates.purchaseDay(price.date))
             if let rate {
                 Text(verbatim: (Decimal(rate.numerator) / Decimal(rate.denominator) / 100).formatted(
                     .currency(code: price.currencyCode).precision(.fractionLength(2...4))) + " / " + pantryUnit(unit))
@@ -370,6 +374,7 @@ private enum PriceEntryKind: CaseIterable {
 
 private struct PantryPriceEditor: View {
     @ObservedObject var model: PantryModel
+    private(set) var dates = ReceiptDateDisplay()
     let expected: InventoryState
     let original: PrivatePriceEvidence?
     let didSave: () -> Void
@@ -435,7 +440,7 @@ private struct PantryPriceEditor: View {
                 Text(verbatim: priceSource(review) + " · " + priceAmount(review))
                 Text(verbatim: [review.store, review.branch].compactMap { $0 }.joined(separator: " · "))
                 if let mode = review.mode { Text(mode.ledgerLabel) }
-                Text(verbatim: ReceiptDateDisplay().purchaseDay(review.date))
+                Text(verbatim: dates.purchaseDay(review.date))
                 if let pack = review.pack { Text(verbatim: packageLabel(pack)) }
                 if let eligibility = review.eligibility { Text(verbatim: eligibility) }
                 if let tax = review.taxTreatment { Text(shelfTaxLabel(tax)) }
