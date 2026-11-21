@@ -24,14 +24,18 @@ func pantryUnit(_ unit: UnitOfMeasure, singular: Bool = false) -> String {
     case .cup: return pantryText(singular ? "cup" : "cups")
     }
 }
+private func pantryUnit(_ unit: UnitOfMeasure, amount: Rational?) -> String {
+    // A fraction of one unit reads as “1/2 cup” or “1/2 taza” in the supported languages.
+    pantryUnit(unit, singular: amount.map { $0 > .zero && $0 <= .one } ?? false)
+}
 func pantryQuantity(_ quantity: Quantity?) -> String {
     guard let quantity else { return pantryText("Unknown") }
     // The exact fraction and original unit stay intact; no floating-point stock math.
-    return "\(quantity.amount.description) \(pantryUnit(quantity.unit, singular: quantity.amount == .one))"
+    return "\(quantity.amount.description) \(pantryUnit(quantity.unit, amount: quantity.amount))"
 }
 func pantryPrintedQuantity(_ literal: String, unit: UnitOfMeasure) -> String {
     let measured = try? ComparisonModel.quantity(literal, unit)
-    return literal + " " + pantryUnit(unit, singular: measured?.amount == .one)
+    return literal + " " + pantryUnit(unit, amount: measured?.amount)
 }
 func pantryCount(_ count: InventoryCount, estimate: String? = nil) -> String {
     if count == .someLeft, let estimate { return pantryFormat("%@ (estimate)", estimate) }
