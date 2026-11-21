@@ -52,11 +52,13 @@ struct HouseholdSettingsView: View {
                 }
             }
             if !model.configured {
-                Section(tr("Household requests")) {
-                    Text(ht("You can make a private shopping list, compare packs and plan dinners on this iPhone without an account."))
+                Section {
                     Text(ht("Sending a request to someone else requires access to their household."))
-                    Label(ht("Household sign-in is unavailable"), systemImage: "network.slash")
+                    Text(ht("You can make a private shopping list, compare packs and plan dinners on this iPhone without an account."))
                         .foregroundStyle(Theme.secondary)
+                } header: {
+                    Text(ht("Household sign-in is unavailable"))
+                        .marketJournalTitle(.title2).textCase(nil)
                 }
             } else if model.locked {
                 Section(ht("Protected account")) {
@@ -68,11 +70,11 @@ struct HouseholdSettingsView: View {
                     Button(ht("Resume saved account")) { Task { await model.unlock() } }
                     if model.emailOTPEnabled {
                         TextField(ht("Email"), text: $model.email).textContentType(.emailAddress)
-                            .keyboardType(.emailAddress).textInputAutocapitalization(.never).autocorrectionDisabled()
+                            .keyboardType(.emailAddress).textInputAutocapitalization(.never).autocorrectionDisabled().privacySensitive()
                         Button(ht("Email me a code")) { Task { await model.sendCode() } }
                             .disabled(model.email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                         if model.codeSent {
-                            SecureField(ht("Email sign-in code"), text: $model.code).textContentType(.oneTimeCode)
+                            SecureField(ht("Email sign-in code"), text: $model.code).textContentType(.oneTimeCode).privacySensitive()
                             Button(ht("Verify code")) {
                                 let entry = visibleEntry
                                 Task {
@@ -420,8 +422,8 @@ struct HouseholdScopeHeading: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(verbatim: scope.household.label)
-                .font(.title2.weight(.semibold))
-                .accessibilityAddTraits(.isHeader)
+                .marketJournalTitle(.title2)
+                .privacySensitive()
                 .accessibilityIdentifier("household.scope.name")
             if let shop = scope.shopId {
                 BrandScopeLabel(ht("Pickup") + " · " + String(shop.prefix(8)), systemImage: "bag")

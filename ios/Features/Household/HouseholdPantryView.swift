@@ -34,7 +34,7 @@ private struct HouseholdPantryView: View {
     var body: some View {
         Group {
             if household.householdPantryScope == model.scope {
-                List {
+                JournalList {
                     if let page = model.page {
                         Section(household.projection?.household.label ?? householdPantryText("Household pantry")) {
                             HouseholdTonightLink(household: household)
@@ -336,7 +336,7 @@ private struct HouseholdPantryGrantsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var target: HouseholdPantryGrants.Adult?
     var body: some View {
-        List {
+        JournalList {
             Section {
                 Text(householdPantryText("Adults with pantry access can see stored food, add food and correct counts."))
                 if let grants = model.grants {

@@ -51,7 +51,7 @@ private struct SharedFallbackMenu: View {
     let completed: (Bool) -> Void
 
     var body: some View {
-        List {
+        JournalList {
             if let library = model.library, model.live {
                 NavigationLink(fallbackText("Manage accepted recipes")) {
                     SharedFallbackLibraryView(model: model, recovery: page)

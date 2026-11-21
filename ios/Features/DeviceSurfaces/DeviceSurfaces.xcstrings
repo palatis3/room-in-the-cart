@@ -2137,6 +2137,38 @@
           }
         }
       }
+    },
+    "Refresh shared text": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh shared text"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar texto compartido"
+          }
+        }
+      }
+    },
+    "Shortcut unavailable": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shortcut unavailable"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atajo no disponible"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

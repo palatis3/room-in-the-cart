@@ -23,12 +23,17 @@ struct MembershipHeading: View {
     let title: String
     let symbol: String
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        Label {
+            Text(title)
+                .marketJournalTitle()
+                .fixedSize(horizontal: false, vertical: true)
+        } icon: {
             Image(systemName: symbol)
-                .font(.title2.weight(.medium)).foregroundStyle(Theme.action)
+                .font(.headline).foregroundStyle(Theme.action)
                 .accessibilityHidden(true)
-            Text(title).font(.largeTitle.bold()).accessibilityAddTraits(.isHeader)
         }
+        .foregroundStyle(Theme.ink)
+        .accessibilityAddTraits(.isHeader)
     }
 }
 
@@ -90,13 +95,16 @@ struct MembershipView: View {
             if let context = model.context {
                 BrandScopeLabel(context.householdName, systemImage: "house")
                     .accessibilityLabel(String(format: mtr("Selected household: %@"), context.householdName))
+                    .privacySensitive()
             }
             TimelineView(.periodic(from: .now, by: 15)) { _ in
                 VStack(alignment: .leading, spacing: 20) {
                     if model.presentsAnnualOffer && model.state.snapshot?.status == .free {
+                        Text(mtr("Free planning")).font(.headline)
+                            .accessibilityAddTraits(.isHeader)
+                        operationUpdates
                         annualOffer
                         returnButton
-                        operationUpdates
                     } else {
                         currentAccess
                         operationUpdates
@@ -170,14 +178,21 @@ struct MembershipView: View {
             .accessibilityLabel(String(format: mtr("%@ every %@"), offer.displayPrice, offer.localizedPeriod))
             .accessibilityIdentifier("membership.annualPrice")
             Text(mtr("Plan repeat weeks and compare dinner combinations using your own prices. Up to two named adults can plan."))
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 9) {
                 Text(String(format: mtr("%@ due when you confirm with Apple."), offer.displayPrice)).font(.headline)
                 Text(String(format: mtr("Renews at %@ each year. Manage or cancel in Apple subscriptions at least 24 hours before renewal. Apple shows the final charge."), offer.displayPrice))
                     .foregroundStyle(Theme.secondary)
+                if let context = model.context {
+                    Text(String(format: mtr("Purchasing account: %@"), context.purchaserName))
+                        .font(.subheadline).foregroundStyle(Theme.secondary).privacySensitive()
+                }
             }
-            if let context = model.context {
-                Text(String(format: mtr("Purchasing account: %@"), context.purchaserName))
-                    .font(.subheadline).foregroundStyle(Theme.secondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(14)
+            .background(Theme.surface, in: RoundedRectangle(cornerRadius: 10))
+            .overlay {
+                RoundedRectangle(cornerRadius: 10).strokeBorder(Theme.divider)
+                    .accessibilityHidden(true)
             }
             Button(mtr("Subscribe to Household")) {
                 guard model.presentsAnnualOffer else { return }

@@ -38,25 +38,43 @@ private struct CaptureWidgetView: View {
         let title = SurfaceCopy.text("Open grocery entry")
         switch family {
         case .systemSmall:
-            VStack(alignment: .leading, spacing: 8) {
-                if renderingMode == .fullColor {
-                    Image(decorative: "BrandCartRest").resizable().scaledToFit()
-                        .frame(width: 40, height: 40)
-                        .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
-                } else {
-                    Image(systemName: "cart.badge.plus").font(.title2)
-                        .widgetAccentable().accessibilityHidden(true)
+            ViewThatFits(in: .vertical) {
+                VStack(alignment: .leading, spacing: 8) {
+                    if renderingMode == .fullColor {
+                        Image(decorative: "MarketGroceries")
+                            .resizable().scaledToFit()
+                            .frame(maxWidth: .infinity, maxHeight: 48, alignment: .trailing)
+                    } else {
+                        Image(systemName: "cart.badge.plus")
+                            .font(.title2).widgetAccentable().accessibilityHidden(true)
+                    }
+                    Divider()
+                    entryTitle(title)
                 }
-                Spacer(minLength: 0)
-                Text(title).font(.headline)
+                entryTitle(title)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
             .foregroundStyle(renderingMode == .fullColor ? Color("ink") : Color.primary)
         case .accessoryCircular:
-            Image(systemName: "cart.badge.plus").widgetAccentable().accessibilityLabel(title)
+            ZStack {
+                AccessoryWidgetBackground()
+                Image(systemName: "cart.badge.plus").font(.title3.weight(.semibold)).widgetAccentable()
+            }.accessibilityElement(children: .ignore).accessibilityLabel(title)
+        case .accessoryRectangular:
+            Label {
+                Text(title).font(.system(.headline, design: .serif, weight: .semibold))
+            } icon: {
+                Image(systemName: "cart.badge.plus").widgetAccentable()
+            }
         default:
             Label(title, systemImage: "cart.badge.plus")
         }
+    }
+
+    private func entryTitle(_ title: String) -> some View {
+        Text(title)
+            .font(.system(.title3, design: .serif, weight: .semibold))
+            .fixedSize(horizontal: false, vertical: true)
     }
 }
 
@@ -114,29 +132,42 @@ private struct AdultSummaryWidgetView: View {
         let summary = entry.summary.flatMap { value in
             !redaction.contains(.privacy) && value.isFresh(at: Date(), zone: .current) ? value : nil
         }
-        VStack(alignment: .leading, spacing: 4) {
-            Label {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .firstTextBaseline) {
                 Text(title)
-            } icon: {
-                Image(systemName: kind == .useSoon ? "calendar" : "fork.knife").widgetAccentable()
+                    .font(.system(.title3, design: .serif, weight: .semibold))
+                    .accessibilityAddTraits(.isHeader)
+                Spacer(minLength: 8)
+                Image(systemName: kind == .useSoon ? "calendar" : "fork.knife")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(renderingMode == .fullColor ? Color("accent") : Color.primary)
+                    .widgetAccentable()
+                    .accessibilityHidden(true)
             }
-            .font(.headline)
-            .foregroundStyle(renderingMode == .fullColor ? Color("accent") : Color.primary)
+            Divider()
             if let summary {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(summaryText(summary)).font(.body)
-                    if let title = summary.reviewedTitle { Text(verbatim: title).font(.body).lineLimit(2) }
+                VStack(alignment: .leading, spacing: 2) {
+                    if let meal = summary.reviewedTitle {
+                        Text(verbatim: meal)
+                            .font(.system(.headline, design: .serif, weight: .semibold))
+                            .lineLimit(2)
+                    }
+                    Text(summaryText(summary))
+                        .font(.body)
+                    Spacer(minLength: 0)
                     let time = summary.writtenAt.formatted(Date.FormatStyle(date: .omitted, time: .shortened, locale: locale))
                     Text(String(format: SurfaceCopy.text("Updated at %@"), locale: locale, time))
                         .font(.caption)
                         .foregroundStyle(renderingMode == .fullColor ? Color("secondary") : Color.secondary)
-                        .layoutPriority(1)
-                }.privacySensitive()
+                }
+                .privacySensitive()
             } else {
                 Text(SurfaceCopy.text("Open the app to review this item"))
+                    .font(.body)
+                Spacer(minLength: 0)
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .foregroundStyle(renderingMode == .fullColor ? Color("ink") : Color.primary)
         .widgetURL((entry.summary?.route ?? entry.expiredRoute).flatMap { (try? IOSSurfaceContainers.urls())?.url(handle: $0) })
         .containerBackground(for: .widget) { Color("surface") }

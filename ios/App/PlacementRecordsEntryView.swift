@@ -13,7 +13,7 @@ struct PlacementRecordsEntryView: View {
                 if let model { PlacementEntryView(model: model) }
                 else { Text(PlacementCopy.text("Shared order reports are unavailable on this iPhone.")) }
             } else {
-                List {
+                JournalList {
                     if household.canUnlockPlacementEvidence {
                         Text(PlacementCopy.text("Open your original saved evidence without fetching the current shopper's private records. This does not restore household authority."))
                         Button(PlacementCopy.text("Unlock saved placement evidence")) { Task { await household.unlockPlacementEvidence() } }
@@ -22,7 +22,7 @@ struct PlacementRecordsEntryView: View {
                     }
                     Text(PlacementCopy.text("Connect your household to report an external placement or review a pending report."))
                     NavigationLink(PlacementCopy.text("Open household")) { HouseholdSettingsView(model: household, continuesAfterWorkspaceLock: true) }
-                }.workingSurface().navigationTitle(PlacementCopy.text("Shared placement reports"))
+                }.navigationTitle(PlacementCopy.text("Shared placement reports"))
             }
         }
         .task { if model == nil { model = household.makePlacementModel() } }

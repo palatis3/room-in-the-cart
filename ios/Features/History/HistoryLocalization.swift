@@ -10,6 +10,13 @@ enum HistoryCopy {
         formatter.minimumFractionDigits = 2; formatter.maximumFractionDigits = 2
         return formatter.string(from: NSDecimalNumber(decimal: Decimal(minor) / 100)) ?? "USD " + NSDecimalNumber(decimal: Decimal(minor) / 100).stringValue
     }
+    static func observedAmount(_ price: HistoryCostEvidence) -> String {
+        switch price {
+        case .exact(let minor): money(minor)
+        case .bounded(let lower, let upper, _): money(lower) + " – " + money(upper)
+        case .unknown: text("Unknown price")
+        }
+    }
     static func date(_ source: String, timeZoneID: String? = nil) -> String {
         let formatter = ISO8601DateFormatter(); formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         var value = formatter.date(from: source)

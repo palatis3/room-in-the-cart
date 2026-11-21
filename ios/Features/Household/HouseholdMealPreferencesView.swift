@@ -46,7 +46,7 @@ private struct HouseholdMealPreferencesView: View {
     var body: some View {
         Group {
             if active {
-                List {
+                JournalList {
                     if let page {
                         if let settings = page.settings { MealPreferenceSummary(settings: settings) }
                         else { Text(dinnerText("No household meal preferences saved.")) }

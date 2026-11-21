@@ -14,7 +14,7 @@ struct SharedPantryView: View {
     }
 
     var body: some View {
-        List {
+        JournalList {
             if let delivery, let pantry = model.pantryRecord, pantry.shopId == shopID,
                pantry.shopRevision == delivery.shopRevision && pantry.supplyRevision == delivery.supplyRevision &&
                pantry.placedRevision == delivery.placedRevision && pantry.authorityEpoch == delivery.authorityEpoch {

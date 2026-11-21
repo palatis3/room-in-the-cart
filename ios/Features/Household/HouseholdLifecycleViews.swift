@@ -154,9 +154,10 @@ struct HouseholdHelperComposer: View {
                 }
                 if let reviewed {
                     Section(ht("Recipient preview")) {
-                        Text(verbatim: reviewed.shopLabel).font(.title2.weight(.semibold))
+                        Text(verbatim: reviewed.shopLabel)
+                            .marketJournalTitle(.title2).privacySensitive()
                         LabeledContent(ht("Instruction language"), value: reviewed.language == "es" ? ht("Spanish") : ht("English"))
-                        Text(mode == "edit" ? ht("Read and suggest corrections") : ht("Read instructions"))
+                        LabeledContent(ht("Recipient access"), value: mode == "edit" ? ht("Read and suggest corrections") : ht("Read instructions"))
                         LabeledContent(ht("Expires after hours"), value: model.expiryHours.formatted())
                         ForEach(Array(reviewed.items.enumerated()), id: \.offset) { _, item in helperInstruction(item) }
                         Toggle(ht("I reviewed these instructions for this recipient"), isOn: $approved)
@@ -200,7 +201,8 @@ struct HouseholdHelperView: View {
             if model.isHelper, expectedScope == nil || model.scope == expectedScope {
                 if let view = model.helperView {
                     Section {
-                        Text(verbatim: view.shopLabel).font(.title2.weight(.semibold)).accessibilityAddTraits(.isHeader)
+                        Text(verbatim: view.shopLabel)
+                            .marketJournalTitle(.title2).privacySensitive()
                         Text(view.canPropose ? ht("You can read and suggest changes for this pickup.") : ht("You can read the instructions for this pickup."))
                         LabeledContent(ht("Current instruction revision"), value: view.revision.formatted())
                         LabeledContent(ht("Last updated"), value: householdTime(view.asOf))

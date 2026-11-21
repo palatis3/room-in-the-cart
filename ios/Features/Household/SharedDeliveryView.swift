@@ -146,7 +146,7 @@ private struct DeliveryMealMatches: View {
 
     var body: some View {
         NavigationStack {
-            List {
+            JournalList {
                 ForEach(reviewed.meals ?? []) { occurrence in
                     if let plan = occurrence.meal.planning, !plan.ingredients.isEmpty {
                         Section {
@@ -341,6 +341,7 @@ private struct SharedDeliveryRegistration: View {
     @State private var line: SharedDeliveryPage.Line?
     @State private var search = ""
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorSchemeContrast) private var contrast
     var body: some View {
         if let line {
             SharedDeliveryEditor(model: model, action: .register(line), page: page)
@@ -348,7 +349,10 @@ private struct SharedDeliveryRegistration: View {
             NavigationStack {
                 List(page.lines.filter { search.isEmpty || $0.name.localizedStandardContains(search) }) { line in
                     Button(line.name) { self.line = line }.accessibilityIdentifier("delivery.line." + line.id.uuidString)
+                        .listRowBackground(Theme.surface)
+                        .listRowSeparatorTint(contrast == .increased ? Theme.controlEdge : Theme.divider)
                 }
+                .workingSurface()
                 .navigationTitle(ht("Ordered item"))
                 .searchable(text: $search, prompt: ht("Search ordered items"))
                 .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ht("Cancel")) { dismiss() } } }

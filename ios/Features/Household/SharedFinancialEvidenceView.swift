@@ -47,7 +47,7 @@ struct SharedFinancialEvidenceView: View {
     }
 
     var body: some View {
-        List {
+        JournalList {
             if authorized {
                 if let record {
                     if let totals = model.financialSummary {

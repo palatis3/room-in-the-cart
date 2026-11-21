@@ -59,7 +59,7 @@ struct SharedFallbackLibraryView: View {
     @Environment(\.scenePhase) private var scene
 
     var body: some View {
-        List {
+        JournalList {
             if model.live, let library = model.library, library.shopId == recovery.shopId {
                 if model.pending != nil {
                     Section {

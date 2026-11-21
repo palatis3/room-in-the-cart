@@ -49,18 +49,17 @@ public struct SelectedTextReviewView: View {
     @ObservedObject private var model: SelectedTextReviewModel
     public init(model: SelectedTextReviewModel) { self.model = model }
     public var body: some View {
-        List {
+        WorkingForm {
             Section { Text(SurfaceCopy.text("Selected text waits for your review. Nothing has been added to a shop.")) }
             ForEach(model.entries) { entry in
                 Section {
-                    Text(entry.originalText).textSelection(.enabled)
-                    if let edited = entry.editedText { Text(edited) }
+                    SharedTextExcerpt(entry: entry)
                     LabeledContent(SurfaceCopy.text("Expires"), value: entry.receipt.expiresAt.formatted(date: .abbreviated, time: .shortened))
                     Button(SurfaceCopy.text("Review selected text")) { Task { await model.reviewEntry(entry) } }.frame(minHeight: 44)
                     Button(SurfaceCopy.text("Discard selected text"), role: .destructive) { Task { await model.discard(entry) } }.frame(minHeight: 44)
                 }.disabled(model.busy)
             }
             if let message = model.message { Text(message); Button(SurfaceCopy.text("Try again")) { Task { await model.refresh() } } }
-        }.workingSurface().navigationTitle(SurfaceCopy.text("Selected text")).task { await model.refresh() }
+        }.navigationTitle(SurfaceCopy.text("Selected text")).task { await model.refresh() }
     }
 }

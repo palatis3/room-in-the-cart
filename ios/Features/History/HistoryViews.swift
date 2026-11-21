@@ -20,7 +20,7 @@ struct HistoryEntryView: View {
     var body: some View {
         WorkingForm {
             Section {
-                Label(HistoryCopy.text("Entered prices and period plans"), systemImage: "calendar").font(.headline)
+                Text(HistoryCopy.text("Entered prices and period plans")).marketJournalTitle(.title2)
                 Text(HistoryCopy.text("These are household-entered records, not retailer prices, bank balances or verified savings."))
                     .font(.footnote)
             }
@@ -146,12 +146,23 @@ struct HistoryEntryView: View {
                         .disabled(model.busy).frame(minHeight: 44)
                 } label: {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(observation.itemName).font(.headline)
+                        let name = Text(verbatim: observation.itemName).font(.headline).foregroundStyle(Theme.ink)
+                        let amount = Text(verbatim: HistoryCopy.observedAmount(observation.price))
+                            .font(.body.weight(.semibold)).monospacedDigit().foregroundStyle(Theme.ink)
+                        ViewThatFits(in: .horizontal) {
+                            HStack(alignment: .firstTextBaseline) {
+                                name.fixedSize()
+                                Spacer(minLength: 12)
+                                amount.fixedSize()
+                            }
+                            VStack(alignment: .leading, spacing: 3) { name; amount }
+                        }
                         Text(HistoryCopy.priceKind(observation.evidenceKind))
                         Text(observation.packLabel)
                         Text(observation.store + " · " + observation.branch)
                         Text(HistoryCopy.channel(observation.channel.rawValue) + " · " + HistoryCopy.mode(observation.mode.rawValue)).font(.caption)
                     }
+                    .foregroundStyle(Theme.secondary)
                 }
             }
             if model.observationCursor != nil {
@@ -266,9 +277,9 @@ struct HistoryEntryView: View {
                 Section(HistoryCopy.text("Period plan and entered evidence")) {
                     HistoryPeriodDetails(period: value.period)
                     HistorySubtotalDetails(subtotal: value.permitted)
-                    LabeledContent(HistoryCopy.text("Future plans still reserved"), value: HistoryCopy.money(value.futureReservedMinor))
-                    LabeledContent(HistoryCopy.text("Conditional minimum remaining"), value: value.remaining.minimumMinor.map(HistoryCopy.money) ?? HistoryCopy.text("Unknown"))
-                    LabeledContent(HistoryCopy.text("Conditional maximum remaining"), value: HistoryCopy.money(value.remaining.maximumMinor))
+                    LabeledContent(HistoryCopy.text("Future plans still reserved"), value: HistoryCopy.money(value.futureReservedMinor)).monospacedDigit()
+                    LabeledContent(HistoryCopy.text("Conditional minimum remaining"), value: value.remaining.minimumMinor.map(HistoryCopy.money) ?? HistoryCopy.text("Unknown")).monospacedDigit()
+                    LabeledContent(HistoryCopy.text("Conditional maximum remaining"), value: HistoryCopy.money(value.remaining.maximumMinor)).monospacedDigit()
                     Text(value.reconciledEnteredPeriod ? HistoryCopy.text("Entered evidence has been reconciled for this period. This is not bank verification.") : HistoryCopy.text("This period is incomplete. Remaining amounts are conditional, not a verified balance."))
                     if model.canEditSelectedPeriod {
                         Button(HistoryCopy.text("Edit this period plan")) { model.editSelectedPeriod() }
@@ -387,7 +398,8 @@ struct HistoryEntryView: View {
                     if let observationID, model.selectedObservation?.id == observationID { editingObservation = false }
                 }
             }
-                .disabled(model.busy || !model.approved).frame(minHeight: 44).accessibilityIdentifier("history.applyReviewed")
+            .buttonStyle(PrimaryAction())
+            .disabled(model.busy || !model.approved).frame(minHeight: 44).accessibilityIdentifier("history.applyReviewed")
             Button(HistoryCopy.text("Continue editing")) { model.cancelReview() }.disabled(model.busy).frame(minHeight: 44)
         }
     }
@@ -485,9 +497,9 @@ private struct HistoryObservationDetails: View {
                 Text("\(pack.amount.numerator)/\(pack.amount.denominator) " + HistoryCopy.unit(pack.unit.rawValue))
             } else { Text(HistoryCopy.text("Usable pack quantity not recorded")) }
             switch observation.price {
-            case .exact(let minor): LabeledContent(HistoryCopy.text("Entered price"), value: HistoryCopy.money(minor))
+            case .exact(let minor): LabeledContent(HistoryCopy.text("Entered price"), value: HistoryCopy.money(minor)).monospacedDigit()
             case .bounded(let lower, let upper, let reason):
-                LabeledContent(HistoryCopy.text("Entered price range"), value: HistoryCopy.money(lower) + " – " + HistoryCopy.money(upper))
+                LabeledContent(HistoryCopy.text("Entered price range"), value: HistoryCopy.money(lower) + " – " + HistoryCopy.money(upper)).monospacedDigit()
                 Text(reason)
             case .unknown(let reason): Text(HistoryCopy.text("Unknown price")); Text(reason)
             }
@@ -498,7 +510,10 @@ private struct HistoryObservationDetails: View {
             if !observation.eligibility.isEmpty { LabeledContent(HistoryCopy.text("Eligibility"), value: observation.eligibility) }
             LabeledContent(HistoryCopy.text("Evidence date and time"), value: HistoryCopy.date(observation.observedAt))
             LabeledContent(HistoryCopy.text("Source language or locale"), value: observation.sourceLocale)
-            Text(observation.sourceText).textSelection(.enabled)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(HistoryCopy.text("Original source text")).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.secondary)
+                Text(verbatim: observation.sourceText).textSelection(.enabled)
+            }
             LabeledContent(HistoryCopy.text("Observation reference"), value: observation.id).font(.caption).textSelection(.enabled)
         }
     }
@@ -512,9 +527,9 @@ private struct HistoryPeriodDetails: View {
             LabeledContent(HistoryCopy.text("Period starts"), value: HistoryCopy.date(period.startsAt, timeZoneID: period.timeZoneId))
             LabeledContent(HistoryCopy.text("Period ends"), value: HistoryCopy.date(period.endsAt, timeZoneID: period.timeZoneId))
             LabeledContent(HistoryCopy.text("Planning time zone"), value: period.timeZoneId)
-            LabeledContent(HistoryCopy.text("Shop budget after excluded reserve"), value: HistoryCopy.money(period.shopBudgetMinor))
+            LabeledContent(HistoryCopy.text("Shop budget after excluded reserve"), value: HistoryCopy.money(period.shopBudgetMinor)).monospacedDigit()
             if let reserve = period.alreadyExcludedReserveMinor {
-                LabeledContent(HistoryCopy.text("Reserve already excluded"), value: HistoryCopy.money(reserve))
+                LabeledContent(HistoryCopy.text("Reserve already excluded"), value: HistoryCopy.money(reserve)).monospacedDigit()
             }
             ForEach(period.shopIds, id: \.self) { id in LabeledContent(HistoryCopy.text("Assigned shop reference"), value: id).font(.caption) }
             ForEach(period.reservations, id: \.id) { reservation in
@@ -541,18 +556,18 @@ private struct HistorySubtotalDetails: View {
     let subtotal: HistoryPermittedSubtotal
     var body: some View {
         Group {
-            LabeledContent(HistoryCopy.text("Entered posted net spending"), value: HistoryCopy.money(subtotal.postedNetMinor))
-            LabeledContent(HistoryCopy.text("Expected credits, not yet deducted"), value: HistoryCopy.money(subtotal.pendingCreditsMinor))
-            LabeledContent(HistoryCopy.text("Credits already included, not deducted again"), value: HistoryCopy.money(subtotal.includedCreditsMinor))
-            LabeledContent(HistoryCopy.text("Payment holds, not spending"), value: HistoryCopy.money(subtotal.paymentHoldsMinor))
-            LabeledContent(HistoryCopy.text("Expected unpaid amount"), value: HistoryCopy.range(subtotal.expectedUnpaid))
-            LabeledContent(HistoryCopy.text("Projected commitment including posted spending"), value: HistoryCopy.range(subtotal.projectedCommitment))
+            LabeledContent(HistoryCopy.text("Entered posted net spending"), value: HistoryCopy.money(subtotal.postedNetMinor)).monospacedDigit()
+            LabeledContent(HistoryCopy.text("Expected credits, not yet deducted"), value: HistoryCopy.money(subtotal.pendingCreditsMinor)).monospacedDigit()
+            LabeledContent(HistoryCopy.text("Credits already included, not deducted again"), value: HistoryCopy.money(subtotal.includedCreditsMinor)).monospacedDigit()
+            LabeledContent(HistoryCopy.text("Payment holds, not spending"), value: HistoryCopy.money(subtotal.paymentHoldsMinor)).monospacedDigit()
+            LabeledContent(HistoryCopy.text("Expected unpaid amount"), value: HistoryCopy.range(subtotal.expectedUnpaid)).monospacedDigit()
+            LabeledContent(HistoryCopy.text("Projected commitment including posted spending"), value: HistoryCopy.range(subtotal.projectedCommitment)).monospacedDigit()
             Text(HistoryCopy.text("Pending credits do not reduce posted spending. Holds are separate. A missing upper bound keeps the minimum remaining amount unknown."))
                 .font(.footnote)
             ForEach(subtotal.shops, id: \.shopId) { shop in
                 DisclosureGroup {
-                    LabeledContent(HistoryCopy.text("Entered posted net spending"), value: HistoryCopy.money(shop.postedNetMinor))
-                    LabeledContent(HistoryCopy.text("Expected unpaid amount"), value: HistoryCopy.range(shop.expectedUnpaid))
+                    LabeledContent(HistoryCopy.text("Entered posted net spending"), value: HistoryCopy.money(shop.postedNetMinor)).monospacedDigit()
+                    LabeledContent(HistoryCopy.text("Expected unpaid amount"), value: HistoryCopy.range(shop.expectedUnpaid)).monospacedDigit()
                     Text(shop.reconciledEntered ? HistoryCopy.text("Current entered evidence reconciled") : HistoryCopy.text("Shop evidence remains incomplete"))
                 } label: { Text(shop.shopId).font(.caption) }
             }
