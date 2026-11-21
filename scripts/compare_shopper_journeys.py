@@ -38,6 +38,7 @@ def score(ratings, keys, domains, cap):
 
 def compare(before, after, domains, exclusions):
     results = []
+    observations = {key: [] for key in domains}
     for slot in SLOTS:
         old, old_cap = load_trip(before / slot, domains)
         new, new_cap = load_trip(after / slot, domains)
@@ -47,7 +48,35 @@ def compare(before, after, domains, exclusions):
         shared -= exclusions.get(slot, set())
         results.append((slot, len(shared), score(old, shared, domains, old_cap),
                         score(new, shared, domains, new_cap), old_cap, new_cap))
-    return results
+        for key in shared:
+            observations[key].append((slot, old[key], new[key]))
+    return results, observations
+
+
+def criterion_report(rubric, observations, csv_path=None):
+    rows = []
+    decreased = 0
+    for key, criterion in rubric.items():
+        cells = observations[key]
+        lower = [slot for slot, old, new in cells if new < old]
+        decreased += len(lower)
+        rows.append({
+            "id": key, "criterion": criterion["criterion"], "domain": criterion["domain"],
+            "shared_observations": len(cells),
+            "before_mean": round(mean(old for _, old, _ in cells), 2) if cells else None,
+            "after_mean": round(mean(new for _, _, new in cells), 2) if cells else None,
+            "improved_trips": " ".join(slot for slot, old, new in cells if new > old),
+            "unchanged_trips": " ".join(slot for slot, old, new in cells if new == old),
+            "lower_trips": " ".join(lower),
+        })
+    observed = sum(bool(row["shared_observations"]) for row in rows)
+    print(f"Matched evidence for {observed}/{len(rows)} criteria; {decreased} individual ratings fell.")
+    if csv_path:
+        with csv_path.open("w", newline="", encoding="utf-8") as file:
+            writer = csv.DictWriter(file, fieldnames=rows[0].keys())
+            writer.writeheader()
+            writer.writerows(rows)
+    return decreased
 
 
 def report(results, fail_on_decline):
@@ -86,9 +115,13 @@ def main():
     parser.add_argument("after", type=Path)
     parser.add_argument("--exclusions", type=Path, help="Judged pairs with shopper, criterion, reason and judge")
     parser.add_argument("--fail-on-decline", action="store_true", help="Return 1 if any eligible journey worsened")
+    parser.add_argument("--criteria-csv", type=Path, help="Write all criteria and the individual trips that improved, held or declined")
+    parser.add_argument("--fail-on-observed-decline", action="store_true",
+                        help="Also return 1 if an individual matched criterion rating fell")
     args = parser.parse_args()
     with RUBRIC.open(newline="") as file:
-        domains = {int(row["id"]): row["domain"] for row in csv.DictReader(file)}
+        rubric = {int(row["id"]): row for row in csv.DictReader(file)}
+    domains = {key: criterion["domain"] for key, criterion in rubric.items()}
     exclusions = {}
     if args.exclusions:
         for row in json.loads(args.exclusions.read_text()):
@@ -96,7 +129,10 @@ def main():
             if slot not in SLOTS or not row.get("reason") or not row.get("judge"):
                 raise ValueError("A pair exclusion needs its shopper, judge and reason")
             exclusions.setdefault(slot, set()).add(row["criterion"])
-    return report(compare(args.before, args.after, domains, exclusions), args.fail_on_decline)
+    results, observations = compare(args.before, args.after, domains, exclusions)
+    status = report(results, args.fail_on_decline or args.fail_on_observed_decline)
+    decreased = criterion_report(rubric, observations, args.criteria_csv)
+    return status or int(args.fail_on_observed_decline and decreased > 0)
 
 
 if __name__ == "__main__":

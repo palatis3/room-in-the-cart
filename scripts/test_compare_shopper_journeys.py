@@ -1,8 +1,11 @@
 import contextlib
+import csv
 import io
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
-from compare_shopper_journeys import report, score
+from compare_shopper_journeys import criterion_report, report, score
 
 
 class ShopperRegressionTests(unittest.TestCase):
@@ -34,3 +37,17 @@ class ShopperRegressionTests(unittest.TestCase):
         with contextlib.redirect_stdout(io.StringIO()) as output:
             self.assertEqual(report([("12", 22, None, None, None, 49)], True), 2)
         self.assertIn("new consequence ceilings for 12", output.getvalue())
+
+    def test_criterion_breakdown_exposes_mixed_results_and_keeps_missing_evidence_blank(self):
+        rubric = {1: {"criterion": "Clear feedback", "domain": "C"},
+                  2: {"criterion": "Return", "domain": "R"}}
+        observations = {1: [("01", 50, 75), ("02", 75, 50), ("03", 75, 75)], 2: []}
+        with TemporaryDirectory() as folder, contextlib.redirect_stdout(io.StringIO()):
+            output = Path(folder) / "criteria.csv"
+            self.assertEqual(criterion_report(rubric, observations, output), 1)
+            with output.open(newline="") as file:
+                mixed, missing = csv.DictReader(file)
+        self.assertEqual(mixed["before_mean"], mixed["after_mean"])
+        self.assertEqual((mixed["improved_trips"], mixed["lower_trips"], mixed["unchanged_trips"]),
+                         ("01", "02", "03"))
+        self.assertEqual((missing["shared_observations"], missing["after_mean"]), ("0", ""))
