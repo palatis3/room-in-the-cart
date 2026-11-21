@@ -290,7 +290,9 @@ struct ComparisonView: View {
     private func offerSection(_ title: String, label: Binding<String>, quantity: Binding<String>, unit: Binding<UnitOfMeasure>, price: Binding<String>, conversion: Binding<ComparisonConversion?>, prefix: String) -> some View {
         Section {
             entry("Usable amount in one pack", text: quantity, id: prefix + "Quantity")
-            unitPicker("Pack unit", selection: unit, id: prefix + "Unit")
+            unitPicker("Pack unit", selection: Binding(get: { unit.wrappedValue }, set: {
+                model.draft.setPackUnit($0, for: prefix == "a" ? .a : .b)
+            }), id: prefix + "Unit")
             entry("Price for one pack (USD)", text: price, id: prefix + "Price", keyboard: .decimalPad)
             WorkingField(tr("Pack name (optional)")) {
                 workingTextField(tr("Pack name (optional)"), text: label, axis: .vertical)
@@ -345,6 +347,16 @@ struct ComparisonView: View {
                             .accessibilityIdentifier("comparisonDecision")
                     } else {
                         Label(tr("Cost unresolved"), systemImage: "questionmark.circle").font(.headline)
+                    }
+                    if let preferred = result.preferredOfferID {
+                        let choice = preferred == inputs.offerA.id ? result.offerA : result.offerB
+                        if let count = choice.wholePacksText, let amount = choice.purchasedAmount, let unit = result.unit {
+                            Text(verbatim: count + " · " + comparisonAmountText(amount, locale: locale) + " " + unit.comparisonLabel(for: amount))
+                                .font(.subheadline.weight(.semibold)).accessibilityIdentifier("comparisonPurchaseCount")
+                        }
+                        if let headroom = choice.itemLimitText {
+                            Text(verbatim: headroom).font(.subheadline).accessibilityIdentifier("comparisonPurchaseHeadroom")
+                        }
                     }
                     Divider()
                     Text(tr("Cost in whole packs")).font(.subheadline.weight(.semibold))
@@ -459,6 +471,7 @@ struct ComparisonView: View {
 
     private func remainingQuantity(_ amount: Rational) -> String {
         let (whole, remainder) = amount.numerator.quotientAndRemainder(dividingBy: amount.denominator)
+        if amount.denominator > 16 { return comparisonAmountText(amount, locale: locale) + " " + model.draft.unit.comparisonLabel(for: amount) }
         let text = whole > 0 && remainder > 0 ? "\(whole) \(remainder)/\(amount.denominator)" : amountText(amount)
         return pQuantity(text, unit: model.draft.unit, singular: amount == .one, language: nil)
     }

@@ -1011,21 +1011,14 @@ import XCTest
             tap(app.buttons["records.privatePrices"])
         }
         openHistory()
-        tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.setup.firstPrice"])
         let addPrice = app.buttons["prices.add"]
-        let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            guard addPrice.exists, let button = try? addPrice.snapshot() else { return false }
-            return button.isEnabled && !button.frame.isEmpty && self.app.frame.contains(button.frame)
-        }, object: nil)
-        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 8), .completed,
-                       "Private price history must finish loading its first action after pantry setup.")
 
-        func record(_ name: String, source: String? = nil, amount: String) {
-            tap(addPrice)
-            if let source {
-                tap(app.buttons["prices.source"])
-                tap(app.buttons[source])
-            }
+        func record(_ name: String, source: String, amount: String, first: Bool = false) {
+            if !first { tap(addPrice) }
+            let choice = app.buttons[source]
+            XCTAssertTrue(choice.waitForExistence(timeout: 8))
+            tap(choice)
             for (field, text) in [("prices.name", name), ("prices.variant", "Unsalted"),
                                   ("prices.store", "South Market"), ("prices.total", amount), ("prices.quantity", "2")] {
                 let input = app.textFields[field]
@@ -1039,7 +1032,7 @@ import XCTest
             tap(app.buttons["prices.confirm"])
             XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", name)).firstMatch.waitForExistence(timeout: 8))
         }
-        record("Paid cashews", amount: "5.60")
+        record("Paid cashews", source: "Manually confirmed paid price", amount: "5.60", first: true)
         record("Shelf cashews", source: "Shelf observation", amount: "5.00")
         record("Quoted cashews", source: "Checkout quote", amount: "6.00")
         app.terminate()

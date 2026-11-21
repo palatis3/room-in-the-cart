@@ -52,6 +52,23 @@
         }
       }
     },
+    "Save a shelf price, checkout quote or amount you paid on this iPhone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save a shelf price, checkout quote or amount you paid on this iPhone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guarda en este iPhone un precio del estante, una cotización al pagar o el importe que pagaste."
+          }
+        }
+      }
+    },
     "Original printed wording": {
       "extractionState": "manual",
       "localizations": {

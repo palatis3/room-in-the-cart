@@ -23,6 +23,13 @@ struct PantrySetupView: View {
     @State private var generation = UUID()
     @State private var busy = false
     @State private var initialSheet: PantrySheet?
+    @State private var startPriceEntry = false
+
+    private func setupExplanation(startsEmpty: Bool) -> String {
+        guard startsEmpty else { return "Review the food and reservations from your saved pickups. You can add food by hand after setup." }
+        if destination == .prices { return "Save a shelf price, checkout quote or amount you paid on this iPhone." }
+        return "Add your first food by hand or review a receipt."
+    }
 
     private enum Phase {
         case loading, staging, unavailable
@@ -54,7 +61,7 @@ struct PantrySetupView: View {
                 Text(pantryText("Unlock the authorized private workspace to view pantry food."))
             } else if case .ready(let original, let model) = phase, original == scope, model.phase != .accessDenied {
                 switch destination {
-                case .prices: PantryPriceHistoryView(model: model)
+                case .prices: PantryPriceHistoryView(model: model, startEntry: $startPriceEntry)
                 case .receipts: PantryReceiptHistory(model: model, showsDone: false)
                 case .home:
                     PantryHomeView(model: model, accessAllowed: true, offersTonight: true, offersStaplePrompts: true,
@@ -81,10 +88,15 @@ struct PantrySetupView: View {
                                     .accessibilityIdentifier("pantry.setup.products")
                                 Button(pantryText("Other pantry options")) { Task { await perform(.apply) } }
                                     .accessibilityIdentifier("pantry.setup.apply")
+                            } else if startsEmpty && destination == .prices {
+                                Button(pantryText("Record a price")) {
+                                    startPriceEntry = true
+                                    Task { await perform(.apply) }
+                                }.buttonStyle(PrimaryAction()).accessibilityIdentifier("pantry.setup.firstPrice")
                             } else if startsEmpty { applySetup(startsEmpty: true) }
                             VStack(alignment: .leading, spacing: 12) {
                                 if !startsEmpty { Text(pantryText("Set up My Pantry")).font(.title2.bold()) }
-                                Text(pantryText(startsEmpty ? "Add your first food by hand or review a receipt." : "Review the food and reservations from your saved pickups. You can add food by hand after setup."))
+                                Text(pantryText(setupExplanation(startsEmpty: startsEmpty)))
                                     .foregroundStyle(Theme.secondary)
                                 BrandScopeLabel(pantryText("Private · On this iPhone"), systemImage: "lock")
                             }
@@ -120,7 +132,7 @@ struct PantrySetupView: View {
                 if original == scope && model.phase != .accessDenied { return }
                 model.accessLost()
             }
-            generation = UUID(); phase = .loading; busy = false; initialSheet = nil
+            generation = UUID(); phase = .loading; busy = false; initialSheet = nil; startPriceEntry = false
             if scope != nil { await perform(.inspect) }
         }
     }
