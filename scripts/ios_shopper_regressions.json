@@ -21,11 +21,13 @@
     "RoomInTheCartTests/PantryVoiceBatchMatcherTests/testStorageQualifiersNarrowExactLotsWithoutChoosingBetweenPhysicalBatches"
   ],
   "07 · Review receipt evidence before adding food": [
-    "RoomInTheCartUITests/FreeJourneyUITests/testSystemFilesReceiptReviewsSelectedPDFLinesBeforeStock"
+    "RoomInTheCartUITests/FreeJourneyUITests/testSystemFilesReceiptReviewsSelectedPDFLinesBeforeStock",
+    "RoomInTheCartTests/ReceiptDocumentTests/testPricePrintedBelowTheItemRequiresExplicitLinkingAndStaysUnpaid"
   ],
   "08 · Type a receipt after denying camera access and review the portion kept": [
     "RoomInTheCartUITests/FreeJourneyUITests/testReceiptCameraRefusalKeepsPrivateReceiptAndTypedEntry",
-    "RoomInTheCartUITests/FreeJourneyUITests/testReviewReopensKeptPortionAndFocusesItsMissingAmount"
+    "RoomInTheCartUITests/FreeJourneyUITests/testReviewReopensKeptPortionAndFocusesItsMissingAmount",
+    "RoomInTheCartTests/ReceiptDocumentTests/testBarePrintedAmountOnlyKeepsTheSameExplicitCurrencyEvidence"
   ],
   "09 · Choose whole packs across weight units under an item limit": [
     "RoomInTheCartTests/AppModelTests/testCornmealPackDefaultsAndReadableConvertedTotals"
