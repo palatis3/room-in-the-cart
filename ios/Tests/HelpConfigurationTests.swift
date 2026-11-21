@@ -27,6 +27,23 @@ final class HelpConfigurationTests: XCTestCase {
         XCTAssertEqual(MembershipConfiguration.fromBundle(bundle).privacyURL, spanish.privacyURL)
     }
 
+    func testFamilyGuideUsesOnlyTheConfiguredCompanionHelpAddress() throws {
+        let base = ["HouseholdServiceURL": "https://grocery-app.com", "HelpURL": "https://grocery-app.com/help"]
+        let bundle = try testBundle(base)
+        for language in ["en", "es"] {
+            XCTAssertEqual(HelpConfiguration.fromBundle(bundle, language: language).familyHelpURL?.absoluteString,
+                           "https://grocery-app.com/help?lang=\(language)#child-permission")
+        }
+        for help in ["https://operator.grocery-app.com/help", "https://grocery-app.com/help#operator",
+                     "https://grocery-app.com/help?topic=contact"] {
+            var custom = base
+            custom["HelpURL"] = help
+            let configuration = HelpConfiguration.fromBundle(try testBundle(custom), language: "es")
+            XCTAssertNil(configuration.familyHelpURL)
+            XCTAssertNotNil(configuration.helpURL)
+        }
+    }
+
     func testBareSupportEmailOpensOnlyAddressWithoutHeadersOrEncodedPayload() throws {
         let contact = try XCTUnwrap(HelpConfiguration.emailURL("hello@roominthecart.com"))
         XCTAssertEqual(contact.absoluteString, "mailto:hello@roominthecart.com")

@@ -33,6 +33,7 @@ struct HelpCenterView: View {
                 Text(helpText("In Shop, choose Add a grocery to start your private list. Pantry, Dinners and Records are also available without an account."))
             }
             Section(helpText("Using Room in the Cart")) {
+                FamilyPermissionGuideLink()
                 ForEach(HelpTopic.allCases) { topic in
                     NavigationLink { HelpArticleView(topic: topic) } label: {
                         Text(topic.title).fixedSize(horizontal: false, vertical: true)
@@ -292,6 +293,7 @@ struct HelpSupportView: View {
                 }
                 if let url = configuration.supportURL { Link(helpText("Open support"), destination: url).accessibilityIdentifier("help.support.open") }
                 else if configuration.supportEmailURL == nil { Text(helpText("Online support is unavailable. You can read the help articles here or share your support summary.")) }
+                FamilyPermissionGuideLink()
                 NavigationLink(helpText("Read offline help")) { HelpCenterView() }
             }
             Section(helpText("Review support summary")) {

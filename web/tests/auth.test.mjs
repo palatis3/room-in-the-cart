@@ -239,3 +239,39 @@ test('when a verified adult cookie outlives a lost response, explain how to reco
   assert.equal(root.querySelector('#adult-attestation')?.checked,false);
   assert.equal(verifies,1);
 });
+
+test('leaving an invitation clears only its draft and the public destination carries only the language', async () => {
+  for (const language of ['en', 'es']) {
+    const {root, dom, app, calls} = await fixture({
+      authState: async () => ({available: true, authenticated: true, csrf: 'fixture-csrf'})
+    }, language);
+    const leave = [...root.querySelectorAll('a')].find(link =>
+      link.textContent === (language === 'es' ? 'Salir sin unirme' : 'Leave without joining'));
+    assert.ok(leave);
+    assert.equal(leave.getAttribute('href'), '/help?lang=' + language);
+    assert.equal(leave.referrerPolicy, 'no-referrer');
+    input(dom, 'invite-alias', 'Picnic helper');
+    const age = root.querySelector('#adult-attestation');
+    age.checked = true;
+    age.dispatchEvent(new dom.window.Event('change'));
+    leave.addEventListener('click', event => event.preventDefault());
+    leave.click();
+    app.render();
+    assert.equal(root.querySelector('#invitation')?.value, '');
+    assert.equal(root.querySelector('#invite-alias')?.value, '');
+    assert.equal(root.querySelector('#adult-attestation')?.checked, false);
+    assert.deepEqual(calls, []);
+  }
+});
+
+test('an unavailable invitation offers language-matched public help and support without carrying the invitation', async () => {
+  for (const language of ['en', 'es']) {
+    const {root} = await fixture({authState: async () => ({available: false, authenticated: false, csrf: null})}, language);
+    const links = [...root.querySelectorAll('a')];
+    assert.deepEqual(links.map(link => link.getAttribute('href')), ['/help?lang=' + language, '/support?lang=' + language]);
+    assert.deepEqual(links.map(link => link.textContent), language === 'es'
+      ? ['Ayuda pública', 'Opciones de soporte'] : ['Public help', 'Support options']);
+    assert.ok(links.every(link => link.referrerPolicy === 'no-referrer'));
+    assert.equal(root.querySelector('form'), null);
+  }
+});

@@ -4,6 +4,7 @@ import Foundation
 /// stays unavailable; neither a guessed domain nor a test destination is used.
 struct HelpConfiguration: Equatable, Sendable {
     let helpURL: URL?
+    let familyHelpURL: URL?
     let privacyURL: URL?
     let termsURL: URL?
     let supportURL: URL?
@@ -26,7 +27,18 @@ struct HelpConfiguration: Equatable, Sendable {
             components.queryItems = [URLQueryItem(name: "lang", value: spanish ? "es" : "en")]
             return components.url
         }
-        return Self(helpURL: page("HelpURL"), privacyURL: page("PrivacyPolicyURL"),
+        let help = page("HelpURL")
+        var familyHelp: URL?
+        if let service, let help,
+           help.host?.lowercased() == service.host?.lowercased(),
+           (help.port ?? 443) == (service.port ?? 443),
+           help.path == "/help", help.fragment == nil,
+           var components = URLComponents(url: help, resolvingAgainstBaseURL: false),
+           components.queryItems?.allSatisfy({ $0.name == "lang" && ["en", "es"].contains($0.value ?? "") }) == true {
+            components.fragment = "child-permission"
+            familyHelp = components.url
+        }
+        return Self(helpURL: help, familyHelpURL: familyHelp, privacyURL: page("PrivacyPolicyURL"),
                     termsURL: page("TermsOfUseURL"), supportURL: page("SupportURL"),
                     supportEmailURL: emailURL(bundle.object(forInfoDictionaryKey: "SupportEmail") as? String),
                     operatorName: displayOperatorName(bundle.object(forInfoDictionaryKey: "OperatorName") as? String))

@@ -36,6 +36,21 @@ async function mountedInvitation(t) {
   return {fixture,dom,root,api,visibility};
 }
 
+test('pending pairing warns against reloading in the selected language and offers an in-page status check', async t => {
+  const f = await setup(t);
+  await paired(f);
+  assert.match(f.root.textContent, /Keep this page open until setup is finished/);
+  const language = f.root.querySelector('select');
+  language.value = 'es';
+  language.dispatchEvent(new f.dom.window.Event('change', {bubbles: true}));
+  assert.match(f.root.textContent, /Mantén esta página abierta hasta terminar/);
+  assert.match(f.root.textContent, /«Consultar estado actual» en lugar de recargarla/);
+  await click(f.root, 'Consultar estado actual');
+  assert.ok(f.root.querySelector('#pairing-code'));
+  assert.equal(f.fixture.counts.claims, 1);
+  assert.equal(f.fixture.counts.finishPosts, 0);
+});
+
 test('a supplied child invitation stays out of sign-in and claim fields',async t=>{
   const f=await mountedInvitation(t);
   const assertHidden=()=>{

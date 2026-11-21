@@ -494,10 +494,26 @@ export class WebApp {
       this.renderContributor(main);
     }
   }
+  private publicLink(page: 'help' | 'support', label: string): HTMLAnchorElement {
+    const link = this.el('a', this.t(label));
+    link.href = '/' + page + '?lang=' + this.language;
+    link.referrerPolicy = 'no-referrer';
+    link.rel = 'noreferrer';
+    return link;
+  }
   private renderLogin(main:HTMLElement):void{
     main.append(this.el('h1',this.t('Sign in to continue')));
-    if(!this.browserAuth){main.append(this.el('p',this.t('Connect to load sign-in options.')),this.button('Refresh',()=>void this.run(()=>this.load(),'load')));return;}
-    if(!this.browserAuth.available){main.append(this.el('p',this.t(this.invitation?'Email sign-in is not available yet. Your invitation stays on this page.':'Email sign-in is not available yet.')),this.button('Refresh',()=>void this.run(()=>this.load(),'load')));return;}
+    if (!this.browserAuth?.available) {
+      const reason = !this.browserAuth ? 'Connect to load sign-in options.'
+        : this.invitation ? 'Email sign-in is not available yet. Your invitation stays on this page.'
+        : 'Email sign-in is not available yet.';
+      main.append(this.el('p', this.t(reason)), this.button('Refresh', () => void this.run(() => this.load(), 'load')));
+      const links = this.el('div');
+      links.className = 'actions';
+      links.append(this.publicLink('help', 'Public help'), this.publicLink('support', 'Support options'));
+      main.append(links);
+      return;
+    }
     main.append(this.el('p',this.t('Use your email code. Signing in does not join a household.')));
     if(this.invitation)main.append(this.el('p',this.t('Your invitation stays on this page while you sign in.')));
     const form=this.el('form');
@@ -515,7 +531,12 @@ export class WebApp {
   private renderInvite(main:HTMLElement):void {
     if(!this.session&&!this.browserAuth?.authenticated){this.renderLogin(main);return;}
 
-    main.append(this.el('h1',this.t('Continue with your invitation')),this.el('p',this.t('Open an invitation from your household to join.')));
+    main.append(this.el('h1', this.t('Continue with your invitation')));
+    if (!this.redemption) {
+      main.append(this.el('p', this.t(this.invitation?.trim()
+        ? 'Confirm the household and your role with the person who invited you. An invitation can let you send your own requests or view selected shopping instructions.'
+        : 'Open an invitation from your household to join.')));
+    }
     const form=this.el('form');
     if(this.invitation?.trim()){
       form.append(this.el('p',this.t('Invitation code received.')));
@@ -564,6 +585,11 @@ export class WebApp {
         this.invitation=null;this.redemption=null;this.adultAttestation=false;this.inviteAlias='';
       });
     });
+    if (!this.redemption && !this.busy) {
+      const leave = this.publicLink('help', 'Leave without joining');
+      leave.addEventListener('click', () => this.clearInvitationDraft());
+      form.append(leave);
+    }
     main.append(form,this.el('p',this.t('An internet connection is needed to open an invitation.')),this.button('Refresh',()=>void this.run(()=>this.load(),'load')));
     if(!this.session&&this.browserAuth?.authenticated)main.append(this.button('Sign out',()=>void this.run(()=>this.signOut(undefined,this.browserAuth?.csrf??undefined))));
   }

@@ -200,6 +200,46 @@ struct GuardianEnrollmentView<Withdrawal: View>: View {
     }
 }
 
+struct FamilyPermissionGuideLink: View {
+    var body: some View {
+        NavigationLink {
+            WorkingForm { FamilyPermissionSections() }
+                .navigationTitle(GuardianCopy.text("Family permissions"))
+                .navigationBarTitleDisplayMode(.inline)
+        } label: {
+            Label(GuardianCopy.text("Children and guardian permission"), systemImage: "person.2")
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .accessibilityIdentifier("guardian.familyGuide")
+    }
+}
+
+private struct FamilyPermissionSections: View {
+    private let configuration = HelpConfiguration.fromBundle()
+
+    var body: some View {
+        Section(GuardianCopy.text("What a child can do")) {
+            Text(GuardianCopy.text("With guardian permission, a child can send grocery requests and see the status of their own requests. The assigned shopper decides what goes in the basket. The household budget stays private."))
+                .accessibilityIdentifier("guardian.familyGuide.scope")
+        }
+        Section(GuardianCopy.text("On the guardian’s iPhone")) {
+            Text(GuardianCopy.text("When child setup is available, open Household requests in Settings, sign in to your adult account, choose your child’s household, then open Guardian controls."))
+                .accessibilityIdentifier("guardian.familyGuide.start")
+            Text(GuardianCopy.text("A parent or legal guardian verifies adulthood, gives permission and confirms the child’s device. Keep the invitation private. The child signs in with their own approved email."))
+        }
+        Section {
+            if let url = configuration.familyHelpURL {
+                Link(GuardianCopy.text("Read the family guide online"), destination: url)
+                    .accessibilityIdentifier("guardian.familyGuide.online")
+            } else if let url = configuration.helpURL {
+                Link(helpText("Online help"), destination: url)
+            }
+            NavigationLink(helpText("Support")) { HelpSupportView() }
+                .accessibilityIdentifier("guardian.familyGuide.support")
+        }
+    }
+}
+
 /// This is the production entry until the operator-approved child identity setup is integrated.
 /// It deliberately has no email field, adult declaration, or fallback to AdultAuth.
 struct GuardianChildEntryView: View {
@@ -208,10 +248,12 @@ struct GuardianChildEntryView: View {
             Section {
                 Label(GuardianCopy.text("Child sign-in is not available yet"), systemImage: "lock.shield")
                     .accessibilityIdentifier("guardian.childAuthUnavailable")
-                Text(GuardianCopy.text("A child invitation requires the child's own live authenticated session from an approved guardian setup. This app cannot create or substitute an adult account for that session."))
-                Text(GuardianCopy.text("Ask your guardian to keep the invitation private and check setup status. Online requests stay unavailable until verification, permission, and device pairing are complete."))
+                Text(GuardianCopy.text("Online requests stay unavailable until your guardian finishes setup. An adult account cannot be used to sign in for a child."))
             }
+            FamilyPermissionSections()
             GuardianChildDeletionHelp()
-        }.navigationTitle(GuardianCopy.text("Use a child invitation"))
+        }
+        .navigationTitle(GuardianCopy.text("Child access"))
+        .navigationBarTitleDisplayMode(.inline)
     }
 }

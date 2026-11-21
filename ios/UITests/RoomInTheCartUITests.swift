@@ -325,6 +325,7 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(scope.label.contains("sus propias solicitudes"))
         XCTAssertTrue(scope.label.contains("presupuesto del hogar es privado"))
         let start = app.staticTexts["guardian.familyGuide.start"]
+        reveal(start)
         XCTAssertTrue(start.label.contains("Solicitudes del hogar"))
         XCTAssertTrue(start.label.contains("Controles del tutor"))
         tap(app.buttons["guardian.familyGuide.support"])

@@ -58,7 +58,6 @@ struct HouseholdSettingsView: View {
                     Label(ht("Household sign-in is unavailable"), systemImage: "network.slash")
                         .foregroundStyle(Theme.secondary)
                 }
-                Section { PrivateListSharingGuide() }
             } else if model.locked {
                 Section(ht("Protected account")) {
                     Button(ht("Unlock household access")) { Task { await model.unlock() } }
@@ -87,7 +86,6 @@ struct HouseholdSettingsView: View {
                         Text(ht("Email sign-in is unavailable. You can still use your private shopping tools."))
                     }
                 }
-                Section { PrivateListSharingGuide() }
             } else {
                 if model.workspaceListState == .unavailable {
                     Section(ht("Choose household")) {
@@ -241,6 +239,9 @@ struct HouseholdSettingsView: View {
                 Section(GuardianCopy.text("Child sign-in")) {
                     GuardianChildEntryButton(household: model)
                 }
+            }
+            if !model.configured || (!model.locked && model.identity == nil) {
+                Section { PrivateListSharingGuide() }
             }
             accountControls
             // Shop selection briefly clears the projection. Keep this destination

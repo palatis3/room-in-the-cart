@@ -109,6 +109,8 @@ const es: Record<string, string> = {
   'Status unavailable':'Estado no disponible',
   'Ask the shopper':'Pedir a quien hace la compra', 'Your requests':'Tus solicitudes',
   'Current instructions':'Instrucciones actuales', 'Language':'Idioma', 'English':'Inglés', 'Spanish':'Español',
+  'Public help':'Ayuda pública', 'Support options':'Opciones de soporte', 'Leave without joining':'Salir sin unirme',
+  'Confirm the household and your role with the person who invited you. An invitation can let you send your own requests or view selected shopping instructions.':'Confirma el hogar y tu función con la persona que te invitó. Según la invitación, puedes enviar tus propias solicitudes o consultar instrucciones de compra seleccionadas.',
   'Loading…':'Cargando…', 'Continue with your invitation':'Continuar con tu invitación',
   'Open an invitation from your household to join.':'Abre una invitación de tu familia para unirte.',
   'Invitation code received.':'Código de invitación recibido.',
