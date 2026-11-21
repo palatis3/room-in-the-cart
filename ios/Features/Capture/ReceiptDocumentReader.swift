@@ -97,6 +97,48 @@ struct ExtractedReceiptDocument: Sendable {
         var id: Self { self }
     }
 
+    struct PrintedPaidTotal: Equatable, Sendable {
+        let wording: String
+        let amount: String
+    }
+
+    private static let paidTotalLabels = ["TOTAL PAID", "PAID TOTAL", "TOTAL PAGADO", "IMPORTE TOTAL PAGADO"]
+
+    /// Require readable source pages and one explicit paid-total row.
+    /// Selection preserves evidence, with payment confirmed later.
+    func printedPaidTotal(selected: Set<Selection>) -> PrintedPaidTotal? {
+        guard !pages.isEmpty, pages.allSatisfy({
+            $0.skipped == nil && !$0.lines.isEmpty && ($0.method == .imageOCR || $0.method == .pdfOCR)
+        }) else { return nil }
+        var source: (page: ReceiptDocumentPage, label: ReceiptDocumentPage.Line)?
+        for page in pages {
+            for line in page.lines {
+                let text = line.text.split(whereSeparator: \.isWhitespace).joined(separator: " ").uppercased()
+                let label = text.trimmingCharacters(in: .whitespaces.union(CharacterSet(charactersIn: ":")))
+                let exact = Self.paidTotalLabels.contains(label)
+                guard exact || Self.paidTotalLabels.contains(where: {
+                    text.hasPrefix($0 + " ") || text.hasPrefix($0 + ":")
+                }) else { continue }
+                // Suppress proposals if a second paid total is present, or if a
+                // total was merged with ambiguous wording in an OCR observation.
+                guard source == nil, exact else { return nil }
+                source = (page, line)
+            }
+        }
+        guard let (page, label) = source, !label.uncertain, let labelBox = label.bounds,
+              selected.contains(.init(page: page.id, line: label.id)) else { return nil }
+        let neighbors = page.lines.filter { line in
+            guard line.id != label.id, let box = line.bounds else { return false }
+            return Self.samePrintedRow(labelBox, box)
+        }
+        guard neighbors.count == 1, let amount = neighbors.first,
+              abs(amount.id - label.id) == 1, !amount.uncertain,
+              let box = amount.bounds, labelBox.maxX <= box.minX,
+              selected.contains(.init(page: page.id, line: amount.id)),
+              let value = ReceiptPrintedEvidence.standaloneAmount(amount.text) else { return nil }
+        return PrintedPaidTotal(wording: amount.text, amount: value)
+    }
+
     /// Keep OCR observations separate. Offer a price only when the image supports
     /// an isolated item/amount pair on one printed row in reading order.
     var amountAssociations: [Selection: Selection] {
@@ -122,6 +164,33 @@ struct ExtractedReceiptDocument: Sendable {
         return result
     }
 
+    /// Expose a named choice for a price printed directly below an item.
+    /// These pairs still require a shopper to attach the separate amount.
+    func splitAmountAssociations(excluding suggested: [Selection: Selection]) -> [Selection: Selection] {
+        let suggestedAmounts = Set(suggested.values)
+        var result: [Selection: Selection] = [:]
+        for page in pages where page.method == .imageOCR || page.method == .pdfOCR {
+            for (item, amount) in zip(page.lines, page.lines.dropFirst()) {
+                let itemPosition = Selection(page: page.id, line: item.id)
+                let amountPosition = Selection(page: page.id, line: amount.id)
+                guard amount.id == item.id + 1, !item.uncertain, !amount.uncertain,
+                      suggested[itemPosition] == nil, !suggestedAmounts.contains(amountPosition),
+                      let itemBox = item.bounds, let amountBox = amount.bounds,
+                      itemBox.maxX <= amountBox.minX, itemBox.minY >= amountBox.maxY,
+                      itemBox.midY - amountBox.midY <= max(itemBox.height, amountBox.height) * 2,
+                      ReceiptPrintedEvidence.canSuggestAmount(for: item.text),
+                      ReceiptPrintedEvidence.isStandaloneAmount(amount.text),
+                      !page.lines.contains(where: { other in
+                          guard other.id != item.id, other.id != amount.id, let box = other.bounds else { return false }
+                          return Self.samePrintedRow(itemBox, box) || Self.samePrintedRow(amountBox, box)
+                      })
+                else { continue }
+                result[itemPosition] = amountPosition
+            }
+        }
+        return result
+    }
+
     private static func samePrintedRow(_ first: CGRect, _ second: CGRect) -> Bool {
         let minHeight = min(first.height, second.height), maxHeight = max(first.height, second.height)
         let overlap = min(first.maxY, second.maxY) - max(first.minY, second.minY)
@@ -131,11 +200,15 @@ struct ExtractedReceiptDocument: Sendable {
 
     func source(target: CaptureTarget, merchant: String, stage: ReceiptAcquisition.DocumentLine.Stage,
                 selection: Set<Selection>, linkedAmountItems: Set<Selection> = [], at date: Date) throws -> SourceMediaRecord {
-        let associations = linkedAmountItems.isEmpty ? [:] : amountAssociations
+        var associations: [Selection: Selection] = [:]
+        if !linkedAmountItems.isEmpty {
+            let suggested = amountAssociations
+            associations = suggested.merging(splitAmountAssociations(excluding: suggested)) { suggested, _ in suggested }
+        }
         let amounts = linkedAmountItems.compactMap { associations[$0] }
         let included = selection.union(amounts)
         guard (1...200).contains(included.count), linkedAmountItems.isSubset(of: selection),
-              amounts.count == linkedAmountItems.count, linkedAmountItems.isEmpty || stage != .order
+              Set(amounts).count == linkedAmountItems.count, linkedAmountItems.isEmpty || stage != .order
         else { throw ReceiptDocumentFailure.selection }
         let id = ReceiptAcquisition.identity(["document", digest.base64EncodedString()])
         var rows: [ScanReceiptLine] = []

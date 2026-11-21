@@ -8,7 +8,7 @@ struct PantryProductBatchView: View {
     @StateObject private var catalogScope = BatchCatalogScope()
     @Environment(\.pantryDigestAccess) private var access
     @ObservedObject private var memory = PantryDigestStore.shared.packMemory
-    @State private var atHome = false
+    @State private var atHome = true
     @State private var retailer = ""
     @State private var typedKind = "manual"
     @State private var repeatedScan: CapturedBarcode?
@@ -42,6 +42,14 @@ struct PantryProductBatchView: View {
         self.model = model
         _batch = State(initialValue: PantryProductBatch(workspaceID: workspaceID))
     }
+    private var confirmationText: String {
+        guard atHome else { return pantryText("I received these packages and checked the date and usable quantities.") }
+        if batch.candidates.contains(where: { $0.included && $0.onePackageUnknown }) {
+            return pantryText("I checked these packages and the amounts shown.")
+        }
+        return pantryText("I checked these physical packages and usable amounts.")
+    }
+
     private var authorized: Bool {
         scene == .active && model.phase == .ready && model.snapshot?.state.workspaceID == batch.workspaceID &&
             (initialAccess == nil || (access?.scope == initialAccess?.scope && access?.authorized() == true))
@@ -85,7 +93,7 @@ struct PantryProductBatchView: View {
                         Section {
                             PantryBatchHeading(lot: lot)
                             NavigationLink(pantryText("Add a date or reminder")) {
-                                PackageDateChoices(model: model, lot: lot, access: access, code: row.barcode)
+                                PackageDateChoices(model: model, lot: lot, access: access, code: row.barcode, reviewedDateWording: row.reviewedDateWording)
                             }.accessibilityLabel(pantryText("Add a date or reminder") + " · " + lot.packageBatchLabel)
                             .accessibilityIdentifier("pack.date." + String(row.ordinal))
                         }
@@ -97,7 +105,7 @@ struct PantryProductBatchView: View {
                             Section {
                                 PantryBatchHeading(lot: lot)
                                 NavigationLink(pantryText("Add a date or reminder")) {
-                                    PackageDateChoices(model: model, lot: lot, access: access)
+                                    PackageDateChoices(model: model, lot: lot, access: access, reviewedDateWording: row.reviewedDateWording)
                                 }.accessibilityLabel(pantryText("Add a date or reminder") + " · " + lot.packageBatchLabel)
                             }
                         }
@@ -114,7 +122,11 @@ struct PantryProductBatchView: View {
                             VStack(alignment: .leading) {
                                 Text(row.name).font(.headline)
                                 Text(row.reviewEvidenceLine)
-                                Text(pantryText("Amount usable") + " · " + (row.usable.isEmpty ? row.total?.description ?? "" : row.usable) + " " + pantryUnit(row.unit))
+                                if !row.onePackageUnknown {
+                                    Text(pantryText("Amount usable") + " · " + pantryPrintedQuantity(row.usable.isEmpty ? row.total?.description ?? "" : row.usable, unit: row.unit))
+                                } else if let wording = row.reviewedDateWording {
+                                    LabeledContent(pantryText("Printed wording to review"), value: wording)
+                                }
                                 Text(pantryLocationName(row.location))
                             }.accessibilityElement(children: .combine)
                         }
@@ -146,9 +158,17 @@ struct PantryProductBatchView: View {
                     Button(pantryText("Edit batch")) { self.review = nil; result = nil }
                 }.disabled(working)
             } else {
+                Section {
+                    Picker(pantryText("Package source"), selection: $atHome) {
+                        Text(pantryText("Counted at home")).tag(true)
+                        Text(pantryText("Received purchase")).tag(false)
+                    }.accessibilityIdentifier("pack.source")
+                } footer: {
+                    Text(pantryText("Choose Counted at home for food you already have."))
+                }
                 Section(pantryText("Add a product")) {
                     LivePackageButton(workspaceID: batch.workspaceID,
-                                      authorized: { authorized && !working && review == nil && !saved }, receive: scanned)
+                                      authorized: { authorized && !working && review == nil && !saved }, acceptsTypedLabel: true, receive: scanned)
                     TextField(pantryText("Barcode, if available"), text: $code).focused($focus, equals: "code")
                         .autocorrectionDisabled().textInputAutocapitalization(.never).accessibilityIdentifier("productBatch.code")
                     if code.count == 8 && code.allSatisfy(\.isNumber) {
@@ -223,7 +243,7 @@ struct PantryProductBatchView: View {
                         ForEach(batch.candidates) { row in
                             productRow(row)
                                 .accessibilityIdentifier("productBatch.row." + String(row.ordinal))
-                            if row.included && row.total != nil {
+                            if row.included && (row.total != nil || row.onePackageUnknown) {
                                 Button(pantryText("Separate batches")) { separate(row) }
                                     .accessibilityIdentifier("pack.separate." + String(row.ordinal))
                                     .accessibilityLabel(pantryFormat("Separate batches of %@", row.name))
@@ -235,16 +255,12 @@ struct PantryProductBatchView: View {
                         Button(pantryText("Done")) { didFinishWithLot(existing.lotID); dismiss() }.buttonStyle(PrimaryAction())
                     } else {
                     Section(pantryText("Record these packages")) {
-                        Picker(pantryText("Package source"), selection: $atHome) {
-                            Text(pantryText("Received purchase")).tag(false)
-                            Text(pantryText("Counted at home")).tag(true)
-                        }.accessibilityIdentifier("pack.source")
                         if !atHome {
                         TextField(pantryText("Store or branch"), text: $merchant).focused($focus, equals: "merchant")
                             .accessibilityIdentifier("productBatch.merchant")
                         ReceiptDatePicker(title: pantryText("Purchase date"), identifier: "productBatch.purchaseDate", date: $date)
                         }
-                        Toggle(pantryText(atHome ? "I checked these physical packages and usable amounts." : "I received these packages and checked the date and usable quantities."), isOn: $confirmed)
+                        Toggle(confirmationText, isOn: $confirmed)
                             .accessibilityIdentifier("productBatch.received")
                         Button(pantryText(atHome ? "Review pantry count" : "Review received products")) { prepare() }
                             .disabled(!confirmed || working || !model.canEdit || (!atHome && merchant.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
@@ -265,21 +281,21 @@ struct PantryProductBatchView: View {
                 if authorized, let row = batch.candidates.first(where: { $0.id == selection.id }) {
                     PantryProductCandidateEditor(row: captureDraftBinding(row, in: $batch.candidates),
                         model: model, access: access, atHome: atHome, deliveries: atHome ? [] : model.productDeliveries, scope: catalogScope.id, focusCount: editingCount,
-                        correctBarcode: correctBarcode, authorized: {
+                        finishEditing: { editingProduct = nil }, correctBarcode: correctBarcode, authorized: {
                             authorized && editingProduct?.id == selection.id && batch.candidates.contains { $0.id == selection.id }
                         })
-                        .toolbar {
-                            ToolbarItem(placement: .confirmationAction) {
-                                Button(pantryText("Close")) { editingProduct = nil }
-                                    .accessibilityIdentifier("productBatch.finishEditing")
-                            }
-                        }
                 }
             }
         }
         .task(id: access?.scope) { inspectPending() }
         .onChange(of: batch.candidates) { _, _ in confirmed = false }
-        .onChange(of: atHome) { _, _ in confirmed = false; for index in batch.candidates.indices { batch.candidates[index].stockAction = nil } }
+        .onChange(of: atHome) { _, _ in
+            confirmed = false
+            for index in batch.candidates.indices {
+                batch.candidates[index].stockAction = nil
+                batch.candidates[index].onePackageUnknown = false
+            }
+        }
         .onChange(of: merchant) { _, _ in confirmed = false }
         .onChange(of: date) { old, new in if !Calendar.current.isDate(old, inSameDayAs: new) { confirmed = false } }
         .onChange(of: canPresent) { _, allowed in
@@ -297,8 +313,12 @@ struct PantryProductBatchView: View {
             Text(row.name.isEmpty ? (row.barcode?.value ?? pantryText("Product photo")) : row.name)
             if row.existingReceipt != nil { Text(pantryText(row.receiptLinkSaved ? "Linked to a recorded purchase" : "Existing purchase selected · excluded from new stock")).font(.caption) }
             else if !row.included { Text(pantryText("Skipped")).font(.caption) }
-            else if let total = row.total { Text(total.description + " " + pantryUnit(row.unit)).font(.caption) }
-            else { Text(pantryText("Choose a package size and count.")).font(.caption) }
+            else if row.onePackageUnknown { Text(pantryText("One package, contents unknown")).font(.caption) }
+            else if let total = row.total { Text(pantryPrintedQuantity(total.description, unit: row.unit)).font(.caption) }
+            else if atHome {
+                Text(pantryText("Enter an amount or leave the contents unknown.")).font(.caption)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else { Text(pantryText("Choose a package size and count.")).font(.caption) }
         }
         if #available(iOS 18, *) {
             NavigationLink {
@@ -483,6 +503,8 @@ private struct PantryProductCandidateEditor: View {
     let deliveries: [PantryReceiptDelivery]
     let scope: UUID
     var focusCount = false
+    var finishEditing: (() -> Void)? = nil
+    @Environment(\.dismiss) private var dismiss
     let correctBarcode: (String, UUID) throws -> Void
     let authorized: () -> Bool
     @Environment(\.locale) private var locale
@@ -506,6 +528,29 @@ private struct PantryProductCandidateEditor: View {
             default: row.stockAction = nil
             }
         })
+    }
+
+    @ViewBuilder private var measuredPackageFields: some View {
+        TextField(pantryText("Amount in each package"), text: $row.perPack).focused($field, equals: "size")
+            .accessibilityIdentifier("productBatch.packSize")
+        Picker(pantryText("Unit"), selection: $row.unit) {
+            ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pantryUnit($0)).tag($0) }
+        }
+        LabeledContent(pantryText(atHome ? "Packages counted" : "Packages received")) {
+            TextField(text: $row.packages, prompt: Text(verbatim: "—")) {
+                Text(pantryText(atHome ? "Packages counted" : "Packages received"))
+            }
+                .multilineTextAlignment(.trailing).keyboardType(.numberPad)
+                .focused($field, equals: "count").accessibilityIdentifier("productBatch.packCount")
+        }
+        if let total = row.total {
+            LabeledContent(pantryText("Amount usable")) {
+                TextField(row.requiresExplicitUsable ? pantryText("Confirm amount") : total.description, text: $row.usable)
+                    .multilineTextAlignment(.trailing).focused($field, equals: "usable")
+                    .accessibilityIdentifier("productBatch.usable")
+                Text(pantryUnit(row.unit, singular: (try? row.usableQuantity())?.amount == .one))
+            }
+        }
     }
 
     var body: some View {
@@ -544,25 +589,25 @@ private struct PantryProductCandidateEditor: View {
                     Section(pantryText("Check the package")) {
                         TextField(pantryText("Food name"), text: $row.name).focused($field, equals: "name")
                             .accessibilityIdentifier("productBatch.productName")
-                        TextField(pantryText("Amount in each package"), text: $row.perPack).focused($field, equals: "size")
-                            .accessibilityIdentifier("productBatch.packSize")
-                        Picker(pantryText("Unit"), selection: $row.unit) {
-                            ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pantryUnit($0)).tag($0) }
+                        if atHome && row.allowsOnePackageUnknown {
+                            Toggle(pantryText("One package, contents unknown"), isOn: $row.onePackageUnknown)
+                                .accessibilityIdentifier("productBatch.oneUnknown")
                         }
-                        LabeledContent(pantryText(atHome ? "Packages counted" : "Packages received")) {
-                            TextField(text: $row.packages, prompt: Text(verbatim: "—")) {
-                                Text(pantryText(atHome ? "Packages counted" : "Packages received"))
+                        if row.onePackageUnknown {
+                            let title = pantryText("Printed wording to review")
+                            VStack(alignment: .leading) {
+                                Text(title).font(.caption)
+                                TextField(pantryText("Optional"), text: Binding(
+                                    get: { row.dateWordingDraft ?? row.reviewedDateWording ?? "" },
+                                    set: { row.dateWordingDraft = $0 }
+                                ), axis: .vertical)
+                                .accessibilityLabel(title).accessibilityIdentifier("productBatch.dateDraft")
+                                .focused($field, equals: "dateDraft")
+                                Text(pantryText("After saving the food, confirm the package date separately."))
+                                    .font(.footnote).foregroundStyle(Theme.secondary)
                             }
-                                .multilineTextAlignment(.trailing).keyboardType(.numberPad)
-                                .focused($field, equals: "count").accessibilityIdentifier("productBatch.packCount")
-                        }
-                        if let total = row.total {
-                            LabeledContent(pantryText("Amount usable")) {
-                                TextField(row.requiresExplicitUsable ? pantryText("Confirm amount") : total.description, text: $row.usable)
-                                    .multilineTextAlignment(.trailing).focused($field, equals: "usable")
-                                    .accessibilityIdentifier("productBatch.usable")
-                                Text(pantryUnit(row.unit))
-                            }
+                        } else {
+                            measuredPackageFields
                         }
                         if row.linkedDelivery == nil {
                             Picker(pantryText("Storage location"), selection: $row.location) {
@@ -607,6 +652,13 @@ private struct PantryProductCandidateEditor: View {
             }
         }
         .navigationTitle(pantryText("Review product")).privacySensitive()
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button(pantryText("Keep edits")) {
+                    if let finishEditing { finishEditing() } else { dismiss() }
+                }.accessibilityIdentifier("productBatch.finishEditing")
+            }
+        }
         .scrollDismissesKeyboard(.interactively)
         .keyboardDoneAction(visible: field != nil, title: pantryText("Done"), identifier: "productBatch.editorDone") { field = nil }
         .onAppear { if focusCount && row.included { field = "count" } }

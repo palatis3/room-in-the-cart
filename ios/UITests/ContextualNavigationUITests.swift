@@ -139,14 +139,16 @@ import UIKit
         XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
         app.typeText("1/0")
         XCTAssertEqual(amount.value as? String, "1/0")
-        XCTAssertFalse(element("ledgerCommitImport").isEnabled)
+        XCTAssertFalse(element("ledgerCommitImport").exists)
         XCTAssertTrue(element("ledgerImportAmountError-1").exists)
         app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 3))
         app.typeText("14")
         XCTAssertEqual(amount.value as? String, "14")
         let commit = app.buttons["ledgerCommitImport"]
-        revealContent(commit, above: app.buttons["Done"])
-        XCTAssertTrue(commit.isEnabled)
+        XCTAssertFalse(commit.exists)
+        tap(app.buttons["Done"])
+        XCTAssertTrue(keyboard.waitForNonExistence(timeout: 5))
+        XCTAssertTrue(commit.waitForExistence(timeout: 5) && commit.isEnabled)
         commit.tap()
         XCTAssertTrue(keyboard.waitForNonExistence(timeout: 5))
         let food = app.buttons["Inspect wraps"]
@@ -267,45 +269,53 @@ import UIKit
         let paste = app.buttons["Paste list"]
         revealContent(paste)
         XCTAssertTrue(paste.isEnabled)
+        // On compact phones revealing Paste scrolls part of the editor behind
+        // the navigation bar; XCTest reports the clipped accessibility frame.
+        let heightAtPaste = editor.frame.height
+        XCTAssertGreaterThan(heightAtPaste, 0)
         paste.coordinate(withNormalizedOffset: CGVector(dx: 0.14, dy: 0.5)).tap()
 
         let pasted = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", fixture), object: editor)
         XCTAssertEqual(XCTWaiter.wait(for: [pasted], timeout: 10), .completed, "Native Paste must preserve all 500 lines")
-        XCTAssertEqual(editor.frame.height, initialHeight, accuracy: 1, "Pasting must preserve the editor viewport")
+        XCTAssertEqual(editor.frame.height, heightAtPaste, accuracy: 1, "Native Paste must preserve the viewport at the same scroll position")
+        // Restore the original fully exposed viewport before editing the text.
+        for _ in 0..<4 {
+            if abs(editor.frame.height - initialHeight) <= 1 { break }
+            app.scrollForm(in: scrollableArea(), upward: false, besideFields: true)
+        }
+        XCTAssertEqual(editor.frame.height, initialHeight, accuracy: 1, "The populated editor must retain its full height")
         XCTAssertLessThan(editor.frame.height, app.windows.firstMatch.frame.height / 2)
 
         let keyboard = app.keyboards.firstMatch
         func focusPastedEditor() {
-            let captureForm = app.collectionViews.containing(.textView, identifier: "ledgerImportText").firstMatch
+            let form = app.collectionViews["ledgerImportForm"]
             for attempt in 0...3 {
-                guard navigation.exists, editor.exists, captureForm.exists else {
+                guard navigation.exists, form.exists else {
                     XCTFail("Bring the list must remain open while focusing the pasted editor")
                     return
                 }
-                let bounds = app.frame
-                let viewport = captureForm.frame.intersection(app.windows.firstMatch.frame)
-                let top = max(viewport.minY, navigation.frame.maxY)
+                let viewport = form.frame.intersection(app.windows.firstMatch.frame)
+                let review = app.buttons["ledgerReviewImport"]
+                let top = max(viewport.minY, navigation.frame.maxY, review.frame.maxY)
                 let bottom = keyboard.exists ? min(viewport.maxY, keyboard.frame.minY) : viewport.maxY
                 let content = CGRect(x: viewport.minX, y: top, width: viewport.width, height: max(0, bottom - top))
                     .insetBy(dx: 4, dy: 4)
-                let frame = editor.frame
-                // Check the actual rendered-text point. The center can be clear
-                // while this point is still behind the sheet's Cancel toolbar.
-                let point = CGPoint(x: frame.minX + frame.width * 0.2, y: frame.minY + frame.height * 0.17)
-                let origin = app.coordinate(withNormalizedOffset: .zero)
-                if content.contains(point) && editor.isHittable {
-                    origin.withOffset(CGVector(dx: point.x - bounds.minX, dy: point.y - bounds.minY)).tap()
-                    return
+                if editor.exists && editor.isHittable {
+                    // Native text can receive focus anywhere in the visible editor,
+                    // even when the pinned Review button covers its first lines.
+                    let visibleEditor = editor.frame.intersection(content)
+                    if visibleEditor.width >= 12 && visibleEditor.height >= 12 {
+                        let bounds = app.frame
+                        app.coordinate(withNormalizedOffset: .zero).withOffset(
+                            CGVector(dx: visibleEditor.midX - bounds.minX, dy: visibleEditor.midY - bounds.minY)
+                        ).tap()
+                        return
+                    }
                 }
-                let marginX = content.maxX - 8
-                guard attempt < 3, content.height >= 100, marginX > frame.maxX,
-                      point.y < content.minY || point.y > content.maxY else { break }
-                // Move the Form from its trailing margin, outside the editor.
-                let distance = min(120, content.height * 0.3)
-                let direction: CGFloat = point.y > content.maxY ? 1 : -1
-                let start = origin.withOffset(CGVector(dx: marginX - bounds.minX, dy: content.midY + direction * distance / 2 - bounds.minY))
-                let end = origin.withOffset(CGVector(dx: marginX - bounds.minX, dy: content.midY - direction * distance / 2 - bounds.minY))
-                start.press(forDuration: 0.05, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0)
+                guard attempt < 3, content.height >= 100 else { break }
+                // The editor precedes Paste in the form. It can unmount after the
+                // native paste scrolls. Use the form margin to scroll back to it.
+                app.scrollForm(in: content, upward: false, besideFields: true)
             }
             XCTFail("Pasted editor text must have an unobscured focus tap point in Bring the list")
         }
@@ -323,25 +333,11 @@ import UIKit
         capture("S02-500-line-native-paste-at-largest-text")
 
         let review = app.buttons["ledgerReviewImport"]
-        let form = app.collectionViews.firstMatch
-        func visibleReviewPoint() -> CGPoint? {
-            guard review.exists && review.isHittable && review.isEnabled else { return nil }
-            let viewport = form.frame.intersection(app.windows.firstMatch.frame)
-            let top = max(viewport.minY, navigation.frame.maxY)
-            let content = CGRect(x: viewport.minX, y: top, width: viewport.width, height: max(0, viewport.maxY - top))
-            let center = CGPoint(x: review.frame.midX, y: review.frame.midY)
-            return content.insetBy(dx: 0, dy: 4).contains(center) ? center : nil
-        }
-        // Start in the Form margin so the drag advances the sheet instead of scrolling editor text.
-        let lower = form.coordinate(withNormalizedOffset: CGVector(dx: 0.96, dy: 0.86))
-        let upper = form.coordinate(withNormalizedOffset: CGVector(dx: 0.96, dy: 0.38))
-        var reviewPoint = visibleReviewPoint()
-        for _ in 0..<3 {
-            if reviewPoint != nil { break }
-            lower.press(forDuration: 0.05, thenDragTo: upper, withVelocity: .slow, thenHoldForDuration: 0)
-            reviewPoint = visibleReviewPoint()
-        }
-        let point = try XCTUnwrap(reviewPoint, "Review list must have a visible tap point within a short scroll")
+        XCTAssertTrue(review.wait(for: \.isHittable, toEqual: true, timeout: 5))
+        XCTAssertTrue(review.isEnabled)
+        XCTAssertGreaterThanOrEqual(review.frame.minY, navigation.frame.maxY)
+        XCTAssertLessThanOrEqual(review.frame.maxY, app.windows.firstMatch.frame.maxY)
+        let point = CGPoint(x: review.frame.midX, y: review.frame.midY)
         capture("S02-review-action-reachable-at-largest-text")
         let origin = app.coordinate(withNormalizedOffset: .zero)
         origin.withOffset(CGVector(dx: point.x - app.frame.minX, dy: point.y - app.frame.minY)).tap()
@@ -357,7 +353,9 @@ import UIKit
         let originalAmount = String(try XCTUnwrap(originalLine.split(separator: " ").first))
         let amount = importForm.textFields[amountID]
         XCTAssertEqual(amount.value as? String, originalAmount)
-        XCTAssertTrue(importForm.staticTexts[String(originalLine)].exists)
+        let sourceWording = importForm.staticTexts["ledgerImportOriginal-\(rowNumber)"]
+        XCTAssertTrue(sourceWording.exists)
+        XCTAssertEqual(sourceWording.label, "Original wording: \(originalLine)")
         XCTAssertFalse(editor.exists)
         let commitActions = app.buttons.matching(identifier: "ledgerCommitImport")
         let commit = commitActions.firstMatch
@@ -371,6 +369,11 @@ import UIKit
         revealContent(amount, above: commit)
         amount.tap()
         XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
+        XCTAssertTrue(commit.waitForNonExistence(timeout: 5))
+        XCTAssertTrue(done.isHittable)
+        XCTAssertTrue(app.navigationBars.buttons["Done"].isHittable)
+        XCTAssertGreaterThanOrEqual(amount.frame.minY, app.navigationBars.firstMatch.frame.maxY)
+        XCTAssertLessThanOrEqual(amount.frame.maxY, app.keyboards.firstMatch.frame.minY)
         app.typeText(originalAmount)
         XCTAssertEqual(amount.value as? String, originalAmount + originalAmount)
         done.tap()
@@ -379,6 +382,18 @@ import UIKit
         commit.tap()
         XCTAssertTrue(navigation.waitForNonExistence(timeout: 20), "Adding the edited list must finish the review")
         XCTAssertTrue(app.textFields["ledgerSearch"].waitForExistence(timeout: 8))
+
+        app.terminate()
+        launch(reset: false, largestText: true)
+        let search = app.textFields["ledgerSearch"]
+        if !search.waitForExistence(timeout: 3) { tap(element("openPickupList")) }
+        let editedName = String(try XCTUnwrap(originalLine.split(separator: " ", maxSplits: 1).last))
+        let uniqueToken = String(try XCTUnwrap(editedName.split(separator: " ").last))
+        fill(uniqueToken + "\n", into: "ledgerSearch")
+        let saved = app.buttons["Inspect " + editedName]
+        revealContent(saved)
+        XCTAssertEqual(saved.value as? String, originalAmount + originalAmount + " items")
+        capture("S02-cold-reopened-edited-grocery")
     }
 
     func testDinnerOnlyCapAndCancelledSlotChangeSurviveRelaunch() {
@@ -442,11 +457,11 @@ import UIKit
             XCTAssertTrue(app.navigationBars["Describe this pickup"].waitForNonExistence(timeout: 8))
         }
         openFacts()
-        fill("West Market", into: "ledgerBranch")
+        fill("West Market", into: "ledgerBranch", fieldType: .any)
         fill("2.40", into: "Known fees (USD, unknown if blank)")
         enableSwitch("Record a retailer preview")
         fill("37.20", into: "Retailer total (USD, unknown if blank)")
-        fill("West retailer page", into: "Source of the retailer preview")
+        fill("West retailer page", into: "Source of the retailer preview", fieldType: .any)
         tap(element("ledgerReviewFacts"))
         assertText("Retailer preview: $37.20")
         saveFacts()

@@ -106,6 +106,7 @@ struct SavedDinnerHandoffLink: View {
 
 struct SavedDinnerHandoffView: View {
     let recipe: MealTemplate
+    @Environment(\.currentDinnerPlanner) private var planner
     @EnvironmentObject private var ledger: LedgerModel
     @EnvironmentObject private var pickup: PickupModel
     @EnvironmentObject private var household: HouseholdModel
@@ -121,12 +122,16 @@ struct SavedDinnerHandoffView: View {
     @State private var startingPickup = false
     @State private var selectingGroceries = false
     @State private var selected: Set<UUID> = []
+    @State private var plannedDate: Date?
+    @State private var plannedServings: Rational
+    @State private var editingPlan = false
     @State private var review: SavedDinnerReview?
     @State private var error: String?
     @State private var busy = false
 
     init(recipe: MealTemplate, selectingGroceries: Bool = false) {
         self.recipe = recipe
+        _plannedServings = State(initialValue: recipe.servings)
         _selectingGroceries = State(initialValue: selectingGroceries)
     }
 
@@ -151,10 +156,19 @@ struct SavedDinnerHandoffView: View {
                 Text(dinnerText("The pickup or dinner plan changed. Make a new preview before applying."))
             } else if let review, review.isApplied(in: ledger.workspace) {
                 Section {
-                    Label(dinnerText(review.plansDinner ? "Dinner planned for tonight" : "Groceries added"), systemImage: "checkmark.circle.fill")
+                    Label(review.plansDinner ? dinnerText(isTonight(review) ? "Dinner planned for tonight" : "Dinner planned") : dinnerText("Groceries added"), systemImage: "checkmark.circle.fill")
                         .foregroundStyle(Theme.onSelection).font(.headline).accessibilityIdentifier("dinner.handoff.saved")
                     Text(verbatim: recipe.title).font(.system(.title2, design: .serif, weight: .semibold))
+                    if let day = review.plannedDay, let count = review.plannedServings {
+                        Text(planSummary(day, count))
+                    }
                     Text(countLabel(review, saved: true))
+                    if let occurrenceID = review.occurrenceID, let planner, planner.store === ledger,
+                       planner.shop?.id == review.shopID, planner.accessAvailable {
+                        NavigationLink(dinnerText("View planned dinner")) {
+                            DinnerOccurrenceView(model: planner, occurrenceID: occurrenceID)
+                        }.accessibilityIdentifier("dinner.handoff.openPlan")
+                    }
                     NavigationLink(ledgerText("Shopping list")) {
                         LedgerHomeView(model: ledger).navigationTitle(ledgerText("Shopping list")).navigationBarTitleDisplayMode(.inline)
                     }.accessibilityIdentifier("dinner.handoff.openList")
@@ -162,7 +176,18 @@ struct SavedDinnerHandoffView: View {
             } else {
                 Section {
                     Text(verbatim: recipe.title).font(.system(.title2, design: .serif, weight: .semibold))
-                    Text(dinnerFormat("Servings: %@", amountText(recipe.servings)))
+                    if selectingGroceries {
+                        Text(dinnerFormat("Servings: %@", amountText(recipe.servings)))
+                    } else {
+                        Button { editingPlan = true } label: {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Label(dinnerText("Change day and servings"), systemImage: "calendar")
+                                if let day = try? MealDay(date: plannedDate ?? Date(), timeZoneIdentifier: planZone.identifier) {
+                                    Text(planSummary(day, plannedServings)).foregroundStyle(Theme.secondary)
+                                }
+                            }
+                        }.accessibilityIdentifier("dinner.handoff.editPlan")
+                    }
                     if let minutes = recipe.leadTimeMinutes {
                         Label(Duration.seconds(minutes * 60).formatted(.units(allowed: [.minutes])), systemImage: "clock")
                     }
@@ -178,8 +203,8 @@ struct SavedDinnerHandoffView: View {
                     Text(dinnerText("Your saved recipe changed. Open the current version to continue."))
                 } else if destinationID == nil {
                     Section {
-                        Text(dinnerText("Give your pickup a name to keep its dinner and grocery list together."))
-                        Button(dinnerText("Name your pickup")) { startingPickup = true }.buttonStyle(PrimaryAction())
+                        Text(dinnerText(selectingGroceries ? "Name your shopping list, then choose the ingredients to add." : "Name the shopping list for this dinner’s ingredients."))
+                        Button(dinnerText("Name your shopping list")) { startingPickup = true }.buttonStyle(PrimaryAction())
                             .accessibilityIdentifier("dinner.handoff.startPickup")
                     }
                 } else if let review {
@@ -187,10 +212,13 @@ struct SavedDinnerHandoffView: View {
                         ForEach(review.ingredients) { ingredientRow($0) }
                     }
                     Section {
-                        Text(dinnerText(review.plansDinner
-                            ? "Planning creates tonight’s dinner with all of its ingredient needs."
-                            : "Only the selected groceries go on this list. Your dinner schedule stays as it is."))
-                        Button(review.plansDinner ? dinnerText("Plan for tonight") : countLabel(review)) {
+                        if let day = review.plannedDay, let count = review.plannedServings {
+                            Text(planSummary(day, count)).font(.headline)
+                            Text(dinnerFormat("Planning adds all the ingredient amounts shown to %@.", review.destinationTitle))
+                        } else {
+                            Text(dinnerText("Only the selected groceries go on this list. Your dinner schedule stays as it is."))
+                        }
+                        Button(review.plansDinner ? dinnerText(isTonight(review) ? "Plan for tonight" : "Plan for this day") : countLabel(review)) {
                             Task { await apply(review) }
                         }.buttonStyle(PrimaryAction()).accessibilityIdentifier("dinner.handoff.confirm")
                         if review.plansDinner { shopInstead }
@@ -237,12 +265,36 @@ struct SavedDinnerHandoffView: View {
             .task(id: readyPlanDestination) {
                 if readyPlanDestination != nil, review == nil { prepare(.planTonight) }
             }
+            .sheet(isPresented: $editingPlan) {
+                NavigationStack {
+                    DinnerPlanFactsEditor(date: plannedDate ?? Date(), servings: plannedServings, zone: planZone) { date, count in
+                        plannedDate = date
+                        plannedServings = count
+                        review = nil
+                        if readyPlanDestination != nil { prepare(.planTonight) }
+                        editingPlan = false
+                    }
+                }
+            }
             .sheet(isPresented: $startingPickup) {
                 NavigationStack {
-                    LedgerNewShopView(model: ledger, title: suggestedListName, authorize: canChangePickup,
+                    LedgerNewShopView(model: ledger, title: suggestedListName, namingShoppingList: true, authorize: canChangePickup,
                         onShopSelected: didSelectPickup)
                 }
             }
+    }
+
+    private var planZone: TimeZone {
+        ledger.shop.flatMap { TimeZone(identifier: $0.basis.timeZoneIdentifier) } ?? .current
+    }
+    private func isTonight(_ review: SavedDinnerReview) -> Bool {
+        review.plannedDay == (try? MealDay(date: Date(), timeZoneIdentifier: planZone.identifier))
+    }
+    private func planSummary(_ day: MealDay, _ count: Rational) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeZone = TimeZone(identifier: day.timeZoneIdentifier)
+        return dinnerFormat("%@ · %@ servings", day.date.map(formatter.string(from:)) ?? day.iso8601, amountText(count))
     }
 
     private var suggestedListName: String {
@@ -273,8 +325,11 @@ struct SavedDinnerHandoffView: View {
                     await ledger.selectShop(shop.id, authorize: canChangePickup, onSelected: didSelectPickup)
                 } }
             }
-            Button(ledgerText("Start another pickup")) { startingPickup = true }
-        } label: { Label(dinnerText("Choose a pickup"), systemImage: "chevron.up.chevron.down") }
+            Button(dinnerText("Create shopping list")) { startingPickup = true }
+        } label: {
+            Label(dinnerText(ledger.shop == nil ? "Choose a shopping list" : "Change list"),
+                  systemImage: "chevron.up.chevron.down")
+        }
         .disabled(busy || ledger.saving || ledger.hasPendingSave)
         .accessibilityIdentifier("dinner.handoff.pickup")
     }
@@ -304,7 +359,12 @@ struct SavedDinnerHandoffView: View {
     private func prepare(_ action: SavedDinnerReview.Action) {
         do {
             let now = Date(), access = try context(at: now)
-            review = try SavedDinnerReview(recipe: recipe, action: action, workspace: ledger.workspace, access: access,
+            var requested = action
+            if case .planTonight = action {
+                let day = try MealDay(date: plannedDate ?? now, timeZoneIdentifier: planZone.identifier)
+                requested = .plan(day: day, servings: plannedServings)
+            }
+            review = try SavedDinnerReview(recipe: recipe, action: requested, workspace: ledger.workspace, access: access,
                 phase: TonightPlanChoice.phase(pickup, shopID: access.shopID), at: now)
             error = nil
         } catch { self.error = message(error) }
@@ -336,6 +396,85 @@ struct SavedDinnerHandoffView: View {
         } catch {
             self.review = nil
             self.error = message(error)
+        }
+    }
+}
+
+private struct DinnerPlanFactsEditor: View {
+    @Environment(\.dismiss) private var dismiss
+    @State private var date: Date
+    @State private var count: String
+    let zone: TimeZone
+    let apply: (Date, Rational) -> Void
+
+    init(date: Date, servings: Rational, zone: TimeZone, apply: @escaping (Date, Rational) -> Void) {
+        _date = State(initialValue: date)
+        _count = State(initialValue: ledgerAmountInput(servings))
+        self.zone = zone
+        self.apply = apply
+    }
+    var body: some View {
+        WorkingForm {
+            DinnerPlanDateField(date: $date, zone: zone)
+            DinnerServingField(count: $count, identifier: "dinner.plan.servings")
+            Text(dinnerText("Changing servings keeps the grocery amounts shown. You can edit individual amounts in the planned dinner."))
+            Button(dinnerText("Review dinner plan")) {
+                if let value = try? DinnerEntry.positive(count) { apply(date, value) }
+            }.buttonStyle(PrimaryAction()).disabled((try? DinnerEntry.positive(count)) == nil)
+            .accessibilityIdentifier("dinner.plan.reviewFacts")
+        }.navigationTitle(dinnerText("Change day and servings")).navigationBarTitleDisplayMode(.inline)
+        .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() } } }
+    }
+}
+
+struct DinnerPlanDateField: View {
+    @Binding var date: Date
+    let zone: TimeZone
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(dinnerText("Dinner date")).font(.headline)
+            DatePicker(dinnerText("Dinner date"), selection: $date, displayedComponents: .date)
+                .datePickerStyle(.compact).labelsHidden().fixedSize()
+                .environment(\.timeZone, zone).accessibilityIdentifier("dinner.plan.date")
+            ViewThatFits(in: .horizontal) {
+                HStack { shortcuts }
+                VStack(alignment: .leading) { shortcuts }
+            }
+        }
+    }
+    @ViewBuilder private var shortcuts: some View {
+        Button(dinnerText("Today")) { date = Date() }.buttonStyle(.bordered).accessibilityIdentifier("dinner.plan.today")
+        Button(dinnerText("Tomorrow")) {
+            var calendar = Calendar(identifier: .gregorian)
+            calendar.timeZone = zone
+            if let tomorrow = calendar.date(byAdding: .day, value: 1, to: Date()) { date = tomorrow }
+        }.buttonStyle(.bordered).accessibilityIdentifier("dinner.plan.tomorrow")
+    }
+}
+
+struct DinnerServingField: View {
+    @Binding var count: String
+    let identifier: String
+    private var value: Rational? { try? DinnerEntry.positive(count) }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(dinnerText("Total servings")).font(.headline)
+            TextField(dinnerText("Total servings"), text: $count)
+                .keyboardType(.numbersAndPunctuation).textFieldStyle(WorkingInputStyle())
+                .accessibilityIdentifier(identifier)
+            HStack {
+                Button {
+                    if let value, let next = try? value.subtracting(.one), next > .zero { count = ledgerAmountInput(next) }
+                } label: { Image(systemName: "minus").frame(minWidth: 44, minHeight: 44) }
+                    .disabled(value.map { $0 <= .one } ?? true)
+                    .accessibilityLabel(dinnerText("One fewer serving")).accessibilityIdentifier(identifier + ".less")
+                Button {
+                    if let value, let next = try? value.adding(.one) { count = ledgerAmountInput(next) }
+                } label: { Image(systemName: "plus").frame(minWidth: 44, minHeight: 44) }
+                    .disabled(value == nil)
+                    .accessibilityLabel(dinnerText("One more serving")).accessibilityIdentifier(identifier + ".more")
+            }.buttonStyle(.bordered)
         }
     }
 }

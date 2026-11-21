@@ -25,6 +25,7 @@ export const childInvitationCopy = {
   resend:{en:'Request another code',es:'Solicitar otro código'},wait:{en:'Wait before requesting another code.',es:'Espera antes de solicitar otro código.'},
   refresh:{en:'Check current status',es:'Consultar estado actual'},claim:{en:'Claim this child invitation',es:'Aceptar esta invitación para menores'},
   claimExplanation:{en:'A pairing code will appear on this device. Your guardian must confirm that code before access can start.',es:'Aparecerá un código de vinculación en este dispositivo. Tu tutor debe confirmar ese código antes de que pueda comenzar el acceso.'},
+  keepPageOpen:{en:'Keep this page open until setup is finished. Use “Check current status” instead of reloading so you keep this pairing code.',es:'Mantén esta página abierta hasta terminar. Usa «Consultar estado actual» en lugar de recargarla para conservar el código de vinculación.'},
   pairing:{en:'Your pairing code',es:'Tu código de vinculación'},waiting:{en:'Waiting for your guardian to confirm this code.',es:'Esperando a que tu tutor confirme este código.'},
   approved:{en:'Your guardian confirmed the code. You can finish setup for your own requests.',es:'Tu tutor confirmó el código. Puedes terminar la configuración para tus propias solicitudes.'},
   finish:{en:'Finish child setup',es:'Terminar la configuración del menor'},retryFinish:{en:'Retry original setup',es:'Reintentar la configuración original'},
@@ -320,6 +321,7 @@ export class ChildInvitationPage {
     }else if(this.phase==='pending'){
       const state=this.controller?.state;if(state?.pairingCode){const heading=el('h2',t('pairing'));heading.id='child-pairing';heading.tabIndex=-1;main.append(heading);const code=el('p',state.pairingCode);code.id='pairing-code';main.append(code);}
       message(state?.stage==='approved'?'approved':state?.stage==='finish_retry'?'finishUncertain':'waiting');
+      main.append(el('p', t('keepPageOpen')));
       if(state?.stage==='approved'||state?.stage==='finish_retry'){
         const finish=button(state.stage==='finish_retry'?'retryFinish':'finish',()=>void this.run(generation=>this.finish(generation)));
         finish.id='child-finish';main.append(finish);

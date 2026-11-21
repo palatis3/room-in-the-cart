@@ -19,6 +19,29 @@ public struct DinnerGuestImpact: Equatable, Sendable {
 }
 
 extension DinnerPreview {
+    /// The short review is for one local, ordinary meal whose food and shopping projection are identical.
+    /// A guest tool, an allocation edit, a pending prep task, or a stale plan requires the full review.
+    public func unchangedGroceriesForScheduleEdit(in workspace: LedgerWorkspace, workspaceID: UUID) -> MealOccurrence? {
+        guard proposal.namespace == "local:\(workspaceID.uuidString)", proposal.tool == .manual,
+              !proposal.isIsolatedPreview, !needsPurchaseAmendment, proposal.swapOriginalID == nil,
+              proposal.changes.count == 1, case let .adjust(edit) = proposal.changes[0],
+              edit.scheduledDay != nil, edit.portionBindings == nil, edit.groups.isEmpty,
+              changedOccurrenceIDs == [edit.occurrenceID], changedContributionIDs.isEmpty,
+              workspace.selectedShopID == proposal.shopID,
+              let shop = workspace.shops.first(where: { $0.id == proposal.shopID }),
+              shop.revisionID == proposal.baseRevisionID, workspace.dinnerPlanning.revisionID == proposal.planningRevisionID,
+              shop.lines == projectedLedger.lines, shop.contributions == projectedLedger.contributions,
+              shop.allocations == projectedLedger.allocations, shop.basis == projectedLedger.basis,
+              shop.quoteReference == projectedLedger.quoteReference, shop.shoppingStop == projectedLedger.shoppingStop,
+              !workspace.dinnerPlanning.prepTasks.contains(where: { $0.shopID == shop.id && $0.occurrenceID == edit.occurrenceID && $0.completedAt == nil }),
+              var prior = shop.mealOccurrences.first(where: { $0.id == edit.occurrenceID }),
+              !prior.isHidden, prior.removedAt == nil, prior.carryover == nil, prior.servingGroups.isEmpty,
+              let meal = projectedMeals.first(where: { $0.id == prior.id }) else { return nil }
+        prior.scheduledDay = edit.scheduledDay
+        prior.servings = edit.servings
+        return prior == meal ? meal : nil
+    }
+
     public var reviewsGuestPurchases: Bool {
         guard proposal.tool == .guests || proposal.tool == .manual else { return false }
         return !proposal.changes.isEmpty && proposal.changes.allSatisfy { if case .adjust = $0 { return true }; return false }

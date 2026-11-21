@@ -15,9 +15,13 @@ enum GroceryNameSpelling {
 /// Plural or accent-insensitive matches help discovery but never select a lot.
 enum PantryVoiceBatchMatcher {
     static func suggestions(for food: String, in lots: [InventoryLot]) -> [InventoryLot] {
-        let query = words(in: food)
+        let qualified = storageQualifier(in: food)
+        let query = words(in: qualified?.food ?? food)
         guard !query.isEmpty else { return [] }
         return lots.filter { lot in
+            // A literal product name may itself end with a storage phrase.
+            if exactLabel(lot.name) == exactLabel(food) { return true }
+            if let qualified, lot.location != qualified.location { return false }
             let label = words(in: lot.name)
             return query.allSatisfy { term in
                 label.contains { matches($0, term) }
@@ -28,8 +32,30 @@ enum PantryVoiceBatchMatcher {
     static func uniqueExact(for food: String, in lots: [InventoryLot]) -> InventoryLot? {
         let candidates = suggestions(for: food, in: lots)
         guard candidates.count == 1, let only = candidates.first,
-              exactLabel(food) == exactLabel(only.name) else { return nil }
+              exactLabel(food) == exactLabel(only.name) ||
+                exactLabel(storageQualifier(in: food)?.food ?? food) == exactLabel(only.name) else { return nil }
         return only
+    }
+
+    /// Only explicit trailing location phrases qualify a food. “Freezer jam” is a food name.
+    static func storageQualifier(in value: String) -> (food: String, location: InventoryLocation, phrase: String)? {
+        let suffixes: [(InventoryLocation, [String])] = [
+            (.fridge, ["from the refrigerator", "from the fridge", "in the refrigerator", "in the fridge",
+                       "del refrigerador", "de la nevera", "del frigorífico", "en el refrigerador", "en la nevera", "en el frigorífico"]),
+            (.freezer, ["from the freezer", "in the freezer", "del congelador", "en el congelador"]),
+            (.cupboard, ["from the cupboard", "from the pantry", "in the cupboard", "in the pantry",
+                         "de la alacena", "de la despensa", "en la alacena", "en la despensa"])
+        ]
+        let trimmed = value.trimmingCharacters(in: .whitespaces)
+        for (location, endings) in suffixes {
+            for ending in endings {
+                if let range = trimmed.range(of: " " + ending, options: [.backwards, .anchored, .caseInsensitive, .diacriticInsensitive]) {
+                    let food = trimmed[..<range.lowerBound].trimmingCharacters(in: .whitespaces)
+                    if !food.isEmpty { return (food, location, String(trimmed[range])) }
+                }
+            }
+        }
+        return nil
     }
 
     private static func matches(_ label: String, _ term: String) -> Bool {

@@ -1,36 +1,36 @@
 {
   "sourceLanguage": "en",
   "strings": {
-    "Name your pickup": {
+    "Choose a shopping list": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Name your pickup"
+            "value": "Choose a shopping list"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nombrar la compra"
+            "value": "Elegir una lista de compras"
           }
         }
       }
     },
-    "Choose a pickup": {
+    "Change list": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Choose a pickup"
+            "value": "Change list"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Elegir una compra"
+            "value": "Cambiar lista"
           }
         }
       }
@@ -171,19 +171,19 @@
         }
       }
     },
-    "Give your pickup a name to keep its dinner and grocery list together.": {
+    "Name the shopping list for this dinner’s ingredients.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Give your pickup a name to keep its dinner and grocery list together."
+            "value": "Name the shopping list for this dinner’s ingredients."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ponle un nombre a la compra para guardar la cena junto con su lista."
+            "value": "Ponle un nombre a la lista de compras para los ingredientes de esta cena."
           }
         }
       }
@@ -12532,6 +12532,448 @@
           "stringUnit": {
             "state": "translated",
             "value": "Volver a revisar la cena"
+          }
+        }
+      }
+    },
+    "Paste a recipe": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste a recipe"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pegar una receta"
+          }
+        }
+      }
+    },
+    "Other source wording": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other source wording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otras líneas de la receta"
+          }
+        }
+      }
+    },
+    "These lines stay in the original note. Add any that belong in the recipe.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These lines stay in the original note. Add any that belong in the recipe."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estas líneas se guardan en la nota original. Añade las que correspondan a la receta."
+          }
+        }
+      }
+    },
+    "Cooking instructions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cooking instructions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pasos de preparación"
+          }
+        }
+      }
+    },
+    "Recipe text": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipe text"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto de la receta"
+          }
+        }
+      }
+    },
+    "Review pasted recipe": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review pasted recipe"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar la receta"
+          }
+        }
+      }
+    },
+    "Change day and servings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change day and servings"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar día y porciones"
+          }
+        }
+      }
+    },
+    "Dinner planned": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dinner planned"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cena planificada"
+          }
+        }
+      }
+    },
+    "Plan for this day": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan for this day"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planificar para este día"
+          }
+        }
+      }
+    },
+    "Planning adds all the ingredient amounts shown to %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planning adds all the ingredient amounts shown to %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al planificar se añadirán todos los ingredientes con las cantidades indicadas a %@."
+          }
+        }
+      }
+    },
+    "Changing servings keeps the grocery amounts shown. You can edit individual amounts in the planned dinner.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changing servings keeps the grocery amounts shown. You can edit individual amounts in the planned dinner."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al cambiar las porciones se mantienen las cantidades indicadas. Puedes ajustar cada ingrediente en la cena planificada."
+          }
+        }
+      }
+    },
+    "Review dinner plan": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review dinner plan"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar el plan de cena"
+          }
+        }
+      }
+    },
+    "Tomorrow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tomorrow"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mañana"
+          }
+        }
+      }
+    },
+    "Today": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoy"
+          }
+        }
+      }
+    },
+    "The grocery amounts on this list stay the same.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The grocery amounts on this list stay the same."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las cantidades en esta lista de compras se mantienen."
+          }
+        }
+      }
+    },
+    "View planned dinner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View planned dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver la cena planificada"
+          }
+        }
+      }
+    },
+    "One fewer serving": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One fewer serving"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una porción menos"
+          }
+        }
+      }
+    },
+    "One more serving": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One more serving"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una porción más"
+          }
+        }
+      }
+    },
+    "The grocery amounts for %@ stay the same.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The grocery amounts for %@ stay the same."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se mantienen las cantidades de %@."
+          }
+        }
+      }
+    },
+    "Grocery amounts stay the same for %lld ingredients.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grocery amounts stay the same for %lld ingredients."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se mantienen las cantidades de %lld ingredientes."
+          }
+        }
+      }
+    },
+    "Save dinner plan": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save dinner plan"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar el plan de cena"
+          }
+        }
+      }
+    },
+    "Show full review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show full review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver la revisión completa"
+          }
+        }
+      }
+    },
+    "Create shopping list": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create shopping list"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crear lista de compras"
+          }
+        }
+      }
+    },
+    "Name your shopping list": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name your shopping list"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombrar la lista de compras"
+          }
+        }
+      }
+    },
+    "Shopping list name (required)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shopping list name (required)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre de la lista de compras (obligatorio)"
+          }
+        }
+      }
+    },
+    "Name your shopping list, then choose the ingredients to add.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name your shopping list, then choose the ingredients to add."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ponle un nombre a la lista de compras y elige los ingredientes que quieras añadir."
           }
         }
       }

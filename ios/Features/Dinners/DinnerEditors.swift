@@ -503,6 +503,7 @@ struct DinnerLibraryView: View {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text(verbatim: template.title).font(.system(.title2, design: .serif, weight: .semibold))
                                 DinnerServingNote(template: template)
+                                if let evidence = template.sourceEvidence { RecipeSourceDisclosure(evidence: evidence) }
                                 SavedDinnerHandoffLink(recipe: template)
                                     .disabled(!model.paid && template.id != model.workspace.mealTemplates.first?.id)
                             }

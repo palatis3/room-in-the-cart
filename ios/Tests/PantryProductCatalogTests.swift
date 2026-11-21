@@ -14,6 +14,40 @@ private actor CatalogTestTransport {
 }
 
 final class PantryProductCatalogTests: XCTestCase {
+    func testReviewedLabelWordingStaysWithOnePhysicalPackageAndRequiresDateConfirmation() throws {
+        var batch = PantryProductBatch(workspaceID: UUID())
+        XCTAssertTrue(try batch.addManual(name: "Butter beans\nBEST BEFORE DEC 2026", code: nil))
+        let first = try XCTUnwrap(batch.candidates.first)
+        XCTAssertEqual(first.reviewedDateWording, "BEST BEFORE DEC 2026")
+        XCTAssertEqual(PrintedDateMeaning.suggested(for: try XCTUnwrap(first.reviewedDateWording)), .bestBefore)
+        try batch.separate(first.id)
+        XCTAssertNil(batch.candidates.last?.reviewedDateWording, "A second physical package needs its own evidence.")
+        XCTAssertTrue(try batch.addManual(name: "Frijoles\nConsumo preferente DIC 2026", code: nil))
+        XCTAssertEqual(batch.candidates.last?.reviewedDateWording, "Consumo preferente DIC 2026")
+        XCTAssertTrue(try batch.addManual(name: "Beans\nPACKED ON JAN 2026\nBEST BEFORE DEC 2026", code: nil))
+        XCTAssertNil(batch.candidates.last?.reviewedDateWording)
+        XCTAssertTrue(try batch.addManual(name: "Butter beans", code: nil))
+        XCTAssertNil(batch.candidates.last?.reviewedDateWording)
+    }
+
+    func testEditingUnchangedFoodRetainsTheChosenLotOnlyWhileItExists() {
+        let origin = UUID(), date = Date()
+        let fridge = InventoryLot(id: UUID(), foodID: UUID(), name: "Sesame", source: .manual(originID: origin, sourceID: UUID()),
+                                 revision: 1, location: .fridge, openedAt: nil, unit: .count, count: .unknown,
+                                 observationID: UUID(), confirmedAt: date, updatedAt: date, useFirst: false)
+        var selected = VoicePantryRow(food: "sesame", original: "I used some sesame", mode: .usedSome)
+        selected.showsAllLots = true
+        selected.choose(fridge)
+        var edited = VoicePantryRow(food: "sesame", original: "I used all sesame", mode: .all)
+        XCTAssertTrue(edited.restoreSelection(from: [selected], in: [fridge]))
+        XCTAssertEqual(edited.lotID, fridge.id)
+        XCTAssertTrue(edited.showsAllLots)
+        var other = VoicePantryRow(food: "sesame from the cupboard", original: "I used sesame from the cupboard", mode: .usedSome)
+        XCTAssertFalse(other.restoreSelection(from: [selected], in: [fridge]))
+        XCTAssertFalse(other.restoreSelection(from: [other], in: []))
+        XCTAssertNil(other.lotID)
+    }
+
     func testManualBarcodeCorrectionKeepsOneReviewedPackageAndRejectsAnEquivalentPhotoCode() throws {
         var batch = PantryProductBatch(workspaceID: UUID())
         XCTAssertTrue(try batch.addManual(name: "Rye crispbread", code: "LOCAL-3317"))

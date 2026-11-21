@@ -277,14 +277,53 @@ import XCTest
         XCTAssertEqual(home.value as? String, "1")
     }
 
+    private func addTypedProduct(_ value: String, using field: XCUIElement) {
+        tap(field)
+        field.typeText(value)
+        XCTAssertEqual(field.value as? String, value)
+        tap(app.buttons["productBatch.keyboardDone"])
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+        XCTAssertEqual(field.value as? String, value)
+        tap(app.buttons["productBatch.add"])
+    }
+
+    func testColdPantryLotSeparatesOneOuterPackageFromUnknownUsableContents() {
+        launch(reset: true)
+        tap(app.tabBars.buttons["Pantry"])
+        tap(app.buttons["pantry.setup.products"])
+        fill("Butter beans", into: "productBatch.label", requireDone: true, control: app.textViews["productBatch.label"])
+        tap(app.buttons["productBatch.add"])
+        let product = app.buttons["productBatch.row.0"]
+        reveal(product)
+        XCTAssertTrue(product.label.contains("contents unknown"), product.label)
+        tap(product)
+        enableSwitch("productBatch.oneUnknown")
+        let keep = app.buttons["productBatch.finishEditing"]
+        XCTAssertEqual(keep.label, "Keep edits")
+        tap(keep)
+        XCTAssertTrue(product.label.contains("One package, contents unknown"), product.label)
+        enableSwitch("productBatch.received")
+        tap(app.buttons["productBatch.review"])
+        tap(app.buttons["productBatch.commit"])
+        XCTAssertTrue(app.staticTexts["productBatch.saved"].waitForExistence(timeout: 8))
+
+        restart()
+        tap(app.tabBars.buttons["Pantry"])
+        let lot = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "pantry.lot.", "Butter beans")).firstMatch
+        tap(lot)
+        let summary = element("pantry.lotSummary")
+        XCTAssertTrue(summary.waitForExistence(timeout: 8))
+        XCTAssertTrue(summary.label.contains("Added as 1 package"), summary.label)
+        XCTAssertTrue(summary.label.contains("Usable amount unknown"), summary.label)
+    }
+
     func testConfirmedPackAtHomeFindsOnlyItsTwoPhysicalBatchesAfterRelaunch() {
         launch(reset: true)
         tap(app.tabBars.buttons["Pantry"])
         tap(app.buttons["pantry.setup.apply"])
         tap(app.buttons["pantry.productBatch"])
         let code = app.textFields["productBatch.code"]
-        tap(code); code.typeText("012345000058")
-        tap(app.buttons["productBatch.add"])
+        addTypedProduct("012345000058", using: code)
         tap(app.buttons["productBatch.row.0"])
         fill("Small bean can", into: "productBatch.productName", requireDone: true, control: app.textFields["productBatch.productName"])
         fill("1", into: "productBatch.packSize", requireDone: true, control: app.textFields["productBatch.packSize"])
@@ -331,11 +370,11 @@ import XCTest
         XCTAssertTrue(originalWrapsLabel.components(separatedBy: "Batch ").first?.contains("6 units") == true,
                       originalWrapsLabel)
         tap(app.buttons["pantry.productBatch"])
+        tap(app.buttons["pack.source"])
+        tap(app.buttons["Received purchase"])
         let code = app.textFields["productBatch.code"]
-        tap(code); code.typeText("LOCAL-OATS")
-        tap(app.buttons["productBatch.add"])
-        tap(code); code.typeText("LOCAL-OATS")
-        tap(app.buttons["productBatch.add"])
+        addTypedProduct("LOCAL-OATS", using: code)
+        addTypedProduct("LOCAL-OATS", using: code)
         let duplicate = app.staticTexts["productBatch.inputStatus"]
         XCTAssertTrue(duplicate.waitForExistence(timeout: 5))
         XCTAssertTrue(duplicate.label.contains("Already in this batch"))
@@ -349,8 +388,7 @@ import XCTest
         closeReviewedProduct()
 
         let label = app.textViews["productBatch.label"]
-        tap(label); label.typeText("Wraps")
-        tap(app.buttons["productBatch.add"])
+        addTypedProduct("Wraps", using: label)
         tap(app.buttons["productBatch.row.1"])
         fill("8", into: "productBatch.packSize", requireDone: true, control: app.textFields["productBatch.packSize"])
         fill("1", into: "productBatch.packCount", requireDone: true, control: app.textFields["productBatch.packCount"])
@@ -398,6 +436,8 @@ import XCTest
         tap(app.shopToolButton("shop.myPantry"))
         tap(app.buttons["pantry.setup.apply"])
         tap(app.buttons["pantry.productBatch"])
+        tap(app.buttons["pack.source"])
+        tap(app.buttons["Received purchase"])
         enableSwitch("productBatch.photoConsent")
 
         func choose(day: Int) {
@@ -479,6 +519,40 @@ import XCTest
         reveal(app.staticTexts["No food recorded here."])
         XCTAssertFalse(receipt.exists)
         XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "pantry.lot.")).count, 0)
+    }
+
+    func testSpanishReceiptPrintedUnitHintWrapsAtExtraLarge() {
+        launch(reset: true, spanish: true, contentSize: .extraLarge)
+        tap(app.tabBars.buttons["Despensa"])
+        tap(app.buttons["pantry.setup.receipt"])
+        receiptTap(app.buttons["receipt.scan"])
+        let wording = app.textViews["scan.sourceEditor"]
+        receiptTap(wording)
+        wording.typeText("Maiz seco 2 paquetes $4.82")
+        receiptTap(app.buttons["scan.sourceDone"])
+        receiptTap(app.buttons["Revisar líneas impresas"])
+
+        let quantity = app.textFields["Cantidad impresa (opcional)"]
+        let input = CGVector(dx: 0.5, dy: 0.7)
+        reveal(quantity, requiredHit: input)
+        quantity.coordinate(withNormalizedOffset: input).tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+        app.typeText("2 paquetes")
+        XCTAssertEqual(quantity.value as? String, "2 paquetes")
+        receiptTap(app.buttons["scan.sourceDone"])
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+
+        let hint = app.staticTexts["scan.receipt.printedQuantityHint"]
+        reveal(hint, requiredHit: CGVector(dx: 0.5, dy: 0.5))
+        XCTAssertEqual(hint.label, "Incluye la unidad impresa, como 2 unidades o 500 g.")
+        let frame = hint.frame
+        let font = UIFont.preferredFont(forTextStyle: .subheadline,
+                                       compatibleWith: UITraitCollection(preferredContentSizeCategory: .extraLarge))
+        let required = (hint.label as NSString).boundingRect(
+            with: CGSize(width: frame.width, height: .greatestFiniteMagnitude),
+            options: [.usesLineFragmentOrigin, .usesFontLeading], attributes: [.font: font], context: nil)
+        capture("Spanish receipt unit guide at Extra Large")
+        XCTAssertGreaterThanOrEqual(frame.height + 2, required.height, "The visible hint must contain the entire unit example")
     }
 
     func testPrivatePantryFromEmptyShopSavesFoodAndReopensAfterRelaunch() throws {
@@ -1007,21 +1081,14 @@ import XCTest
             tap(app.buttons["records.privatePrices"])
         }
         openHistory()
-        tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.setup.firstPrice"])
         let addPrice = app.buttons["prices.add"]
-        let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            guard addPrice.exists, let button = try? addPrice.snapshot() else { return false }
-            return button.isEnabled && !button.frame.isEmpty && self.app.frame.contains(button.frame)
-        }, object: nil)
-        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 8), .completed,
-                       "Private price history must finish loading its first action after pantry setup.")
 
-        func record(_ name: String, source: String? = nil, amount: String) {
-            tap(addPrice)
-            if let source {
-                tap(app.buttons["prices.source"])
-                tap(app.buttons[source])
-            }
+        func record(_ name: String, source: String, amount: String, first: Bool = false) {
+            if !first { tap(addPrice) }
+            let choice = app.buttons[source]
+            XCTAssertTrue(choice.waitForExistence(timeout: 8))
+            tap(choice)
             for (field, text) in [("prices.name", name), ("prices.variant", "Unsalted"),
                                   ("prices.store", "South Market"), ("prices.total", amount), ("prices.quantity", "2")] {
                 let input = app.textFields[field]
@@ -1035,7 +1102,7 @@ import XCTest
             tap(app.buttons["prices.confirm"])
             XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", name)).firstMatch.waitForExistence(timeout: 8))
         }
-        record("Paid cashews", amount: "5.60")
+        record("Paid cashews", source: "Manually confirmed paid price", amount: "5.60", first: true)
         record("Shelf cashews", source: "Shelf observation", amount: "5.00")
         record("Quoted cashews", source: "Checkout quote", amount: "6.00")
         app.terminate()
@@ -1065,8 +1132,13 @@ import XCTest
         XCTAssertTrue(export.waitForExistence(timeout: 10))
         export.tap()
         let save = app.buttons["Save"].firstMatch
-        XCTAssertTrue(save.waitForExistence(timeout: 25), app.debugDescription)
-        save.tap()
+        let move = app.navigationBars["FullDocumentManagerViewControllerNavigationBar"].buttons["Move"]
+        let exporterReady = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            (save.exists && save.isHittable) || (move.exists && move.isHittable)
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [exporterReady], timeout: 25), .completed, app.debugDescription)
+        let action = save.exists && save.isHittable ? save : move
+        action.tap()
         if app.buttons["Replace"].waitForExistence(timeout: 2) { app.buttons["Replace"].tap() }
         XCTAssertTrue(app.staticTexts["fixture.receipt.exported"].waitForExistence(timeout: 10), app.debugDescription)
         app.terminate()
@@ -1713,7 +1785,7 @@ import XCTest
         let row = app.descendants(matching: .any).matching(
             NSPredicate(format: "label CONTAINS %@ AND label CONTAINS %@", "Wrap", "Received 1 unit")).firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 8), app.debugDescription)
-        XCTAssertTrue(row.label.contains("Add 1/2 units to Fridge"), row.label)
+        XCTAssertTrue(row.label.contains("Add 1/2 units to Cupboard"), row.label)
         receiptTap(app.buttons["receipt.commit"])
         let saved = app.staticTexts["receipt.status"]
         XCTAssertTrue(saved.waitForExistence(timeout: 8))
@@ -1809,6 +1881,41 @@ import XCTest
         XCTAssertTrue(app.staticTexts["Paid line total $0.00"].waitForExistence(timeout: 8))
         XCTAssertTrue(app.staticTexts["Receipt revision 3"].exists)
         XCTAssertTrue(markUnknown.exists)
+    }
+
+    func testFirstSavedReceiptInvalidatesEmptyHistoryBeforeClosing() {
+        launch(reset: true)
+        tap(app.tabBars.buttons["Records"])
+        receiptTap(app.buttons["records.privateReceipts"])
+        receiptTap(app.buttons["pantry.setup.apply"])
+        let start = app.buttons["receipt.history.start"]
+        let empty = app.staticTexts["No confirmed receipt lines yet."]
+        XCTAssertTrue(start.waitForExistence(timeout: 8))
+        XCTAssertTrue(empty.exists)
+
+        receiptTap(start)
+        let editor = app.navigationBars["Review a receipt"]
+        receiptTap(editor.buttons["Close"])
+        XCTAssertTrue(editor.waitForNonExistence(timeout: 8))
+        XCTAssertTrue(start.isHittable && empty.exists, "Cancel must return to the genuine empty history")
+
+        receiptTap(start)
+        reviewManualOatsAtMarket()
+        receiptTap(app.buttons["receipt.commit"])
+        let saved = app.staticTexts["receipt.status"]
+        XCTAssertTrue(saved.waitForExistence(timeout: 8))
+        XCTAssertEqual(saved.label, "Reviewed receipt lines saved.")
+        XCTAssertTrue(editor.exists, "Inspect the history behind the still-open confirmation")
+        XCTAssertFalse(empty.exists, "The first-use message must disappear before the possible slide back to history")
+        XCTAssertFalse(start.exists)
+        capture("First receipt saved before history dismissal")
+        receiptTap(app.buttons["Done"])
+
+        XCTAssertTrue(app.buttons["receipt.putawayHistory"].waitForExistence(timeout: 8))
+        XCTAssertFalse(empty.exists)
+        reveal(app.staticTexts["Oats 3 count USD 4.20"])
+        reveal(app.staticTexts["Usable 2 units"])
+        capture("First confirmed receipt in history")
     }
 
     func testReceiptCameraRefusalKeepsPrivateReceiptAndTypedEntry() {
@@ -2002,6 +2109,7 @@ import XCTest
         launch(reset: true, sourceRemoval: true)
         openShoppingList()
         tap(app.buttons["Inspect Wraps"])
+        XCTAssertFalse(app.buttons["ledgerEditQuantityAndNotes"].exists, "Multiple sources require choosing the specific contribution")
         let edit = app.buttons["Edit quantity and notes for Wednesday quesadillas"]
         reveal(edit)
         let geometry = XCTAttachment(string: "Edit target: \(edit.frame)")
@@ -4662,10 +4770,12 @@ import XCTest
         XCTAssertTrue(printOptions.waitForNonExistence(timeout: 8), app.debugDescription)
     }
 
-    private func launch(reset: Bool, spanish: Bool = false, privateRecovery: Bool = false, sourceRemoval: Bool = false, sharedReceiptToken: String? = nil) {
+    private func launch(reset: Bool, spanish: Bool = false, privateRecovery: Bool = false, sourceRemoval: Bool = false,
+                        sharedReceiptToken: String? = nil, contentSize: UIContentSizeCategory? = nil) {
         app.launchArguments = ["--ui-testing", "-AppleLanguages", spanish ? "(es)" : "(en)", "-AppleLocale", spanish ? "es_US" : "en_US"]
         if reset { app.launchArguments.append("--reset-test-workspace") }
         if let sharedReceiptToken { app.launchArguments += ["--receipt-share-test-store", sharedReceiptToken] }
+        if let contentSize { app.launchArguments += ["-UIPreferredContentSizeCategoryName", contentSize.rawValue] }
         if privateRecovery { app.launchArguments.append("--seed-private-recovery") }
         if sourceRemoval { app.launchArguments.append("--seed-source-removal") }
         app.launch()

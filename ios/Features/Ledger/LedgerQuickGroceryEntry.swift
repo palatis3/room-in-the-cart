@@ -284,7 +284,7 @@ struct LedgerDepartmentPicker: View {
 
     var body: some View {
         Button { showingDepartments = true } label: {
-            Text(department.isEmpty ? quickGroceryText("Department") : department)
+            Label(department.isEmpty ? quickGroceryText("Set department") : department, systemImage: "chevron.up.chevron.down")
                 .font(.footnote)
                 .frame(minWidth: 44, minHeight: 44, alignment: .leading)
                 .contentShape(Rectangle())

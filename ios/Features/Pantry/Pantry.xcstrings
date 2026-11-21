@@ -1,6 +1,223 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Keep edits": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep edits"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conservar cambios"
+          }
+        }
+      }
+    },
+    "Enter an amount or leave the contents unknown.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter an amount or leave the contents unknown."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indica una cantidad o deja el contenido como desconocido."
+          }
+        }
+      }
+    },
+    "Added as 1 package": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added as 1 package"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se añadió como 1 envase"
+          }
+        }
+      }
+    },
+    "Usable amount unknown": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usable amount unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad aprovechable desconocida"
+          }
+        }
+      }
+    },
+    "One package, contents unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One package, contents unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un envase, contenido sin medir"
+          }
+        }
+      }
+    },
+    "Printed wording to review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Printed wording to review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto impreso para revisar"
+          }
+        }
+      }
+    },
+    "After saving the food, confirm the package date separately.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After saving the food, confirm the package date separately."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Después de guardar el alimento, confirma la fecha del envase por separado."
+          }
+        }
+      }
+    },
+    "I checked these packages and the amounts shown.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I checked these packages and the amounts shown."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé estos envases y las cantidades que se muestran."
+          }
+        }
+      }
+    },
+    "Optional": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opcional"
+          }
+        }
+      }
+    },
+    "Recorded pantry amounts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recorded pantry amounts"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidades registradas en la despensa"
+          }
+        }
+      }
+    },
+    "Choose Counted at home for food you already have.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose Counted at home for food you already have."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige «Contado en casa» para los alimentos que ya tienes."
+          }
+        }
+      }
+    },
+    "Live scanning is unavailable. Choose a photo, or type the product name, label or code.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Live scanning is unavailable. Choose a photo, or type the product name, label or code."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El escaneo en directo no está disponible. Elige una foto o escribe el nombre del producto, la etiqueta o el código."
+          }
+        }
+      }
+    },
+    "Save a shelf price, checkout quote or amount you paid on this iPhone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save a shelf price, checkout quote or amount you paid on this iPhone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guarda en este iPhone un precio del estante, una cotización al pagar o el importe que pagaste."
+          }
+        }
+      }
+    },
     "Original printed wording": {
       "extractionState": "manual",
       "localizations": {

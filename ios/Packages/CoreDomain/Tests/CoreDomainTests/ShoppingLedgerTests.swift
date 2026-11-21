@@ -306,6 +306,24 @@ final class ShoppingLedgerTests: XCTestCase {
         XCTAssertThrowsError(try ledger.commitImport(second, decisions: decisions))
     }
 
+    func testUndoCountsTheEntireBatchAndPreservesAlreadyRemovedEntries() throws {
+        var ledger = ShoppingLedger()
+        let preview = try ledger.stageImport(text: "coffee beans\ndecaf coffee beans\nvanilla", source: .paste)
+        let batchID = try ledger.commitImport(preview, decisions: [preview.lines[2].id: .skip])
+        let batch = try XCTUnwrap(ledger.importBatches.last)
+        XCTAssertEqual(ledger.search("decaf").map(\.name), ["decaf coffee beans"])
+        XCTAssertEqual(ledger.remainingEntries(in: batch), Set(preview.lines.prefix(2).map(\.id)))
+        try ledger.removeContribution(contributionID: preview.lines[0].id, at: instant)
+        XCTAssertEqual(ledger.remainingEntries(in: batch), [preview.lines[1].id])
+        try ledger.undoImport(batchID: batchID, at: instant.addingTimeInterval(100))
+        XCTAssertEqual(ledger.contributions.first { $0.id == preview.lines[0].id }?.removedAt, instant)
+        XCTAssertTrue(ledger.remainingEntries(in: batch).isEmpty)
+        XCTAssertTrue(ledger.search("").isEmpty)
+        let after = ledger
+        try ledger.undoImport(batchID: batchID)
+        XCTAssertEqual(ledger, after)
+    }
+
     func testExplicitAdditionalPasteAddsQuantityAndUndoIsIsolated() throws {
         var ledger = ShoppingLedger()
         let staple = try ledger.addManualLine(name: "wraps", quantity: q(12), at: instant)

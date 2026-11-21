@@ -1,6 +1,6 @@
 import { renderProductOverview } from './product-overview.js';
 import { brandName } from './brand.js';
-import { publicPages, type PublicLanguage, type PublicPageKey } from './public-pages-content.js';
+import { publicPages, type PublicLanguage, type PublicPageKey, type PublicPage } from './public-pages-content.js';
 import { publicSiteConfiguration, type PublicSiteConfiguration } from './public-site-configuration.js';
 
 const pageKeys: readonly PublicPageKey[] = ['help', 'privacy', 'terms', 'support'];
@@ -9,6 +9,7 @@ const labels = {
   language: { en: 'Language', es: 'Idioma' },
   navigation: { en: 'Information pages', es: 'Páginas de información' },
   contents: { en: 'On this page', es: 'En esta página' },
+  staleSection: { en: 'This section has moved. Choose a topic below.', es: 'Esta sección cambió de lugar. Elige un tema a continuación.' },
   invited: { en: 'Open the invited app', es: 'Abrir la app por invitación' },
   support: { en: 'Contact support', es: 'Contactar con soporte' },
   emailSupport: { en: 'Email support', es: 'Enviar correo a soporte' },
@@ -68,7 +69,11 @@ export function mountPublicPage(root: HTMLElement, configuration: PublicSiteConf
     ? requestedLanguage : window.navigator.language.toLowerCase().startsWith('es') ? 'es' : 'en';
   const supportURL = operatorSupportURL(configuration.operatorSupportURL);
   const operatorName = operatorDisplayName(configuration.operatorName);
-  const anchor = /^#public-section-\d+$/.test(window.location.hash) ? window.location.hash : '';
+  const sections: PublicPage['sections'] = key === 'about' ? [] : publicPages[key].sections;
+  const sectionIds = sections.map((section, index) => section.id ?? 'public-section-' + index);
+  const currentAnchor = (): string => sectionIds.includes(window.location.hash.slice(1)) ? window.location.hash : '';
+  const anchor = currentAnchor();
+  const staleSection = key !== 'about' && !anchor && /^#public-section-\d+$/.test(window.location.hash);
   // Unknown parameters/fragments are never echoed into links or retained as an
   // invitation secret. Language is the only public-page query parameter.
   window.history.replaceState(null, '', '/' + key + '?lang=' + language + anchor);
@@ -92,7 +97,7 @@ export function mountPublicPage(root: HTMLElement, configuration: PublicSiteConf
     }
     languageSelect.addEventListener('change', () => {
       language = languageSelect.value === 'es' ? 'es' : 'en';
-      window.history.replaceState(null, '', '/' + key + '?lang=' + language);
+      window.history.replaceState(null, '', '/' + key + '?lang=' + language + currentAnchor());
       render(true);
     });
     languageGroup.append(languageLabel, languageSelect); header.append(brand, languageGroup); root.append(header);
@@ -119,6 +124,7 @@ export function mountPublicPage(root: HTMLElement, configuration: PublicSiteConf
     const introduction = element('div'); introduction.className = 'public-introduction';
     introduction.append(element('h1', page.title[language]), element('p', page.lead[language]));
     main.append(introduction);
+    if (staleSection) introduction.append(element('p', labels.staleSection[language]));
     if (operatorName && (key === 'privacy' || key === 'terms')) {
       const operator = element('p', labels.operator[language] + ': ' + operatorName);
       operator.className = 'public-operator'; introduction.append(operator);
@@ -134,7 +140,7 @@ export function mountPublicPage(root: HTMLElement, configuration: PublicSiteConf
     const contents = element('nav'); contents.className = 'public-contents'; contents.setAttribute('aria-label', labels.contents[language]);
     const contentsTitle = element('h2', labels.contents[language]); const contentsList = element('ul');
     page.sections.forEach((section, index) => {
-      const row = element('li'); const link = element('a', section.title[language]); link.href = '#public-section-' + index;
+      const row = element('li'); const link = element('a', section.title[language]); link.href = '#' + sectionIds[index];
       row.append(link); contentsList.append(row);
     });
     contents.append(contentsTitle, contentsList);
@@ -142,7 +148,7 @@ export function mountPublicPage(root: HTMLElement, configuration: PublicSiteConf
     const sections = element('div'); sections.className = 'public-sections';
     reading.append(contents, sections); main.append(reading);
     page.sections.forEach((section, index) => {
-      const article = element('section'); article.className = 'public-article'; article.id = 'public-section-' + index;
+      const article = element('section'); article.className = 'public-article'; article.id = sectionIds[index]!; article.tabIndex = -1;
       const title = element('h2', section.title[language]); title.id = article.id + '-title'; article.setAttribute('aria-labelledby', title.id);
       article.append(title); for (const paragraph of section.paragraphs) article.append(element('p', paragraph[language]));
       sections.append(article);
@@ -151,7 +157,11 @@ export function mountPublicPage(root: HTMLElement, configuration: PublicSiteConf
     const footer = element('footer'); footer.className = 'public-footer';
     footer.append(element('p', labels.footer[language]));
     const invited = element('a', labels.invited[language]); invited.href = '/requests?lang=' + language; footer.append(invited); root.append(footer);
-    if (restoreLanguageFocus) languageSelect.focus();
+    const destination = document.getElementById(currentAnchor().slice(1));
+    if (destination) {
+      destination.focus({ preventScroll: true });
+      destination.scrollIntoView?.({ block: 'start' });
+    } else if (restoreLanguageFocus) languageSelect.focus();
   };
   render();
   return true;

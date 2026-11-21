@@ -4,6 +4,7 @@ import CoreDomain
 enum PantryVoiceIntent: Equatable, Sendable {
     case consume([PantryVoiceItem])
     case dateQuery(String)
+    case balanceQuery(String)
     case observation(PantryVoiceObservation)
     case askRemaining(food: String?, original: String)
     case needsReview(String)
@@ -42,7 +43,7 @@ enum PantryVoiceRemaining: Equatable, Sendable {
 /// Produces review proposals. The interpreter neither looks up batches nor changes stock.
 enum PantryVoiceParser {
     private static let container = #"bottle|jar|carton|bag|box|can|tub|container|pot|botella|frasco|cartón|bolsa|caja|lata|bote|envase|recipiente|tarro"#
-    private static let vague = #"some|a little(?: bit)?(?: of)?|a bit of|un poco de|algo de"#
+    private static let vague = #"some|a little(?: bit)?(?: of)?|a bit of|(?:un poco|algo) (?:del|de(?: la)?)"#
     private static let use = #"^(?:(?:i (?:just )?)?used|(?:yo )?(?:(?:ya )?usé|acabo de usar)) (.+)$"#
     private static let pieces = ["piece", "pieces", "slice", "slices", "rebanada", "rebanadas", "trozo",
                                  "trozos", "pedazo", "pedazos", "pieza", "piezas"]
@@ -63,6 +64,19 @@ enum PantryVoiceParser {
             guard matches(#"^(?:(?:i (?:just )?)?used|(?:yo )?(?:ya )?usé|acabo de usar|delete|remove|borra|elimina|quita)\b"#, beforeUpdate) else { return review }
             command = beforeUpdate
         } else { command = spoken }
+        let question = command.trimmingCharacters(in: CharacterSet(charactersIn: "¿? "))
+        let trailingLocation = PantryVoiceBatchMatcher.storageQualifier(in: question)
+        if let food = firstFood([
+            #"^how much (?:of (?:the |my )?)?(.+?) (?:do (?:i|we) have left|is left|remains)$"#,
+            #"^cu[aá]nt[oa]s? (.+?) (?:me |nos )?quedan?$"#
+        ], in: trailingLocation?.food ?? question) {
+            if let trailingLocation {
+                guard PantryVoiceBatchMatcher.storageQualifier(in: food) == nil,
+                      let target = checkedFood(food + trailingLocation.phrase) else { return review }
+                return .balanceQuery(target)
+            }
+            return .balanceQuery(food)
+        }
         if let target = dateFood(command) { return .dateQuery(target) }
         if let combined = useWithRemaining(command, original: text, localeIdentifier: localeIdentifier) { return combined }
         guard !command.contains("?"), !command.contains("¿"),
@@ -305,9 +319,12 @@ enum PantryVoiceParser {
     }
 
     private static func consumedItem(_ wording: String, spanish: Bool) -> PantryVoiceItem? {
-        if let food = firstFood([#"^(?:"# + vague + #") (.+)$"#], in: wording) {
+        if let parts = groups(#"^(?:"# + vague + #")(?: (.+))?$"#, wording) {
+            guard let food = checkedFood(parts[0]) else { return nil }
             return PantryVoiceItem(original: wording, food: food, amount: .someUsed)
         }
+        // An incomplete partitive must not fall through to “un” as one count.
+        guard !matches(#"^(?:un poco|algo)\b"#, wording) else { return nil }
         var tokens = ListQuantityParser.itemTokens(wording)
         var rangeCheck = tokens
         guard !ListQuantityParser.takeRange(from: &rangeCheck) else { return nil }
@@ -341,6 +358,11 @@ enum PantryVoiceParser {
 
     private static func checkedFood(_ name: String) -> String? {
         let trimmed = name.trimmingCharacters(in: .whitespaces)
+        if let qualified = PantryVoiceBatchMatcher.storageQualifier(in: trimmed) {
+            guard trimmed.utf8.count <= 180, PantryVoiceBatchMatcher.storageQualifier(in: qualified.food) == nil,
+                  checkedFood(qualified.food) != nil else { return nil }
+            return trimmed
+        }
         if trimmed.caseInsensitiveCompare("half and half") == .orderedSame { return trimmed }
         if matches(#"\b(?:and|y|e)\b"#, trimmed) {
             guard let list = try? NaturalListSegmenter.propose(trimmed), list.items.count == 1,

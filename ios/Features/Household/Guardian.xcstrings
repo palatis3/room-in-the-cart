@@ -1,6 +1,246 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "You can read this guide offline. This iPhone has no link to the public family guide.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can read this guide offline. This iPhone has no link to the public family guide."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puedes leer esta guía sin conexión a internet. Este iPhone no tiene un enlace a la guía pública para familias."
+          }
+        }
+      }
+    },
+    "Child permissions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Child permissions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permisos de menores"
+          }
+        }
+      }
+    },
+    "If someone can’t join": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If someone can’t join"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si alguien no puede unirse"
+          }
+        }
+      }
+    },
+    "Ask a parent or guardian to open Support and describe where setup stopped. Keep invitation links, sign-in codes and the child’s email private. You can keep using your shopping list.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask a parent or guardian to open Support and describe where setup stopped. Keep invitation links, sign-in codes and the child’s email private. You can keep using your shopping list."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pide a uno de los padres o al tutor que abra Soporte y explique en qué paso se detuvo la configuración. Mantén en privado los enlaces de invitación, los códigos de acceso y el correo del menor. Puedes seguir usando tu lista de compras."
+          }
+        }
+      }
+    },
+    "You can read this guide on this iPhone without an internet connection.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can read this guide on this iPhone without an internet connection."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puedes consultar esta guía en este iPhone sin conexión a internet."
+          }
+        }
+      }
+    },
+    "Family permissions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Family permissions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permisos familiares"
+          }
+        }
+      }
+    },
+    "Children and guardian permission": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Children and guardian permission"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menores y permiso del tutor"
+          }
+        }
+      }
+    },
+    "What a child can do": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What a child can do"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Qué puede hacer el menor"
+          }
+        }
+      }
+    },
+    "With guardian permission, a child can send grocery requests and see the status of their own requests. The assigned shopper decides what goes in the basket. The household budget stays private.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "With guardian permission, a child can send grocery requests and see the status of their own requests. The assigned shopper decides what goes in the basket. The household budget stays private."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Con el permiso de su tutor, el menor puede pedir productos y ver el estado de sus propias solicitudes. La persona encargada de comprar decide qué agrega a la cesta. El presupuesto del hogar es privado."
+          }
+        }
+      }
+    },
+    "On the guardian’s iPhone": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On the guardian’s iPhone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En el iPhone del tutor"
+          }
+        }
+      }
+    },
+    "When child setup is available, open Household requests in Settings, sign in to your adult account, choose your child’s household, then open Guardian controls.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When child setup is available, open Household requests in Settings, sign in to your adult account, choose your child’s household, then open Guardian controls."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuando esté disponible la configuración para menores, abre Solicitudes del hogar en Configuración, inicia sesión con tu cuenta de adulto, elige el hogar del menor y abre Controles del tutor."
+          }
+        }
+      }
+    },
+    "A parent or legal guardian verifies adulthood, gives permission and confirms the child’s device. Keep the invitation private. The child signs in with their own approved email.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A parent or legal guardian verifies adulthood, gives permission and confirms the child’s device. Keep the invitation private. The child signs in with their own approved email."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La madre, el padre o el tutor legal verifica su mayoría de edad, da permiso y confirma el dispositivo del menor. La invitación es privada. El menor inicia sesión con su propio correo aprobado."
+          }
+        }
+      }
+    },
+    "Read the family guide online": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read the family guide online"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leer la guía familiar en línea"
+          }
+        }
+      }
+    },
+    "Online requests stay unavailable until your guardian finishes setup. An adult account cannot be used to sign in for a child.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Online requests stay unavailable until your guardian finishes setup. An adult account cannot be used to sign in for a child."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para enviar solicitudes en línea, el tutor debe terminar la configuración. El menor no puede iniciar sesión con la cuenta de un adulto."
+          }
+        }
+      }
+    },
+    "Child access": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Child access"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acceso del menor"
+          }
+        }
+      }
+    },
     "Check your approved email and enter its sign-in code on this phone.": {
       "localizations": {
         "en": {

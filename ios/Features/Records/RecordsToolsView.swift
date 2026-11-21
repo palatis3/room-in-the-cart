@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 import RecordArchive
 
 struct RecordsToolsView: View {
+    @Environment(\.pickupLedger) private var liveLedger
     @ObservedObject var model: RecordsToolsModel
     var recipeLibraryOnly = false
     var pantry: RecordsPantryToolsModel? = nil
@@ -75,6 +76,7 @@ struct RecordsToolsView: View {
             }
             if recipeLibraryOnly {
                 Section {
+                    if let liveLedger, liveLedger.ready { DinnerPasteRecipeButton(ledger: liveLedger) }
                     recipePageButton
                     manualRecipeButton
                     recipeFileButton

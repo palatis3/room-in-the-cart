@@ -64,6 +64,34 @@ test('a contributor chooses the intended pickup when two are open and reviews th
  assert.equal(sent.length,1);assert.equal(sent[0].shopId,'second');assert.equal(sent[0].body.route,'next');dom.window.close();
 });
 
+test('a scoped single-pickup review describes the shared destination without displaying its identifier', async () => {
+ for (const [lang, expected] of [['en','The pickup shared with you'], ['es','El pedido compartido contigo']]) {
+  const shopId = '66666666-1111-4111-8111-111111111111';
+  const {root,dom} = await setup(fakeAPI({session:async()=>({...session(),shopId})}), lang);
+  type(dom,'item','Apricots');submit(root,dom);
+  assert.ok(root.querySelector('form').textContent.includes(expected));
+  assert.doesNotMatch(root.textContent,/66666666/);
+  dom.window.close();
+ }
+});
+
+test('same-time pickups with matching identifier prefixes have distinct visible choices and the exact selected target is sent', async () => {
+ const choices=['11111111-1111-4111-8111-111111111111','11111111-2222-4222-8222-222222222222']
+  .map(shopId=>({shopId,createdAt:'2026-11-10T12:00:00Z',nextShopOnly:false}));
+ const sent=[];
+ const {root,dom}=await setup(fakeAPI({session:async()=>({...session(),shopId:null,selectionRequired:true}),
+  requestPickups:async()=>choices, command:async(_,cmd)=>{sent.push(cmd);return {...own(),shopId:cmd.shopId};}}));
+ const picker=root.querySelector('#request-pickup');
+ const labels=[...picker.options].slice(1).map(option=>option.textContent);
+ assert.equal(new Set(labels).size,2);assert.doesNotMatch(labels.join(' '),/11111111/);
+ picker.value=choices[1].shopId;picker.dispatchEvent(new dom.window.Event('change'));
+ type(dom,'item','Apricots');submit(root,dom);
+ assert.ok(root.querySelector('form').textContent.includes(labels[1]));
+ submit(root,dom);await waitForIdle(root);
+ assert.deepEqual(sent.map(command=>command.shopId),[choices[1].shopId]);
+ dom.window.close();
+});
+
 test('a pickup closing during review keeps the draft and requires explicit review of the remaining destination', async()=>{
  for(const action of ['send','refresh']){
   let active={...session(),shopId:null,selectionRequired:true};
@@ -80,7 +108,7 @@ test('a pickup closing during review keeps the draft and requires explicit revie
   assert.equal(sent.length,0);
   assert.equal(root.querySelector('#item').value,'Brown rice');
   assert.match(root.textContent,/Available pickups changed/);
-  submit(root,dom);assert.match(root.querySelector('form').textContent,/first/);
+  submit(root,dom);assert.match(root.querySelector('form').textContent,/Pickup 1 · Created.*November 10/);
   submit(root,dom);await waitForIdle(root);
   assert.deepEqual(sent.map(c=>c.shopId),['first']);dom.window.close();
  }
@@ -112,7 +140,7 @@ test('a second pickup opening during review preserves the draft and asks for a d
     assert.equal(root.querySelector('#item').value, 'Corn tortillas');
     assert.equal(root.querySelector('#amount').value, 'one pack');
     submit(root, dom);
-    assert.match(root.querySelector('form').textContent, /second/);
+    assert.match(root.querySelector('form').textContent, /Pickup 2 · Created/);
     submit(root, dom);
     await waitForIdle(root);
     assert.deepEqual(sent.map(command => command.shopId), ['second']);
@@ -573,6 +601,27 @@ test('a shopper decision during withdrawal refreshes status and retires the reje
  click(root,'Withdraw');click(root,'Confirm withdrawal');await waitForIdle(root);
  assert.match(root.textContent,/Saved for next shop/);assert.match(root.textContent,/Follow up/);
  assert.doesNotMatch(root.textContent,/Confirm withdrawal/);assert.equal(commands.length,1);
+});
+
+test('a received follow-up names only a parent still present in the contributor’s current requests', async () => {
+ for (const [language, prefix, fallback] of [
+  ['en','Follow-up to · ','Follow-up to an earlier request'],
+  ['es','Aclaración de · ','Aclaración de una solicitud anterior']
+ ]) {
+  const parent = {...own(), originalItem:'Original lunch fruit', requestId:'scope-only-parent-id'};
+  const child = {...own(), originalItem:'Pear option', requestId:'child-id', followupTo:parent.requestId};
+  let visible = [child,parent];
+  const {root,dom} = await setup(fakeAPI({requests:async()=>visible}),language);
+  const card = () => root.querySelector('[data-request-id="child-id"]');
+  assert.ok(card().textContent.includes(prefix + parent.originalItem));
+  assert.doesNotMatch(root.querySelector('[data-request-id="scope-only-parent-id"]').textContent,/Follow-up to|Aclaración de/);
+  visible = [child];
+  click(root,language==='es'?'Actualizar':'Refresh');await waitForIdle(root);
+  assert.ok(card().textContent.includes(fallback));
+  assert.ok(!root.textContent.includes(parent.originalItem));
+  assert.ok(!root.textContent.includes(parent.requestId));
+  dom.window.close();
+ }
 });
 
 test('a rejected edit retains the authored text until the contributor confirms a linked follow-up',async()=>{

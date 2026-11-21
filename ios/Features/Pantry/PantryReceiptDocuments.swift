@@ -32,8 +32,9 @@ struct PantryReceiptDocuments: View {
     var sectionPreviews: [Data?] = []
     var omittedLines: Set<ExtractedReceiptDocument.Selection> = []
     var backToSections: (() -> Void)? = nil
-    let onReview: (SourceMediaRecord, SharedReceiptItem?) -> Void
+    let onReview: (SourceMediaRecord, SharedReceiptItem?, ExtractedReceiptDocument.PrintedPaidTotal?) -> Void
     @State private var inbox: [SharedReceiptItem] = []
+    @State private var inboxUnavailable = false
     @State private var openedShare: SharedReceiptItem?
     @State private var discard: SharedReceiptItem?
     @Environment(\.dismiss) private var dismiss
@@ -68,9 +69,12 @@ struct PantryReceiptDocuments: View {
                 ProgressView(pantryText("Reading receipt on this device"))
                 Button(pantryText("Cancel reading")) { cancel() }
             } else if let document {
-                let pairs = availableAmounts(document)
+                let suggested = document.amountAssociations
+                let pairs = availableAmounts(suggested)
+                let splitAmounts = availableAmounts(document.splitAmountAssociations(excluding: suggested))
+                let splitItems = Dictionary(uniqueKeysWithValues: splitAmounts.map { ($0.value, $0.key) })
                 let suggestedAmountLines = Set(pairs.values)
-                let linkedAmounts = Set(linkedAmountItems.compactMap { pairs[$0] })
+                let linkedAmounts = Set(linkedAmountItems.compactMap { pairs[$0] ?? splitAmounts[$0] })
                 let included = selection.union(linkedAmounts)
                 let storeIssue = receiptStoreIssue(merchant)
                 Section(pantryText("Receipt source")) {
@@ -91,10 +95,20 @@ struct PantryReceiptDocuments: View {
                         merchantFocused = true
                         storeFocusRequest = nil
                     }
+                    if merchant.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                       let candidate = printedReceiptName(document) {
+                        Button(String(format: captureText("Use %@ as the receipt name"), candidate)) {
+                            guard authorize() else { return }
+                            merchantFocused = false
+                            merchant = candidate
+                        }
+                        .frame(minHeight: 44)
+                        .accessibilityIdentifier("receipt.document.usePrintedName")
+                    }
                     Picker(pantryText("Document type"), selection: $stage) {
                         ForEach(ReceiptAcquisition.DocumentLine.Stage.allCases, id: \.self) { Text(receiptStage($0)).tag($0) }
                     }
-                    Text(reviewsEvidenceOnly ? putawayText("Select the receipt lines and purchase date you want to review.")
+                    Text(reviewsEvidenceOnly ? putawayText("Choose the printed lines to keep as evidence. Next you’ll decide what happened to each item.")
                          : pantryText("Select food lines and the printed purchase date to review. You will confirm received and usable quantities separately."))
                 }
                 ForEach(document.pages) { page in
@@ -104,13 +118,17 @@ struct PantryReceiptDocuments: View {
                         else if page.lines.isEmpty { Text(pantryText("No readable lines on this page. You can type them in the receipt scanner.")) }
                         ForEach(page.lines.filter { !omittedLines.contains(.init(page: page.id, line: $0.id)) }) { line in
                             let position = ExtractedReceiptDocument.Selection(page: page.id, line: line.id)
-                            let price = pairs[position]
+                            let price = pairs[position] ?? (linkedAmountItems.contains(position) ? splitAmounts[position] : nil)
                             let priceLine = price.flatMap { price in page.lines.first { $0.id == price.line } }
+                            let splitItem = splitItems[position].flatMap { item in
+                                selection.contains(item) ? page.lines.first { $0.id == item.line } : nil
+                            }
                             documentLine(line, at: position, attached: linkedAmounts.contains(position),
                                          canInclude: included.contains(position) || included.count < 200,
                                          canSelectAmountSeparately: suggestedAmountLines.contains(position),
                                          suggestedAmount: priceLine,
-                                         canLink: price.map { included.union([position, $0]).count <= 200 } == true)
+                                         canLink: price.map { included.union([position, $0]).count <= 200 } == true,
+                                         splitItem: splitItem)
                         }
                     }
                 }
@@ -141,7 +159,9 @@ struct PantryReceiptDocuments: View {
                         do {
                             let source = try document.source(target: target, merchant: merchant.trimmingCharacters(in: .whitespacesAndNewlines),
                                 stage: stage, selection: selection, linkedAmountItems: linkedAmountItems, at: Date())
-                            onReview(source, openedShare)
+                            let printedTotal = reviewsEvidenceOnly && stage == .receipt
+                                ? document.printedPaidTotal(selected: selection) : nil
+                            onReview(source, openedShare, printedTotal)
                             dismiss()
                         } catch { show(error) }
                     }.buttonStyle(PrimaryAction()).disabled(!authorize() || (!reviewsEvidenceOnly && !confirmed) || selection.isEmpty || storeIssue != nil)
@@ -168,6 +188,10 @@ struct PantryReceiptDocuments: View {
                 Button(pantryText("Choose a receipt from Files")) { picking = true }
                 PhotosPicker(selection: $photo, matching: .images, preferredItemEncoding: .current) {
                     Text(pantryText("Choose a receipt from Photos"))
+                }
+                if inboxUnavailable {
+                    Text(pantryText("Shared files are unavailable. You can still choose a receipt from Files or Photos."))
+                        .font(.subheadline).foregroundStyle(Theme.secondary)
                 }
                 Text(pantryText("Use a PDF, JPEG, PNG, HEIC photo or UTF-8 or UTF-16 text file up to 10 MB. PDFs can have up to 20 pages."))
             }
@@ -228,14 +252,26 @@ struct PantryReceiptDocuments: View {
         .task { if let initialInput, document == nil, job == nil { start { initialInput } } }
     }
 
-    private func availableAmounts(_ document: ExtractedReceiptDocument) -> [ExtractedReceiptDocument.Selection: ExtractedReceiptDocument.Selection] {
+    private func availableAmounts(_ pairs: [ExtractedReceiptDocument.Selection: ExtractedReceiptDocument.Selection])
+        -> [ExtractedReceiptDocument.Selection: ExtractedReceiptDocument.Selection] {
         guard stage != .order else { return [:] }
-        return document.amountAssociations.filter { !omittedLines.contains($0.key) && !omittedLines.contains($0.value) }
+        return pairs.filter { !omittedLines.contains($0.key) && !omittedLines.contains($0.value) }
+    }
+
+    private func printedReceiptName(_ document: ExtractedReceiptDocument) -> String? {
+        guard let first = document.pages.first, first.method == .imageOCR || first.method == .pdfOCR,
+              let line = first.lines.first, !line.uncertain else { return nil }
+        let wording = line.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard receiptStoreIssue(wording) == nil, wording.contains(where: \.isLetter),
+              !wording.contains(where: \.isNumber), wording.split(whereSeparator: \.isWhitespace).count >= 2,
+              ReceiptPrintedEvidence.canSuggestAmount(for: wording) else { return nil }
+        return wording
     }
 
     private func documentLine(_ line: ReceiptDocumentPage.Line, at position: ExtractedReceiptDocument.Selection,
                               attached: Bool, canInclude: Bool, canSelectAmountSeparately: Bool,
-                              suggestedAmount: ReceiptDocumentPage.Line?, canLink: Bool) -> some View {
+                              suggestedAmount: ReceiptDocumentPage.Line?, canLink: Bool,
+                              splitItem: ReceiptDocumentPage.Line?) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 12) {
                 if attached {
@@ -297,17 +333,33 @@ struct PantryReceiptDocuments: View {
                 .disabled(!authorize() || (!canLink && !linked))
                 .accessibilityIdentifier("receipt.document.amountLink.\(position.page).\(line.id)")
             }
+            if let splitItem, !attached {
+                Button {
+                    let item = ExtractedReceiptDocument.Selection(page: position.page, line: splitItem.id)
+                    guard authorize(), selection.contains(item), canInclude else { return }
+                    linkedAmountItems.insert(item)
+                    confirmed = false
+                } label: {
+                    Label(String(format: captureText("Link %@ to %@"), line.text, splitItem.text), systemImage: "link")
+                        .font(.subheadline.weight(.semibold))
+                        .frame(minHeight: 44, alignment: .leading)
+                }
+                .buttonStyle(.borderless)
+                .disabled(!authorize() || !canInclude)
+                .accessibilityIdentifier("receipt.document.splitAmountLink.\(position.page).\(line.id)")
+            }
         }
     }
 
     private func loadInbox() async {
-        guard let model, model.supportsReceiptAliases, authorize() else { inbox = []; return }
+        guard let model, model.supportsReceiptAliases, authorize() else { inbox = []; inboxUnavailable = false; return }
         do {
             let rows = try await model.pendingSharedReceipts()
             guard !Task.isCancelled, authorize() else { return }
             inbox = rows
+            inboxUnavailable = false
         } catch {
-            if authorize() { self.error = pantryText("Shared files are unavailable. You can still choose a receipt from Files or Photos.") }
+            if !Task.isCancelled, authorize() { inboxUnavailable = true }
         }
     }
 

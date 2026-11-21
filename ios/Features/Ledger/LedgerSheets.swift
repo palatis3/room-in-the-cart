@@ -24,6 +24,8 @@ struct LedgerImportView: View {
     @State private var reminderPicker: LedgerReminderPresentation?
     @State private var reminderDestination: UUID?
     @State private var original = ""
+    @State private var originalExpanded = false
+    @State private var skippedRowToShow: UUID?
     @State private var showingReviewTotals = false
     @State private var inputLimit: ImportTextLimit?
     @State private var preview: StagedListImport?
@@ -115,11 +117,26 @@ struct LedgerImportView: View {
                         .id("ledgerImportSaveStatus")
                 }
                 if let preview, let review {
+                    if !review.similarEarlierLines.isEmpty,
+                       let index = preview.lines.firstIndex(where: { review.similarEarlierLines[$0.id] != nil }) {
+                        Section {
+                            Button(ledgerFormat("Review possible repeat on line %lld", Int64(index + 1))) {
+                                inputFocus = nil
+                                scroll.scrollTo(preview.lines[index].id, anchor: .top)
+                            }.accessibilityIdentifier("ledgerReviewRepeat")
+                        }
+                    }
                     Section(ledgerText("Original wording")) {
                         if preview.source == .selectedText, let shop {
                             LabeledContent(applePlanningText("Destination pickup"), value: shop.title)
                         }
-                        Text(original).textSelection(.enabled).accessibilityFocused($focus, equals: .preview)
+                        if preview.lines.count > 1, captured == nil, original.contains(where: \.isNewline) {
+                            DisclosureGroup(ledgerText("Show original list"), isExpanded: $originalExpanded) {
+                                Text(verbatim: original).textSelection(.enabled)
+                            }.accessibilityIdentifier("ledgerOriginalDisclosure")
+                        } else {
+                            Text(verbatim: original).textSelection(.enabled)
+                        }
                         if let pickup = captured?.naturalBatch?.pickup {
                             Text(captureText("Pickup for all items") + ": " + pickup.title)
                             if !availablePickup(pickup) {
@@ -145,7 +162,7 @@ struct LedgerImportView: View {
                                                                 set: { setChoice($0, for: row.id) }),
                                                 onEdited: { refreshMatches() })
                         }
-                    } header: { Text(ledgerText("Review every line")) } footer: {
+                    } header: { Text(ledgerText("Review every line")).accessibilityFocused($focus, equals: .preview) } footer: {
                         Text(ledgerText("Merge confirms the same need. Add amount keeps an additional contribution. Unresolved amounts remain visibly unknown."))
                     }.disabled(model.saving || model.hasPendingSave)
                     Section {
@@ -159,40 +176,20 @@ struct LedgerImportView: View {
                     }
                 } else {
                     Section {
-                        Text(ledgerText("One item per line. For example: 12 wraps or 2 kg rice."))
+                        Text(ledgerText("Type or paste your list")).font(.headline)
                         TextEditor(text: $original)
                             .frame(height: min(importEditorHeight, 240))
+                            .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Theme.controlEdge).allowsHitTesting(false))
                             .focused($inputFocus, equals: .original)
                             .accessibilityLabel(ledgerText("List to review")).accessibilityIdentifier("ledgerImportText")
                         PasteButton(payloadType: String.self) { values in
                             original = values.joined(separator: "\n")
                             source = .paste
                         }.accessibilityLabel(ledgerText("Paste list"))
+                        Text(ledgerText("One item per line. For example: 12 wraps or 2 kg rice.")).font(.footnote).foregroundStyle(Theme.secondary)
                     }.disabled(model.saving || model.hasPendingSave)
-                    Section {
-                        Button(ledgerText("Review list")) {
-                            guard let shop else { return }
-                            inputFocus = nil
-                            do {
-                                let staged = try pantryFoodPrefill
-                                    ? PantryRestockReview.stage(food: prefill, text: original, source: source, id: importID, shop: shop, suggestedAmount: pantrySuggestedAmount, productLink: pantryProductLink)
-                                    : shop.stageImport(text: original, source: source, importID: importID)
-                                invalidAmounts = [:]
-                                preview = staged
-                                choices = LedgerImportReview.initialChoices(staged)
-                                explicitSeparate = []
-                                matchesAreCurrent = true
-                                inputLimit = nil
-                                focus = .preview
-                            } catch let limit as ImportTextLimit {
-                                inputLimit = limit
-                                focus = .inputLimit
-                            } catch {
-                                model.error = ledgerText("Check the amounts, units and links. This change could not be applied; your saved pickup is unchanged.")
-                            }
-                        }.buttonStyle(PrimaryAction()).disabled(!original.unicodeScalars.contains { !CharacterSet.whitespacesAndNewlines.contains($0) })
-                            .accessibilityIdentifier("ledgerReviewImport")
-                        if let inputLimit {
+                    if let inputLimit {
+                        Section {
                             Text(ledgerImportLimitMessage(inputLimit))
                                 .accessibilityFocused($focus, equals: .inputLimit)
                                 .accessibilityIdentifier("ledgerImportSizeError")
@@ -217,8 +214,9 @@ struct LedgerImportView: View {
                 }
             }.accessibilityIdentifier("ledgerImportForm")
                 .scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(ledgerText("Bring the list"))
-                .safeAreaInset(edge: .bottom, spacing: 0) {
-                    if let preview, let review {
+                .navigationBarTitleDisplayMode(preview == nil ? .inline : .automatic)
+                .safeAreaInset(edge: preview == nil ? .top : .bottom, spacing: 0) {
+                    if let preview, let review, inputFocus == nil {
                         Group {
                             if preview.lines.count > 1, let shop {
                                 let totals = review.selectionTotals(for: preview, destination: shop.title)
@@ -239,14 +237,32 @@ struct LedgerImportView: View {
                         }
                         .padding(.horizontal, 16).padding(.vertical, 8)
                         .background(Theme.canvas)
+                    } else if preview == nil {
+                        reviewListButton
+                            .padding(.horizontal, 16).padding(.vertical, 8).background(Theme.canvas)
                     }
                 }
-                .keyboardDoneAction(visible: inputFocus != nil, title: ledgerText("Done")) { inputFocus = nil }
-                .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText(firstDraft == nil ? "Cancel" : "Close")) {
-                    if let firstDraft {
-                        Task { if await firstDraft.closeSavingEdits(firstContents, prefill: prefill) { dismiss() } }
-                    } else { dismiss() }
-                }.disabled(model.saving) } }
+                .keyboardDoneAction(visible: inputFocus == .original, title: ledgerText("Done")) { inputFocus = nil }
+                .onChange(of: inputFocus) { _, field in
+                    if let field, field != .original { scroll.scrollTo(field, anchor: .center) }
+                }
+                .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidShowNotification)) { _ in
+                    if let field = inputFocus, field != .original { scroll.scrollTo(field, anchor: .center) }
+                }
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button(ledgerText(firstDraft == nil ? "Cancel" : "Close")) {
+                            if let firstDraft {
+                                Task { if await firstDraft.closeSavingEdits(firstContents, prefill: prefill) { dismiss() } }
+                            } else { dismiss() }
+                        }.disabled(model.saving)
+                    }
+                    if let field = inputFocus, field != .original {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button(ledgerText("Done")) { inputFocus = nil }
+                        }
+                    }
+                }
                 .interactiveDismissDisabled(model.saving || firstDraft != nil)
                 .sheet(item: $reminderPicker, content: reminderSelection)
                 .onChange(of: reminderCopyBinding) { _, value in
@@ -271,6 +287,17 @@ struct LedgerImportView: View {
                     if let binding = capturePresentation?.binding ?? captureBinding, current != binding { invalidateCapture() }
                 }
                 .onChange(of: scenePhase) { _, phase in if phase == .background { reminderPicker = nil; invalidateCapture() } }
+                .task(id: skippedRowToShow) {
+                    guard let id = skippedRowToShow else { return }
+                    // Skipping can collapse this row and remove a repeat shortcut above it.
+                    // Scroll once after the form has incorporated both changes.
+                    await Task.yield()
+                    guard !Task.isCancelled, skippedRowToShow == id else { return }
+                    skippedRowToShow = nil
+                    if inputFocus == nil, choices[id] == .skip {
+                        scroll.scrollTo(id, anchor: .top)
+                    }
+                }
                 .task(id: ImportStatusFocusKey(previewID: preview?.id, error: model.error,
                                                saving: model.saving, pending: model.hasPendingSave)) {
                     guard showingImportStatus else { return }
@@ -360,6 +387,32 @@ struct LedgerImportView: View {
         }
     }
 
+    private var reviewListButton: some View {
+        Button(ledgerText("Review list")) {
+            guard let shop else { return }
+            inputFocus = nil
+            do {
+                let staged = try pantryFoodPrefill
+                    ? PantryRestockReview.stage(food: prefill, text: original, source: source, id: importID, shop: shop, suggestedAmount: pantrySuggestedAmount, productLink: pantryProductLink)
+                    : shop.stageImport(text: original, source: source, importID: importID)
+                invalidAmounts = [:]
+                preview = staged
+                choices = LedgerImportReview.initialChoices(staged)
+                explicitSeparate = []
+                matchesAreCurrent = true
+                inputLimit = nil
+                originalExpanded = false
+                focus = .preview
+            } catch let limit as ImportTextLimit {
+                inputLimit = limit
+                focus = .inputLimit
+            } catch {
+                model.error = ledgerText("Check the amounts, units and links. This change could not be applied; your saved pickup is unchanged.")
+            }
+        }.buttonStyle(PrimaryAction()).disabled(!original.unicodeScalars.contains { !CharacterSet.whitespacesAndNewlines.contains($0) })
+            .accessibilityIdentifier("ledgerReviewImport")
+    }
+
     private func importConfirmation(_ preview: StagedListImport, review: LedgerImportReview, title: String? = nil) -> some View {
         let needsAmountCorrection = invalidAmounts.keys.contains { review.choices[$0] != .skip }
         let reviewedBinding = captureBinding
@@ -368,6 +421,7 @@ struct LedgerImportView: View {
             authorizeEntry() && (reminderBinding == nil || reminderCopyBinding == reminderBinding)
         }
         return Button(title ?? ledgerText("Add reviewed list")) {
+            guard inputFocus == nil else { return }
             Task {
                 guard authorizeSave(), self.preview == preview, captureBinding == reviewedBinding,
                       reviewedBinding == nil || captureAuthorized else {
@@ -503,6 +557,7 @@ struct LedgerImportView: View {
         next[id] = value
         if value == .addNew && explicitlySeparate { explicitSeparate.insert(id) } else { explicitSeparate.remove(id) }
         choices = LedgerImportReview(shop: shop, preview: preview, choices: next).choices
+        if value == .skip { skippedRowToShow = id }
     }
 
     private func refreshMatches() {
@@ -736,7 +791,8 @@ private struct LedgerImportRowView: View {
         VStack(alignment: .leading, spacing: 8) {
             heading {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(line.originalText).font(.subheadline)
+                    Text(verbatim: ledgerFormat("Original wording: %@", line.originalText))
+                        .font(.subheadline).accessibilityIdentifier("ledgerImportOriginal-\(number)")
                     if choice == .skip {
                         Text(ledgerText("Skipped")).font(.caption).foregroundStyle(Theme.secondary)
                     }
@@ -800,7 +856,9 @@ private struct LedgerImportRowView: View {
             WorkingField(ledgerText("Item name")) {
                 TextField(ledgerText("Item name"), text: $line.name, prompt: Text(""), axis: .vertical)
                     .focused(inputFocus, equals: .name(line.id))
+                    .accessibilityIdentifier("ledgerImportName-\(number)")
                     .textFieldStyle(.roundedBorder)
+                    .id(LedgerImportField.name(line.id))
             }
             WorkingField(shoppingText("Quantity (optional)")) {
                 TextField(shoppingText("Quantity (optional)"), text: $amount, prompt: Text(""))
@@ -808,6 +866,7 @@ private struct LedgerImportRowView: View {
                     .focused(inputFocus, equals: .amount(line.id))
                     .textFieldStyle(.roundedBorder)
                     .accessibilityIdentifier("ledgerImportAmount-\(number)")
+                    .id(LedgerImportField.amount(line.id))
             }
             Picker(ledgerText("Unit"), selection: $unit) {
                 ForEach(UnitOfMeasure.allCases, id: \.self) { Text($0.displayName).tag($0) }
@@ -817,7 +876,10 @@ private struct LedgerImportRowView: View {
             Text(ledgerText("Enter a nonnegative amount with up to six decimal places, or leave it unknown."))
                 .foregroundStyle(Theme.warning)
                 .accessibilityIdentifier("ledgerImportAmountError-\(number)")
-        } else if line.quantity == nil {
+        } else if line.quantity == nil, line.originalPack == nil, line.capture == nil,
+                  QuickGrocery.plainName(line.originalText) != nil, QuickGrocery.plainName(line.name) != nil {
+            Text(ledgerText("Quantity optional")).font(.footnote).foregroundStyle(Theme.secondary)
+        } else if line.quantity == nil && line.originalPack?.count == nil {
             Label(ledgerText("Quantity unresolved"), systemImage: "questionmark.circle").foregroundStyle(Theme.warning)
             if let reason = line.unresolvedReason { Text(ledgerContributionNote(reason)).font(.footnote) }
         }
@@ -844,9 +906,35 @@ private struct LedgerImportRowView: View {
     }
 }
 
+/// The sheet can render once more after its write is published and before dismissal.
+struct LedgerFactsReview {
+    enum Status { case editing, saved, stale }
+    let original: ShoppingLedger
+    let workspaceID: UUID?
+    private(set) var submittedRevision: UUID?
+
+    func status(for shop: ShoppingLedger?, in currentWorkspace: UUID?) -> Status {
+        guard let workspaceID, workspaceID == currentWorkspace, let shop, shop.id == original.id else { return .stale }
+        if shop.revisionID == submittedRevision { return .saved }
+        return shop.revisionID == original.revisionID ? .editing : .stale
+    }
+
+    func renewed(for shop: ShoppingLedger?, in currentWorkspace: UUID?) -> Self? {
+        guard let workspaceID, workspaceID == currentWorkspace, let shop, shop.id == original.id else { return nil }
+        return Self(original: shop, workspaceID: workspaceID)
+    }
+
+    mutating func apply(_ proposed: ShopBasis, evidenceFor terms: ShopBasis.RetailerTerms, to shop: inout ShoppingLedger) throws {
+        guard shop.id == original.id else { throw LedgerError.stalePreview }
+        try shop.updateBasis(proposed, evidenceFor: terms, reviewing: original.revisionID)
+        submittedRevision = shop.revisionID
+    }
+}
+
 struct LedgerFactsView: View {
     @ObservedObject var model: LedgerModel
-    @State private var original: ShoppingLedger
+    @State private var factsReview: LedgerFactsReview
+    private var original: ShoppingLedger { factsReview.original }
     @Environment(\.dismiss) private var dismiss
     @State private var basis: ShopBasis
     @State private var cap: String
@@ -866,15 +954,13 @@ struct LedgerFactsView: View {
     @State private var hasSlot: Bool
     @State private var slot: Date
     @State private var reviewing = false
-    @State private var workspaceID: UUID?
     @State private var evidenceTerms: ShopBasis.RetailerTerms
     @State private var validation: String?
     private enum Input: Hashable { case branch, timeZone, cap, reserve, fees, retailerTotal, retailerSource, includedCharges }
     @FocusState private var inputFocus: Input?
     init(model: LedgerModel, shop: ShoppingLedger) {
         self.model = model
-        _original = State(initialValue: shop)
-        _workspaceID = State(initialValue: model.sourceWorkspaceID)
+        _factsReview = State(initialValue: LedgerFactsReview(original: shop, workspaceID: model.sourceWorkspaceID))
         _evidenceTerms = State(initialValue: shop.basis.retailerTerms)
         _basis = State(initialValue: shop.basis)
         _cap = State(initialValue: shop.basis.cap.map { NSDecimalNumber(decimal: Decimal($0.minorUnits) / 100).stringValue } ?? "")
@@ -894,9 +980,8 @@ struct LedgerFactsView: View {
         edited.slot = hasSlot ? slot : nil
         return edited.retailerTerms
     }
-    private var isCurrent: Bool {
-        workspaceID != nil && model.sourceWorkspaceID == workspaceID && model.shop?.id == original.id
-            && model.shop?.revisionID == original.revisionID
+    private var status: LedgerFactsReview.Status {
+        factsReview.status(for: model.shop, in: model.sourceWorkspaceID)
     }
     private var needsFreshEvidence: Bool {
         currentTerms != evidenceTerms && (hasRetailerPreview || !fees.isEmpty || !retailerSource.isEmpty
@@ -904,24 +989,33 @@ struct LedgerFactsView: View {
     }
     var body: some View {
         WorkingForm {
-            if !isCurrent {
-                Text(ledgerText("This pickup changed. Close these edits and reopen the current pickup details."))
+            if status == .stale {
+                if let fresh = factsReview.renewed(for: model.shop, in: model.sourceWorkspaceID) {
+                    Text(ledgerText("This pickup changed. Review the current details alongside your edits before saving."))
+                    Button(ledgerText("Review pickup details")) {
+                        factsReview = fresh
+                        reviewing = false
+                        review()
+                    }.disabled(model.saving || model.hasPendingSave)
+                } else {
+                    Text(ledgerText("This pickup changed. Close these edits and reopen the current pickup details."))
+                }
                 Button(ledgerText("Close")) { dismiss() }
-            } else if reviewing {
+            } else if status == .editing && reviewing {
                 Section(ledgerText("Previously saved")) { summary(original.basis) }
                 Section(ledgerText("Proposed pickup details")) { summary(basis) }
                 Section {
                     Text(ledgerText("Changing the store, mode, date or costs invalidates earlier pickup quotes. Review them again before relying on a total."))
                     Button(ledgerText("Save pickup details")) {
                         Task { if await model.editShop(key: "basis-\(original.id)", shopID: original.id, {
-                            guard isCurrent else { throw LedgerError.stalePreview }
-                            try $0.updateBasis(basis, evidenceFor: evidenceTerms, reviewing: original.revisionID)
-                        }) { dismiss() } }
+                            guard status == .editing else { throw LedgerError.stalePreview }
+                            try factsReview.apply(basis, evidenceFor: evidenceTerms, to: &$0)
+                        }) { dismissIfSaved() } }
                     }.buttonStyle(PrimaryAction()).disabled(model.saving || model.hasPendingSave)
                         .accessibilityIdentifier("ledgerCommitFacts")
                     Button(ledgerText("Keep editing")) { reviewing = false }.disabled(model.saving || model.hasPendingSave)
                 }
-            } else {
+            } else if status == .editing {
                 Section(ledgerText("Store and timing")) {
                     TextField(ledgerText("Store branch"), text: $basis.branch, axis: .vertical).accessibilityIdentifier("ledgerBranch")
                         .focused($inputFocus, equals: .branch)
@@ -1002,7 +1096,7 @@ struct LedgerFactsView: View {
                         .accessibilityIdentifier("ledgerReviewFacts")
                 }
             }
-            if isCurrent {
+            if status == .editing {
                 let history = original.revisions.reversed().filter { $0.previousRetailerBasis != nil }
                 if !history.isEmpty {
                     DisclosureGroup(ledgerText("Earlier retailer evidence")) {
@@ -1015,7 +1109,7 @@ struct LedgerFactsView: View {
                 }
             }
             if let validation { Text(validation).foregroundStyle(Theme.warning) }
-            LedgerSaveStatus(model: model, onRetried: { dismiss() })
+            LedgerSaveStatus(model: model, onRetried: dismissIfSaved)
         }.scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(ledgerText("Describe this pickup"))
             .sheet(item: $screenshotRequest) { request in
                 NavigationStack { checkoutImage(for: request.terms) }
@@ -1029,9 +1123,13 @@ struct LedgerFactsView: View {
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() }.disabled(model.saving) } }
             .interactiveDismissDisabled(model.saving)
     }
+    private func dismissIfSaved() {
+        if status == .saved { dismiss() }
+    }
+
     private func checkoutImage(for terms: ShopBasis.RetailerTerms) -> some View {
-        PriceImageReview(purpose: .checkout, authorized: { isCurrent && terms == currentTerms }, acceptCheckout: { reviewed in
-            guard isCurrent, terms == currentTerms else { return }
+        PriceImageReview(purpose: .checkout, authorized: { status == .editing && terms == currentTerms }, acceptCheckout: { reviewed in
+            guard status == .editing, terms == currentTerms else { return }
             screenshot = reviewed
             hasRetailerPreview = true
             retailerTotal = reviewed.displayedTotal.map { NSDecimalNumber(decimal: Decimal($0.minorUnits) / 100).stringValue } ?? ""
@@ -1064,7 +1162,7 @@ struct LedgerFactsView: View {
             } else { basis.retailerPreview = nil }
             basis.slot = hasSlot ? slot : nil
             try basis.validate()
-            guard isCurrent else { return }
+            guard status == .editing else { return }
             validation = nil
             reviewing = true
         } catch { validation = ledgerText("Use a nonnegative USD amount with no more than two decimal places.") }

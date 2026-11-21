@@ -9,17 +9,18 @@ final class StagingHelpUITests: XCTestCase {
         continueAfterFailure = false
         app.launchArguments = ["-AppleLanguages", "(\(language))", "-AppleLocale", "\(language)_US"]
         app.launch()
-        let shop = app.tabBars.buttons[language == "es" ? "Compras" : "Shop"]
+        let shopTitle = language == "es" ? "Compras" : "Shop"
+        let shop = app.tabBars.buttons[shopTitle]
         XCTAssertTrue(shop.waitForExistence(timeout: 20))
         shop.tap()
-        let settings = app.buttons["settings"]
+        let settings = app.navigationBars[shopTitle].buttons["settings"]
         for _ in 0..<4 {
-            if settings.exists { break }
+            if settings.exists && settings.isHittable { break }
             let back = app.navigationBars.buttons.firstMatch
             XCTAssertTrue(back.waitForExistence(timeout: 5))
             back.tap()
         }
-        XCTAssertTrue(settings.waitForExistence(timeout: 5))
+        XCTAssertTrue(settings.wait(for: \.isHittable, toEqual: true, timeout: 5))
         settings.tap()
     }
 
@@ -35,6 +36,52 @@ final class StagingHelpUITests: XCTestCase {
         tapInList(app.buttons["settings.support"])
         tapInList(app.descendants(matching: .any).matching(identifier: "help.support.open").firstMatch)
         verifyPublicPage("Support")
+    }
+
+    func testConfiguredSpanishFamilyGuideReturnsFromSafariToNativeHelp() {
+        openSettings(language: "es")
+        tapInList(app.buttons["guardian.familyGuide"])
+        let guide = app.navigationBars["Permisos de menores"]
+        XCTAssertTrue(guide.waitForExistence(timeout: 8))
+        let online = app.descendants(matching: .any).matching(identifier: "guardian.familyGuide.online").firstMatch
+        tapInList(online)
+        let web = app.webViews.firstMatch
+        XCTAssertTrue(web.waitForExistence(timeout: 20))
+        let heading = web.staticTexts["Menores y permiso del tutor"].firstMatch
+        XCTAssertTrue(heading.waitForExistence(timeout: 20))
+        // The contents menu repeats the section heading. Only the section itself has its scope paragraph.
+        let scope = web.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@",
+            "Con el permiso del tutor y un dispositivo vinculado")).firstMatch
+        XCTAssertTrue(scope.waitForExistence(timeout: 12))
+        XCTAssertTrue(scope.isHittable, "The configured Spanish family section should open at its own anchor.")
+        let done = app.buttons.matching(NSPredicate(format: "label IN %@ AND NOT (identifier IN %@)",
+                                                     ["Done", "Listo", "OK"], ["guardian.familyGuide.done", "settings.done"])).firstMatch
+        XCTAssertTrue(done.waitForExistence(timeout: 5) && done.isHittable)
+        done.tap()
+        XCTAssertTrue(web.waitForNonExistence(timeout: 8))
+        let settings = app.navigationBars["Configuración"]
+        let guideDone = guide.buttons["guardian.familyGuide.done"]
+        let settingsDone = settings.buttons["settings.done"]
+        func canTap(_ button: XCUIElement) -> Bool {
+            guard button.exists && button.isHittable else { return false }
+            let frame = button.frame
+            return !frame.isEmpty && app.frame.contains(CGPoint(x: frame.midX, y: frame.midY))
+        }
+        // Safari can close the guide sheet as well. A dismissing guide can
+        // remain in the hierarchy below the screen while Settings is active.
+        let nativeReturn = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            canTap(guideDone) || canTap(settingsDone)
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [nativeReturn], timeout: 8), .completed,
+                       "Safari must return to the native family guide or Settings.")
+        let nativeDone = canTap(guideDone) ? guideDone : settingsDone
+        XCTAssertTrue(canTap(nativeDone))
+        nativeDone.tap()
+        XCTAssertTrue(guide.waitForNonExistence(timeout: 8))
+        XCTAssertTrue(settings.waitForNonExistence(timeout: 8))
+        let originalShop = app.navigationBars["Compras"]
+        XCTAssertTrue(originalShop.waitForExistence(timeout: 8))
+        XCTAssertTrue(originalShop.buttons["settings"].wait(for: \.isHittable, toEqual: true, timeout: 8))
     }
 
     private func tapInList(_ target: XCUIElement, file: StaticString = #filePath, line: UInt = #line) {

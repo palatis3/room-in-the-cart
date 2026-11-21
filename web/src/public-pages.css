@@ -93,6 +93,15 @@
   font-weight: 650;
   text-decoration: none;
 }
+.overview-family-guide {
+  display: flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 44px;
+  margin-top: .5rem;
+  color: inherit;
+  text-underline-offset: .2em;
+}
 .overview-action:hover { background: #eef1d2; text-decoration: underline; }
 .overview-example {
   margin: 0;

@@ -29,6 +29,7 @@ final class PantryRepository {
             lot.splitFromLotID != nil || (lot.discardedTimes ?? 0) > 0 || lots.contains { $0.splitFromLotID == lot.id }
         }
         var receiptAcquiredLots: Set<UUID> = []
+        let singlePackageIntakes: Set<UUID>
         let loadedPayloadBytes: Int
         fileprivate let observationCount: Int
         fileprivate let lotPayloadBytes: [UUID: Int]
@@ -119,6 +120,7 @@ final class PantryRepository {
         let histories = Dictionary(grouping: observations, by: \.lotID)
         let lotIDs = Set(lots.map(\.id))
         guard Set(sources.keys) == lotIDs, Set(histories.keys) == lotIDs else { throw Failure.invalidProvenance }
+        var singlePackageIntakes = Set<UUID>()
         for lot in lots {
             let history = (histories[lot.id] ?? []).sorted { $0.revision < $1.revision }
             var predecessor: InventoryObservation?
@@ -133,10 +135,18 @@ final class PantryRepository {
             guard let latest = predecessor, latest.id == lot.observationID,
                   latest.count == lot.count, latest.countWording == lot.countWording, latest.observedAt == lot.confirmedAt,
                   sources[lot.id]?.source == lot.source else { throw Failure.invalidProvenance }
+            // This operation writes an unknown first observation only after the shopper
+            // explicitly confirms one physical package with unknown usable contents.
+            if let intake = history.first, intake.revision == 1, intake.count == .unknown,
+               lot.source == .manual(originID: originID, sourceID: lot.id),
+               intake.operationID == PantryProductBatch.homeOperationID(for: lot.id) {
+                singlePackageIntakes.insert(lot.id)
+            }
         }
         return Snapshot(state: final, lots: lots, reservations: claims,
             availability: try InventoryProjection.build(originID: final.workspaceID, lots: lots, reservations: claims, at: now),
-            receiptAcquiredLots: acquiredLots.ids, loadedPayloadBytes: limits.payloadBytes - remainingBytes,
+            receiptAcquiredLots: acquiredLots.ids, singlePackageIntakes: singlePackageIntakes,
+            loadedPayloadBytes: limits.payloadBytes - remainingBytes,
             observationCount: observationRows.count,
             lotPayloadBytes: Dictionary(uniqueKeysWithValues: lotRows.map { ($0.key.id, $0.payload.count) }),
             reservationPayloadBytes: Dictionary(uniqueKeysWithValues: claimRows.map { ($0.key.id, $0.payload.count) }))

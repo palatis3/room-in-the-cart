@@ -1,6 +1,74 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "I paid the printed total %@ in USD": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I paid the printed total %@ in USD"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pagué el total impreso de %@ en USD"
+          }
+        }
+      }
+    },
+    "All received food is usable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All received food is usable"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todo lo que recibí se puede aprovechar"
+          }
+        }
+      }
+    },
+    "Choose the printed lines to keep as evidence. Next you’ll decide what happened to each item.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the printed lines to keep as evidence. Next you’ll decide what happened to each item."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige las líneas impresas que quieres conservar. Después indicarás qué pasó con cada artículo."
+          }
+        }
+      }
+    },
+    "See receipt totals and all decisions, including food kept out of Pantry.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "See receipt totals and all decisions, including food kept out of Pantry."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consulta los totales y todas las decisiones, incluso de los alimentos que no guardaste en la despensa."
+          }
+        }
+      }
+    },
     "Transaction reference (optional)": {
       "extractionState": "manual",
       "localizations": {

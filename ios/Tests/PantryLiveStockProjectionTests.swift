@@ -428,6 +428,84 @@ import LocalStore
 }
 
 extension PantryLiveStockProjectionTests {
+    func testOnePhysicalPackageWithUnknownContentsReplaysWithoutMakingAPurchaseOrConfirmingDate() async throws {
+        let (fixture, _, _) = try await receiptFixture()
+        let pickup = try await receiptPickup(fixture)
+        let editor = try XCTUnwrap(pickup.makePantryModel())
+        await editor.load()
+        let before = try XCTUnwrap(editor.snapshot).lots
+        var intake = PantryProductBatch(workspaceID: fixture.store.workspaceID)
+        XCTAssertTrue(try intake.addManual(name: "Butter beans", code: "LOCAL-BEANS"))
+        intake.candidates[0].onePackageUnknown = true
+        intake.candidates[0].dateWordingDraft = "BEST BEFORE DEC 2026"
+        let row = intake.candidates[0]
+        XCTAssertEqual(try row.homeCount(), .unknown)
+        XCTAssertThrowsError(try row.usableQuantity())
+        XCTAssertThrowsError(try intake.draft(merchant: "Market", purchaseDate: now, confirmed: true))
+        var several = row
+        several.packages = "2"
+        XCTAssertThrowsError(try several.homeCount())
+        let review = try await editor.reviewHomePacks(intake)
+        XCTAssertEqual(editor.snapshot?.lots, before)
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let scope = PantryDigestScope(origin: fixture.store.workspaceID, identity: .init(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil))
+        let journal = PantryPackMemory(folder: folder)
+        let staged = try XCTUnwrap(ReviewedPackSave(review: review, intake: intake, scope: scope, atHome: true))
+        XCTAssertEqual(staged.rows.first?.reviewedDateWording, "BEST BEFORE DEC 2026")
+        try journal.stage(staged, scope: scope) { true }
+        try await editor.saveReceipt(review)
+        XCTAssertTrue(try XCTUnwrap(editor.snapshot).singlePackageIntakes.contains(row.id))
+        let retry = try XCTUnwrap(PantryPackMemory(folder: folder).pending(scope))
+        try await editor.saveReceipt(retry.review)
+        try journal.clear(retry, scope: scope) { true }
+        let reopened = try XCTUnwrap(pickup.makePantryModel())
+        await reopened.load()
+        let after = try XCTUnwrap(reopened.snapshot).lots
+        XCTAssertEqual(after.count, before.count + 1)
+        let lot = try XCTUnwrap(after.first { $0.id == row.id })
+        XCTAssertEqual(lot.name, "Butter beans")
+        XCTAssertEqual(lot.count, .unknown)
+        XCTAssertTrue(try XCTUnwrap(reopened.snapshot).singlePackageIntakes.contains(lot.id))
+        XCTAssertNil(lot.openedAt)
+        XCTAssertEqual(lot.location, .cupboard)
+        XCTAssertEqual(lot.packageCode?.value, "LOCAL-BEANS")
+        guard case .manual = lot.source else { return XCTFail("Expected at-home stock") }
+        let history = try await reopened.receiptHistory()
+        XCTAssertTrue(history.isEmpty)
+        let labels = PantryPackageDateStore(folder: folder.appendingPathComponent("labels"))
+        XCTAssertNil(try labels.load(scope, lot: lot.id))
+        try intake.separate(row.id)
+        XCTAssertNil(intake.candidates.last?.reviewedDateWording)
+    }
+
+    func testUnknownUsableAmountAloneDoesNotEstablishOneOuterPackage() async throws {
+        let fixture = try await activate([])
+        let origin = fixture.store.workspaceID
+        let at = now
+        let genericID = UUID()
+        let initial = try await fixture.repository.load(at: at)
+        // Older ordinary manual lots have no package-intake evidence.
+        let ordinary = InventoryLotSeed(foodID: genericID, name: "Beans", source: .manual(originID: origin, sourceID: genericID),
+                                        location: .cupboard, unit: .count, count: .unknown)
+        let generic = try await fixture.repository.apply(.init(id: UUID(), originID: origin, lotID: genericID, eventID: UUID(),
+            expectedRevision: nil, occurredAt: at, change: .create(ordinary, observationID: UUID())),
+            reviewedInventoryRevision: initial.state.revision, at: at)
+        XCTAssertFalse(generic.current.singlePackageIntakes.contains(genericID))
+
+        var measured = PantryProductBatch(workspaceID: origin)
+        XCTAssertTrue(try measured.addManual(name: "Flour", code: nil))
+        measured.candidates[0].packages = "2"
+        measured.candidates[0].perPack = "100"
+        measured.candidates[0].unit = .gram
+        let review = try await fixture.repository.reviewHomePacks(measured, basis: generic.current.state, at: at)
+        try await fixture.repository.applyReceipt(review, at: at)
+        let id = measured.candidates[0].id
+        let current = try await change(id, .count(.unknown, observationID: UUID()), fixture: fixture)
+        XCTAssertEqual(current.lots.first(where: { $0.id == id })?.count, .unknown)
+        XCTAssertTrue(current.singlePackageIntakes.isEmpty)
+    }
+
     func testReviewedAtHomePacksSaveTwoPhysicalLotsWithNoPurchaseAndReplayOnce() async throws {
         let (fixture, _, _) = try await receiptFixture()
         let pickup = try await receiptPickup(fixture)
@@ -466,6 +544,7 @@ extension PantryLiveStockProjectionTests {
         XCTAssertEqual(Set(lots.map(\.location)), [.fridge, .cupboard])
         XCTAssertEqual(Set(lots.map(\.id)), Set(intake.candidates.map(\.id)))
         for lot in lots {
+            XCTAssertFalse(try XCTUnwrap(reopened.snapshot).singlePackageIntakes.contains(lot.id))
             guard case .manual = lot.source else { return XCTFail("A home count cannot create purchase evidence") }
             XCTAssertEqual(lot.count.quantity?.amount, try Rational(375))
             XCTAssertEqual(lot.packageCode?.canonicalGTIN, code.canonicalGTIN)

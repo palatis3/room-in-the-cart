@@ -4,6 +4,8 @@ import SwiftUI
 
 struct PantryPriceHistoryView: View {
     @ObservedObject var model: PantryModel
+    private(set) var dates = ReceiptDateDisplay()
+    @Binding var startEntry: Bool
     @State private var page: PantryPricePage?
     @State private var rows: [PrivatePriceEvidence] = []
     @State private var notice: String?
@@ -27,7 +29,7 @@ struct PantryPriceHistoryView: View {
                             Text(verbatim: row.name).font(.headline)
                             Text(verbatim: priceAmount(row)).font(.title3.weight(.semibold)).monospacedDigit()
                             Text(verbatim: priceSource(row)).font(.subheadline).foregroundStyle(Theme.secondary)
-                            Text(verbatim: row.store + " · " + row.date.formatted(date: .abbreviated, time: .omitted))
+                            Text(verbatim: row.store + " · " + dates.purchaseDay(row.date))
                                 .font(.footnote).foregroundStyle(Theme.secondary)
                         }.padding(.vertical, 3)
                     }
@@ -72,6 +74,10 @@ struct PantryPriceHistoryView: View {
                 $0.date == $1.date ? $0.id.uuidString < $1.id.uuidString : $0.date > $1.date
             }
             page = next
+            if startEntry, model.phase == .ready, model.canEdit {
+                startEntry = false
+                editing = true
+            }
             notice = nil
         } catch {
             rows = []; page = nil
@@ -82,6 +88,7 @@ struct PantryPriceHistoryView: View {
 
 private struct PantryPriceDetail: View {
     @ObservedObject var model: PantryModel
+    private(set) var dates = ReceiptDateDisplay()
     @EnvironmentObject private var household: HouseholdModel
     let row: PrivatePriceEvidence
     let state: InventoryState
@@ -110,7 +117,7 @@ private struct PantryPriceDetail: View {
                     if let variant = row.variant { Text(verbatim: variant) }
                     Text(verbatim: [row.store, row.branch].compactMap { $0 }.joined(separator: " · "))
                     if let mode = row.mode { Text(mode.ledgerLabel) }
-                    Text(row.date, style: .date)
+                    Text(verbatim: dates.purchaseDay(row.date))
                     if let eligibility = row.eligibility { Text(verbatim: eligibility) }
                     if let tax = row.taxTreatment { Text(shelfTaxLabel(tax)) }
                     if case .paidReceipt(let source) = row.source {
@@ -169,6 +176,7 @@ private struct PantryPriceDetail: View {
 
 private struct PantryPriceRevisionView: View {
     @ObservedObject var model: PantryModel
+    private(set) var dates = ReceiptDateDisplay()
     let current: PrivatePriceEvidence
     let state: InventoryState
     @State private var revision: Int64 = 1
@@ -189,7 +197,7 @@ private struct PantryPriceRevisionView: View {
                     Text(verbatim: priceSource(record) + " · " + priceAmount(record))
                     Text(verbatim: [record.store, record.branch].compactMap { $0 }.joined(separator: " · "))
                     if let mode = record.mode { Text(mode.ledgerLabel) }
-                    Text(record.date, style: .date)
+                    Text(verbatim: dates.purchaseDay(record.date))
                     if let pack = record.pack { Text(verbatim: packageLabel(pack)) }
                     if let terms = record.eligibility { Text(verbatim: terms) }
                     Text(verbatim: record.sourceText)
@@ -215,6 +223,7 @@ private struct PantryPriceRevisionView: View {
 
 private struct PantryComparablePrice: View {
     @ObservedObject var model: PantryModel
+    private(set) var dates = ReceiptDateDisplay()
     let price: PrivatePriceEvidence
     let state: InventoryState
     let unit: UnitOfMeasure
@@ -222,7 +231,7 @@ private struct PantryComparablePrice: View {
 
     var body: some View {
         VStack(alignment: .leading) {
-            Text(verbatim: price.store + " · " + price.date.formatted(date: .abbreviated, time: .omitted))
+            Text(verbatim: price.store + " · " + dates.purchaseDay(price.date))
             if let rate {
                 Text(verbatim: (Decimal(rate.numerator) / Decimal(rate.denominator) / 100).formatted(
                     .currency(code: price.currencyCode).precision(.fractionLength(2...4))) + " / " + pantryUnit(unit))
@@ -321,12 +330,16 @@ private func priceSource(_ row: PrivatePriceEvidence) -> String {
 
 private func packageLabel(_ pack: PrivatePriceEvidence.Pack) -> String {
     let quantity = pack.perPackage
-    // Manual price entries include their unit in the original package wording.
-    // Other sources store just the number and keep the unit in its own field.
+    // Keep source wording when it already includes a unit. Earlier manual entries
+    // appended the plural unit even when the shopper entered a single unit.
     let literal = quantity.originalLiteral.trimmingCharacters(in: .whitespacesAndNewlines)
     let amount: String
     if literal.isEmpty {
         amount = pantryQuantity(quantity)
+    } else if quantity.amount == .one, literal.hasSuffix(" " + pantryUnit(quantity.unit)) {
+        let number = String(literal.dropLast(pantryUnit(quantity.unit).count + 1))
+        amount = (try? ListQuantityParser.numericAmount(number)) == .one
+            ? number + " " + pantryUnit(quantity.unit, singular: true) : literal
     } else if literal.contains(where: { $0.isLetter }) {
         amount = literal
     } else {
@@ -361,6 +374,7 @@ private enum PriceEntryKind: CaseIterable {
 
 private struct PantryPriceEditor: View {
     @ObservedObject var model: PantryModel
+    private(set) var dates = ReceiptDateDisplay()
     let expected: InventoryState
     let original: PrivatePriceEvidence?
     let didSave: () -> Void
@@ -371,7 +385,7 @@ private struct PantryPriceEditor: View {
     @State private var priceBasis = ReviewedShelfImage.PriceBasis.unknown
     @FocusState private var focused: String?
     @State private var id = UUID()
-    @State private var entryKind = PriceEntryKind.paid
+    @State private var entryKind: PriceEntryKind?
     @State private var name = ""
     @State private var variant = ""
     @State private var store = ""
@@ -399,7 +413,7 @@ private struct PantryPriceEditor: View {
         _id = State(initialValue: original.id)
         _printed = State(initialValue: original.shelfImage?.printed)
         _priceBasis = State(initialValue: original.shelfImage?.basis ?? .unknown)
-        _entryKind = State(initialValue: PriceEntryKind.allCases.first { $0.source == original.source } ?? .paid)
+        _entryKind = State(initialValue: PriceEntryKind.allCases.first { $0.source == original.source })
         _name = State(initialValue: original.name)
         _variant = State(initialValue: original.variant ?? "")
         _store = State(initialValue: original.store)
@@ -426,7 +440,7 @@ private struct PantryPriceEditor: View {
                 Text(verbatim: priceSource(review) + " · " + priceAmount(review))
                 Text(verbatim: [review.store, review.branch].compactMap { $0 }.joined(separator: " · "))
                 if let mode = review.mode { Text(mode.ledgerLabel) }
-                Text(review.date, style: .date)
+                Text(verbatim: dates.purchaseDay(review.date))
                 if let pack = review.pack { Text(verbatim: packageLabel(pack)) }
                 if let eligibility = review.eligibility { Text(verbatim: eligibility) }
                 if let tax = review.taxTreatment { Text(shelfTaxLabel(tax)) }
@@ -447,9 +461,15 @@ private struct PantryPriceEditor: View {
                     }
                 }.buttonStyle(PrimaryAction()).disabled(saving).accessibilityIdentifier("prices.confirm")
                 Button(pantryText("Edit price")) { self.review = nil }.disabled(saving)
+            } else if entryKind == nil {
+                Section(pantryText("Price source")) {
+                    ForEach(PriceEntryKind.allCases, id: \.self) { kind in
+                        Button(kind.label) { entryKind = kind }
+                    }
+                }
             } else {
-                Picker(pantryText("Price source"), selection: $entryKind) {
-                    ForEach(PriceEntryKind.allCases, id: \.self) { value in Text(value.label).tag(value) }
+                PriceChoice("Price source", value: entryKind?.label ?? "", selection: $entryKind) {
+                    ForEach(PriceEntryKind.allCases, id: \.self) { value in Text(value.label).tag(Optional(value)) }
                 }.disabled(original != nil).accessibilityIdentifier("prices.source")
                 if entryKind == .shelf {
                     if original == nil {
@@ -459,7 +479,7 @@ private struct PantryPriceEditor: View {
                         if !printed.wording.isEmpty { Text(verbatim: printed.wording) }
                         if let reading = printed.reviewedReading { ReviewedImageWordingLabel(reading: reading) }
                         if printed.uncertain { Text(pantryText("Uncertain image wording")) }
-                        Picker(pantryText("Printed price basis"), selection: $priceBasis) {
+                        PriceChoice("Printed price basis", value: shelfBasisName(priceBasis), selection: $priceBasis) {
                             Text(pantryText("Package or multibuy total")).tag(ReviewedShelfImage.PriceBasis.bundle)
                             Text(pantryText("Displayed unit price")).tag(ReviewedShelfImage.PriceBasis.unit)
                             Text(pantryText("Price basis unclear")).tag(ReviewedShelfImage.PriceBasis.unknown)
@@ -470,22 +490,25 @@ private struct PantryPriceEditor: View {
                 TextField(pantryText("Brand or variant"), text: $variant).accessibilityIdentifier("prices.variant").focused($focused, equals: "variant")
                 TextField(pantryText("Store"), text: $store).accessibilityIdentifier("prices.store").focused($focused, equals: "store")
                 TextField(pantryText("Branch"), text: $branch).focused($focused, equals: "branch")
-                Picker(pantryText("Shopping mode"), selection: $mode) {
+                PriceChoice("Shopping mode", value: mode?.ledgerLabel ?? pantryText("Not recorded"), selection: $mode) {
                     Text(pantryText("Not recorded")).tag(nil as FulfillmentMode?)
                     ForEach(FulfillmentMode.allCases, id: \.self) { value in Text(value.ledgerLabel).tag(Optional(value)) }
                 }
-                DatePicker(pantryText("Price date"), selection: $date, in: ...Date(), displayedComponents: .date)
-                Picker(pantryText("Currency"), selection: $currency) {
+                ReceiptDatePicker(title: pantryText("Price date"), identifier: "prices.date", date: $date)
+                PriceChoice("Currency", value: currency.isEmpty ? pantryText("Choose the printed currency") : currency, selection: $currency) {
                     if printed != nil { Text(pantryText("Choose the printed currency")).tag("") }
                     ForEach(PrivatePriceEvidence.supportedCurrencies, id: \.self) { Text(verbatim: $0).tag($0) }
                 }
                 TextField(entryKind == .shelf && printed != nil ? pantryText("Printed price amount") : pantryText("Total for all packages"), text: $amount).keyboardType(.decimalPad).accessibilityIdentifier("prices.total").focused($focused, equals: "amount")
                 Section(pantryText("Package basis")) {
                     if entryKind != .shelf || printed == nil || priceBasis != .unit {
-                        TextField(pantryText("Number of packages"), text: $packages).keyboardType(.numberPad).focused($focused, equals: "packages")
+                        WorkingField(pantryText("Number of packages")) {
+                            TextField(pantryText("Number of packages"), text: $packages).keyboardType(.numberPad)
+                                .focused($focused, equals: "packages").accessibilityIdentifier("prices.packages")
+                        }
                     }
                     TextField(entryKind == .shelf && printed != nil && priceBasis == .unit ? pantryText("Printed unit-price quantity") : pantryText("Quantity per package"), text: $quantity).keyboardType(.decimalPad).accessibilityIdentifier("prices.quantity").focused($focused, equals: "quantity")
-                    Picker(pantryText("Unit"), selection: $unit) {
+                    PriceChoice("Unit", value: pantryUnit(unit), selection: $unit) {
                         ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pantryUnit($0)).tag($0) }
                     }
                 }
@@ -534,7 +557,7 @@ private struct PantryPriceEditor: View {
                 })
             }
         }
-        .navigationTitle(pantryText("Record a price"))
+        .navigationTitle(pantryText(original == nil ? "Record a price" : "Correct recorded price"))
         .toolbar {
             ToolbarItem(placement: .cancellationAction) { Button(pantryText("Cancel")) { dismiss() }.disabled(saving) }
 
@@ -549,7 +572,7 @@ private struct PantryPriceEditor: View {
             let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
             return trimmed.isEmpty ? nil : trimmed
         }
-        guard let name = text(name), let store = text(store), let packages = Int64(packages), packages > 0 else { throw PantryReceiptError.invalid }
+        guard let entryKind, let name = text(name), let store = text(store), let packages = Int64(packages), packages > 0 else { throw PantryReceiptError.invalid }
         func decimal(_ value: String) -> String {
             guard let separator = locale.decimalSeparator, separator != "." else { return value }
             return value.replacingOccurrences(of: separator, with: ".")
@@ -558,7 +581,7 @@ private struct PantryPriceEditor: View {
         if let raw = text(quantity) {
             let reviewedCount = entryKind == .shelf && printed != nil && priceBasis == .unit ? 1 : packages
             pack = try .init(count: reviewedCount, perPackage: .init(amount: ListQuantityParser.numericAmount(decimal(raw)), unit: unit,
-                                                               originalLiteral: raw + " " + pantryUnit(unit)))
+                                                               originalLiteral: raw))
         } else { pack = nil }
         guard (original?.revision ?? 0) < Int64.max else { throw PantryReceiptError.invalid }
         let image = entryKind != .shelf ? nil : printed.map { ReviewedShelfImage(printed: $0, basis: priceBasis) }
@@ -581,10 +604,47 @@ private func shelfTaxLabel(_ value: PrivatePriceEvidence.TaxTreatment?) -> Strin
     }
 }
 
+private struct PriceChoice<Value: Hashable, Options: View>: View {
+    let title: String
+    let value: String
+    @Binding var selection: Value
+    @ViewBuilder let options: Options
+    @Environment(\.dynamicTypeSize) private var size
+
+    init(_ key: String, value: String, selection: Binding<Value>, @ViewBuilder options: () -> Options) {
+        title = pantryText(key)
+        self.value = value
+        _selection = selection
+        self.options = options()
+    }
+
+    var body: some View {
+        let picker = Picker(title, selection: $selection) { options }
+        if size.isAccessibilitySize {
+            Menu {
+                picker
+            } label: {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(title).font(.subheadline).foregroundStyle(Theme.secondary)
+                    HStack {
+                        Text(verbatim: value)
+                        Spacer(minLength: 4)
+                        Image(systemName: "chevron.up.chevron.down").accessibilityHidden(true)
+                    }
+                }
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                .contentShape(Rectangle())
+            }
+            .accessibilityLabel(title).accessibilityValue(value)
+        } else { picker }
+    }
+}
+
 struct ShelfTaxPicker: View {
     @Binding var tax: PrivatePriceEvidence.TaxTreatment?
     var body: some View {
-        Picker(pantryText("Tax treatment"), selection: $tax) {
+        PriceChoice("Tax treatment", value: tax.map { shelfTaxLabel($0) } ?? pantryText("Not recorded"), selection: $tax) {
             Text(pantryText("Not recorded")).tag(nil as PrivatePriceEvidence.TaxTreatment?)
             Text(pantryText("Tax included")).tag(Optional(PrivatePriceEvidence.TaxTreatment.included))
             Text(pantryText("Tax excluded")).tag(Optional(PrivatePriceEvidence.TaxTreatment.excluded))

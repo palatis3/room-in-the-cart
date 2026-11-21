@@ -132,6 +132,40 @@ class AppConfigurationTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "serviceURL.*separate from staging"):
                 load_configuration(root, "Release")
 
+    def test_public_website_is_an_optional_public_https_origin_independent_of_household(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            paths = root / "config"
+            paths.mkdir()
+            release = paths / "release.json"
+            expected = "https://family.grocery-app.com:8443/"
+            release.write_text(json.dumps({"publicWebsiteURL": expected}))
+            config = load_configuration(root, "Release")
+            metadata = compiled_metadata(config, "Release")
+            self.assertEqual(build_settings(config, "Release")["RITC_PUBLIC_WEBSITE_URL"], expected)
+            self.assertEqual(metadata["PublicWebsiteURL"], expected)
+            self.assertEqual(metadata["HouseholdServiceURL"], "")
+            self.assertEqual(metadata["HelpURL"], "")
+            for invalid in ("http://family.grocery-app.com", expected + "help", expected + "?", expected + "#",
+                            "https://speaker@family.grocery-app.com", "https://127.0.0.1", "https://foo.test"):
+                with self.subTest(invalid=invalid):
+                    release.write_text(json.dumps({"publicWebsiteURL": invalid}))
+                    with self.assertRaisesRegex(ValueError, "publicWebsiteURL"):
+                        load_configuration(root, "Release")
+            release.unlink()
+            (paths / "staging.json").write_text(json.dumps({"publicWebsiteURL": "https://family.staging.grocery-app.com"}))
+            self.assertEqual(compiled_metadata(load_configuration(root, "Release"), "Release")["PublicWebsiteURL"], "")
+            for key in ("publicWebsiteURL", "serviceURL", "helpURL", "supportURL", "privacyPolicyURL"):
+                url = "https://FAMILY.staging.grocery-app.com.:443"
+                with self.subTest(key=key):
+                    release.write_text(json.dumps({key: url}))
+                    with self.assertRaisesRegex(ValueError, key + ".*separate from staging"):
+                        load_configuration(root, "Release")
+            (paths / "staging.json").write_text(json.dumps({"serviceURL": "https://api.staging.grocery-app.com"}))
+            release.write_text(json.dumps({"publicWebsiteURL": "https://api.staging.grocery-app.com"}))
+            with self.assertRaisesRegex(ValueError, "publicWebsiteURL.*separate from staging"):
+                load_configuration(root, "Release")
+
     def test_release_pages_reject_staging_deployments_even_without_other_release_settings(self):
         with tempfile.TemporaryDirectory() as folder:
             config_dir = Path(folder) / "config"

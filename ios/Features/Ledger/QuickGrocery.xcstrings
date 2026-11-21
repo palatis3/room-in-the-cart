@@ -688,6 +688,38 @@
           }
         }
       }
+    },
+    "Edit name, notes and department": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit name, notes and department"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar nombre, notas y departamento"
+          }
+        }
+      }
+    },
+    "Set department": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set department"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir departamento"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

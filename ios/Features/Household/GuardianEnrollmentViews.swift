@@ -1,4 +1,5 @@
 import SwiftUI
+import SafariServices
 import HouseholdClient
 
 struct GuardianControlsEntry: View {
@@ -200,6 +201,110 @@ struct GuardianEnrollmentView<Withdrawal: View>: View {
     }
 }
 
+struct FamilyPermissionGuideLink: View {
+    var title = GuardianCopy.text("Children and guardian permission")
+    var done: (() -> Void)?
+
+    var body: some View {
+        NavigationLink {
+            FamilyPermissionGuide(done: done)
+        } label: {
+            Label(title, systemImage: "person.2")
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .accessibilityIdentifier("guardian.familyGuide")
+    }
+}
+
+struct FamilyPermissionGuide: View {
+    var done: (() -> Void)?
+
+    var body: some View {
+        WorkingForm { FamilyPermissionSections(done: done) }
+            .navigationTitle(GuardianCopy.text("Child permissions"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                if let done {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button(ledgerText("Done"), action: done)
+                            .accessibilityIdentifier("guardian.familyGuide.done")
+                    }
+                }
+            }
+    }
+}
+
+private struct FamilyPermissionSections: View {
+    var done: (() -> Void)? = nil
+    private let configuration = HelpConfiguration.fromBundle()
+    @State private var showingOnlineGuide = false
+
+    var body: some View {
+        Section(GuardianCopy.text("What a child can do")) {
+            Text(GuardianCopy.text("With guardian permission, a child can send grocery requests and see the status of their own requests. The assigned shopper decides what goes in the basket. The household budget stays private."))
+                .accessibilityIdentifier("guardian.familyGuide.scope")
+        }
+        Section(GuardianCopy.text("On the guardian’s iPhone")) {
+            Text(GuardianCopy.text("When child setup is available, open Household requests in Settings, sign in to your adult account, choose your child’s household, then open Guardian controls."))
+                .accessibilityIdentifier("guardian.familyGuide.start")
+            Text(GuardianCopy.text("A parent or legal guardian verifies adulthood, gives permission and confirms the child’s device. Keep the invitation private. The child signs in with their own approved email."))
+        }
+        Section(GuardianCopy.text("If someone can’t join")) {
+            Text(GuardianCopy.text("Ask a parent or guardian to open Support and describe where setup stopped. Keep invitation links, sign-in codes and the child’s email private. You can keep using your shopping list."))
+                .accessibilityIdentifier("guardian.familyGuide.joinHelp")
+            NavigationLink(helpText("Support")) {
+                HelpSupportView().toolbar {
+                    if let done {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button(ledgerText("Done"), action: done)
+                                .accessibilityIdentifier("guardian.familyGuide.exitSupport")
+                        }
+                    }
+                }
+            }.accessibilityIdentifier("guardian.familyGuide.support")
+        }
+        Section {
+            Text(configuration.helpURL == nil
+                 ? GuardianCopy.text("You can read this guide offline. This iPhone has no link to the public family guide.")
+                 : GuardianCopy.text("You can read this guide on this iPhone without an internet connection."))
+                .accessibilityIdentifier("guardian.familyGuide.offline")
+            if let url = configuration.familyHelpURL {
+                Button(GuardianCopy.text("Read the family guide online")) { showingOnlineGuide = true }
+                    .accessibilityAddTraits(.isLink)
+                    .accessibilityIdentifier("guardian.familyGuide.online")
+                    .fullScreenCover(isPresented: $showingOnlineGuide) {
+                        FamilyGuideBrowser(url: url) { showingOnlineGuide = false }
+                            .ignoresSafeArea()
+                    }
+            } else if let url = configuration.helpURL {
+                Link(helpText("Online help"), destination: url)
+            }
+        }
+    }
+}
+
+private struct FamilyGuideBrowser: UIViewControllerRepresentable {
+    let url: URL
+    let done: () -> Void
+
+    func makeCoordinator() -> Coordinator { Coordinator(done: done) }
+
+    func makeUIViewController(context: Context) -> SFSafariViewController {
+        let browser = SFSafariViewController(url: url)
+        browser.dismissButtonStyle = .done
+        browser.delegate = context.coordinator
+        return browser
+    }
+
+    func updateUIViewController(_ controller: SFSafariViewController, context: Context) {}
+
+    final class Coordinator: NSObject, SFSafariViewControllerDelegate {
+        let done: () -> Void
+        init(done: @escaping () -> Void) { self.done = done }
+        func safariViewControllerDidFinish(_ controller: SFSafariViewController) { done() }
+    }
+}
+
 /// This is the production entry until the operator-approved child identity setup is integrated.
 /// It deliberately has no email field, adult declaration, or fallback to AdultAuth.
 struct GuardianChildEntryView: View {
@@ -208,10 +313,12 @@ struct GuardianChildEntryView: View {
             Section {
                 Label(GuardianCopy.text("Child sign-in is not available yet"), systemImage: "lock.shield")
                     .accessibilityIdentifier("guardian.childAuthUnavailable")
-                Text(GuardianCopy.text("A child invitation requires the child's own live authenticated session from an approved guardian setup. This app cannot create or substitute an adult account for that session."))
-                Text(GuardianCopy.text("Ask your guardian to keep the invitation private and check setup status. Online requests stay unavailable until verification, permission, and device pairing are complete."))
+                Text(GuardianCopy.text("Online requests stay unavailable until your guardian finishes setup. An adult account cannot be used to sign in for a child."))
             }
+            FamilyPermissionSections()
             GuardianChildDeletionHelp()
-        }.navigationTitle(GuardianCopy.text("Use a child invitation"))
+        }
+        .navigationTitle(GuardianCopy.text("Child access"))
+        .navigationBarTitleDisplayMode(.inline)
     }
 }

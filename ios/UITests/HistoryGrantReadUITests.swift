@@ -70,9 +70,12 @@ import XCTest
         let start = app.switches["Filter from an evidence date"]
         let end = app.switches["Filter through an evidence date"]
         func setFilter(_ row: XCUIElement, enabled: Bool) {
-            reveal(row)
+            reveal(row, requiringVisibleCenter: true)
+            XCTAssertEqual(row.value as? String, enabled ? "0" : "1")
             let thumb = row.switches.firstMatch
-            (thumb.exists ? thumb : row).tap()
+            let control = thumb.exists ? thumb : row
+            reveal(control, requiringVisibleCenter: true)
+            control.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
             XCTAssertEqual(row.value as? String, enabled ? "1" : "0")
         }
         setFilter(start, enabled: true)
@@ -219,9 +222,16 @@ import XCTest
         },object:nil)
         XCTAssertEqual(XCTWaiter.wait(for:[e],timeout:12),.completed)
     }
-    private func reveal(_ value: XCUIElement) {
+    private func reveal(_ value: XCUIElement, requiringVisibleCenter: Bool = false) {
+        func visible() -> Bool {
+            guard value.exists && value.isHittable else { return false }
+            guard requiringVisibleCenter else { return true }
+            // A clipped switch can be hittable even when its activation point is at the screen edge.
+            let frame = value.frame
+            return !frame.isEmpty && historyContentArea().contains(CGPoint(x: frame.midX, y: frame.midY))
+        }
         for attempt in 0..<30 {
-            if value.exists && value.isHittable { return }
+            if visible() { return }
             let bounds = app.frame
             let keyboard = app.keyboards.allElementsBoundByIndex.filter(\.exists).map { $0.frame.minY }.min() ?? bounds.maxY
             let bars = app.navigationBars.allElementsBoundByIndex.filter(\.exists).map { $0.frame.maxY }.max() ?? bounds.minY+110
@@ -232,7 +242,7 @@ import XCTest
             origin.withOffset(CGVector(dx:bounds.midX-bounds.minX,dy:(up ? low:high)-bounds.minY))
                 .press(forDuration:0.05,thenDragTo:origin.withOffset(CGVector(dx:bounds.midX-bounds.minX,dy:(up ? high:low)-bounds.minY)))
         }
-        XCTAssertTrue(value.exists && value.isHittable,"Missing actual history control: "+value.debugDescription)
+        XCTAssertTrue(visible(), "Missing visible history control: " + value.debugDescription)
     }
     private func capture(_ name: String) { let a = XCTAttachment(screenshot:app.screenshot()); a.name = name; a.lifetime = .keepAlways; add(a) }
 }

@@ -5,6 +5,7 @@ import Foundation
 public struct SavedDinnerReview: Identifiable, Sendable {
     public enum Action: Sendable {
         case planTonight
+        case plan(day: MealDay, servings: Rational)
         case groceries(Set<UUID>)
     }
 
@@ -19,7 +20,13 @@ public struct SavedDinnerReview: Identifiable, Sendable {
     private let originalRevision: UUID
     private let planningRevision: UUID
     private let proposal: DinnerProposal?
-    private let day: MealDay?
+    public let plannedDay: MealDay?
+    public let plannedServings: Rational?
+    private let preparationDay: MealDay?
+    public var occurrenceID: UUID? {
+        guard let proposal, case let .choose(meal) = proposal.changes.first else { return nil }
+        return meal.occurrenceID
+    }
 
     public init(recipe: MealTemplate, action: Action, workspace: LedgerWorkspace,
                 access: DinnerAccessContext, phase: BasketPhase, at now: Date) throws {
@@ -37,19 +44,27 @@ public struct SavedDinnerReview: Identifiable, Sendable {
         planningRevision = workspace.dinnerPlanning.revisionID
         id = UUID()
         switch action {
-        case .planTonight:
+        case .planTonight, .plan:
             let tonight = try MealDay(date: now, timeZoneIdentifier: shop.basis.timeZoneIdentifier)
-            let meal = PlannedDinner(acceptedDinnerID: accepted?.id, template: recipe, day: tonight)
+            let chosenDay: MealDay, servings: Rational
+            if case let .plan(day, count) = action {
+                guard day.timeZoneIdentifier == shop.basis.timeZoneIdentifier else { throw DinnerPlanningError.stalePreview }
+                chosenDay = day; servings = count
+            } else {
+                chosenDay = tonight; servings = recipe.servings
+            }
+            var meal = PlannedDinner(acceptedDinnerID: accepted?.id, template: recipe, day: chosenDay)
+            if servings != recipe.servings { meal.plannedServings = servings }
             proposal = try DinnerPlanningEngine.preview(id: id, changes: [.choose(meal)], tool: accepted == nil ? .manual : .reusableDinner,
                 ledger: shop, state: workspace.dinnerPlanning, access: access, phase: phase, at: now).proposal
-            day = tonight
+            plannedDay = chosenDay; plannedServings = servings; preparationDay = tonight
             ingredients = recipe.ingredients
             plansDinner = true
         case .groceries(let ids):
             ingredients = recipe.ingredients.filter { ids.contains($0.id) }
             guard !ids.isEmpty, ingredients.count == ids.count else { throw DinnerPlanningError.reviewRequired("ingredients") }
             proposal = nil
-            day = nil
+            plannedDay = nil; plannedServings = nil; preparationDay = nil
             plansDinner = false
         }
     }
@@ -82,7 +97,7 @@ public struct SavedDinnerReview: Identifiable, Sendable {
               shop.revisionID == originalRevision, shop.title == destinationTitle,
               workspace.dinnerPlanning.revisionID == planningRevision else { throw DinnerPlanningError.stalePreview }
         _ = try Self.source(recipe, workspace: workspace, access: access)
-        if let day, day != (try MealDay(date: now, timeZoneIdentifier: shop.basis.timeZoneIdentifier)) { throw DinnerPlanningError.stalePreview }
+        if let preparationDay, preparationDay != (try MealDay(date: now, timeZoneIdentifier: shop.basis.timeZoneIdentifier)) { throw DinnerPlanningError.stalePreview }
     }
 
     public func apply(to workspace: inout LedgerWorkspace, access: DinnerAccessContext, phase: BasketPhase, at now: Date) throws {

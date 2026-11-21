@@ -1,7 +1,9 @@
 import Foundation
 import CoreDomain
+import RecordArchive
 
 struct RecipeCaptureDraft: Equatable, Sendable {
+    var prepMinutes: Int?
     var title = "" { didSet { confirmed = false } }
     var servings = "" { didSet { confirmed = false } }
     var sourceURL = "" { didSet { confirmed = false } }
@@ -51,7 +53,7 @@ struct RecipeCaptureDraft: Equatable, Sendable {
 
 /// A bounded suggestion parser, not a recipe generator. Unclassified lines stay visible for manual selection.
 enum RecipeOCRParser {
-    static func draft(_ original: String) throws -> RecipeCaptureDraft {
+    static func draft(_ original: String, familyNote: Bool = false) throws -> RecipeCaptureDraft {
         try ScanLimits.text(original)
         let lines = original.components(separatedBy: .newlines).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         var value = RecipeCaptureDraft()
@@ -59,6 +61,7 @@ enum RecipeOCRParser {
         var ingredients: [String] = [], instructions: [String] = []
         var unclassified: [(text: String, yield: Bool)] = []
         var yields: [(literal: String, amount: Rational)] = []
+        var times: [(line: String, minutes: Int)] = []
         for (index, line) in lines.enumerated() {
             let key = line.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: ": "))
             if ["ingredients", "ingredientes"].contains(key) { section = 1; continue }
@@ -79,8 +82,18 @@ enum RecipeOCRParser {
             if index == 0 { value.title = line; continue }
             if section == 1 { ingredients.append(line) }
             else if section == 2 { instructions.append(line) }
-            else { unclassified.append((line, false)) }
+            else if familyNote, let match = prepTime.firstMatch(in: line, range: NSRange(line.startIndex..., in: line)),
+                    let range = Range(match.range(at: 1), in: line), let minutes = Int(line[range]), minutes > 0 {
+                times.append((line, minutes))
+            } else if familyNote, let word = key.split(whereSeparator: { !$0.isLetter }).first,
+                      cookingVerbs.contains(String(word)) {
+                instructions.append(line)
+            } else if familyNote, line.first?.isNumber == true, ImportedRecipe.ingredientDraft(line).quantity != nil {
+                ingredients.append(line)
+            } else { unclassified.append((line, false)) }
         }
+        if times.count == 1 { value.prepMinutes = times[0].minutes }
+        else { unclassified += times.map { ($0.line, false) } }
         value.ingredientText = ingredients.joined(separator: "\n")
         value.notes = instructions.joined(separator: "\n")
         value.useInstructionLines = !instructions.isEmpty
@@ -93,6 +106,10 @@ enum RecipeOCRParser {
         value.confirmed = false
         return value
     }
+    private static let cookingVerbs: Set<String> = ["roast", "mix", "stir", "bake", "boil", "simmer", "serve",
+        "asa", "asar", "mezcla", "mezclar", "remueve", "hornea", "hornear", "hierve", "hervir", "sirve", "servir"]
+    private static let prepTime = try! NSRegularExpression(
+        pattern: #"^(?:prep(?:aration)? time|tiempo de preparaci[oó]n)\s*:\s*(\d{1,4})\s*(?:min\.?|minutes?|minutos?)$"#, options: .caseInsensitive)
     private static let yieldHeading = try! NSRegularExpression(
         pattern: #"^(?:serves|servings|yield|rinde|porciones|raciones)(?:\s*:\s*|\s+)(.+?)(?:\s+(?:servings?|porci[oó]n|porciones|raci[oó]n|raciones))?$"#,
         options: .caseInsensitive

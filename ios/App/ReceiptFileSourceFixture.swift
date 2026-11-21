@@ -8,6 +8,7 @@ import UniformTypeIdentifiers
 struct ReceiptFileSourceFixture: View {
     @State private var exporting = false
     @State private var saved = false
+    @State private var pdfDocument: SamplePDF?
     @State private var shareToken: String?
     @State private var pdfURL: URL?
     @State private var groceryTextURL: URL?
@@ -22,7 +23,10 @@ struct ReceiptFileSourceFixture: View {
             }
             if let pdfURL {
                 ShareLink(item: pdfURL) { Text(verbatim: "Share sample receipt PDF") }
-                Button { exporting = true } label: { Text(verbatim: "Export sample receipt PDF") }
+                Button {
+                    saved = false
+                    exporting = true
+                } label: { Text(verbatim: "Export sample receipt PDF") }
             }
             if let photo {
                 Button { Task { await saveFixturePhoto(photo) } } label: {
@@ -64,11 +68,17 @@ struct ReceiptFileSourceFixture: View {
             }
             try? data.write(to: pdf, options: .atomic)
             let image = UIGraphicsImageRenderer(bounds: bounds).image { _ in draw() }
+            pdfDocument = SamplePDF(data)
             pdfURL = pdf; photo = image
         }
-        .fileExporter(isPresented: $exporting, document: pdfURL.flatMap { try? Data(contentsOf: $0) }.map(SamplePDF.init),
+        .fileExporter(isPresented: $exporting, document: pdfDocument,
                       contentType: .pdf, defaultFilename: Self.name) { result in
-            if case .success = result { saved = true }
+            guard case .success(let destination) = result, let pdfURL, let pdfDocument,
+                  destination.standardizedFileURL != pdfURL.standardizedFileURL else { return }
+            let scoped = destination.startAccessingSecurityScopedResource()
+            defer { if scoped { destination.stopAccessingSecurityScopedResource() } }
+            saved = (try? Data(contentsOf: pdfURL)) == pdfDocument.bytes &&
+                (try? Data(contentsOf: destination)) == pdfDocument.bytes
         }
     }
 

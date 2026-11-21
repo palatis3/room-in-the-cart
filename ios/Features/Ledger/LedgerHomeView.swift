@@ -2,7 +2,7 @@ import SwiftUI
 import CoreDomain
 
 private enum LedgerHomeSheet: Hashable, Identifiable {
-    case newShop, entry, facts, history, layout, printList
+    case newShop, entry, facts, history, layout, printList, familyGuide
     case inStore(UUID), shareItems(UUID), kits(UUID?), standing
     case renameShop(id: UUID, title: String)
     case editLine(workspace: UUID, shop: UUID, line: UUID)
@@ -89,13 +89,19 @@ struct LedgerHomeView: View {
                                     .frame(minHeight: 44, alignment: .leading)
                             }.accessibilityIdentifier("ledgerHistory")
                             if let batch = shop.importBatches.last(where: { $0.undoneAt == nil }) {
-                                Button(ledgerText("Undo last list import"), role: .destructive) {
-                                    Task {
-                                        _ = await model.editShop(key: "undo-\(batch.id)", shopID: shop.id) { try $0.undoImport(batchID: batch.id) }
-                                        focus = model.error == nil ? .result : .error
-                                    }
-                                }.disabled(model.saving || model.hasPendingSave)
-                                    .accessibilityIdentifier("ledgerUndoImport")
+                                let entries = shop.remainingEntries(in: batch)
+                                if !entries.isEmpty {
+                                    Button(ledgerFormat(entries.count == 1 ? "Undo last import · %lld entry" : "Undo last import · %lld entries", Int64(entries.count)), role: .destructive) {
+                                        Task {
+                                            _ = await model.editShop(key: "undo-\(batch.id)", shopID: shop.id) { current in
+                                                guard current.revisionID == shop.revisionID else { throw LedgerError.stalePreview }
+                                                try current.undoImport(batchID: batch.id)
+                                            }
+                                            focus = model.error == nil ? .result : .error
+                                        }
+                                    }.disabled(model.saving || model.hasPendingSave)
+                                        .accessibilityIdentifier("ledgerUndoImport")
+                                }
                             }
                         }
                         if model.error == nil && !model.hasPendingSave {
@@ -186,6 +192,8 @@ struct LedgerHomeView: View {
             if let shop = model.shop { LedgerFactsView(model: model, shop: shop) }
         case .layout:
             if let shop = model.shop { LedgerLayoutEditor(model: model, shop: shop) }
+        case .familyGuide:
+            FamilyPermissionGuide { sheet = nil }
         case .printList:
             if let shop = model.shop { LargePrintList(shop: shop, layout: model.workspace.listLayout) }
         case .history:
@@ -241,7 +249,9 @@ struct LedgerHomeView: View {
         }
         .accessibilityIdentifier("ledgerListOptions")
         .confirmationDialog(ledgerText("List options"), isPresented: $showingListOptions, titleVisibility: .visible) {
-            Button(tripText("Send selected items")) { sheet = .shareItems(shop.id) }
+            Button(tripText("Preview list copy")) { sheet = .shareItems(shop.id) }
+                .accessibilityIdentifier("tripShare.previewCopy")
+            Button(GuardianCopy.text("Child permissions")) { sheet = .familyGuide }
             Button(shoppingText("Shopping kits")) { sheet = .kits(shop.id) }
             Button(shoppingText("Standing list")) { sheet = .standing }
             Button(ledgerText("List order and aisles")) { sheet = .layout }
@@ -448,14 +458,16 @@ struct LedgerNewShopView: View {
     @ObservedObject var model: LedgerModel
     @Environment(\.dismiss) private var dismiss
     private let originalID: UUID?
+    private let namingShoppingList: Bool
     private let originalTitle: String
     private let onShopSelected: ((UUID) -> Void)?
     private let authorize: (@MainActor () -> Bool)?
     @FocusState private var editingName: Bool
     @State private var title: String
 
-    init(model: LedgerModel, shopID: UUID? = nil, title: String = "", authorize: (@MainActor () -> Bool)? = nil, onShopSelected: ((UUID) -> Void)? = nil) {
+    init(model: LedgerModel, shopID: UUID? = nil, title: String = "", namingShoppingList: Bool = false, authorize: (@MainActor () -> Bool)? = nil, onShopSelected: ((UUID) -> Void)? = nil) {
         self.model = model
+        self.namingShoppingList = namingShoppingList && shopID == nil
         self.onShopSelected = onShopSelected
         self.authorize = authorize
         originalID = shopID
@@ -463,10 +475,14 @@ struct LedgerNewShopView: View {
         _title = State(initialValue: title)
     }
 
+    private var createLabel: String {
+        namingShoppingList ? dinnerText("Create shopping list") : ledgerText("Start pickup")
+    }
+
     var body: some View {
         WorkingForm {
-            WorkingField(ledgerText("Pickup name (required)")) {
-                TextField(ledgerText("Pickup name"), text: $title, prompt: Text(verbatim: "—"), axis: .vertical)
+            WorkingField(namingShoppingList ? dinnerText("Shopping list name (required)") : ledgerText("Pickup name (required)")) {
+                TextField(namingShoppingList ? dinnerText("Shopping list name (required)") : ledgerText("Pickup name"), text: $title, prompt: Text(verbatim: "—"), axis: .vertical)
                     .focused($editingName).accessibilityIdentifier("ledgerShopName")
             }.contentShape(Rectangle())
                 .simultaneousGesture(TapGesture().onEnded { editingName = true })
@@ -474,14 +490,14 @@ struct LedgerNewShopView: View {
             if model.saving || model.hasPendingSave || model.error != nil {
                 LedgerSaveStatus(model: model, showsLastSave: false, onRetried: { dismiss() })
             }
-            Button(originalID == nil ? ledgerText("Start pickup") : ledgerText("Save name")) {
+            Button(originalID == nil ? createLabel : ledgerText("Save name")) {
                 Task { await save() }
             }.buttonStyle(PrimaryAction())
                 .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || model.saving || model.hasPendingSave)
                 .accessibilityIdentifier(originalID == nil ? "ledgerCreateShop" : "ledgerSaveShopName")
         }.keyboardDoneAction(visible: editingName, title: ledgerText("Done"), identifier: "ledger.shopName.done") { editingName = false }
             .scrollDismissesKeyboard(.interactively).workingSurface()
-            .navigationTitle(originalID == nil ? ledgerText("Start pickup") : ledgerText("Rename pickup"))
+            .navigationTitle(originalID == nil ? createLabel : ledgerText("Rename pickup"))
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() }.disabled(model.saving) } }
             .interactiveDismissDisabled(model.saving)
     }

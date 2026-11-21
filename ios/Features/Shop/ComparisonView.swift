@@ -94,9 +94,7 @@ struct ComparisonView: View {
             if reviewing, let comparison = model.comparison {
                 results(comparison.result, inputs: comparison.inputs)
                     .toolbar {
-                        if typeSize.isAccessibilitySize {
-                            ToolbarItem(placement: .topBarTrailing) { accessibleSaveControl }
-                        }
+                        ToolbarItem(placement: .topBarTrailing) { toolbarSaveControl }
                     }
                     .alert(tr("Save"), isPresented: Binding(
                         get: { toolbarSaveError != nil },
@@ -109,6 +107,18 @@ struct ComparisonView: View {
                     .sheet(item: $missingInput) { input in missingInputEditor(input) }
             } else {
                 editor
+                    .toolbar {
+                        if let inputFocused {
+                            ToolbarItem(placement: .topBarTrailing) {
+                                Button { self.inputFocused = nil } label: {
+                                    Text(tr("Done"))
+                                        .frame(minWidth: 44, minHeight: 44)
+                                        .contentShape(Rectangle())
+                                }
+                                .accessibilityIdentifier("comparison.done." + inputFocused)
+                            }
+                        }
+                    }
             }
         }
         .workingSurface()
@@ -116,12 +126,10 @@ struct ComparisonView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(Theme.canvas, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
-        .keyboardDoneAction(visible: inputFocused != nil, title: tr("Done"),
-                            identifier: inputFocused.map { "comparison.done." + $0 }) { inputFocused = nil }
         .onAppear { if reviewing { model.compare() } }
     }
 
-    @ViewBuilder private var accessibleSaveControl: some View {
+    @ViewBuilder private var toolbarSaveControl: some View {
         if model.savedAt != nil {
             Text(tr("Saved"))
                 .accessibilityLabel(tr("Saved on this iPhone"))
@@ -290,7 +298,9 @@ struct ComparisonView: View {
     private func offerSection(_ title: String, label: Binding<String>, quantity: Binding<String>, unit: Binding<UnitOfMeasure>, price: Binding<String>, conversion: Binding<ComparisonConversion?>, prefix: String) -> some View {
         Section {
             entry("Usable amount in one pack", text: quantity, id: prefix + "Quantity")
-            unitPicker("Pack unit", selection: unit, id: prefix + "Unit")
+            unitPicker("Pack unit", selection: Binding(get: { unit.wrappedValue }, set: {
+                model.draft.setPackUnit($0, for: prefix == "a" ? .a : .b)
+            }), id: prefix + "Unit")
             entry("Price for one pack (USD)", text: price, id: prefix + "Price", keyboard: .decimalPad)
             WorkingField(tr("Pack name (optional)")) {
                 workingTextField(tr("Pack name (optional)"), text: label, axis: .vertical)
@@ -345,6 +355,16 @@ struct ComparisonView: View {
                             .accessibilityIdentifier("comparisonDecision")
                     } else {
                         Label(tr("Cost unresolved"), systemImage: "questionmark.circle").font(.headline)
+                    }
+                    if let preferred = result.preferredOfferID {
+                        let choice = preferred == inputs.offerA.id ? result.offerA : result.offerB
+                        if let count = choice.wholePacksText, let amount = choice.purchasedAmount, let unit = result.unit {
+                            Text(verbatim: count + " · " + comparisonAmountText(amount, locale: locale) + " " + unit.comparisonLabel(for: amount))
+                                .font(.subheadline.weight(.semibold)).accessibilityIdentifier("comparisonPurchaseCount")
+                        }
+                        if let headroom = choice.itemLimitText {
+                            Text(verbatim: headroom).font(.subheadline).accessibilityIdentifier("comparisonPurchaseHeadroom")
+                        }
                     }
                     Divider()
                     Text(tr("Cost in whole packs")).font(.subheadline.weight(.semibold))
@@ -459,6 +479,7 @@ struct ComparisonView: View {
 
     private func remainingQuantity(_ amount: Rational) -> String {
         let (whole, remainder) = amount.numerator.quotientAndRemainder(dividingBy: amount.denominator)
+        if amount.denominator > 16 { return comparisonAmountText(amount, locale: locale) + " " + model.draft.unit.comparisonLabel(for: amount) }
         let text = whole > 0 && remainder > 0 ? "\(whole) \(remainder)/\(amount.denominator)" : amountText(amount)
         return pQuantity(text, unit: model.draft.unit, singular: amount == .one, language: nil)
     }

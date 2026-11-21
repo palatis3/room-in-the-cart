@@ -10,6 +10,20 @@ final class PantryVoiceBatchMatcherTests: XCTestCase {
                             observationID: UUID(), confirmedAt: date, updatedAt: date, useFirst: false)
     }
 
+    func testStorageQualifiersNarrowExactLotsWithoutChoosingBetweenPhysicalBatches() {
+        let cupboard = lot("Ajonjolí", location: .cupboard), fridge = lot("Ajonjolí", location: .fridge)
+        let otherFridge = lot("Ajonjolí", location: .fridge)
+        for qualified in ["ajonjolí del refrigerador", "ajonjolí from the fridge"] {
+            XCTAssertEqual(PantryVoiceBatchMatcher.uniqueExact(for: qualified, in: [cupboard, fridge]), fridge)
+            XCTAssertEqual(PantryVoiceBatchMatcher.suggestions(for: qualified, in: [cupboard, fridge, otherFridge]), [fridge, otherFridge])
+            XCTAssertNil(PantryVoiceBatchMatcher.uniqueExact(for: qualified, in: [cupboard, fridge, otherFridge]))
+            XCTAssertTrue(PantryVoiceBatchMatcher.suggestions(for: qualified, in: [cupboard]).isEmpty)
+            let literal = lot(qualified)
+            XCTAssertNil(PantryVoiceBatchMatcher.uniqueExact(for: qualified, in: [literal, fridge]))
+        }
+        XCTAssertNil(PantryVoiceBatchMatcher.storageQualifier(in: "Freezer jam"))
+    }
+
     func testShowsEachMatchingBatchWithoutSelectingAFirstOrExactNameAmongAlternatives() {
         let bread = lot("Bread"), rye = lot("Rye bread"), frozen = lot("Bread", location: .freezer)
         let lots = [bread, lot("Breadcrumbs"), rye, frozen]

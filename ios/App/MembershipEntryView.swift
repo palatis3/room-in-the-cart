@@ -33,6 +33,7 @@ struct MembershipEntryView: View {
                 MembershipPage {
                     if household.membershipSession == nil {
                         householdEntry
+                        FamilyPermissionGuideLink()
                         PrivateListSharingGuide()
                     } else if membership.failure {
                         MembershipHeading(title: mtr("Membership needs verification"), symbol: "arrow.clockwise")

@@ -494,10 +494,26 @@ export class WebApp {
       this.renderContributor(main);
     }
   }
+  private publicLink(page: 'help' | 'support', label: string): HTMLAnchorElement {
+    const link = this.el('a', this.t(label));
+    link.href = '/' + page + '?lang=' + this.language;
+    link.referrerPolicy = 'no-referrer';
+    link.rel = 'noreferrer';
+    return link;
+  }
   private renderLogin(main:HTMLElement):void{
     main.append(this.el('h1',this.t('Sign in to continue')));
-    if(!this.browserAuth){main.append(this.el('p',this.t('Connect to load sign-in options.')),this.button('Refresh',()=>void this.run(()=>this.load(),'load')));return;}
-    if(!this.browserAuth.available){main.append(this.el('p',this.t(this.invitation?'Email sign-in is not available yet. Your invitation stays on this page.':'Email sign-in is not available yet.')),this.button('Refresh',()=>void this.run(()=>this.load(),'load')));return;}
+    if (!this.browserAuth?.available) {
+      const reason = !this.browserAuth ? 'Connect to load sign-in options.'
+        : this.invitation ? 'Email sign-in is not available yet. Your invitation stays on this page.'
+        : 'Email sign-in is not available yet.';
+      main.append(this.el('p', this.t(reason)), this.button('Refresh', () => void this.run(() => this.load(), 'load')));
+      const links = this.el('div');
+      links.className = 'actions';
+      links.append(this.publicLink('help', 'Public help'), this.publicLink('support', 'Support options'));
+      main.append(links);
+      return;
+    }
     main.append(this.el('p',this.t('Use your email code. Signing in does not join a household.')));
     if(this.invitation)main.append(this.el('p',this.t('Your invitation stays on this page while you sign in.')));
     const form=this.el('form');
@@ -515,7 +531,12 @@ export class WebApp {
   private renderInvite(main:HTMLElement):void {
     if(!this.session&&!this.browserAuth?.authenticated){this.renderLogin(main);return;}
 
-    main.append(this.el('h1',this.t('Continue with your invitation')),this.el('p',this.t('Open an invitation from your household to join.')));
+    main.append(this.el('h1', this.t('Continue with your invitation')));
+    if (!this.redemption) {
+      main.append(this.el('p', this.t(this.invitation?.trim()
+        ? 'Confirm the household and your role with the person who invited you. An invitation can let you send your own requests or view selected shopping instructions.'
+        : 'Open an invitation from your household to join.')));
+    }
     const form=this.el('form');
     if(this.invitation?.trim()){
       form.append(this.el('p',this.t('Invitation code received.')));
@@ -564,6 +585,11 @@ export class WebApp {
         this.invitation=null;this.redemption=null;this.adultAttestation=false;this.inviteAlias='';
       });
     });
+    if (!this.redemption && !this.busy) {
+      const leave = this.publicLink('help', 'Leave without joining');
+      leave.addEventListener('click', () => this.clearInvitationDraft());
+      form.append(leave);
+    }
     main.append(form,this.el('p',this.t('An internet connection is needed to open an invitation.')),this.button('Refresh',()=>void this.run(()=>this.load(),'load')));
     if(!this.session&&this.browserAuth?.authenticated)main.append(this.button('Sign out',()=>void this.run(()=>this.signOut(undefined,this.browserAuth?.csrf??undefined))));
   }
@@ -582,8 +608,8 @@ export class WebApp {
     const target=this.requestTarget(session);
     return target===session.shopId ? session.nextShopOnly===true : this.pickups.find(p=>p.shopId===target)?.nextShopOnly===true;
   }
-  private pickupLabel(pickup:RequestPickup):string {
-    return this.date(pickup.createdAt)+' · '+pickup.shopId.slice(0,8);
+  private pickupLabel(pickup: RequestPickup, index: number): string {
+    return this.t('Pickup') + ' ' + (index + 1) + ' · ' + this.t('Created') + ' ' + this.date(pickup.createdAt);
   }
   private renderContributor(main:HTMLElement):void {
     const protectedPickup=this.usesProtectedPickup(this.session!);
@@ -597,15 +623,25 @@ export class WebApp {
       const label=this.el('label',this.t('Pickup for this request'));label.htmlFor='request-pickup';
       const picker=this.el('select');picker.id='request-pickup';picker.disabled=this.busy||this.uncertainSend;
       const placeholder=this.el('option',this.t('Choose a pickup'));placeholder.value='';picker.append(placeholder);
-      for(const pickup of this.pickups){const option=this.el('option',this.pickupLabel(pickup));option.value=pickup.shopId;picker.append(option);}
+      for (const [index, pickup] of this.pickups.entries()) {
+        const option = this.el('option', this.pickupLabel(pickup, index));
+        option.value = pickup.shopId;
+        picker.append(option);
+      }
       picker.value=this.chosenPickupId??'';
       picker.addEventListener('change',()=>{this.chosenPickupId=picker.value||null;this.draft.route='current';this.retryCommand=null;this.render();this.root.querySelector<HTMLElement>('#request-pickup')?.focus();});
       main.append(label,picker);
     }
     if(this.draft.followup)form.append(this.el('h2',this.t('Follow up')));
     if(this.review) {
-      const pickup=this.pickups.find(p=>p.shopId===target);
-      if(target)form.append(this.el('p',this.t('Pickup for this request')+' · '+(pickup?this.pickupLabel(pickup):target.slice(0,8))));
+      if (target) {
+        const index = this.pickups.findIndex(pickup => pickup.shopId === target);
+        const pickup = this.pickups[index];
+        const destination = pickup ? this.pickupLabel(pickup, index)
+          : this.draft.editing || this.draft.followup || this.retryCommand ? this.t('The pickup from the original request')
+          : this.t('The pickup shared with you');
+        form.append(this.el('p', this.t('Pickup for this request') + ' · ' + destination));
+      }
       const heading = this.el('h2', this.t('Review before sending'));
       heading.id = 'request-review-heading';
       heading.tabIndex = -1;
@@ -679,8 +715,16 @@ export class WebApp {
       own.append(this.el('p',this.t('No requests yet.')));
       if(this.firstRequestPageAsOf)own.append(this.el('p',this.t('Checked on server')+' · '+this.date(this.firstRequestPageAsOf,'medium')));
     }
+    const visibleRequestNames = new Map(this.requests.map(row => [row.requestId, row.originalItem]));
     for(const r of this.requests){const card=this.el('article');card.className='card';card.dataset.requestId=r.requestId;
-      card.append(this.el('h3',r.originalItem),this.el('p',r.ownQuantity??this.t('Unknown amount')),this.el('p',this.t(r.carriedForward?'Moved to a later pickup for review':statuses[r.status]??'Status unavailable')),this.el('p',this.t(r.route==='next'?'Next shop':'This pickup')),this.el('p',this.date(r.receivedAt)));
+      card.append(this.el('h3',r.originalItem));
+      if (r.followupTo) {
+        const parentName = visibleRequestNames.get(r.followupTo);
+        const relationship = parentName ? this.t('Follow-up to') + ' · ' + parentName
+          : this.t('Follow-up to an earlier request');
+        card.append(this.el('p', relationship));
+      }
+      card.append(this.el('p',r.ownQuantity??this.t('Unknown amount')),this.el('p',this.t(r.carriedForward?'Moved to a later pickup for review':statuses[r.status]??'Status unavailable')),this.el('p',this.t(r.route==='next'?'Next shop':'This pickup')),this.el('p',this.date(r.receivedAt)));
       if(r.serverReadAt)card.append(this.el('p',this.t('Checked on server')+' · '+this.date(r.serverReadAt,'medium')));
       const localEdit=this.pending.find(p=>p.command.kind==='request.edit'&&p.command.shopId===r.shopId&&p.command.body.requestId===r.requestId);
       const correction=localEdit?.command ?? (this.uncertainSend && this.retryCommand?.kind==='request.edit' &&

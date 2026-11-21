@@ -206,6 +206,89 @@ import LocalStore
         XCTAssertEqual(model.workspace, committed)
     }
 
+    func testPickupDetailsRecognizeOnlyTheirOwnSavedRevisionDuringDismissal() async throws {
+        let directory = try directory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("ledger.sqlite")
+        let model = LedgerModel(databaseURL: url)
+        await model.open()
+        let started = await model.startShop(title: "Garbanzos")
+        XCTAssertTrue(started)
+        let original = try XCTUnwrap(model.shop)
+        let workspaceID = try XCTUnwrap(model.sourceWorkspaceID)
+        var review = LedgerFactsReview(original: original, workspaceID: workspaceID)
+        var draft = original.basis
+        draft.branch = "Mercado Nogal, sucursal Lago"
+        let saved = await model.editShop(key: "basis", shopID: original.id) { shop in
+            try review.apply(draft, evidenceFor: draft.retailerTerms, to: &shop)
+            XCTAssertEqual(review.status(for: model.shop, in: workspaceID), .editing)
+        }
+        XCTAssertTrue(saved)
+        XCTAssertEqual(review.status(for: model.shop, in: workspaceID), .saved)
+        XCTAssertEqual(review.status(for: model.shop, in: UUID()), .stale)
+        let reopened = LedgerModel(databaseURL: url)
+        await reopened.open()
+        XCTAssertEqual(reopened.shop?.basis.branch, draft.branch)
+        XCTAssertEqual(reopened.shop?.revisionID, review.submittedRevision)
+
+        // Matching branch text is insufficient if another writer advanced the revision.
+        let edited = await model.editShop(key: "add-line", shopID: original.id) { shop in
+            try shop.addManualLine(name: "Rice", quantity: nil)
+        }
+        XCTAssertTrue(edited)
+        XCTAssertEqual(model.shop?.basis.branch, draft.branch)
+        XCTAssertEqual(review.status(for: model.shop, in: workspaceID), .stale)
+    }
+
+    func testPickupDetailsForeignSaveKeepsDraftPendingUntilExplicitReview() async throws {
+        let directory = try directory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("ledger.sqlite")
+        let model = LedgerModel(databaseURL: url)
+        await model.open()
+        let started = await model.startShop(title: "Garbanzos")
+        XCTAssertTrue(started)
+        let original = try XCTUnwrap(model.shop)
+        let workspaceID = try XCTUnwrap(model.sourceWorkspaceID)
+        var review = LedgerFactsReview(original: original, workspaceID: workspaceID)
+        var draft = original.basis
+        draft.branch = "Lago"
+        let foreign = LedgerModel(databaseURL: url)
+        await foreign.open()
+        let advanced = await foreign.editShop(key: "other-shopper", shopID: original.id) { shop in
+            var changed = shop.basis
+            changed.branch = "Norte"
+            try shop.updateBasis(changed, evidenceFor: changed.retailerTerms, reviewing: shop.revisionID)
+            try shop.addManualLine(name: "Peppers", quantity: nil)
+        }
+        XCTAssertTrue(advanced)
+        let saved = await model.editShop(key: "basis", shopID: original.id) { shop in
+            try review.apply(draft, evidenceFor: draft.retailerTerms, to: &shop)
+        }
+        XCTAssertFalse(saved)
+        XCTAssertTrue(model.hasPendingSave)
+        XCTAssertEqual(review.status(for: model.shop, in: workspaceID), .editing)
+        let retry = await model.retrySave()
+        XCTAssertFalse(retry)
+        XCTAssertTrue(model.hasPendingSave)
+        await model.discardPendingSave()
+        var latest = try XCTUnwrap(model.shop)
+        XCTAssertEqual(review.status(for: latest, in: workspaceID), .stale)
+        XCTAssertThrowsError(try review.apply(draft, evidenceFor: draft.retailerTerms, to: &latest))
+        XCTAssertEqual(latest, foreign.shop)
+        XCTAssertNil(review.renewed(for: latest, in: UUID()))
+        review = try XCTUnwrap(review.renewed(for: latest, in: workspaceID))
+        XCTAssertEqual(review.original.basis.branch, "Norte")
+        XCTAssertEqual(draft.branch, "Lago")
+        let accepted = await model.editShop(key: "reviewed-basis", shopID: latest.id) { shop in
+            try review.apply(draft, evidenceFor: draft.retailerTerms, to: &shop)
+        }
+        XCTAssertTrue(accepted)
+        XCTAssertEqual(review.status(for: model.shop, in: workspaceID), .saved)
+        XCTAssertEqual(model.shop?.basis.branch, "Lago")
+        XCTAssertEqual(model.shop?.lines.map(\.name), ["Peppers"])
+    }
+
     func testExternalHeadRemainsAuthoritativeAfterStaleSaveAndDiscard() async throws {
         let directory = try directory(); defer { try? FileManager.default.removeItem(at: directory) }
         let url = directory.appendingPathComponent("ledger.sqlite")

@@ -240,7 +240,9 @@ struct InStoreShoppingView: View {
                             TripNextStoreEntry(model: model, shopID: shopID).toolbar { closeSheet }
                         case .options:
                             List {
-                                NavigationLink(tripText("Send selected items")) { TripHandoffEntry(model: model, shopID: shopID) }
+                                NavigationLink(tripText("Preview list copy")) { TripHandoffEntry(model: model, shopID: shopID) }
+                                    .accessibilityIdentifier("tripShare.previewCopy")
+                                FamilyPermissionGuideLink(title: GuardianCopy.text("Child permissions")) { destination = nil }
                                 NavigationLink(pantryText("Buy this pack again")) { ShopPackLookupEntry(ledger: model, shopID: shopID) }
                                 PantryShelfPhotoLink()
                                 InStoreDisplayToggle(owner: displayOwner)
@@ -283,6 +285,8 @@ struct InStoreShoppingView: View {
                                 packages: [BasketPackage]) -> some View {
         let measure = TripMeasure(shop, line: line, packages: packages)
         let amount = shop.tripAmountLabel(line, measure: measure)
+        let department = model.workspace.listLayout.department(for: line, in: shop)
+        let showDepartment = !department.isEmpty && model.workspace.listLayout.layout(for: shop).mode != .aisle
         return HStack(alignment: .top, spacing: 8) {
             Button {
                 let index = visible.firstIndex(where: { $0.id == line.id }) ?? 0
@@ -294,13 +298,14 @@ struct InStoreShoppingView: View {
                     .frame(width: 44, height: 44).contentShape(Rectangle())
             }
             .accessibilityLabel(ledgerFormat("Check %@", line.name))
-            .accessibilityValue([amount ?? "", line.notes, exclusions ?? ""].filter { !$0.isEmpty }.joined(separator: ", "))
+            .accessibilityValue([amount ?? "", showDepartment ? department : "", line.notes, exclusions ?? ""].filter { !$0.isEmpty }.joined(separator: ", "))
             .accessibilityFocused($focus, equals: .line(line.id))
             .accessibilityIdentifier("inStoreCheck-\(line.id)")
             Button { destination = .details(line.id) } label: {
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(verbatim: line.name).font(.headline)
+                        if showDepartment { Text(verbatim: department).font(.subheadline).foregroundStyle(Theme.secondary) }
                         if let coupon = line.pinnedCoupon { InStoreCouponPickLabel(coupon: coupon, line: line) }
                         if let amount { Text(amount) }
                         if !line.notes.isEmpty { Text(verbatim: line.notes) }

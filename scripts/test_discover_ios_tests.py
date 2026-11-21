@@ -48,6 +48,11 @@ class DiscoverTests(unittest.TestCase):
         }))
         self.runfile = self.products / "RoomInTheCart_iphonesimulator1-arm64.xctestrun"
         self.runfile.touch()
+        manifest = root / "ios_shopper_regressions.json"
+        manifest.write_text(json.dumps({"Bulk list review": ["RoomInTheCartUITests/Journey/testCase1"]}))
+        shopper_manifest = patch("discover_ios_tests.SHOPPER_REGRESSIONS", manifest)
+        shopper_manifest.start()
+        self.addCleanup(shopper_manifest.stop)
         self.commands = []
         inventories = iter(attempts)
 
@@ -77,6 +82,14 @@ class DiscoverTests(unittest.TestCase):
         self.assertEqual(self.commands[0], [sys.executable, str(Path(__file__).with_name("boot_ios_simulator.py")), SIMULATOR])
         self.assertEqual((self.plan / "test-enumeration.json").read_bytes(), encoded())
         self.assertFalse((self.diagnostics / "attempt-2.json").exists())
+
+    def test_renamed_required_shopper_case_fails_before_publishing_a_plan(self):
+        inventory = encoded().replace(b"testCase1()", b"testRenamed()")
+        self.prepare([inventory])
+        with self.assertRaisesRegex(ValueError, "Bulk list review: RoomInTheCartUITests/Journey/testCase1"):
+            self.discover()
+        self.assertEqual((self.diagnostics / "attempt-1.json").read_bytes(), inventory)
+        self.assertFalse(self.plan.exists())
 
     def test_exact_error_recovers_once_on_same_device_and_preserves_both_outputs(self):
         failed = encoded([ERROR], model=False)

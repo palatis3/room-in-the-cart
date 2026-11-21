@@ -45,9 +45,11 @@ public struct ImportedRecipe: Codable, Equatable, Sendable, Identifiable {
             let measure = ListQuantityParser.takeMeasure(number, from: &tokens)
             let pieces: Set<String> = ["egg", "eggs", "huevo", "huevos", "onion", "onions", "cebolla", "cebollas",
                                        "carrot", "carrots", "zanahoria", "zanahorias", "tomato", "tomatoes", "tomate", "tomates",
-                                       "lemon", "lemons", "limón", "limones", "tortilla", "tortillas"]
+                                       "lemon", "lemons", "limón", "limones", "tortilla", "tortillas", "pita", "pitas",
+                                       "potato", "potatoes", "papa", "papas", "camote", "camotes"]
             guard let amount = measure.amount, let first = tokens.first,
                   measure.unit != nil || pieces.contains(first.lowercased().trimmingCharacters(in: .punctuationCharacters))
+                    || ["sweet potato", "sweet potatoes", "pan pita", "panes pita"].contains(tokens.joined(separator: " ").lowercased())
             else { return unresolved }
             quantity = Quantity(amount: amount, unit: measure.unit ?? .count, originalLiteral: original)
         }

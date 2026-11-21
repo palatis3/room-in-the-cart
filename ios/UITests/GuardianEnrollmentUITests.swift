@@ -30,18 +30,21 @@ import XCTest
         if button.exists { return button }
         return app.descendants(matching:.any).matching(identifier:id).firstMatch
     }
-    private func viewport() -> CGRect {
-        let container = app.collectionViews.firstMatch
+    private func viewport(in scrollView: XCUIElement? = nil) -> CGRect {
+        let container = scrollView ?? app.collectionViews.firstMatch
         let bounds = container.exists ? container.frame.intersection(app.frame) : app.frame
-        let nav = app.navigationBars.firstMatch, keyboard = app.keyboards.firstMatch
+        let nav = (scrollView == nil ? nil : app.navigationBars.allElementsBoundByIndex.last) ?? app.navigationBars.firstMatch
+        let keyboard = app.keyboards.firstMatch
         var top = bounds.minY, bottom = bounds.maxY
         if nav.exists, nav.frame.intersects(bounds) { top = max(top,nav.frame.maxY) }
         if keyboard.exists { bottom = min(bottom,keyboard.frame.minY) }
-        for toolbar in app.toolbars.allElementsBoundByIndex where toolbar.exists && toolbar.frame.minY > top {
-            bottom = min(bottom,toolbar.frame.minY)
+        if scrollView == nil {
+            for toolbar in app.toolbars.allElementsBoundByIndex where toolbar.exists && toolbar.frame.minY > top {
+                bottom = min(bottom,toolbar.frame.minY)
+            }
+            let evidence = app.staticTexts.matching(identifier:"guardian.fixture.rootReady").firstMatch
+            if evidence.exists { bottom = min(bottom,evidence.frame.minY) }
         }
-        let evidence = app.staticTexts.matching(identifier:"guardian.fixture.rootReady").firstMatch
-        if evidence.exists { bottom = min(bottom,evidence.frame.minY) }
         return CGRect(x:bounds.minX+8,y:top+4,width:max(1,bounds.width-16),height:max(1,bottom-top-8))
     }
     private func isInBar(_ value: XCUIElement) -> Bool {
@@ -49,10 +52,10 @@ import XCTest
         return app.navigationBars.descendants(matching:.any).matching(identifier:value.identifier).firstMatch.exists ||
             app.toolbars.descendants(matching:.any).matching(identifier:value.identifier).firstMatch.exists
     }
-    private func visible(_ value: XCUIElement, hitTarget: Bool) -> Bool {
+    private func visible(_ value: XCUIElement, hitTarget: Bool, in scrollView: XCUIElement? = nil) -> Bool {
         guard value.exists, !value.frame.isEmpty else { return false }
         if isInBar(value) { return value.isHittable && app.frame.contains(CGPoint(x:value.frame.midX,y:value.frame.midY)) }
-        let area = viewport(), frame = value.frame
+        let area = viewport(in: scrollView), frame = value.frame
         if hitTarget {
             return value.isHittable && frame.minY >= area.minY && frame.maxY <= area.maxY && area.contains(CGPoint(x:frame.midX,y:frame.midY))
         }
@@ -62,10 +65,10 @@ import XCTest
         }
         return !intersection.isNull && intersection.height >= min(44,frame.height)
     }
-    private func scrollContent(upward: Bool) {
-        let container = app.collectionViews.firstMatch
-        guard container.exists else { XCTFail("No Form scroll container"); return }
-        let area = viewport(), bounds = container.frame
+    private func scrollContent(upward: Bool, in scrollView: XCUIElement? = nil) {
+        let container = scrollView ?? app.collectionViews.firstMatch
+        guard container.exists else { XCTFail("No active scroll container"); return }
+        let area = viewport(in: scrollView), bounds = container.frame
         let start = container.coordinate(withNormalizedOffset:.zero).withOffset(CGVector(dx:area.midX-bounds.minX,dy:(upward ? area.maxY-area.height*0.20 : area.minY+area.height*0.20)-bounds.minY))
         let end = container.coordinate(withNormalizedOffset:.zero).withOffset(CGVector(dx:area.midX-bounds.minX,dy:(upward ? area.minY+area.height*0.20 : area.maxY-area.height*0.20)-bounds.minY))
         start.press(forDuration:0.05,thenDragTo:end)
@@ -86,17 +89,18 @@ import XCTest
         XCTAssertGreaterThanOrEqual(value.frame.minY,viewport().minY-4)
         XCTAssertLessThanOrEqual(value.frame.minY,viewport().minY+40)
     }
-    private func reveal(_ value: XCUIElement, hitTarget: Bool = true, searchTowardStart: Bool = false) {
+    private func reveal(_ value: XCUIElement, hitTarget: Bool = true, searchTowardStart: Bool = false,
+                        in scrollView: XCUIElement? = nil) {
         for attempt in 0..<32 {
-            if visible(value,hitTarget:hitTarget) { return }
-            let area = viewport()
+            if visible(value,hitTarget:hitTarget,in:scrollView) { return }
+            let area = viewport(in: scrollView)
             let upward: Bool
             if value.exists, !value.frame.isEmpty { upward = value.frame.midY > area.midY }
             else { upward = searchTowardStart ? attempt >= 22 : attempt < 22 }
-            scrollContent(upward:upward)
+            scrollContent(upward:upward,in:scrollView)
         }
         capture("Could not reveal " + value.identifier)
-        XCTAssertTrue(visible(value,hitTarget:hitTarget),value.debugDescription)
+        XCTAssertTrue(visible(value,hitTarget:hitTarget,in:scrollView),value.debugDescription)
     }
     private func tap(_ id: String, searchTowardStart: Bool = false) {
         let value = element(id)
@@ -147,18 +151,31 @@ import XCTest
                                    "-AppleLanguages", "(\(language))", "-AppleLocale", "\(language)_US"]
             app.launch()
             tap("settings")
-            tap(language == "en" ? "Household membership" : "Membresía del hogar")
-            let beginning = language == "en" ? "Add a grocery in Shop" : "En Compras, añade un producto"
-            let sharing = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", beginning)).firstMatch
-            reveal(sharing, hitTarget: false)
-            let option = language == "en" ? "Send selected items" : "Enviar artículos seleccionados"
-            XCTAssertTrue(sharing.label.contains(option))
+            let title = language == "en" ? "Household membership" : "Membresía del hogar"
+            tap(title)
+            XCTAssertTrue(app.navigationBars[title].waitForExistence(timeout: 8))
+            let membership = app.scrollViews.containing(.button, identifier: "membership.free").firstMatch
+            XCTAssertTrue(membership.waitForExistence(timeout: 8))
+
+            let listOptions = language == "en" ? "List options" : "Opciones de la lista"
+            let option = language == "en" ? "Preview list copy" : "Vista previa de la lista"
+            // The membership stack can expose its identifier on both the heading and the instruction.
+            let sharing = membership.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", option)).firstMatch
+            reveal(sharing, hitTarget: false, in: membership)
+            XCTAssertTrue(sharing.label.contains(listOptions))
+            let review = language == "en" ? "review the message before choosing a recipient" :
+                "revisa el mensaje antes de elegir un destinatario"
+            XCTAssertTrue(sharing.label.contains(review))
             let paid = language == "en" ? "Household is a paid subscription. Choose your household" :
                 "La membresía del hogar es una suscripción de pago. Elige tu hogar"
-            let price = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", paid)).firstMatch
-            reveal(price, hitTarget: false, searchTowardStart: true)
-            XCTAssertTrue(price.label.contains("App Store"))
+            let price = membership.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", paid)).firstMatch
+            reveal(price, hitTarget: false, searchTowardStart: true, in: membership)
+            let priceCondition = language == "en" ? "App Store price if an offer is available" :
+                "precio del App Store si hay una oferta disponible"
+            XCTAssertTrue(price.label.contains(priceCondition))
+            reveal(membership.buttons["membership.offlinePrivacy"], in: membership)
             XCTAssertFalse(app.buttons["membership.subscribe"].exists)
+            capture("Signed-out membership and privacy in " + language)
             app.terminate()
         }
     }

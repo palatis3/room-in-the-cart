@@ -27,11 +27,22 @@ struct DinnerPlanningHome: View {
         DinnerWorkspaceView(model: model, needsPantrySetup: needsPantrySetup, pickupOpening: pickupOpening,
                             startPickup: { startingPickup = true }) { LedgerSaveStatus(model: ledger) }
             .sheet(isPresented: $startingPickup) { NavigationStack { LedgerNewShopView(model: ledger) } }
+            .environment(\.currentDinnerPlanner, model)
             .environment(\.timeZone, TimeZone(identifier: model.shop?.basis.timeZoneIdentifier ?? "") ?? .current)
             .task { await ledger.open() }
     }
 }
 extension LedgerModel: DinnerWorkspaceStore {}
+
+private struct CurrentDinnerPlannerKey: EnvironmentKey {
+    static let defaultValue: DinnerFeatureModel? = nil
+}
+extension EnvironmentValues {
+    var currentDinnerPlanner: DinnerFeatureModel? {
+        get { self[CurrentDinnerPlannerKey.self] }
+        set { self[CurrentDinnerPlannerKey.self] = newValue }
+    }
+}
 
 /// A ready pickup still requires the feature's normal per-shop access checks.
 enum DinnerPickupOpeningState: Equatable {
@@ -93,6 +104,7 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
     private struct RecipeEditor: Identifiable {
         let id = UUID()
         let recipe: MealTemplate?
+        var pasteEntry = false
     }
     @State private var editingRecipe: RecipeEditor?
     @State private var handoff: MealTemplate?
@@ -120,6 +132,7 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                                 recipeEditorButton(library, recipe: recipe)
                             }
                             recipeEditorButton(library)
+                            pasteRecipeButton
                         }
                     } else {
                         Section {
@@ -128,6 +141,7 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                                     detail: dinnerText("You can save a recipe now and choose it for a pickup later.")) { EmptyView() }
                                 if let library = privateRecipeLibrary {
                                     recipeEditorButton(library).buttonStyle(PrimaryAction())
+                                    pasteRecipeButton
                                 }
                             }.padding(.vertical, 6)
                         }
@@ -173,6 +187,7 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                         DinnerPrepAgenda(model: model)
                     }
                     Section(dinnerText("Plan")) {
+                        if privateRecipeLibrary != nil { pasteRecipeButton }
                         NavigationLink(dinnerText("All chosen dinners, including earlier dates")) { DinnerAllMealsView(model: model) }
                         NavigationLink(captureText("Review a recipe from text or photo")) { RecipeCaptureEntry(model: model) }
                             .accessibilityIdentifier("dinner.scanRecipe")
@@ -211,10 +226,16 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
         }.workingSurface().navigationTitle(dinnerText("Dinners")).listStyle(.insetGrouped)
         .sheet(item: $editingRecipe) { editor in
             if let library = privateRecipeLibrary {
-                NavigationStack { DinnerPrivateRecipeEditor(ledger: library, recipe: editor.recipe) }
+                NavigationStack { DinnerPrivateRecipeEditor(ledger: library, recipe: editor.recipe, pasteEntry: editor.pasteEntry) }
             }
         }
         .sheet(item: $handoff) { recipe in NavigationStack { SavedDinnerHandoffView(recipe: recipe) } }
+    }
+
+    private var pasteRecipeButton: some View {
+        Button { editingRecipe = RecipeEditor(recipe: nil, pasteEntry: true) } label: {
+            Label(dinnerText("Paste a recipe"), systemImage: "doc.on.clipboard")
+        }.accessibilityIdentifier("dinner.pasteRecipe")
     }
 
     private func recipeEditorButton(_ ledger: LedgerModel, recipe: MealTemplate? = nil, featured: Bool = false) -> some View {
@@ -310,8 +331,11 @@ struct DinnerWeekView<SaveStatus: View>: View {
                     .disabled(!model.editable)
             }
             Section {
-                DatePicker(dinnerText("Week starting"), selection: $weekStart, displayedComponents: .date)
-                    .accessibilityIdentifier("dinnerWeekStart")
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(dinnerText("Week starting")).font(.headline)
+                    DatePicker(dinnerText("Week starting"), selection: $weekStart, displayedComponents: .date)
+                        .datePickerStyle(.compact).labelsHidden().fixedSize().accessibilityIdentifier("dinnerWeekStart")
+                }
                 Picker(dinnerText("Week display"), selection: $showWeekGrid) {
                     Text(dinnerText("List")).tag(false)
                     Text(dinnerText("Grid")).tag(true)
@@ -430,11 +454,73 @@ struct DinnerPreviewView: View {
     @ObservedObject var model: DinnerFeatureModel
     @Environment(\.dismiss) private var dismiss
     @Environment(\.closeDinnerDecision) private var close
+    @State private var detailedReviewID: UUID?
+    @State private var saved: SavedSchedule?
+    @AccessibilityFocusState private var savedFocused: Bool
+
+    private struct SavedSchedule {
+        let identity: DinnerFeatureModel.EditorIdentity
+        let reviewID: UUID
+        let mealID: UUID
+    }
+
+    private var savedMeal: MealOccurrence? {
+        guard let saved, model.accessAvailable, model.editorIdentity == saved.identity,
+              model.state.applyReceipts.contains(where: { $0.id == saved.reviewID }),
+              let meal = model.shop?.mealOccurrences.first(where: { $0.id == saved.mealID && $0.removedAt == nil }) else { return nil }
+        return meal
+    }
+
+    @ViewBuilder private func scheduleFacts(_ meal: MealOccurrence) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(verbatim: meal.title).font(.headline)
+            if let day = meal.scheduledDay, let date = day.date {
+                Text(date.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted, timeZone: TimeZone(identifier: day.timeZoneIdentifier) ?? .current)))
+            }
+            Text(dinnerFormat("Servings: %@", meal.servings.description))
+        }.accessibilityElement(children: .combine).accessibilityIdentifier("dinnerPreviewMeal-" + meal.id.uuidString)
+    }
+
     private func finish() { if let close { close() } else { dismiss() } }
     var body: some View {
         List {
             Group {
-                if let preview = model.preview, model.canReviewPreview {
+                if let meal = savedMeal {
+                    Section {
+                        Label(dinnerText("Dinner changes saved."), systemImage: "checkmark.circle.fill")
+                            .font(.headline).accessibilityFocused($savedFocused).accessibilityIdentifier("dinner.schedule.saved")
+                            .onAppear { savedFocused = true }
+                        scheduleFacts(meal)
+                        Button(ledgerText("Done")) { finish() }.accessibilityIdentifier("dinner.schedule.done")
+                    }
+                } else if let preview = model.preview, model.canReviewPreview,
+                          detailedReviewID != preview.proposal.id, model.canApply, let workspaceID = model.localIdeaWorkspaceID,
+                          let meal = preview.unchangedGroceriesForScheduleEdit(in: model.workspace, workspaceID: workspaceID) {
+                    Section {
+                        scheduleFacts(meal)
+                        let ingredientIDs = Set(meal.ingredientContributionIDs)
+                        let names = preview.projectedContributions.filter { ingredientIDs.contains($0.id) && $0.removedAt == nil }.map(\.productName)
+                        Text(names.count <= 2 && !names.isEmpty
+                            ? dinnerFormat("The grocery amounts for %@ stay the same.", ListFormatter.localizedString(byJoining: names))
+                            : dinnerFormat("Grocery amounts stay the same for %lld ingredients.", Int64(names.count)))
+                            .accessibilityIdentifier("dinner.schedule.groceries")
+                        Button(dinnerText("Save dinner plan")) {
+                            guard let identity = model.editorIdentity else { return }
+                            Task {
+                                if await model.applyPreview() {
+                                    saved = SavedSchedule(identity: identity, reviewID: preview.proposal.id, mealID: meal.id)
+                                }
+                            }
+                        }.buttonStyle(PrimaryAction()).disabled(!model.canApply)
+                            .accessibilityIdentifier("dinnerApply")
+                    }
+                    Section {
+                        Button(dinnerText("Show full review")) { detailedReviewID = preview.proposal.id }
+                            .accessibilityIdentifier("dinner.schedule.showFull")
+                        Button(dinnerText("Cancel preview"), role: .cancel) { model.cancelPreview(); finish() }
+                            .accessibilityIdentifier("dinnerCancelPreview")
+                    }
+                } else if let preview = model.preview, model.canReviewPreview {
                     if let detail = model.currentSwapReview {
                         DinnerSwapEvidenceView(review: detail, showPrices: model.budgetVisible)
                     }
@@ -493,6 +579,12 @@ struct DinnerPreviewView: View {
                         }
                     }
                     Section(dinnerText("Grocery needs")) {
+                        if preview.changedContributionIDs.isEmpty, preview.proposal.changes.contains(where: { change in
+                            if case .adjust = change { return true }
+                            return false
+                        }) {
+                            Text(dinnerText("The grocery amounts on this list stay the same."))
+                        }
                         ForEach(preview.projectedContributions.filter { preview.changedContributionIDs.contains($0.id) }) { source in
                             VStack(alignment: .leading, spacing: 5) {
                                 Text(source.productName).font(.headline)
@@ -540,7 +632,10 @@ struct DinnerPreviewView: View {
                 } else { Section { Text(dinnerText("No dinner changes are waiting for review.")) } }
                 DinnerFeedback(model: model)
             }.listRowBackground(Theme.surface)
-        }.workingSurface().navigationTitle(dinnerText("Dinner preview")).dinnerAccess(model)
+        }.workingSurface()
+            .navigationTitle(savedMeal == nil ? dinnerText("Dinner preview") : dinnerText("Dinner"))
+            .preference(key: DinnerScheduleReceiptVisible.self, value: savedMeal != nil)
+            .dinnerAccess(model)
     }
 }
 func dinnerNoteKind(_ kind: DinnerWeekNote.Kind) -> String {
@@ -692,16 +787,29 @@ private struct DinnerTableSetting: View {
 }
 
 /// A recipe can occupy the Free slot before the first pickup exists.
+struct DinnerPasteRecipeButton: View {
+    @ObservedObject var ledger: LedgerModel
+    @State private var presented = false
+    var body: some View {
+        Button { presented = true } label: { Label(dinnerText("Paste a recipe"), systemImage: "doc.on.clipboard") }
+            .accessibilityIdentifier("dinner.pasteRecipe")
+            .sheet(isPresented: $presented) {
+                NavigationStack { DinnerPrivateRecipeEditor(ledger: ledger, recipe: nil, pasteEntry: true) }
+            }
+    }
+}
+
 private struct DinnerPrivateRecipeEditor: View {
     @ObservedObject var ledger: LedgerModel
     let recipe: MealTemplate?
+    var pasteEntry = false
     @EnvironmentObject private var access: WorkspaceAccess
     @EnvironmentObject private var household: HouseholdModel
     @Environment(\.guardianChildCoordinator) private var child
     @Environment(\.scenePhase) private var scene
 
     var body: some View {
-        TonightRecipeReview(ledger: ledger, source: nil, template: recipe, currentIdentity: {
+        TonightRecipeReview(ledger: ledger, source: nil, template: recipe, pasteEntry: pasteEntry, currentIdentity: {
             guard scene == .active, UIApplication.shared.isProtectedDataAvailable,
                   child?.presented != true, household.projection?.grantId == nil else { return nil }
             return CapturePrivateIdentity.current(access: access, household: household)

@@ -7,6 +7,49 @@ import SQLite3
 
 final class AppModelTests: XCTestCase {
     @MainActor
+    func testCornmealPackDefaultsAndReadableConvertedTotals() throws {
+        var draft = ComparisonDraft()
+        draft.item = "Cornmeal"
+        draft.needed = "600"
+        draft.unit = .gram
+        XCTAssertEqual(draft.aUnit, .gram)
+        XCTAssertEqual(draft.bUnit, .gram)
+        draft.setPackUnit(.pound, for: .b)
+        draft.aLabel = "Mill Lane"; draft.aQuantity = "350"; draft.aPrice = "2.75"
+        draft.bLabel = "Cedar Mill"; draft.bQuantity = "1"; draft.bPrice = "3.15"
+        draft.cap = "6"
+        let model = ComparisonModel(draft: draft)
+        model.compare()
+        let result = try XCTUnwrap(model.result)
+        XCTAssertEqual(result.preferredOfferID, "a")
+        XCTAssertEqual(result.offerA.packsToBuy, 2)
+        XCTAssertEqual(result.offerA.totalCost?.minorUnits, 550)
+        XCTAssertEqual(result.offerA.itemHeadroom?.minorUnits, 50)
+        XCTAssertEqual(result.offerB.totalCost?.minorUnits, 630)
+        let bought = try XCTUnwrap(result.offerB.purchasedAmount)
+        let leftover = try XCTUnwrap(result.offerB.leftover)
+        XCTAssertEqual(bought, try Rational(45_359_237, 50_000))
+        XCTAssertEqual(leftover, try Rational(15_359_237, 50_000))
+        XCTAssertTrue(comparisonAmountText(bought, locale: Locale(identifier: "en_US")).contains("907.2"))
+        XCTAssertTrue(comparisonAmountText(leftover, locale: Locale(identifier: "en_US")).contains("307.2"))
+
+        XCTAssertEqual(comparisonAmountText(try Rational(1, 20), locale: Locale(identifier: "en_US")), "0.05")
+        XCTAssertEqual(comparisonAmountText(try Rational(1, 3)), "1/3")
+
+        var untouched = ComparisonDraft()
+        untouched.setPackUnit(.count, for: .b)
+        untouched.unit = .kilogram
+        XCTAssertEqual(untouched.aUnit, .kilogram)
+        XCTAssertEqual(untouched.bUnit, .count)
+        var legacy = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(ComparisonDraft())) as? [String: Any])
+        legacy.removeValue(forKey: "aUnitChosen"); legacy.removeValue(forKey: "bUnitChosen")
+        var restored = try JSONDecoder().decode(ComparisonDraft.self, from: JSONSerialization.data(withJSONObject: legacy))
+        restored.unit = .gram
+        XCTAssertEqual(restored.aUnit, .count)
+        XCTAssertEqual(restored.bUnit, .count)
+    }
+
+    @MainActor
     func testDamagedComparisonDoesNotHideHealthyRecordAfterRelaunch() async throws {
         let directory = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }

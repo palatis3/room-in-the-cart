@@ -16,8 +16,9 @@ PUBLIC_SETTINGS = (
     ("RITC_SUPPORT_EMAIL", "supportEmail", "SupportEmail"),
     ("RITC_OPERATOR_NAME", "operatorName", "OperatorName"),
     ("RITC_HELP_URL", "helpURL", "HelpURL"),
+    ("RITC_PUBLIC_WEBSITE_URL", "publicWebsiteURL", "PublicWebsiteURL"),
 )
-PAGE_KEYS = {"privacyPolicyURL", "termsOfUseURL", "supportURL", "helpURL"}
+PAGE_KEYS = {"privacyPolicyURL", "termsOfUseURL", "supportURL", "helpURL", "publicWebsiteURL"}
 BACKEND_URL_KEYS = ("supabaseURL", "serviceURL")
 HTTPS_AUTHORITY = re.compile(r"(?:\[[0-9a-fA-F:.]+\]|[^:\[\]]+)(?::[0-9]+)?")
 DNS_LABEL = re.compile(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?")
@@ -157,7 +158,10 @@ def load_configuration(root, name):
         if value and key in PAGE_KEYS:
             if not valid_page_url(value):
                 raise ValueError(f"{key} must be an operator-owned HTTPS page, without credentials or a test/example host")
-            origins[key] = normalized_origin(urlsplit(value))
+            url = urlsplit(value)
+            if key == "publicWebsiteURL" and (url.path not in ("", "/") or "?" in value or "#" in value):
+                raise ValueError("publicWebsiteURL must be the public HTTPS origin, without a path, query or fragment")
+            origins[key] = normalized_origin(url)
         if value and key in BACKEND_URL_KEYS:
             try:
                 origins[key] = backend_origin(value)
@@ -176,6 +180,8 @@ def load_configuration(root, name):
     if name == "Release" and (origins or config.get("publishableKey")):
         staging = load_configuration(root, "Staging")
         staging_origins = {backend_origin(staging[key]) for key in BACKEND_URL_KEYS if staging.get(key)}
+        if staging.get("publicWebsiteURL"):
+            staging_origins.add(normalized_origin(urlsplit(staging["publicWebsiteURL"])))
         for key, origin in origins.items():
             if origin in staging_origins:
                 raise ValueError(f"release.json {key} must use an origin separate from staging")

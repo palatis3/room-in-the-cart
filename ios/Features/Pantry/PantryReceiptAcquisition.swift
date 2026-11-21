@@ -66,6 +66,7 @@ struct ReceiptImportDraft {
     var language = Bundle.main.preferredLocalizations.first?.hasPrefix("es") == true ? "es" : "en"
     var tracksPutaway = false
     var receiptTotal = ""
+    var printedPaidTotal: ExtractedReceiptDocument.PrintedPaidTotal?
     var overlapChoices: [UUID: PutawayOverlap.Choice] = [:]
     var reference = ""
     var purchaseDate = Calendar.current.startOfDay(for: Date())
@@ -129,6 +130,12 @@ struct ReceiptImportDraft {
     var selectedLines: [Line] { lines.filter { $0.treatment != .skip } }
 
     var stockLines: [Line] { lines.filter { $0.treatment.recordsStock } }
+
+    mutating func usePrintedPaidTotal() {
+        guard tracksPutaway, receiptTotal.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              let printedPaidTotal else { return }
+        receiptTotal = printedPaidTotal.amount
+    }
 
     func facts(receiptID: UUID, snapshot: PantryRepository.Snapshot, at now: Date, lineDocumentID: UUID? = nil) throws -> [ReceiptAcquisition] {
         guard snapshot.state.workspaceID == workspaceID, dateConfirmed, purchaseDate <= now,

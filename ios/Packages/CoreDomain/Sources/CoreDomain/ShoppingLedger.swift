@@ -945,11 +945,18 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         }
     }
 
+    /// Imported contributions still present, including entries outside the current search.
+    public func remainingEntries(in batch: LedgerImportBatch) -> Set<UUID> {
+        guard batch.undoneAt == nil else { return [] }
+        let ids = Set(batch.contributionIDs)
+        return Set(contributions.lazy.filter { $0.removedAt == nil && ids.contains($0.id) }.map(\.id))
+    }
+
     public mutating func undoImport(batchID: UUID, at: Date = Date()) throws {
         guard let index = importBatches.firstIndex(where: { $0.id == batchID }) else { throw LedgerError.notFound(batchID) }
-        if importBatches[index].undoneAt != nil { return }
+        let removed = remainingEntries(in: importBatches[index])
+        guard !removed.isEmpty else { return }
         try mutate("undoImport", at: at) { next in
-            let removed = Set(next.importBatches[index].contributionIDs)
             try next.removeSources(removed, at: at)
             next.importBatches[index].undoneAt = at
         }
@@ -1423,7 +1430,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
                     }
                     let template = dinner.template
                     next.mealOccurrences.append(MealOccurrence(repeatedFrom: repeatWeek?.meals[changeIndex].source, id: dinner.occurrenceID, templateID: template.id, templateRevision: template.revision,
-                        title: template.title, servings: template.servings, notes: template.notes, sourceURL: template.sourceURL,
+                        title: template.title, servings: dinner.plannedServings ?? template.servings, notes: template.notes, sourceURL: template.sourceURL,
                         sourceEvidence: template.sourceEvidence, recipeSteps: template.recipeSteps, exclusions: template.exclusions, servingGroups: template.servingGroups + [dinner.lunchHold].compactMap { $0 }, leadTimeMinutes: template.leadTimeMinutes,
                         completedSteps: template.completedSteps, ingredientContributionIDs: dinner.contributionIDs,
                         scheduledDay: dinner.day, isHidden: false, removedAt: nil))
@@ -1442,12 +1449,14 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
                     for group in meal.servingGroups where group.isProtected {
                         guard adjustment.groups.contains(group) else { throw DinnerPlanningError.reviewRequired("protectedGroup") }
                     }
+                    if let day = adjustment.scheduledDay { next.mealOccurrences[index].scheduledDay = day }
                     next.mealOccurrences[index].servings = adjustment.servings
                     next.mealOccurrences[index].servingGroups = adjustment.groups
                     for edit in adjustment.quantities {
                         let source = try next.contributionIndex(edit.contributionID)
                         guard next.contributions[source].removedAt == nil else { throw DinnerPlanningError.invalid("removedContribution") }
                         next.contributions[source].quantity = edit.quantity
+                        if edit.quantity != nil { next.contributions[source].checkedWithoutAmount = nil }
                     }
                 case .remove(let occurrenceID):
                     guard touchedMeals.insert(occurrenceID).inserted else { throw DinnerPlanningError.invalid("duplicateMealChange") }

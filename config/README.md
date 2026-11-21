@@ -1,5 +1,7 @@
 # Native public configuration
 
+When the owner is ready to publish the companion, use the [roominthecart.com launch checklist](../docs/PUBLIC-WEBSITE-HANDOFF.md) for the bilingual family-guide return, public pages and App Store fields.
+
 `public-contact.json` supplies the user-provided operator business, **Venture House Group LLC**, and public support address, `hello@roominthecart.com`, to all native environments. An environment can explicitly override or blank `operatorName` or `supportEmail`. No email is sent by configuration. `staging.json` supplies Debug and Staging. `release.json` supplies Release. If it is absent, optional connected features and external help/billing destinations remain unconfigured. Copy `release.example.json` to `release.json` when the owner has the real production values, then regenerate the committed Xcode project with `python3 scripts/generate_xcode_project.py`. These files and generated settings are public; keep server keys, passwords, signing material and App Store API keys elsewhere.
 
 Xcode’s RoomInTheCart-Staging scheme runs, tests, profiles and archives the staging bundle. Its test action checks the deployed service anonymously and opens the published Help and Support pages from the native app. Use an internet-connected iPhone simulator with Safari for those checks. An internal TestFlight build can use this staging scheme and its own App Store Connect bundle record once distribution signing is configured. The RoomInTheCart scheme runs the ordinary Debug suites.
@@ -18,7 +20,10 @@ Xcode’s RoomInTheCart-Staging scheme runs, tests, profiles and archives the st
 | `supportURL` | `SupportURL` | Operator-owned public HTTPS support page for distribution |
 | `supportEmail` | `SupportEmail` | Bare support address; defaults to the supplied address in `public-contact.json` |
 | `operatorName` | `OperatorName` | Supplied business name, Venture House Group LLC; literal text without control/format characters |
+| `publicWebsiteURL` | `PublicWebsiteURL` | Optional HTTPS origin of the operator’s first-party companion website |
 | `helpURL` | `HelpURL` | Optional public HTTPS help page; native help works offline |
+
+To connect the public site before enabling household accounts, set `publicWebsiteURL` in the appropriate environment’s configuration and regenerate the Xcode project. Use the site's HTTPS origin, optionally with a port and trailing slash. Native Help opens the companion’s `/help`, `/support`, `/privacy` and `/terms` pages in the app’s language. The family action opens `/help?lang=es#child-permission` or its English equivalent. An explicit page URL overrides that page; external custom addresses, queries and fragments retain their own routing. Membership still requires explicit operator-approved privacy and terms URLs. With no website configured, an explicitly configured Help page on the household service origin keeps its existing companion behavior; local help remains available with every URL blank.
 
 Configured backend URLs must use HTTPS without credentials, query strings or fragments. Use canonical IP addresses or ASCII hostnames, including punycode for internationalized domains. The native identity client accepts Supabase `sb_publishable_` keys. Release rejects the staging Supabase and household service origins for its backend, Privacy, Terms, Support and Help URLs. It also rejects a reused staging publishable key. Origin comparison normalizes the host and HTTPS port across paths, queries and fragments. Both builds can link to an approved public support or policy site hosted separately from the staging services. Alternate domains can still point to the same deployment, so confirm the actual project and service identities when provisioning production.
 

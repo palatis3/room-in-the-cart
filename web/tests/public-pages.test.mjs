@@ -182,3 +182,25 @@ test('the overview uses the chosen language for its real app screen, guide and p
     assert.equal(root.querySelectorAll('form,iframe,a[href*="apps.apple.com"],a[href*="token"]').length, 0);
   }
 });
+
+test('a family or existing help bookmark keeps the translated article in focus', () => {
+  for (const anchor of ['#child-permission', '#public-section-1']) {
+    const { dom, root } = setup('/help?lang=en&secret=private' + anchor);
+    const select = root.querySelector('select');
+    select.value = 'es';
+    select.dispatchEvent(new dom.window.Event('change'));
+    assert.equal(dom.window.location.search + dom.window.location.hash, '?lang=es' + anchor);
+    assert.equal(dom.window.document.activeElement.id, anchor.slice(1));
+    assert.match(dom.window.document.activeElement.querySelector('h2').textContent,
+      anchor === '#child-permission' ? /permiso del tutor/ : /Comparar dos paquetes/);
+  }
+  const guide = setup('/about?lang=es').root.querySelector('.overview-family-guide');
+  assert.equal(guide.getAttribute('href'), '/help?lang=es#child-permission');
+});
+
+test('an obsolete article offers the current topics without retaining its fragment', () => {
+  const { dom, root } = setup('/help?lang=en#public-section-999');
+  assert.equal(dom.window.location.hash, '');
+  assert.match(root.querySelector('.public-introduction').textContent, /Choose a topic/);
+  assert.ok(root.querySelector('.public-contents a[href="#child-permission"]'));
+});

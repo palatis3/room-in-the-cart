@@ -4,6 +4,7 @@ import Foundation
 /// stays unavailable; neither a guessed domain nor a test destination is used.
 struct HelpConfiguration: Equatable, Sendable {
     let helpURL: URL?
+    let familyHelpURL: URL?
     let privacyURL: URL?
     let termsURL: URL?
     let supportURL: URL?
@@ -12,24 +13,46 @@ struct HelpConfiguration: Equatable, Sendable {
     var supportEmailAddress: String? { supportEmailURL.flatMap { URLComponents(url: $0, resolvingAgainstBaseURL: false)?.path } }
 
     static func fromBundle(_ bundle: Bundle = .main, language: String = Bundle.main.preferredLocalizations.first ?? "en") -> Self {
-        let service = pageURL(bundle.object(forInfoDictionaryKey: "HouseholdServiceURL") as? String)
-        func page(_ key: String) -> URL? {
-            guard let url = pageURL(bundle.object(forInfoDictionaryKey: key) as? String) else { return nil }
-            // The companion's four public routes accept a language override.
-            // An explicit query or another operator-owned site has its own URL contract.
-            guard let service, url.host?.lowercased() == service.host?.lowercased(),
-                  (url.port ?? 443) == (service.port ?? 443),
-                  ["/help", "/support", "/privacy", "/terms"].contains(url.path),
+        let website = websiteOrigin(bundle.object(forInfoDictionaryKey: "PublicWebsiteURL") as? String)
+        let companion = website ?? pageURL(bundle.object(forInfoDictionaryKey: "HouseholdServiceURL") as? String)
+        func usesCompanion(_ url: URL) -> Bool {
+            guard let companion else { return false }
+            return url.host?.lowercased() == companion.host?.lowercased() && (url.port ?? 443) == (companion.port ?? 443)
+        }
+        func localizedPage(_ url: URL) -> URL {
+            guard usesCompanion(url), ["/help", "/support", "/privacy", "/terms"].contains(url.path),
                   var components = URLComponents(url: url, resolvingAgainstBaseURL: false),
                   components.percentEncodedQuery == nil else { return url }
             let spanish = Locale(identifier: language).language.languageCode?.identifier == "es"
             components.queryItems = [URLQueryItem(name: "lang", value: spanish ? "es" : "en")]
-            return components.url
+            return components.url ?? url
         }
-        return Self(helpURL: page("HelpURL"), privacyURL: page("PrivacyPolicyURL"),
-                    termsURL: page("TermsOfUseURL"), supportURL: page("SupportURL"),
+        func page(_ key: String, route: String) -> URL? {
+            if let raw = bundle.object(forInfoDictionaryKey: key) as? String, !raw.isEmpty {
+                return pageURL(raw).map(localizedPage)
+            }
+            return website.map { localizedPage($0.appendingPathComponent(route)) }
+        }
+        let help = page("HelpURL", route: "help")
+        let familyPage = website.map { localizedPage($0.appendingPathComponent("help")) } ?? help
+        var familyHelp: URL?
+        if let familyPage, usesCompanion(familyPage), familyPage.path == "/help", familyPage.fragment == nil,
+           var components = URLComponents(url: familyPage, resolvingAgainstBaseURL: false),
+           components.queryItems?.allSatisfy({ $0.name == "lang" && ["en", "es"].contains($0.value ?? "") }) == true {
+            components.fragment = "child-permission"
+            familyHelp = components.url
+        }
+        return Self(helpURL: help, familyHelpURL: familyHelp, privacyURL: page("PrivacyPolicyURL", route: "privacy"),
+                    termsURL: page("TermsOfUseURL", route: "terms"), supportURL: page("SupportURL", route: "support"),
                     supportEmailURL: emailURL(bundle.object(forInfoDictionaryKey: "SupportEmail") as? String),
                     operatorName: displayOperatorName(bundle.object(forInfoDictionaryKey: "OperatorName") as? String))
+    }
+
+    private static func websiteOrigin(_ raw: String?) -> URL? {
+        guard let url = pageURL(raw), let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              ["", "/"].contains(components.percentEncodedPath), components.percentEncodedQuery == nil,
+              components.percentEncodedFragment == nil else { return nil }
+        return url
     }
 
     static func displayOperatorName(_ raw: String?) -> String? {

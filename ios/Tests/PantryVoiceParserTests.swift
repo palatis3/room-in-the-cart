@@ -3,6 +3,64 @@ import XCTest
 @testable import RoomInTheCart
 
 final class PantryVoiceParserTests: XCTestCase {
+    func testReadOnlyBalanceWithTrailingPlaceKeepsFoodAndStorageWithoutAUseIntent() {
+        for (text, target, locale) in [
+            ("¿Cuánto ajonjolí me queda en el refrigerador?", "ajonjolí en el refrigerador", "es_MX"),
+            ("How much sesame do I have left in the fridge?", "sesame in the fridge", "en_US"),
+            ("How much sesame in the cupboard is left?", "sesame in the cupboard", "en_US"),
+            ("¿Cuántas manzanas nos quedan en la alacena?", "manzanas en la alacena", "es_MX")
+        ] {
+            XCTAssertEqual(PantryVoiceParser.parse(text, localeIdentifier: locale), .balanceQuery(target))
+        }
+        for text in ["How much sesame in the fridge is left in the freezer?",
+                     "¿Cuánto ajonjolí me queda en el refrigerador? Añade sal",
+                     "How much sesame do I have left in the car?"] {
+            XCTAssertEqual(PantryVoiceParser.parse(text, localeIdentifier: "en_US"), .needsReview(text))
+        }
+    }
+
+    func testReadOnlyBalanceQuestionsAndLocationQualifiedUnmeasuredUses() throws {
+        XCTAssertEqual(PantryVoiceParser.parse("¿Cuánto ajonjolí me queda?", localeIdentifier: "es_MX"), .balanceQuery("ajonjolí"))
+        XCTAssertEqual(PantryVoiceParser.parse("How much sesame do I have left?", localeIdentifier: "en_US"), .balanceQuery("sesame"))
+        for (command, food, locale) in [
+            ("Usé un poco de ajonjolí del refrigerador", "ajonjolí del refrigerador", "es_MX"),
+            ("I used some sesame from the fridge", "sesame from the fridge", "en_US")
+        ] {
+            guard case .consume(let items) = PantryVoiceParser.parse(command, localeIdentifier: locale) else {
+                return XCTFail(command)
+            }
+            XCTAssertEqual(items.count, 1)
+            XCTAssertEqual(items.first?.food, food)
+            XCTAssertEqual(items.first?.amount, .someUsed)
+        }
+        let unsupported = "How much rice do I have left? add beans"
+        XCTAssertEqual(PantryVoiceParser.parse(unsupported, localeIdentifier: "en_US"), .needsReview(unsupported))
+    }
+
+    func testSpanishSingularPartitivesKeepUseQualitativeAndRespectReadOnlyOrNegativePhrases() {
+        for (wording, food) in [
+            ("un poco del ajonjolí del refrigerador", "ajonjolí del refrigerador"),
+            ("un poco de ajonjolí del refrigerador", "ajonjolí del refrigerador"),
+            ("un poco de la harina de la alacena", "harina de la alacena"),
+            ("algo del arroz", "arroz")
+        ] {
+            XCTAssertEqual(PantryVoiceParser.parse("Usé " + wording, localeIdentifier: "es_US"),
+                           .consume([.init(original: wording, food: food, amount: .someUsed)]))
+        }
+        for text in ["No usé un poco del ajonjolí del refrigerador", "¿Usé un poco del ajonjolí?",
+                     "Usé un poco", "Usé un poco del", "Usé un poco de la"] {
+            XCTAssertEqual(PantryVoiceParser.parse(text, localeIdentifier: "es_US"), .needsReview(text))
+        }
+        let low = "Me queda poco ajonjolí"
+        guard case .observation(let observation) = PantryVoiceParser.parse(low, localeIdentifier: "es_US") else {
+            return XCTFail("Low stock must remain an observation")
+        }
+        XCTAssertEqual(observation.food, "ajonjolí")
+        XCTAssertEqual(observation.remaining, .low)
+        XCTAssertEqual(PantryVoiceParser.parse("¿Cuánto ajonjolí me queda en el refrigerador?", localeIdentifier: "es_US"),
+                       .balanceQuery("ajonjolí en el refrigerador"))
+    }
+
     func testNaturalEnglishAndSpanishConsumptionKeepEachQuantityAndPieceWording() throws {
         for (locale, command, names, rows, piece) in [
             ("en-US", "hey I just used two eggs and two pieces of bread and some flour",

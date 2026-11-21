@@ -672,6 +672,22 @@
           }
         }
       }
+    },
+    "Preview list copy": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview list copy"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vista previa de la lista"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -1,6 +1,23 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "about %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "about %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "aprox. %@"
+          }
+        }
+      }
+    },
     "The age check couldn’t finish. Check your connection and Apple Account, then try again.": {
       "extractionState": "manual",
       "localizations": {

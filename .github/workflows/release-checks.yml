@@ -140,7 +140,7 @@ jobs:
             -parallel-testing-enabled NO -jobs 2 -derivedDataPath .build/StagingDerivedData ARCHS=arm64 \
             CODE_SIGN_IDENTITY=- -resultBundlePath .build/staging-results/staging.xcresult \
             test 2>&1 | tee .build/staging-results/test.log
-      - name: Require all three staging checks and inspect runtime warnings
+      - name: Require all four staging checks and inspect runtime warnings
         if: ${{ !cancelled() }}
         shell: bash
         run: |
@@ -151,8 +151,9 @@ jobs:
           RoomInTheCartTests/StagingServiceTests/testInstalledAppReachesItsStagingServiceAnonymously
           RoomInTheCartUITests/StagingHelpUITests/testOnlineHelpOpensItsPageInSafari
           RoomInTheCartUITests/StagingHelpUITests/testOnlineSupportOpensItsPageInSafari
+          RoomInTheCartUITests/StagingHelpUITests/testConfiguredSpanishFamilyGuideReturnsFromSafariToNativeHelp
           TESTS
-          python3 scripts/check_ios_test_results.py --selectors "$result/selectors.txt" --expected-count 3 \
+          python3 scripts/check_ios_test_results.py --selectors "$result/selectors.txt" --expected-count 4 \
             --summary "$result/summary.json" --tests "$result/tests.json" \
             --result-bundle "$result/staging.xcresult" --test-log "$result/test.log"
       - name: Preserve staging test evidence

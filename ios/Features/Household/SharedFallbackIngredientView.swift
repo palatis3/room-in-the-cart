@@ -3,12 +3,22 @@ import HouseholdClient
 import SwiftUI
 
 struct SharedFallbackIngredientView: View {
-    @Binding var draft: CandidateReviewDraft
+    let editor: CandidateReviewEditor
+    @State private var draft: CandidateReviewDraft
     let page: SharedRecoveryPage
     let includeOffers: Bool
+    let edited: () -> Void
     @FocusState private var input: Field?
     private enum Field: Hashable {
         case minutes, label(UUID), yield(UUID), price(UUID), stock(UUID), exclusions(UUID)
+    }
+
+    init(editor: CandidateReviewEditor, page: SharedRecoveryPage, includeOffers: Bool, edited: @escaping () -> Void) {
+        self.editor = editor
+        self.page = page
+        self.includeOffers = includeOffers
+        self.edited = edited
+        _draft = State(initialValue: editor.draft)
     }
 
     var body: some View {
@@ -51,6 +61,11 @@ struct SharedFallbackIngredientView: View {
                 }
             }
         }
+        .onChange(of: draft) { _, current in
+            editor.draft = current
+            edited()
+        }
+        .onDisappear { editor.draft = draft }
         .navigationTitle(fallbackText("Review ingredients, food and time"))
         .navigationBarTitleDisplayMode(.inline)
         .keyboardDoneAction(visible: input != nil, title: ht("Done"), identifier: "fallback.food.done") { input = nil }

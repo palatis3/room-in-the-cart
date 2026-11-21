@@ -187,6 +187,174 @@ import XCTest
         XCTAssertTrue(try ReceiptImportDraft(source: unlinked).selectedLines.isEmpty)
     }
 
+    func testPricePrintedBelowTheItemRequiresExplicitLinkingAndStaysUnpaid() throws {
+        typealias Line = ReceiptDocumentPage.Line
+        typealias Selection = ExtractedReceiptDocument.Selection
+        let itemBounds = CGRect(x: 0.07, y: 0.66, width: 0.31, height: 0.035)
+        let amountBounds = CGRect(x: 0.80, y: 0.61, width: 0.13, height: 0.035)
+        let item = Line(id: 4, text: "LENTILS 2 CT", bounds: itemBounds)
+        let amount = Line(id: 5, text: "$5.60", bounds: amountBounds)
+        let itemPosition = Selection(page: 1, line: 4)
+        let amountPosition = Selection(page: 1, line: 5)
+        let target = CaptureTarget(workspaceID: UUID(), containerID: UUID(), objectID: UUID(), revision: 1, kind: .receiptEvidence)
+        func input(_ lines: [Line]) -> ExtractedReceiptDocument {
+            .init(digest: Data(repeating: 1, count: 32), pages: [.init(id: 1, method: .imageOCR, lines: lines)])
+        }
+        let document = input([item, amount])
+        XCTAssertTrue(document.amountAssociations.isEmpty)
+        XCTAssertEqual(document.splitAmountAssociations(excluding: document.amountAssociations), [itemPosition: amountPosition])
+
+        let included = try document.source(target: target, merchant: "Bridgeway Grocer", stage: .receipt,
+                                           selection: [itemPosition, amountPosition], at: Date())
+        let independent = try ReceiptImportDraft(source: included)
+        XCTAssertEqual(independent.lines.count, 2)
+        XCTAssertNil(independent.lines.first?.printed?.amount)
+
+        let linked = try document.source(target: target, merchant: "Bridgeway Grocer", stage: .receipt,
+                                         selection: [itemPosition], linkedAmountItems: [itemPosition], at: Date())
+        XCTAssertEqual(linked.documentLayoutID, included.documentLayoutID)
+        XCTAssertEqual(linked.receiptLines.map(\.originalText), ["LENTILS 2 CT", "$5.60"])
+        XCTAssertEqual(linked.receiptLines.first?.linkedAmountLineID, linked.receiptLines.last?.id)
+        let reviewed = try ReceiptImportDraft(source: linked)
+        XCTAssertEqual(reviewed.lines.count, 1)
+        XCTAssertEqual(reviewed.lines.first?.printed?.priceWording, "$5.60")
+        XCTAssertEqual(reviewed.lines.first?.paid, "")
+        XCTAssertTrue(reviewed.stockLines.isEmpty)
+
+        let totalLabel = Line(id: 6, text: "TOTAL PAID", bounds: CGRect(x: 0.03, y: 0.61, width: 0.38, height: 0.035))
+        for unsafe in [
+            input([item, amount, totalLabel]),
+            input([.init(id: 4, text: "TOTAL", bounds: itemBounds), amount]),
+            input([item, .init(id: 5, text: "$5.60 / kg", bounds: amountBounds)]),
+            input([item, .init(id: 5, text: "$5.60", uncertain: true, bounds: amountBounds)])
+        ] {
+            XCTAssertTrue(unsafe.splitAmountAssociations(excluding: unsafe.amountAssociations).isEmpty)
+            XCTAssertThrowsError(try unsafe.source(target: target, merchant: "Bridgeway Grocer", stage: .receipt,
+                                                   selection: [itemPosition], linkedAmountItems: [itemPosition], at: Date()))
+        }
+        XCTAssertThrowsError(try document.source(target: target, merchant: "Bridgeway Grocer", stage: .order,
+                                                  selection: [itemPosition], linkedAmountItems: [itemPosition], at: Date()))
+        XCTAssertThrowsError(try document.source(target: target, merchant: "Bridgeway Grocer", stage: .receipt,
+                                                  selection: [amountPosition], linkedAmountItems: [itemPosition], at: Date()))
+    }
+
+    func testReceiptAcceptsPrintedCountWordsInEnglishAndSpanishWithoutAssumingPackageContents() {
+        for (wording, expected) in [("1 unit", "1"), ("2 units", "2"), ("1 unidad", "1"), ("2 unidades", "2")] {
+            let source = ReceiptPrintedEvidence(.init(originalText: "Tamal " + wording), knownStorage: [:])
+            XCTAssertEqual(source.quantity, expected, wording)
+            XCTAssertEqual(source.unit, .count, wording)
+            let correction = ReceiptPrintedEvidence(.init(originalText: "Tamal", quantityNote: wording), knownStorage: [:])
+            XCTAssertEqual(correction.quantity, expected, wording)
+            XCTAssertEqual(correction.unit, .count, wording)
+        }
+        for wording in ["Tamal 2 units per pack $4.82", "Tamal 2 unidades por paquete $4.82", "Tamal 2 units/pack $4.82",
+                        "Tamal per pack: 2 units $4.82", "Tamal por paquete: 2 unidades $4.82", "Tamal por cada caja 2 unidades $4.82"] {
+            let source = ReceiptPrintedEvidence(.init(originalText: wording), knownStorage: [:])
+            XCTAssertNil(source.quantity, wording)
+            XCTAssertNil(source.unit, wording)
+            XCTAssertEqual(source.amount, "4.82", wording)
+        }
+        for note in ["2 paquetes", "2 packages", "2 units per pack", "2 unitarios"] {
+            let result = ReceiptPrintedEvidence(.init(originalText: "Tamal", quantityNote: note), knownStorage: [:])
+            XCTAssertNil(result.quantity, note)
+            XCTAssertNil(result.unit, note)
+        }
+    }
+
+    func testBarePrintedAmountOnlyKeepsTheSameExplicitCurrencyEvidence() throws {
+        let wording = "2 paquetes de maíz seco $4.82"
+        func proposal(_ source: String, note: String) -> ReceiptPrintedEvidence {
+            .init(.init(originalText: source, quantityNote: "2", priceNote: note), knownStorage: [:])
+        }
+        XCTAssertEqual(proposal(wording, note: "").priceWording, "$4.82")
+        XCTAssertEqual(proposal(wording, note: "4.82").priceWording, "$4.82")
+        XCTAssertEqual(proposal(wording, note: "4,82").amount, "4.82")
+        XCTAssertEqual(proposal(wording, note: "USD 4.28").amount, "4.28")
+        XCTAssertNil(proposal(wording, note: "4.28").amount)
+        XCTAssertNil(proposal("MAÍZ 2 CT 4.82", note: "4.82").amount)
+        XCTAssertNil(proposal("MAÍZ 2 CT MXN 4.82", note: "4.82").amount)
+        XCTAssertNil(proposal(wording, note: "4.82").quantity)
+
+        let target = CaptureTarget(workspaceID: UUID(), containerID: UUID(), objectID: UUID(), revision: 1, kind: .receiptEvidence)
+        let source = SourceMediaRecord(id: UUID(), target: target, originalText: wording, reviewedLabel: "Mercado Alondra",
+                                       imageJPEG: nil, barcode: nil,
+                                       receiptLines: [.init(originalText: wording, quantityNote: "2", priceNote: "4.82")],
+                                       capturedAt: Date())
+        let draft = try ReceiptImportDraft(source: source)
+        XCTAssertEqual(draft.lines.first?.original, wording)
+        XCTAssertEqual(draft.lines.first?.printed?.amount, "4.82")
+        XCTAssertEqual(draft.lines.first?.paid, "")
+        XCTAssertTrue(draft.selectedLines.isEmpty)
+    }
+
+    func testPrintedPaidTotalRemainsUnknownUntilTheShopperAdoptsIt() throws {
+        typealias Selection = ExtractedReceiptDocument.Selection
+        let paidLabel = ReceiptDocumentPage.Line(id: 14, text: "TOTAL PAID", bounds: .init(x: 0.08, y: 0.2, width: 0.29, height: 0.04))
+        let paidAmount = ReceiptDocumentPage.Line(id: 15, text: "$12.35", bounds: .init(x: 0.8, y: 0.2, width: 0.12, height: 0.04))
+        let document = ExtractedReceiptDocument(digest: Data(repeating: 7, count: 32),
+                                                pages: [.init(id: 1, method: .imageOCR, lines: [paidLabel, paidAmount])])
+        let label = Selection(page: 1, line: 14)
+        let amount = Selection(page: 1, line: 15)
+        for selection: Set<Selection> in [[], [label], [amount]] {
+            XCTAssertNil(document.printedPaidTotal(selected: selection))
+        }
+        let total = try XCTUnwrap(document.printedPaidTotal(selected: [label, amount]))
+        XCTAssertEqual(total.wording, "$12.35")
+        XCTAssertEqual(total.amount, "12.35")
+
+        let target = CaptureTarget(workspaceID: UUID(), containerID: UUID(), objectID: UUID(), revision: 1, kind: .receiptEvidence)
+        let source = try document.source(target: target, merchant: "Bridgeway Grocer", stage: .receipt,
+                                         selection: [label, amount], at: Date())
+        XCTAssertEqual(source.receiptLines.map(\.originalText), ["TOTAL PAID", "$12.35"])
+        var draft = try ReceiptImportDraft(source: source)
+        draft.printedPaidTotal = total
+        XCTAssertNil(try ComparisonModel.money(draft.receiptTotal))
+        draft.usePrintedPaidTotal()
+        XCTAssertTrue(draft.receiptTotal.isEmpty)
+
+        draft.tracksPutaway = true
+        draft.usePrintedPaidTotal()
+        XCTAssertEqual(draft.receiptTotal, "12.35")
+        draft.receiptTotal = "12.34"
+        draft.usePrintedPaidTotal()
+        XCTAssertEqual(draft.receiptTotal, "12.34")
+        XCTAssertEqual(try ComparisonModel.money(draft.receiptTotal), try ComparisonModel.money("12.34"))
+        XCTAssertTrue(draft.selectedLines.isEmpty)
+        XCTAssertTrue(draft.stockLines.isEmpty)
+    }
+
+    func testPrintedPaidTotalRejectsSubtotalConflictsAndUncertainAmounts() throws {
+        typealias Line = ReceiptDocumentPage.Line
+        typealias Selection = ExtractedReceiptDocument.Selection
+        let left = CGRect(x: 0.06, y: 0.2, width: 0.32, height: 0.04)
+        let right = CGRect(x: 0.8, y: 0.2, width: 0.13, height: 0.04)
+        let paid = Line(id: 2, text: "TOTAL PAGADO:", bounds: left)
+        let amount = Line(id: 1, text: "USD 12,35", bounds: right)
+        let both: Set<Selection> = [.init(page: 1, line: 1), .init(page: 1, line: 2)]
+        func document(_ lines: [Line], method: ReceiptAcquisition.DocumentLine.Method = .pdfOCR,
+                      extraPages: [ReceiptDocumentPage] = []) -> ExtractedReceiptDocument {
+            .init(digest: Data(repeating: 8, count: 32), pages: [.init(id: 1, method: method, lines: lines)] + extraPages)
+        }
+        XCTAssertEqual(document([amount, paid]).printedPaidTotal(selected: both)?.amount, "12.35")
+        for wording in ["SUBTOTAL", "TOTAL", "AMOUNT DUE", "TAX", "TOTAL PAID USD 12.35"] {
+            XCTAssertNil(document([amount, .init(id: 2, text: wording, bounds: left)]).printedPaidTotal(selected: both), wording)
+        }
+        for wording in ["12.35", "MXN $12.35", "$12.35 CAD", "$12.35 A", "$12.35/kg", "$12.35 $9.55"] {
+            XCTAssertNil(document([.init(id: 1, text: wording, bounds: right), paid]).printedPaidTotal(selected: both), wording)
+        }
+        XCTAssertNil(document([amount, paid], method: .textFile).printedPaidTotal(selected: both))
+        XCTAssertNil(document([.init(id: 1, text: "$12.35", uncertain: true, bounds: right), paid]).printedPaidTotal(selected: both))
+        XCTAssertNil(document([.init(id: 1, text: "$12.35", bounds: right.offsetBy(dx: 0, dy: -0.07)), paid])
+            .printedPaidTotal(selected: both))
+        XCTAssertNil(document([amount, paid, .init(id: 3, text: "MXN", bounds: .init(x: 0.6, y: 0.2, width: 0.14, height: 0.04))])
+            .printedPaidTotal(selected: both))
+        let conflict = ReceiptDocumentPage(id: 2, method: .pdfOCR, lines: [
+            .init(id: 1, text: "TOTAL PAID", bounds: left), .init(id: 2, text: "$19.95", bounds: right)
+        ])
+        XCTAssertNil(document([amount, paid], extraPages: [conflict]).printedPaidTotal(selected: both))
+        XCTAssertNil(document([amount, paid], extraPages: [.init(id: 2, method: .pdfOCR, lines: [])]).printedPaidTotal(selected: both))
+    }
+
     func testSourceInspectorReturnsOnlyAnAvailableImagePage() async throws {
         let text = ReceiptDocumentBytes(data: Data("YOGURT $1.50".utf8), kind: .text)
         let typedImage = await ReceiptDocumentReader.originalPage(text, pageNumber: 1)

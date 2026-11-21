@@ -16,9 +16,12 @@ struct ReceiptPrintedEvidence: Equatable {
 
     // A final amount must be distinct from an explicit unit price. Preserve currency ambiguity for review.
     private static let price = #/(?i)(?:US\$|USD\s*\$?|\$)\s*([0-9]{1,7}[.,][0-9]{2})(?:\s*USD)?\s*$/#
+    private static let bareAmount = #/[0-9]{1,7}[.,][0-9]{2}/#
     private static let unmarkedTotal = #/\s+([0-9]{1,7}[.,][0-9]{2})\s*$/#
     private static let unitPrice = #/(?i)(?:\s*@|\s+(at|a)\b)\s*(?:US\$|USD\s*\$?|\$)?\s*[0-9]+(?:[.,][0-9]{1,2})?(?:\s*(?:\/|per|por)\s*([a-z.]+))?\s*$/#
-    private static let measure = #/(?i)\b([0-9]{1,5}(?:[.,][0-9]{1,3})?)\s*(fluid\s+ounces?|fl\.?\s*oz|fl\.?\s+ounces?|onzas?\s+l[ií]quidas?|oz\.?\s+l[ií]q(?:uidas)?|kg|kgs|kilogramos?|kilograms?|gramos?|grams?|gr|g|lb[s.]?|pounds?|libras?|ounces?|onzas?|oz|liters?|litros?|ml|l|count|ct|ea|each|unidades|uds)\b\.?/#
+    private static let measure = #/(?i)\b([0-9]{1,5}(?:[.,][0-9]{1,3})?)\s*(fluid\s+ounces?|fl\.?\s*oz|fl\.?\s+ounces?|onzas?\s+l[ií]quidas?|oz\.?\s+l[ií]q(?:uidas)?|kg|kgs|kilogramos?|kilograms?|gramos?|grams?|gr|g|lb[s.]?|pounds?|libras?|ounces?|onzas?|oz|liters?|litros?|ml|l|count|ct|ea|each|units?|unidad(?:es)?|uds?)\b\.?/#
+    private static let precedingBasis = #/(?i)\b(?:per|por)\s+(?:(?:each|cada)\s+)?[\p{L}]+\s*[:=]?\s*$/#
+    private static let followingBasis = #/(?i)^\s*(?:/|per\b|por\b)/#
     private static let adjustment = #/(?i)^\s*(?:service fee|bottle deposit|sales tax|tax|impuesto|iva|subtotal|sub total|total|change|cambio|cash|efectivo|tender|visa|mastercard|payment|pago|discount|descuento|coupon|cup[oó]n|deposit|dep[oó]sito|fee|cargo|delivery fee|shipping|env[ií]o|tip|propina|refund|reembolso|return|devoluci[oó]n|promotion|promoci[oó]n)\b/#
     private static let mixed = #/(?i)(?:[€£]|\b(?:CAD|EUR|GBP|MXN|AUD|BOGO|gratis|was|ahorra|save|oferta|coupon|cup[oó]n)\b|\b(?:buy|compra)\s+\w+\s+(?:get|recibe)\b|\b[0-9]+\s*(?:for|por)\s*[$0-9]|\d+\s*%|[0-9]\s*[x×]\s*[0-9]|\b(?:pack|pk)\s*(?:of|de)?\s*[0-9]|\d\s*\/\s*\d)/#
     private static let signedValue = #/(?:^|\s)[−–-]\s*[$0-9]|\(\s*\$?\d+[.,]\d{2}\s*\)/#
@@ -31,7 +34,11 @@ struct ReceiptPrintedEvidence: Equatable {
     private static let rateByUnit = #/(?i)(?:@|\b(?:per|por)\s+(?:kg|lb|g|unidad|unit|oz|ea)\b|\/\s*(?:kg|lb|g|unidad|unit|oz|ea)\b)/#
 
     static func isStandaloneAmount(_ text: String) -> Bool {
-        text.trimmingCharacters(in: .whitespaces).wholeMatch(of: price) != nil
+        standaloneAmount(text) != nil
+    }
+
+    static func standaloneAmount(_ text: String) -> String? {
+        text.trimmingCharacters(in: .whitespaces).wholeMatch(of: price).map { normalizedAmount($0.1) }
     }
 
     static func canSuggestAmount(for wording: String) -> Bool {
@@ -71,7 +78,9 @@ struct ReceiptPrintedEvidence: Equatable {
             amount = nil; priceWording = nil; uncertain = true; return
         }
         let measurements = candidate.matches(of: Self.measure)
-        if measurements.count == 1, let match = measurements.first {
+        if measurements.count == 1, let match = measurements.first,
+           !candidate[..<match.range.lowerBound].contains(Self.precedingBasis),
+           !candidate[match.range.upperBound...].contains(Self.followingBasis) {
             if let measured = Self.measurement(String(match.1), unit: String(match.2)) {
                 quantity = measured.0; unit = measured.1
                 candidate.replaceSubrange(match.range, with: " ")
@@ -92,9 +101,17 @@ struct ReceiptPrintedEvidence: Equatable {
         }
         if !row.priceNote.isEmpty {
             let note = row.priceNote.trimmingCharacters(in: .whitespaces)
-            let total = note.wholeMatch(of: Self.price)
-            amount = total.map { String($0.1).replacingOccurrences(of: ",", with: ".") }
-            priceWording = total.map { String($0.0) }
+            if let total = note.wholeMatch(of: Self.price) {
+                amount = Self.normalizedAmount(total.1)
+                priceWording = String(total.0)
+            } else if note.wholeMatch(of: Self.bareAmount) == nil
+                        || Self.normalizedAmount(note) != amount
+                        || priceWording?.wholeMatch(of: Self.price) == nil {
+                // Digits alone can repeat an explicit printed amount. They cannot
+                // supply a new currency or establish a different amount.
+                amount = nil
+                priceWording = nil
+            }
         }
         let labels: [InventoryLocation] = [(Self.freezer,InventoryLocation.freezer),(Self.fridge,.fridge),(Self.cupboard,.cupboard)].compactMap {
             text.contains($0.0) ? $0.1 : nil
@@ -103,6 +120,10 @@ struct ReceiptPrintedEvidence: Equatable {
         let places = history.union(labels)
         if places.count == 1, !text.contains(Self.storageConflict) { storage = places.first }
         uncertain = quantity == nil || amount == nil || name == nil
+    }
+
+    private static func normalizedAmount(_ text: some StringProtocol) -> String {
+        text.replacingOccurrences(of: ",", with: ".")
     }
     private static func removeUnitPrice(from text: inout String) {
         guard let rate = text.firstMatch(of: unitPrice) else { return }
@@ -117,7 +138,7 @@ struct ReceiptPrintedEvidence: Equatable {
     private static func measurement(_ number: String, unit: String) -> (String,UnitOfMeasure)? {
         let token = unit.lowercased(), normalized = number.replacingOccurrences(of: ",", with: ".")
         var tokens = ListQuantityParser.itemTokens(token)
-        let parsed: UnitOfMeasure? = ["ea","each","ct","count","unidades","uds"].contains(token) ? .count : ListQuantityParser.takeUnit(from: &tokens)
+        let parsed: UnitOfMeasure? = ["ea","each","ct","count","unit","units","unidad","unidades","ud","uds"].contains(token) ? .count : ListQuantityParser.takeUnit(from: &tokens)
         let parts = normalized.split(separator: ".")
         if parts.count == 2, parts[1].count == 3, parts[0] != "0", parts[0].count <= 3 { return nil }
         guard let parsed, let value = try? ListQuantityParser.numericAmount(normalized), value > .zero else { return nil }

@@ -14,6 +14,19 @@ import CoreDomain
         return shop
     }
 
+    func testShoppingRowRetainsDeliberateUnmeasuredRecipeDecision() throws {
+        var shop = ShoppingLedger()
+        _ = try shop.chooseMeal(.init(title: "Sopa", ingredients: [
+            .init(name: "Maíz", quantity: nil, checkedWithoutAmount: true),
+            .init(name: "Caldo", quantity: nil)
+        ]))
+        let corn = try XCTUnwrap(shop.lines.first { $0.name == "Maíz" })
+        let broth = try XCTUnwrap(shop.lines.first { $0.name == "Caldo" })
+        XCTAssertEqual(shop.shoppingRowQuantity(for: corn), tonightText("Checked by hand · unmeasured"))
+        XCTAssertNil(try shop.quantity(forLineID: corn.id))
+        XCTAssertEqual(shop.shoppingRowQuantity(for: broth), ledgerText("Quantity unresolved"))
+    }
+
     func testOnlyOneUnqualifiedNameOmitsTheQuantityFromShoppingRows() throws {
         var shop = ShoppingLedger()
         let oats = try XCTUnwrap(QuickGrocery.stage("Oats", in: shop))
@@ -41,6 +54,23 @@ import CoreDomain
         let amount = Quantity(amount: .one, unit: .count, originalLiteral: "1")
         _ = try shop.addManualLine(name: "Apple", quantity: amount)
         XCTAssertEqual(shop.shoppingRowQuantity(for: try XCTUnwrap(shop.lines.last)), ledgerQuantity(amount))
+    }
+
+    func testOptionalGroceriesAndOuterPackageCountsRetainTheirUnderlyingEvidence() throws {
+        var shop = ShoppingLedger()
+        let preview = try shop.stageImport(text: "cilantro\n1 lata de garbanzos\n2 cans of beans\n2–3 bags of rice")
+        try shop.commitImport(preview)
+        let lines = shop.lines
+        XCTAssertEqual(lines.count, 4)
+        let display: [String?] = [nil, ledgerFormat("%lld can", 1), ledgerFormat("%lld cans", 2), ledgerQuantity(nil)]
+        XCTAssertEqual(lines.map { shop.shoppingRowQuantity(for: $0) }, display)
+        XCTAssertEqual(TripHandoffRow.outstanding(in: shop).map(\.amount), display)
+        for line in lines { XCTAssertNil(try shop.quantity(forLineID: line.id)) }
+        let source = try XCTUnwrap(shop.contributions(forLineID: lines[1].id).first)
+        XCTAssertEqual(source.originalText, "1 lata de garbanzos")
+        XCTAssertEqual(source.originalPack?.count, 1)
+        XCTAssertNil(source.originalPack?.amountPerPack)
+        XCTAssertEqual(source.notes, "Review the pack count and usable amount in each pack.")
     }
 
     func testBulkPluralHintComparesOnlyIncludedRowsWithTheSameMeasuredAmount() throws {

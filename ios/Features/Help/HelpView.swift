@@ -7,7 +7,8 @@ struct PrivateListSharingGuide: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(helpText("Share a list copy")).font(.headline).accessibilityAddTraits(.isHeader)
-            Text(helpText("Add a grocery in Shop to start a list. In Shopping list, open List options, then Send selected items. Preview the copy before choosing a recipient. They can read it without the app."))
+            Text(helpText("In Shopping list, open List options, then Preview list copy. Select the groceries to include and review the message before choosing a recipient. They can read it without the app."))
+                .accessibilityIdentifier("help.privateListSharing.instructions")
                 .fixedSize(horizontal: false, vertical: true)
         }
         .accessibilityIdentifier("help.privateListSharing")
@@ -33,6 +34,7 @@ struct HelpCenterView: View {
                 Text(helpText("In Shop, choose Add a grocery to start your private list. Pantry, Dinners and Records are also available without an account."))
             }
             Section(helpText("Using Room in the Cart")) {
+                FamilyPermissionGuideLink()
                 ForEach(HelpTopic.allCases) { topic in
                     NavigationLink { HelpArticleView(topic: topic) } label: {
                         Text(topic.title).fixedSize(horizontal: false, vertical: true)
@@ -99,8 +101,8 @@ private struct HelpArticleView: View {
                 paragraph(helpText("To compare stores, enter two quotes for the same needs. Include fees, extra travel cost and time, and check when each quote was observed. This is a manual comparison, not live retailer pricing."))
             case .dinners:
                 paragraph(helpText("In Dinners, save a familiar meal with its portions, ingredients, source, exclusions and any known prep lead time. Review an idea before choosing it for this shop. Choosing an idea and assigning a night are separate steps."))
-                paragraph(helpText("Before your first pickup, open Dinners, then Import and use recipes. Type a family recipe or choose a Recipe JSON-LD file from Files. Review and save it. Once you have a pickup, open the saved recipe from Dinner library to review its ingredients for that pickup."))
-                paragraph(helpText("Use the meal week for guests, away nights and protected lunches. Preview a change before saving it. Editing this week does not rewrite your reusable dinner or rotation."))
+                paragraph(helpText("In Dinners, choose Paste a recipe to review and save a note. Under Import and use recipes, you can also type a recipe or choose a Recipe JSON-LD file. When you have a pickup, open a saved recipe to choose which ingredients to add."))
+                paragraph(helpText("Open a planned dinner to change its day or servings. Review the ingredient amounts before saving. Your original recipe keeps its servings. Use the meal week for guests, nights away and lunches to set aside."))
                 paragraph(helpText("Count pantry or freezer food only after confirming its usable quantity and matching it to the need. If food falls short, protect lunch reservations and review each affected dinner. Leave an unresolved need open until you choose a repair."))
             case .handoff:
                 paragraph(helpText("Review the basket and prepare a dated retailer handoff in Shop. Copy or share that reviewed list, then place the order with your retailer. Copying or sharing does not place an order."))
@@ -263,6 +265,7 @@ struct HelpSupportView: View {
     var body: some View {
         WorkingForm {
             Section(helpText("Get help")) {
+                FamilyPermissionGuideLink(title: GuardianCopy.text("Child permissions"))
                 Text(helpText("Describe the steps, what you expected and what happened. Leave out grocery details, budgets, names, receipts, sign-in codes and invitation links."))
                 if let url = configuration.supportEmailURL, let address = configuration.supportEmailAddress {
                     Button {

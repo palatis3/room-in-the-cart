@@ -57,7 +57,18 @@ struct ComparisonDraft: Codable, Equatable {
     var id: UUID
     var item = "" { didSet { if item != oldValue { aConversion = nil; bConversion = nil } } }
     var needed = ""
-    var unit: UnitOfMeasure = .count { didSet { if unit != oldValue { aConversion = nil; bConversion = nil } } }
+    var unit: UnitOfMeasure = .count {
+        didSet {
+            guard unit != oldValue else { return }
+            if aUnitChosen == false, aUnit == oldValue, aLabel.isEmpty, aQuantity.isEmpty, aPrice.isEmpty, aConversion == nil { aUnit = unit }
+            if bUnitChosen == false, bUnit == oldValue, bLabel.isEmpty, bQuantity.isEmpty, bPrice.isEmpty, bConversion == nil { bUnit = unit }
+            aConversion = nil; bConversion = nil
+        }
+    }
+    // An older saved draft has no record of which defaults were explicitly selected.
+    // Treat its units as chosen. Only new, untouched packs follow the needed unit.
+    private var aUnitChosen: Bool? = false
+    private var bUnitChosen: Bool? = false
     var stock = ""
     var protected = ""
     var cap = ""
@@ -74,15 +85,21 @@ struct ComparisonDraft: Codable, Equatable {
     var bConversion: ComparisonConversion?
     init(id: UUID = UUID()) { self.id = id }
 
+    mutating func setPackUnit(_ unit: UnitOfMeasure, for pack: ComparisonPack) {
+        switch pack {
+        case .a: aUnitChosen = true; aUnit = unit
+        case .b: bUnitChosen = true; bUnit = unit
+        }
+    }
+
     mutating func setUsableAmount(_ amount: String, unit: UnitOfMeasure, for pack: ComparisonPack) {
         switch pack {
         case .a:
             aQuantity = amount
-            aUnit = unit
         case .b:
             bQuantity = amount
-            bUnit = unit
         }
+        setPackUnit(unit, for: pack)
     }
 }
 
@@ -168,19 +185,33 @@ func comparisonUnitPriceText(_ cents: Rational, in unit: UnitOfMeasure, locale: 
     return message(key, dollars.formatted(style), unitLabel)
 }
 
+/// Keep ordinary cooking fractions exact. Long conversion fractions need a readable
+/// magnitude without modifying the exact value used to choose whole packs.
+func comparisonAmountText(_ amount: Rational, locale: Locale = .current) -> String {
+    guard amount.denominator > 16 else { return amountText(amount) }
+    let value = Decimal(amount.numerator) / Decimal(amount.denominator)
+    let style = Decimal.FormatStyle(locale: locale)
+    let display = value < 1 ? style.precision(.significantDigits(1...3)) : style.precision(.fractionLength(0...1))
+    let number = value.formatted(display)
+    if let shown = try? display.parseStrategy.parse(number), shown * Decimal(amount.denominator) == Decimal(amount.numerator) {
+        return number
+    }
+    return message("about %@", number)
+}
+
 extension OfferResult {
     var wholePacksText: String? {
         packsToBuy.map { message("Whole packs to buy: %@", $0.formatted()) }
     }
     func purchasedText(in unit: UnitOfMeasure) -> String? {
-        purchasedAmount.map { message("Usable amount to buy: %@ %@", amountText($0), unit.comparisonLabel(for: $0)) }
+        purchasedAmount.map { message("Usable amount to buy: %@ %@", comparisonAmountText($0), unit.comparisonLabel(for: $0)) }
     }
     func shortageText(in unit: UnitOfMeasure) -> String? {
         guard let remainingNeed, remainingNeed > .zero else { return nil }
-        return message("Still needed: %@ %@", amountText(remainingNeed), unit.comparisonLabel(for: remainingNeed))
+        return message("Still needed: %@ %@", comparisonAmountText(remainingNeed), unit.comparisonLabel(for: remainingNeed))
     }
     func leftoverText(in unit: UnitOfMeasure) -> String? {
-        leftover.map { message("Left after the total need: %@ %@", amountText($0), unit.comparisonLabel(for: $0)) }
+        leftover.map { message("Left after the total need: %@ %@", comparisonAmountText($0), unit.comparisonLabel(for: $0)) }
     }
     var unitCeilingText: String? {
         unitCeiling.map { message("Maximum per pack for this item limit: %@", moneyText($0)) }

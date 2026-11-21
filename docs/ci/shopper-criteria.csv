@@ -1,0 +1,121 @@
+id,domain,criterion,question
+1,C,First-use orientation,Can a new shopper tell what to do on arrival?
+2,E,Tab and destination names,Do the labels predict what is behind each destination?
+3,E,Finding the primary action,Can someone find the action without consulting instructions?
+4,E,Back navigation and context,Can they return to the previous item or screen without starting again?
+5,O,Handoffs between workflows,Can they move a dinner ingredient into groceries or a reviewed receipt into records with a clear destination?
+6,O,Task completion,Can they achieve and independently verify their stated goal?
+7,E,Tap and entry effort,"How many intentional actions, repeat entries and detours are needed?"
+8,O,Editing and reversibility,"Can people change a detail, cancel a draft or recover a prior choice?"
+9,O,Error and permission recovery,"After an invalid entry or refused permission, is there a visible, effective next step?"
+10,O,Save feedback and persistence,"Does the app communicate what was saved, and can the shopper find it again?"
+11,C,Plain-language wording,"Do titles, field labels and buttons use words a shopper would use?"
+12,C,"Quantities, dates and prices","Can people interpret units, date evidence, estimates and unknown values?"
+13,C,Spanish localization,"Are Spanish labels and messages understandable, complete and natural in context?"
+14,E,Empty states and defaults,Does a new or empty screen help the user take a meaningful first step?
+15,O,Privacy and purchase clarity,"Can a shopper tell what stays local, what requires an account and what would cost money?"
+16,A,Typography and reading order,"Do scale, weight and line breaks show what to read first?"
+17,E,Layout and information density,Does grouping and spacing make the next choice visible without excessive reading?
+18,C,Color placement and meaning,"Does color consistently emphasize action, selection or risk where needed?"
+19,C,Visual cohesion and premium finish,"Do adjacent screens share a coherent palette, icon treatment, alignment and level of finish?"
+20,C,Motion and interaction feedback,Does feedback explain a transition or state change? Does reduced motion retain meaning?
+21,A,Text resizing and reflow,"At larger sizes, can the shopper read the necessary words and reach controls?"
+22,A,Contrast and non-color cues,Is text legible in the tested appearance and can state be understood without hue?
+23,A,Touch targets and keyboard interaction,Can the shopper hit a control and keep going with the keyboard open?
+24,A,Accessible labels and focus,"Do interactive controls have meaningful names, sensible order and recoverable focus?"
+25,C,Responsiveness,Is there visible acknowledgment of an action without a stall or duplicate input?
+26,C,First-tap prediction,"Before tapping, what does the shopper expect the control to do? Does it match?"
+27,C,Icon comprehension,Can the shopper identify an icon's action from its label or context?
+28,R,Resuming after interruption,Can they resume after navigating away or suspending the app?
+29,E,Choosing between similar routes,"Can they distinguish single from bulk, or manual from scanned?"
+30,E,Remembering previous input,Do earlier facts stay visible when a later decision depends on them?
+31,O,Active destination,"Can they identify the selected list, pickup or batch before changing it?"
+32,O,Predicting a commit,"Before committing, can they name the item, amount and destination?"
+33,C,Attention to exceptions,Does the value needing attention stand out among correct values?
+34,C,Look-alike actions,"Are Close, Cancel, Done and Save distinguishable in the observed context?"
+35,R,Returning to a common task,Does a second use skip completed first-use setup?
+36,C,Persistent field labels,Can the field still be identified after typing and clearing it?
+37,A,Keyboard suited to the value,"Do names, prices, counts and notes get suitable input?"
+38,E,Next and Done behavior,Does the keyboard advance and dismiss predictably?
+39,O,Correcting one value in place,Does correcting one typo or number preserve other fields?
+40,O,Reusing earlier facts,"Are names, quantities and sources carried into the next step?"
+41,O,"Whitespace, accents and punctuation","When actually entered, are ordinary variations interpreted accurately?"
+42,O,Uncertain human quantities,Can the shopper express an unknown amount or approximate remainder?
+43,O,Blank versus zero,Does an absent price or amount remain distinct from a known zero?
+44,O,Duplicate prevention,"Can the shopper spot, prevent or repair a repeated or near-duplicate entry?"
+45,C,Reason for a blocked action,Is the missing requirement named with a route to fix it?
+46,O,Cancel preserves the original,"After canceling a draft, is the saved state correct?"
+47,O,Independent save verification,Can the shopper confirm the action elsewhere or after a relaunch?
+48,O,Source versus interpretation,Can they distinguish the original wording from app inference?
+49,O,Units and price basis,"Can they distinguish per-unit, per-pack, line and whole-receipt costs?"
+50,O,Date meaning and precision,"Can they distinguish purchase, package and reminder dates and month-only evidence?"
+51,O,Private and shared destination,"Before acting, is it clear who will see the result?"
+52,O,Permission refusal fallback,"When access is actually denied, is there an immediately usable alternative?"
+53,C,Visual grouping by proximity,"Do the value, units, field and action read as one decision?"
+54,C,Strongest visual cue,Does the most salient color or contrast highlight the most relevant action or exception?
+55,C,Color consistency across transitions,Does a color retain its meaning from input to confirmation?
+56,C,Competing button emphasis,Is the principal action visibly distinct from alternatives?
+57,A,Legibility at a glance,"Can they locate the essential amount, date or destination without searching prose?"
+58,A,Wrap and truncation under pressure,"Do long names, Spanish and large text fit on the tested device?"
+59,A,Reading numbers side by side,"Can they compare aligned amounts, units and prices accurately?"
+60,A,Keyboard and bottom bar obstruction,Can they reach the intended action while keyboard or tab bar is visible?
+61,E,Progressive disclosure,Can they complete the first decision with optional details folded away?
+62,C,Tone after a mistake,Is a witnessed recovery message neutral and actionable?
+63,C,Feedback after a tap,Is the pending or settled outcome clear enough to discourage a second tap?
+64,C,Motion preserves orientation,Can they locate the new screen or the row that changed after a transition?
+65,E,One-handed and repeated use,Do frequent controls remain predictably placed without repeated scrolling?
+66,O,Undo targets the last change,Perform two different changes in sequence. Undo the second and verify both affected records against their prior states.
+67,O,Correction after Undo disappears,Let a witnessed transient Undo offer disappear. Correct the mistake through the settled interface and verify the final record.
+68,O,Partial batch failure accounting,Trigger one rejected row in a multirow submission. Reconcile which rows actually saved with the app’s report.
+69,O,Retry after uncertain delivery,Interrupt delivery after sending a fictional operation. Retry after reconnection and count applied results against the one intended operation.
+70,O,Offline versus received,"With connectivity actually interrupted, try sending a fictional request. Compare the claimed delivery state with independently visible receipt on the receiving surface after reconnecting."
+71,O,Draft after submission failure,Trigger a real or controlled failed submission. Compare each still-editable field with its pre-submit value before retrying.
+72,O,Expired or withdrawn access,Use a controlled expired or withdrawn invitation or view. Verify that reentry with that link no longer exposes the scoped records.
+73,O,Conflicting changes,Change the same fictional record from another supported session before applying an older edit. Check the final record and whether the shopper could resolve the conflict.
+74,C,Pending versus applied by another person,"For an actual request or proposed correction, have the shopper identify who must act next and whether the destination record has already changed. Compare with the visible status."
+75,O,Rejection leaves no side effects,"Submit a deliberately rejected mutation and compare destination counts, totals or inventory with the pre-submit baseline."
+76,O,Pasted note boundaries,Paste multiple distinct lines including a blank separator. Compare the resulting item boundaries and order with the source note.
+77,O,Selective batch inclusion,"Deselect a named source row, submit the other rows, then reconcile the exact set of saved names with the shopper’s chosen subset."
+78,O,Decimal-separator input,Enter an amount with the decimal separator customary for the active locale. Compare the saved numeric magnitude with the intended value.
+79,O,Fractional quantity round trip,"Enter a fractional grocery quantity, commit it and reopen the record. Compare the stored fraction and unit with the intended amount."
+80,O,Out-of-range numbers,Enter a negative price or another value outside the stated range. Attempt submission and check whether a misleading value enters the resulting record.
+81,O,Calendar boundary entry,"Choose a target date across a month or year boundary or on leap day. Reopen it and verify the exact day, month and year."
+82,O,Replacing a date with unknown,Clear a previously saved date whose evidence is now unavailable. Reopen the record and verify it contains no invented replacement date.
+83,O,Date-driven ordering,Create or locate at least two records with distinct dates. Compare their order or due grouping in a date-based view with chronological order.
+84,E,Distinguishing long shared prefixes,"Use two long names that differ near the end. Identify the requested variant before taking a row action, then confirm which variant was selected."
+85,O,Mixed-language user text,"Enter a fictional food name in a different language from the interface, change the interface language, then compare the reopened name with the original entry."
+86,E,Known-item lookup in a large list,"With at least 20 distinct rows, start at the top and find a named item below the initial viewport. Record search, scroll and wrong-row attempts."
+87,E,Recovering from a fruitless search,"Enter a query known to have no matches, then recover the full collection without recreating its contents. Check that a previously visible row returns."
+88,E,Retaining a place in a large list,Open and close a below-the-fold detail in a list of at least 20 rows. Count scrolls needed to reach the same row again.
+89,O,Action after row reordering,"Change the displayed order or trigger a reorder, then act on a named row. Check the named record and its former neighbor for unintended changes."
+90,O,Bulk action with hidden rows,Apply a bulk action while some known records are filtered or collapsed. Compare affected visible and hidden records with the scope presented to the shopper.
+91,O,Price comparison arithmetic,"Supply two known quantities and prices. Calculate the correct cheaper equivalent independently and compare the app’s decision, including a tie if exercised."
+92,O,Dependent total after an edit,"Record a displayed total, change one included numeric input and compute the expected new total. Check the summary delta."
+93,O,Linked completion counts,Complete or reopen an item. Reconcile the count of remaining items shown on separate task and summary views with the actual outstanding rows.
+94,O,Inventory movement balances,"Move, use or split a known quantity. Reconcile source and destination balances with the intended movement and starting quantity."
+95,C,Meaning of a status group,"Have the shopper classify a concrete item using the labels for outstanding, picked, used or reviewed work. Verify its group against the item’s actual lifecycle state."
+96,A,Action without a precision gesture,"For a swipe, drag or long-press task, complete the same operation using a discoverable alternative interaction and verify the result."
+97,A,Keyboard-only completion,"With a hardware keyboard or browser keyboard controls, complete a task through focus and activation without tapping. Record any trap or unreachable step."
+98,A,Screen reader announces a change,"Run a screen reader, perform an actual update while observing spoken output, and check whether the changed status can be identified without visual inspection."
+99,A,Bypassing repeated web navigation,"From the start of a companion page, activate its skip mechanism by keyboard or assistive technology and verify that focus reaches the main content."
+100,A,Text equivalent of an instructional image,"On a page with an image conveying task information, compare the accessible text equivalent and adjacent text with the decision-relevant information shown."
+101,A,Viewport change during entry,"Resize a live browser viewport or rotate a supported device during an open form. Check the in-progress value, field position and ability to complete the same entry."
+102,A,Device-edge interaction,"On the tested device, operate a control adjacent to the notch, home indicator or browser chrome. Record whether a system gesture or overlap intercepts the intended action."
+103,A,Zooming a public page,"At 200 percent browser zoom, read a specific passage and activate its linked next step. Record sideways scrolling, overlap or lost controls."
+104,A,Appearance changes mid-task,"Switch between supported light and dark appearances with a selected item, open field or warning visible. Check whether that specific state remains identifiable and usable."
+105,E,Browser history through a section link,"Follow an in-page guide link, follow another destination, then use browser Back. Check that the expected guide section or anchor is recoverable."
+106,C,Accuracy of a public instruction,Choose one actionable companion-guide instruction. Perform it in the matching app version and compare the named control and actual result with the instruction.
+107,C,Recognizing a worked example,Show a public example with fictional products or prices. Ask what facts the shopper can apply to their own shop and which values belong only to the example.
+108,E,Finding the support destination,"From an ordinary companion page, reach the advertised support channel for a concrete problem. Check its destination without sending a message."
+109,C,Understanding the companion’s role,"Give a concrete adult shopping or invited-helper task. Ask the shopper to choose the app or website and explain what can be done there, then check the choice against the observed destination."
+110,O,Scope of a copied public address,Copy the displayed public page address after navigation from a fictional invitation context. Inspect and reopen it to check that only the intended public destination and safe context travel.
+111,E,Opening a saved companion address,"Save or copy a specific guide or support address, open it in a separate browser context, and check route, section when applicable, and selected language."
+112,R,Continuing an app task after consulting the site,"Pause partway through an app task, consult a specific companion instruction, then return and carry out its next step. Record whether prior work requires reconstruction."
+113,R,Using companion guidance on a second device,Keep the guide open on a distinct device or independently identified viewport and carry out one named step in the app on the other. Record which task details must be reconstructed.
+114,R,Saved work informs a later decision,"In a separate visit, use an earlier saved fact to make a concrete purchase, pantry or meal choice. Identify the fact, choice and visible outcome."
+115,R,Separating finished from outstanding work on return,End a visit with at least one completed and one outstanding action. On reentry identify the correct outstanding work and continue it without redoing completed work.
+116,R,Reusing a prior record on another occasion,Start a distinct shopping or cooking occasion from a previous record or reusable item. Check that the new occasion can proceed and the original record remains intact.
+117,R,A corrected fact remains useful later,Correct a consequential fact in one visit. In a later visit make a specific decision that depends on the corrected value and verify which value informed it.
+118,R,Recovering the reason for a saved choice,"Record a reason, source or instruction behind a choice. On a subsequent visit, use that context to explain or revise the decision without consulting external notes."
+119,R,Return effort for the same operation,Repeat an equivalent operation on a later visit with the same starting conditions except prior use. Compare observed steps and avoidable detours for both attempts.
+120,R,Actionable trigger for a future visit,"At the stopping point, ask the simulated shopper to name a concrete future trigger and the saved information or unfinished work that would help then. Verify that this information or work is present; record only a stated-intent proxy."

@@ -147,6 +147,7 @@ struct ReviewedPackSave: Codable, Equatable {
         let lotID: UUID
         let name: String
         let description: String
+        var reviewedDateWording: String? = nil
     }
     let owner: String
     let batch: InventoryBatch
@@ -161,7 +162,8 @@ struct ReviewedPackSave: Codable, Equatable {
         rows = try intake.candidates.filter(\.included).map { candidate in
             let lot = atHome ? candidate.id : review.facts.first { $0.ordinal == candidate.ordinal }?.lotID
             guard let lot else { throw ProductBatchError.invalid }
-            return Row(id: candidate.id, lotID: lot, name: candidate.name, description: candidate.reviewEvidenceLine)
+            return Row(id: candidate.id, lotID: lot, name: candidate.name, description: candidate.reviewEvidenceLine,
+                       reviewedDateWording: candidate.reviewedDateWording)
         }
         try validate(scope)
     }

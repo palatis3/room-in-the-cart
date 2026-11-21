@@ -97,6 +97,11 @@ struct DinnerOccurrenceView: View {
                     Text(meal.title).font(.title2.bold())
                     Text(dinnerFormat("Servings: %@", meal.servings.description))
                     Text(meal.scheduledDay.map(dinnerDay) ?? dinnerText("Unscheduled"))
+                    if let shop = model.shop, model.phaseProvider(shop.id) == .draft {
+                        NavigationLink(dinnerText("Change day and servings")) {
+                            DinnerManualAdjustmentView(model: model, meal: meal, editsPlan: true)
+                        }.disabled(!model.editable).accessibilityIdentifier("dinner.occurrence.editPlan")
+                    }
                     if !meal.notes.isEmpty { Text(meal.notes) }
                     if let evidence = meal.sourceEvidence {
                         if let templateID = meal.templateID {
@@ -231,13 +236,21 @@ struct DinnerManualAdjustmentView: View {
     @ObservedObject var model: DinnerFeatureModel
     let meal: MealOccurrence
     let baseRevision: UUID?
+    private let basePlanningRevision: UUID
+    private let editsPlan: Bool
+    private let zone: TimeZone
+    @State private var planDate: Date
     @State private var servings: String
     @State private var groups: [DinnerGroupDraft]
     @State private var amounts: [DinnerIngredientDraft]
     @State private var bindings: [DinnerBindingDraft]
     @State private var showPreview = false
     private var reviewsAllocations: Bool { meal.servingGroups.contains(where: \.isProtected) }
-    init(model: DinnerFeatureModel, meal: MealOccurrence, suggestedServings: Rational? = nil) {
+    init(model: DinnerFeatureModel, meal: MealOccurrence, suggestedServings: Rational? = nil, editsPlan: Bool = false) {
+        self.editsPlan = editsPlan
+        basePlanningRevision = model.state.revisionID
+        zone = TimeZone(identifier: meal.scheduledDay?.timeZoneIdentifier ?? model.shop?.basis.timeZoneIdentifier ?? "") ?? .current
+        _planDate = State(initialValue: meal.scheduledDay?.date ?? Date())
         self.model = model; self.meal = meal; baseRevision = model.shop?.revisionID
         _servings = State(initialValue: (suggestedServings ?? meal.servings).description)
         _groups = State(initialValue: meal.servingGroups.map(DinnerGroupDraft.init))
@@ -254,15 +267,36 @@ struct DinnerManualAdjustmentView: View {
                 existing: baseline.first { $0.contributionID == source.id && $0.groupID == group.id })
         } })
     }
+    private var reviewButton: some View {
+        Button(dinnerText(editsPlan ? "Review dinner plan" : "Review")) {
+            do {
+                guard basePlanningRevision == model.state.revisionID else { throw DinnerPlanningError.stalePreview }
+                let changes = try amounts.map { DinnerQuantityEdit(contributionID: $0.id, quantity: try $0.reviewedQuantity()) }
+                let reviewedGroups = try groups.map { try $0.group() }
+                let reviewedBindings = reviewsAllocations ? try bindings.map { row in
+                    guard let group = reviewedGroups.first(where: { $0.id == row.groupID }) else { throw DinnerPlanningError.reviewRequired("portionBinding") }
+                    return try row.binding(occurrenceID: meal.id, servings: group.servings)
+                } : nil
+                showPreview = model.prepare([.adjust(DinnerAdjustment(occurrenceID: meal.id, servings: try DinnerEntry.positive(servings),
+                    groups: reviewedGroups, quantities: changes, portionBindings: reviewedBindings,
+                    scheduledDay: editsPlan ? try MealDay(date: planDate, timeZoneIdentifier: zone.identifier) : nil))], expectedRevision: baseRevision)
+            } catch { model.report(error) }
+        }.disabled(!model.editable).accessibilityIdentifier("dinner.occurrence.review")
+    }
     var body: some View {
         WorkingForm {
+            if editsPlan {
+                Section {
+                    Text(verbatim: meal.title).font(.headline)
+                    DinnerPlanDateField(date: $planDate, zone: zone)
+                }
+            }
             Section {
-                Text(dinnerText("Enter each resulting amount explicitly. This Free editor does not scale ingredients automatically."))
-                VStack(alignment: .leading, spacing: 5) {
-                    Text(dinnerText("Total servings")).font(.caption).foregroundStyle(Theme.secondary)
-                    TextField(dinnerText("Total servings"), text: $servings)
-                        .keyboardType(.numbersAndPunctuation).textInputAutocapitalization(.never).autocorrectionDisabled()
-                        .frame(minHeight: 44)
+                DinnerServingField(count: $servings, identifier: "dinner.occurrence.servings")
+                if editsPlan {
+                    reviewButton.buttonStyle(PrimaryAction())
+                } else {
+                    Text(dinnerText("Enter each resulting amount explicitly. This Free editor does not scale ingredients automatically."))
                 }
             }
             Section(dinnerText("Serving groups")) {
@@ -293,6 +327,9 @@ struct DinnerManualAdjustmentView: View {
                 }.disabled(groups.count >= 100)
             }
             Section(dinnerText("Resulting grocery amounts")) {
+                if editsPlan {
+                    Text(dinnerText("Enter each resulting amount explicitly. This Free editor does not scale ingredients automatically."))
+                }
                 ForEach($amounts) { $amount in
                     VStack(alignment: .leading) {
                         Text(amount.name).font(.headline)
@@ -330,22 +367,9 @@ struct DinnerManualAdjustmentView: View {
                     }
                 }
             }
-            Section {
-                Button(dinnerText("Review")) {
-                    do {
-                        let changes = try amounts.map { DinnerQuantityEdit(contributionID: $0.id, quantity: try $0.reviewedQuantity()) }
-                        let reviewedGroups = try groups.map { try $0.group() }
-                        let reviewedBindings = reviewsAllocations ? try bindings.map { row in
-                            guard let group = reviewedGroups.first(where: { $0.id == row.groupID }) else { throw DinnerPlanningError.reviewRequired("portionBinding") }
-                            return try row.binding(occurrenceID: meal.id, servings: group.servings)
-                        } : nil
-                        showPreview = model.prepare([.adjust(DinnerAdjustment(occurrenceID: meal.id, servings: try DinnerEntry.positive(servings),
-                            groups: reviewedGroups, quantities: changes, portionBindings: reviewedBindings))], expectedRevision: baseRevision)
-                    } catch { model.report(error) }
-                }.disabled(!model.editable)
-            }
+            if !editsPlan { Section { reviewButton } }
             DinnerFeedback(model: model)
-        }.navigationTitle(dinnerText("Manual quantities")).dinnerAccess(model)
+        }.navigationTitle(dinnerText(editsPlan ? "Change day and servings" : "Manual quantities")).dinnerAccess(model)
             .dinnerApplyPresentation(model, presented: $showPreview)
     }
 }

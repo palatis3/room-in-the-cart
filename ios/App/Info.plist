@@ -23,6 +23,8 @@
 	<string>$(RITC_SUPPORT_EMAIL)</string>
 	<key>OperatorName</key>
 	<string>$(RITC_OPERATOR_NAME)</string>
+	<key>PublicWebsiteURL</key>
+	<string>$(RITC_PUBLIC_WEBSITE_URL)</string>
 	<key>HelpURL</key>
 	<string>$(RITC_HELP_URL)</string>
 	<key>RITCRegionalAgeCheckEnabled</key>

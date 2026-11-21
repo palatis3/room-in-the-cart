@@ -1,6 +1,108 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Include the printed currency, such as USD 4.82.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Include the printed currency, such as USD 4.82."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incluye la moneda impresa, como USD 4.82."
+          }
+        }
+      }
+    },
+    "Include the printed unit, such as 2 units or 500 g.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Include the printed unit, such as 2 units or 500 g."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incluye la unidad impresa, como 2 unidades o 500 g."
+          }
+        }
+      }
+    },
+    "Link %@ to %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link %@ to %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vincular %@ a %@"
+          }
+        }
+      }
+    },
+    "Printed lines to check": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Printed lines to check"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Líneas impresas por revisar"
+          }
+        }
+      }
+    },
+    "The source changed. Review the updated printed lines to continue.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The source changed. Review the updated printed lines to continue."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El texto original cambió. Revisa las líneas actualizadas para continuar."
+          }
+        }
+      }
+    },
+    "Use %@ as the receipt name": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use %@ as the receipt name"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar %@ como nombre del recibo"
+          }
+        }
+      }
+    },
     "I checked the printed lines.": {
       "extractionState": "manual",
       "localizations": {

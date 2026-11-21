@@ -6,6 +6,10 @@ import LocalStore
 enum ProductBatchError: Error { case full, invalid, lookupUnavailable, rateLimited, chooseStockAction, changedDelivery, duplicateBarcode }
 
 struct PantryProductBatch {
+    static func homeOperationID(for candidate: UUID) -> UUID {
+        ReceiptAcquisition.identity(["home-pack", candidate.uuidString])
+    }
+
     struct Candidate: Identifiable, Equatable {
         let id = UUID()
         let ordinal: Int
@@ -18,9 +22,25 @@ struct PantryProductBatch {
         var packages = ""
         var usable = ""
         var requiresExplicitUsable = false
+        var onePackageUnknown = false
+        var dateWordingDraft: String?
+
+        var allowsOnePackageUnknown: Bool {
+            let count = packages.trimmingCharacters(in: .whitespacesAndNewlines)
+            return count.isEmpty || Int(count) == 1
+        }
+
+        func homeCount() throws -> InventoryCount {
+            guard onePackageUnknown else { return .exact(try usableQuantity()) }
+            guard allowsOnePackageUnknown, existingReceipt == nil, linkedDelivery == nil,
+                  (dateWordingDraft?.utf8.count ?? 0) <= 1024, dateWordingDraft?.contains("\0") != true
+            else { throw ProductBatchError.invalid }
+            return .unknown
+        }
+
         func usableQuantity() throws -> Quantity {
             let literal = usable.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard let total, !requiresExplicitUsable || !literal.isEmpty,
+            guard !onePackageUnknown, let total, !requiresExplicitUsable || !literal.isEmpty,
                   let quantity = try ComparisonModel.quantity(literal.isEmpty ? total.description : literal, unit),
                   quantity.amount >= .zero, quantity.amount <= total else { throw ProductBatchError.invalid }
             return quantity
@@ -82,7 +102,25 @@ struct PantryProductBatch {
             return try? size.amount.multiplied(by: Rational(count))
         }
 
+        /// Reuse a complete, manually supplied label line from this physical package.
+        /// Several date statements need individual review, and other packages never inherit the stamp.
+        var reviewedDateWording: String? {
+            if onePackageUnknown, let wording = dateWordingDraft {
+                let trimmed = wording.trimmingCharacters(in: .whitespacesAndNewlines)
+                return trimmed.isEmpty ? nil : trimmed
+            }
+            guard enteredByHand else { return nil }
+            let lines = original.components(separatedBy: .newlines).map { $0.trimmingCharacters(in: .whitespaces) }
+            let dates = lines.filter { PrintedDateMeaning.suggested(for: $0) != .other }
+            guard dates.count == 1, let line = dates.first, line.contains(where: \.isNumber) else { return nil }
+            return line
+        }
+
         var reviewEvidenceLine: String {
+            if onePackageUnknown {
+                return [barcode?.displayValue, original.isEmpty ? nil : original, pantryText("One package, contents unknown")]
+                    .compactMap { $0 }.joined(separator: " · ")
+            }
             let size = try? ComparisonModel.quantity(perPack, unit)
             return evidenceLine(unitLabel: pantryUnit(unit, singular: size?.amount == .one))
         }
@@ -315,11 +353,11 @@ extension PantryRepository {
         var writes: [InventoryWrite] = []
         for row in rows {
             guard row.existingReceipt == nil, row.linkedDelivery == nil else { throw ProductBatchError.invalid }
-            let amount = try row.usableQuantity()
+            let count = try row.homeCount()
             let name = row.name.trimmingCharacters(in: .whitespacesAndNewlines)
             let seed = InventoryLotSeed(foodID: row.confirmedPackID ?? row.id, name: name,
-                source: .manual(originID: originID, sourceID: row.id), location: row.location, unit: row.unit, count: .exact(amount), observedAt: time, packageCode: row.barcode, intakeOrdinal: row.ordinal)
-            let command = InventoryCommand(id: ReceiptAcquisition.identity(["home-pack", row.id.uuidString]), originID: originID,
+                source: .manual(originID: originID, sourceID: row.id), location: row.location, unit: row.unit, count: count, observedAt: time, packageCode: row.barcode, intakeOrdinal: row.ordinal)
+            let command = InventoryCommand(id: PantryProductBatch.homeOperationID(for: row.id), originID: originID,
                 lotID: row.id, eventID: ReceiptAcquisition.identity(["event", row.id.uuidString]), expectedRevision: nil,
                 occurredAt: time, change: .create(seed, observationID: ReceiptAcquisition.identity(["count", row.id.uuidString])))
             writes += try PantryPersistenceCodec.writes(InventoryEngine.prepare(command, current: nil, at: time))
