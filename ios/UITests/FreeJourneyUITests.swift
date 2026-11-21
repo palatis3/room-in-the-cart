@@ -293,9 +293,15 @@ import XCTest
         tap(app.buttons["pantry.setup.products"])
         fill("Butter beans", into: "productBatch.label", requireDone: true, control: app.textViews["productBatch.label"])
         tap(app.buttons["productBatch.add"])
-        tap(app.buttons["productBatch.row.0"])
+        let product = app.buttons["productBatch.row.0"]
+        reveal(product)
+        XCTAssertTrue(product.label.contains("Contents unknown"), product.label)
+        tap(product)
         enableSwitch("productBatch.oneUnknown")
-        tap(app.buttons["productBatch.finishEditing"])
+        let keep = app.buttons["productBatch.finishEditing"]
+        XCTAssertEqual(keep.label, "Keep edits")
+        tap(keep)
+        XCTAssertTrue(product.label.contains("One package, contents unknown"), product.label)
         enableSwitch("productBatch.received")
         tap(app.buttons["productBatch.review"])
         tap(app.buttons["productBatch.commit"])

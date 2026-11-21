@@ -281,15 +281,9 @@ struct PantryProductBatchView: View {
                 if authorized, let row = batch.candidates.first(where: { $0.id == selection.id }) {
                     PantryProductCandidateEditor(row: captureDraftBinding(row, in: $batch.candidates),
                         model: model, access: access, atHome: atHome, deliveries: atHome ? [] : model.productDeliveries, scope: catalogScope.id, focusCount: editingCount,
-                        correctBarcode: correctBarcode, authorized: {
+                        finishEditing: { editingProduct = nil }, correctBarcode: correctBarcode, authorized: {
                             authorized && editingProduct?.id == selection.id && batch.candidates.contains { $0.id == selection.id }
                         })
-                        .toolbar {
-                            ToolbarItem(placement: .confirmationAction) {
-                                Button(pantryText("Close")) { editingProduct = nil }
-                                    .accessibilityIdentifier("productBatch.finishEditing")
-                            }
-                        }
                 }
             }
         }
@@ -321,7 +315,10 @@ struct PantryProductBatchView: View {
             else if !row.included { Text(pantryText("Skipped")).font(.caption) }
             else if row.onePackageUnknown { Text(pantryText("One package, contents unknown")).font(.caption) }
             else if let total = row.total { Text(pantryPrintedQuantity(total.description, unit: row.unit)).font(.caption) }
-            else { Text(pantryText("Choose a package size and count.")).font(.caption) }
+            else if atHome {
+                Text(pantryText("Enter an amount or choose Contents unknown.")).font(.caption)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else { Text(pantryText("Choose a package size and count.")).font(.caption) }
         }
         if #available(iOS 18, *) {
             NavigationLink {
@@ -506,6 +503,8 @@ private struct PantryProductCandidateEditor: View {
     let deliveries: [PantryReceiptDelivery]
     let scope: UUID
     var focusCount = false
+    var finishEditing: (() -> Void)? = nil
+    @Environment(\.dismiss) private var dismiss
     let correctBarcode: (String, UUID) throws -> Void
     let authorized: () -> Bool
     @Environment(\.locale) private var locale
@@ -653,6 +652,13 @@ private struct PantryProductCandidateEditor: View {
             }
         }
         .navigationTitle(pantryText("Review product")).privacySensitive()
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button(pantryText("Keep edits")) {
+                    if let finishEditing { finishEditing() } else { dismiss() }
+                }.accessibilityIdentifier("productBatch.finishEditing")
+            }
+        }
         .scrollDismissesKeyboard(.interactively)
         .keyboardDoneAction(visible: field != nil, title: pantryText("Done"), identifier: "productBatch.editorDone") { field = nil }
         .onAppear { if focusCount && row.included { field = "count" } }
