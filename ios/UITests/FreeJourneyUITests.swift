@@ -2109,6 +2109,7 @@ import XCTest
         launch(reset: true, sourceRemoval: true)
         openShoppingList()
         tap(app.buttons["Inspect Wraps"])
+        XCTAssertFalse(app.buttons["ledgerEditQuantityAndNotes"].exists, "Multiple sources require choosing the specific contribution")
         let edit = app.buttons["Edit quantity and notes for Wednesday quesadillas"]
         reveal(edit)
         let geometry = XCTAttachment(string: "Edit target: \(edit.frame)")

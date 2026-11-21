@@ -140,6 +140,92 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(items.firstMatch.label.contains("huevos"))
     }
 
+    func testSpanishPrivateGroceryEditsQuantityAndNotesFromItemDetailsAndReopens() {
+        launch(language: "es")
+        XCTAssertTrue(app.staticTexts["Lista privada en este iPhone"].exists)
+        let name = "garbanzos"
+        let note = "Sin sal"
+        let field = element("quickGrocery.name")
+        tap(field)
+        field.typeText(name + "\n")
+        XCTAssertTrue(app.buttons["quickGrocery.undo"].waitForExistence(timeout: 10))
+        tap(app.buttons["quickGrocery.viewList"])
+
+        let list = app.navigationBars["Lista de compras"]
+        let item = app.buttons["Ver detalles de " + name]
+        let check = app.buttons["Marcar " + name]
+        XCTAssertTrue(item.waitForExistence(timeout: 8))
+        let rowID = item.identifier
+        XCTAssertTrue(rowID.hasPrefix("ledgerInspect-"))
+        XCTAssertTrue(check.exists)
+        let checkID = check.identifier
+        tap(item)
+        let detail = app.navigationBars["Detalles del artículo"]
+        XCTAssertTrue(detail.waitForExistence(timeout: 8))
+        let edit = app.buttons["ledgerEditQuantityAndNotes"]
+        XCTAssertTrue(edit.waitForExistence(timeout: 5) && edit.isHittable, "Quantity editing must be reachable without scrolling to the source")
+        XCTAssertEqual(edit.label, "Editar cantidad y notas")
+        XCTAssertGreaterThanOrEqual(edit.frame.height + 1e-9, 44)
+        let packs = app.buttons["ledgerPackChoice"]
+        if packs.exists && !packs.frame.isEmpty { XCTAssertLessThanOrEqual(edit.frame.maxY, packs.frame.minY) }
+        screenshot("Spanish ordinary grocery quantity near the total")
+        edit.tap()
+        let editor = app.navigationBars["Cantidad y notas"]
+        XCTAssertTrue(editor.waitForExistence(timeout: 5))
+        let done = editor.buttons["ledgerContributionDone"]
+        func finishInput() {
+            XCTAssertTrue(done.waitForExistence(timeout: 5) && done.isHittable)
+            XCTAssertEqual(done.label, "Listo")
+            XCTAssertTrue(app.waitForDoneAboveKeyboard(identifier: "ledgerContributionDone"))
+            done.tap()
+            XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "ledgerContributionDone"))
+        }
+        let quantity = app.textFields["Cantidad (opcional)"]
+        reveal(quantity)
+        quantity.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.7)).tap()
+        app.typeText("2")
+        XCTAssertEqual(quantity.value as? String, "2")
+        finishInput()
+        let notes = element("ledgerContributionNotes")
+        tap(notes)
+        app.typeText(note)
+        XCTAssertEqual(notes.value as? String, note)
+        finishInput()
+        let save = app.buttons["ledgerSaveContributionChanges"]
+        reveal(save)
+        XCTAssertEqual(save.label, "Guardar cambios")
+        XCTAssertTrue(save.isEnabled)
+        save.tap()
+        XCTAssertTrue(editor.waitForNonExistence(timeout: 8))
+        let total = element("ledgerIngredientTotal")
+        XCTAssertTrue(total.waitForExistence(timeout: 5))
+        XCTAssertEqual(total.label, "2 unidades")
+        reveal(app.staticTexts["Entrada manual"])
+        reveal(app.staticTexts[note])
+        XCTAssertFalse(app.buttons["Editar cantidad y notas de Entrada manual"].exists)
+        tap(detail.buttons.firstMatch)
+        XCTAssertTrue(list.waitForExistence(timeout: 8))
+
+        app.terminate()
+        launch(language: "es", reset: false)
+        if !list.waitForExistence(timeout: 5) { tap(app.buttons["openPickupList"]) }
+        XCTAssertTrue(list.waitForExistence(timeout: 8))
+        XCTAssertTrue(item.waitForExistence(timeout: 8))
+        XCTAssertEqual(item.identifier, rowID)
+        XCTAssertEqual(item.value as? String, "2 unidades")
+        XCTAssertTrue(check.exists && check.isEnabled, "The same grocery remains active and unchecked")
+        XCTAssertEqual(check.identifier, checkID)
+        tap(item)
+        XCTAssertTrue(edit.waitForExistence(timeout: 5) && edit.isHittable)
+        edit.tap()
+        XCTAssertTrue(editor.waitForExistence(timeout: 5))
+        reveal(quantity)
+        XCTAssertEqual(quantity.value as? String, "2")
+        reveal(notes)
+        XCTAssertEqual(notes.value as? String, note)
+        screenshot("Spanish private grocery quantity and note after cold reopen")
+    }
+
     func testColdAddItemShortcutOpensEditableFirstDraftWithoutCreatingPickup() {
         app.launchArguments = ["--ui-testing", "--reset-test-workspace", "--test-shopping-add-intent",
                                "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]

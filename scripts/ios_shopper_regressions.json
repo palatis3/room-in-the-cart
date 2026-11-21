@@ -50,6 +50,8 @@
   ],
   "10 · Reopen private prices with their recorded source": [
     "RoomInTheCartUITests/FreeJourneyUITests/testPrivateRecordsReopenManualPaidAndShelfPricesWithoutCreatingFood",
+    "RoomInTheCartUITests/RoomInTheCartUITests/testSpanishPrivateGroceryEditsQuantityAndNotesFromItemDetailsAndReopens",
+    "RoomInTheCartUITests/FreeJourneyUITests/testIngredientContributionActionsHaveSeparateAccessibleTargets",
     "RoomInTheCartTests/LedgerModelPerformanceSafetyTests/testPickupDetailsRecognizeOnlyTheirOwnSavedRevisionDuringDismissal",
     "RoomInTheCartTests/LedgerModelPerformanceSafetyTests/testPickupDetailsForeignSaveKeepsDraftPendingUntilExplicitReview"
   ],

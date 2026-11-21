@@ -3331,18 +3331,18 @@
         }
       }
     },
-    "Save contribution": {
+    "Save changes": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Save contribution"
+            "value": "Save changes"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Guardar aportación"
+            "value": "Guardar cambios"
           }
         }
       }

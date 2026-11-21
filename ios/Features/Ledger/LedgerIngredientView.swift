@@ -35,10 +35,19 @@ struct LedgerIngredientView: View {
     var body: some View {
         List {
             if let shop, let line {
+                let contributions = shop.contributions(forLineID: lineID)
+                let typedItemBatches = shop.typedItemBatchIDs
+                let primaryQuantitySource = ordinaryQuantitySource(for: line, in: shop, contributions: contributions,
+                                                                   typedItemBatches: typedItemBatches)
                 Section {
                     Text(line.name).font(.title2.bold())
                     if let amount = shop.shoppingRowQuantity(for: line) {
                         Text(amount).font(.headline).accessibilityIdentifier("ledgerIngredientTotal")
+                    }
+                    if let primaryQuantitySource {
+                        Button { sheet = .contribution(primaryQuantitySource.id) } label: { editQuantityLabel }
+                            .accessibilityIdentifier("ledgerEditQuantityAndNotes")
+                            .disabled(model.saving || model.hasPendingSave)
                     }
                     if !line.notes.isEmpty { Text(line.notes) }
                     let department = model.workspace.listLayout.department(for: line, in: shop)
@@ -85,7 +94,6 @@ struct LedgerIngredientView: View {
                     }.accessibilityIdentifier("ledger.scanReferences")
                 }
                 Section(ledgerText("Where this need came from")) {
-                    let contributions = shop.contributions(forLineID: lineID)
                     if contributions.contains(where: { $0.source.isProtected }) {
                         Toggle(ledgerText("Show protected needs"), isOn: $showProtectedNeeds)
                             .accessibilityIdentifier("ledgerShowProtectedNeeds")
@@ -94,7 +102,6 @@ struct LedgerIngredientView: View {
                                 .font(.footnote).foregroundStyle(Theme.secondary)
                         }
                     }
-                    let typedItemBatches = shop.typedItemBatchIDs
                     ForEach(contributions.filter { showProtectedNeeds || !$0.source.isProtected }, id: \.id) { contribution in
                         let source = ledgerSourceLabel(contribution, shop: shop, typedItemBatches: typedItemBatches)
                         VStack(alignment: .leading, spacing: 8) {
@@ -111,13 +118,11 @@ struct LedgerIngredientView: View {
                                 Text(ledgerFormat("Linked within existing quantity: %@", ledgerQuantity(link.quantity)))
                                     .font(.footnote)
                             }
-                            Button { sheet = .contribution(contribution.id) } label: {
-                                Text(quickGroceryText("Edit quantity and notes"))
-                                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                                    .contentShape(Rectangle())
+                            if primaryQuantitySource?.id != contribution.id {
+                                Button { sheet = .contribution(contribution.id) } label: { editQuantityLabel }
+                                    .buttonStyle(.borderless)
+                                    .accessibilityLabel(quickGroceryFormat("Edit quantity and notes for %@", source))
                             }
-                            .buttonStyle(.borderless)
-                            .accessibilityLabel(quickGroceryFormat("Edit quantity and notes for %@", source))
                             if contribution.source.isMeal || contribution.source.isProtected {
                                 Button { sheet = .link(contribution.id) } label: {
                                     Text(ledgerText("Link within an existing amount"))
@@ -170,6 +175,26 @@ struct LedgerIngredientView: View {
                 if pickup.pantryIsActive { _ = await pickup.refreshPantryStock() }
             }
     }
+
+    private var editQuantityLabel: some View {
+        Text(quickGroceryText("Edit quantity and notes"))
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+            .contentShape(Rectangle())
+    }
+
+    private func ordinaryQuantitySource(for line: ShoppingLine, in shop: ShoppingLedger,
+                                        contributions: [LedgerContribution], typedItemBatches: Set<UUID>) -> LedgerContribution? {
+        guard !line.isTrashed, !line.isHandled, !line.isChecked, contributions.count == 1,
+              let source = contributions.first,
+              !shop.allocations.contains(where: { $0.supplyContributionID == source.id || $0.demandContributionID == source.id })
+        else { return nil }
+        switch source.source {
+        case .manual: return source
+        case .imported(let batchID) where typedItemBatches.contains(batchID): return source
+        default: return nil
+        }
+    }
+
     private func currentSelection(shop: ShoppingLedger, workspaceID: UUID) -> LedgerPackSelection? {
         model.workspace.packSelections.reversed().first { selection in
             selection.shopID == shopID && selection.lineID == lineID &&
@@ -282,6 +307,7 @@ private struct LedgerContributionEditor: View {
     @State private var notes: String
     @State private var validation: String?
     @State private var confirmingRemoval = false
+    @FocusState private var focusedField: String?
     private var hasEdits: Bool {
         amount != (contribution.quantity.map { ledgerAmountInput($0.amount) } ?? "") ||
             unit != (contribution.quantity?.unit ?? .count) || notes != ledgerEditableNote(contribution)
@@ -297,25 +323,39 @@ private struct LedgerContributionEditor: View {
         WorkingForm {
             Section(ledgerText("Original wording")) { Text(contribution.originalText) }
             Section {
-                LedgerQuantityFields(amount: $amount, unit: $unit, amountLabel: shoppingText("Quantity (optional)"))
+                LedgerQuantityFields(amount: $amount, unit: $unit, amountFocus: ($focusedField, "amount"),
+                                     amountLabel: shoppingText("Quantity (optional)"))
                 WorkingField(ledgerText("Contribution notes")) {
                     TextField(ledgerText("Contribution notes"), text: $notes, prompt: Text(verbatim: ""), axis: .vertical)
                         .textFieldStyle(.roundedBorder)
+                        .focused($focusedField, equals: "notes")
+                        .accessibilityIdentifier("ledgerContributionNotes")
                 }
             }.disabled(model.saving || model.hasPendingSave)
-            Button(ledgerText("Save contribution")) {
+            Button(ledgerText("Save changes")) {
                 do {
                     let quantity = try LedgerEntry.quantity(amount, unit)
                     let savedNotes = notes == ledgerEditableNote(contribution) ? contribution.notes : notes
+                    focusedField = nil
                     Task { if await model.editShop(key: "contribution-\(contribution.id)", shopID: shopID, { try $0.updateContribution(contributionID: contribution.id, quantity: quantity, notes: savedNotes) }) { dismiss() } }
                 } catch { validation = ledgerText("Enter a nonnegative amount with up to six decimal places, or leave it unknown.") }
             }.buttonStyle(PrimaryAction()).disabled(!hasEdits || model.saving || model.hasPendingSave)
+                .accessibilityIdentifier("ledgerSaveContributionChanges")
             Button(ledgerText("Remove only this contribution"), role: .destructive) { confirmingRemoval = true }
                 .disabled(model.saving || model.hasPendingSave)
             if let validation { Text(validation).foregroundStyle(Theme.warning) }
             GroceryEditStatus(model: model, hasEdits: hasEdits, onRetried: { dismiss() })
         }.scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(quickGroceryText("Quantity and notes"))
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() }.disabled(model.saving) } }
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() }.disabled(model.saving) }
+                if focusedField != nil {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button { focusedField = nil } label: {
+                            Text(ledgerText("Done")).frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
+                        }.accessibilityIdentifier("ledgerContributionDone")
+                    }
+                }
+            }
             .interactiveDismissDisabled(model.saving)
             .confirmationDialog(ledgerText("Remove only this contribution?"), isPresented: $confirmingRemoval, titleVisibility: .visible) {
                 Button(ledgerText("Remove contribution"), role: .destructive) {
