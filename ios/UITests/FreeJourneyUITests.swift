@@ -4114,7 +4114,7 @@ import XCTest
         XCTAssertTrue(app.navigationBars[title].buttons.firstMatch.isHittable, "The pushed week must have a native Back control")
     }
 
-    private func tapVisibleFormRow(_ row: XCUIElement, marker: String = "S25_ROW_TAP") {
+    private func tapVisibleFormRow(_ row: XCUIElement, marker: String = "S25_ROW_TAP", expectedEnabled: Bool = true) {
         // XCUI's default activation point can lie above the scrolled content.
         // Use the visible row center, clear of navigation and tab bars.
         for attempt in 0...24 {
@@ -4122,6 +4122,7 @@ import XCTest
             let exists = row.exists
             let frame = exists ? row.frame : .zero
             if exists && row.isHittable && area.contains(CGPoint(x: frame.midX, y: frame.midY)) {
+                XCTAssertEqual(row.isEnabled, expectedEnabled, "Unexpected enabled state for \(row.identifier)")
                 print("\(marker) id=\(row.identifier) label=\(row.label) type=\(row.elementType) enabled=\(row.isEnabled) frame=\(frame) area=\(area)")
                 row.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
                 return
@@ -4387,7 +4388,7 @@ import XCTest
         disabledState.name = "Dinner-unknown-quantity-disabled-accept"; disabledState.lifetime = .keepAlways; add(disabledState)
         capture("Dinner-unknown-quantity-disabled-accept")
         try assertReadableDinnerAcceptance(accept, name: "Dinner-disabled-accept")
-        tapVisibleFormRow(accept, marker: "DISABLED_DINNER_ACCEPT_TAP")
+        tapVisibleFormRow(accept, marker: "DISABLED_DINNER_ACCEPT_TAP", expectedEnabled: false)
         XCTAssertTrue(accept.exists)
         XCTAssertFalse(accept.isEnabled)
         tapDinnerAcceptancePadding(accept, topEdge: spanish)
