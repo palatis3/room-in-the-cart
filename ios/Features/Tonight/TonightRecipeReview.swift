@@ -160,9 +160,9 @@ struct TonightRecipeReview: View {
                                 .accessibilityIdentifier("dinner.recipe.reviewPaste")
                         }
                     } else {
-                        if let familySource {
+                        if let evidence = familySource ?? template?.sourceEvidence {
                             Section {
-                                RecipeSourceDisclosure(evidence: familySource)
+                                RecipeSourceDisclosure(evidence: evidence)
                                 if !unclassified.isEmpty { unclassifiedLines }
                             }
                         }
@@ -290,8 +290,12 @@ struct TonightRecipeReview: View {
                                     .accessibilityIdentifier("tonight.recipe.reviewChanges")
                             } else if let nextInput {
                                 Button { advance(to: nextInput, using: scroll) } label: {
-                                    Text(tonightText("Next")).frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
+                                    ViewThatFits(in: .horizontal) {
+                                        Text(tonightText("Next")).fixedSize()
+                                        Image(systemName: "arrow.forward")
+                                    }.frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
                                 }
+                                .accessibilityLabel(tonightText("Next"))
                                 .accessibilityIdentifier("tonight.recipe.keyboardNext")
                             }
                             Spacer()
