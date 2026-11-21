@@ -603,6 +603,27 @@ test('a shopper decision during withdrawal refreshes status and retires the reje
  assert.doesNotMatch(root.textContent,/Confirm withdrawal/);assert.equal(commands.length,1);
 });
 
+test('a received follow-up names only a parent still present in the contributor’s current requests', async () => {
+ for (const [language, prefix, fallback] of [
+  ['en','Follow-up to · ','Follow-up to an earlier request'],
+  ['es','Aclaración de · ','Aclaración de una solicitud anterior']
+ ]) {
+  const parent = {...own(), originalItem:'Original lunch fruit', requestId:'scope-only-parent-id'};
+  const child = {...own(), originalItem:'Pear option', requestId:'child-id', followupTo:parent.requestId};
+  let visible = [child,parent];
+  const {root,dom} = await setup(fakeAPI({requests:async()=>visible}),language);
+  const card = () => root.querySelector('[data-request-id="child-id"]');
+  assert.ok(card().textContent.includes(prefix + parent.originalItem));
+  assert.doesNotMatch(root.querySelector('[data-request-id="scope-only-parent-id"]').textContent,/Follow-up to|Aclaración de/);
+  visible = [child];
+  click(root,language==='es'?'Actualizar':'Refresh');await waitForIdle(root);
+  assert.ok(card().textContent.includes(fallback));
+  assert.ok(!root.textContent.includes(parent.originalItem));
+  assert.ok(!root.textContent.includes(parent.requestId));
+  dom.window.close();
+ }
+});
+
 test('a rejected edit retains the authored text until the contributor confirms a linked follow-up',async()=>{
  let row=own();const commands=[];
  const {root,dom}=await setup(fakeAPI({requests:async()=>[row],command:async(_,command)=>{

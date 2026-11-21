@@ -715,8 +715,16 @@ export class WebApp {
       own.append(this.el('p',this.t('No requests yet.')));
       if(this.firstRequestPageAsOf)own.append(this.el('p',this.t('Checked on server')+' · '+this.date(this.firstRequestPageAsOf,'medium')));
     }
+    const visibleRequestNames = new Map(this.requests.map(row => [row.requestId, row.originalItem]));
     for(const r of this.requests){const card=this.el('article');card.className='card';card.dataset.requestId=r.requestId;
-      card.append(this.el('h3',r.originalItem),this.el('p',r.ownQuantity??this.t('Unknown amount')),this.el('p',this.t(r.carriedForward?'Moved to a later pickup for review':statuses[r.status]??'Status unavailable')),this.el('p',this.t(r.route==='next'?'Next shop':'This pickup')),this.el('p',this.date(r.receivedAt)));
+      card.append(this.el('h3',r.originalItem));
+      if (r.followupTo) {
+        const parentName = visibleRequestNames.get(r.followupTo);
+        const relationship = parentName ? this.t('Follow-up to') + ' · ' + parentName
+          : this.t('Follow-up to an earlier request');
+        card.append(this.el('p', relationship));
+      }
+      card.append(this.el('p',r.ownQuantity??this.t('Unknown amount')),this.el('p',this.t(r.carriedForward?'Moved to a later pickup for review':statuses[r.status]??'Status unavailable')),this.el('p',this.t(r.route==='next'?'Next shop':'This pickup')),this.el('p',this.date(r.receivedAt)));
       if(r.serverReadAt)card.append(this.el('p',this.t('Checked on server')+' · '+this.date(r.serverReadAt,'medium')));
       const localEdit=this.pending.find(p=>p.command.kind==='request.edit'&&p.command.shopId===r.shopId&&p.command.body.requestId===r.requestId);
       const correction=localEdit?.command ?? (this.uncertainSend && this.retryCommand?.kind==='request.edit' &&

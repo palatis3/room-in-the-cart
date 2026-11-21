@@ -135,6 +135,7 @@ const es: Record<string, string> = {
   'This request changed. Review its current status.':'La solicitud cambió. Revisa su estado actual.',
   'This request changed. Compare your draft with the current request before saving.':'La solicitud cambió. Compara tu borrador con la solicitud actual antes de guardar.',
   'The shopper has already acted. Review your text as a follow-up.':'La persona que hace la compra ya tomó una decisión. Revisa tu texto para enviarlo como aclaración.',
+  'Follow-up to':'Aclaración de', 'Follow-up to an earlier request':'Aclaración de una solicitud anterior',
   'Follow up':'Enviar aclaración', 'Received':'Recibida', 'Needs clarification':'Necesita aclaración',
   'Moved to a later pickup for review':'Se pasó a una compra posterior para su revisión',
   'From an earlier pickup':'De una compra anterior',
