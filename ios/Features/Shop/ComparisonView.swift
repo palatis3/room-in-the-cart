@@ -18,8 +18,12 @@ struct ComparisonView: View {
     @StateObject private var model: ComparisonModel
     @Environment(\.locale) private var locale
     @State private var stockExpanded: Bool
-    @State private var missingPrice: ComparisonPack?
-    @State private var missingAmount: ComparisonPack?
+    private enum MissingInput: Hashable, Identifiable {
+        case price(ComparisonPack)
+        case amount(ComparisonPack)
+        var id: Self { self }
+    }
+    @State private var missingInput: MissingInput?
     @State private var reviewing: Bool
     private enum ResultFocus: Hashable { case summary, saved, error }
     @AccessibilityFocusState private var resultFocused: ResultFocus?
@@ -38,6 +42,7 @@ struct ComparisonView: View {
         Group {
             if reviewing, let comparison = model.comparison {
                 results(comparison.result, inputs: comparison.inputs)
+                    .sheet(item: $missingInput) { input in missingInputEditor(input) }
             } else {
                 editor
             }
@@ -50,16 +55,19 @@ struct ComparisonView: View {
         .keyboardDoneAction(visible: inputFocused != nil, title: tr("Done"),
                             identifier: inputFocused.map { "comparison.done." + $0 }) { inputFocused = nil }
         .onAppear { if reviewing { model.compare() } }
-        .sheet(item: $missingPrice) { target in
-            MissingPackPriceEditor(target: target) { literal in
-                switch target {
+    }
+
+    @ViewBuilder private func missingInputEditor(_ input: MissingInput) -> some View {
+        switch input {
+        case .price(let pack):
+            MissingPackPriceEditor(target: pack) { literal in
+                switch pack {
                 case .a: model.draft.aPrice = literal
                 case .b: model.draft.bPrice = literal
                 }
                 updateResult()
             }
-        }
-        .sheet(item: $missingAmount) { pack in
+        case .amount(let pack):
             MissingPackAmountEditor(pack: pack, unit: pack == .a ? model.draft.aUnit : model.draft.bUnit) { literal, unit in
                 model.draft.setUsableAmount(literal, unit: unit, for: pack)
                 updateResult()
@@ -68,6 +76,7 @@ struct ComparisonView: View {
     }
 
     private func updateResult() {
+        missingInput = nil
         model.compare()
         reviewing = model.result != nil
         resultFocused = reviewing ? .summary : .error
@@ -291,10 +300,10 @@ struct ComparisonView: View {
 
     @ViewBuilder private func recoveryActions(for pack: ComparisonPack, result: OfferResult) -> some View {
         if result.issues.contains(.priceUnknown) {
-            recoveryAction(pack.priceTitle, id: pack.rawValue + "AddPrice") { missingPrice = pack }
+            recoveryAction(pack.priceTitle, id: pack.rawValue + "AddPrice") { missingInput = .price(pack) }
         }
         if result.issues.contains(.usableQuantityUnknown) {
-            recoveryAction(pack.amountTitle, id: pack.rawValue + "AddAmount") { missingAmount = pack }
+            recoveryAction(pack.amountTitle, id: pack.rawValue + "AddAmount") { missingInput = .amount(pack) }
         }
     }
 
