@@ -510,6 +510,7 @@ import XCTest
                 nodes.append(contentsOf: node.children)
             }
             let bottom = tabBar.exists && tabBar.isHittable ? tabBar.frame.minY : app.frame.maxY
+            guard top >= app.frame.minY, bottom <= app.frame.maxY, bottom - top >= 100 else { continue }
             let area = CGRect(x: app.frame.minX + 12, y: top, width: app.frame.width - 24, height: bottom - top)
             if control.exists, control.isHittable, area.contains(CGPoint(x: control.frame.midX, y: control.frame.midY)) { return }
             let upward = control.exists ? control.frame.midY > area.midY : attempt < 8
@@ -550,9 +551,11 @@ import XCTest
         amountField.typeText("\n")
         XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
         tap(app.buttons["pantry.review"])
-        tap(app.buttons["pantry.confirm"])
+        let confirm = app.buttons["pantry.confirm"]
+        tap(confirm)
+        XCTAssertTrue(confirm.waitForNonExistence(timeout: 8), app.debugDescription)
         let row = lot(name)
-        reveal(row)
+        reveal(row, needsTap: false)
         return row.identifier
     }
 
