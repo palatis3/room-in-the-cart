@@ -42,7 +42,7 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(undo.waitForExistence(timeout: 10))
         XCTAssertTrue(undo.label.contains(name))
         XCTAssertEqual(field.frame.height, emptyHeight, accuracy: 1, "Submitting should restore the empty line.")
-        let viewList = app.buttons["quickGrocery.viewList"]
+        let viewList = app.buttons["openPickupList"]
         XCTAssertTrue(viewList.waitForExistence(timeout: 5))
         XCTAssertEqual(viewList.label, "Ver lista de compras")
         XCTAssertLessThanOrEqual(undo.frame.maxY, viewList.frame.minY, "Accessibility text sizes should stack the receipt actions.")
@@ -64,7 +64,7 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(added.label.contains("Oats"))
         XCTAssertTrue(app.staticTexts["Added Oats to Pickup on this iPhone."].exists)
         XCTAssertFalse(app.keyboards.firstMatch.exists)
-        tap(app.buttons["quickGrocery.viewList"])
+        tap(app.buttons["openPickupList"])
         let originalRow = app.buttons["Inspect Oats"]
         XCTAssertTrue(originalRow.waitForExistence(timeout: 8))
         let editID = originalRow.identifier.replacingOccurrences(of: "ledgerInspect-", with: "ledgerEditRow-")
@@ -319,7 +319,7 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(corrected.waitForExistence(timeout: 8))
         app.terminate()
         launch(reset: false)
-        if !corrected.waitForExistence(timeout: 3) { tap(app.buttons["quickGrocery.viewList"]) }
+        if !app.navigationBars["Shopping list"].waitForExistence(timeout: 3) { tap(app.buttons["openPickupList"]) }
         XCTAssertTrue(corrected.waitForExistence(timeout: 8))
         let tortillas = app.buttons["Inspect corn tortillas"]
         reveal(tortillas)
@@ -501,7 +501,7 @@ final class RoomInTheCartUITests: XCTestCase {
         tap(field)
         field.typeText(name)
         tap(app.buttons["quickGrocery.add"])
-        tap(app.buttons["quickGrocery.viewList"])
+        tap(app.buttons["openPickupList"])
         tap(app.buttons["ledgerListOptions"])
         // UIKit can expose a single dialog action as two nested buttons.
         let share = app.scrollViews.buttons.matching(identifier: "tripShare.previewCopy").firstMatch
@@ -1255,7 +1255,7 @@ final class RoomInTheCartUITests: XCTestCase {
             dismiss.tap()
             XCTAssertTrue(keyboard.waitForNonExistence(timeout: 5))
         }
-        let list = app.buttons["quickGrocery.viewList"]
+        let list = app.buttons["openPickupList"]
         revealFullyInShop(list)
         list.tap()
     }

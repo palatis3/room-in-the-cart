@@ -71,6 +71,10 @@ struct RestorableShoppingListLink<Label: View>: View {
     private let label: Label
     init(@ViewBuilder label: () -> Label) { self.label = label() }
     var body: some View {
+        link.accessibilityIdentifier("openPickupList")
+    }
+
+    @ViewBuilder private var link: some View {
         if let workspace = ledger.sourceWorkspaceID {
             let actor = access.localActorID
             let route = RestorableDestination.shoppingList(actorID: actor,

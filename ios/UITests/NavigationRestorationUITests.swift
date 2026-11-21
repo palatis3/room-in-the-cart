@@ -155,8 +155,9 @@ import XCTest
         XCTAssertTrue(eggsAdded.waitForExistence(timeout: 10))
         let keyboard = app.keyboards.firstMatch
         XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
-        let viewList = app.buttons["quickGrocery.viewList"]
+        let viewList = app.buttons["openPickupList"]
         XCTAssertTrue(viewList.isHittable)
+        XCTAssertEqual(app.buttons.matching(identifier: "openPickupList").count, 1)
         XCTAssertEqual(viewList.label, "View shopping list")
         XCTAssertLessThanOrEqual(viewList.frame.maxY, keyboard.frame.minY)
         capture("Quick entry with View shopping list and Undo")

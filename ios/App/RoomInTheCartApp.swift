@@ -519,7 +519,6 @@ struct ShopView: View {
                         RestorableShoppingListLink {
                             Label(quickGroceryText("View shopping list"), systemImage: "list.bullet").frame(minHeight: 44)
                         }
-                        .accessibilityIdentifier("openPickupList")
                     }
                     Label(quickGroceryText("Private on this iPhone"), systemImage: "lock")
                         .font(.footnote).foregroundStyle(Theme.secondary)
@@ -635,7 +634,6 @@ struct ShopView: View {
                         .accessibilityIdentifier("newComparison")
                     Divider()
                     RestorableShoppingListLink { ShopToolLabel(ledgerText("Start pickup"), "cart", chevron: true) }
-                        .accessibilityIdentifier("openPickupList")
                 }
                 .buttonStyle(.plain)
                 .overlay(alignment: .top) { Divider() }

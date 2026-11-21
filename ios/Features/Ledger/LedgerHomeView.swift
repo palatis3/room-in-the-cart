@@ -602,7 +602,6 @@ struct ShopGroceryPreview: View {
                         .frame(minHeight: 44)
                 }
                 .foregroundStyle(Theme.action)
-                .accessibilityIdentifier("openPickupList")
             }
             if let last = shop.recentlyChecked.first(where: { !$0.isHandled }) {
                 Button {

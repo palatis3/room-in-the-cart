@@ -257,7 +257,6 @@ private struct QuickGroceryField: View {
                         }
                         .buttonStyle(.borderless)
                         .foregroundStyle(Theme.onSelection)
-                        .accessibilityIdentifier("quickGrocery.viewList")
                     }
                 }
             }
