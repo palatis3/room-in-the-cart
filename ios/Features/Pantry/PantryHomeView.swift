@@ -399,9 +399,12 @@ private func onlyNeedsRecount(_ lot: InventoryLot, _ availability: InventoryLotA
 /// Identifies the physical batch when an editor or history screen has its own navigation title.
 struct PantryBatchHeading: View {
     let lot: InventoryLot
+    var showsBatchIdentifier = true
 
     var body: some View {
-        WorkingRecordHeading(lot.name, detail: [pantryLocationName(lot.location), lot.packageBatchLabel].joined(separator: " · "), systemImage: "shippingbox")
+        let location = pantryLocationName(lot.location)
+        let detail = showsBatchIdentifier ? location + " · " + lot.packageBatchLabel : location
+        WorkingRecordHeading(lot.name, detail: detail, systemImage: "shippingbox")
     }
 }
 
@@ -614,9 +617,12 @@ private struct PantryFoodEditor: View {
                                 }
                             }
                             if existingFoodID == nil {
-                                workingTextField(pantryText("Food name"), text: $name).focused($editing)
-                                    .accessibilityLabel(pantryText("Food name"))
-                                    .accessibilityIdentifier("pantry.foodName")
+                                WorkingField(pantryText("Food name")) {
+                                    TextField("", text: $name)
+                                        .textFieldStyle(.roundedBorder)
+                                        .focused($editing)
+                                        .accessibilityIdentifier("pantry.foodName")
+                                }
                             }
                         }
                         Picker(pantryText("Storage location"), selection: $location) {
@@ -638,9 +644,12 @@ private struct PantryFoodEditor: View {
                     }
                 }
                 Section {
-                    workingTextField(pantryText(purchase == nil ? "Amount, if known" : "Amount remaining"), text: $amount).focused($editing)
-                        .accessibilityLabel(pantryText(purchase == nil ? "Amount, if known" : "Amount remaining"))
-                        .accessibilityIdentifier("pantry.amount")
+                    WorkingField(pantryText(purchase == nil ? "Amount, if known" : "Amount remaining")) {
+                        TextField("", text: $amount)
+                            .textFieldStyle(.roundedBorder)
+                            .focused($editing)
+                            .accessibilityIdentifier("pantry.amount")
+                    }
                     if purchase != nil {
                         LabeledContent(pantryText("Unit"), value: pantryUnit(unit))
                     } else {

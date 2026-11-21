@@ -807,7 +807,14 @@ extension PantryUsageHistoryRow {
         WorkingForm {
             if revision == nil { Text(pantryText("Unlock the authorized private workspace to view pantry food.")) }
             else if loadedRevision == revision, let entries, let lot = model.snapshot?.lots.first(where: { $0.id == lotID }) {
-                Section { PantryBatchHeading(lot: lot) }
+                Section {
+                    let similarBatch = model.snapshot?.lots.contains {
+                        $0.id != lot.id && $0.location == lot.location &&
+                            $0.name.localizedCaseInsensitiveCompare(lot.name) == .orderedSame
+                    } == true
+                    PantryBatchHeading(lot: lot, showsBatchIdentifier: similarBatch ||
+                        lot.intakeOrdinal != nil || lot.packageCode?.gs1?.lot != nil)
+                }
                 Section {
                     LabeledContent(pantryText("Recorded uses"), value: entries.count.formatted())
                         .accessibilityIdentifier("pantry.usageCount")
