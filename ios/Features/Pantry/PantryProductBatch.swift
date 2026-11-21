@@ -82,6 +82,16 @@ struct PantryProductBatch {
             return try? size.amount.multiplied(by: Rational(count))
         }
 
+        /// Reuse a complete, manually supplied label line from this physical package.
+        /// Several date statements need individual review, and other packages never inherit the stamp.
+        var reviewedDateWording: String? {
+            guard enteredByHand else { return nil }
+            let lines = original.components(separatedBy: .newlines).map { $0.trimmingCharacters(in: .whitespaces) }
+            let dates = lines.filter { PrintedDateMeaning.suggested(for: $0) != .other }
+            guard dates.count == 1, let line = dates.first, line.contains(where: \.isNumber) else { return nil }
+            return line
+        }
+
         var reviewEvidenceLine: String {
             let size = try? ComparisonModel.quantity(perPack, unit)
             return evidenceLine(unitLabel: pantryUnit(unit, singular: size?.amount == .one))

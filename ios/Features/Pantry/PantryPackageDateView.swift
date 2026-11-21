@@ -34,6 +34,7 @@ struct PantryPackageDateSection: View {
     let access: PantryDigestAccess
     let store: PantryPackageDateStore
     var scannedCode: CapturedBarcode? = nil
+    var reviewedDateWording: String? = nil
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scene
     @Environment(\.pantryDigestPermissionPrompt) private var permissionPrompt
@@ -333,7 +334,13 @@ struct PantryPackageDateSection: View {
         reviewedLot = lot; reviewedScope = access.scope
         do {
             let value = try store.load(access.scope, lot: lot.id)
-            previous = value; selectedAI = value?.selectedAI; wording = value?.originalPrintedWording ?? ""; meaning = value?.meaning ?? .other
+            previous = value; selectedAI = value?.selectedAI
+            if let value {
+                wording = value.originalPrintedWording ?? ""; meaning = value.meaning
+            } else {
+                wording = reviewedDateWording ?? ""
+                meaning = PrintedDateMeaning.suggested(for: wording)
+            }
             hasDay = value?.verifiedDay != nil
             confirmingCalendar = value?.yearNeedsReview == true
             date = value?.day?.date ?? Date()

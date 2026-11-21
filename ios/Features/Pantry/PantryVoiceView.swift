@@ -4,7 +4,7 @@ import SwiftUI
 
 /// Editable choices for one phrase. Ambiguous names, package units and remaining estimates
 /// stay unresolved until the user supplies them. No transcript is part of a save command.
-private struct VoicePantryRow {
+struct VoicePantryRow {
     enum Mode { case amount, remaining, all, usedSome, skip }
     let food: String
     let original: String
@@ -29,6 +29,14 @@ private struct VoicePantryRow {
         }
     }
     var showsAllLots = false
+
+    mutating func restoreSelection(from previous: [VoicePantryRow], in lots: [InventoryLot]) -> Bool {
+        guard let prior = previous.first(where: { $0.food == food }),
+              let id = prior.lotID, let current = lots.first(where: { $0.id == id }) else { return false }
+        showsAllLots = prior.showsAllLots
+        choose(current)
+        return true
+    }
 
     mutating func choose(_ lot: InventoryLot) {
         if let estimateLotID, estimateLotID != lot.id {
@@ -88,6 +96,9 @@ private struct VoicePantryRow {
     @State private var rows: [VoicePantryRow] = []
     @State private var basis: InventoryState?
     @State private var dateOnly = false
+    @State private var balanceFood: String?
+    @State private var editedBasis: InventoryState?
+    @State private var editedRows: [VoicePantryRow] = []
     @State private var dateEvidence: PantryVoiceDateEvidence?
     @State private var review: PantryConsumptionReview?
     @State private var saved: [InventoryLot]?
@@ -186,6 +197,8 @@ private struct VoicePantryRow {
                     if !editing {
                         reviewWordsButton.buttonStyle(PrimaryAction())
                     }
+                } else if let balanceFood {
+                    balanceSection(balanceFood)
                 } else if let review {
                     previewSection(review)
                 } else {
@@ -213,6 +226,8 @@ private struct VoicePantryRow {
                 }
                 if startingLot == nil && (stage == .choices || stage == .review) {
                     Button {
+                        editedBasis = basis
+                        editedRows = rows
                         resetReview()
                         editing = true
                     } label: {
@@ -290,7 +305,9 @@ private struct VoicePantryRow {
         .onDisappear {
             // A pushed shopping/reminder handoff still needs its saved lot and live identity.
             voice.cancel()
-            draft = ""; resetReview()
+            if balanceFood == nil {
+                draft = ""; resetReview(); editedRows = []; editedBasis = nil
+            }
         }
     }
 
@@ -311,13 +328,13 @@ private struct VoicePantryRow {
         remainingChoices = nil
         closeRemaining()
         token = UUID(); basis = nil; rows = []; review = nil; dateOnly = false
-        dateEvidence = nil; message = nil; working = false
+        dateEvidence = nil; balanceFood = nil; message = nil; working = false
     }
 
     private func erase() {
         reviewAfterEditing = false
         voice.cancel()
-        draft = ""; resetReview(); saved = nil; savedRevision = nil; identity = nil; generation = nil; editing = false
+        draft = ""; resetReview(); editedRows = []; editedBasis = nil; saved = nil; savedRevision = nil; identity = nil; generation = nil; editing = false
     }
 
     private func parse() {
@@ -344,6 +361,8 @@ private struct VoicePantryRow {
             var row = VoicePantryRow(food: observation.food, original: observation.original, reportsUse: false, mode: .remaining)
             row.applyRemaining(observation)
             rows = [row]
+        case .balanceQuery(let food):
+            balanceFood = food
         case .dateQuery(let food):
             dateOnly = true; rows = [.init(food: food, original: draft, mode: .skip)]
         case .needsReview:
@@ -351,11 +370,29 @@ private struct VoicePantryRow {
             return
         }
         for index in rows.indices where !rows[index].food.isEmpty {
+            if editedBasis == snapshot.state, rows[index].restoreSelection(from: editedRows, in: snapshot.lots) { continue }
             if let lot = PantryVoiceBatchMatcher.uniqueExact(for: rows[index].food, in: snapshot.lots) {
                 rows[index].choose(lot)
             }
         }
+        editedRows = []; editedBasis = nil
         basis = snapshot.state
+    }
+
+    private func balanceSection(_ food: String) -> some View {
+        let matches = PantryVoiceBatchMatcher.suggestions(for: food, in: lots)
+        return Section(pantryText("Recorded pantry amounts")) {
+            if matches.isEmpty {
+                Text(pantryFormat("No pantry batch matches %@.", food))
+            }
+            ForEach(matches) { lot in
+                batchHeading(lot)
+                NavigationLink(pantryText("Usage history") + " · " + pantryLocationName(lot.location)) {
+                    PantryUsageHistoryView(model: model, lotID: lot.id, origin: origin, authorized: { authorized })
+                }
+            }
+        }
+        .accessibilityIdentifier("pantry.voiceBalance")
     }
 
     private var lots: [InventoryLot] { model.snapshot?.lots ?? [] }
@@ -701,6 +738,7 @@ private struct VoicePantryRow {
             } icon: { Image(systemName: "checkmark.circle") }
             .accessibilityIdentifier("pantry.voiceSaved")
             ForEach(Array(saved.enumerated()), id: \.element.id) { index, lot in
+                Text(pantryLocationName(lot.location))
                 if let wording = lot.countWording {
                     Text(pantryFormat("%@ · Remaining estimate: %@", lot.name, wording))
                         .accessibilityIdentifier("pantry.voiceSavedWording.\(index)")

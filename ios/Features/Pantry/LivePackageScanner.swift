@@ -5,6 +5,7 @@ import VisionKit
 struct LivePackageButton: View {
     let workspaceID: UUID?
     let authorized: () -> Bool
+    var acceptsTypedLabel = false
     let receive: (CapturedBarcode) -> Void
     @Environment(\.scenePhase) private var scene
     @Environment(\.pantryDigestPermissionPrompt) private var permissionPrompt
@@ -50,7 +51,8 @@ struct LivePackageButton: View {
     }
     private func unavailable() {
         scanning = false
-        status = pantryText("Live scanning is unavailable. Choose a photo or type the code.")
+        status = pantryText(acceptsTypedLabel ? "Live scanning is unavailable. Choose a photo, or type the product name, label or code." :
+                            "Live scanning is unavailable. Choose a photo or type the code.")
     }
 }
 

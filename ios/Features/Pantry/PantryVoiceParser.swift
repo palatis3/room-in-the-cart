@@ -4,6 +4,7 @@ import CoreDomain
 enum PantryVoiceIntent: Equatable, Sendable {
     case consume([PantryVoiceItem])
     case dateQuery(String)
+    case balanceQuery(String)
     case observation(PantryVoiceObservation)
     case askRemaining(food: String?, original: String)
     case needsReview(String)
@@ -63,6 +64,13 @@ enum PantryVoiceParser {
             guard matches(#"^(?:(?:i (?:just )?)?used|(?:yo )?(?:ya )?usé|acabo de usar|delete|remove|borra|elimina|quita)\b"#, beforeUpdate) else { return review }
             command = beforeUpdate
         } else { command = spoken }
+        let question = command.trimmingCharacters(in: CharacterSet(charactersIn: "¿? "))
+        if let food = firstFood([
+            #"^how much (?:of (?:the |my )?)?(.+?) (?:do (?:i|we) have left|is left|remains)$"#,
+            #"^cu[aá]nt[oa]s? (.+?) (?:me |nos )?quedan?$"#
+        ], in: question) {
+            return .balanceQuery(food)
+        }
         if let target = dateFood(command) { return .dateQuery(target) }
         if let combined = useWithRemaining(command, original: text, localeIdentifier: localeIdentifier) { return combined }
         guard !command.contains("?"), !command.contains("¿"),
@@ -341,6 +349,11 @@ enum PantryVoiceParser {
 
     private static func checkedFood(_ name: String) -> String? {
         let trimmed = name.trimmingCharacters(in: .whitespaces)
+        if let qualified = PantryVoiceBatchMatcher.storageQualifier(in: trimmed) {
+            guard trimmed.utf8.count <= 180, PantryVoiceBatchMatcher.storageQualifier(in: qualified.food) == nil,
+                  checkedFood(qualified.food) != nil else { return nil }
+            return trimmed
+        }
         if trimmed.caseInsensitiveCompare("half and half") == .orderedSame { return trimmed }
         if matches(#"\b(?:and|y|e)\b"#, trimmed) {
             guard let list = try? NaturalListSegmenter.propose(trimmed), list.items.count == 1,

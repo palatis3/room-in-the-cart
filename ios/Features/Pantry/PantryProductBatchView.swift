@@ -8,7 +8,7 @@ struct PantryProductBatchView: View {
     @StateObject private var catalogScope = BatchCatalogScope()
     @Environment(\.pantryDigestAccess) private var access
     @ObservedObject private var memory = PantryDigestStore.shared.packMemory
-    @State private var atHome = false
+    @State private var atHome = true
     @State private var retailer = ""
     @State private var typedKind = "manual"
     @State private var repeatedScan: CapturedBarcode?
@@ -85,7 +85,7 @@ struct PantryProductBatchView: View {
                         Section {
                             PantryBatchHeading(lot: lot)
                             NavigationLink(pantryText("Add a date or reminder")) {
-                                PackageDateChoices(model: model, lot: lot, access: access, code: row.barcode)
+                                PackageDateChoices(model: model, lot: lot, access: access, code: row.barcode, reviewedDateWording: row.reviewedDateWording)
                             }.accessibilityLabel(pantryText("Add a date or reminder") + " · " + lot.packageBatchLabel)
                             .accessibilityIdentifier("pack.date." + String(row.ordinal))
                         }
@@ -97,7 +97,7 @@ struct PantryProductBatchView: View {
                             Section {
                                 PantryBatchHeading(lot: lot)
                                 NavigationLink(pantryText("Add a date or reminder")) {
-                                    PackageDateChoices(model: model, lot: lot, access: access)
+                                    PackageDateChoices(model: model, lot: lot, access: access, reviewedDateWording: row.reviewedDateWording)
                                 }.accessibilityLabel(pantryText("Add a date or reminder") + " · " + lot.packageBatchLabel)
                             }
                         }
@@ -114,7 +114,7 @@ struct PantryProductBatchView: View {
                             VStack(alignment: .leading) {
                                 Text(row.name).font(.headline)
                                 Text(row.reviewEvidenceLine)
-                                Text(pantryText("Amount usable") + " · " + (row.usable.isEmpty ? row.total?.description ?? "" : row.usable) + " " + pantryUnit(row.unit))
+                                Text(pantryText("Amount usable") + " · " + pantryPrintedQuantity(row.usable.isEmpty ? row.total?.description ?? "" : row.usable, unit: row.unit))
                                 Text(pantryLocationName(row.location))
                             }.accessibilityElement(children: .combine)
                         }
@@ -146,9 +146,17 @@ struct PantryProductBatchView: View {
                     Button(pantryText("Edit batch")) { self.review = nil; result = nil }
                 }.disabled(working)
             } else {
+                Section {
+                    Picker(pantryText("Package source"), selection: $atHome) {
+                        Text(pantryText("Counted at home")).tag(true)
+                        Text(pantryText("Received purchase")).tag(false)
+                    }.accessibilityIdentifier("pack.source")
+                } footer: {
+                    Text(pantryText("Choose Counted at home for food you already have."))
+                }
                 Section(pantryText("Add a product")) {
                     LivePackageButton(workspaceID: batch.workspaceID,
-                                      authorized: { authorized && !working && review == nil && !saved }, receive: scanned)
+                                      authorized: { authorized && !working && review == nil && !saved }, acceptsTypedLabel: true, receive: scanned)
                     TextField(pantryText("Barcode, if available"), text: $code).focused($focus, equals: "code")
                         .autocorrectionDisabled().textInputAutocapitalization(.never).accessibilityIdentifier("productBatch.code")
                     if code.count == 8 && code.allSatisfy(\.isNumber) {
@@ -235,10 +243,6 @@ struct PantryProductBatchView: View {
                         Button(pantryText("Done")) { didFinishWithLot(existing.lotID); dismiss() }.buttonStyle(PrimaryAction())
                     } else {
                     Section(pantryText("Record these packages")) {
-                        Picker(pantryText("Package source"), selection: $atHome) {
-                            Text(pantryText("Received purchase")).tag(false)
-                            Text(pantryText("Counted at home")).tag(true)
-                        }.accessibilityIdentifier("pack.source")
                         if !atHome {
                         TextField(pantryText("Store or branch"), text: $merchant).focused($focus, equals: "merchant")
                             .accessibilityIdentifier("productBatch.merchant")
@@ -297,7 +301,7 @@ struct PantryProductBatchView: View {
             Text(row.name.isEmpty ? (row.barcode?.value ?? pantryText("Product photo")) : row.name)
             if row.existingReceipt != nil { Text(pantryText(row.receiptLinkSaved ? "Linked to a recorded purchase" : "Existing purchase selected · excluded from new stock")).font(.caption) }
             else if !row.included { Text(pantryText("Skipped")).font(.caption) }
-            else if let total = row.total { Text(total.description + " " + pantryUnit(row.unit)).font(.caption) }
+            else if let total = row.total { Text(pantryPrintedQuantity(total.description, unit: row.unit)).font(.caption) }
             else { Text(pantryText("Choose a package size and count.")).font(.caption) }
         }
         if #available(iOS 18, *) {
@@ -561,7 +565,7 @@ private struct PantryProductCandidateEditor: View {
                                 TextField(row.requiresExplicitUsable ? pantryText("Confirm amount") : total.description, text: $row.usable)
                                     .multilineTextAlignment(.trailing).focused($field, equals: "usable")
                                     .accessibilityIdentifier("productBatch.usable")
-                                Text(pantryUnit(row.unit))
+                                Text(pantryUnit(row.unit, singular: (try? row.usableQuantity())?.amount == .one))
                             }
                         }
                         if row.linkedDelivery == nil {

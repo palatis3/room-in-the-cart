@@ -1,6 +1,57 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Recorded pantry amounts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recorded pantry amounts"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidades registradas en la despensa"
+          }
+        }
+      }
+    },
+    "Choose Counted at home for food you already have.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose Counted at home for food you already have."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige «Contado en casa» para los alimentos que ya tienes."
+          }
+        }
+      }
+    },
+    "Live scanning is unavailable. Choose a photo, or type the product name, label or code.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Live scanning is unavailable. Choose a photo, or type the product name, label or code."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El escaneo en directo no está disponible. Elige una foto o escribe el nombre del producto, la etiqueta o el código."
+          }
+        }
+      }
+    },
     "Original printed wording": {
       "extractionState": "manual",
       "localizations": {

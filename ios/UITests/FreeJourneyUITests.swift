@@ -331,6 +331,8 @@ import XCTest
         XCTAssertTrue(originalWrapsLabel.components(separatedBy: "Batch ").first?.contains("6 units") == true,
                       originalWrapsLabel)
         tap(app.buttons["pantry.productBatch"])
+        tap(app.buttons["pack.source"])
+        tap(app.buttons["Received purchase"])
         let code = app.textFields["productBatch.code"]
         tap(code); code.typeText("LOCAL-OATS")
         tap(app.buttons["productBatch.add"])
@@ -398,6 +400,8 @@ import XCTest
         tap(app.shopToolButton("shop.myPantry"))
         tap(app.buttons["pantry.setup.apply"])
         tap(app.buttons["pantry.productBatch"])
+        tap(app.buttons["pack.source"])
+        tap(app.buttons["Received purchase"])
         enableSwitch("productBatch.photoConsent")
 
         func choose(day: Int) {

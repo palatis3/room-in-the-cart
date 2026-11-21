@@ -3,6 +3,24 @@ import XCTest
 @testable import RoomInTheCart
 
 final class PantryVoiceParserTests: XCTestCase {
+    func testReadOnlyBalanceQuestionsAndLocationQualifiedUnmeasuredUses() throws {
+        XCTAssertEqual(PantryVoiceParser.parse("¿Cuánto ajonjolí me queda?", localeIdentifier: "es_MX"), .balanceQuery("ajonjolí"))
+        XCTAssertEqual(PantryVoiceParser.parse("How much sesame do I have left?", localeIdentifier: "en_US"), .balanceQuery("sesame"))
+        for (command, food, locale) in [
+            ("Usé un poco de ajonjolí del refrigerador", "ajonjolí del refrigerador", "es_MX"),
+            ("I used some sesame from the fridge", "sesame from the fridge", "en_US")
+        ] {
+            guard case .consume(let items) = PantryVoiceParser.parse(command, localeIdentifier: locale) else {
+                return XCTFail(command)
+            }
+            XCTAssertEqual(items.count, 1)
+            XCTAssertEqual(items.first?.food, food)
+            XCTAssertEqual(items.first?.amount, .someUsed)
+        }
+        let unsupported = "How much rice do I have left? add beans"
+        XCTAssertEqual(PantryVoiceParser.parse(unsupported, localeIdentifier: "en_US"), .needsReview(unsupported))
+    }
+
     func testNaturalEnglishAndSpanishConsumptionKeepEachQuantityAndPieceWording() throws {
         for (locale, command, names, rows, piece) in [
             ("en-US", "hey I just used two eggs and two pieces of bread and some flour",

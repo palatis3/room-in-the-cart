@@ -77,6 +77,8 @@ struct PantrySetupView: View {
                                 .buttonStyle(PrimaryAction()).accessibilityIdentifier("pantry.setup.firstFood")
                                 Button(pantryText("Review a receipt")) { Task { await perform(.apply, opening: .receipt) } }
                                     .accessibilityIdentifier("pantry.setup.receipt")
+                                Button(pantryText("Scan products")) { Task { await perform(.apply, opening: .products) } }
+                                    .accessibilityIdentifier("pantry.setup.products")
                                 Button(pantryText("Other pantry options")) { Task { await perform(.apply) } }
                                     .accessibilityIdentifier("pantry.setup.apply")
                             } else if startsEmpty { applySetup(startsEmpty: true) }
