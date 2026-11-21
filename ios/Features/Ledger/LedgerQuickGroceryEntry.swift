@@ -127,6 +127,7 @@ private struct QuickGroceryField: View {
                 Button(quickGroceryText("Add")) { submit() }
                     .buttonStyle(PrimaryAction()).fixedSize(horizontal: true, vertical: false)
                     .accessibilityLabel(quickGroceryText("Add grocery"))
+                    .accessibilityHint(quickGroceryFormat("Adds to the list “%@”.", model.shop?.title ?? ledgerText("Pickup")))
                     .accessibilityIdentifier("quickGrocery.add")
                     .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || busy)
             }

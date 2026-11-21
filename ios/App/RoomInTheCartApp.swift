@@ -521,7 +521,8 @@ struct ShopView: View {
                     LedgerQuickGroceryEntry(model: ledger, prominent: true)
                     BrandScopeLabel(quickGroceryText("Private on this iPhone"), systemImage: "lock")
                     if ledger.shop == nil {
-                        Text(tr("Works offline. No account needed."))
+                        Text(quickGroceryFormat("Your first grocery starts “%@”. Works offline without an account.", ledgerText("Pickup")))
+                            .accessibilityIdentifier("quickGrocery.firstDestination")
                             .font(.footnote).foregroundStyle(Theme.secondary)
                     }
                 }
@@ -644,7 +645,7 @@ struct ShopView: View {
         VStack(alignment: .leading, spacing: 8) {
             if ledger.shop == nil {
                 VStack(alignment: .leading, spacing: 0) {
-                    Button { showingFirstList = true } label: { ShopToolLabel(ledgerText("Add a list"), "text.badge.plus", chevron: true) }
+                    Button { showingFirstList = true } label: { ShopToolLabel(ledgerText("Add several items"), "text.badge.plus", chevron: true) }
                         .disabled(ledger.firstListStore == nil || ledger.saving || ledger.hasPendingSave)
                         .accessibilityIdentifier("shop.addFirstList")
                     Divider()

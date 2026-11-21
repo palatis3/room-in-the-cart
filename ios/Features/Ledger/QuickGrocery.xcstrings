@@ -656,6 +656,38 @@
           }
         }
       }
+    },
+    "Your first grocery starts “%@”. Works offline without an account.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your first grocery starts “%@”. Works offline without an account."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El primer producto crea la lista «%@». Funciona sin conexión y sin cuenta."
+          }
+        }
+      }
+    },
+    "Adds to the list “%@”.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adds to the list “%@”."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se añade a la lista «%@»."
+          }
+        }
+      }
     }
   },
   "version": "1.0"
