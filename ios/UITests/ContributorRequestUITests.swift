@@ -401,13 +401,16 @@ import XCTest
         XCTAssertEqual(correction.value as? String, "Keep the original correction draft", app.debugDescription)
         XCTAssertEqual(element("fixture.reportPosts").label, "Report POSTs: 0")
         tap(app.buttons["Report what you cooked"])
-        fill("3", into: "helper.cookingReport.servings")
         let ingredients = "Used 2 wraps; substituted rice for the remaining wrap. Salt amount unknown."
         let leftovers = "1 portion in the fridge. No freezer portions."
-        fill(ingredients, into: "helper.cookingReport.ingredients")
-        fill(leftovers, into: "helper.cookingReport.leftovers")
-        let done = app.buttons["helper.cookingReport.done"]
-        if done.exists && done.isHittable { done.tap() }
+        // Move directly between adjacent report fields and finish editing once.
+        fill("3", into: "helper.cookingReport.servings", dismissAfterEntry: false)
+        fill(ingredients, into: "helper.cookingReport.ingredients", dismissAfterEntry: false)
+        fill(leftovers, into: "helper.cookingReport.leftovers", dismissAfterEntry: false)
+        let doneID = "helper.cookingReport.done"
+        XCTAssertTrue(app.waitForDoneAboveKeyboard(identifier: doneID))
+        app.buttons[doneID].tap()
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: doneID))
         XCTAssertFalse(app.buttons["helper.cookingReport.send"].exists)
         tap(app.buttons["helper.cookingReport.review"])
         let expected = "Cooking report\n\nServings made\n3\n\nIngredients used and substitutions\n" + ingredients +
@@ -735,7 +738,8 @@ import XCTest
         }
         XCTFail("No visible switch tap point after 24 reveal attempts: \(label)")
     }
-    private func fill(_ text: String, into id: String, replacing: Bool = false, input: XCUIElement? = nil) {
+    private func fill(_ text: String, into id: String, replacing: Bool = false, input: XCUIElement? = nil,
+                      dismissAfterEntry: Bool = true) {
         // A Form can expose both its StaticText label and its input with the
         // same name. Never let a label become the typing target.
         let field = input ?? (id == "capture.editor" ? app.textViews[id] : app.textFields[id])
@@ -768,6 +772,7 @@ import XCTest
             XCTAssertFalse(app.keyboards.firstMatch.exists, "Revealing the editor must not reopen the keyboard")
             XCTAssertEqual(field.value as? String, text, "Dismissing the keyboard must preserve the draft")
         }
+        guard dismissAfterEntry else { return }
         let done = app.buttons.matching(NSPredicate(format: "label == %@", "Done")).firstMatch
         if done.exists && done.isHittable { done.tap() }
     }
