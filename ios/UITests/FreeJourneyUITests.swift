@@ -277,14 +277,23 @@ import XCTest
         XCTAssertEqual(home.value as? String, "1")
     }
 
+    private func addTypedProduct(_ value: String, using field: XCUIElement) {
+        tap(field)
+        field.typeText(value)
+        XCTAssertEqual(field.value as? String, value)
+        tap(app.buttons["productBatch.keyboardDone"])
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+        XCTAssertEqual(field.value as? String, value)
+        tap(app.buttons["productBatch.add"])
+    }
+
     func testConfirmedPackAtHomeFindsOnlyItsTwoPhysicalBatchesAfterRelaunch() {
         launch(reset: true)
         tap(app.tabBars.buttons["Pantry"])
         tap(app.buttons["pantry.setup.apply"])
         tap(app.buttons["pantry.productBatch"])
         let code = app.textFields["productBatch.code"]
-        tap(code); code.typeText("012345000058")
-        tap(app.buttons["productBatch.add"])
+        addTypedProduct("012345000058", using: code)
         tap(app.buttons["productBatch.row.0"])
         fill("Small bean can", into: "productBatch.productName", requireDone: true, control: app.textFields["productBatch.productName"])
         fill("1", into: "productBatch.packSize", requireDone: true, control: app.textFields["productBatch.packSize"])
@@ -334,10 +343,8 @@ import XCTest
         tap(app.buttons["pack.source"])
         tap(app.buttons["Received purchase"])
         let code = app.textFields["productBatch.code"]
-        tap(code); code.typeText("LOCAL-OATS")
-        tap(app.buttons["productBatch.add"])
-        tap(code); code.typeText("LOCAL-OATS")
-        tap(app.buttons["productBatch.add"])
+        addTypedProduct("LOCAL-OATS", using: code)
+        addTypedProduct("LOCAL-OATS", using: code)
         let duplicate = app.staticTexts["productBatch.inputStatus"]
         XCTAssertTrue(duplicate.waitForExistence(timeout: 5))
         XCTAssertTrue(duplicate.label.contains("Already in this batch"))
@@ -351,8 +358,7 @@ import XCTest
         closeReviewedProduct()
 
         let label = app.textViews["productBatch.label"]
-        tap(label); label.typeText("Wraps")
-        tap(app.buttons["productBatch.add"])
+        addTypedProduct("Wraps", using: label)
         tap(app.buttons["productBatch.row.1"])
         fill("8", into: "productBatch.packSize", requireDone: true, control: app.textFields["productBatch.packSize"])
         fill("1", into: "productBatch.packCount", requireDone: true, control: app.textFields["productBatch.packCount"])
