@@ -10,9 +10,10 @@ import subprocess
 import sys
 from uuid import UUID
 
-from plan_ios_tests import DURATIONS_PATH, make_plan, write_plan
+from plan_ios_tests import DURATIONS_PATH, make_plan, selector, write_plan
 
 
+SHOPPER_REGRESSIONS = Path(__file__).with_name("ios_shopper_regressions.json")
 BUNDLE_ID = "dev.roominthecart.app.debug"
 # The single complete enumeration.errors entry from Xcode 26.3 in job 127611996888.
 # Fail closed if Xcode reports a different cause or app, including in the same entry.
@@ -26,6 +27,24 @@ HOST_MISSING = (
     f'(Underlying Error: The request to open "{BUNDLE_ID}" failed. {NOT_FOUND} '
     f'(Underlying Error: The operation couldn’t be completed. Application "{BUNDLE_ID}" is unknown to FrontBoard.))))'
 )
+
+
+def require_shopper_regressions(plan):
+    journeys = json.loads(SHOPPER_REGRESSIONS.read_bytes())
+    if not isinstance(journeys, dict) or not journeys:
+        raise ValueError(f"{SHOPPER_REGRESSIONS.name} must list shopper journeys")
+    scheduled = {
+        selector(identifier)
+        for job in plan["include"]
+        for identifier in plan["shards"][job["shard"]]["test_identifiers"]
+    }
+    missing = []
+    for journey, required in journeys.items():
+        if not isinstance(required, list) or not required or not all(isinstance(case, str) for case in required):
+            raise ValueError(f"{SHOPPER_REGRESSIONS.name}: {journey} must list required test selectors")
+        missing.extend(f"{journey}: {case}" for case in required if case not in scheduled)
+    if missing:
+        raise ValueError("Required shopper regressions missing from the enabled iOS shards:\n" + "\n".join(missing))
 
 
 def discover(simulator, products, diagnostics, plan_dir):
@@ -68,6 +87,7 @@ def discover(simulator, products, diagnostics, plan_dir):
         path, inventory = enumerate_tests(2)
 
     plan = make_plan(inventory, json.loads(DURATIONS_PATH.read_bytes()), ui_shards=10)
+    require_shopper_regressions(plan)
     write_plan(plan, plan_dir)
     shutil.copyfile(path, plan_dir / "test-enumeration.json")
 
