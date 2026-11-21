@@ -98,7 +98,7 @@ struct ComparisonView: View {
                             ToolbarItem(placement: .topBarTrailing) { accessibleSaveControl }
                         }
                     }
-                    .alert(tr("Save comparison"), isPresented: Binding(
+                    .alert(tr("Save"), isPresented: Binding(
                         get: { toolbarSaveError != nil },
                         set: { if !$0 { toolbarSaveError = nil } }
                     ), presenting: toolbarSaveError) { _ in
@@ -128,10 +128,16 @@ struct ComparisonView: View {
                 .accessibilityIdentifier("comparison.toolbarSaved")
                 .accessibilityFocused($resultFocused, equals: .toolbarSaved)
         } else {
-            Button(tr("Save")) { saveComparison(focusAfterSave: .toolbarSaved) }
-                .accessibilityLabel(tr(model.saving ? "Saving…" : "Save comparison"))
-                .accessibilityIdentifier("comparison.toolbarSave")
-                .disabled(model.saving)
+            Button {
+                saveComparison(focusAfterSave: .toolbarSaved)
+            } label: {
+                Text(tr("Save"))
+                    .frame(minWidth: 44, minHeight: 44)
+                    .contentShape(Rectangle())
+            }
+            .accessibilityLabel(tr(model.saving ? "Saving…" : "Save comparison"))
+            .accessibilityIdentifier("comparison.toolbarSave")
+            .disabled(model.saving)
         }
     }
 
