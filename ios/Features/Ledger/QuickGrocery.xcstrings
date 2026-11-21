@@ -241,18 +241,18 @@
         }
       }
     },
-    "View list": {
+    "View shopping list": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "View list"
+            "value": "View shopping list"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ver lista"
+            "value": "Ver lista de compras"
           }
         }
       }

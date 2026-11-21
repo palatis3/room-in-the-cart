@@ -424,7 +424,7 @@ private struct VoicePantryRow {
             case .amount: ""
             }
             VStack(alignment: .leading, spacing: 7) {
-                BrandScopeLabel(currentChoice, systemImage: "checkmark")
+                BrandScopeLabel(currentChoice, systemImage: "checkmark", showsSelection: true)
                     .accessibilityIdentifier("pantry.voiceEstimate.\(index)")
                 if row.mode == .usedSome {
                     Text(pantryText("Record one use. The amount remaining will be unknown."))

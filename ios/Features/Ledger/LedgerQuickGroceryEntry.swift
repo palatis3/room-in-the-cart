@@ -158,7 +158,7 @@ private struct QuickGroceryField: View {
                         .disabled(busy).accessibilityIdentifier("quickGrocery.undo")
                         if prominent {
                             RestorableShoppingListLink {
-                                Text(quickGroceryText("View list")).underline()
+                                Text(quickGroceryText("View shopping list")).underline()
                                     .frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
                             }
                             .buttonStyle(.borderless)
