@@ -284,11 +284,14 @@ struct TonightRecipeReview: View {
                 }
                 .textFieldStyle(WorkingInputStyle())
                 .onChange(of: candidate != nil) { _, reviewing in
-                    guard let field = editingReviewedField else { return }
                     if reviewing {
-                        scroll.scrollTo(reviewAnchor(for: field), anchor: .center)
-                        editingReviewedField = nil
-                    } else {
+                        if let field = editingReviewedField {
+                            scroll.scrollTo(reviewAnchor(for: field), anchor: .center)
+                            editingReviewedField = nil
+                        } else {
+                            scroll.scrollTo(reviewAnchor(for: "title"), anchor: .top)
+                        }
+                    } else if let field = editingReviewedField {
                         advance(to: field, using: scroll)
                     }
                 }

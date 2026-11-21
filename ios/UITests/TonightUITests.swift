@@ -82,6 +82,9 @@ import XCTest
         dismissRecipeKeyboard()
         tap(app.buttons["tonight.recipe.review"])
         let minutes = app.descendants(matching: .any).matching(identifier: "tonight.recipe.reviewedMinutes").firstMatch
+        let reviewedTitle = app.buttons["tonight.recipe.review.title"]
+        XCTAssertTrue(reviewedTitle.wait(for: \.isHittable, toEqual: true, timeout: 5))
+        XCTAssertTrue(reviewedTitle.label.contains("Sopa"))
         XCTAssertTrue(minutes.waitForExistence(timeout: 5))
         XCTAssertTrue([minutes.label, minutes.value as? String ?? ""].joined(separator: " ").contains("10"))
         let row = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@ AND label CONTAINS %@", "Limón", "1")).firstMatch
