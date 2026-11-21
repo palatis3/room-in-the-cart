@@ -18,19 +18,19 @@
         }
       }
     },
-    "Change shopping list": {
+    "Change list": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Change shopping list"
+            "value": "Change list"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cambiar la lista de compras"
+            "value": "Cambiar lista"
           }
         }
       }

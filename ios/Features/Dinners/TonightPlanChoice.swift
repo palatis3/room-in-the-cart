@@ -327,7 +327,7 @@ struct SavedDinnerHandoffView: View {
             }
             Button(dinnerText("Create shopping list")) { startingPickup = true }
         } label: {
-            Label(dinnerText(ledger.shop == nil ? "Choose a shopping list" : "Change shopping list"),
+            Label(dinnerText(ledger.shop == nil ? "Choose a shopping list" : "Change list"),
                   systemImage: "chevron.up.chevron.down")
         }
         .disabled(busy || ledger.saving || ledger.hasPendingSave)
