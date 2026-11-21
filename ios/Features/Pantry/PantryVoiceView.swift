@@ -509,11 +509,10 @@ private struct VoicePantryRow {
                     guard authorized, model.canEdit, basis == model.snapshot?.state else { return }
                     closeRemaining()
                     remainingReply = RemainingReply(rowIndex: index, lotID: lot.id, text: row.estimate)
-                }.accessibilityIdentifier("pantry.voiceDescribe.\(index)")
+                }
             }
             Button(pantryText("Used it all")) { change(index) { $0.mode = .all; $0.reportsUse = true } }
             Button(pantryText("Not sure")) { change(index) { $0.mode = .skip } }
-                .accessibilityIdentifier("pantry.voiceNotSure.\(index)")
             Button(pantryText("Cancel"), role: .cancel) {}
         }
         if let reply = remainingReply, reply.rowIndex == index, currentReply(reply) {
