@@ -559,8 +559,12 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(help.label.contains("Soporte") && help.label.contains("códigos de acceso"))
         let offline = app.staticTexts["guardian.familyGuide.offline"]
         reveal(offline)
-        XCTAssertTrue(offline.label.contains("sin conexión a internet"))
-        XCTAssertTrue(offline.label.contains("no tiene un enlace"))
+        // The ordinary Debug scheme uses the companion Help address from config/staging.json.
+        XCTAssertEqual(offline.label, "Puedes consultar esta guía en este iPhone sin conexión a internet.")
+        let online = element("guardian.familyGuide.online")
+        reveal(online)
+        XCTAssertTrue(online.isHittable)
+        XCTAssertEqual(online.label, "Leer la guía familiar en línea")
         tap(app.buttons["guardian.familyGuide.support"])
         let support = app.navigationBars["Soporte"]
         XCTAssertTrue(support.waitForExistence(timeout: 6))
