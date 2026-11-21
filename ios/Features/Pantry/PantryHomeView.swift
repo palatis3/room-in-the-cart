@@ -619,7 +619,7 @@ private struct PantryFoodEditor: View {
                             if existingFoodID == nil {
                                 WorkingField(pantryText("Food name")) {
                                     TextField("", text: $name)
-                                        .textFieldStyle(.roundedBorder)
+                                        .textFieldStyle(WorkingInputStyle())
                                         .focused($editing)
                                         .accessibilityIdentifier("pantry.foodName")
                                 }
@@ -646,7 +646,7 @@ private struct PantryFoodEditor: View {
                 Section {
                     WorkingField(pantryText(purchase == nil ? "Amount, if known" : "Amount remaining")) {
                         TextField("", text: $amount)
-                            .textFieldStyle(.roundedBorder)
+                            .textFieldStyle(WorkingInputStyle())
                             .focused($editing)
                             .accessibilityIdentifier("pantry.amount")
                     }

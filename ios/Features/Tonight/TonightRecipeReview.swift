@@ -64,7 +64,7 @@ struct TonightRecipeReview: View {
     }
     private var screenTitle: String {
         if savedRecipe != nil { return tonightText("Recipe saved") }
-        if candidate != nil { return tonightText("Review recipe facts") }
+        if candidate != nil { return tonightText("recipe.review.screenTitle") }
         if template != nil { return tonightText("Edit recipe") }
         if source != nil { return tonightText("Review a recipe") }
         return tonightText("Enter a recipe")
@@ -223,7 +223,7 @@ struct TonightRecipeReview: View {
                         Text(ledgerText("Local to this iPhone")).font(.footnote)
                     }
                 }
-                .textFieldStyle(.roundedBorder)
+                .textFieldStyle(WorkingInputStyle())
                 .onChange(of: candidate != nil) { _, reviewing in
                     guard let field = editingReviewedField else { return }
                     if reviewing {

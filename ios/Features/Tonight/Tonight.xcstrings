@@ -1361,6 +1361,24 @@
         }
       }
     },
+    "recipe.review.screenTitle": {
+      "comment": "Compact navigation title above the editable recipe review.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review recipe facts"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar receta"
+          }
+        }
+      }
+    },
     "Review restrictions and missing information": {
       "extractionState": "manual",
       "localizations": {
