@@ -452,6 +452,7 @@
 				"RITC_SUPPORT_EMAIL" = "hello@roominthecart.com";
 				"RITC_OPERATOR_NAME" = "Venture House Group LLC";
 				"RITC_HELP_URL" = "https://room-in-the-cart-staging.vercel.app/help";
+				"RITC_PUBLIC_WEBSITE_URL" = "";
 				"RITC_EMAIL_OTP_ENABLED" = "NO";
 				"RITC_REGIONAL_AGE_CHECK_ENABLED" = "NO";
 				"RITC_BUILD_ENVIRONMENT" = "Debug";
@@ -5751,6 +5752,7 @@
 				"RITC_SUPPORT_EMAIL" = "hello@roominthecart.com";
 				"RITC_OPERATOR_NAME" = "Venture House Group LLC";
 				"RITC_HELP_URL" = "https://room-in-the-cart-staging.vercel.app/help";
+				"RITC_PUBLIC_WEBSITE_URL" = "";
 				"RITC_EMAIL_OTP_ENABLED" = "NO";
 				"RITC_REGIONAL_AGE_CHECK_ENABLED" = "NO";
 				"RITC_BUILD_ENVIRONMENT" = "Staging";
@@ -6872,6 +6874,7 @@
 				"RITC_SUPPORT_EMAIL" = "hello@roominthecart.com";
 				"RITC_OPERATOR_NAME" = "Venture House Group LLC";
 				"RITC_HELP_URL" = "";
+				"RITC_PUBLIC_WEBSITE_URL" = "";
 				"RITC_EMAIL_OTP_ENABLED" = "NO";
 				"RITC_REGIONAL_AGE_CHECK_ENABLED" = "NO";
 				"RITC_BUILD_ENVIRONMENT" = "Release";

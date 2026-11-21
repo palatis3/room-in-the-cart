@@ -27,6 +27,50 @@ final class HelpConfigurationTests: XCTestCase {
         XCTAssertEqual(MembershipConfiguration.fromBundle(bundle).privacyURL, spanish.privacyURL)
     }
 
+    func testPublicWebsiteAloneLocalizesHelpAndFamilyWithoutActivatingHouseholdOrBilling() throws {
+        let origin = "https://family.grocery-app.com:8443"
+        let bundle = try testBundle(["PublicWebsiteURL": origin + "/", "HouseholdSubscriptionProductID": "family.annual"])
+        for (locale, language) in [("es-MX", "es"), ("en-US", "en")] {
+            let config = HelpConfiguration.fromBundle(bundle, language: locale)
+            XCTAssertEqual(config.helpURL?.absoluteString, origin + "/help?lang=" + language)
+            XCTAssertEqual(config.familyHelpURL?.absoluteString, origin + "/help?lang=" + language + "#child-permission")
+            XCTAssertEqual(config.supportURL?.absoluteString, origin + "/support?lang=" + language)
+            XCTAssertEqual(config.privacyURL?.absoluteString, origin + "/privacy?lang=" + language)
+            XCTAssertEqual(config.termsURL?.absoluteString, origin + "/terms?lang=" + language)
+        }
+        let diagnostics = SupportDiagnostics(bundle: bundle, systemVersion: "17", language: "es")
+        XCTAssertFalse(diagnostics.householdConfigured)
+        XCTAssertFalse(diagnostics.membershipConfigured)
+        XCTAssertFalse(MembershipConfiguration.fromBundle(bundle).isReady)
+    }
+
+    func testExplicitWebsiteKeepsCustomDocumentsAndUsesItsOwnOriginsFamilyGuide() throws {
+        let docs = "https://docs.grocery-app.com/help?lang=fr&topic=a%2Fb#families"
+        let policy = "https://legal.grocery-app.com/privacy?document=current#read"
+        let terms = "https://family.grocery-app.com/terms?v=2#one"
+        let bundle = try testBundle(["PublicWebsiteURL": "https://family.grocery-app.com",
+            "HouseholdServiceURL": "https://api.grocery-app.com", "HelpURL": docs,
+            "PrivacyPolicyURL": policy, "TermsOfUseURL": terms, "SupportURL": "https://api.grocery-app.com/support"])
+        let config = HelpConfiguration.fromBundle(bundle, language: "es")
+        XCTAssertEqual(config.helpURL?.absoluteString, docs)
+        XCTAssertEqual(config.privacyURL?.absoluteString, policy)
+        XCTAssertEqual(config.termsURL?.absoluteString, terms)
+        XCTAssertEqual(config.supportURL?.absoluteString, "https://api.grocery-app.com/support")
+        XCTAssertEqual(config.familyHelpURL?.absoluteString, "https://family.grocery-app.com/help?lang=es#child-permission")
+    }
+
+    func testMissingOrMalformedWebsiteDoesNotInventPublicDestinations() throws {
+        for origin in ["", "http://family.grocery-app.com", "https://user@family.grocery-app.com",
+                       "https://family.grocery-app.com/help", "https://family.grocery-app.com/?", "https://family.grocery-app.com/#operator"] {
+            let config = HelpConfiguration.fromBundle(try testBundle(["PublicWebsiteURL": origin]))
+            XCTAssertNil(config.helpURL, origin)
+            XCTAssertNil(config.familyHelpURL, origin)
+        }
+        let config = HelpConfiguration.fromBundle(try testBundle(["PublicWebsiteURL": "https://family.grocery-app.com",
+            "HelpURL": "http://docs.grocery-app.com/help"]))
+        XCTAssertNil(config.helpURL)
+    }
+
     func testFamilyGuideUsesOnlyTheConfiguredCompanionHelpAddress() throws {
         let base = ["HouseholdServiceURL": "https://grocery-app.com", "HelpURL": "https://grocery-app.com/help"]
         let bundle = try testBundle(base)

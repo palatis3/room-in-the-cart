@@ -155,7 +155,10 @@ struct MembershipConfiguration: Sendable {
             return value
         }
         let pages = HelpConfiguration.fromBundle(bundle)
-        return Self(productID: value("HouseholdSubscriptionProductID"), privacyURL: pages.privacyURL, termsURL: pages.termsURL)
+        // Purchase disclosures still require the operator-approved individual URLs.
+        return Self(productID: value("HouseholdSubscriptionProductID"),
+                    privacyURL: value("PrivacyPolicyURL") == nil ? nil : pages.privacyURL,
+                    termsURL: value("TermsOfUseURL") == nil ? nil : pages.termsURL)
     }
     var isReady: Bool { productID != nil && privacyURL != nil && termsURL != nil }
 }
