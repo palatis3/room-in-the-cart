@@ -408,6 +408,9 @@ final class RoomInTheCartUITests: XCTestCase {
         let help = app.staticTexts["guardian.familyGuide.joinHelp"]
         reveal(help)
         XCTAssertTrue(help.label.contains("Soporte") && help.label.contains("códigos de acceso"))
+        let offline = app.staticTexts["guardian.familyGuide.offline"]
+        reveal(offline)
+        XCTAssertTrue(offline.label.contains("sin conexión a internet"))
         tap(app.buttons["guardian.familyGuide.support"])
         let support = app.navigationBars["Soporte"]
         XCTAssertTrue(support.waitForExistence(timeout: 6))

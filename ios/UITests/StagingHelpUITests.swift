@@ -49,7 +49,11 @@ final class StagingHelpUITests: XCTestCase {
         XCTAssertTrue(web.waitForExistence(timeout: 20))
         let heading = web.staticTexts["Menores y permiso del tutor"].firstMatch
         XCTAssertTrue(heading.waitForExistence(timeout: 20))
-        XCTAssertTrue(heading.isHittable, "The configured Spanish family section should open at its own anchor.")
+        // The contents menu repeats the section heading. Only the section itself has its scope paragraph.
+        let scope = web.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@",
+            "Con el permiso del tutor y un dispositivo vinculado")).firstMatch
+        XCTAssertTrue(scope.waitForExistence(timeout: 12))
+        XCTAssertTrue(scope.isHittable, "The configured Spanish family section should open at its own anchor.")
         let done = app.buttons.matching(NSPredicate(format: "label IN %@", ["Done", "Listo", "OK"])).firstMatch
         XCTAssertTrue(done.waitForExistence(timeout: 5))
         done.tap()
