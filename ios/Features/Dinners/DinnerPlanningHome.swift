@@ -454,11 +454,73 @@ struct DinnerPreviewView: View {
     @ObservedObject var model: DinnerFeatureModel
     @Environment(\.dismiss) private var dismiss
     @Environment(\.closeDinnerDecision) private var close
+    @State private var detailedReviewID: UUID?
+    @State private var saved: SavedSchedule?
+    @AccessibilityFocusState private var savedFocused: Bool
+
+    private struct SavedSchedule {
+        let identity: DinnerFeatureModel.EditorIdentity
+        let reviewID: UUID
+        let mealID: UUID
+    }
+
+    private var savedMeal: MealOccurrence? {
+        guard let saved, model.accessAvailable, model.editorIdentity == saved.identity,
+              model.state.applyReceipts.contains(where: { $0.id == saved.reviewID }),
+              let meal = model.shop?.mealOccurrences.first(where: { $0.id == saved.mealID && $0.removedAt == nil }) else { return nil }
+        return meal
+    }
+
+    @ViewBuilder private func scheduleFacts(_ meal: MealOccurrence) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(verbatim: meal.title).font(.headline)
+            if let day = meal.scheduledDay, let date = day.date {
+                Text(date.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted, timeZone: TimeZone(identifier: day.timeZoneIdentifier) ?? .current)))
+            }
+            Text(dinnerFormat("Servings: %@", meal.servings.description))
+        }.accessibilityElement(children: .combine).accessibilityIdentifier("dinnerPreviewMeal-" + meal.id.uuidString)
+    }
+
     private func finish() { if let close { close() } else { dismiss() } }
     var body: some View {
         List {
             Group {
-                if let preview = model.preview, model.canReviewPreview {
+                if let meal = savedMeal {
+                    Section {
+                        Label(dinnerText("Dinner changes saved."), systemImage: "checkmark.circle.fill")
+                            .font(.headline).accessibilityFocused($savedFocused).accessibilityIdentifier("dinner.schedule.saved")
+                            .onAppear { savedFocused = true }
+                        scheduleFacts(meal)
+                        Button(ledgerText("Done")) { finish() }.accessibilityIdentifier("dinner.schedule.done")
+                    }
+                } else if let preview = model.preview, model.canReviewPreview,
+                          detailedReviewID != preview.id, model.canApply, let workspaceID = model.localIdeaWorkspaceID,
+                          let meal = preview.unchangedGroceriesForScheduleEdit(in: model.workspace, workspaceID: workspaceID) {
+                    Section {
+                        scheduleFacts(meal)
+                        let ingredientIDs = Set(meal.ingredientContributionIDs)
+                        let names = preview.projectedContributions.filter { ingredientIDs.contains($0.id) && $0.removedAt == nil }.map(\.productName)
+                        Text(names.count <= 2 && !names.isEmpty
+                            ? dinnerFormat("The grocery amounts for %@ stay the same.", ListFormatter.localizedString(byJoining: names))
+                            : dinnerFormat("Grocery amounts stay the same for %lld ingredients.", Int64(names.count)))
+                            .accessibilityIdentifier("dinner.schedule.groceries")
+                        Button(dinnerText("Save dinner plan")) {
+                            guard let identity = model.editorIdentity else { return }
+                            Task {
+                                if await model.applyPreview() {
+                                    saved = SavedSchedule(identity: identity, reviewID: preview.id, mealID: meal.id)
+                                }
+                            }
+                        }.buttonStyle(PrimaryAction()).disabled(!model.canApply)
+                            .accessibilityIdentifier("dinnerApply")
+                    }
+                    Section {
+                        Button(dinnerText("Show full review")) { detailedReviewID = preview.id }
+                            .accessibilityIdentifier("dinner.schedule.showFull")
+                        Button(dinnerText("Cancel preview"), role: .cancel) { model.cancelPreview(); finish() }
+                            .accessibilityIdentifier("dinnerCancelPreview")
+                    }
+                } else if let preview = model.preview, model.canReviewPreview {
                     if let detail = model.currentSwapReview {
                         DinnerSwapEvidenceView(review: detail, showPrices: model.budgetVisible)
                     }

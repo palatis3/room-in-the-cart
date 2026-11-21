@@ -292,9 +292,12 @@ struct DinnerManualAdjustmentView: View {
                 }
             }
             Section {
-                Text(dinnerText("Enter each resulting amount explicitly. This Free editor does not scale ingredients automatically."))
                 DinnerServingField(count: $servings, identifier: "dinner.occurrence.servings")
-                if editsPlan { reviewButton.buttonStyle(PrimaryAction()) }
+                if editsPlan {
+                    reviewButton.buttonStyle(PrimaryAction())
+                } else {
+                    Text(dinnerText("Enter each resulting amount explicitly. This Free editor does not scale ingredients automatically."))
+                }
             }
             Section(dinnerText("Serving groups")) {
                 ForEach($groups) { $group in
@@ -324,6 +327,9 @@ struct DinnerManualAdjustmentView: View {
                 }.disabled(groups.count >= 100)
             }
             Section(dinnerText("Resulting grocery amounts")) {
+                if editsPlan {
+                    Text(dinnerText("Enter each resulting amount explicitly. This Free editor does not scale ingredients automatically."))
+                }
                 ForEach($amounts) { $amount in
                     VStack(alignment: .leading) {
                         Text(amount.name).font(.headline)

@@ -54,6 +54,18 @@ final class SavedDinnerReviewTests: XCTestCase {
             groups: original.servingGroups, quantities: [], scheduledDay: today)
         let preview = try DinnerPlanningEngine.preview(changes: [.adjust(adjustment)], tool: .manual,
             ledger: data.shops[0], state: data.dinnerPlanning, access: access, phase: .draft, at: now)
+        XCTAssertEqual(preview.unchangedGroceriesForScheduleEdit(in: data, workspaceID: workspaceID)?.id, original.id)
+        XCTAssertNil(preview.unchangedGroceriesForScheduleEdit(in: data, workspaceID: UUID()))
+        var stale = data
+        _ = try stale.shops[0].addManualLine(name: "Coffee", quantity: nil)
+        XCTAssertNil(preview.unchangedGroceriesForScheduleEdit(in: stale, workspaceID: workspaceID))
+        let changed = DinnerAdjustment(occurrenceID: original.id, servings: try Rational(2), groups: [],
+            quantities: [.init(contributionID: original.ingredientContributionIDs[0],
+                quantity: .init(amount: try Rational(3), unit: .count, originalLiteral: "3"))], scheduledDay: today)
+        let foodPreview = try DinnerPlanningEngine.preview(changes: [.adjust(changed)], tool: .manual, ledger: data.shops[0],
+            state: data.dinnerPlanning, access: access, phase: .draft, at: now)
+        XCTAssertNil(foodPreview.unchangedGroceriesForScheduleEdit(in: data, workspaceID: workspaceID))
+        XCTAssertTrue(foodPreview.reviewsGuestPurchases)
         _ = try DinnerPlanningEngine.apply(preview.proposal, ledger: &data.shops[0], state: &data.dinnerPlanning,
             access: access, phase: .draft, at: now)
         let restored = try JSONDecoder().decode(LedgerWorkspace.self, from: JSONEncoder().encode(data))

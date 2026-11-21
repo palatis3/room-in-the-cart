@@ -12842,6 +12842,74 @@
         }
       }
     },
+    "The grocery amounts for %@ stay the same.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The grocery amounts for %@ stay the same."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se mantienen las cantidades de %@."
+          }
+        }
+      }
+    },
+    "Grocery amounts stay the same for %lld ingredients.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grocery amounts stay the same for %lld ingredients."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se mantienen las cantidades de %lld ingredientes."
+          }
+        }
+      }
+    },
+    "Save dinner plan": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save dinner plan"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar el plan de cena"
+          }
+        }
+      }
+    },
+    "Show full review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show full review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver la revisión completa"
+          }
+        }
+      }
+    },
     "Create shopping list": {
       "extractionState": "manual",
       "localizations": {

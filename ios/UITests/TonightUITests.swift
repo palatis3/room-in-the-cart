@@ -155,7 +155,18 @@ import XCTest
     }
 
     func testPastedFamilyNotePlansTomorrowAndChangesOccurrenceBeforeColdReturn() {
+        checkFamilyPlanEdit(maximumText: false)
+    }
+
+    func testLargestTextKeepsScheduleOnlyConfirmationAheadOfOptionalPriceReview() {
+        checkFamilyPlanEdit(maximumText: true)
+    }
+
+    private func checkFamilyPlanEdit(maximumText: Bool) {
         app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        if maximumText {
+            app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+        }
         app.launch()
         tap(app.tabBars.buttons["Dinners"])
         tap(app.buttons["dinner.pasteRecipe"])
@@ -182,8 +193,21 @@ import XCTest
         tap(less)
         XCTAssertEqual(app.textFields["dinner.occurrence.servings"].value as? String, "2")
         tap(app.buttons["dinner.occurrence.review"])
-        tap(app.buttons["dinnerApply"])
+        let stableGroceries = app.descendants(matching: .any)["dinner.schedule.groceries"]
+        XCTAssertTrue(stableGroceries.waitForExistence(timeout: 8))
+        XCTAssertTrue(stableGroceries.label.contains("sweet potatoes") && stableGroceries.label.contains("pitas"))
+        let preview = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "dinnerPreviewMeal-")).firstMatch
+        XCTAssertTrue(preview.label.contains("Family pita supper") && preview.label.contains("Servings: 2"))
+        XCTAssertFalse(app.staticTexts["guestFeeImpact"].exists)
+        XCTAssertFalse(app.staticTexts["guestCheckoutImpact"].exists)
+        let confirmChanges = app.buttons["dinnerApply"]
+        XCTAssertEqual(confirmChanges.label, "Save dinner plan")
+        if maximumText && !confirmChanges.isHittable { app.swipeUp() }
+        XCTAssertTrue(confirmChanges.isHittable, "Saving should take at most one scroll after reviewing this meal.")
+        tap(confirmChanges)
         XCTAssertTrue(app.buttons["dinnerApply"].waitForNonExistence(timeout: 12))
+        XCTAssertTrue(app.descendants(matching: .any)["dinner.schedule.saved"].waitForExistence(timeout: 6))
+        XCTAssertTrue(preview.label.contains("Servings: 2"))
         app.terminate()
         app.launchArguments.removeAll { $0 == "--reset-test-workspace" }
         app.launch()
