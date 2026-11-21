@@ -151,7 +151,7 @@ import UIKit
         XCTAssertTrue(commit.waitForExistence(timeout: 5) && commit.isEnabled)
         commit.tap()
         XCTAssertTrue(keyboard.waitForNonExistence(timeout: 5))
-        let food = app.buttons["Inspect wraps"]
+        let food = app.fullListGrocery(labeled: "Inspect wraps")
         XCTAssertTrue(food.wait(for: \.isHittable, toEqual: true, timeout: 8))
         let id = food.identifier
         restart()

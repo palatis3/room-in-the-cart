@@ -31,7 +31,12 @@ import XCTest
         assertText("Purchased usable amount: 8")
         tap(app.buttons["Apply reviewed checkout copy"])
         app.terminate(); launch(reset: false); shopRoot()
-        tap(element("openPickupList")); tap(app.buttons["Inspect wraps"])
+        openFullList()
+        let preview = app.scrollViews["shopContentScroll"].buttons["Inspect wraps"]
+        let previewCovered = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false OR hittable == false"), object: preview)
+        XCTAssertEqual(XCTWaiter.wait(for: [previewCovered], timeout: 8), .completed,
+                       "The Shop preview must stop receiving taps when the full list is open.")
+        tap(app.fullListGrocery(labeled: "Inspect wraps"))
         assertText("Confirmed at home for this need: 8")
         capture("confirmed-stock-pack-choice-durable-after-restart")
     }
@@ -84,7 +89,7 @@ import XCTest
 
     func testHidingProtectedLunchKeepsTotalAndTwoWholePacksWithoutStock() {
         createWrapList()
-        tap(app.buttons["Inspect wraps"])
+        tap(app.fullListGrocery(labeled: "Inspect wraps"))
         XCTAssertFalse(element("ledgerShowProtectedNeeds").exists)
         tap(app.buttons["Protect an amount for lunch or another need"])
         fill("School lunch", into: "Who or what this is for")
@@ -124,22 +129,28 @@ import XCTest
         assertText("Protected: School lunch")
 
         app.terminate(); launch(reset: false); shopRoot()
-        tap(element("openPickupList")); tap(app.buttons["Inspect wraps"])
+        openFullList(); tap(app.fullListGrocery(labeled: "Inspect wraps"))
         assertText("Protected: School lunch")
         reveal(total)
         XCTAssertEqual(total.label, "12 items")
     }
 
+    private func openFullList() {
+        tap(element("openPickupList"))
+        XCTAssertTrue(app.navigationBars["Shopping list"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["ledgerShopPicker"].wait(for: \.isHittable, toEqual: true, timeout: 8))
+    }
+
     private func createWrapList() {
         launch(reset: true)
-        tap(element("openPickupList"))
+        openFullList()
         tap(element("ledgerImport"))
         let original = editableElement("ledgerImportText")
         tap(original); app.typeText("12 wraps")
         dismissKeyboard()
         XCTAssertEqual(original.value as? String, "12 wraps")
         tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
-        XCTAssertTrue(app.buttons["Inspect wraps"].wait(for: \.isHittable, toEqual: true, timeout: 8),
+        XCTAssertTrue(app.fullListGrocery(labeled: "Inspect wraps").wait(for: \.isHittable, toEqual: true, timeout: 8),
                       "The reviewed wraps must be actionable when the import sheet closes.")
     }
 
@@ -147,7 +158,7 @@ import XCTest
         createWrapList()
         shopRoot(); tap(app.buttons["Review checkout"]); tap(app.buttons["Continue to checkout review"])
         tap(app.buttons["Apply reviewed checkout copy"])
-        shopRoot(); tap(element("openPickupList")); tap(app.buttons["Inspect wraps"])
+        shopRoot(); openFullList(); tap(app.fullListGrocery(labeled: "Inspect wraps"))
         tap(app.buttons["Confirm pantry or freezer food"])
         fill("Checked freezer wraps", into: "Actual food or freezer batch")
         let usableAmount = editableElement("Confirmed usable amount")

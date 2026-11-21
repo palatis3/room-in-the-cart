@@ -426,6 +426,12 @@ extension XCUIApplication {
         return XCTWaiter.wait(for: [ready], timeout: timeout) == .completed
     }
 
+    func fullListGrocery(labeled label: String) -> XCUIElement {
+        collectionViews.buttons.matching(NSPredicate(
+            format: "identifier BEGINSWITH %@ AND label == %@", "ledgerInspect-", label
+        )).element
+    }
+
     func assertSelectedShoppingList(named name: String, file: StaticString = #filePath, line: UInt = #line) {
         XCTAssertTrue(navigationBars["Shopping list"].waitForExistence(timeout: 8), file: file, line: line)
         let selectedPickup = buttons.matching(NSPredicate(
