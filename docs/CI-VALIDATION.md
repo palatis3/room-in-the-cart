@@ -1,5 +1,7 @@
 # Local CI validation
 
+The [shopper regression guide](ci/shopper-regressions.md) covers required iPhone workflow checks and repeatable scoring for first-use reviews.
+
 ## November 18 ordinary iPhone test scheduling
 
 In the [November 18 core run](https://github.com/palatis3/room-in-the-cart/actions/runs/44259710342), UI03 waited 77.5 minutes after the shared build and executed for 19.1 minutes. During 68.2 minutes of that wait, the recorded jobs from the feature branch, main and Dependabot occupied fewer than six A2 machines. UI04 waited 70.8 minutes, including 54.2 minutes with fewer than six A1 assignments. Assignment counts cannot distinguish a free machine from one still provisioning.
