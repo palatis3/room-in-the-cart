@@ -278,10 +278,24 @@ struct LedgerDepartmentPicker: View {
     let shop: ShoppingLedger
     let line: ShoppingLine
     let labels: [String]
+    @State private var showingDepartments = false
     private var department: String { line.aisle }
+    private var title: String { quickGroceryFormat("Department for %@", line.name) }
 
     var body: some View {
-        Menu {
+        Button { showingDepartments = true } label: {
+            Text(department.isEmpty ? quickGroceryText("Department") : department)
+                .font(.footnote)
+                .frame(minWidth: 44, minHeight: 44, alignment: .leading)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.borderless)
+        .accessibilityLabel(title)
+        .accessibilityHint(shop.basis.branch.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?
+            quickGroceryText("Applies to this list.") : quickGroceryText("Remembers this department for this product at this branch."))
+        .accessibilityValue(department.isEmpty ? ledgerText("No aisle assigned") : department)
+        .disabled(model.saving || model.hasPendingSave)
+        .confirmationDialog(title, isPresented: $showingDepartments, titleVisibility: .visible) {
             ForEach([""] + labels, id: \.self) { label in
                 Button {
                     Task {
@@ -298,15 +312,7 @@ struct LedgerDepartmentPicker: View {
                     if label == department { Label(value, systemImage: "checkmark") } else { Text(value) }
                 }
             }
-        } label: {
-            Text(department.isEmpty ? quickGroceryText("Department") : department)
-                .font(.footnote).frame(minHeight: 44)
+            Button(ledgerText("Cancel"), role: .cancel) {}
         }
-        .buttonStyle(.borderless)
-        .accessibilityLabel(quickGroceryFormat("Department for %@", line.name))
-        .accessibilityHint(shop.basis.branch.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?
-            quickGroceryText("Applies to this list.") : quickGroceryText("Remembers this department for this product at this branch."))
-        .accessibilityValue(department.isEmpty ? ledgerText("No aisle assigned") : department)
-        .disabled(model.saving || model.hasPendingSave)
     }
 }
