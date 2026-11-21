@@ -1,6 +1,22 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "This pickup changed. Review the current details alongside your edits before saving.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This pickup changed. Review the current details alongside your edits before saving."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este pedido cambió. Compara los detalles actuales con tus cambios antes de guardar."
+          }
+        }
+      }
+    },
     "Add %lld": {
       "localizations": {
         "en": {

@@ -882,9 +882,35 @@ private struct LedgerImportRowView: View {
     }
 }
 
+/// The sheet can render once more after its write is published and before dismissal.
+struct LedgerFactsReview {
+    enum Status { case editing, saved, stale }
+    let original: ShoppingLedger
+    let workspaceID: UUID?
+    private(set) var submittedRevision: UUID?
+
+    func status(for shop: ShoppingLedger?, in currentWorkspace: UUID?) -> Status {
+        guard let workspaceID, workspaceID == currentWorkspace, let shop, shop.id == original.id else { return .stale }
+        if shop.revisionID == submittedRevision { return .saved }
+        return shop.revisionID == original.revisionID ? .editing : .stale
+    }
+
+    func renewed(for shop: ShoppingLedger?, in currentWorkspace: UUID?) -> Self? {
+        guard let workspaceID, workspaceID == currentWorkspace, let shop, shop.id == original.id else { return nil }
+        return Self(original: shop, workspaceID: workspaceID)
+    }
+
+    mutating func apply(_ proposed: ShopBasis, evidenceFor terms: ShopBasis.RetailerTerms, to shop: inout ShoppingLedger) throws {
+        guard shop.id == original.id else { throw LedgerError.stalePreview }
+        try shop.updateBasis(proposed, evidenceFor: terms, reviewing: original.revisionID)
+        submittedRevision = shop.revisionID
+    }
+}
+
 struct LedgerFactsView: View {
     @ObservedObject var model: LedgerModel
-    @State private var original: ShoppingLedger
+    @State private var factsReview: LedgerFactsReview
+    private var original: ShoppingLedger { factsReview.original }
     @Environment(\.dismiss) private var dismiss
     @State private var basis: ShopBasis
     @State private var cap: String
@@ -904,15 +930,13 @@ struct LedgerFactsView: View {
     @State private var hasSlot: Bool
     @State private var slot: Date
     @State private var reviewing = false
-    @State private var workspaceID: UUID?
     @State private var evidenceTerms: ShopBasis.RetailerTerms
     @State private var validation: String?
     private enum Input: Hashable { case branch, timeZone, cap, reserve, fees, retailerTotal, retailerSource, includedCharges }
     @FocusState private var inputFocus: Input?
     init(model: LedgerModel, shop: ShoppingLedger) {
         self.model = model
-        _original = State(initialValue: shop)
-        _workspaceID = State(initialValue: model.sourceWorkspaceID)
+        _factsReview = State(initialValue: LedgerFactsReview(original: shop, workspaceID: model.sourceWorkspaceID))
         _evidenceTerms = State(initialValue: shop.basis.retailerTerms)
         _basis = State(initialValue: shop.basis)
         _cap = State(initialValue: shop.basis.cap.map { NSDecimalNumber(decimal: Decimal($0.minorUnits) / 100).stringValue } ?? "")
@@ -932,9 +956,8 @@ struct LedgerFactsView: View {
         edited.slot = hasSlot ? slot : nil
         return edited.retailerTerms
     }
-    private var isCurrent: Bool {
-        workspaceID != nil && model.sourceWorkspaceID == workspaceID && model.shop?.id == original.id
-            && model.shop?.revisionID == original.revisionID
+    private var status: LedgerFactsReview.Status {
+        factsReview.status(for: model.shop, in: model.sourceWorkspaceID)
     }
     private var needsFreshEvidence: Bool {
         currentTerms != evidenceTerms && (hasRetailerPreview || !fees.isEmpty || !retailerSource.isEmpty
@@ -942,24 +965,33 @@ struct LedgerFactsView: View {
     }
     var body: some View {
         WorkingForm {
-            if !isCurrent {
-                Text(ledgerText("This pickup changed. Close these edits and reopen the current pickup details."))
+            if status == .stale {
+                if let fresh = factsReview.renewed(for: model.shop, in: model.sourceWorkspaceID) {
+                    Text(ledgerText("This pickup changed. Review the current details alongside your edits before saving."))
+                    Button(ledgerText("Review pickup details")) {
+                        factsReview = fresh
+                        reviewing = false
+                        review()
+                    }.disabled(model.saving || model.hasPendingSave)
+                } else {
+                    Text(ledgerText("This pickup changed. Close these edits and reopen the current pickup details."))
+                }
                 Button(ledgerText("Close")) { dismiss() }
-            } else if reviewing {
+            } else if status == .editing && reviewing {
                 Section(ledgerText("Previously saved")) { summary(original.basis) }
                 Section(ledgerText("Proposed pickup details")) { summary(basis) }
                 Section {
                     Text(ledgerText("Changing the store, mode, date or costs invalidates earlier pickup quotes. Review them again before relying on a total."))
                     Button(ledgerText("Save pickup details")) {
                         Task { if await model.editShop(key: "basis-\(original.id)", shopID: original.id, {
-                            guard isCurrent else { throw LedgerError.stalePreview }
-                            try $0.updateBasis(basis, evidenceFor: evidenceTerms, reviewing: original.revisionID)
-                        }) { dismiss() } }
+                            guard status == .editing else { throw LedgerError.stalePreview }
+                            try factsReview.apply(basis, evidenceFor: evidenceTerms, to: &$0)
+                        }) { dismissIfSaved() } }
                     }.buttonStyle(PrimaryAction()).disabled(model.saving || model.hasPendingSave)
                         .accessibilityIdentifier("ledgerCommitFacts")
                     Button(ledgerText("Keep editing")) { reviewing = false }.disabled(model.saving || model.hasPendingSave)
                 }
-            } else {
+            } else if status == .editing {
                 Section(ledgerText("Store and timing")) {
                     TextField(ledgerText("Store branch"), text: $basis.branch, axis: .vertical).accessibilityIdentifier("ledgerBranch")
                         .focused($inputFocus, equals: .branch)
@@ -1040,7 +1072,7 @@ struct LedgerFactsView: View {
                         .accessibilityIdentifier("ledgerReviewFacts")
                 }
             }
-            if isCurrent {
+            if status == .editing {
                 let history = original.revisions.reversed().filter { $0.previousRetailerBasis != nil }
                 if !history.isEmpty {
                     DisclosureGroup(ledgerText("Earlier retailer evidence")) {
@@ -1053,7 +1085,7 @@ struct LedgerFactsView: View {
                 }
             }
             if let validation { Text(validation).foregroundStyle(Theme.warning) }
-            LedgerSaveStatus(model: model, onRetried: { dismiss() })
+            LedgerSaveStatus(model: model, onRetried: dismissIfSaved)
         }.scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(ledgerText("Describe this pickup"))
             .sheet(item: $screenshotRequest) { request in
                 NavigationStack { checkoutImage(for: request.terms) }
@@ -1067,9 +1099,13 @@ struct LedgerFactsView: View {
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() }.disabled(model.saving) } }
             .interactiveDismissDisabled(model.saving)
     }
+    private func dismissIfSaved() {
+        if status == .saved { dismiss() }
+    }
+
     private func checkoutImage(for terms: ShopBasis.RetailerTerms) -> some View {
-        PriceImageReview(purpose: .checkout, authorized: { isCurrent && terms == currentTerms }, acceptCheckout: { reviewed in
-            guard isCurrent, terms == currentTerms else { return }
+        PriceImageReview(purpose: .checkout, authorized: { status == .editing && terms == currentTerms }, acceptCheckout: { reviewed in
+            guard status == .editing, terms == currentTerms else { return }
             screenshot = reviewed
             hasRetailerPreview = true
             retailerTotal = reviewed.displayedTotal.map { NSDecimalNumber(decimal: Decimal($0.minorUnits) / 100).stringValue } ?? ""
@@ -1102,7 +1138,7 @@ struct LedgerFactsView: View {
             } else { basis.retailerPreview = nil }
             basis.slot = hasSlot ? slot : nil
             try basis.validate()
-            guard isCurrent else { return }
+            guard status == .editing else { return }
             validation = nil
             reviewing = true
         } catch { validation = ledgerText("Use a nonnegative USD amount with no more than two decimal places.") }
