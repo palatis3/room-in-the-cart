@@ -179,7 +179,7 @@ struct SavedDinnerHandoffView: View {
                 } else if destinationID == nil {
                     Section {
                         Text(dinnerText("Give your pickup a name to keep its dinner and grocery list together."))
-                        Button(ledgerText("Start pickup")) { startingPickup = true }.buttonStyle(PrimaryAction())
+                        Button(dinnerText("Name your pickup")) { startingPickup = true }.buttonStyle(PrimaryAction())
                             .accessibilityIdentifier("dinner.handoff.startPickup")
                     }
                 } else if let review {

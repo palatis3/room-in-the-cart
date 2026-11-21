@@ -130,8 +130,14 @@ import XCTest
         XCTAssertTrue(app.descendants(matching: .any)["tonight.recipe.reviewedMinutes"].exists)
         tap(app.buttons["tonight.recipe.save"])
         tap(app.buttons["dinner.planSaved"].firstMatch)
-        tap(app.buttons["dinner.handoff.startPickup"])
-        tap(app.buttons["ledgerCreateShop"])
+        let namePickup = app.buttons["dinner.handoff.startPickup"]
+        XCTAssertTrue(namePickup.waitForExistence(timeout: 5))
+        XCTAssertEqual(namePickup.label, "Name your pickup")
+        tap(namePickup)
+        let createPickup = app.buttons["ledgerCreateShop"]
+        XCTAssertTrue(createPickup.waitForExistence(timeout: 5))
+        XCTAssertEqual(createPickup.label, "Start pickup")
+        tap(createPickup)
         let confirm = app.buttons["dinner.handoff.confirm"]
         XCTAssertTrue(confirm.waitForExistence(timeout: 8))
         XCTAssertEqual(confirm.label, "Plan for tonight")
