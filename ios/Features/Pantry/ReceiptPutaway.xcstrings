@@ -1,6 +1,23 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "I paid the printed total %@ in USD": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I paid the printed total %@ in USD"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pagué el total impreso de %@ en USD"
+          }
+        }
+      }
+    },
     "All received food is usable": {
       "extractionState": "manual",
       "localizations": {

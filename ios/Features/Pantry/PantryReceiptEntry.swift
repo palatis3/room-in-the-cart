@@ -230,6 +230,16 @@ struct PantryReceiptEntry: View {
                         }
                         .contentShape(Rectangle())
                         .simultaneousGesture(TapGesture().onEnded { field = "receiptTotal" })
+                        if let total = displayed.printedPaidTotal,
+                           displayed.receiptTotal.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                            Button(String(format: putawayText("I paid the printed total %@ in USD"), total.wording)) {
+                                guard model.permitsReceiptSource, draft?.draftID == displayed.draftID else { return }
+                                field = nil
+                                draft?.usePrintedPaidTotal()
+                            }
+                            .frame(minHeight: 44)
+                            .accessibilityIdentifier("receipt.usePrintedTotal")
+                        }
                     }
                 }
                 if !model.receiptTrips.isEmpty {
@@ -383,7 +393,10 @@ struct PantryReceiptEntry: View {
                     PantryReceiptDocuments(model: model, target: .init(workspaceID: state.workspaceID, containerID: targetID,
                         objectID: targetID, revision: state.revision, kind: .receiptEvidence), authorize: {
                         model.permitsReceiptSource && model.snapshot?.state.workspaceID == state.workspaceID
-                    }, reviewsPrivateReceipt: true) { source, share in accept(source); sharedSource = share }
+                    }, reviewsPrivateReceipt: true) { source, share, printedTotal in
+                        accept(source, printedPaidTotal: printedTotal)
+                        sharedSource = share
+                    }
                 }
             }
         }
@@ -504,11 +517,13 @@ struct PantryReceiptEntry: View {
         draft = current
     }
 
-    private func accept(_ source: SourceMediaRecord, fromSavedPickup: Bool = false) {
+    private func accept(_ source: SourceMediaRecord, fromSavedPickup: Bool = false,
+                        printedPaidTotal: ExtractedReceiptDocument.PrintedPaidTotal? = nil) {
         guard model.canEdit, model.snapshot?.state.workspaceID == source.target.workspaceID else { return }
         do {
             draft = try ReceiptImportDraft(source: source, fromSavedPickup: fromSavedPickup, lots: model.snapshot?.lots ?? [])
             draft?.tracksPutaway = !source.receiptLines.contains { $0.documentLine?.stage == .order }
+            draft?.printedPaidTotal = printedPaidTotal
             reviewedSourceImage = source.imageJPEG
             message = nil
         }

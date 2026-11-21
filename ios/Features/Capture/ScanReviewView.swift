@@ -714,7 +714,7 @@ private struct ReceiptSectionCapture: View {
             if let review {
                 PantryReceiptDocuments(target: target, authorize: authorize, reviewsPrivateReceipt: reviewsPrivateReceipt, initialDocument: review,
                     sectionPreviews: draft.sections.map(\.preview), omittedLines: omitted,
-                    backToSections: start == .sections ? { self.review = nil; self.omitted = [] } : nil) { source, _ in
+                    backToSections: start == .sections ? { self.review = nil; self.omitted = [] } : nil) { source, _, _ in
                     if authorize() { reviewed(source) }
                 }
             } else {

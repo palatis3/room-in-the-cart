@@ -32,7 +32,11 @@ struct ReceiptPrintedEvidence: Equatable {
     private static let rateByUnit = #/(?i)(?:@|\b(?:per|por)\s+(?:kg|lb|g|unidad|unit|oz|ea)\b|\/\s*(?:kg|lb|g|unidad|unit|oz|ea)\b)/#
 
     static func isStandaloneAmount(_ text: String) -> Bool {
-        text.trimmingCharacters(in: .whitespaces).wholeMatch(of: price) != nil
+        standaloneAmount(text) != nil
+    }
+
+    static func standaloneAmount(_ text: String) -> String? {
+        text.trimmingCharacters(in: .whitespaces).wholeMatch(of: price).map { normalizedAmount($0.1) }
     }
 
     static func canSuggestAmount(for wording: String) -> Bool {

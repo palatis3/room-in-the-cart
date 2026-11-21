@@ -189,7 +189,7 @@ struct HouseholdReceiptEntry: View {
             } }
         }
         .sheet(isPresented: $file) {
-            NavigationStack { PantryReceiptDocuments(target: target, authorize: { model.permitsReceiptReview(page) }) { source, _ in accept(source) } }
+            NavigationStack { PantryReceiptDocuments(target: target, authorize: { model.permitsReceiptReview(page) }) { source, _, _ in accept(source) } }
         }
     }
 }

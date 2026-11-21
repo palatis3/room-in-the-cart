@@ -32,7 +32,7 @@ struct PantryReceiptDocuments: View {
     var sectionPreviews: [Data?] = []
     var omittedLines: Set<ExtractedReceiptDocument.Selection> = []
     var backToSections: (() -> Void)? = nil
-    let onReview: (SourceMediaRecord, SharedReceiptItem?) -> Void
+    let onReview: (SourceMediaRecord, SharedReceiptItem?, ExtractedReceiptDocument.PrintedPaidTotal?) -> Void
     @State private var inbox: [SharedReceiptItem] = []
     @State private var inboxUnavailable = false
     @State private var openedShare: SharedReceiptItem?
@@ -159,7 +159,9 @@ struct PantryReceiptDocuments: View {
                         do {
                             let source = try document.source(target: target, merchant: merchant.trimmingCharacters(in: .whitespacesAndNewlines),
                                 stage: stage, selection: selection, linkedAmountItems: linkedAmountItems, at: Date())
-                            onReview(source, openedShare)
+                            let printedTotal = reviewsEvidenceOnly && stage == .receipt
+                                ? document.printedPaidTotal(selected: selection) : nil
+                            onReview(source, openedShare, printedTotal)
                             dismiss()
                         } catch { show(error) }
                     }.buttonStyle(PrimaryAction()).disabled(!authorize() || (!reviewsEvidenceOnly && !confirmed) || selection.isEmpty || storeIssue != nil)
