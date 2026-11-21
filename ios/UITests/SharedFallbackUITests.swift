@@ -112,9 +112,16 @@ final class SharedFallbackUITests: XCTestCase {
         }, object: nil)
         XCTAssertEqual(XCTWaiter.wait(for: [applied], timeout: 3), .completed, file: file, line: line)
     }
-    private func enter(_ value: String, _ field: String, done: String) {
+    private func enter(_ value: String, _ field: String, done: String, file: StaticString = #filePath, line: UInt = #line) {
         let element = app.textFields[field]
-        tap(element); element.typeText(value); tap(app.buttons[done])
+        let finish = app.buttons[done]
+        tap(element, file: file, line: line)
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 3), field, file: file, line: line)
+        XCTAssertTrue(finish.waitForExistence(timeout: 3), field, file: file, line: line)
+        element.typeText(value)
+        XCTAssertEqual(element.value as? String, value, "Before Done: \(field)", file: file, line: line)
+        tap(finish, file: file, line: line)
+        XCTAssertEqual(element.value as? String, value, "After Done: \(field)", file: file, line: line)
     }
     private func back(_ title: String) { tap(app.navigationBars[title].buttons.firstMatch) }
     private func captureScreen(_ name: String) {
@@ -196,6 +203,7 @@ final class SharedFallbackUITests: XCTestCase {
             field.typeText("2")
             XCTAssertEqual(field.value as? String, "2", label)
         }
+        XCTAssertEqual(app.textFields["Pack name"].value as? String, "Two wraps")
         back("Review ingredients, food and time")
         toggle(app.switches["fallback.select." + usual])
         tap(app.buttons["fallback.food." + usual]); toggle(try sourceToggle(for: 0)); back("Review ingredients, food and time")
