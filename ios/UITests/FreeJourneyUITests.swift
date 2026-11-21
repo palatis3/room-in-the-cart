@@ -2568,10 +2568,12 @@ import XCTest
         let proceed = element("capture.continue")
         reveal(proceed)
         XCTAssertFalse(proceed.isEnabled)
-        let pickup = element("capture.batchPickup")
-        reveal(pickup, initiallyUpward: false)
-        pickup.tap()
-        tap(app.buttons["Next week groceries"])
+        tapVisibleFormRow(app.buttons["capture.batchPickup"], marker: "NATURAL_LIST_PICKUP")
+        let nextWeek = app.buttons["Next week groceries"]
+        guard nextWeek.wait(for: \.isHittable, toEqual: true, timeout: 5) else {
+            return XCTFail("The pickup menu must offer Next week groceries")
+        }
+        nextWeek.tap()
         tap(proceed)
         assertText("Pickup for all items: Next week groceries")
         tap(element("ledgerCommitImport"))
