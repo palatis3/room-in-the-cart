@@ -176,13 +176,18 @@ final class RoomInTheCartUITests: XCTestCase {
         for language in ["en", "es"] {
             launch(language: language, largeDark: language == "es")
             let add = app.buttons["shop.addFirstList"]
+            let destination = language == "en" ? "Pickup" : "Recogida"
+            let firstDestination = app.staticTexts["quickGrocery.firstDestination"]
+            XCTAssertTrue(firstDestination.waitForExistence(timeout: 10))
+            XCTAssertTrue(firstDestination.label.contains(destination))
+            XCTAssertEqual(add.label, language == "en" ? "Add several items" : "Añadir varios artículos")
             tap(add)
             let close = app.buttons[language == "en" ? "Close" : "Cerrar"]
             tap(close)
             XCTAssertTrue(add.waitForExistence(timeout: 5))
             tap(add)
             let field = app.textViews["ledgerImportText"]
-            let wording = language == "en" ? "2 kg rice" : "2 kg arroz"
+            let wording = language == "en" ? "2 kg rice\n1 lemon" : "2 kg arroz\n1 limón"
             tap(field)
             field.typeText(wording)
             let done = language == "en" ? "Done" : "Listo"
@@ -210,6 +215,17 @@ final class RoomInTheCartUITests: XCTestCase {
             reveal(field)
             XCTAssertEqual(field.value as? String, wording)
             tap(app.buttons["ledgerReviewImport"])
+            let summary = app.staticTexts["ledgerImportSummary"]
+            let both = language == "en" ? "Pickup · Selected: 2 · Skipped: 0" : "Recogida · Incluidos: 2 · Omitidos: 0"
+            let onlyOne = language == "en" ? "Pickup · Selected: 1 · Skipped: 1" : "Recogida · Incluidos: 1 · Omitidos: 1"
+            XCTAssertTrue(summary.waitForExistence(timeout: 10))
+            XCTAssertEqual(summary.label, both)
+            tap(app.buttons["ledgerImportSkip-1"])
+            XCTAssertEqual(summary.label, onlyOne)
+            XCTAssertFalse(app.textFields["ledgerImportAmount-1"].exists)
+            tap(app.buttons["ledgerImportInclude-1"])
+            XCTAssertEqual(summary.label, both)
+            XCTAssertEqual(app.textFields["ledgerImportAmount-1"].value as? String, "2")
             tap(app.buttons["ledgerCommitImport"])
             let undo = app.buttons["ledgerUndoImport"]
             tap(undo)

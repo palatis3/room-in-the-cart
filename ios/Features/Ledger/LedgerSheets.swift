@@ -135,6 +135,8 @@ struct LedgerImportView: View {
                                                 inputFocus: $inputFocus, invalidAmount: Binding(get: { invalidAmounts[row.id] },
                                                     set: { invalidAmounts[row.id] = $0 }),
                                                 matches: review.matches[row.id] ?? [],
+                                                explicitlySeparate: explicitSeparate.contains(row.id),
+                                                restoreChoice: { setChoice($0, for: row.id, explicitlySeparate: $1) },
                                                 choice: Binding(get: { review.choices[row.id] },
                                                                 set: { setChoice($0, for: row.id) }),
                                                 onEdited: { refreshMatches() })
@@ -214,9 +216,17 @@ struct LedgerImportView: View {
                 .scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(ledgerText("Bring the list"))
                 .safeAreaInset(edge: .bottom, spacing: 0) {
                     if let preview, let review {
-                        importConfirmation(preview, review: review)
-                            .padding(.horizontal, 16).padding(.vertical, 12)
-                            .background(Theme.canvas)
+                        VStack(spacing: 4) {
+                            if preview.lines.count > 1, let shop {
+                                Text(review.selectionSummary(for: preview, destination: shop.title))
+                                    .font(.subheadline).foregroundStyle(Theme.secondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .accessibilityIdentifier("ledgerImportSummary")
+                            }
+                            importConfirmation(preview, review: review)
+                        }
+                        .padding(.horizontal, 16).padding(.vertical, 8)
+                        .background(Theme.canvas)
                     }
                 }
                 .keyboardDoneAction(visible: inputFocus != nil, title: ledgerText("Done")) { inputFocus = nil }
@@ -445,11 +455,11 @@ struct LedgerImportView: View {
         })
     }
 
-    private func setChoice(_ value: ImportResolution?, for id: UUID) {
+    private func setChoice(_ value: ImportResolution?, for id: UUID, explicitlySeparate: Bool = true) {
         guard let preview, let shop else { return }
         var next = choices
         next[id] = value
-        if value == .addNew { explicitSeparate.insert(id) } else { explicitSeparate.remove(id) }
+        if value == .addNew && explicitlySeparate { explicitSeparate.insert(id) } else { explicitSeparate.remove(id) }
         choices = LedgerImportReview(shop: shop, preview: preview, choices: next).choices
     }
 
@@ -509,6 +519,14 @@ struct LedgerImportReview {
     var matches: [UUID: [Match]] = [:]
     var choices: [UUID: ImportResolution]
     let isComplete: Bool
+
+    func selectionSummary(for preview: StagedListImport, destination: String) -> String {
+        let selected = preview.lines.compactMap { choices[$0.id] }
+        let skipped = selected.filter { $0 == .skip }.count
+        let summary = ledgerFormat("%@ · Selected: %lld · Skipped: %lld", destination, Int64(selected.count - skipped), Int64(skipped))
+        let undecided = preview.lines.count - selected.count
+        return undecided == 0 ? summary : summary + " · " + ledgerFormat("To review: %lld", Int64(undecided))
+    }
 
     static func initialChoices(_ preview: StagedListImport) -> [UUID: ImportResolution] {
         Dictionary(uniqueKeysWithValues: preview.lines.filter { $0.duplicateLineIDs.isEmpty }.map { ($0.id, .addNew) })
@@ -572,6 +590,7 @@ struct LedgerImportResolutionPicker: View {
     let identifier: String
     let matches: [LedgerImportReview.Match]
     @Binding var choice: ImportResolution?
+    var offersSkip = true
     var body: some View {
         if !matches.isEmpty && !matches.contains(where: { $0.option.canMerge || $0.option.canAdd }) {
             Text(ledgerText("The matching items cannot take this amount. Choose a separate line or skip it."))
@@ -588,7 +607,9 @@ struct LedgerImportResolutionPicker: View {
                     Text(ledgerFormat("Add amount to: %@", match.name)).tag(ImportResolution.addToLine(match.id) as ImportResolution?)
                 }
             }
-            Text(ledgerText("Skip this line")).tag(ImportResolution.skip as ImportResolution?)
+            if offersSkip {
+                Text(ledgerText("Skip this line")).tag(ImportResolution.skip as ImportResolution?)
+            }
         }.pickerStyle(.menu).accessibilityIdentifier(identifier)
     }
 }
@@ -609,69 +630,121 @@ private struct LedgerImportRowView: View {
     let inputFocus: FocusState<LedgerImportField?>.Binding
     @Binding var invalidAmount: InvalidImportAmount?
     let matches: [LedgerImportReview.Match]
+    let explicitlySeparate: Bool
+    let restoreChoice: (ImportResolution?, Bool) -> Void
     @Binding var choice: ImportResolution?
+    @State private var previousChoice: ImportResolution?
+    @State private var previousWasExplicit = false
     let onEdited: () -> Void
     @State private var amount: String
     @State private var unit: UnitOfMeasure
     init(number: Int, line: Binding<StagedImportLine>, inputFocus: FocusState<LedgerImportField?>.Binding,
-         invalidAmount: Binding<InvalidImportAmount?>, matches: [LedgerImportReview.Match], choice: Binding<ImportResolution?>, onEdited: @escaping () -> Void) {
+         invalidAmount: Binding<InvalidImportAmount?>, matches: [LedgerImportReview.Match],
+         explicitlySeparate: Bool, restoreChoice: @escaping (ImportResolution?, Bool) -> Void,
+         choice: Binding<ImportResolution?>, onEdited: @escaping () -> Void) {
         self.number = number
         _line = line
         self.inputFocus = inputFocus
         _invalidAmount = invalidAmount
         self.matches = matches
+        self.explicitlySeparate = explicitlySeparate
+        self.restoreChoice = restoreChoice
         _choice = choice
         self.onEdited = onEdited
         _amount = State(initialValue: invalidAmount.wrappedValue?.text ?? line.wrappedValue.quantity.map { ledgerAmountInput($0.amount) } ?? "")
         _unit = State(initialValue: invalidAmount.wrappedValue?.unit ?? line.wrappedValue.quantity?.unit ?? .count)
     }
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(line.originalText).font(.caption).foregroundStyle(Theme.secondary)
-            if let pack = line.originalPack { LedgerPackLabelFacts(pack: pack) }
-            if let capture = line.capture {
-                Text(line.name).font(.headline)
-                if let quantity = line.quantity { Text(ledgerAmountInput(quantity.amount) + " " + quantity.unit.displayName) }
-                if let count = capture.packCount { Text(captureText("Packs") + ": " + String(count)) }
-                if let amount = capture.amountPerPack { Text(captureText("Usable amount per pack") + ": " + ledgerAmountInput(amount.amount) + " " + amount.unit.displayName) }
-                Text(captureText("Purpose") + ": " + capture.purpose)
-                Text(captureText("Destination") + ": " + capture.destination)
-                if !line.exclusions.isEmpty { Text(captureText("Exclusions") + ": " + line.exclusions.joined(separator: "; ")) }
-            } else {
-                WorkingField(ledgerText("Item name")) {
-                    TextField(ledgerText("Item name"), text: $line.name, prompt: Text(""), axis: .vertical)
-                        .focused(inputFocus, equals: .name(line.id))
-                        .textFieldStyle(.roundedBorder)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(line.originalText).font(.subheadline)
+                    if choice == .skip {
+                        Text(ledgerText("Skipped")).font(.caption).foregroundStyle(Theme.secondary)
+                    }
                 }
-                WorkingField(shoppingText("Quantity (optional)")) {
-                    TextField(shoppingText("Quantity (optional)"), text: $amount, prompt: Text(""))
-                        .keyboardType(.numbersAndPunctuation)
-                        .focused(inputFocus, equals: .amount(line.id))
-                        .textFieldStyle(.roundedBorder)
-                        .accessibilityIdentifier("ledgerImportAmount-\(number)")
+                Spacer()
+                if choice == .skip {
+                    Button(action: includeLine) {
+                        Text(ledgerText("Include")).frame(minWidth: 44, minHeight: 44)
+                    }
+                    .accessibilityLabel(ledgerFormat("Include %@", line.originalText))
+                    .accessibilityIdentifier("ledgerImportInclude-\(number)")
+                } else {
+                    Button {
+                        previousChoice = choice
+                        previousWasExplicit = explicitlySeparate
+                        inputFocus.wrappedValue = nil
+                        choice = .skip
+                    } label: {
+                        Text(ledgerText("Skip")).frame(minWidth: 44, minHeight: 44)
+                    }
+                    .accessibilityLabel(ledgerFormat("Skip %@", line.originalText))
+                    .accessibilityIdentifier("ledgerImportSkip-\(number)")
                 }
-                Picker(ledgerText("Unit"), selection: $unit) {
-                    ForEach(UnitOfMeasure.allCases, id: \.self) { Text($0.displayName).tag($0) }
-                }
+            }.buttonStyle(.borderless)
+            if choice != .skip || line.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                rowFields
             }
-            if invalidAmount != nil && choice != .skip {
-                Text(ledgerText("Enter a nonnegative amount with up to six decimal places, or leave it unknown."))
-                    .foregroundStyle(Theme.warning)
-                    .accessibilityIdentifier("ledgerImportAmountError-\(number)")
-            } else if line.quantity == nil {
-                Label(ledgerText("Quantity unresolved"), systemImage: "questionmark.circle").foregroundStyle(Theme.warning)
-                if let reason = line.unresolvedReason { Text(ledgerContributionNote(reason)).font(.footnote) }
-            }
-            if matches.contains(where: { $0.option.canMerge }) && matches.contains(where: { $0.option.canAdd }) {
-                Text(ledgerText("A matching item is already listed. Is this the same need or an additional amount?"))
-                    .font(.subheadline)
-            }
-            LedgerImportResolutionPicker(identifier: "ledgerImportResolution-\(number)", matches: matches, choice: $choice)
         }.padding(.vertical, 8).fixedSize(horizontal: false, vertical: true)
             .onChange(of: amount) { _, _ in updateQuantity() }
             .onChange(of: unit) { _, _ in updateQuantity() }
             .onChange(of: line.name) { _, _ in onEdited() }
     }
+    private func includeLine() {
+        if let previousChoice, previousChoice != .addNew || previousWasExplicit {
+            // setChoice revalidates the target against the current preview.
+            restoreChoice(previousChoice, previousWasExplicit)
+        } else {
+            let hasCandidate = !line.duplicateLineIDs.isEmpty || !matches.isEmpty
+            restoreChoice(hasCandidate ? nil : .addNew, false)
+        }
+    }
+
+    @ViewBuilder private var rowFields: some View {
+        if let pack = line.originalPack { LedgerPackLabelFacts(pack: pack) }
+        if let capture = line.capture {
+            Text(line.name).font(.headline)
+            if let quantity = line.quantity { Text(ledgerAmountInput(quantity.amount) + " " + quantity.unit.displayName) }
+            if let count = capture.packCount { Text(captureText("Packs") + ": " + String(count)) }
+            if let amount = capture.amountPerPack { Text(captureText("Usable amount per pack") + ": " + ledgerAmountInput(amount.amount) + " " + amount.unit.displayName) }
+            Text(captureText("Purpose") + ": " + capture.purpose)
+            Text(captureText("Destination") + ": " + capture.destination)
+            if !line.exclusions.isEmpty { Text(captureText("Exclusions") + ": " + line.exclusions.joined(separator: "; ")) }
+        } else {
+            WorkingField(ledgerText("Item name")) {
+                TextField(ledgerText("Item name"), text: $line.name, prompt: Text(""), axis: .vertical)
+                    .focused(inputFocus, equals: .name(line.id))
+                    .textFieldStyle(.roundedBorder)
+            }
+            WorkingField(shoppingText("Quantity (optional)")) {
+                TextField(shoppingText("Quantity (optional)"), text: $amount, prompt: Text(""))
+                    .keyboardType(.numbersAndPunctuation)
+                    .focused(inputFocus, equals: .amount(line.id))
+                    .textFieldStyle(.roundedBorder)
+                    .accessibilityIdentifier("ledgerImportAmount-\(number)")
+            }
+            Picker(ledgerText("Unit"), selection: $unit) {
+                ForEach(UnitOfMeasure.allCases, id: \.self) { Text($0.displayName).tag($0) }
+            }
+        }
+        if invalidAmount != nil && choice != .skip {
+            Text(ledgerText("Enter a nonnegative amount with up to six decimal places, or leave it unknown."))
+                .foregroundStyle(Theme.warning)
+                .accessibilityIdentifier("ledgerImportAmountError-\(number)")
+        } else if line.quantity == nil {
+            Label(ledgerText("Quantity unresolved"), systemImage: "questionmark.circle").foregroundStyle(Theme.warning)
+            if let reason = line.unresolvedReason { Text(ledgerContributionNote(reason)).font(.footnote) }
+        }
+        if matches.contains(where: { $0.option.canMerge }) && matches.contains(where: { $0.option.canAdd }) {
+            Text(ledgerText("A matching item is already listed. Is this the same need or an additional amount?"))
+                .font(.subheadline)
+        }
+        if !matches.isEmpty || choice == nil {
+            LedgerImportResolutionPicker(identifier: "ledgerImportResolution-\(number)", matches: matches, choice: $choice, offersSkip: false)
+        }
+    }
+
     private func updateQuantity() {
         do {
             line.quantity = try LedgerEntry.quantity(amount, unit)

@@ -23,6 +23,14 @@ import CoreDomain
         XCTAssertNil(try shop.quantity(forLineID: plain.id))
         XCTAssertEqual(ledgerQuantity(try shop.quantity(forLineID: plain.id)), ledgerText("Quantity unresolved"))
 
+        try shop.updateLine(lineID: plain.id, name: "Rolled oats", notes: "", aisle: "")
+        let renamed = try XCTUnwrap(shop.lines.first)
+        XCTAssertNil(shop.shoppingRowQuantity(for: renamed))
+        XCTAssertNil(try shop.quantity(forLineID: renamed.id))
+        XCTAssertEqual(shop.contributions(forLineID: renamed.id).map(\.originalText), ["Oats"])
+        try shop.updateLine(lineID: plain.id, name: "2 bags of oats", notes: "", aisle: "")
+        XCTAssertEqual(shop.shoppingRowQuantity(for: try XCTUnwrap(shop.lines.first)), ledgerText("Quantity unresolved"))
+
         let unknown = try shop.stageImport(text: "2–3 bags of rice")
         try shop.commitImport(unknown)
         XCTAssertEqual(shop.shoppingRowQuantity(for: try XCTUnwrap(shop.lines.last)), ledgerText("Quantity unresolved"))
