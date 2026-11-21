@@ -228,12 +228,58 @@ import XCTest
         store.tap(); store.typeText("East market")
         if app.buttons["tripStoreKeyboardDone"].isHittable { app.buttons["tripStoreKeyboardDone"].tap() }
         tapTrip(app.buttons["Start this stop"])
-        tapTrip(app.buttons["inStoreCheck-" + id])
-        tapTrip(app.buttons["inStoreUndo"])
-        XCTAssertTrue(apple.waitForExistence(timeout: 8))
-        XCTAssertTrue(apple.label.contains("3"))
-        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier == %@ AND label CONTAINS %@",
-            "inStoreUndo", "Apples")).firstMatch.exists)
+        XCTAssertTrue(app.navigationBars["Next store"].waitForNonExistence(timeout: 8))
+        let check = app.buttons["inStoreCheck-" + id]
+        let navigation = app.navigationBars["Shop in store"]
+        let subtotal = app.staticTexts["inStoreSubtotal"]
+        let list = app.collectionViews.firstMatch
+        XCTAssertTrue(navigation.waitForExistence(timeout: 8))
+        // Returning from Next store can leave Apples above the visible aisle. XCTest
+        // may report its check as hittable while its automatic tap falls in the toolbar.
+        for _ in 0..<4 {
+            if check.exists, check.isHittable, check.frame.minY >= navigation.frame.maxY { break }
+            list.swipeDown()
+        }
+        XCTAssertTrue(app.staticTexts["East market"].exists)
+        func footerUndo(_ title: String) -> XCUIElement {
+            app.buttons.matching(NSPredicate(format: "identifier == %@ AND label == %@", "inStoreUndo", title)).firstMatch
+        }
+        let limeUndo = footerUndo("Undo for Lime")
+        XCTAssertTrue(limeUndo.waitForExistence(timeout: 6))
+        let partial = "1 item of 4 items picked · 3 items still needed"
+        XCTAssertTrue(apple.label.contains(partial), apple.label)
+
+        var previous = CGRect.null
+        let settled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard check.exists, check.isHittable else { return false }
+            let frame = check.frame
+            defer { previous = frame }
+            return frame == previous && frame.width >= 44 && frame.height >= 44 &&
+                frame.minY >= navigation.frame.maxY && frame.maxY <= subtotal.frame.minY
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [settled], timeout: 8), .completed, "The whole checkbox must be visible and stationary.")
+        let target = XCTAttachment(screenshot: app.screenshot())
+        target.name = "East market · Apples checkbox " + NSCoder.string(for: previous)
+        target.lifetime = .keepAlways
+        add(target)
+        check.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        let appleUndo = footerUndo("Undo pick of Apples")
+        XCTAssertTrue(appleUndo.waitForExistence(timeout: 8))
+        XCTAssertTrue(check.waitForNonExistence(timeout: 8))
+        appleUndo.tap()
+
+        func assertRestoredPick() {
+            XCTAssertTrue(apple.waitForExistence(timeout: 8))
+            XCTAssertTrue(apple.label.contains(partial), apple.label)
+            XCTAssertTrue(limeUndo.waitForExistence(timeout: 8), "The separate Lime find must still be the latest pick.")
+            XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier == %@ AND label CONTAINS %@",
+                "inStoreUndo", "Apples")).firstMatch.exists)
+        }
+        assertRestoredPick()
+        app.terminate()
+        launch(fresh: false, shelfBudget: true)
+        tapTrip(app.buttons["ledgerInStore"])
+        assertRestoredPick()
     }
 
     private func enableAisleSwitch(_ row: XCUIElement) {
