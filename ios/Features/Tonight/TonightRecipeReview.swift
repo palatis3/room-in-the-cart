@@ -26,6 +26,7 @@ struct TonightRecipeReview: View {
     @State private var brandsReviewed = false
     @State private var effort: MealEffort?
     @State private var candidate: MealTemplate?
+    @State private var editingReviewedField: String?
     @State private var savedRecipe: MealTemplate?
     @State private var showRestrictions = false
     @AccessibilityFocusState private var savedHeadingFocused: Bool
@@ -61,6 +62,14 @@ struct TonightRecipeReview: View {
         guard let original, template.map(original.mealTemplates.contains) != true else { return nil }
         return original.mealTemplates.first
     }
+    private var screenTitle: String {
+        if savedRecipe != nil { return tonightText("Recipe saved") }
+        if candidate != nil { return tonightText("recipe.review.screenTitle") }
+        if template != nil { return tonightText("Edit recipe") }
+        if source != nil { return tonightText("Review a recipe") }
+        return tonightText("Enter a recipe")
+    }
+
     var body: some View {
         ScrollViewReader { scroll in form(scroll) }
     }
@@ -87,17 +96,22 @@ struct TonightRecipeReview: View {
                             savedHeadingFocused = true
                         }
                     } else if let candidate {
-                        Section(tonightText("Review recipe facts")) {
-                            Text(candidate.title).font(.system(.title2, design: .serif, weight: .semibold))
+                        Section {
+                            editableFact(ledgerText("Dinner title"), value: candidate.title, field: "title") {
+                                Text(verbatim: candidate.title).font(.system(.title2, design: .serif, weight: .semibold))
+                            }
                             if let template, original?.mealTemplates.contains(template) != true {
                                 Text(tonightText("This saves a reviewed Free copy. The accepted recipe and previously chosen dinners keep their original facts."))
                             }
-                            fact(ledgerText("Servings"), amountText(candidate.servings))
+                            reviewedFact(ledgerText("Servings"), amountText(candidate.servings), field: "servings")
                             if let minutes = candidate.leadTimeMinutes {
-                                fact(tonightText("Preparation time"), Duration.seconds(minutes * 60).formatted(.units(allowed: [.minutes])))
-                                    .accessibilityIdentifier("tonight.recipe.reviewedMinutes")
+                                reviewedFact(tonightText("Preparation time"), Duration.seconds(minutes * 60).formatted(.units(allowed: [.minutes])),
+                                             field: "minutes", identifier: "tonight.recipe.reviewedMinutes")
                             }
-                            ForEach(candidate.ingredients) { ingredient in fact(ingredient.name, ingredient.reviewedAmountLabel) }
+                            ForEach(candidate.ingredients) { ingredient in
+                                let field = ingredient.quantity == nil ? "ingredient-\(ingredient.id)" : ingredient.id.uuidString
+                                reviewedFact(ingredient.name, ingredient.reviewedAmountLabel, field: field)
+                            }
                             if let template, original?.mealTemplates.contains(template) == true {
                                 Text(tonightText("Saving updates this recipe in your library."))
                             } else if let replacedRecipe {
@@ -120,15 +134,16 @@ struct TonightRecipeReview: View {
                         }
                         Section(tonightText("Recipe")) {
                             WorkingField(ledgerText("Dinner title")) {
-                                TextField(ledgerText("Dinner title"), text: $title, prompt: Text(verbatim: "—"))
+                                TextField(ledgerText("Dinner title"), text: $title, prompt: Text(verbatim: ""))
                                     .focused($focusedInput, equals: "title")
                                     .submitLabel(.next)
                                     .onSubmit { advance(to: "servings", using: scroll) }
                                     .accessibilityIdentifier("tonight.recipe.title")
                             }
                             .dinnerInputRow($focusedInput, field: "title")
+                            .id("title")
                             WorkingField(ledgerText("Servings")) {
-                                TextField(ledgerText("Servings"), text: $servings, prompt: Text(verbatim: "—"))
+                                TextField(ledgerText("Servings"), text: $servings, prompt: Text(verbatim: ""))
                                     .keyboardType(.numbersAndPunctuation)
                                     .focused($focusedInput, equals: "servings")
                                     .submitLabel(.next)
@@ -138,7 +153,7 @@ struct TonightRecipeReview: View {
                             .dinnerInputRow($focusedInput, field: "servings")
                             .id("servings")
                             WorkingField(tonightText("Prep time in minutes (optional)")) {
-                                TextField(tonightText("Prep time in minutes (optional)"), text: $minutes, prompt: Text(verbatim: "—"))
+                                TextField(tonightText("Prep time in minutes (optional)"), text: $minutes, prompt: Text(verbatim: ""))
                                     .keyboardType(.numberPad)
                                     .focused($focusedInput, equals: "minutes")
                                     .accessibilityIdentifier("tonight.recipe.minutes")
@@ -153,7 +168,7 @@ struct TonightRecipeReview: View {
                                     Text(verbatim: wording).font(.subheadline).foregroundStyle(Theme.secondary)
                                 }
                                 WorkingField(tonightText("Ingredient")) {
-                                    TextField(tonightText("Ingredient"), text: row.name, prompt: Text(verbatim: "—"))
+                                    TextField(tonightText("Ingredient"), text: row.name, prompt: Text(verbatim: ""))
                                         .focused($focusedInput, equals: "ingredient-\(ingredient.id)")
                                         .submitLabel(ingredient.checkedWithoutAmount ? .done : .next)
                                         .onSubmit {
@@ -208,20 +223,36 @@ struct TonightRecipeReview: View {
                         Text(ledgerText("Local to this iPhone")).font(.footnote)
                     }
                 }
+                .textFieldStyle(WorkingInputStyle())
+                .onChange(of: candidate != nil) { _, reviewing in
+                    guard let field = editingReviewedField else { return }
+                    if reviewing {
+                        scroll.scrollTo(reviewAnchor(for: field), anchor: .center)
+                        editingReviewedField = nil
+                    } else {
+                        advance(to: field, using: scroll)
+                    }
+                }
                 .safeAreaInset(edge: .bottom, spacing: 0) {
-                    if focusedInput != nil {
+                    if focusedInput != nil || (editingReviewedField != nil && candidate == nil) {
                         HStack {
-                            if let nextInput {
+                            if editingReviewedField != nil {
+                                Button(tonightText("Review changes")) { review(scroll) }
+                                    .frame(minHeight: 44)
+                                    .accessibilityIdentifier("tonight.recipe.reviewChanges")
+                            } else if let nextInput {
                                 Button { advance(to: nextInput, using: scroll) } label: {
                                     Text(tonightText("Next")).frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
                                 }
                                 .accessibilityIdentifier("tonight.recipe.keyboardNext")
                             }
                             Spacer()
-                            Button { focusedInput = nil } label: {
-                                Text(ledgerText("Done")).frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
+                            if focusedInput != nil {
+                                Button { focusedInput = nil } label: {
+                                    Text(ledgerText("Done")).frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
+                                }
+                                .accessibilityIdentifier("tonight.recipe.keyboardDone")
                             }
-                            .accessibilityIdentifier("tonight.recipe.keyboardDone")
                         }
                         .font(.body.weight(.semibold))
                         .padding(.horizontal)
@@ -231,7 +262,8 @@ struct TonightRecipeReview: View {
                 .scrollDismissesKeyboard(.interactively)
                 .disabled(busy)
             }
-        }.navigationTitle(tonightText("Review a recipe"))
+        }.navigationTitle(screenTitle)
+            .navigationBarTitleDisplayMode(.inline)
             .privacySensitive()
             .toolbar {
                 if savedRecipe == nil || !authorized {
@@ -278,6 +310,35 @@ struct TonightRecipeReview: View {
     private func advance(to field: String, using scroll: ScrollViewProxy) {
         scroll.scrollTo(field, anchor: .center)
         focusedInput = field
+    }
+
+    private func reviewedFact(_ label: String, _ value: String, field: String, identifier: String? = nil) -> some View {
+        editableFact(label, value: value, field: field, identifier: identifier) { fact(label, value) }
+    }
+
+    private func editableFact<Content: View>(_ label: String, value: String, field: String, identifier: String? = nil,
+                                            @ViewBuilder content: () -> Content) -> some View {
+        Button {
+            editingReviewedField = field
+            candidate = nil
+        } label: {
+            HStack(spacing: 12) {
+                content().frame(maxWidth: .infinity, alignment: .leading)
+                Image(systemName: "pencil").font(.body).foregroundStyle(Theme.action).accessibilityHidden(true)
+            }
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(ledger.hasPendingSave)
+        .accessibilityLabel(String(format: tonightText("Edit %@"), label) + ", " + value)
+        .accessibilityIdentifier(identifier ?? "tonight.recipe.review." + field)
+        .id(reviewAnchor(for: field))
+    }
+
+    private func reviewAnchor(for field: String) -> String {
+        // Measured and unmeasured ingredients share the same review row.
+        "review-" + (field.hasPrefix("ingredient-") ? String(field.dropFirst("ingredient-".count)) : field)
     }
 
     @ViewBuilder private func fact(_ label: String, _ value: String) -> some View {

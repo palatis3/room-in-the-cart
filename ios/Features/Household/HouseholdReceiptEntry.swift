@@ -115,6 +115,10 @@ struct HouseholdReceiptEntry: View {
         do { draft = try ReceiptImportDraft(source: source); invalid = false } catch { invalid = true }
     }
     var body: some View {
+        ScrollViewReader { scroll in form(scroll) }
+    }
+
+    private func form(_ scroll: ScrollViewProxy) -> some View {
         WorkingForm {
             Section(householdPantryText("Shared pantry destination")) {
                 Text(household).font(.headline)
@@ -149,7 +153,7 @@ struct HouseholdReceiptEntry: View {
                     }
                     .contentShape(Rectangle())
                     .simultaneousGesture(TapGesture().onEnded { field = "reference" })
-                    ReceiptPurchaseDateFields(draft: value)
+                    ReceiptPurchaseDateFields(draft: value, scroll: scroll)
                 }
                 if let householdModel {
                     HouseholdReceiptTripLink(household: householdModel, pantry: model, page: page, draft: displayed, state: $tripState)

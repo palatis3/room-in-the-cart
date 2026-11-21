@@ -20,6 +20,7 @@ enum PantryVoiceAmount: Equatable, Sendable {
     case pieces(Rational, String)
     case all
     case someUsed
+    case someUsedWithRemaining(PantryVoiceObservation)
     case unknown
 }
 
@@ -42,6 +43,7 @@ enum PantryVoiceRemaining: Equatable, Sendable {
 enum PantryVoiceParser {
     private static let container = #"bottle|jar|carton|bag|box|can|tub|container|pot|botella|frasco|cartón|bolsa|caja|lata|bote|envase|recipiente|tarro"#
     private static let vague = #"some|a little(?: bit)?(?: of)?|a bit of|un poco de|algo de"#
+    private static let use = #"^(?:(?:i (?:just )?)?used|(?:yo )?(?:(?:ya )?usé|acabo de usar)) (.+)$"#
     private static let pieces = ["piece", "pieces", "slice", "slices", "rebanada", "rebanadas", "trozo",
                                  "trozos", "pedazo", "pedazos", "pieza", "piezas"]
 
@@ -62,6 +64,7 @@ enum PantryVoiceParser {
             command = beforeUpdate
         } else { command = spoken }
         if let target = dateFood(command) { return .dateQuery(target) }
+        if let combined = useWithRemaining(command, original: text, localeIdentifier: localeIdentifier) { return combined }
         guard !command.contains("?"), !command.contains("¿"),
               !matches(#"\b(?:expired|expire[sd]?|expiration|caduc\w*|vencid\w*|vence|if|unless|instead|except|but|rather|or|not|never|no|nunca|pero|excepto|quizás|tal vez|maybe|think)\b"#, command)
         else { return review }
@@ -76,7 +79,6 @@ enum PantryVoiceParser {
         if let food = firstFood(allForms, in: command) {
             return .consume([PantryVoiceItem(original: trimmed, food: food, amount: .all)])
         }
-        let use = #"^(?:(?:i (?:just )?)?used|(?:yo )?(?:(?:ya )?usé|acabo de usar)) (.+)$"#
         let source: String
         if let item = groups(use, command)?.first {
             source = item
@@ -104,6 +106,35 @@ enum PantryVoiceParser {
             }
         }
         return items.isEmpty ? review : .consume(items)
+    }
+
+    /// An uncertainty qualifier can describe the remainder, never whether the use happened.
+    /// Parse each clause under its ordinary rules and bind a single unnamed remainder to one food.
+    private static func useWithRemaining(_ command: String, original: String, localeIdentifier: String) -> PantryVoiceIntent? {
+        guard matches(use, command) else { return nil }
+        let remainderStart = #"(?:i think |creo que )?(?:there['’]s |there is |i have |we have |it['’]s |it is |(?:me |nos )?queda |está )"#
+        let boundary = #"^(.*?)(?:\s*[,;.]\s*|\s+)(?:(?:and|y)\s+)?("# + remainderStart + #".+)$"#
+        guard let clauses = groups(boundary, command) else { return nil }
+        let review = PantryVoiceIntent.needsReview(original)
+        let used = clauses[0]
+        let remainder = clauses[1]
+        // Neither a second food nor a second action may inherit this estimate.
+        guard !matches(#"[,;.!?¿]|\b(?:and|or|y|e|o|u|creo|pienso|quizá|quizás|posiblemente|probablemente)\b"#, used),
+              case .consume(let items) = parse(used, localeIdentifier: localeIdentifier),
+              items.count == 1, let item = items.first, item.amount == .unknown || item.amount == .someUsed
+        else { return review }
+        let description = remainder.replacingOccurrences(of: #"^(?:i think |creo que )"#, with: "",
+                                                         options: [.regularExpression, .caseInsensitive])
+        guard case .observation(let estimate) = parse(description, localeIdentifier: localeIdentifier),
+              estimate.food.isEmpty else { return review }
+        switch estimate.remaining {
+        case .some, .nearlyEmpty, .somewhatFull, .mostlyFull, .nearlyFull, .full, .enoughForMeal, .aboutFraction:
+            let observation = PantryVoiceObservation(food: item.food, original: original, remaining: estimate.remaining,
+                                                     remainingWording: remainder)
+            return .consume([PantryVoiceItem(original: original, food: item.food, amount: .someUsedWithRemaining(observation))])
+        default:
+            return review
+        }
     }
 
     /// Only an active remaining-amount prompt supplies the meaning of a bare fraction.

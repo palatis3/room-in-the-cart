@@ -36,7 +36,7 @@ extension ShoppingLedger {
         guard sources.count == 1, let only = sources.first, only.source.canSupplyExistingQuantity,
               only.quantity == nil, only.originalPack == nil, only.capture == nil, only.exclusions.isEmpty,
               only.notes.isEmpty, line.notes.isEmpty, only.productName == line.name,
-              QuickGrocery.plainName(only.originalText) == line.name else { return ledgerQuantity(nil) }
+              QuickGrocery.plainName(only.originalText) != nil, QuickGrocery.plainName(line.name) != nil else { return ledgerQuantity(nil) }
         return nil
     }
 

@@ -3,6 +3,17 @@ import UIKit
 
 func helpText(_ key: String) -> String { String(localized: String.LocalizationValue(key), table: "Help") }
 
+struct PrivateListSharingGuide: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(helpText("Share a list copy")).font(.headline).accessibilityAddTraits(.isHeader)
+            Text(helpText("Add a grocery in Shop to start a list. In Shopping list, open List options, then Send selected items. Preview the copy before choosing a recipient. They can read it without the app."))
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .accessibilityIdentifier("help.privateListSharing")
+    }
+}
+
 /// Place directly in the Settings Form. All articles remain available offline.
 struct HelpSettingsSection: View {
     var body: some View {
@@ -47,6 +58,7 @@ enum HelpTopic: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var navigationTitle: String {
         switch self {
+        case .household: return helpText("Household sharing")
         case .records: return helpText("Record recovery")
         case .membership: return mtr("Membership")
         default: return title
@@ -95,15 +107,24 @@ private struct HelpArticleView: View {
                 paragraph(helpText("Report placement separately. Record substitutions and the usable quantities that actually came home, then review meal shortages. Keep a pending credit pending until it posts; do not record a refund twice."))
                 paragraph(helpText("Prepare a dated cook instruction showing portions, what to set aside and what remains unresolved. Choose the recipient language and review any private wording. Marking a copy sent and reporting acknowledgment are separate actions."))
             case .household:
-                paragraph(helpText("You can shop on this iPhone without joining a household. Your existing private lists and dinners stay here when you join."))
-                if household.configured {
-                    paragraph(helpText("Open Household requests in Settings to see which requests you can send or review."))
-                } else {
-                    paragraph(ht("Household sign-in is unavailable"))
+                Section {
+                    paragraph(helpText("You can shop on this iPhone without joining a household. Your existing private lists and dinners stay here when you join."))
+                    PrivateListSharingGuide()
                 }
-                paragraph(helpText("A request is received only after the household confirms it. If the response is uncertain, retry the same request. A contributor sees their own request and outcome; household budgets stay private."))
-                paragraph(helpText("Only the assigned shopper can commit a shared basket change. Another authorized adult can propose a change for review. A membership seat does not grant shopper authority or budget access."))
-                paragraph(helpText("A current cook view is limited to one shop, selected fields and its expiry. Manage or revoke it through household controls. A dated static message remains a separate copy. Child enrollment requires the configured guardian consent process."))
+                Section(helpText("Join a household")) {
+                    if household.configured {
+                        paragraph(helpText("Open Household requests in Settings to see which requests you can send or review."))
+                    } else {
+                        paragraph(ht("Household sign-in is unavailable"))
+                    }
+                    paragraph(helpText("When Household is available, an organizer can invite an adult from People and invitations. The invited adult opens the invitation on their own device."))
+                }
+                DisclosureGroup(helpText("Requests and permissions")) {
+                    paragraph(helpText("A request is received only after the household confirms it. If the response is uncertain, retry the same request. A contributor sees their own request and outcome; household budgets stay private."))
+                    paragraph(helpText("Only the assigned shopper can commit a shared basket change. Another authorized adult can propose a change for review. A membership seat does not grant shopper authority or budget access."))
+                    paragraph(helpText("A current cook view is limited to one shop, selected fields and its expiry. Manage or revoke it through household controls. A dated static message remains a separate copy. Child enrollment requires the configured guardian consent process."))
+                }
+                .accessibilityIdentifier("help.householdPermissions")
             case .records:
                 Section(helpText("On your old iPhone")) {
                     paragraph(helpText("In Records, open Recovery, exports and saved records. Choose your records and save the encrypted file. Keep the key separately."))
@@ -145,7 +166,7 @@ private struct MembershipHelpAccess: View {
             } else if !household.configured {
                 Text(mtr("Your private lists and dinners work without an account. Household sign-in is unavailable on this iPhone."))
             } else if household.membershipSession == nil {
-                Text(mtr("Select your household to check your planning access."))
+                Text(helpText("Household is a paid subscription. Choose your household to check planning access and see the App Store price if an offer is available."))
             } else {
                 Text(helpText("Open Household membership to check your current access."))
             }
@@ -178,6 +199,12 @@ struct HelpPrivacyView: View {
             Section(helpText("Your private workspace")) {
                 Text(helpText("Your private lists, dinners, comparisons, capture reviews and pickup records stay on this iPhone. Joining a household keeps that work here."))
                 Text(helpText("An export can include private notes and the names of people you shared with. Preview it before choosing a recipient."))
+            }
+            Section(helpText("When you connect or share")) {
+                PrivateListSharingGuide()
+                Text(helpText("Account sign-in sends account information to the identity provider. Explicit household actions send the account, request, shop, budget or instruction fields needed for that action. The service checks the household, role and shop permissions."))
+            }
+            Section(helpText("Reminders and feedback")) {
                 Text(helpText("You can search the USDA FoodKeeper guide offline. In My Pantry, you can save a date to check food quality and choose a daily reminder. The reminder can appear on your Lock Screen. It asks you to open My Pantry and omits food names."))
                 Text(helpText("Optional pickup feedback stays in your local pickup record. It is not sent to an analytics service. You can turn the prompt off in Settings and remove a saved response from its pickup."))
                 Text(helpText("Optional household measurement is separate. With explicit consent, the service stores the response codes you review, the shop identity, eligible week and notice version, and can match membership status to study retention. Existing local feedback, grocery text, prices and member names are not sent. Manage or withdraw that consent in Settings."))
@@ -185,8 +212,7 @@ struct HelpPrivacyView: View {
             Section(helpText("Regional age checks")) {
                 Text(helpText("If Apple requires an age range and the regional check is enabled, the app asks whether you’ll share it. The app uses the response on this iPhone to decide whether to open your workspace. It keeps the check result in memory and sends no age range to your household."))
             }
-            Section(helpText("When you connect or share")) {
-                Text(helpText("Account sign-in sends account information to the identity provider. Explicit household actions send the account, request, shop, budget or instruction fields needed for that action. The service checks the household, role and shop permissions."))
+            Section(helpText("Sharing specific information")) {
                 Text(helpText("If you report household content, the service records your reason, which item and version you reported, your member ID and the sender’s ID when known. You can submit the report without sharing the wording, or choose up to 1,000 characters for the review team to read. Reports expire after the period the operator sets for review. Blocking a sender in your household sends no message text."))
                 Text(helpText("If last calls are available, the shopper can set a cutoff that eligible adults see in the app. The service records your response and whether you mute the invitation. Requests after the cutoff go to the next trip."))
                 Text(helpText("If you request a private review of your authority to delete a child’s account, the service uses the details you provide to verify your request. It keeps a case number, account or enrollment references, status and dates. You can check the case and its expiry in Guardian controls. A separate deletion receipt confirms when the account has been erased."))

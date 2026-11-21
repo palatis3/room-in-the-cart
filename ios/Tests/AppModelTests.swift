@@ -123,6 +123,29 @@ final class AppModelTests: XCTestCase {
     }
 
     @MainActor
+    func testMissingPackAmountEditKeepsApplicableConversionsAndAcceptsZeroYield() throws {
+        var draft = makeConversionDraft()
+        let original = draft
+        draft.bQuantity = ""
+        let model = ComparisonModel(draft: draft)
+        model.compare()
+        XCTAssertTrue(try XCTUnwrap(model.result).offerB.issues.contains(.usableQuantityUnknown))
+
+        model.draft.setUsableAmount("0", unit: .cup, for: .b)
+        model.compare()
+        let zero = try XCTUnwrap(model.result).offerB
+        XCTAssertTrue(zero.issues.contains(.noUsableYield))
+        XCTAssertFalse(zero.issues.contains(.usableQuantityUnknown))
+        XCTAssertEqual(model.draft.bConversion, original.bConversion)
+
+        model.draft.setUsableAmount("120", unit: .gram, for: .b)
+        XCTAssertNil(model.draft.bConversion)
+        XCTAssertEqual(model.draft.aConversion, original.aConversion)
+        model.compare()
+        XCTAssertEqual(try XCTUnwrap(model.result).offerB.totalCost?.minorUnits, 300)
+    }
+
+    @MainActor
     func testConfirmedConversionResolvesOnlyItsOwnOfferAndKeepsUnknownsVisible() throws {
         let draft = makeConversionDraft()
         var withoutSecondBasis = draft

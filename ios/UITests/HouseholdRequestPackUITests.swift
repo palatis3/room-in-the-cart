@@ -755,8 +755,18 @@ import XCTest
             start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 0, dy: 160)))
         }
         tap(add)
-        fill("3.49", into: "household.decision.price", replacing: true)
-        dismissKeyboardIfPresent()
+        let price = app.textFields["household.decision.price"]
+        enter("3.49", into: price, replacing: true)
+        let doneID = "household.decision.done"
+        // Synthesized typing can briefly move the Done inset as the decimal keyboard returns.
+        // Tap once, after the named control has settled above the visible keyboard.
+        guard app.waitForDoneAboveKeyboard(identifier: doneID) else {
+            XCTFail("The request price Done button did not settle above the keyboard.")
+            return
+        }
+        app.buttons[doneID].tap()
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: doneID))
+        XCTAssertEqual(price.value as? String, "3.49")
         let review = element("household.decision.review")
         centerForReading(review)
         review.tap()
@@ -846,14 +856,16 @@ import XCTest
         XCTAssertEqual(control.value as? String, "1", "The reviewed switch must be on: \(label)")
     }
     private func fill(_ text: String, into id: String, replacing: Bool = false) {
-        let field = app.textFields[id]
+        enter(text, into: app.textFields[id], replacing: replacing)
+        let done = app.buttons.matching(NSPredicate(format: "label == %@", "Done")).firstMatch
+        if done.exists && done.isHittable { done.tap() }
+    }
+    private func enter(_ text: String, into field: XCUIElement, replacing: Bool) {
         // A partially clipped field can report hittable on the smaller iOS 17 screen.
         reveal(field, fullyVisible: true)
         XCTAssertTrue(field.isHittable, field.debugDescription); field.tap()
         if replacing, let old = field.value as? String, old != field.placeholderValue { app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
         app.typeText(text)
-        let done = app.buttons.matching(NSPredicate(format: "label == %@", "Done")).firstMatch
-        if done.exists && done.isHittable { done.tap() }
     }
     private func dismissKeyboardIfPresent() {
         let keyboard = app.keyboards.firstMatch

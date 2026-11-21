@@ -41,9 +41,9 @@ import XCTest
         XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
         let viewList = app.buttons["quickGrocery.viewList"]
         XCTAssertTrue(viewList.isHittable)
-        XCTAssertEqual(viewList.label, "View list")
+        XCTAssertEqual(viewList.label, "View shopping list")
         XCTAssertLessThanOrEqual(viewList.frame.maxY, keyboard.frame.minY)
-        capture("Quick entry with View list and Undo")
+        capture("Quick entry with View shopping list and Undo")
         viewList.tap()
         let milk = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "ledgerCheck-", "milk")).firstMatch
         let eggs = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "ledgerCheck-", "eggs")).firstMatch
@@ -57,8 +57,12 @@ import XCTest
         XCTAssertTrue(detail.waitForExistence(timeout: 8))
         XCTAssertTrue(app.staticTexts["milk"].exists)
         tap(detail.buttons.firstMatch)
+        XCTAssertTrue(detail.waitForNonExistence(timeout: 8))
         let department = app.buttons["Department for milk"]
-        tap(department)
+        XCTAssertTrue(department.wait(for: \.isHittable, toEqual: true, timeout: 8), app.debugDescription)
+        XCTAssertGreaterThanOrEqual(department.frame.width, 44)
+        XCTAssertGreaterThanOrEqual(department.frame.height, 44)
+        department.tap()
         tap(app.buttons["Bakery"])
         let changed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Bakery"), object: department)
         XCTAssertEqual(XCTWaiter.wait(for: [changed], timeout: 5), .completed)

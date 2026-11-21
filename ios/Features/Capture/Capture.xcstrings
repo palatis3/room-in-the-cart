@@ -239,19 +239,19 @@
         }
       }
     },
-    "Possible line total for %@: %@": {
+    "Select to keep this amount separate, or link it from the item.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Possible line total for %@: %@"
+            "value": "Select to keep this amount separate, or link it from the item."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Posible total de la línea de %@: %@"
+            "value": "Selecciónalo para mantener el importe separado o vincúlalo desde el artículo."
           }
         }
       }
@@ -273,19 +273,36 @@
         }
       }
     },
-    "Link possible line total": {
+    "Link %@ to this item": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Link possible line total"
+            "value": "Link %@ to this item"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vincular el posible total de la línea"
+            "value": "Vincular %@ a este artículo"
+          }
+        }
+      }
+    },
+    "Select item and link %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select item and link %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seleccionar artículo y vincular %@"
           }
         }
       }

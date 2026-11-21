@@ -241,18 +241,18 @@
         }
       }
     },
-    "View list": {
+    "View shopping list": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "View list"
+            "value": "View shopping list"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ver lista"
+            "value": "Ver lista de compras"
           }
         }
       }
@@ -653,6 +653,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Entrada manual"
+          }
+        }
+      }
+    },
+    "Your first grocery starts “%@”. Works offline without an account.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your first grocery starts “%@”. Works offline without an account."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El primer producto crea la lista «%@». Funciona sin conexión y sin cuenta."
+          }
+        }
+      }
+    },
+    "For the list “%@”.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For the list “%@”."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para la lista «%@»."
           }
         }
       }

@@ -23,6 +23,14 @@ import CoreDomain
         XCTAssertNil(try shop.quantity(forLineID: plain.id))
         XCTAssertEqual(ledgerQuantity(try shop.quantity(forLineID: plain.id)), ledgerText("Quantity unresolved"))
 
+        try shop.updateLine(lineID: plain.id, name: "Rolled oats", notes: "", aisle: "")
+        let renamed = try XCTUnwrap(shop.lines.first)
+        XCTAssertNil(shop.shoppingRowQuantity(for: renamed))
+        XCTAssertNil(try shop.quantity(forLineID: renamed.id))
+        XCTAssertEqual(shop.contributions(forLineID: renamed.id).map(\.originalText), ["Oats"])
+        try shop.updateLine(lineID: plain.id, name: "2 bags of oats", notes: "", aisle: "")
+        XCTAssertEqual(shop.shoppingRowQuantity(for: try XCTUnwrap(shop.lines.first)), ledgerText("Quantity unresolved"))
+
         let unknown = try shop.stageImport(text: "2–3 bags of rice")
         try shop.commitImport(unknown)
         XCTAssertEqual(shop.shoppingRowQuantity(for: try XCTUnwrap(shop.lines.last)), ledgerText("Quantity unresolved"))
@@ -33,6 +41,35 @@ import CoreDomain
         let amount = Quantity(amount: .one, unit: .count, originalLiteral: "1")
         _ = try shop.addManualLine(name: "Apple", quantity: amount)
         XCTAssertEqual(shop.shoppingRowQuantity(for: try XCTUnwrap(shop.lines.last)), ledgerQuantity(amount))
+    }
+
+    func testBulkPluralHintComparesOnlyIncludedRowsWithTheSameMeasuredAmount() throws {
+        let shop = ShoppingLedger()
+        let preview = try shop.stageImport(text: "2 manzanas\n2 manzana\n1 manzana\n2 kg manzana\n2 manzanas verdes")
+        let original = LedgerImportReview.initialChoices(preview)
+        let initial = LedgerImportReview(shop: shop, preview: preview, choices: original)
+        XCTAssertEqual(initial.similarEarlierLines, [preview.lines[1].id: 0])
+        XCTAssertEqual(initial.choices, original)
+        var skipping = original
+        skipping[preview.lines[0].id] = .skip
+        let revised = LedgerImportReview(shop: shop, preview: preview, choices: skipping)
+        XCTAssertTrue(revised.similarEarlierLines.isEmpty)
+        XCTAssertEqual(revised.choices, skipping)
+
+        let reverse = try shop.stageImport(text: "3 lime\n3 limes")
+        let reverseReview = LedgerImportReview(shop: shop, preview: reverse, choices: LedgerImportReview.initialChoices(reverse))
+        XCTAssertEqual(reverseReview.similarEarlierLines, [reverse.lines[1].id: 0])
+        XCTAssertTrue(reverseReview.isComplete)
+
+        let repeated = try shop.stageImport(text: "2 apples\n2 apples")
+        let separate = Dictionary(uniqueKeysWithValues: repeated.lines.map { ($0.id, ImportResolution.addNew) })
+        let keepBoth = LedgerImportReview(shop: shop, preview: repeated, choices: separate)
+        XCTAssertEqual(keepBoth.similarEarlierLines, [repeated.lines[1].id: 0])
+        XCTAssertTrue(keepBoth.isComplete)
+        var saved = shop
+        try saved.commitImport(repeated, decisions: keepBoth.choices)
+        XCTAssertEqual(saved.lines.count, 2)
+        XCTAssertEqual(saved.contributions.map(\.originalText), ["2 apples", "2 apples"])
     }
 
     func testChangingPickupsClearsOnlyThePreviousListsFilter() async throws {

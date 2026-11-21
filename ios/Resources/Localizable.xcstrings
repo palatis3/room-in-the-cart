@@ -1235,6 +1235,74 @@
         }
       }
     },
+    "Enter Pack A usable amount": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter Pack A usable amount"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indicar la cantidad utilizable del paquete A"
+          }
+        }
+      }
+    },
+    "Enter Pack B usable amount": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter Pack B usable amount"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indicar la cantidad utilizable del paquete B"
+          }
+        }
+      }
+    },
+    "Item spending limit: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item spending limit: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Límite de gasto para este artículo: %@"
+          }
+        }
+      }
+    },
+    "Enter the amount as a number or fraction, such as 3 or 1/2.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the amount as a number or fraction, such as 3 or 1/2."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe la cantidad como un número o una fracción, por ejemplo, 3 o 1/2."
+          }
+        }
+      }
+    },
     "Add Pack A price": {
       "extractionState": "manual",
       "localizations": {
@@ -1714,6 +1782,14 @@
         }
       }
     },
+    "Save": {
+      "comment": "Short comparison navigation-bar label at accessibility text sizes.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Save" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Guardar" } }
+      }
+    },
     "Save a pack comparison to return to the same amounts and prices, even offline.": {
       "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
       "extractionState": "manual",
@@ -1748,6 +1824,14 @@
             "value": "Guardar comparación"
           }
         }
+      }
+    },
+    "Saved": {
+      "comment": "Short comparison navigation-bar label at accessibility text sizes.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Saved" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Guardado" } }
       }
     },
     "Saved on this iPhone": {

@@ -22,11 +22,13 @@ enum Theme {
 struct BrandScopeLabel: View {
     let title: String
     let systemImage: String
+    let showsSelection: Bool
     @Environment(\.colorSchemeContrast) private var contrast
 
-    init(_ title: String, systemImage: String) {
+    init(_ title: String, systemImage: String, showsSelection: Bool = false) {
         self.title = title
         self.systemImage = systemImage
+        self.showsSelection = showsSelection
     }
 
     var body: some View {
@@ -36,10 +38,10 @@ struct BrandScopeLabel: View {
             Image(systemName: systemImage).accessibilityHidden(true)
         }
         .font(.subheadline.weight(.semibold))
-        .foregroundStyle(Theme.onSelection)
+        .foregroundStyle(showsSelection ? Theme.onSelection : Theme.secondary)
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
-        .background(Theme.selection, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .background(showsSelection ? Theme.selection : Theme.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         .overlay {
             if contrast == .increased {
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -178,6 +180,19 @@ struct WorkingRecordHeading: View {
 
 /// Explicit prompt color keeps native empty-field purposes readable. Return the
 /// native TextField so callers retain their existing focus and input modifiers.
+struct WorkingInputStyle: TextFieldStyle {
+    func _body(configuration: TextField<Self._Label>) -> some View {
+        configuration
+            .textFieldStyle(.roundedBorder)
+            .overlay {
+                RoundedRectangle(cornerRadius: 5)
+                    .strokeBorder(Theme.controlEdge, lineWidth: 1)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+            }
+    }
+}
+
 func workingTextField(_ title: String, text: Binding<String>) -> TextField<Text> {
     TextField(title, text: text, prompt: Text(title).foregroundStyle(Theme.secondary))
 }

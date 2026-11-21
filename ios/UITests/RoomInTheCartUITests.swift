@@ -43,7 +43,7 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertEqual(field.frame.height, emptyHeight, accuracy: 1, "Submitting should restore the empty line.")
         let viewList = app.buttons["quickGrocery.viewList"]
         XCTAssertTrue(viewList.waitForExistence(timeout: 5))
-        XCTAssertEqual(viewList.label, "Ver lista")
+        XCTAssertEqual(viewList.label, "Ver lista de compras")
         XCTAssertLessThanOrEqual(undo.frame.maxY, viewList.frame.minY, "Accessibility text sizes should stack the receipt actions.")
         XCTAssertGreaterThanOrEqual(viewList.frame.height, 44)
     }
@@ -176,13 +176,18 @@ final class RoomInTheCartUITests: XCTestCase {
         for language in ["en", "es"] {
             launch(language: language, largeDark: language == "es")
             let add = app.buttons["shop.addFirstList"]
+            let destination = language == "en" ? "Pickup" : "Recogida"
+            let firstDestination = app.staticTexts["quickGrocery.firstDestination"]
+            XCTAssertTrue(firstDestination.waitForExistence(timeout: 10))
+            XCTAssertTrue(firstDestination.label.contains(destination))
+            XCTAssertEqual(add.label, language == "en" ? "Add several items" : "Añadir varios artículos")
             tap(add)
             let close = app.buttons[language == "en" ? "Close" : "Cerrar"]
             tap(close)
             XCTAssertTrue(add.waitForExistence(timeout: 5))
             tap(add)
             let field = app.textViews["ledgerImportText"]
-            let wording = language == "en" ? "2 kg rice" : "2 kg arroz"
+            let wording = language == "en" ? "2 apples\n2 apple" : "2 manzanas\n2 manzana"
             tap(field)
             field.typeText(wording)
             let done = language == "en" ? "Done" : "Listo"
@@ -210,12 +215,100 @@ final class RoomInTheCartUITests: XCTestCase {
             reveal(field)
             XCTAssertEqual(field.value as? String, wording)
             tap(app.buttons["ledgerReviewImport"])
-            tap(app.buttons["ledgerCommitImport"])
+            let compact = language == "es"
+            let summary = compact ? app.buttons["ledgerImportSummary"] : app.staticTexts["ledgerImportSummary"]
+            let confirm = app.buttons["ledgerCommitImport"]
+            func assertSummary(_ expected: String, line: UInt = #line) {
+                XCTAssertEqual(compact ? summary.value as? String : summary.label, expected, line: line)
+            }
+            let both = language == "en" ? "Pickup · Selected: 2 · Skipped: 0" : "Recogida · Incluidos: 2 · Omitidos: 0"
+            let onlyOne = language == "en" ? "Pickup · Selected: 1 · Skipped: 1" : "Recogida · Incluidos: 1 · Omitidos: 1"
+            XCTAssertTrue(summary.waitForExistence(timeout: 10))
+            assertSummary(both)
+            // Scroll to the adjacent action. The notice is informative text and has no tap action.
+            let skipSecond = app.buttons["ledgerImportSkip-2"]
+            revealReviewAction(skipSecond, above: compact ? confirm : summary)
+            let advisory = app.staticTexts["ledgerImportRepeat-2"]
+            XCTAssertTrue(advisory.waitForExistence(timeout: 5))
+            XCTAssertFalse(advisory.frame.isEmpty)
+            XCTAssertEqual(advisory.label, language == "en" ? "Similar to line 1: 2 apples" : "Se parece a la línea 1: 2 manzanas")
+            tap(skipSecond)
+            assertSummary(onlyOne)
+            XCTAssertFalse(app.textFields["ledgerImportAmount-2"].exists)
+            XCTAssertFalse(advisory.exists)
+            tap(app.buttons["ledgerImportInclude-2"])
+            assertSummary(both)
+            XCTAssertEqual(app.textFields["ledgerImportAmount-2"].value as? String, "2")
+            if compact {
+                XCTAssertEqual(confirm.value as? String, both)
+                XCTAssertTrue(confirm.isHittable && confirm.isEnabled)
+                let amount = app.textFields["ledgerImportAmount-2"]
+                revealReviewAction(amount, above: confirm)
+                amount.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5)).tap()
+                amount.typeText("..")
+                XCTAssertTrue(doneButton.wait(for: \.isHittable, toEqual: true, timeout: 5))
+                doneButton.tap()
+                XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: done))
+                XCTAssertFalse(confirm.isEnabled)
+                tap(summary)
+                let totals = app.alerts["Totales de la revisión"]
+                XCTAssertTrue(totals.staticTexts[both].exists)
+                let jump = totals.buttons["Revisar línea 2"]
+                XCTAssertTrue(jump.isHittable)
+                jump.tap()
+                revealReviewAction(amount, above: confirm)
+                amount.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5)).tap()
+                amount.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 3) + "2")
+                XCTAssertTrue(doneButton.wait(for: \.isHittable, toEqual: true, timeout: 5))
+                doneButton.tap()
+                XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: done))
+                XCTAssertEqual(amount.value as? String, "2")
+                XCTAssertTrue(confirm.isEnabled && confirm.isHittable)
+                screenshot("Spanish largest text compact review and reachable confirmation")
+            }
+            tap(confirm)
             let undo = app.buttons["ledgerUndoImport"]
             tap(undo)
             XCTAssertTrue(undo.waitForNonExistence(timeout: 10))
             app.terminate()
         }
+    }
+
+    func testSharePreviewClosesToPrivateListWithoutSending() {
+        launch()
+        let name = "Roasted red peppers"
+        let field = element("quickGrocery.name")
+        tap(field)
+        field.typeText(name)
+        tap(app.buttons["quickGrocery.add"])
+        tap(app.buttons["quickGrocery.viewList"])
+        tap(app.buttons["ledgerListOptions"])
+        tap(app.buttons["Send selected items"])
+        let row = app.switches.matching(NSPredicate(format: "label CONTAINS %@", name)).firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 8))
+        row.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        tap(app.buttons["Preview message"])
+        let preview = app.staticTexts["tripShareBody"]
+        XCTAssertTrue(preview.waitForExistence(timeout: 8))
+        XCTAssertTrue(preview.label.contains(name))
+        tap(app.buttons["tripShare.close"])
+        XCTAssertTrue(preview.waitForNonExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["Inspect " + name].waitForExistence(timeout: 8))
+    }
+
+    func testHouseholdHelpShowsPrivateSharingBeforeDetailedPermissions() {
+        launch(language: "es")
+        tap(app.buttons["settings"])
+        tap(app.buttons["settings.help"])
+        tap(app.buttons["help.topic.household"])
+        XCTAssertTrue(app.navigationBars["Compartir en el hogar"].waitForExistence(timeout: 8))
+        let share = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "Enviar artículos seleccionados")).firstMatch
+        XCTAssertTrue(share.waitForExistence(timeout: 8))
+        let permissions = app.buttons["help.householdPermissions"]
+        let rule = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "los presupuestos del hogar")).firstMatch
+        XCTAssertFalse(rule.exists)
+        tap(permissions)
+        XCTAssertTrue(rule.waitForExistence(timeout: 8))
     }
 
     func testAccountDeletionSettingsExplainsScopeInEnglishAndSpanishBeforeSignIn() {
@@ -420,6 +513,45 @@ final class RoomInTheCartUITests: XCTestCase {
         screenshot("Unknown-pack-quantity-reopened")
     }
 
+    func testMissingPackAmountCanBeCorrectedFromResultWithItsUnitAndItemLimit() {
+        launch()
+        openEmptyComparison()
+        type([("itemName", "Frozen shelled edamame"), ("needed", "300")])
+        tap(app.buttons["neededUnit"])
+        tap(app.buttons["grams"])
+        type([("aQuantity", "300"), ("aPrice", "3.45")])
+        tap(app.buttons["aUnit"])
+        tap(app.buttons["grams"])
+        type([("bPrice", "5.76"), ("itemCap", "5.50")])
+        compare()
+
+        let addAmount = app.buttons["bAddAmount"]
+        XCTAssertEqual(addAmount.label, "Enter Pack B usable amount")
+        XCTAssertFalse(app.buttons["aAddAmount"].exists)
+        tap(addAmount)
+        let amount = app.textFields["bQuantity"]
+        XCTAssertTrue(amount.waitForExistence(timeout: 5))
+        tap(app.buttons["Cancel"])
+        XCTAssertTrue(amount.waitForNonExistence(timeout: 5))
+        tap(addAmount)
+        tap(amount)
+        amount.typeText("0.6")
+        dismissComparisonKeyboard("comparison.done.bQuantity")
+        tap(app.buttons["bUnit"])
+        tap(app.buttons["kilograms"])
+        tap(app.buttons["comparison.updateAmount"])
+
+        XCTAssertTrue(amount.waitForNonExistence(timeout: 5))
+        XCTAssertFalse(addAmount.exists)
+        let cap = element("comparisonItemLimit")
+        revealFullyInComparison(cap)
+        XCTAssertTrue(cap.label.contains("$5.50"))
+        XCTAssertTrue(element("aCostSummary").label.contains("$3.45"))
+        XCTAssertTrue(element("bCostSummary").label.contains("$5.76"))
+        assertContains("Usable amount in one pack: 0.6 kilograms")
+        assertContains("Over the item limit: $0.26")
+    }
+
     func testPackageLabelConversionResolvesOnlyAfterConfirmationAndReopens() {
         launch()
         openEmptyComparison()
@@ -544,6 +676,29 @@ final class RoomInTheCartUITests: XCTestCase {
         reveal(name)
         XCTAssertEqual(name.value as? String, "Accessible edit wraps")
         compare()
+        assertKnownTotals()
+    }
+
+    func testLargestTextComparisonSavesFromNavigationAndReopensOneRecord() {
+        launch(largeDark: true)
+        openEmptyComparison()
+        enterComparison(item: "Measured oats", firstQuantity: "8", cap: "30")
+        compare()
+        let bar = app.navigationBars.firstMatch
+        let save = bar.buttons["comparison.toolbarSave"]
+        XCTAssertTrue(save.waitForExistence(timeout: 5) && save.isHittable)
+        XCTAssertEqual(save.label, "Save comparison")
+        save.doubleTap()
+        let saved = bar.descendants(matching: .any).matching(identifier: "comparison.toolbarSaved").firstMatch
+        XCTAssertTrue(saved.waitForExistence(timeout: 10))
+        XCTAssertEqual(saved.label, "Saved on this iPhone")
+        XCTAssertFalse(save.exists)
+
+        app.terminate()
+        launch(reset: false, largeDark: true)
+        reopenSavedRecord(recordsLabel: "Records", item: "Measured oats")
+        XCTAssertTrue(saved.waitForExistence(timeout: 5))
+        XCTAssertFalse(save.exists)
         assertKnownTotals()
     }
 
@@ -974,9 +1129,10 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars[recordsLabel].waitForExistence(timeout: 5))
         let rows = app.buttons.matching(identifier: "savedComparison")
         let row = rows.firstMatch
-        XCTAssertTrue(row.waitForExistence(timeout: 10))
-        XCTAssertEqual(rows.count, 1, "One save must produce one durable record")
+        // Records creates offscreen rows lazily, especially at accessibility text sizes.
         reveal(row)
+        XCTAssertTrue(row.exists && row.isHittable)
+        XCTAssertEqual(rows.count, 1, "One save must produce one durable record")
         XCTAssertTrue(row.label.contains(item), "Original item name should survive restart: \(row.label)")
         row.tap()
         XCTAssertTrue(element("comparisonResultsScroll").waitForExistence(timeout: 5))
@@ -1075,6 +1231,21 @@ final class RoomInTheCartUITests: XCTestCase {
 
     private func element(_ id: String) -> XCUIElement {
         app.descendants(matching: .any).matching(identifier: id).firstMatch
+    }
+
+    private func revealReviewAction(_ target: XCUIElement, above summary: XCUIElement,
+                                    file: StaticString = #filePath, line: UInt = #line) {
+        let form = app.collectionViews["ledgerImportForm"]
+        let top = max(form.frame.minY, app.navigationBars.firstMatch.frame.maxY)
+        let area = CGRect(x: form.frame.minX + 18, y: top, width: form.frame.width - 36,
+                          height: summary.frame.minY - top)
+        XCTAssertGreaterThan(area.height, 44, file: file, line: line)
+        for _ in 0..<36 {
+            let frame = target.exists ? target.frame : .zero
+            if !frame.isEmpty && (area.minY...area.maxY).contains(frame.midY) && target.isHittable { return }
+            app.scrollForm(in: area, upward: frame.isEmpty || frame.midY > area.minY, besideFields: true)
+        }
+        XCTFail("Could not reach the review action above the pinned totals: \(target)", file: file, line: line)
     }
 
     private func tap(_ target: XCUIElement) {

@@ -521,7 +521,8 @@ struct ShopView: View {
                     LedgerQuickGroceryEntry(model: ledger, prominent: true)
                     BrandScopeLabel(quickGroceryText("Private on this iPhone"), systemImage: "lock")
                     if ledger.shop == nil {
-                        Text(tr("Works offline. No account needed."))
+                        Text(quickGroceryFormat("Your first grocery starts “%@”. Works offline without an account.", ledgerText("Pickup")))
+                            .accessibilityIdentifier("quickGrocery.firstDestination")
                             .font(.footnote).foregroundStyle(Theme.secondary)
                     }
                 }
@@ -644,11 +645,11 @@ struct ShopView: View {
         VStack(alignment: .leading, spacing: 8) {
             if ledger.shop == nil {
                 VStack(alignment: .leading, spacing: 0) {
-                    Button { showingFirstList = true } label: { ShopToolLabel(ledgerText("Add a list"), "text.badge.plus", chevron: true) }
+                    Button { showingFirstList = true } label: { ShopToolLabel(ledgerText("Add several items"), "text.badge.plus", chevron: true) }
                         .disabled(ledger.firstListStore == nil || ledger.saving || ledger.hasPendingSave)
                         .accessibilityIdentifier("shop.addFirstList")
                     Divider()
-                    NavigationLink { ComparisonView() } label: { ShopToolLabel(tr("Compare packs"), "arrow.left.arrow.right", chevron: true) }
+                    NavigationLink { NewComparisonDestination() } label: { ShopToolLabel(tr("Compare packs"), "arrow.left.arrow.right", chevron: true) }
                         .accessibilityIdentifier("newComparison")
                     Divider()
                     RestorableShoppingListLink { ShopToolLabel(ledgerText("Start pickup"), "cart", chevron: true) }
@@ -675,7 +676,7 @@ struct ShopView: View {
                 Button { showingStandingList = true } label: { ShopToolLabel(shoppingText("Standing list"), "list.star") }
                     .disabled(!ledger.ready).accessibilityIdentifier("shop.standingList")
             } else {
-                NavigationLink { ComparisonView() } label: { ShopToolLabel(tr("Compare packs"), "arrow.left.arrow.right") }
+                NavigationLink { NewComparisonDestination() } label: { ShopToolLabel(tr("Compare packs"), "arrow.left.arrow.right") }
                     .accessibilityIdentifier("newComparison")
             }
             if canReviewCheckout {
@@ -834,7 +835,7 @@ struct RecordsView: View {
                             .font(.subheadline).foregroundStyle(Theme.secondary)
                     }.padding(.vertical, 4)
                     NavigationLink {
-                        ComparisonView()
+                        NewComparisonDestination()
                     } label: { Label(tr("Compare packs"), systemImage: "plus") }
                     .accessibilityIdentifier("records.startComparison")
                 }

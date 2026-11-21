@@ -391,18 +391,34 @@
         }
       }
     },
-    "Review selected lines": {
+    "Preview receipt changes": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Review selected lines"
+            "value": "Preview receipt changes"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Revisar líneas seleccionadas"
+            "value": "Ver los cambios del recibo"
+          }
+        }
+      }
+    },
+    "Use selected receipt lines": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use selected receipt lines"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar las líneas seleccionadas"
           }
         }
       }

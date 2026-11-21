@@ -143,18 +143,25 @@ struct PantryRestockActions: View {
                 let times = model.snapshot?.lots.filter { $0.foodID == lot.foodID }.compactMap(\.discardedTimes).reduce(0, +) ?? 0
                 if times > 0 { LabeledContent(pantryText("Recorded discards for this product"), value: times.formatted()) }
                 if showCheckDates, let digest, digest.authorized(), PantryRestockReview.canSetCheckDate(for: lot) {
-                    let scope = PantryDigestAccess(scope: digest.scope, authorized: { adult != nil && digest.authorized() })
-                    NavigationLink(pantryFormat("Set a check date for %@", food)) {
+                    digestButton(pantryFormat("Set a check date for %@", food), identifier: "pantry.restock.checkDate", digest: digest) { scope in
                         PantryDigestDayEditor(model: model, access: scope, lot: lot)
-                    }.accessibilityIdentifier("pantry.restock.checkDate")
-                    NavigationLink(pantryText("Review daily notification settings")) {
+                    }
+                    digestButton(pantryText("Review daily notification settings"), identifier: "pantry.restock.notificationSettings", digest: digest) { scope in
                         PantryDigestList(model: model, access: scope)
-                    }.accessibilityIdentifier("pantry.restock.notificationSettings")
+                    }
                     Text(pantryText("A check date stays in My Pantry. For an alert, choose a time and turn on daily notifications."))
                         .font(.footnote)
                 }
             }
         }
+    }
+
+    private func digestButton<Content: View>(_ title: String, identifier: String, digest: PantryDigestAccess,
+                                             @ViewBuilder content: @escaping (PantryDigestAccess) -> Content) -> some View {
+        PantryRestockDigestButton(title: title, identifier: identifier, resolve: {
+            guard let owner = adult, digest.authorized() else { return nil }
+            return PantryDigestAccess(scope: digest.scope, authorized: { adult == owner && digest.authorized() })
+        }, destination: content)
     }
 
     // A Form expands the Group above into several rows. Only the tapped grocery row presents this sheet.
@@ -177,5 +184,40 @@ struct PantryRestockActions: View {
                     } else { Text(pantryText("This food is unavailable. Return to My Pantry and refresh.")) }
                 }
             }
+    }
+}
+
+// Keep the saved-use result mounted while its date tools are open. Rebuilding a pushed
+// destination from that dynamic Form can repeatedly invalidate navigation on iOS 17.
+private struct PantryRestockDigestButton<Destination: View>: View {
+    let title: String
+    let identifier: String
+    let resolve: @MainActor () -> PantryDigestAccess?
+    @ViewBuilder let destination: (PantryDigestAccess) -> Destination
+    @State private var presentation: Presentation?
+
+    private struct Presentation: Identifiable {
+        let id = UUID()
+        let access: PantryDigestAccess
+    }
+
+    var body: some View {
+        Button(title) {
+            guard let access = resolve() else { return }
+            presentation = Presentation(access: access)
+        }
+        .accessibilityIdentifier(identifier)
+        .sheet(item: $presentation) { review in
+            NavigationStack {
+                destination(review.access)
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button(pantryText("Close")) { presentation = nil }
+                                .accessibilityIdentifier("pantry.restock.closeDigest")
+                        }
+                    }
+            }
+        }
     }
 }

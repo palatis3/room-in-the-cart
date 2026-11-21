@@ -21,6 +21,42 @@ final class PantryVoiceParserTests: XCTestCase {
         }
     }
 
+    func testSingleUnmeasuredUseKeepsItsRoughRemainderAndOriginalSource() {
+        for (locale, wording, food, remainder) in [
+            ("es-MX", "Usé arroz integral, creo que queda un poco.", "arroz integral", "creo que queda un poco"),
+            ("en-US", "I used brown rice, I think there’s a little left.", "brown rice", "I think there’s a little left"),
+            ("en-US", "I just used some brown rice and I have some left", "brown rice", "I have some left"),
+            ("es-MX", "Acabo de usar un poco de arroz integral me queda algo", "arroz integral", "me queda algo")
+        ] {
+            let estimate = PantryVoiceObservation(food: food, original: wording, remaining: .some, remainingWording: remainder)
+            let item = PantryVoiceItem(original: wording, food: food, amount: .someUsedWithRemaining(estimate))
+            XCTAssertEqual(PantryVoiceParser.parse(wording, localeIdentifier: locale), .consume([item]), wording)
+            XCTAssertNil(PantryVoiceParser.parseRemainingReply(wording, localeIdentifier: locale), wording)
+        }
+    }
+
+    func testRoughRemainderCannotGuessWhetherOrHowMuchOfWhichFoodWasUsed() {
+        for (locale, text) in [
+            ("es-MX", "No usé arroz integral, creo que queda un poco."),
+            ("es-MX", "Creo que usé arroz integral, queda un poco."),
+            ("es-MX", "Usé arroz y frijoles, creo que queda un poco."),
+            ("es-MX", "Usé dos tazas de arroz, creo que queda un poco."),
+            ("es-MX", "Usé arroz, creo que queda un poco de harina."),
+            ("es-MX", "Usé arroz, creo que está vacío."),
+            ("en-US", "I think I used brown rice, there's a little left."),
+            ("en-US", "I never used brown rice, there's a little left."),
+            ("en-US", "I used rice and flour, I think there’s a little left."),
+            ("en-US", "I used two cups of rice, there's a little left."),
+            ("en-US", "I used all the rice, there's a little left."),
+            ("en-US", "I used rice, there's some flour left."),
+            ("en-US", "I used rice, I think it's empty."),
+            ("en-US", "I used rice, I think there's a little left?"),
+            ("en-US", "I used rice, I think there's a little left, then add milk.")
+        ] {
+            XCTAssertEqual(PantryVoiceParser.parse(text, localeIdentifier: locale), .needsReview(text), text)
+        }
+    }
+
     func testPoliteFridgeUpdateAfterConsumptionKeepsEveryIngredientAndRejectsOtherQuestions() {
         let english = "Hey, I just used two eggs and two pieces of bread and some flour"
         let spanish = "Oye, acabo de usar dos huevos y dos rebanadas de pan y un poco de harina"

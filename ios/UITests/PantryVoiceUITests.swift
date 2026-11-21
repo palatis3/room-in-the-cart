@@ -144,10 +144,7 @@ import XCTest
         let remaining = app.buttons["pantry.voiceRemaining.0"]
         reveal(remaining)
         remaining.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
-        let unsure = app.buttons["pantry.voiceNotSure.0"]
-        XCTAssertTrue(unsure.waitForExistence(timeout: 6), app.debugDescription)
-        XCTAssertEqual(unsure.label, spanish ? "No lo sé" : "Not sure")
-        unsure.tap()
+        tapRemainingChoice(spanish ? "No lo sé" : "Not sure", spanish: spanish)
         let unchanged = element("pantry.voiceStatus")
         reveal(unchanged)
         XCTAssertEqual(unchanged.label, spanish ? "No seleccionaste ningún cambio para la despensa." : "No pantry changes selected.")
@@ -206,6 +203,64 @@ import XCTest
         openPantry(reset: false, spanish: spanish, expectEmptyShop: true)
         assertLot(id, contains: spanish ? "(estimación)" : "(estimate)")
         assertLot(id, contains: observation)
+    }
+
+    func testEnglishSavedUseCanOpenCloseAndReopenItsPersonalCheckDay() {
+        checkSavedUseDate(spanish: false)
+    }
+
+    func testSpanishSavedUseCanOpenCloseAndReopenItsPersonalCheckDay() {
+        checkSavedUseDate(spanish: true)
+    }
+
+    private func checkSavedUseDate(spanish: Bool) {
+        let name = spanish ? "Arroz integral" : "Brown rice"
+        let words = spanish ? "Usé arroz integral, creo que queda un poco." : "I used some brown rice."
+        openPantry(reset: true, spanish: spanish)
+        let lotID = addLot(name, amount: "2")
+        tapPantryEntry(app.buttons["pantry.voiceEntry"])
+        fill(words, into: "pantry.voiceText")
+        XCTAssertTrue(app.keyboards.firstMatch.exists)
+        let reviewWords = app.buttons["pantry.voiceReview"]
+        XCTAssertTrue(reviewWords.isHittable)
+        XCTAssertLessThanOrEqual(reviewWords.frame.maxY, app.keyboards.firstMatch.frame.minY + 2)
+        reviewWords.tap()
+        let picker = app.buttons["pantry.voiceRemaining.0"]
+        XCTAssertTrue(picker.waitForExistence(timeout: 8), app.debugDescription)
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 8))
+        assertTranscript(words)
+        reveal(picker)
+        picker.tap()
+        tapRemainingChoice(spanish ? "Queda menos de la mitad" : "Less than half left", spanish: spanish)
+        tap(app.buttons["pantry.voicePreview"])
+        assertTranscript(words)
+        tap(app.buttons["pantry.voiceConfirm"])
+        let saved = element("pantry.voiceSaved")
+        XCTAssertTrue(saved.waitForExistence(timeout: 10))
+        let checkDay = app.buttons["pantry.restock.checkDate"]
+        reveal(checkDay)
+        tap(checkDay)
+        let saveDate = app.buttons["pantry.digest.saveDate"]
+        XCTAssertTrue(saveDate.waitForExistence(timeout: 8), app.debugDescription)
+        tap(app.buttons["pantry.restock.closeDigest"])
+        XCTAssertTrue(saved.waitForExistence(timeout: 8))
+        reveal(checkDay)
+        tap(checkDay)
+        XCTAssertTrue(saveDate.waitForExistence(timeout: 8))
+        tap(saveDate)
+        XCTAssertTrue(element("pantry.digest.dateStatus").waitForExistence(timeout: 8))
+        XCTAssertFalse(system.alerts.firstMatch.exists)
+        tap(app.buttons["pantry.restock.closeDigest"])
+        XCTAssertTrue(saved.waitForExistence(timeout: 8))
+        app.terminate()
+        openPantry(reset: false, spanish: spanish)
+        tap(app.buttons[lotID])
+        tap(app.buttons["pantry.usageHistory"])
+        let count = element("pantry.usageCount")
+        XCTAssertTrue(count.waitForExistence(timeout: 8))
+        XCTAssertTrue(count.label.contains("1") || (count.value as? String) == "1", count.debugDescription)
+        XCTAssertTrue(element("pantry.usageEvent.0").exists)
+        XCTAssertFalse(element("pantry.usageEvent.1").exists)
     }
 
     func testSpanishFirstFoodRecordsOneUnmeasuredUseAndKeepsMonthOnlyLabel() {
@@ -306,7 +361,7 @@ import XCTest
         let remaining = app.buttons["pantry.voiceRemaining.0"]
         reveal(remaining)
         remaining.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
-        tap(app.buttons["pantry.voiceDescribe.0"])
+        tapRemainingChoice("Describir cuánto queda", spanish: true)
         let reply = "más de la mitad"
         fill(reply, into: "pantry.voiceRemainingText.0")
         dismissVoiceKeyboard()
@@ -354,6 +409,21 @@ import XCTest
         tap(app.buttons["pantry.voiceReview"])
         XCTAssertTrue(app.buttons["pantry.voiceDate"].waitForExistence(timeout: 8), app.debugDescription)
         XCTAssertFalse(element("pantry.voiceConfirm").exists)
+    }
+
+    private func tapRemainingChoice(_ label: String, spanish: Bool, file: StaticString = #filePath, line: UInt = #line) {
+        let title = spanish ? "Indicar cuánto queda" : "Choose how much is left"
+        let named = NSPredicate(format: "label == %@", label)
+        XCTAssertTrue(app.buttons.matching(named).firstMatch.waitForExistence(timeout: 6),
+                      app.debugDescription, file: file, line: line)
+        // The same native confirmation dialog appears as a named Sheet on iOS 27 and Other on iOS 17.
+        let sheet = app.sheets[title]
+        let dialog = sheet.exists ? sheet : app.otherElements[title]
+        XCTAssertTrue(dialog.exists, app.debugDescription, file: file, line: line)
+        let choices = dialog.buttons.matching(named)
+        XCTAssertEqual(choices.count, 1, dialog.debugDescription, file: file, line: line)
+        XCTAssertTrue(choices.element.isHittable, dialog.debugDescription, file: file, line: line)
+        choices.element.tap()
     }
 
     private func tapPantryEntry(_ entry: XCUIElement) {
@@ -424,18 +494,30 @@ import XCTest
         app.descendants(matching: .any).matching(identifier: id).firstMatch
     }
 
-    private func reveal(_ control: XCUIElement) {
+    private func reveal(_ control: XCUIElement, needsTap: Bool = true) {
         let tabBar = app.tabBars.firstMatch
         for attempt in 0..<16 {
-            let top = app.navigationBars.allElementsBoundByIndex.last?.frame.maxY ?? app.frame.minY
+            if !needsTap && control.exists { return }
+            // A dismissing sheet can remove a navigation bar between indexed queries.
+            let snapshot = try? app.snapshot()
+            var nodes = snapshot.map { [$0] } ?? []
+            var top = snapshot?.frame.minY ?? app.frame.minY
+            while let node = nodes.popLast() {
+                if node.elementType == .navigationBar, !node.frame.isEmpty {
+                    top = node.frame.maxY
+                    break
+                }
+                nodes.append(contentsOf: node.children)
+            }
             let bottom = tabBar.exists && tabBar.isHittable ? tabBar.frame.minY : app.frame.maxY
+            guard top >= app.frame.minY, bottom <= app.frame.maxY, bottom - top >= 100 else { continue }
             let area = CGRect(x: app.frame.minX + 12, y: top, width: app.frame.width - 24, height: bottom - top)
             if control.exists, control.isHittable, area.contains(CGPoint(x: control.frame.midX, y: control.frame.midY)) { return }
             let upward = control.exists ? control.frame.midY > area.midY : attempt < 8
             // Drag the displayed form without flicking past a short row or scrolling the list behind a sheet.
             app.scrollForm(in: area, upward: upward, besideFields: true)
         }
-        XCTAssertTrue(control.waitForExistence(timeout: 8) && control.isHittable, app.debugDescription)
+        XCTAssertTrue(control.waitForExistence(timeout: 8) && (!needsTap || control.isHittable), app.debugDescription)
     }
 
     private func tap(_ control: XCUIElement) {
@@ -469,15 +551,17 @@ import XCTest
         amountField.typeText("\n")
         XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
         tap(app.buttons["pantry.review"])
-        tap(app.buttons["pantry.confirm"])
+        let confirm = app.buttons["pantry.confirm"]
+        tap(confirm)
+        XCTAssertTrue(confirm.waitForNonExistence(timeout: 8), app.debugDescription)
         let row = lot(name)
-        reveal(row)
+        reveal(row, needsTap: false)
         return row.identifier
     }
 
     private func assertLot(_ id: String, contains expected: String) {
         let row = app.buttons[id]
-        reveal(row)
+        reveal(row, needsTap: false)
         XCTAssertTrue(row.label.localizedCaseInsensitiveContains(expected), row.label)
     }
 
