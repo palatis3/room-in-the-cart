@@ -5,7 +5,8 @@
   ],
   "02 · Review a bulk list and keep one duplicate amount": [
     "RoomInTheCartUITests/ContextualNavigationUITests/testLargeTextKeepsLongNativePasteEditableAndReviewReachable",
-    "RoomInTheCartUITests/FreeJourneyUITests/testStagedListCanReturnToOriginalAndMergeADuplicateAfterRestart"
+    "RoomInTheCartUITests/FreeJourneyUITests/testStagedListCanReturnToOriginalAndMergeADuplicateAfterRestart",
+    "RoomInTheCartUITests/RoomInTheCartUITests/testSpanishLongListSkipKeepsTheMangoVisibleAndOriginalYogurtWordingSeparate"
   ],
   "03 · Carry the missing recipe ingredient into a named pickup": [
     "RoomInTheCartUITests/TonightUITests/testFirstSavedDinnerCarriesIntoNewPickupAndAddsOnlySelectedIngredient"
