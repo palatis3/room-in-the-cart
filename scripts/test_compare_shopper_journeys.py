@@ -24,5 +24,7 @@ class ShopperRegressionTests(unittest.TestCase):
 
     def test_incomplete_trip_withholds_the_headline(self):
         with contextlib.redirect_stdout(io.StringIO()) as output:
-            self.assertEqual(report([("01", 23, None, None, None, None)], True), 2)
+            self.assertEqual(report([("01", 23, None, None, None, None),
+                                     ("02", 30, 70, 75, None, None)], True), 2)
+        self.assertIn("Eligible subset (1/2 journeys)", output.getvalue())
         self.assertNotIn("Equal-weight cohort", output.getvalue())

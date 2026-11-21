@@ -63,6 +63,12 @@ def report(results, fail_on_decline):
         if round(later - earlier, 2) < 0 or (new_cap or 100) < (old_cap or 100):
             declines.append(slot)
     if incomplete:
+        eligible = [row for row in results if row[2] is not None and row[3] is not None]
+        if eligible:
+            print(f"Eligible subset ({len(eligible)}/{len(results)} journeys): "
+                  f"{mean(row[2] for row in eligible):.2f} -> {mean(row[3] for row in eligible):.2f}/100")
+        if declines:
+            print("Review lower scores or new consequence ceilings for " + ", ".join(declines))
         print("The full cohort needs more matched evidence.")
         return 2
     print(f"Equal-weight cohort: {mean(r[2] for r in results):.2f} -> {mean(r[3] for r in results):.2f}/100")
