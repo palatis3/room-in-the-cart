@@ -497,7 +497,17 @@ import XCTest
     private func reveal(_ control: XCUIElement) {
         let tabBar = app.tabBars.firstMatch
         for attempt in 0..<16 {
-            let top = app.navigationBars.allElementsBoundByIndex.last?.frame.maxY ?? app.frame.minY
+            // A dismissing sheet can remove a navigation bar between indexed queries.
+            let snapshot = try? app.snapshot()
+            var nodes = snapshot.map { [$0] } ?? []
+            var top = snapshot?.frame.minY ?? app.frame.minY
+            while let node = nodes.popLast() {
+                if node.elementType == .navigationBar, !node.frame.isEmpty {
+                    top = node.frame.maxY
+                    break
+                }
+                nodes.append(contentsOf: node.children)
+            }
             let bottom = tabBar.exists && tabBar.isHittable ? tabBar.frame.minY : app.frame.maxY
             let area = CGRect(x: app.frame.minX + 12, y: top, width: app.frame.width - 24, height: bottom - top)
             if control.exists, control.isHittable, area.contains(CGPoint(x: control.frame.midX, y: control.frame.midY)) { return }
