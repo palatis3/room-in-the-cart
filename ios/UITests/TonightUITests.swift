@@ -206,12 +206,21 @@ import XCTest
         if maximumText && !(confirmChanges.exists && confirmChanges.isHittable) { app.swipeUp() }
         XCTAssertTrue(confirmChanges.isHittable, "Saving should take at most one scroll after reviewing this meal.")
         XCTAssertEqual(confirmChanges.label, "Save dinner plan")
+        XCTAssertTrue(app.navigationBars["Dinner preview"].exists)
+        XCTAssertTrue(app.buttons["dinnerDecisionCancel"].exists)
         tap(confirmChanges)
         XCTAssertTrue(app.buttons["dinnerApply"].waitForNonExistence(timeout: 12))
         let saved = app.descendants(matching: .any).matching(identifier: "dinner.schedule.saved")
             .matching(NSPredicate(format: "label == %@", "Dinner changes saved.")).firstMatch
         XCTAssertTrue(saved.waitForExistence(timeout: 6))
+        XCTAssertTrue(app.navigationBars["Dinner"].waitForExistence(timeout: 6))
+        let closeReceipt = app.buttons["dinner.schedule.closeReceipt"]
+        XCTAssertTrue(closeReceipt.waitForExistence(timeout: 6))
+        XCTAssertEqual(closeReceipt.label, "Done")
+        XCTAssertFalse(app.buttons["dinnerDecisionCancel"].exists)
         XCTAssertTrue(preview.label.contains("Servings: 2"))
+        closeReceipt.tap()
+        XCTAssertTrue(saved.waitForNonExistence(timeout: 6))
         app.terminate()
         app.launchArguments.removeAll { $0 == "--reset-test-workspace" }
         app.launch()

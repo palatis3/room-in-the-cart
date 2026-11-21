@@ -19,26 +19,39 @@ extension EnvironmentValues {
     }
 }
 
+struct DinnerScheduleReceiptVisible: PreferenceKey {
+    static let defaultValue = false
+    static func reduce(value: inout Bool, nextValue: () -> Bool) { value = value || nextValue() }
+}
+
 private struct DinnerDecisionContent<Decision: View>: View {
     @ObservedObject var model: DinnerFeatureModel
     @State private var finalReview = false
+    @State private var showingReceipt = false
     let close: () -> Void
     @ViewBuilder let decision: () -> Decision
     var body: some View {
         Group {
             if finalReview {
-                NavigationStack { DinnerPreviewView(model: model).toolbar { cancelControl } }
+                NavigationStack { DinnerPreviewView(model: model).toolbar { dismissalControl } }
             } else {
-                NavigationStack { decision().toolbar { cancelControl } }
+                NavigationStack { decision().toolbar { dismissalControl } }
             }
         }
+        .onPreferenceChange(DinnerScheduleReceiptVisible.self) { showingReceipt = $0 }
         .environment(\.advanceToDinnerApply, { finalReview = true })
         .environment(\.closeDinnerDecision, close)
         .presentationDetents([.large])
     }
-    @ToolbarContentBuilder private var cancelControl: some ToolbarContent {
-        ToolbarItem(placement: .cancellationAction) {
-            Button(dinnerText("Cancel"), action: close).accessibilityIdentifier("dinnerDecisionCancel")
+    @ToolbarContentBuilder private var dismissalControl: some ToolbarContent {
+        if showingReceipt {
+            ToolbarItem(placement: .confirmationAction) {
+                Button(ledgerText("Done"), action: close).accessibilityIdentifier("dinner.schedule.closeReceipt")
+            }
+        } else {
+            ToolbarItem(placement: .cancellationAction) {
+                Button(dinnerText("Cancel"), action: close).accessibilityIdentifier("dinnerDecisionCancel")
+            }
         }
     }
 

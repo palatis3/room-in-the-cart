@@ -632,7 +632,10 @@ struct DinnerPreviewView: View {
                 } else { Section { Text(dinnerText("No dinner changes are waiting for review.")) } }
                 DinnerFeedback(model: model)
             }.listRowBackground(Theme.surface)
-        }.workingSurface().navigationTitle(dinnerText("Dinner preview")).dinnerAccess(model)
+        }.workingSurface()
+            .navigationTitle(savedMeal == nil ? dinnerText("Dinner preview") : dinnerText("Dinner"))
+            .preference(key: DinnerScheduleReceiptVisible.self, value: savedMeal != nil)
+            .dinnerAccess(model)
     }
 }
 func dinnerNoteKind(_ kind: DinnerWeekNote.Kind) -> String {
