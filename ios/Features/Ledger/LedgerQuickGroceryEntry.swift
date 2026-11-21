@@ -152,23 +152,24 @@ private struct QuickGroceryField: View {
                     .textFieldStyle(.plain).font(.body)
                     .fixedSize(horizontal: false, vertical: !text.isEmpty)
                     .frame(height: emptyLineHeight)
+                    .focused($editing)
+                    .submitLabel(.done).onSubmit { submit(keepKeyboard: true) }
+                    .accessibilityLabel(quickGroceryText("Grocery name"))
+                    .accessibilityIdentifier("quickGrocery.name")
                     .overlay(alignment: .leading) {
                         if text.isEmpty && !typeSize.isAccessibilitySize {
                             Text(quickGroceryText("Add a grocery"))
                                 .font(.body).foregroundStyle(Theme.secondary)
-                                .accessibilityHidden(true).allowsHitTesting(false)
+                                .accessibilityRepresentation { EmptyView() }
+                                .allowsHitTesting(false)
                         }
                     }
                     .padding(.horizontal, 12).padding(.vertical, 8)
                     .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
                     .background(Theme.surface, in: RoundedRectangle(cornerRadius: 12))
                     .overlay { RoundedRectangle(cornerRadius: 12).strokeBorder(editing ? Theme.action : Theme.controlEdge, lineWidth: editing ? 2 : 1) }
-                    .focused($editing)
                     .contentShape(Rectangle())
                     .simultaneousGesture(TapGesture().onEnded { editing = true })
-                    .accessibilityLabel(quickGroceryText("Grocery name"))
-                    .accessibilityIdentifier("quickGrocery.name")
-                    .submitLabel(.done).onSubmit { submit(keepKeyboard: true) }
                 Button(quickGroceryText("Add")) { submit() }
                     .buttonStyle(PrimaryAction()).fixedSize(horizontal: true, vertical: false)
                     .accessibilityLabel(quickGroceryText("Add grocery"))

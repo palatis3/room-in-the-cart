@@ -52,7 +52,13 @@ final class RoomInTheCartUITests: XCTestCase {
     func testPrivateQuickEntrySurvivesAnOrdinaryBackgroundInterruption() {
         launch()
         let field = element("quickGrocery.name")
-        tap(field)
+        reveal(field)
+        XCTAssertEqual(app.descendants(matching: .any).matching(identifier: "quickGrocery.name").count, 1)
+        XCTAssertTrue([.textField, .textView].contains(field.elementType))
+        XCTAssertFalse(app.staticTexts["Add a grocery"].exists)
+        // Touch the visible prompt on the leading side of the empty field.
+        field.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.5)).tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
         field.typeText("Oats")
         XCUIDevice.shared.press(.home)
         app.activate()
