@@ -240,18 +240,27 @@ struct LedgerImportView: View {
                             .padding(.horizontal, 16).padding(.vertical, 8).background(Theme.canvas)
                     }
                 }
-                .keyboardDoneAction(visible: inputFocus != nil, title: ledgerText("Done")) { inputFocus = nil }
+                .keyboardDoneAction(visible: inputFocus == .original, title: ledgerText("Done")) { inputFocus = nil }
                 .onChange(of: inputFocus) { _, field in
                     if let field, field != .original { scroll.scrollTo(field, anchor: .center) }
                 }
                 .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidShowNotification)) { _ in
                     if let field = inputFocus, field != .original { scroll.scrollTo(field, anchor: .center) }
                 }
-                .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText(firstDraft == nil ? "Cancel" : "Close")) {
-                    if let firstDraft {
-                        Task { if await firstDraft.closeSavingEdits(firstContents, prefill: prefill) { dismiss() } }
-                    } else { dismiss() }
-                }.disabled(model.saving) } }
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button(ledgerText(firstDraft == nil ? "Cancel" : "Close")) {
+                            if let firstDraft {
+                                Task { if await firstDraft.closeSavingEdits(firstContents, prefill: prefill) { dismiss() } }
+                            } else { dismiss() }
+                        }.disabled(model.saving)
+                    }
+                    if let field = inputFocus, field != .original {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button(ledgerText("Done")) { inputFocus = nil }
+                        }
+                    }
+                }
                 .interactiveDismissDisabled(model.saving || firstDraft != nil)
                 .sheet(item: $reminderPicker, content: reminderSelection)
                 .onChange(of: reminderCopyBinding) { _, value in
