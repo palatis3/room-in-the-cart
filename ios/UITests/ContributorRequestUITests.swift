@@ -294,8 +294,12 @@ import XCTest
         tap(sourceDone)
         XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "scan.sourceDone"), app.debugDescription)
         XCTAssertEqual(merchant.value as? String, "Corner Market")
-        XCTAssertEqual(wording.value as? String, printedLines)
         tap(app.buttons["Review printed lines"])
+        for line in printedLines.split(separator: "\n") {
+            let original = app.staticTexts[String(line)]
+            reveal(original)
+            XCTAssertEqual(original.label, String(line))
+        }
         enableSwitch("I checked the printed lines.")
         tap(app.buttons["scan.receipt.review"])
         enableSwitch("I checked the purchase date.")
