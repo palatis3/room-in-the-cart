@@ -13,10 +13,11 @@ struct TripHandoffRow: Identifiable, Equatable {
         guard let rows = try? shop.shoppingKitRows() else { return [] }
         let sources = Dictionary(uniqueKeysWithValues: shop.lines.map { ($0.id, $0) })
         let packages = shop.itemPackages
+        let contributions = Dictionary(grouping: shop.contributions.filter { $0.removedAt == nil }, by: \.lineID)
         return rows.compactMap { row in
             guard let line = sources[row.id], !line.isHandled, !line.isChecked, !line.isTrashed else { return nil }
             let measure = row.quantity.map { TripMeasure(need: $0, packages: packages[line.id] ?? []) }
-            var amount: String? = ledgerText("Quantity unresolved")
+            var amount: String?
             if let measure {
                 var remaining = measure.need.amount
                 if let pick = line.tripPick {
@@ -26,6 +27,8 @@ struct TripHandoffRow: Identifiable, Equatable {
                 }
                 guard remaining > .zero else { return nil }
                 amount = measure.display(remaining)
+            } else {
+                amount = ShoppingLedger.shoppingLabelWithoutTotal(for: line, sources: contributions[line.id] ?? [])
             }
             return Self(id: line.id, name: line.name, amount: amount, packNote: measure?.packNote)
         }
@@ -85,7 +88,7 @@ struct TripHandoffEntry: View {
                     }.buttonStyle(PrimaryAction()).disabled(selected.isDisjoint(with: rows.map(\.id)))
                 }
             }
-        }.navigationTitle(tripText("Send selected items"))
+        }.navigationTitle(tripText("Preview list copy"))
         .onChange(of: model.shop?.revisionID) { _, _ in preview = nil; sharing = false }
     }
 

@@ -25,21 +25,41 @@ func ledgerQuantity(_ quantity: Quantity?) -> String {
     return "\(amountText(quantity.amount)) \(quantity.unit.comparisonLabel(for: quantity.amount))"
 }
 
+/// The outer count is a shopping instruction, never a measured ingredient total.
+func shoppingPackageCount(_ count: Int, original: String) -> String {
+    var tokens = ListQuantityParser.itemTokens(original)
+    _ = try? ListQuantityParser.takeAmount(from: &tokens, allowingWords: true)
+    let key: String
+    switch tokens.first?.lowercased() {
+    case "can", "cans", "lata", "latas": key = count == 1 ? "%lld can" : "%lld cans"
+    case "box", "boxes", "caja", "cajas": key = count == 1 ? "%lld box" : "%lld boxes"
+    default: key = count == 1 ? "%lld pack" : "%lld packs"
+    }
+    return ledgerFormat(key, Int64(count))
+}
+
 extension ShoppingLedger {
     /// A single plain grocery can stand on its name. Reviewed quantities, source
     /// conflicts, and demand from meals or portions still need a visible amount.
     func shoppingRowQuantity(for line: ShoppingLine) -> String? {
-        let sources = contributions(forLineID: line.id)
-        if !sources.isEmpty, sources.allSatisfy(\.isHandCheckedUnmeasuredIngredient) {
-            return tonightText("Checked by hand · unmeasured")
-        }
         do {
             if let quantity = try quantity(forLineID: line.id) { return ledgerQuantity(quantity) }
         } catch { return ledgerQuantity(nil) }
-        guard sources.count == 1, let only = sources.first, only.source.canSupplyExistingQuantity,
-              only.quantity == nil, only.originalPack == nil, only.capture == nil, only.exclusions.isEmpty,
-              only.notes.isEmpty, line.notes.isEmpty, only.productName == line.name,
-              QuickGrocery.plainName(only.originalText) != nil, QuickGrocery.plainName(line.name) != nil else { return ledgerQuantity(nil) }
+        return Self.shoppingLabelWithoutTotal(for: line, sources: contributions(forLineID: line.id))
+    }
+
+    static func shoppingLabelWithoutTotal(for line: ShoppingLine, sources: [LedgerContribution]) -> String? {
+        if !sources.isEmpty, sources.allSatisfy(\.isHandCheckedUnmeasuredIngredient) {
+            return tonightText("Checked by hand · unmeasured")
+        }
+        guard sources.count == 1, let source = sources.first, source.source.canSupplyExistingQuantity,
+              source.quantity == nil else { return ledgerQuantity(nil) }
+        if let count = source.originalPack?.count {
+            return shoppingPackageCount(count, original: source.originalText)
+        }
+        guard source.capture == nil, source.originalPack == nil, source.exclusions.isEmpty,
+              source.productName == line.name, QuickGrocery.plainName(source.originalText) != nil,
+              QuickGrocery.plainName(line.name) != nil else { return ledgerQuantity(nil) }
         return nil
     }
 
@@ -73,6 +93,11 @@ func ledgerAmountInput(_ value: Rational) -> String {
         guard let amount = try rational(literal) else { return nil }
         return Quantity(amount: amount, unit: unit, originalLiteral: literal)
     }
+}
+
+func ledgerEditableNote(_ contribution: LedgerContribution) -> String {
+    guard case .imported = contribution.source else { return contribution.notes }
+    return ledgerContributionNote(contribution.notes)
 }
 
 func ledgerContributionNote(_ note: String) -> String {

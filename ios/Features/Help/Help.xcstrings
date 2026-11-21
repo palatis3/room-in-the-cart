@@ -2845,6 +2845,22 @@
           }
         }
       }
+    },
+    "In Shopping list, open List options, then Preview list copy. Select the groceries to include and review the message before choosing a recipient. They can read it without the app.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Shopping list, open List options, then Preview list copy. Select the groceries to include and review the message before choosing a recipient. They can read it without the app."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En Lista de compras, abre Opciones de la lista y luego Vista previa de la lista. Selecciona los artículos y revisa el mensaje antes de elegir un destinatario. Puede leerlo sin la aplicación."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

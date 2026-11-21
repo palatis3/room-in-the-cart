@@ -37,8 +37,9 @@ struct LedgerIngredientView: View {
             if let shop, let line {
                 Section {
                     Text(line.name).font(.title2.bold())
-                    Text(ledgerQuantity(try? shop.quantity(forLineID: lineID))).font(.headline)
-                        .accessibilityIdentifier("ledgerIngredientTotal")
+                    if let amount = shop.shoppingRowQuantity(for: line) {
+                        Text(amount).font(.headline).accessibilityIdentifier("ledgerIngredientTotal")
+                    }
                     if !line.notes.isEmpty { Text(line.notes) }
                     let department = model.workspace.listLayout.department(for: line, in: shop)
                     if !department.isEmpty { Text(department) }
@@ -48,7 +49,7 @@ struct LedgerIngredientView: View {
                             PickupStockEntryView(model: pickup, title: line.name, shopID: shopID, ingredientID: lineID)
                         }
                     }
-                    Button(quickGroceryText("Edit name and notes")) { sheet = .line }
+                    Button(quickGroceryText("Edit name, notes and department")) { sheet = .line }
                         .disabled(model.saving || model.hasPendingSave)
                     if !line.isTrashed && !line.isHandled {
                         if let workspaceID = model.sourceWorkspaceID,
@@ -100,7 +101,7 @@ struct LedgerIngredientView: View {
                             Text(ledgerQuantity(contribution.quantity))
                             Text(contribution.originalText).font(.footnote).foregroundStyle(Theme.secondary)
                             if let pack = contribution.originalPack { LedgerPackLabelFacts(pack: pack) }
-                            if !contribution.notes.isEmpty { Text(ledgerContributionNote(contribution.notes)) }
+                            if !contribution.notes.isEmpty { Text(ledgerEditableNote(contribution)) }
                             if !contribution.exclusions.isEmpty {
                                 Text(ledgerFormat("Exclusions: %@", ledgerExclusionsText(contribution.exclusions)))
                             }
@@ -213,8 +214,8 @@ struct LedgerLineEditor: View {
                     TextField(ledgerText("Visible notes"), text: $notes, prompt: Text(verbatim: ""), axis: .vertical)
                         .textFieldStyle(.roundedBorder)
                 }
-                WorkingField(ledgerText("Aisle or group")) {
-                    TextField(ledgerText("Aisle or group"), text: $aisle, prompt: Text(verbatim: ""), axis: .vertical)
+                WorkingField(quickGroceryText("Department")) {
+                    TextField(quickGroceryText("Department"), text: $aisle, prompt: Text(verbatim: ""), axis: .vertical)
                         .textFieldStyle(.roundedBorder)
                 }
                 if !shop.basis.branch.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -281,14 +282,14 @@ private struct LedgerContributionEditor: View {
     @State private var confirmingRemoval = false
     private var hasEdits: Bool {
         amount != (contribution.quantity.map { ledgerAmountInput($0.amount) } ?? "") ||
-            unit != (contribution.quantity?.unit ?? .count) || notes != contribution.notes
+            unit != (contribution.quantity?.unit ?? .count) || notes != ledgerEditableNote(contribution)
     }
 
     init(model: LedgerModel, shopID: UUID, contribution: LedgerContribution) {
         self.model = model; self.shopID = shopID; self.contribution = contribution
         _amount = State(initialValue: contribution.quantity.map { ledgerAmountInput($0.amount) } ?? "")
         _unit = State(initialValue: contribution.quantity?.unit ?? .count)
-        _notes = State(initialValue: contribution.notes)
+        _notes = State(initialValue: ledgerEditableNote(contribution))
     }
     var body: some View {
         WorkingForm {
@@ -303,7 +304,8 @@ private struct LedgerContributionEditor: View {
             Button(ledgerText("Save contribution")) {
                 do {
                     let quantity = try LedgerEntry.quantity(amount, unit)
-                    Task { if await model.editShop(key: "contribution-\(contribution.id)", shopID: shopID, { try $0.updateContribution(contributionID: contribution.id, quantity: quantity, notes: notes) }) { dismiss() } }
+                    let savedNotes = notes == ledgerEditableNote(contribution) ? contribution.notes : notes
+                    Task { if await model.editShop(key: "contribution-\(contribution.id)", shopID: shopID, { try $0.updateContribution(contributionID: contribution.id, quantity: quantity, notes: savedNotes) }) { dismiss() } }
                 } catch { validation = ledgerText("Enter a nonnegative amount with up to six decimal places, or leave it unknown.") }
             }.buttonStyle(PrimaryAction()).disabled(!hasEdits || model.saving || model.hasPendingSave)
             Button(ledgerText("Remove only this contribution"), role: .destructive) { confirmingRemoval = true }

@@ -77,7 +77,7 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(element("ledgerUnsavedItem").exists)
         tap(app.buttons["Save item"])
         tap(app.buttons["Inspect Oats (rolled)"])
-        XCTAssertTrue(app.buttons["Edit name and notes"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["Edit name, notes and department"].waitForExistence(timeout: 8))
         XCTAssertTrue(app.staticTexts["Oats"].exists)
         tap(app.navigationBars.buttons.firstMatch)
         tap(app.buttons["Check Oats (rolled)"])
@@ -225,7 +225,10 @@ final class RoomInTheCartUITests: XCTestCase {
             let onlyOne = language == "en" ? "Pickup · Selected: 1 · Skipped: 1" : "Recogida · Incluidos: 1 · Omitidos: 1"
             XCTAssertTrue(summary.waitForExistence(timeout: 10))
             assertSummary(both)
-            // Scroll to the adjacent action. The notice is informative text and has no tap action.
+            let jump = app.buttons["ledgerReviewRepeat"]
+            tap(jump)
+            // The shortcut scrolls to the decision, without changing the selection.
+            assertSummary(both)
             let skipSecond = app.buttons["ledgerImportSkip-2"]
             revealReviewAction(skipSecond, above: compact ? confirm : summary)
             let advisory = app.staticTexts["ledgerImportRepeat-2"]
@@ -283,7 +286,7 @@ final class RoomInTheCartUITests: XCTestCase {
         tap(app.buttons["quickGrocery.add"])
         tap(app.buttons["quickGrocery.viewList"])
         tap(app.buttons["ledgerListOptions"])
-        tap(app.buttons["Send selected items"])
+        tap(app.buttons["Preview list copy"])
         let row = app.switches.matching(NSPredicate(format: "label CONTAINS %@", name)).firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 8))
         row.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
@@ -291,6 +294,7 @@ final class RoomInTheCartUITests: XCTestCase {
         let preview = app.staticTexts["tripShareBody"]
         XCTAssertTrue(preview.waitForExistence(timeout: 8))
         XCTAssertTrue(preview.label.contains(name))
+        XCTAssertFalse(preview.label.contains("Quantity unresolved"))
         tap(app.buttons["tripShare.close"])
         XCTAssertTrue(preview.waitForNonExistence(timeout: 8))
         XCTAssertTrue(app.buttons["Inspect " + name].waitForExistence(timeout: 8))
@@ -302,13 +306,29 @@ final class RoomInTheCartUITests: XCTestCase {
         tap(app.buttons["settings.help"])
         tap(app.buttons["help.topic.household"])
         XCTAssertTrue(app.navigationBars["Compartir en el hogar"].waitForExistence(timeout: 8))
-        let share = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "Enviar artículos seleccionados")).firstMatch
+        let share = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "Vista previa de la lista")).firstMatch
         XCTAssertTrue(share.waitForExistence(timeout: 8))
         let permissions = app.buttons["help.householdPermissions"]
         let rule = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "los presupuestos del hogar")).firstMatch
         XCTAssertFalse(rule.exists)
         tap(permissions)
         XCTAssertTrue(rule.waitForExistence(timeout: 8))
+    }
+
+    func testFamilyPermissionGuideExplainsChildScopeAndGuardianStartOffline() {
+        launch(language: "es", largeDark: true)
+        tap(app.buttons["settings"])
+        tap(app.buttons["settings.help"])
+        tap(app.buttons["guardian.familyGuide"])
+        let scope = app.staticTexts["guardian.familyGuide.scope"]
+        XCTAssertTrue(scope.waitForExistence(timeout: 8))
+        XCTAssertTrue(scope.label.contains("sus propias solicitudes"))
+        XCTAssertTrue(scope.label.contains("presupuesto del hogar es privado"))
+        let start = app.staticTexts["guardian.familyGuide.start"]
+        XCTAssertTrue(start.label.contains("Solicitudes del hogar"))
+        XCTAssertTrue(start.label.contains("Controles del tutor"))
+        tap(app.buttons["guardian.familyGuide.support"])
+        XCTAssertTrue(app.navigationBars["Soporte"].waitForExistence(timeout: 8))
     }
 
     func testAccountDeletionSettingsExplainsScopeInEnglishAndSpanishBeforeSignIn() {

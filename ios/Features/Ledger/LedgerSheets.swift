@@ -24,6 +24,7 @@ struct LedgerImportView: View {
     @State private var reminderPicker: LedgerReminderPresentation?
     @State private var reminderDestination: UUID?
     @State private var original = ""
+    @State private var originalExpanded = false
     @State private var showingReviewTotals = false
     @State private var inputLimit: ImportTextLimit?
     @State private var preview: StagedListImport?
@@ -115,11 +116,26 @@ struct LedgerImportView: View {
                         .id("ledgerImportSaveStatus")
                 }
                 if let preview, let review {
+                    if !review.similarEarlierLines.isEmpty,
+                       let index = preview.lines.firstIndex(where: { review.similarEarlierLines[$0.id] != nil }) {
+                        Section {
+                            Button(ledgerFormat("Review possible repeat on line %lld", Int64(index + 1))) {
+                                inputFocus = nil
+                                scroll.scrollTo(preview.lines[index].id, anchor: .top)
+                            }.accessibilityIdentifier("ledgerReviewRepeat")
+                        }
+                    }
                     Section(ledgerText("Original wording")) {
                         if preview.source == .selectedText, let shop {
                             LabeledContent(applePlanningText("Destination pickup"), value: shop.title)
                         }
-                        Text(original).textSelection(.enabled).accessibilityFocused($focus, equals: .preview)
+                        if preview.lines.count > 1 && captured == nil {
+                            DisclosureGroup(ledgerText("Show original list"), isExpanded: $originalExpanded) {
+                                Text(verbatim: original).textSelection(.enabled)
+                            }.accessibilityIdentifier("ledgerOriginalDisclosure")
+                        } else {
+                            Text(verbatim: original).textSelection(.enabled)
+                        }
                         if let pickup = captured?.naturalBatch?.pickup {
                             Text(captureText("Pickup for all items") + ": " + pickup.title)
                             if !availablePickup(pickup) {
@@ -145,7 +161,7 @@ struct LedgerImportView: View {
                                                                 set: { setChoice($0, for: row.id) }),
                                                 onEdited: { refreshMatches() })
                         }
-                    } header: { Text(ledgerText("Review every line")) } footer: {
+                    } header: { Text(ledgerText("Review every line")).accessibilityFocused($focus, equals: .preview) } footer: {
                         Text(ledgerText("Merge confirms the same need. Add amount keeps an additional contribution. Unresolved amounts remain visibly unknown."))
                     }.disabled(model.saving || model.hasPendingSave)
                     Section {
@@ -159,40 +175,20 @@ struct LedgerImportView: View {
                     }
                 } else {
                     Section {
-                        Text(ledgerText("One item per line. For example: 12 wraps or 2 kg rice."))
+                        Text(ledgerText("Type or paste your list")).font(.headline)
                         TextEditor(text: $original)
                             .frame(height: min(importEditorHeight, 240))
+                            .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Theme.controlEdge).allowsHitTesting(false))
                             .focused($inputFocus, equals: .original)
                             .accessibilityLabel(ledgerText("List to review")).accessibilityIdentifier("ledgerImportText")
                         PasteButton(payloadType: String.self) { values in
                             original = values.joined(separator: "\n")
                             source = .paste
                         }.accessibilityLabel(ledgerText("Paste list"))
+                        Text(ledgerText("One item per line. For example: 12 wraps or 2 kg rice.")).font(.footnote).foregroundStyle(Theme.secondary)
                     }.disabled(model.saving || model.hasPendingSave)
-                    Section {
-                        Button(ledgerText("Review list")) {
-                            guard let shop else { return }
-                            inputFocus = nil
-                            do {
-                                let staged = try pantryFoodPrefill
-                                    ? PantryRestockReview.stage(food: prefill, text: original, source: source, id: importID, shop: shop, suggestedAmount: pantrySuggestedAmount, productLink: pantryProductLink)
-                                    : shop.stageImport(text: original, source: source, importID: importID)
-                                invalidAmounts = [:]
-                                preview = staged
-                                choices = LedgerImportReview.initialChoices(staged)
-                                explicitSeparate = []
-                                matchesAreCurrent = true
-                                inputLimit = nil
-                                focus = .preview
-                            } catch let limit as ImportTextLimit {
-                                inputLimit = limit
-                                focus = .inputLimit
-                            } catch {
-                                model.error = ledgerText("Check the amounts, units and links. This change could not be applied; your saved pickup is unchanged.")
-                            }
-                        }.buttonStyle(PrimaryAction()).disabled(!original.unicodeScalars.contains { !CharacterSet.whitespacesAndNewlines.contains($0) })
-                            .accessibilityIdentifier("ledgerReviewImport")
-                        if let inputLimit {
+                    if let inputLimit {
+                        Section {
                             Text(ledgerImportLimitMessage(inputLimit))
                                 .accessibilityFocused($focus, equals: .inputLimit)
                                 .accessibilityIdentifier("ledgerImportSizeError")
@@ -239,6 +235,9 @@ struct LedgerImportView: View {
                         }
                         .padding(.horizontal, 16).padding(.vertical, 8)
                         .background(Theme.canvas)
+                    } else {
+                        reviewListButton
+                            .padding(.horizontal, 16).padding(.vertical, 8).background(Theme.canvas)
                     }
                 }
                 .keyboardDoneAction(visible: inputFocus != nil, title: ledgerText("Done")) { inputFocus = nil }
@@ -358,6 +357,32 @@ struct LedgerImportView: View {
             importConfirmation(preview, review: review, title: ledgerFormat("Add %lld", Int64(totals.included)))
                 .accessibilityValue(Text(verbatim: totals.summary))
         }
+    }
+
+    private var reviewListButton: some View {
+        Button(ledgerText("Review list")) {
+            guard let shop else { return }
+            inputFocus = nil
+            do {
+                let staged = try pantryFoodPrefill
+                    ? PantryRestockReview.stage(food: prefill, text: original, source: source, id: importID, shop: shop, suggestedAmount: pantrySuggestedAmount, productLink: pantryProductLink)
+                    : shop.stageImport(text: original, source: source, importID: importID)
+                invalidAmounts = [:]
+                preview = staged
+                choices = LedgerImportReview.initialChoices(staged)
+                explicitSeparate = []
+                matchesAreCurrent = true
+                inputLimit = nil
+                originalExpanded = false
+                focus = .preview
+            } catch let limit as ImportTextLimit {
+                inputLimit = limit
+                focus = .inputLimit
+            } catch {
+                model.error = ledgerText("Check the amounts, units and links. This change could not be applied; your saved pickup is unchanged.")
+            }
+        }.buttonStyle(PrimaryAction()).disabled(!original.unicodeScalars.contains { !CharacterSet.whitespacesAndNewlines.contains($0) })
+            .accessibilityIdentifier("ledgerReviewImport")
     }
 
     private func importConfirmation(_ preview: StagedListImport, review: LedgerImportReview, title: String? = nil) -> some View {
@@ -817,7 +842,10 @@ private struct LedgerImportRowView: View {
             Text(ledgerText("Enter a nonnegative amount with up to six decimal places, or leave it unknown."))
                 .foregroundStyle(Theme.warning)
                 .accessibilityIdentifier("ledgerImportAmountError-\(number)")
-        } else if line.quantity == nil {
+        } else if line.quantity == nil, line.originalPack == nil, line.capture == nil,
+                  QuickGrocery.plainName(line.originalText) != nil, QuickGrocery.plainName(line.name) != nil {
+            Text(ledgerText("Quantity optional")).font(.footnote).foregroundStyle(Theme.secondary)
+        } else if line.quantity == nil && line.originalPack?.count == nil {
             Label(ledgerText("Quantity unresolved"), systemImage: "questionmark.circle").foregroundStyle(Theme.warning)
             if let reason = line.unresolvedReason { Text(ledgerContributionNote(reason)).font(.footnote) }
         }

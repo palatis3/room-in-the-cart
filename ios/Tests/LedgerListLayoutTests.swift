@@ -56,6 +56,23 @@ import CoreDomain
         XCTAssertEqual(shop.shoppingRowQuantity(for: try XCTUnwrap(shop.lines.last)), ledgerQuantity(amount))
     }
 
+    func testOptionalGroceriesAndOuterPackageCountsRetainTheirUnderlyingEvidence() throws {
+        var shop = ShoppingLedger()
+        let preview = try shop.stageImport(text: "cilantro\n1 lata de garbanzos\n2 cans of beans\n2–3 bags of rice")
+        try shop.commitImport(preview)
+        let lines = shop.lines
+        XCTAssertEqual(lines.count, 4)
+        let display: [String?] = [nil, ledgerFormat("%lld can", 1), ledgerFormat("%lld cans", 2), ledgerQuantity(nil)]
+        XCTAssertEqual(lines.map { shop.shoppingRowQuantity(for: $0) }, display)
+        XCTAssertEqual(TripHandoffRow.outstanding(in: shop).map(\.amount), display)
+        for line in lines { XCTAssertNil(try shop.quantity(forLineID: line.id)) }
+        let source = try XCTUnwrap(shop.contributions(forLineID: lines[1].id).first)
+        XCTAssertEqual(source.originalText, "1 lata de garbanzos")
+        XCTAssertEqual(source.originalPack?.count, 1)
+        XCTAssertNil(source.originalPack?.amountPerPack)
+        XCTAssertEqual(source.notes, "Review the pack count and usable amount in each pack.")
+    }
+
     func testBulkPluralHintComparesOnlyIncludedRowsWithTheSameMeasuredAmount() throws {
         let shop = ShoppingLedger()
         let preview = try shop.stageImport(text: "2 manzanas\n2 manzana\n1 manzana\n2 kg manzana\n2 manzanas verdes")

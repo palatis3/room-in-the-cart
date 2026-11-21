@@ -241,7 +241,7 @@ struct LedgerHomeView: View {
         }
         .accessibilityIdentifier("ledgerListOptions")
         .confirmationDialog(ledgerText("List options"), isPresented: $showingListOptions, titleVisibility: .visible) {
-            Button(tripText("Send selected items")) { sheet = .shareItems(shop.id) }
+            Button(tripText("Preview list copy")) { sheet = .shareItems(shop.id) }
             Button(shoppingText("Shopping kits")) { sheet = .kits(shop.id) }
             Button(shoppingText("Standing list")) { sheet = .standing }
             Button(ledgerText("List order and aisles")) { sheet = .layout }

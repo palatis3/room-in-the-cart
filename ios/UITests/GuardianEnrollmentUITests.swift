@@ -151,7 +151,7 @@ import XCTest
             let beginning = language == "en" ? "Add a grocery in Shop" : "En Compras, añade un producto"
             let sharing = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", beginning)).firstMatch
             reveal(sharing, hitTarget: false)
-            let option = language == "en" ? "Send selected items" : "Enviar artículos seleccionados"
+            let option = language == "en" ? "Preview list copy" : "Vista previa de la lista"
             XCTAssertTrue(sharing.label.contains(option))
             let paid = language == "en" ? "Household is a paid subscription. Choose your household" :
                 "La membresía del hogar es una suscripción de pago. Elige tu hogar"

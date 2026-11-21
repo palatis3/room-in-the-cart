@@ -323,25 +323,11 @@ import UIKit
         capture("S02-500-line-native-paste-at-largest-text")
 
         let review = app.buttons["ledgerReviewImport"]
-        let form = app.collectionViews.firstMatch
-        func visibleReviewPoint() -> CGPoint? {
-            guard review.exists && review.isHittable && review.isEnabled else { return nil }
-            let viewport = form.frame.intersection(app.windows.firstMatch.frame)
-            let top = max(viewport.minY, navigation.frame.maxY)
-            let content = CGRect(x: viewport.minX, y: top, width: viewport.width, height: max(0, viewport.maxY - top))
-            let center = CGPoint(x: review.frame.midX, y: review.frame.midY)
-            return content.insetBy(dx: 0, dy: 4).contains(center) ? center : nil
-        }
-        // Start in the Form margin so the drag advances the sheet instead of scrolling editor text.
-        let lower = form.coordinate(withNormalizedOffset: CGVector(dx: 0.96, dy: 0.86))
-        let upper = form.coordinate(withNormalizedOffset: CGVector(dx: 0.96, dy: 0.38))
-        var reviewPoint = visibleReviewPoint()
-        for _ in 0..<3 {
-            if reviewPoint != nil { break }
-            lower.press(forDuration: 0.05, thenDragTo: upper, withVelocity: .slow, thenHoldForDuration: 0)
-            reviewPoint = visibleReviewPoint()
-        }
-        let point = try XCTUnwrap(reviewPoint, "Review list must have a visible tap point within a short scroll")
+        XCTAssertTrue(review.wait(for: \.isHittable, toEqual: true, timeout: 5))
+        XCTAssertTrue(review.isEnabled)
+        XCTAssertGreaterThanOrEqual(review.frame.minY, navigation.frame.maxY)
+        XCTAssertLessThanOrEqual(review.frame.maxY, app.windows.firstMatch.frame.maxY)
+        let point = CGPoint(x: review.frame.midX, y: review.frame.midY)
         capture("S02-review-action-reachable-at-largest-text")
         let origin = app.coordinate(withNormalizedOffset: .zero)
         origin.withOffset(CGVector(dx: point.x - app.frame.minX, dy: point.y - app.frame.minY)).tap()
