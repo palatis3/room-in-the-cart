@@ -176,7 +176,7 @@ struct LedgerImportView: View {
                     }
                 } else {
                     Section {
-                        Text(ledgerText("Type or paste your list")).font(.headline)
+                        Text(ledgerText("Type or paste your list")).marketJournalTitle(.title2)
                         TextEditor(text: $original)
                             .frame(height: min(importEditorHeight, 240))
                             .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Theme.controlEdge).allowsHitTesting(false))
@@ -792,7 +792,9 @@ private struct LedgerImportRowView: View {
             heading {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(verbatim: ledgerFormat("Original wording: %@", line.originalText))
-                        .font(.subheadline).accessibilityIdentifier("ledgerImportOriginal-\(number)")
+                        .font(.system(.subheadline, design: .monospaced))
+                        .foregroundStyle(Theme.ink)
+                        .accessibilityIdentifier("ledgerImportOriginal-\(number)")
                     if choice == .skip {
                         Text(ledgerText("Skipped")).font(.caption).foregroundStyle(Theme.secondary)
                     }

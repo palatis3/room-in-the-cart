@@ -65,8 +65,7 @@ struct PickupArrivalView: View {
     var body: some View {
         WorkingForm {
             PickupSaveStatus(model: model)
-            Section(pTr("Review discrepancies")) {
-                Text(pTr("Unchecked lines remain unverified. Received food and confirmed usable food are separate."))
+            Section {
                 Picker(pTr("Original order line"), selection: Binding(get: { entry.lineID }, set: { id in
                     guard id != entry.lineID else { return }
                     entry = ArrivalLineEntry(line: orderLines.first { $0.id == id })
@@ -75,6 +74,16 @@ struct PickupArrivalView: View {
                     Text(pTr("Choose a line")).tag(UUID?.none)
                     ForEach(orderLines) { line in Text(line.name).tag(Optional(line.id)) }
                 }
+                if let line = selectedLine {
+                    LabeledContent(pTr("Confirmed ordered amount"), value: pQuantity(line.ordered))
+                        .font(.body.monospacedDigit())
+                }
+            } header: {
+                Text(pTr("Review discrepancies"))
+            } footer: {
+                Text(pTr("Unchecked lines remain unverified. Received food and confirmed usable food are separate."))
+            }
+            Section {
                 Picker(pTr("What happened"), selection: $entry.disposition) {
                     Text(pTr("Received")).tag(ReceiptDisposition.received)
                     Text(pTr("No fill")).tag(ReceiptDisposition.noFill)
@@ -82,8 +91,10 @@ struct PickupArrivalView: View {
                     Text(pTr("Wrong item")).tag(ReceiptDisposition.wrongItem)
                     Text(pTr("Late arrival")).tag(ReceiptDisposition.late)
                 }
-                TextField(pTr("Actual item name"), text: $entry.item)
-                    .focused($focused, equals: .item)
+                WorkingField(pTr("Actual item name")) {
+                    TextField(pTr("Actual item name"), text: $entry.item)
+                        .focused($focused, equals: .item)
+                }
                 quantityField(pTr("Physical amount received"), text: $entry.received, field: .received)
                 quantityField(pTr("Confirmed usable amount (optional)"), text: $entry.usable, field: .usable)
                 Picker(pTr("Unit"), selection: $entry.unit) { ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pTr($0.rawValue)).tag($0) } }
@@ -98,12 +109,12 @@ struct PickupArrivalView: View {
                         .textInputAutocapitalization(.never).autocorrectionDisabled()
                 }.accessibilityIdentifier("arrival.references")
                 DatePicker(pTr("Actual arrival"), selection: $occurred, in: ...model.stockReviewDate)
-                Button(pTr("Save observed arrival")) { save() }.buttonStyle(.borderedProminent)
+                Button(pTr("Save observed arrival")) { save() }.buttonStyle(PrimaryAction())
                     .disabled(model.hasPendingSave || needsAnotherDelivery)
                 if needsAnotherDelivery {
                     Text(pTr("An arrival is already saved for this item. Start another delivery to record more, or review the saved arrival below."))
                 }
-                if let formError { Text(formError).foregroundStyle(.red) }
+                if let formError { Text(formError).foregroundStyle(Theme.error) }
                 Button(pTr("Start another delivery for this item")) {
                     entry = ArrivalLineEntry(line: selectedLine)
                     references.startAnother()
@@ -114,8 +125,9 @@ struct PickupArrivalView: View {
             Section(pTr("Saved arrivals and usable corrections")) {
                 ForEach(Array((model.journey?.pickup?.receipts ?? []).enumerated()), id: \.offset) { _, receipt in
                     VStack(alignment: .leading) {
-                        Text(receipt.itemName).font(.headline)
+                        Text(receipt.itemName).marketJournalTitle(.title3)
                         Text("\(pTr("Received")): \(pQuantity(receipt.received)) · \(pTr(receipt.disposition.rawValue))")
+                            .monospacedDigit()
                         DisclosureGroup(pTr("Saved delivery references")) {
                             LabeledContent(pTr("Receipt or delivery reference"), value: receipt.key.sourceEventID)
                             LabeledContent(pTr("Split delivery reference"), value: receipt.key.segmentID)
@@ -224,7 +236,9 @@ struct PickupOfferView: View {
                     Text(pTr("Open a saved offer to update its pending household preference or retailer response. A new offer creates a separate record."))
                 }
                 ForEach(journey.offers) { offer in
-                    Section(offer.replacement) {
+                    Section {
+                        Text(verbatim: offer.replacement)
+                            .marketJournalTitle(.title2)
                         PickupOfferFacts(offer: offer, journey: journey)
                             .accessibilityIdentifier("pickup.offer.saved.\(offer.id.uuidString)")
                         Button(pTr("Review or edit saved offer")) {

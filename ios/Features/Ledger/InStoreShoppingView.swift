@@ -126,7 +126,7 @@ struct InStoreShoppingView: View {
                 let exclusions = shop.listExclusions
                 let packages = shop.itemPackages
                 ScrollViewReader { reader in
-                    List {
+                    JournalList {
                         if model.error != nil || model.hasPendingSave { LedgerSaveStatus(model: model) }
                         if !shop.currentStop.name.isEmpty {
                             Section { Label(shop.currentStop.name, systemImage: "storefront").font(.headline) }
@@ -181,7 +181,7 @@ struct InStoreShoppingView: View {
                             Section { subtotalSummary(shop, last: picked.first).id(Focus.subtotal) }
                         }
                     }
-                    .workingSurface()
+                    .listStyle(.plain)
                     .coordinateSpace(name: "shoppingAisles")
                     .onAppear {
                         if let id = restoredRow(), visible.contains(where: { $0.id == id }) || outstanding.contains(where: { $0.id == id }) {
@@ -304,10 +304,11 @@ struct InStoreShoppingView: View {
             Button { destination = .details(line.id) } label: {
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(verbatim: line.name).font(.headline)
+                        GroceryNameAndAmount(name: line.name, amount: shop.groceryRowAmount(line, measure: measure))
+                            .accessibilityElement(children: .ignore)
+                            .accessibilityLabel([line.name, amount].compactMap { $0 }.joined(separator: ", "))
                         if showDepartment { Text(verbatim: department).font(.subheadline).foregroundStyle(Theme.secondary) }
                         if let coupon = line.pinnedCoupon { InStoreCouponPickLabel(coupon: coupon, line: line) }
-                        if let amount { Text(amount) }
                         if !line.notes.isEmpty { Text(verbatim: line.notes) }
                         if let exclusions { Text(exclusions) }
                     }.foregroundStyle(Theme.ink)

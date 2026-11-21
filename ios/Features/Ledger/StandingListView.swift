@@ -20,7 +20,7 @@ struct StandingListView: View {
 
     var body: some View {
         let rows = filtered
-        List {
+        JournalList {
             NavigationLink(shoppingText("Add standing item")) {
                 StandingItemEditor(model: model, original: nil) { savedItem = $0 }
             }
@@ -32,7 +32,7 @@ struct StandingListView: View {
             checkedSection(rows.filter { $0.checkedAt != nil })
             transferredSection(rows.filter { $0.transfer != nil })
             if model.error != nil || model.hasPendingSave { LedgerSaveStatus(model: model) }
-        }.navigationTitle(shoppingText("Standing list"))
+        }.listStyle(.plain).navigationTitle(shoppingText("Standing list"))
         .onChange(of: stores) { _, options in if let store, !options.contains(store) { self.store = nil } }
         .toolbar { ToolbarItem(placement: .confirmationAction) { Button(ledgerText("Done")) { dismiss() } } }
     }

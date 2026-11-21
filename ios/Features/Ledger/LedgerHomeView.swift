@@ -6,6 +6,7 @@ private enum LedgerHomeSheet: Hashable, Identifiable {
     case inStore(UUID), shareItems(UUID), kits(UUID?), standing
     case renameShop(id: UUID, title: String)
     case editLine(workspace: UUID, shop: UUID, line: UUID)
+    case editAmount(workspace: UUID, shop: UUID, line: UUID, source: UUID)
     var id: Self { self }
 }
 
@@ -29,7 +30,7 @@ struct LedgerHomeView: View {
             if model.ready, let shop = model.shop {
                 if !dynamicTypeSize.isAccessibilitySize { controls(shop) }
                 ScrollViewReader { reader in
-                    List {
+                    JournalList {
                         if dynamicTypeSize.isAccessibilitySize {
                             Section {
                                 shopPicker(shop).buttonStyle(.borderless)
@@ -45,6 +46,7 @@ struct LedgerHomeView: View {
                         if model.error != nil || model.hasPendingSave {
                             Section { LedgerSaveStatus(model: model).accessibilityFocused($focus, equals: .error) }
                         }
+                        Section { LedgerQuickGroceryEntry(model: model) }
                         Section {
                             Button { sheet = .inStore(shop.id) } label: {
                                 Label(shoppingText("Shop in store"), systemImage: "cart")
@@ -60,6 +62,8 @@ struct LedgerHomeView: View {
                             }
                         }
                         let exclusions = shop.listExclusions
+                        let packages = shop.itemPackages
+                        let typedBatches = shop.typedItemBatchIDs
                         let departmentChoices = model.workspace.listLayout.departmentChoices(in: shop)
                         let groups = model.workspace.listLayout.groups(shop: shop, search: model.search)
                         if groups.allSatisfy({ $0.lines.isEmpty }) {
@@ -73,14 +77,14 @@ struct LedgerHomeView: View {
                             ForEach(groups) { group in
                                 Section(group.aisle.isEmpty ? ledgerText(model.workspace.listLayout.layout(for: shop).mode == .aisle ? "No aisle assigned" : "Shopping list") : group.aisle) {
                                     ForEach(group.lines) { line in
-                                        row(line, shop: shop, exclusions: exclusions[line.id], departmentChoices: departmentChoices)
+                                        row(line, shop: shop, packages: packages[line.id] ?? [], typedBatches: typedBatches,
+                                            exclusions: exclusions[line.id], departmentChoices: departmentChoices)
                                             .id(line.id)
                                     }
                                 }
                             }
                         }
                         Section {
-                            LedgerQuickGroceryEntry(model: model)
                             factsSummary(shop)
                         }
                         Section {
@@ -107,7 +111,7 @@ struct LedgerHomeView: View {
                         if model.error == nil && !model.hasPendingSave {
                             Section { LedgerSaveStatus(model: model).accessibilityFocused($focus, equals: .result) }
                         }
-                    }.listStyle(.insetGrouped).workingSurface()
+                    }.listStyle(.plain)
                     .onChange(of: returnToLine) { _, line in
                         guard let line else { return }
                         reader.scrollTo(line, anchor: .center)
@@ -183,6 +187,15 @@ struct LedgerHomeView: View {
             if model.sourceWorkspaceID == workspaceID, let shop = model.shop, shop.id == shopID,
                let line = shop.lines.first(where: { $0.id == lineID && !$0.isChecked && !$0.isTrashed && !$0.isHandled }) {
                 LedgerLineEditor(model: model, shop: shop, line: line)
+            } else {
+                Text(ledgerText("This pickup changed. Close these edits and reopen the current pickup details."))
+            }
+        case let .editAmount(workspace, shopID, lineID, sourceID):
+            if model.sourceWorkspaceID == workspace, let shop = model.shop, shop.id == shopID,
+               let line = shop.lines.first(where: { $0.id == lineID }),
+               let source = shop.ordinaryQuantitySource(for: line, contributions: shop.contributions(forLineID: lineID),
+                                                        typedItemBatches: shop.typedItemBatchIDs), source.id == sourceID {
+                LedgerContributionEditor(model: model, shopID: shopID, contribution: source)
             } else {
                 Text(ledgerText("This pickup changed. Close these edits and reopen the current pickup details."))
             }
@@ -345,26 +358,18 @@ struct LedgerHomeView: View {
     }
 
     private func changeCheck(_ line: ShoppingLine, shop: ShoppingLedger, checked: Bool) async -> Bool {
-        let saved = await model.editShop(key: "check-\(line.id)", shopID: shop.id) { current in
-            guard model.workspace.selectedShopID == shop.id, current.revisionID == shop.revisionID,
-                  let source = current.lines.first(where: { $0.id == line.id }),
-                  source.checkedAt == line.checkedAt, source.isChecked != checked, !source.isHandled, !source.isTrashed else {
-                throw LedgerError.stalePreview
-            }
-            if !checked, source.tripUndo?.action == .pick {
-                try current.undoTripChange(lineID: line.id, expectedRevision: shop.revisionID)
-            } else {
-                try current.setChecked(lineID: line.id, checked: checked)
-            }
-        }
+        let saved = await model.changeGroceryCheck(line, in: shop, checked: checked)
         if saved { checkCue = checked && !reduceMotion && scene == .active ? GroceryCheckCue(lineID: line.id) : nil }
         return saved
     }
 
-    private func row(_ line: ShoppingLine, shop: ShoppingLedger, exclusions: String?, departmentChoices: [String]) -> some View {
-        let quantity = line.tripPick == nil ? shop.shoppingRowQuantity(for: line) :
-            shop.tripAmountLabel(line, measure: TripMeasure(shop, line: line, packages: shop.itemPackages[line.id] ?? []))
-        let details = [quantity ?? "", exclusions ?? "", line.notes, line.aisle].filter { !$0.isEmpty }.joined(separator: ", ")
+    private func row(_ line: ShoppingLine, shop: ShoppingLedger, packages: [BasketPackage], typedBatches: Set<UUID>,
+                     exclusions: String?, departmentChoices: [String]) -> some View {
+        let measure = TripMeasure(shop, line: line, packages: packages)
+        let source = shop.ordinaryQuantitySource(for: line, contributions: shop.contributions(forLineID: line.id), typedItemBatches: typedBatches)
+        let quantity = shop.groceryRowAmount(line, measure: measure)
+        let spokenAmount = shop.tripAmountLabel(line, measure: measure)
+        let details = [spokenAmount ?? "", exclusions ?? "", line.notes, line.aisle].filter { !$0.isEmpty }.joined(separator: ", ")
         let editItem = {
             guard !model.saving, !model.hasPendingSave, model.shop?.id == shop.id,
                   let workspace = model.sourceWorkspaceID else { return }
@@ -396,18 +401,31 @@ struct LedgerHomeView: View {
                     LedgerIngredientView(model: model, shopID: shop.id, lineID: line.id)
                 } label: {
                     VStack(alignment: .leading, spacing: 5) {
-                        Text(line.name).font(.headline)
-                        if let quantity { Text(quantity).foregroundStyle(Theme.secondary) }
+                        GroceryNameAndAmount(name: line.name, amount: quantity)
                         if let exclusions { Text(verbatim: exclusions) }
                         if !line.notes.isEmpty { Text(line.notes) }
                     }.padding(.vertical, 6).fixedSize(horizontal: false, vertical: true)
                         .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                         .contentShape(Rectangle())
                 }.accessibilityLabel(ledgerFormat("Inspect %@", line.name))
+                    .buttonStyle(.plain)
                     .accessibilityValue(Text(verbatim: details))
                     .accessibilityIdentifier("ledgerInspect-\(line.id)")
                     .accessibilityAction(named: Text(ledgerText("Edit item")), editItem)
                 LedgerDepartmentPicker(model: model, shop: shop, line: line, labels: departmentChoices)
+            }
+            if let source, let workspace = model.sourceWorkspaceID {
+                Button {
+                    sheet = .editAmount(workspace: workspace, shop: shop.id, line: line.id, source: source.id)
+                } label: {
+                    Image(systemName: "pencil").foregroundStyle(Theme.action)
+                        .frame(width: 44, height: 44).contentShape(Rectangle())
+                }
+                .buttonStyle(.borderless)
+                .accessibilityLabel(quickGroceryText("Edit quantity and notes"))
+                .accessibilityValue(Text(verbatim: line.name))
+                .accessibilityIdentifier("ledgerEditAmount-\(line.id)")
+                .disabled(model.saving || model.hasPendingSave)
             }
         }
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
@@ -417,6 +435,216 @@ struct LedgerHomeView: View {
             .tint(Theme.action)
             .disabled(model.saving || model.hasPendingSave)
             .accessibilityIdentifier("ledgerEditRow-\(line.id)")
+        }
+    }
+}
+
+extension LedgerModel {
+    func changeGroceryCheck(_ line: ShoppingLine, in shop: ShoppingLedger, checked: Bool,
+                            authorize: (@MainActor () -> Bool)? = nil) async -> Bool {
+        await editShop(key: "check-\(line.id)", shopID: shop.id, authorize: authorize) { current in
+            guard self.workspace.selectedShopID == shop.id, current.revisionID == shop.revisionID,
+                  let source = current.lines.first(where: { $0.id == line.id }),
+                  source.checkedAt == line.checkedAt, source.isChecked != checked, !source.isHandled, !source.isTrashed else {
+                throw LedgerError.stalePreview
+            }
+            if !checked, source.tripUndo?.action == .pick {
+                try current.undoTripChange(lineID: line.id, expectedRevision: shop.revisionID)
+            } else {
+                try current.setChecked(lineID: line.id, checked: checked)
+            }
+        }
+    }
+}
+
+/// Keep the shopping amount beside the name where space permits. An amount can be
+/// absent on an ordinary typed grocery, or carry a meaningful unresolved state.
+struct GroceryNameAndAmount: View {
+    let name: String
+    let amount: String?
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    var body: some View {
+        let layout = typeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 3))
+            : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: 12))
+        layout {
+            Text(verbatim: name)
+                .font(.headline).foregroundStyle(Theme.ink)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            if let amount {
+                Text(verbatim: amount).font(.body).monospacedDigit()
+                    .foregroundStyle(Theme.ink)
+            }
+        }
+        .fixedSize(horizontal: false, vertical: true)
+        .multilineTextAlignment(.leading)
+    }
+}
+
+struct ShopGroceryPreview: View {
+    @ObservedObject var model: LedgerModel
+    let shop: ShoppingLedger
+    let showsListLink: Bool
+    let authorize: @MainActor () -> Bool
+    @Environment(\.dynamicTypeSize) private var typeSize
+    private enum Destination: Hashable, Identifiable {
+        case detail(UUID), amount(line: UUID, source: UUID)
+        var id: Self { self }
+    }
+    @State private var destination: Destination?
+    @Environment(\.scenePhase) private var scene
+    @State private var retainedIDs: [UUID] = []
+    @State private var measuredHeights: [UUID: CGFloat] = [:]
+    @State private var retainedHeights: [UUID: CGFloat] = [:]
+
+    private struct RowHeights: PreferenceKey {
+        static let defaultValue: [UUID: CGFloat] = [:]
+        static func reduce(value: inout [UUID: CGFloat], nextValue: () -> [UUID: CGFloat]) {
+            value.merge(nextValue()) { _, latest in latest }
+        }
+    }
+
+    private func releaseRows() {
+        retainedIDs = []
+        retainedHeights = [:]
+    }
+
+    private func previewRows(active: [ShoppingLine]) -> [ShoppingLine] {
+        guard !retainedIDs.isEmpty else { return Array(active.prefix(4)) }
+        // Keep only IDs in view state. Every name, amount and check comes from the current shop.
+        let retained = retainedIDs.compactMap { id in
+            shop.lines.first { $0.id == id && !$0.isTrashed && !$0.isHandled }
+        }
+        let ids = Set(retained.map(\.id))
+        return retained + active.lazy.filter { !ids.contains($0.id) }.prefix(4 - retained.count)
+    }
+
+    var body: some View {
+        let rows = model.workspace.listLayout.groups(shop: shop).flatMap(\.lines)
+        let visible = previewRows(active: rows)
+        let packages = shop.itemPackages
+        let typedItemBatches = shop.typedItemBatchIDs
+        VStack(alignment: .leading, spacing: 0) {
+            if model.error != nil || model.hasPendingSave {
+                LedgerSaveStatus(model: model, showsLastSave: false)
+            }
+            ForEach(visible) { line in
+                let measure = TripMeasure(shop, line: line, packages: packages[line.id] ?? [])
+                Divider()
+                HStack(alignment: .top, spacing: 6) {
+                    Button {
+                        if retainedIDs.isEmpty {
+                            retainedIDs = visible.map(\.id)
+                            retainedHeights = measuredHeights
+                        }
+                        Task {
+                            let saved = await model.changeGroceryCheck(line, in: shop, checked: !line.isChecked, authorize: authorize)
+                            if saved && !line.isChecked && UIAccessibility.isVoiceOverRunning {
+                                UIAccessibility.post(notification: .announcement, argument: quickGroceryFormat("Checked %@", line.name))
+                            }
+                        }
+                    } label: {
+                        Image(systemName: line.isChecked ? "checkmark.square.fill" : "square").font(.title2)
+                            .foregroundStyle(line.isChecked ? Theme.action : Theme.controlEdge)
+                            .frame(width: 44, height: 48).contentShape(Rectangle())
+                    }.accessibilityLabel(line.isChecked ? shoppingFormat("Uncheck %@", line.name) : ledgerFormat("Check %@", line.name))
+                        .accessibilityAddTraits(line.isChecked ? .isSelected : [])
+                        .accessibilityIdentifier("shop.check-\(line.id)")
+                    let amount = shop.groceryRowAmount(line, measure: measure)
+                    let source = measure == nil ? nil : shop.ordinaryQuantitySource(for: line,
+                        contributions: shop.contributions(forLineID: line.id), typedItemBatches: typedItemBatches)
+                    let layout = typeSize.isAccessibilitySize
+                        ? AnyLayout(VStackLayout(alignment: .leading, spacing: 0))
+                        : AnyLayout(HStackLayout(spacing: 4))
+                    layout {
+                        Button { destination = .detail(line.id) } label: {
+                            GroceryNameAndAmount(name: line.name, amount: source == nil ? amount : nil)
+                                .frame(minHeight: 48).contentShape(Rectangle())
+                        }
+                        .accessibilityLabel(ledgerFormat("Inspect %@", line.name))
+                        .accessibilityValue(shop.tripAmountLabel(line, measure: measure) ?? "")
+                        .accessibilityIdentifier("shop.inspect-\(line.id)")
+                        if let source, let amount {
+                            Button { destination = .amount(line: line.id, source: source.id) } label: {
+                                HStack(spacing: 6) {
+                                    Text(verbatim: amount).monospacedDigit().foregroundStyle(Theme.ink)
+                                    Image(systemName: "pencil").font(.footnote).foregroundStyle(Theme.action)
+                                }
+                                .fixedSize(horizontal: false, vertical: true)
+                                .frame(minWidth: 44, minHeight: 48).contentShape(Rectangle())
+                            }
+                            .accessibilityLabel(quickGroceryText("Edit quantity and notes"))
+                            .accessibilityValue([line.name, shop.tripAmountLabel(line, measure: measure)].compactMap { $0 }.joined(separator: ", "))
+                            .accessibilityIdentifier("shop.editAmount-\(line.id)")
+                        }
+                    }
+                }
+                .padding(.vertical, 3)
+                .frame(minHeight: retainedHeights[line.id], alignment: .top)
+                .background {
+                    GeometryReader { geometry in
+                        Color.clear.preference(key: RowHeights.self, value: [line.id: geometry.size.height])
+                    }
+                    .accessibilityHidden(true).allowsHitTesting(false)
+                }
+                .disabled(model.saving || model.hasPendingSave)
+            }
+            if !visible.isEmpty { Divider() }
+            if !rows.isEmpty, !visible.isEmpty, visible.allSatisfy(\.isChecked) {
+                Button(quickGroceryText("Show next groceries"), action: releaseRows)
+                    .frame(minHeight: 44).foregroundStyle(Theme.action)
+            }
+            if showsListLink {
+                RestorableShoppingListLink {
+                    Label(rows.count > 4 ? quickGroceryFormat("View all %lld groceries", Int64(rows.count)) :
+                            quickGroceryText("View shopping list"), systemImage: "list.bullet")
+                        .frame(minHeight: 44)
+                }
+                .foregroundStyle(Theme.action)
+                .accessibilityIdentifier("openPickupList")
+            }
+            if let last = shop.recentlyChecked.first(where: { !$0.isHandled }) {
+                Button {
+                    Task {
+                        _ = await model.changeGroceryCheck(last, in: shop, checked: false, authorize: authorize)
+                    }
+                } label: {
+                    Label(quickGroceryFormat("Undo checking %@", last.name), systemImage: "arrow.uturn.backward")
+                        .frame(minHeight: 44)
+                }.foregroundStyle(Theme.action)
+                    .disabled(model.saving || model.hasPendingSave)
+                    .accessibilityIdentifier("shop.undoCheck")
+            }
+        }
+        .buttonStyle(.plain)
+        .onPreferenceChange(RowHeights.self) { measuredHeights = $0 }
+        .onDisappear(perform: releaseRows)
+        .onChange(of: scene) { _, phase in if phase == .background { releaseRows() } }
+        .onChange(of: shop.importBatches.last?.id) { _, _ in releaseRows() }
+        .onChange(of: typeSize) { _, _ in releaseRows() }
+        .sheet(item: $destination) { target in
+            PrivateShoppingSheet(model: model) {
+                if let current = model.shop, current.id == shop.id {
+                    switch target {
+                    case let .detail(id):
+                        LedgerIngredientView(model: model, shopID: current.id, lineID: id)
+                            .toolbar {
+                                ToolbarItem(placement: .cancellationAction) {
+                                    Button(ledgerText("Close")) { destination = nil }
+                                }
+                            }
+                    case let .amount(lineID, sourceID):
+                        if let line = current.lines.first(where: { $0.id == lineID }),
+                           let source = current.ordinaryQuantitySource(for: line, contributions: current.contributions(forLineID: lineID),
+                                                                       typedItemBatches: current.typedItemBatchIDs), source.id == sourceID {
+                            LedgerContributionEditor(model: model, shopID: current.id, contribution: source)
+                        } else {
+                            Text(ledgerText("This pickup changed. Close these edits and reopen the current pickup details."))
+                        }
+                    }
+                }
+            }
         }
     }
 }

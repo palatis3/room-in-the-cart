@@ -8,17 +8,27 @@ struct PickupHomeView: View {
     @State private var nextShopRequested = false
     @AccessibilityFocusState private var nextShopFocused: Bool
     var body: some View {
-        List {
+        JournalList {
             PickupSaveStatus(model: model)
             PickupStockBasisNotice(model: model)
             if let value = model.journey {
                 Section(pTr("This pickup")) {
-                    Text(value.savedAt, format: .dateTime.month().day().year().hour().minute())
+                    VStack(alignment: .leading, spacing: 4) {
+                        if let selected = ledger?.shop, selected.id == value.id {
+                            Text(verbatim: selected.title)
+                                .marketJournalTitle(.title2)
+                        }
+                        Text(value.savedAt, format: .dateTime.month().day().year().hour().minute())
+                            .font(.subheadline).foregroundStyle(Theme.secondary)
+                    }.padding(.vertical, 4)
                     if value.isFreshNextShopDraft, let ledger {
                         NavigationLink(pTr("Open next shopping list")) { PickupListBridgeView(model: model, ledger: ledger, journeyID: value.id) }
                     }
                     if let basket = value.basket {
-                        Text(pTr(basket.phase == .reportedPlaced ? "Placement reported · original order locked" : basket.phase == .frozen ? "Frozen · placement unconfirmed" : "Draft · no order placed"))
+                        Label(pTr(basket.phase == .reportedPlaced ? "Placement reported · original order locked" : basket.phase == .frozen ? "Frozen · placement unconfirmed" : "Draft · no order placed"),
+                              systemImage: basket.phase == .reportedPlaced ? "lock" : basket.phase == .frozen ? "clock" : "pencil")
+                            .font(.headline)
+
                         if value.isAtHomeOnlyPlan {
                             NavigationLink(ledgerText("Use-at-home plan")) { LedgerAtHomePlanView(model: model) }
                         } else if basket.phase != .reportedPlaced {
@@ -72,7 +82,7 @@ struct PickupHomeView: View {
                 }
             }
         }
-        .workingSurface()
+        .listStyle(.plain)
         .navigationTitle(pTr("Pickup"))
         .modifier(PickupNextShopRoute(model: model, requested: $nextShopRequested) { nextShopFocused = true })
         .task { await model.load() }
@@ -631,7 +641,7 @@ private struct PickupPlacedOrdersView: View {
     @EnvironmentObject private var access: WorkspaceAccess
 
     var body: some View {
-        List {
+        JournalList {
             if access.unlocked {
                 let orders = model.journeys.compactMap { journey in
                     journey.basket?.placements.first.map { (journey: journey, placement: $0) }

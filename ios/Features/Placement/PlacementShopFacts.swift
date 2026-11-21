@@ -9,9 +9,9 @@ struct PlacementShopFacts: View {
         Group {
             ForEach(lines) { line in
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(line.originalItem).font(.headline)
-                    LabeledContent(PlacementCopy.text("Packs"), value: line.packs.formatted())
-                    LabeledContent(PlacementCopy.text("Entered price per pack"), value: PlacementCopy.money(line.unitPriceMinor))
+                    Text(verbatim: line.originalItem).font(.headline).foregroundStyle(Theme.ink)
+                    LabeledContent(PlacementCopy.text("Packs"), value: line.packs.formatted()).monospacedDigit()
+                    LabeledContent(PlacementCopy.text("Entered price per pack"), value: PlacementCopy.money(line.unitPriceMinor)).monospacedDigit()
                     Text(line.feeEligible ? PlacementCopy.text("Counts toward the fee threshold") : PlacementCopy.text("Does not count toward the fee threshold")).font(.caption)
                 }
             }
@@ -42,6 +42,7 @@ struct PlacementBudgetFacts: View {
     var body: some View {
         Group {
             LabeledContent(PlacementCopy.text("Captured total"), value: PlacementCopy.money(budget.totalMinor))
+                .font(.headline).monospacedDigit()
             LabeledContent(PlacementCopy.text("Captured lower bound"), value: PlacementCopy.money(budget.lowerBoundMinor))
             LabeledContent(PlacementCopy.text("Captured upper bound"), value: PlacementCopy.money(budget.upperBoundMinor))
             LabeledContent(PlacementCopy.text("Captured amount over cap"), value: PlacementCopy.money(budget.overCapMinor))

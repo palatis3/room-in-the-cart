@@ -209,7 +209,7 @@ struct ComparisonView: View {
     private var editor: some View {
         WorkingForm {
             Section {
-                Text(tr("What are you buying?")).font(.title.bold()).accessibilityAddTraits(.isHeader)
+                Text(tr("What are you buying?")).marketJournalTitle()
                 WorkingField(tr("Item name")) {
                     workingTextField(tr("Item name"), text: $model.draft.item, axis: .vertical)
                         .focused($inputFocused, equals: "itemName").accessibilityIdentifier("itemName")
@@ -343,8 +343,8 @@ struct ComparisonView: View {
             Section {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(tr("Item-only comparison")).font(.subheadline.weight(.semibold))
-                    Text(model.draft.item.isEmpty ? tr("One item") : model.draft.item).font(.title.bold())
-                        .accessibilityAddTraits(.isHeader).accessibilityFocused($resultFocused, equals: .summary)
+                    Text(model.draft.item.isEmpty ? tr("One item") : model.draft.item).marketJournalTitle()
+                        .accessibilityFocused($resultFocused, equals: .summary)
                     if let summary = result.purchaseSummary {
                         Text(summary).font(.headline).accessibilityIdentifier("comparisonPurchaseSummary")
                     } else if let preferred = result.preferredOfferID {
@@ -378,8 +378,8 @@ struct ComparisonView: View {
                     costLine(inputs.offerB, result: result.offerB, fallback: tr("Pack B"), unitPrice: rates?.b, unit: result.unit)
                 }
                 .fixedSize(horizontal: false, vertical: true).padding(.vertical, 6)
-                .foregroundStyle(result.offerA.isResolved && result.offerB.isResolved ? Theme.onSelection : Theme.ink)
-                .listRowBackground(result.offerA.isResolved && result.offerB.isResolved ? Theme.selection : Theme.warningSurface)
+                .foregroundStyle(Theme.ink)
+                .listRowBackground(Theme.surface)
                 recoveryActions(for: .a, result: result.offerA)
                 recoveryActions(for: .b, result: result.offerB)
                 editRow
@@ -427,7 +427,7 @@ struct ComparisonView: View {
                     .foregroundStyle(Color("error")).accessibilityFocused($resultFocused, equals: .error)
             }
         }
-        .listStyle(.insetGrouped)
+        .listStyle(.plain)
         .environment(\.defaultMinListRowHeight, 0)
         .scrollContentBackground(.hidden)
         .background(Theme.canvas)
@@ -467,6 +467,9 @@ struct ComparisonView: View {
                     Text(verbatim: title)
                     Text(verbatim: cost).fontWeight(.semibold).monospacedDigit()
                 }
+            }
+            if let packs = result.packsToBuy, packs > 0, let price = offer.price {
+                WholePackCalculation(count: packs, price: price)
             }
             if let unitPrice, let unit {
                 Text(verbatim: comparisonUnitPriceText(unitPrice, in: unit, locale: locale))
@@ -525,6 +528,25 @@ struct ComparisonView: View {
 private extension ComparisonPack {
     var priceTitle: String { tr(self == .a ? "Add Pack A price" : "Add Pack B price") }
     var amountTitle: String { tr(self == .a ? "Enter Pack A usable amount" : "Enter Pack B usable amount") }
+}
+
+/// A pack count is a whole number even when the ingredient need is fractional.
+struct WholePackCalculation: View {
+    let count: Int64
+    let price: Money
+    @Environment(\.locale) private var locale
+
+    var body: some View {
+        Label {
+            Text(tripFormat(count == 1 ? "%lld pack × %@" : "%lld packs × %@", count, moneyText(price, locale: locale)))
+                .monospacedDigit()
+        } icon: {
+            Image(systemName: "shippingbox").accessibilityHidden(true)
+        }
+        .font(.subheadline.weight(.medium))
+        .foregroundStyle(Theme.action)
+        .fixedSize(horizontal: false, vertical: true)
+    }
 }
 
 private struct MissingPackAmountEditor: View {
@@ -764,14 +786,14 @@ private struct ComparisonMetric: UIViewRepresentable {
         label.adjustsFontForContentSizeCategory = true
         label.lineBreakMode = .byWordWrapping
         label.isAccessibilityElement = true
-        label.isOpaque = true
-        label.backgroundColor = .secondarySystemGroupedBackground
+        label.isOpaque = false
+        label.backgroundColor = .clear
         return label
     }
 
     func updateUIView(_ label: UILabel, context: Context) {
         label.text = text
-        label.textColor = .label
+        label.textColor = UIColor(Theme.ink)
         let traits = UITraitCollection(preferredContentSizeCategory: UIContentSizeCategory(typeSize))
         label.font = UIFont.preferredFont(forTextStyle: style, compatibleWith: traits)
         label.accessibilityIdentifier = id
