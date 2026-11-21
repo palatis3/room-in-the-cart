@@ -455,11 +455,11 @@ import UIKit
             XCTAssertTrue(app.navigationBars["Describe this pickup"].waitForNonExistence(timeout: 8))
         }
         openFacts()
-        fill("West Market", into: "ledgerBranch")
+        fill("West Market", into: "ledgerBranch", fieldType: .any)
         fill("2.40", into: "Known fees (USD, unknown if blank)")
         enableSwitch("Record a retailer preview")
         fill("37.20", into: "Retailer total (USD, unknown if blank)")
-        fill("West retailer page", into: "Source of the retailer preview")
+        fill("West retailer page", into: "Source of the retailer preview", fieldType: .any)
         tap(element("ledgerReviewFacts"))
         assertText("Retailer preview: $37.20")
         saveFacts()
