@@ -503,10 +503,11 @@ final class RoomInTheCartUITests: XCTestCase {
         tap(app.buttons["quickGrocery.add"])
         tap(app.buttons["quickGrocery.viewList"])
         tap(app.buttons["ledgerListOptions"])
-        let share = app.buttons["tripShare.previewCopy"]
-        XCTAssertTrue(share.waitForExistence(timeout: 8))
+        // UIKit can expose a single dialog action as two nested buttons.
+        let share = app.scrollViews.buttons.matching(identifier: "tripShare.previewCopy").firstMatch
+        XCTAssertTrue(share.wait(for: \.isHittable, toEqual: true, timeout: 8))
         XCTAssertEqual(share.label, "Preview list copy")
-        tap(share)
+        share.tap()
         let row = app.switches.matching(NSPredicate(format: "label CONTAINS %@", name)).firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 8))
         row.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
@@ -517,7 +518,9 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertFalse(preview.label.contains("Quantity unresolved"))
         tap(app.buttons["tripShare.close"])
         XCTAssertTrue(preview.waitForNonExistence(timeout: 8))
+        XCTAssertTrue(app.navigationBars["Shopping list"].waitForExistence(timeout: 8))
         XCTAssertTrue(app.buttons["Inspect " + name].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["Check " + name].exists)
     }
 
     func testHouseholdHelpShowsPrivateSharingBeforeDetailedPermissions() {
