@@ -515,6 +515,40 @@ import XCTest
         XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "pantry.lot.")).count, 0)
     }
 
+    func testSpanishReceiptPrintedUnitHintWrapsAtExtraLarge() {
+        launch(reset: true, spanish: true, contentSize: .extraLarge)
+        tap(app.tabBars.buttons["Despensa"])
+        tap(app.buttons["pantry.setup.receipt"])
+        receiptTap(app.buttons["receipt.scan"])
+        let wording = app.textViews["scan.sourceEditor"]
+        receiptTap(wording)
+        wording.typeText("Maiz seco 2 paquetes $4.82")
+        receiptTap(app.buttons["scan.sourceDone"])
+        receiptTap(app.buttons["Revisar líneas impresas"])
+
+        let quantity = app.textFields["Cantidad impresa (opcional)"]
+        let input = CGVector(dx: 0.5, dy: 0.7)
+        reveal(quantity, requiredHit: input)
+        quantity.coordinate(withNormalizedOffset: input).tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+        app.typeText("2 paquetes")
+        XCTAssertEqual(quantity.value as? String, "2 paquetes")
+        receiptTap(app.buttons["scan.sourceDone"])
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+
+        let hint = app.staticTexts["scan.receipt.printedQuantityHint"]
+        reveal(hint, requiredHit: CGVector(dx: 0.5, dy: 0.5))
+        XCTAssertEqual(hint.label, "Incluye la unidad impresa, como 2 unidades o 500 g.")
+        let frame = hint.frame
+        let font = UIFont.preferredFont(forTextStyle: .subheadline,
+                                       compatibleWith: UITraitCollection(preferredContentSizeCategory: .extraLarge))
+        let required = (hint.label as NSString).boundingRect(
+            with: CGSize(width: frame.width, height: .greatestFiniteMagnitude),
+            options: [.usesLineFragmentOrigin, .usesFontLeading], attributes: [.font: font], context: nil)
+        capture("Spanish receipt unit guide at Extra Large")
+        XCTAssertGreaterThanOrEqual(frame.height + 2, required.height, "The visible hint must contain the entire unit example")
+    }
+
     func testPrivatePantryFromEmptyShopSavesFoodAndReopensAfterRelaunch() throws {
         launch(reset: true)
         var pantry: XCUIElement { app.shopToolButton("shop.myPantry") }
@@ -4689,10 +4723,12 @@ import XCTest
         XCTAssertTrue(printOptions.waitForNonExistence(timeout: 8), app.debugDescription)
     }
 
-    private func launch(reset: Bool, spanish: Bool = false, privateRecovery: Bool = false, sourceRemoval: Bool = false, sharedReceiptToken: String? = nil) {
+    private func launch(reset: Bool, spanish: Bool = false, privateRecovery: Bool = false, sourceRemoval: Bool = false,
+                        sharedReceiptToken: String? = nil, contentSize: UIContentSizeCategory? = nil) {
         app.launchArguments = ["--ui-testing", "-AppleLanguages", spanish ? "(es)" : "(en)", "-AppleLocale", spanish ? "es_US" : "en_US"]
         if reset { app.launchArguments.append("--reset-test-workspace") }
         if let sharedReceiptToken { app.launchArguments += ["--receipt-share-test-store", sharedReceiptToken] }
+        if let contentSize { app.launchArguments += ["-UIPreferredContentSizeCategoryName", contentSize.rawValue] }
         if privateRecovery { app.launchArguments.append("--seed-private-recovery") }
         if sourceRemoval { app.launchArguments.append("--seed-source-removal") }
         app.launch()

@@ -372,6 +372,9 @@ import CoreDomain
                     .accessibilityIdentifier("scan.receipt.printedHeading")
                 ForEach(receiptLines ?? []) { snapshot in
                     let row = captureDraftBinding(ScanReceiptLine(id: snapshot.id, originalText: ""), in: receiptBinding)
+                    let edited = row.wrappedValue
+                    let proposal = edited.quantityNote.isEmpty && edited.priceNote.isEmpty
+                        ? nil : ReceiptPrintedEvidence(edited, knownStorage: [:])
                     VStack(alignment: .leading) {
                         Text(row.wrappedValue.originalText)
                             .font(.system(.headline, design: .monospaced)).textSelection(.enabled)
@@ -389,23 +392,19 @@ import CoreDomain
                                 .receiptInputChrome()
                                 .focused($focusedField, equals: .receiptQuantity(snapshot.id))
                         }
+                        if let proposal, !edited.quantityNote.isEmpty, proposal.quantity == nil {
+                            receiptFormatHint(captureText("Include the printed unit, such as 2 units or 500 g."),
+                                              identifier: "scan.receipt.printedQuantityHint")
+                        }
                         let priceLabel = captureText("Printed amount (optional)")
                         WorkingField(priceLabel) {
                             TextField(priceLabel, text: row.priceNote, prompt: Text(""))
                                 .receiptInputChrome()
                                 .focused($focusedField, equals: .receiptPrice(snapshot.id))
                         }
-                        let edited = row.wrappedValue
-                        if !edited.quantityNote.isEmpty || !edited.priceNote.isEmpty {
-                            let proposal = ReceiptPrintedEvidence(edited, knownStorage: [:])
-                            if !edited.quantityNote.isEmpty && proposal.quantity == nil {
-                                Text(captureText("Include the printed unit, such as 2 units or 500 g."))
-                                    .font(.subheadline).foregroundStyle(Theme.secondary)
-                            }
-                            if !edited.priceNote.isEmpty && proposal.amount == nil {
-                                Text(captureText("Include the printed currency, such as USD 4.82."))
-                                    .font(.subheadline).foregroundStyle(Theme.secondary)
-                            }
+                        if let proposal, !edited.priceNote.isEmpty, proposal.amount == nil {
+                            receiptFormatHint(captureText("Include the printed currency, such as USD 4.82."),
+                                              identifier: "scan.receipt.printedAmountHint")
                         }
                     }
                 }
@@ -431,6 +430,15 @@ import CoreDomain
             }
         }
     }
+
+    private func receiptFormatHint(_ wording: String, identifier: String) -> some View {
+        Text(wording)
+            .font(.subheadline).foregroundStyle(Theme.secondary)
+            .lineLimit(nil)
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityIdentifier(identifier)
+    }
+
     private var recipeFields: some View {
         Section(captureText("Editable recipe review")) {
             Text(captureText("Review the title, servings and ingredients. Accepting this draft does not choose a dinner or add groceries."))

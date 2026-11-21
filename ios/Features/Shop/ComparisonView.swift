@@ -94,9 +94,7 @@ struct ComparisonView: View {
             if reviewing, let comparison = model.comparison {
                 results(comparison.result, inputs: comparison.inputs)
                     .toolbar {
-                        if typeSize.isAccessibilitySize {
-                            ToolbarItem(placement: .topBarTrailing) { accessibleSaveControl }
-                        }
+                        ToolbarItem(placement: .topBarTrailing) { toolbarSaveControl }
                     }
                     .alert(tr("Save"), isPresented: Binding(
                         get: { toolbarSaveError != nil },
@@ -109,6 +107,18 @@ struct ComparisonView: View {
                     .sheet(item: $missingInput) { input in missingInputEditor(input) }
             } else {
                 editor
+                    .toolbar {
+                        if let inputFocused {
+                            ToolbarItem(placement: .topBarTrailing) {
+                                Button { self.inputFocused = nil } label: {
+                                    Text(tr("Done"))
+                                        .frame(minWidth: 44, minHeight: 44)
+                                        .contentShape(Rectangle())
+                                }
+                                .accessibilityIdentifier("comparison.done." + inputFocused)
+                            }
+                        }
+                    }
             }
         }
         .workingSurface()
@@ -116,12 +126,10 @@ struct ComparisonView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(Theme.canvas, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
-        .keyboardDoneAction(visible: inputFocused != nil, title: tr("Done"),
-                            identifier: inputFocused.map { "comparison.done." + $0 }) { inputFocused = nil }
         .onAppear { if reviewing { model.compare() } }
     }
 
-    @ViewBuilder private var accessibleSaveControl: some View {
+    @ViewBuilder private var toolbarSaveControl: some View {
         if model.savedAt != nil {
             Text(tr("Saved"))
                 .accessibilityLabel(tr("Saved on this iPhone"))

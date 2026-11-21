@@ -569,6 +569,10 @@ final class RoomInTheCartUITests: XCTestCase {
         openEmptyComparison()
         enterComparison(item: "Family wraps", firstQuantity: "7 1/2", cap: "30", omitPriceFor: "b")
         compare()
+        let bar = app.navigationBars.firstMatch
+        let save = bar.buttons["comparison.toolbarSave"]
+        XCTAssertTrue(save.waitForExistence(timeout: 5) && save.isHittable, "Save must be available with the first result")
+        XCTAssertEqual(save.label, "Save comparison")
         let addPrice = app.buttons["bAddPrice"]
         XCTAssertEqual(addPrice.label, "Add Pack B price")
         XCTAssertFalse(app.buttons["aAddPrice"].exists)
@@ -596,12 +600,20 @@ final class RoomInTheCartUITests: XCTestCase {
         assertKnownTotals()
         assertContains("Room within the item limit: $26.00")
         screenshot("English-known-item-only-result")
-        saveAndAssertDurableStatus()
+        revealFullyInComparison(app.buttons["saveComparison"])
+        XCTAssertTrue(app.buttons["saveComparison"].isHittable)
+        tap(save)
+        let saved = bar.descendants(matching: .any).matching(identifier: "comparison.toolbarSaved").firstMatch
+        XCTAssertTrue(saved.waitForExistence(timeout: 10))
+        XCTAssertEqual(saved.label, "Saved on this iPhone")
+        XCTAssertFalse(save.exists)
         screenshot("English-saved-result")
 
         app.terminate()
         launch(reset: false)
         reopenSavedRecord(recordsLabel: "Records", item: "Family wraps")
+        XCTAssertTrue(saved.waitForExistence(timeout: 5))
+        XCTAssertFalse(save.exists)
         assertScope("Item-only comparison")
         assertKnownTotals()
         assertSavedStatus("Saved on this iPhone")
@@ -1323,10 +1335,11 @@ final class RoomInTheCartUITests: XCTestCase {
         for entry in fields {
             let (id, text) = entry
             let field = comparisonInput(id)
-            // A partially exposed row can be hittable underneath the keyboard accessory.
+            // A partially exposed row can be hittable underneath the software keyboard.
             if let previousDone {
-                let done = app.buttons[previousDone]
-                if done.exists && (!field.exists || !field.isHittable || field.frame.midY >= done.frame.minY) {
+                let keyboard = app.keyboards.firstMatch
+                if app.buttons[previousDone].exists &&
+                    (!field.exists || !field.isHittable || (keyboard.exists && field.frame.midY >= keyboard.frame.minY)) {
                     dismissComparisonKeyboard(previousDone)
                 }
             }

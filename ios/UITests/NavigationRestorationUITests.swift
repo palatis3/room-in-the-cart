@@ -181,11 +181,12 @@ import XCTest
         reveal(field)
         field.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         let doneID = "comparison.done." + id
-        XCTAssertTrue(app.buttons[doneID].waitForExistence(timeout: 5), "Expected keyboard focus in " + id)
+        let done = app.navigationBars["Compare packs"].buttons[doneID]
+        XCTAssertTrue(done.waitForExistence(timeout: 5) && done.isHittable, "Expected Done in the comparison toolbar for " + id)
         app.typeText(text)
         XCTAssertEqual(field.value as? String, text)
         XCTAssertTrue(app.waitForDoneAboveKeyboard(identifier: doneID))
-        app.buttons[doneID].tap()
+        done.tap()
         XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: doneID))
     }
     private func reveal(_ element: XCUIElement) {
