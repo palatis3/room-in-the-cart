@@ -1,6 +1,16 @@
 import CoreDomain
 import Foundation
 
+/// Used for discovery only. Ledger identity and quantity compatibility use their own exact checks.
+enum GroceryNameSpelling {
+    static let pluralEndings = ["s", "es"]
+
+    static func folded(_ value: String) -> String {
+        let locale = Locale(identifier: "en_US_POSIX")
+        return value.folding(options: [.diacriticInsensitive, .widthInsensitive], locale: locale).lowercased(with: locale)
+    }
+}
+
 /// Candidates come only from the private snapshot supplied by the caller.
 /// Plural or accent-insensitive matches help discovery but never select a lot.
 enum PantryVoiceBatchMatcher {
@@ -26,7 +36,7 @@ enum PantryVoiceBatchMatcher {
         if label == term { return true }
         let shorter = label.count < term.count ? label : term
         let longer = label.count < term.count ? term : label
-        return longer == shorter + "s" || longer == shorter + "es"
+        return GroceryNameSpelling.pluralEndings.contains { longer == shorter + $0 }
     }
 
     private static func exactLabel(_ value: String) -> String {
@@ -36,9 +46,6 @@ enum PantryVoiceBatchMatcher {
     }
 
     private static func words(in value: String) -> [String] {
-        let locale = Locale(identifier: "en_US_POSIX")
-        let text = value.folding(options: [.diacriticInsensitive, .widthInsensitive],
-                                 locale: locale).lowercased(with: locale)
-        return text.split { !$0.isLetter && !$0.isNumber }.map(String.init)
+        GroceryNameSpelling.folded(value).split { !$0.isLetter && !$0.isNumber }.map(String.init)
     }
 }

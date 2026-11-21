@@ -43,6 +43,25 @@ import CoreDomain
         XCTAssertEqual(shop.shoppingRowQuantity(for: try XCTUnwrap(shop.lines.last)), ledgerQuantity(amount))
     }
 
+    func testBulkPluralHintComparesOnlyIncludedRowsWithTheSameMeasuredAmount() throws {
+        let shop = ShoppingLedger()
+        let preview = try shop.stageImport(text: "2 manzanas\n2 manzana\n1 manzana\n2 kg manzana\n2 manzanas verdes")
+        let original = LedgerImportReview.initialChoices(preview)
+        let initial = LedgerImportReview(shop: shop, preview: preview, choices: original)
+        XCTAssertEqual(initial.similarEarlierLines, [preview.lines[1].id: 0])
+        XCTAssertEqual(initial.choices, original)
+        var skipping = original
+        skipping[preview.lines[0].id] = .skip
+        let revised = LedgerImportReview(shop: shop, preview: preview, choices: skipping)
+        XCTAssertTrue(revised.similarEarlierLines.isEmpty)
+        XCTAssertEqual(revised.choices, skipping)
+
+        let reverse = try shop.stageImport(text: "3 lime\n3 limes")
+        let reverseReview = LedgerImportReview(shop: shop, preview: reverse, choices: LedgerImportReview.initialChoices(reverse))
+        XCTAssertEqual(reverseReview.similarEarlierLines, [reverse.lines[1].id: 0])
+        XCTAssertTrue(reverseReview.isComplete)
+    }
+
     func testChangingPickupsClearsOnlyThePreviousListsFilter() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }

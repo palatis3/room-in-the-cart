@@ -131,7 +131,9 @@ struct LedgerImportView: View {
                     }
                     Section {
                         ForEach(Array(preview.lines.enumerated()), id: \.element.id) { index, row in
-                            LedgerImportRowView(number: index + 1, line: rowBinding(row, at: index, previewID: preview.id),
+                            LedgerImportRowView(number: index + 1, similarLine: review.similarEarlierLines[row.id].map {
+                                ledgerFormat("Similar to line %lld: %@", Int64($0 + 1), preview.lines[$0].originalText)
+                            }, line: rowBinding(row, at: index, previewID: preview.id),
                                                 inputFocus: $inputFocus, invalidAmount: Binding(get: { invalidAmounts[row.id] },
                                                     set: { invalidAmounts[row.id] = $0 }),
                                                 matches: review.matches[row.id] ?? [],
@@ -519,6 +521,34 @@ struct LedgerImportReview {
     var matches: [UUID: [Match]] = [:]
     var choices: [UUID: ImportResolution]
     let isComplete: Bool
+    var similarEarlierLines: [UUID: Int] = [:]
+
+    /// Do not suggest combining quantities. Flag only literal plural variants in this draft
+    /// with the same measured amount and unit, excluding packages, captures and qualified wording.
+    private static func similarLines(in preview: StagedListImport, choices: [UUID: ImportResolution]) -> [UUID: Int] {
+        guard preview.lines.count > 1 else { return [:] }
+        struct Measure: Hashable { let amount: Rational; let unit: UnitOfMeasure }
+        var earlier: [Measure: [String: Int]] = [:]
+        var result: [UUID: Int] = [:]
+        for (index, row) in preview.lines.enumerated() {
+            guard choices[row.id] != .skip, let quantity = row.quantity, row.unresolvedReason == nil,
+                  row.originalPack == nil, row.capture == nil, row.exclusions.isEmpty, row.pantryProductLink == nil,
+                  let plain = QuickGrocery.plainName(row.name) else { continue }
+            let words = GroceryNameSpelling.folded(plain).split(separator: " ")
+            guard let last = words.last, last.count >= 3, words.allSatisfy({ $0.allSatisfy(\.isLetter) }) else { continue }
+            let name = words.joined(separator: " ")
+            let measure = Measure(amount: quantity.amount, unit: quantity.unit)
+            var variants = GroceryNameSpelling.pluralEndings.map { name + $0 }
+            for ending in GroceryNameSpelling.pluralEndings where last.hasSuffix(ending) && last.count >= ending.count + 3 {
+                variants.append(String(name.dropLast(ending.count)))
+            }
+            result[row.id] = variants.compactMap { earlier[measure]?[$0] }.min()
+            if choices[row.id] != nil && earlier[measure]?[name] == nil {
+                earlier[measure, default: [:]][name] = index
+            }
+        }
+        return result
+    }
 
     func selectionSummary(for preview: StagedListImport, destination: String) -> String {
         let selected = preview.lines.compactMap { choices[$0.id] }
@@ -580,6 +610,7 @@ struct LedgerImportReview {
             }
         }
         let retained = self.choices
+        similarEarlierLines = Self.similarLines(in: preview, choices: retained)
         isComplete = !preview.lines.isEmpty && preview.lines.allSatisfy {
             retained[$0.id] != nil && !$0.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
@@ -626,6 +657,7 @@ struct LedgerPackLabelFacts: View {
 
 private struct LedgerImportRowView: View {
     let number: Int
+    let similarLine: String?
     @Binding var line: StagedImportLine
     let inputFocus: FocusState<LedgerImportField?>.Binding
     @Binding var invalidAmount: InvalidImportAmount?
@@ -638,11 +670,12 @@ private struct LedgerImportRowView: View {
     let onEdited: () -> Void
     @State private var amount: String
     @State private var unit: UnitOfMeasure
-    init(number: Int, line: Binding<StagedImportLine>, inputFocus: FocusState<LedgerImportField?>.Binding,
+    init(number: Int, similarLine: String?, line: Binding<StagedImportLine>, inputFocus: FocusState<LedgerImportField?>.Binding,
          invalidAmount: Binding<InvalidImportAmount?>, matches: [LedgerImportReview.Match],
          explicitlySeparate: Bool, restoreChoice: @escaping (ImportResolution?, Bool) -> Void,
          choice: Binding<ImportResolution?>, onEdited: @escaping () -> Void) {
         self.number = number
+        self.similarLine = similarLine
         _line = line
         self.inputFocus = inputFocus
         _invalidAmount = invalidAmount
@@ -683,6 +716,10 @@ private struct LedgerImportRowView: View {
                     .accessibilityIdentifier("ledgerImportSkip-\(number)")
                 }
             }.buttonStyle(.borderless)
+            if let similarLine {
+                Label(similarLine, systemImage: "text.magnifyingglass").font(.subheadline)
+                    .accessibilityIdentifier("ledgerImportRepeat-\(number)")
+            }
             if choice != .skip || line.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 rowFields
             }

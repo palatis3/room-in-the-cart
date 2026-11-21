@@ -6772,6 +6772,22 @@
           }
         }
       }
+    },
+    "Similar to line %lld: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Similar to line %lld: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se parece a la línea %lld: %@"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
