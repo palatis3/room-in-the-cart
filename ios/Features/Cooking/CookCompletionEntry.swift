@@ -206,22 +206,21 @@ private struct CookCompletionPartView: View {
     @Binding var part: CookCompletionEditorModel.Part
     @State private var selectingSubstitute = false
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Divider()
-            recordTypePicker
-            if part.use == .measured || part.use == .unmeasured {
-                batchFields
-            } else if part.use == .untracked {
-                Text(cookCompletionText("This records unresolved use without changing a pantry count. It does not mean nothing was used."))
-            }
-            if part.use != .undecided {
-                substitutionFields
-            }
-            Button(cookCompletionText("Review possible substitutions")) { selectingSubstitute = true }
-            Button(cookCompletionText("Remove this part"), role: .destructive) { model.removePart(ingredientID: ingredientID, partID: part.id) }
+        recordTypePicker
+        if part.use == .measured || part.use == .unmeasured {
+            batchFields
+        } else if part.use == .untracked {
+            Text(cookCompletionText("This records unresolved use without changing a pantry count. It does not mean nothing was used."))
         }
-        .sheet(isPresented: $selectingSubstitute) {
-            NavigationStack { CookSubstitutionReview(model: model, ingredientID: ingredientID, partID: part.id) }
+        if part.use != .undecided {
+            substitutionFields
+        }
+        Button(cookCompletionText("Review possible substitutions")) { selectingSubstitute = true }
+            .sheet(isPresented: $selectingSubstitute) {
+                NavigationStack { CookSubstitutionReview(model: model, ingredientID: ingredientID, partID: part.id) }
+            }
+        Button(cookCompletionText("Remove this part"), role: .destructive) {
+            model.removePart(ingredientID: ingredientID, partID: part.id)
         }
     }
 
