@@ -496,7 +496,11 @@ final class RoomInTheCartUITests: XCTestCase {
 
         app.terminate()
         launch(language: "es", reset: false)
-        tap(app.buttons["openPickupList"])
+        if !list.waitForExistence(timeout: 5) {
+            let openList = app.buttons["openPickupList"]
+            XCTAssertTrue(openList.waitForExistence(timeout: 8), app.debugDescription)
+            tap(openList)
+        }
         XCTAssertTrue(list.waitForExistence(timeout: 8))
         XCTAssertEqual(uncheckedRows(), originalRows)
     }
