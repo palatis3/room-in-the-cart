@@ -596,43 +596,54 @@ private struct PackConversionEditor: View {
 
     var body: some View {
         NavigationStack {
-            WorkingForm {
-                Section {
-                    Text(tr("Enter two equivalent amounts for this food from the package label, a recipe, or your own measurement."))
-                        .foregroundStyle(Theme.secondary)
-                    amountField(unit: draft.sourceUnit, text: $draft.sourceLiteral, id: "conversion.source")
-                    amountField(unit: draft.targetUnit, text: $draft.targetLiteral, id: "conversion.target")
-                    workingTextField(tr("Label or measurement note (optional)"), text: $draft.sourceNote, axis: .vertical)
-                        .focused($focusedField, equals: "conversion.note")
-                        .accessibilityIdentifier("conversion.note")
-                } header: { Text(verbatim: packLabel) }
-                Section {
-                    if showError {
-                        Text(tr("Enter two positive amounts. Use a decimal or fraction and keep the source note brief."))
-                            .foregroundStyle(Theme.warning)
+            ScrollViewReader { scroll in
+                conversionForm
+                    .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidShowNotification)) { _ in
+                        // Give the next amount room above the keyboard and its Done bar on compact screens.
+                        if let focusedField { scroll.scrollTo(focusedField, anchor: .top) }
                     }
-                    Button(tr("Confirm conversion")) {
-                        guard (try? draft.unitBasis()) != nil else { showError = true; return }
-                        conversion = draft
-                        dismiss()
-                    }.buttonStyle(PrimaryAction()).accessibilityIdentifier("conversion.confirm")
-                    if conversion != nil {
-                        Button(tr("Remove conversion"), role: .destructive) { conversion = nil; dismiss() }
-                            .accessibilityIdentifier("conversion.remove")
-                    }
+            }
+        }
+    }
+
+    private var conversionForm: some View {
+        WorkingForm {
+            Section {
+                Text(tr("Enter two equivalent amounts for this food from the package label, a recipe, or your own measurement."))
+                    .foregroundStyle(Theme.secondary)
+                amountField(unit: draft.sourceUnit, text: $draft.sourceLiteral, id: "conversion.source")
+                amountField(unit: draft.targetUnit, text: $draft.targetLiteral, id: "conversion.target")
+                workingTextField(tr("Label or measurement note (optional)"), text: $draft.sourceNote, axis: .vertical)
+                    .focused($focusedField, equals: "conversion.note")
+                    .accessibilityIdentifier("conversion.note")
+                    .id("conversion.note")
+            } header: { Text(verbatim: packLabel) }
+            Section {
+                if showError {
+                    Text(tr("Enter two positive amounts. Use a decimal or fraction and keep the source note brief."))
+                        .foregroundStyle(Theme.warning)
+                }
+                Button(tr("Confirm conversion")) {
+                    guard (try? draft.unitBasis()) != nil else { showError = true; return }
+                    conversion = draft
+                    dismiss()
+                }.buttonStyle(PrimaryAction()).accessibilityIdentifier("conversion.confirm")
+                if conversion != nil {
+                    Button(tr("Remove conversion"), role: .destructive) { conversion = nil; dismiss() }
+                        .accessibilityIdentifier("conversion.remove")
                 }
             }
-            .workingSurface()
-            .navigationTitle(tr("Ingredient conversion"))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(tr("Cancel")) { dismiss() }.accessibilityIdentifier("conversion.cancel")
-                }
+        }
+        .workingSurface()
+        .navigationTitle(tr("Ingredient conversion"))
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button(tr("Cancel")) { dismiss() }.accessibilityIdentifier("conversion.cancel")
             }
-            .keyboardDoneAction(visible: focusedField != nil, title: tr("Done"), identifier: "conversion.done") {
-                focusedField = nil
-            }
+        }
+        .keyboardDoneAction(visible: focusedField != nil, title: tr("Done"), identifier: "conversion.done") {
+            focusedField = nil
         }
     }
 
@@ -646,6 +657,10 @@ private struct PackConversionEditor: View {
                 .accessibilityLabel(label).accessibilityIdentifier(id)
                 .frame(minHeight: 44)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+        .simultaneousGesture(TapGesture().onEnded { focusedField = id })
+        .id(id)
     }
 }
 
