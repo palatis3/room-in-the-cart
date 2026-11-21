@@ -174,6 +174,47 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertEqual(editor.value as? String, edited)
     }
 
+    func testEditingReviewedGroceryKeepsCommitAwayFromKeyboardAndPreservesBothRows() {
+        launch()
+        tap(app.buttons["shop.addFirstList"])
+        let original = app.textViews["ledgerImportText"]
+        tap(original)
+        original.typeText("scalllions\ncorn tortillas")
+        let done = app.buttons["Done"]
+        tap(done)
+        tap(app.buttons["ledgerReviewImport"])
+        let commit = app.buttons["ledgerCommitImport"]
+        XCTAssertTrue(commit.waitForExistence(timeout: 8))
+        let name = app.textFields["ledgerImportName-1"]
+        revealReviewAction(name, above: commit)
+        name.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(commit.waitForNonExistence(timeout: 5))
+        XCTAssertTrue(done.isHittable)
+        XCTAssertLessThanOrEqual(name.frame.maxY, done.frame.minY)
+        app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 9) + "scallions")
+        XCTAssertEqual(name.value as? String, "scallions")
+        tap(done)
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done"))
+        XCTAssertTrue(commit.waitForExistence(timeout: 5))
+        tap(commit)
+        let corrected = app.buttons["Inspect scallions"]
+        XCTAssertTrue(corrected.waitForExistence(timeout: 8))
+        app.terminate()
+        launch(reset: false)
+        if !corrected.waitForExistence(timeout: 3) { tap(app.buttons["quickGrocery.viewList"]) }
+        XCTAssertTrue(corrected.waitForExistence(timeout: 8))
+        let tortillas = app.buttons["Inspect corn tortillas"]
+        reveal(tortillas)
+        XCTAssertTrue(tortillas.exists)
+        tap(corrected)
+        let optional = app.staticTexts["Quantity optional"]
+        reveal(optional)
+        XCTAssertTrue(optional.exists)
+        XCTAssertTrue(app.staticTexts["scalllions"].exists)
+        XCTAssertFalse(app.staticTexts["Review the quantity and unit."].exists)
+    }
+
     func testFirstListResumesAfterRelaunchAndCreatesOneUndoablePickupOnConfirmation() {
         for language in ["en", "es"] {
             launch(language: language, largeDark: language == "es")

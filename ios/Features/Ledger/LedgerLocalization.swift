@@ -57,10 +57,7 @@ extension ShoppingLedger {
         if let count = source.originalPack?.count {
             return shoppingPackageCount(count, original: source.originalText)
         }
-        guard source.capture == nil, source.originalPack == nil, source.exclusions.isEmpty,
-              source.productName == line.name, QuickGrocery.plainName(source.originalText) != nil,
-              QuickGrocery.plainName(line.name) != nil else { return ledgerQuantity(nil) }
-        return nil
+        return source.hasOptionalShoppingAmount && source.productName == line.name ? nil : ledgerQuantity(nil)
     }
 
     var listExclusions: [UUID: String] {
@@ -95,8 +92,24 @@ func ledgerAmountInput(_ value: Rational) -> String {
     }
 }
 
+extension LedgerContribution {
+    var hasOptionalShoppingAmount: Bool {
+        source.canSupplyExistingQuantity && quantity == nil && capture == nil && originalPack == nil &&
+            exclusions.isEmpty && QuickGrocery.plainName(originalText) != nil && QuickGrocery.plainName(productName) != nil
+    }
+
+    var sourceQuantityLabel: String {
+        if hasOptionalShoppingAmount { return ledgerText("Quantity optional") }
+        if isHandCheckedUnmeasuredIngredient { return tonightText("Checked by hand · unmeasured") }
+        if quantity == nil, let count = originalPack?.count { return shoppingPackageCount(count, original: originalText) }
+        return ledgerQuantity(quantity)
+    }
+}
+
 func ledgerEditableNote(_ contribution: LedgerContribution) -> String {
     guard case .imported = contribution.source else { return contribution.notes }
+    if contribution.hasOptionalShoppingAmount,
+       contribution.notes == "Review the quantity and unit." || contribution.notes == "quantityUnknown" { return "" }
     return ledgerContributionNote(contribution.notes)
 }
 

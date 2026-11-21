@@ -99,10 +99,11 @@ struct LedgerIngredientView: View {
                         let source = ledgerSourceLabel(contribution, shop: shop, typedItemBatches: typedItemBatches)
                         VStack(alignment: .leading, spacing: 8) {
                             Text(source).font(.headline)
-                            Text(ledgerQuantity(contribution.quantity))
+                            Text(contribution.sourceQuantityLabel)
                             Text(contribution.originalText).font(.footnote).foregroundStyle(Theme.secondary)
                             if let pack = contribution.originalPack { LedgerPackLabelFacts(pack: pack) }
-                            if !contribution.notes.isEmpty { Text(ledgerEditableNote(contribution)) }
+                            let displayedNote = ledgerEditableNote(contribution)
+                            if !displayedNote.isEmpty { Text(displayedNote) }
                             if !contribution.exclusions.isEmpty {
                                 Text(ledgerFormat("Exclusions: %@", ledgerExclusionsText(contribution.exclusions)))
                             }

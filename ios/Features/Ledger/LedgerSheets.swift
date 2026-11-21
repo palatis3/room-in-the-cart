@@ -214,7 +214,7 @@ struct LedgerImportView: View {
             }.accessibilityIdentifier("ledgerImportForm")
                 .scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(ledgerText("Bring the list"))
                 .safeAreaInset(edge: .bottom, spacing: 0) {
-                    if let preview, let review {
+                    if let preview, let review, inputFocus == nil {
                         Group {
                             if preview.lines.count > 1, let shop {
                                 let totals = review.selectionTotals(for: preview, destination: shop.title)
@@ -235,7 +235,7 @@ struct LedgerImportView: View {
                         }
                         .padding(.horizontal, 16).padding(.vertical, 8)
                         .background(Theme.canvas)
-                    } else {
+                    } else if preview == nil {
                         reviewListButton
                             .padding(.horizontal, 16).padding(.vertical, 8).background(Theme.canvas)
                     }
@@ -393,6 +393,7 @@ struct LedgerImportView: View {
             authorizeEntry() && (reminderBinding == nil || reminderCopyBinding == reminderBinding)
         }
         return Button(title ?? ledgerText("Add reviewed list")) {
+            guard inputFocus == nil else { return }
             Task {
                 guard authorizeSave(), self.preview == preview, captureBinding == reviewedBinding,
                       reviewedBinding == nil || captureAuthorized else {
@@ -825,6 +826,7 @@ private struct LedgerImportRowView: View {
             WorkingField(ledgerText("Item name")) {
                 TextField(ledgerText("Item name"), text: $line.name, prompt: Text(""), axis: .vertical)
                     .focused(inputFocus, equals: .name(line.id))
+                    .accessibilityIdentifier("ledgerImportName-\(number)")
                     .textFieldStyle(.roundedBorder)
             }
             WorkingField(shoppingText("Quantity (optional)")) {
