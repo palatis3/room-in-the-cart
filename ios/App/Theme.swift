@@ -156,6 +156,7 @@ struct WorkingField<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
             Text(title).font(.subheadline.weight(.medium)).foregroundStyle(Theme.secondary)
+                .lineLimit(nil).fixedSize(horizontal: false, vertical: true)
                 .accessibilityHidden(true)
             content.accessibilityLabel(title)
         }
