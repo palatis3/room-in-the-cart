@@ -1,3 +1,4 @@
+import UIKit
 import XCTest
 
 /// Real typed entry through the shipping screens. The DEBUG launch switch only
@@ -331,6 +332,61 @@ final class RoomInTheCartUITests: XCTestCase {
             XCTAssertTrue(undo.waitForNonExistence(timeout: 10))
             app.terminate()
         }
+    }
+
+    func testSpanishLongListSkipKeepsTheMangoVisibleAndOriginalYogurtWordingSeparate() {
+        let wording = "2 mangos\n2 mango\ncilantro\n2 yogures naturales\n1 kg arroz\n1 pan integral\n1 oat milk\n1 lata de garbanzos"
+        UIPasteboard.general.string = wording
+        app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", "(es)", "-AppleLocale", "es_US",
+                               "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryXXL", "-UIUserInterfaceStyle", "Dark"]
+        app.launch()
+        tap(app.buttons["shop.addFirstList"])
+        let paste = app.buttons["Pegar lista"]
+        reveal(paste)
+        paste.coordinate(withNormalizedOffset: CGVector(dx: 0.14, dy: 0.5)).tap()
+        let editor = app.textViews["ledgerImportText"]
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", wording), object: editor)], timeout: 8), .completed)
+        tap(app.buttons["ledgerReviewImport"])
+
+        let summary = element("ledgerImportSummary")
+        let commit = app.buttons["ledgerCommitImport"]
+        let skip = app.buttons["ledgerImportSkip-2"]
+        revealReviewAction(skip, above: commit)
+        XCTAssertEqual(skip.label, "Omitir 2 mango")
+        skip.tap()
+        let include = app.buttons["ledgerImportInclude-2"]
+        let visible = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard include.exists && include.isHittable && summary.exists && commit.exists else { return false }
+            let totals = "Recogida · Incluidos: 7 · Omitidos: 1"
+            let aboveFooter = min(summary.frame.minY, commit.frame.minY)
+            return (summary.label == totals || summary.value as? String == totals) &&
+                include.frame.midY > self.app.navigationBars.firstMatch.frame.maxY && include.frame.midY < aboveFooter
+        }, object: nil)
+        // No reveal or corrective swipe between tapping Omitir and reading the skipped row.
+        XCTAssertEqual(XCTWaiter.wait(for: [visible], timeout: 8), .completed)
+        XCTAssertEqual(include.label, "Incluir 2 mango")
+        screenshot("Spanish skipped mango remains visible in eight-line review")
+
+        let amount = app.textFields["ledgerImportAmount-4"]
+        revealReviewAction(amount, above: commit)
+        amount.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+        XCTAssertEqual(amount.value as? String, "2")
+        amount.typeText(XCUIKeyboardKey.delete.rawValue + "3")
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "3"), object: amount)], timeout: 5), .completed)
+        XCTAssertGreaterThan(amount.frame.midY, app.navigationBars.firstMatch.frame.maxY)
+        XCTAssertLessThan(amount.frame.midY, app.keyboards.firstMatch.frame.minY)
+        tap(app.buttons["Listo"])
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Listo"))
+        let source = app.staticTexts["ledgerImportOriginal-4"]
+        revealReviewAction(source, above: commit)
+        XCTAssertEqual(source.label, "Texto original: 2 yogures naturales")
+        XCTAssertEqual(amount.value as? String, "3")
+        screenshot("Spanish source wording and corrected yogurt quantity")
+        tap(commit)
+        let yogurt = app.buttons["Ver detalles de yogures naturales"]
+        reveal(yogurt)
+        XCTAssertEqual(yogurt.value as? String, "3 unidades")
     }
 
     func testSharePreviewClosesToPrivateListWithoutSending() {

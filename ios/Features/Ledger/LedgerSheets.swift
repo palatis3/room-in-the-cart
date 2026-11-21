@@ -25,6 +25,7 @@ struct LedgerImportView: View {
     @State private var reminderDestination: UUID?
     @State private var original = ""
     @State private var originalExpanded = false
+    @State private var skippedRowToShow: UUID?
     @State private var showingReviewTotals = false
     @State private var inputLimit: ImportTextLimit?
     @State private var preview: StagedListImport?
@@ -286,6 +287,17 @@ struct LedgerImportView: View {
                     if let binding = capturePresentation?.binding ?? captureBinding, current != binding { invalidateCapture() }
                 }
                 .onChange(of: scenePhase) { _, phase in if phase == .background { reminderPicker = nil; invalidateCapture() } }
+                .task(id: skippedRowToShow) {
+                    guard let id = skippedRowToShow else { return }
+                    // Skipping can collapse this row and remove a repeat shortcut above it.
+                    // Scroll once after the form has incorporated both changes.
+                    await Task.yield()
+                    guard !Task.isCancelled, skippedRowToShow == id else { return }
+                    skippedRowToShow = nil
+                    if inputFocus == nil, choices[id] == .skip {
+                        scroll.scrollTo(id, anchor: .top)
+                    }
+                }
                 .task(id: ImportStatusFocusKey(previewID: preview?.id, error: model.error,
                                                saving: model.saving, pending: model.hasPendingSave)) {
                     guard showingImportStatus else { return }
@@ -545,6 +557,7 @@ struct LedgerImportView: View {
         next[id] = value
         if value == .addNew && explicitlySeparate { explicitSeparate.insert(id) } else { explicitSeparate.remove(id) }
         choices = LedgerImportReview(shop: shop, preview: preview, choices: next).choices
+        if value == .skip { skippedRowToShow = id }
     }
 
     private func refreshMatches() {
@@ -778,7 +791,8 @@ private struct LedgerImportRowView: View {
         VStack(alignment: .leading, spacing: 8) {
             heading {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(line.originalText).font(.subheadline)
+                    Text(verbatim: ledgerFormat("Original wording: %@", line.originalText))
+                        .font(.subheadline).accessibilityIdentifier("ledgerImportOriginal-\(number)")
                     if choice == .skip {
                         Text(ledgerText("Skipped")).font(.caption).foregroundStyle(Theme.secondary)
                     }

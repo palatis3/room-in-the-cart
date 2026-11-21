@@ -2546,6 +2546,22 @@
         }
       }
     },
+    "Original wording: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original wording: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto original: %@"
+          }
+        }
+      }
+    },
     "Other meals, manually added groceries and protected lunch needs will remain.": {
       "localizations": {
         "en": {
