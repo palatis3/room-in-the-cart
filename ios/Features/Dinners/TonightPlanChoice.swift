@@ -203,8 +203,8 @@ struct SavedDinnerHandoffView: View {
                     Text(dinnerText("Your saved recipe changed. Open the current version to continue."))
                 } else if destinationID == nil {
                     Section {
-                        Text(dinnerText("Give your pickup a name to keep its dinner and grocery list together."))
-                        Button(dinnerText("Name your pickup")) { startingPickup = true }.buttonStyle(PrimaryAction())
+                        Text(dinnerText(selectingGroceries ? "Name your shopping list, then choose the ingredients to add." : "Give your pickup a name to keep its dinner and grocery list together."))
+                        Button(dinnerText(selectingGroceries ? "Name your shopping list" : "Name your pickup")) { startingPickup = true }.buttonStyle(PrimaryAction())
                             .accessibilityIdentifier("dinner.handoff.startPickup")
                     }
                 } else if let review {
@@ -278,7 +278,7 @@ struct SavedDinnerHandoffView: View {
             }
             .sheet(isPresented: $startingPickup) {
                 NavigationStack {
-                    LedgerNewShopView(model: ledger, title: suggestedListName, authorize: canChangePickup,
+                    LedgerNewShopView(model: ledger, title: suggestedListName, namingShoppingList: selectingGroceries, authorize: canChangePickup,
                         onShopSelected: didSelectPickup)
                 }
             }

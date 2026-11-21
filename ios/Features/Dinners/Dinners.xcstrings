@@ -12841,6 +12841,74 @@
           }
         }
       }
+    },
+    "Create shopping list": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create shopping list"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crear lista de compras"
+          }
+        }
+      }
+    },
+    "Name your shopping list": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name your shopping list"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombrar la lista de compras"
+          }
+        }
+      }
+    },
+    "Shopping list name (required)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shopping list name (required)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre de la lista de compras (obligatorio)"
+          }
+        }
+      }
+    },
+    "Name your shopping list, then choose the ingredients to add.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name your shopping list, then choose the ingredients to add."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ponle un nombre a la lista de compras y elige los ingredientes que quieras añadir."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

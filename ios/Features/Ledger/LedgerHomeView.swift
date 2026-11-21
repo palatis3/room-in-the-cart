@@ -455,14 +455,16 @@ struct LedgerNewShopView: View {
     @ObservedObject var model: LedgerModel
     @Environment(\.dismiss) private var dismiss
     private let originalID: UUID?
+    private let namingShoppingList: Bool
     private let originalTitle: String
     private let onShopSelected: ((UUID) -> Void)?
     private let authorize: (@MainActor () -> Bool)?
     @FocusState private var editingName: Bool
     @State private var title: String
 
-    init(model: LedgerModel, shopID: UUID? = nil, title: String = "", authorize: (@MainActor () -> Bool)? = nil, onShopSelected: ((UUID) -> Void)? = nil) {
+    init(model: LedgerModel, shopID: UUID? = nil, title: String = "", namingShoppingList: Bool = false, authorize: (@MainActor () -> Bool)? = nil, onShopSelected: ((UUID) -> Void)? = nil) {
         self.model = model
+        self.namingShoppingList = namingShoppingList && shopID == nil
         self.onShopSelected = onShopSelected
         self.authorize = authorize
         originalID = shopID
@@ -470,10 +472,14 @@ struct LedgerNewShopView: View {
         _title = State(initialValue: title)
     }
 
+    private var createLabel: String {
+        namingShoppingList ? dinnerText("Create shopping list") : ledgerText("Start pickup")
+    }
+
     var body: some View {
         WorkingForm {
-            WorkingField(ledgerText("Pickup name (required)")) {
-                TextField(ledgerText("Pickup name"), text: $title, prompt: Text(verbatim: "—"), axis: .vertical)
+            WorkingField(namingShoppingList ? dinnerText("Shopping list name (required)") : ledgerText("Pickup name (required)")) {
+                TextField(namingShoppingList ? dinnerText("Shopping list name (required)") : ledgerText("Pickup name"), text: $title, prompt: Text(verbatim: "—"), axis: .vertical)
                     .focused($editingName).accessibilityIdentifier("ledgerShopName")
             }.contentShape(Rectangle())
                 .simultaneousGesture(TapGesture().onEnded { editingName = true })
@@ -481,14 +487,14 @@ struct LedgerNewShopView: View {
             if model.saving || model.hasPendingSave || model.error != nil {
                 LedgerSaveStatus(model: model, showsLastSave: false, onRetried: { dismiss() })
             }
-            Button(originalID == nil ? ledgerText("Start pickup") : ledgerText("Save name")) {
+            Button(originalID == nil ? createLabel : ledgerText("Save name")) {
                 Task { await save() }
             }.buttonStyle(PrimaryAction())
                 .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || model.saving || model.hasPendingSave)
                 .accessibilityIdentifier(originalID == nil ? "ledgerCreateShop" : "ledgerSaveShopName")
         }.keyboardDoneAction(visible: editingName, title: ledgerText("Done"), identifier: "ledger.shopName.done") { editingName = false }
             .scrollDismissesKeyboard(.interactively).workingSurface()
-            .navigationTitle(originalID == nil ? ledgerText("Start pickup") : ledgerText("Rename pickup"))
+            .navigationTitle(originalID == nil ? createLabel : ledgerText("Rename pickup"))
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() }.disabled(model.saving) } }
             .interactiveDismissDisabled(model.saving)
     }
