@@ -1,23 +1,6 @@
 {
   "sourceLanguage": "en",
   "strings": {
-    "Name your pickup": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Name your pickup"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nombrar la compra"
-          }
-        }
-      }
-    },
     "Choose a shopping list": {
       "extractionState": "manual",
       "localizations": {
@@ -188,19 +171,19 @@
         }
       }
     },
-    "Give your pickup a name to keep its dinner and grocery list together.": {
+    "Name the shopping list for this dinner’s ingredients.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Give your pickup a name to keep its dinner and grocery list together."
+            "value": "Name the shopping list for this dinner’s ingredients."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ponle un nombre a la compra para guardar la cena junto con su lista."
+            "value": "Ponle un nombre a la lista de compras para los ingredientes de esta cena."
           }
         }
       }
