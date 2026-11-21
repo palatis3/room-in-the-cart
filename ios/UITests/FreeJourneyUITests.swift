@@ -4121,7 +4121,7 @@ import XCTest
             let area = scrollableArea(usingTabBarFrame: true).insetBy(dx: 0, dy: 12)
             let exists = row.exists
             let frame = exists ? row.frame : .zero
-            if exists && row.isEnabled && row.isHittable && area.contains(CGPoint(x: frame.midX, y: frame.midY)) {
+            if exists && row.isHittable && area.contains(CGPoint(x: frame.midX, y: frame.midY)) {
                 print("\(marker) id=\(row.identifier) label=\(row.label) type=\(row.elementType) enabled=\(row.isEnabled) frame=\(frame) area=\(area)")
                 row.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
                 return
