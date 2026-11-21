@@ -35,10 +35,13 @@
   "08 · Type a receipt after denying camera access and review the portion kept": [
     "RoomInTheCartUITests/FreeJourneyUITests/testReceiptCameraRefusalKeepsPrivateReceiptAndTypedEntry",
     "RoomInTheCartUITests/FreeJourneyUITests/testReviewReopensKeptPortionAndFocusesItsMissingAmount",
-    "RoomInTheCartTests/ReceiptDocumentTests/testBarePrintedAmountOnlyKeepsTheSameExplicitCurrencyEvidence"
+    "RoomInTheCartTests/ReceiptDocumentTests/testBarePrintedAmountOnlyKeepsTheSameExplicitCurrencyEvidence",
+    "RoomInTheCartUITests/FreeJourneyUITests/testSpanishReceiptPrintedUnitHintWrapsAtExtraLarge"
   ],
   "09 · Choose whole packs across weight units under an item limit": [
-    "RoomInTheCartTests/AppModelTests/testCornmealPackDefaultsAndReadableConvertedTotals"
+    "RoomInTheCartTests/AppModelTests/testCornmealPackDefaultsAndReadableConvertedTotals",
+    "RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresRecordsDetailAndIndependentShoppingList",
+    "RoomInTheCartUITests/RoomInTheCartUITests/testKnownComparisonSavesAndReopensWithItemOnlyLimit"
   ],
   "10 · Reopen private prices with their recorded source": [
     "RoomInTheCartUITests/FreeJourneyUITests/testPrivateRecordsReopenManualPaidAndShelfPricesWithoutCreatingFood",
