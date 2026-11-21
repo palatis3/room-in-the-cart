@@ -14,15 +14,19 @@
     "RoomInTheCartUITests/TonightUITests/testPastedFamilyNotePlansTomorrowAndChangesOccurrenceBeforeColdReturn"
   ],
   "05 · Keep the package label and confirm the printed date": [
-    "RoomInTheCartTests/PantryProductCatalogTests/testReviewedLabelWordingStaysWithOnePhysicalPackageAndRequiresDateConfirmation"
+    "RoomInTheCartTests/PantryProductCatalogTests/testReviewedLabelWordingStaysWithOnePhysicalPackageAndRequiresDateConfirmation",
+    "RoomInTheCartTests/PantryLiveStockProjectionTests/testOnePhysicalPackageWithUnknownContentsReplaysWithoutMakingAPurchaseOrConfirmingDate"
   ],
   "06 · Record an unmeasured use from the correct container": [
     "RoomInTheCartTests/PantryVoiceParserTests/testReadOnlyBalanceQuestionsAndLocationQualifiedUnmeasuredUses",
-    "RoomInTheCartTests/PantryVoiceBatchMatcherTests/testStorageQualifiersNarrowExactLotsWithoutChoosingBetweenPhysicalBatches"
+    "RoomInTheCartTests/PantryVoiceBatchMatcherTests/testStorageQualifiersNarrowExactLotsWithoutChoosingBetweenPhysicalBatches",
+    "RoomInTheCartTests/PantryVoiceParserTests/testReadOnlyBalanceWithTrailingPlaceKeepsFoodAndStorageWithoutAUseIntent"
   ],
   "07 · Review receipt evidence before adding food": [
     "RoomInTheCartUITests/FreeJourneyUITests/testSystemFilesReceiptReviewsSelectedPDFLinesBeforeStock",
-    "RoomInTheCartTests/ReceiptDocumentTests/testPricePrintedBelowTheItemRequiresExplicitLinkingAndStaysUnpaid"
+    "RoomInTheCartTests/ReceiptDocumentTests/testPricePrintedBelowTheItemRequiresExplicitLinkingAndStaysUnpaid",
+    "RoomInTheCartTests/ReceiptDocumentTests/testPrintedPaidTotalRemainsUnknownUntilTheShopperAdoptsIt",
+    "RoomInTheCartTests/ReceiptDocumentTests/testPrintedPaidTotalRejectsSubtotalConflictsAndUncertainAmounts"
   ],
   "08 · Type a receipt after denying camera access and review the portion kept": [
     "RoomInTheCartUITests/FreeJourneyUITests/testReceiptCameraRefusalKeepsPrivateReceiptAndTypedEntry",
@@ -33,7 +37,9 @@
     "RoomInTheCartTests/AppModelTests/testCornmealPackDefaultsAndReadableConvertedTotals"
   ],
   "10 · Reopen private prices with their recorded source": [
-    "RoomInTheCartUITests/FreeJourneyUITests/testPrivateRecordsReopenManualPaidAndShelfPricesWithoutCreatingFood"
+    "RoomInTheCartUITests/FreeJourneyUITests/testPrivateRecordsReopenManualPaidAndShelfPricesWithoutCreatingFood",
+    "RoomInTheCartTests/LedgerModelPerformanceSafetyTests/testPickupDetailsRecognizeOnlyTheirOwnSavedRevisionDuringDismissal",
+    "RoomInTheCartTests/LedgerModelPerformanceSafetyTests/testPickupDetailsForeignSaveKeepsDraftPendingUntilExplicitReview"
   ],
   "11 · Preview a copy and return to the private list": [
     "RoomInTheCartUITests/RoomInTheCartUITests/testSharePreviewClosesToPrivateListWithoutSending"
