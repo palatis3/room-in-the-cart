@@ -141,8 +141,8 @@ final class RoomInTheCartUITests: XCTestCase {
     }
 
     func testSpanishPrivateGroceryEditsQuantityAndNotesFromItemDetailsAndReopens() {
-        launch(language: "es")
-        XCTAssertTrue(app.staticTexts["Lista privada en este iPhone"].exists)
+        launch(language: "es", largeDark: true, contentSize: .accessibilityLarge)
+        reveal(app.staticTexts["Lista privada en este iPhone"])
         let name = "garbanzos"
         let note = "Sin sal"
         let field = element("quickGrocery.name")
@@ -181,16 +181,33 @@ final class RoomInTheCartUITests: XCTestCase {
             XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "ledgerContributionDone"))
         }
         let quantity = app.textFields["Cantidad (opcional)"]
-        reveal(quantity)
-        quantity.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.7)).tap()
-        app.typeText("2")
-        XCTAssertEqual(quantity.value as? String, "2")
-        finishInput()
         let notes = element("ledgerContributionNotes")
-        tap(notes)
-        app.typeText(note)
-        XCTAssertEqual(notes.value as? String, note)
-        finishInput()
+        func editInputs(quantity amount: String, note: String) {
+            reveal(quantity)
+            quantity.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.7)).tap()
+            app.typeText(amount)
+            XCTAssertEqual(quantity.value as? String, amount)
+            finishInput()
+            tap(notes)
+            app.typeText(note)
+            XCTAssertEqual(notes.value as? String, note)
+            finishInput()
+        }
+        reveal(quantity)
+        let originalAmount = quantity.value as? String
+        reveal(notes)
+        let originalNote = notes.value as? String
+        editInputs(quantity: "7", note: "Borrador")
+        tap(editor.buttons["Cancelar"])
+        XCTAssertTrue(editor.waitForNonExistence(timeout: 8))
+        XCTAssertTrue(edit.waitForExistence(timeout: 5) && edit.isHittable)
+        edit.tap()
+        XCTAssertTrue(editor.waitForExistence(timeout: 5))
+        reveal(quantity)
+        XCTAssertEqual(quantity.value as? String, originalAmount)
+        reveal(notes)
+        XCTAssertEqual(notes.value as? String, originalNote)
+        editInputs(quantity: "2", note: note)
         let save = app.buttons["ledgerSaveContributionChanges"]
         reveal(save)
         XCTAssertEqual(save.label, "Guardar cambios")
@@ -207,7 +224,7 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(list.waitForExistence(timeout: 8))
 
         app.terminate()
-        launch(language: "es", reset: false)
+        launch(language: "es", reset: false, largeDark: true, contentSize: .accessibilityLarge)
         if !list.waitForExistence(timeout: 5) { tap(app.buttons["openPickupList"]) }
         XCTAssertTrue(list.waitForExistence(timeout: 8))
         XCTAssertTrue(item.waitForExistence(timeout: 8))
@@ -1320,14 +1337,14 @@ final class RoomInTheCartUITests: XCTestCase {
         }
     }
 
-    private func launch(language: String = "en", reset: Bool = true, largeDark: Bool = false) {
+    private func launch(language: String = "en", reset: Bool = true, largeDark: Bool = false, contentSize: UIContentSizeCategory? = nil) {
         app.launchArguments = ["--ui-testing", "-AppleLanguages", "(\(language))", "-AppleLocale", "\(language)_US",
                                "-appearance", largeDark ? "dark" : "light"]
         if reset { app.launchArguments.append("--reset-test-workspace") }
-        if largeDark {
-            app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL",
-                                    "-UIUserInterfaceStyle", "Dark"]
+        if largeDark || contentSize != nil {
+            app.launchArguments += ["-UIPreferredContentSizeCategoryName", (contentSize ?? .accessibilityExtraExtraExtraLarge).rawValue]
         }
+        if largeDark { app.launchArguments += ["-UIUserInterfaceStyle", "Dark"] }
         app.launch()
         XCTAssertTrue(tabButton(language == "es" ? "Compras" : "Shop", symbol: "cart").waitForExistence(timeout: 15))
     }
