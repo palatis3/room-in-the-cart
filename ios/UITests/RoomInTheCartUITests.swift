@@ -222,7 +222,7 @@ final class RoomInTheCartUITests: XCTestCase {
             XCTAssertEqual(summary.label, both)
             // Scroll to the adjacent action. The notice is informative text and has no tap action.
             let skipSecond = app.buttons["ledgerImportSkip-2"]
-            reveal(skipSecond)
+            revealReviewAction(skipSecond, above: summary)
             let advisory = app.staticTexts["ledgerImportRepeat-2"]
             XCTAssertTrue(advisory.waitForExistence(timeout: 5))
             XCTAssertFalse(advisory.frame.isEmpty)
@@ -234,7 +234,12 @@ final class RoomInTheCartUITests: XCTestCase {
             tap(app.buttons["ledgerImportInclude-2"])
             XCTAssertEqual(summary.label, both)
             XCTAssertEqual(app.textFields["ledgerImportAmount-2"].value as? String, "2")
-            tap(app.buttons["ledgerCommitImport"])
+            let confirm = app.buttons["ledgerCommitImport"]
+            if language == "es" {
+                // At accessibility text sizes the confirmation follows the review in the Form.
+                revealReviewAction(confirm, above: summary)
+            }
+            tap(confirm)
             let undo = app.buttons["ledgerUndoImport"]
             tap(undo)
             XCTAssertTrue(undo.waitForNonExistence(timeout: 10))
@@ -1175,6 +1180,21 @@ final class RoomInTheCartUITests: XCTestCase {
 
     private func element(_ id: String) -> XCUIElement {
         app.descendants(matching: .any).matching(identifier: id).firstMatch
+    }
+
+    private func revealReviewAction(_ target: XCUIElement, above summary: XCUIElement,
+                                    file: StaticString = #filePath, line: UInt = #line) {
+        let form = app.collectionViews["ledgerImportForm"]
+        let top = max(form.frame.minY, app.navigationBars.firstMatch.frame.maxY)
+        let area = CGRect(x: form.frame.minX + 18, y: top, width: form.frame.width - 36,
+                          height: summary.frame.minY - top)
+        XCTAssertGreaterThan(area.height, 44, file: file, line: line)
+        for _ in 0..<36 {
+            let frame = target.exists ? target.frame : .zero
+            if !frame.isEmpty && (area.minY...area.maxY).contains(frame.midY) && target.isHittable { return }
+            app.scrollForm(in: area, upward: frame.isEmpty || frame.midY > area.minY, besideFields: true)
+        }
+        XCTFail("Could not reach the review action above the pinned totals: \(target)", file: file, line: line)
     }
 
     private func tap(_ target: XCUIElement) {

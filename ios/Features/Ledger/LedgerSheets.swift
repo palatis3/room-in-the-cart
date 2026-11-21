@@ -16,6 +16,7 @@ struct LedgerImportView: View {
     @EnvironmentObject private var access: WorkspaceAccess
     @EnvironmentObject private var household: HouseholdModel
     @Environment(\.locale) private var locale
+    @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.scenePhase) private var scenePhase
     let shopID: UUID
     @Environment(\.dismiss) private var dismiss
@@ -147,7 +148,6 @@ struct LedgerImportView: View {
                         Text(ledgerText("Merge confirms the same need. Add amount keeps an additional contribution. Unresolved amounts remain visibly unknown."))
                     }.disabled(model.saving || model.hasPendingSave)
                     Section {
-
                         if captured != nil {
                             Button(captureText("Edit captured fields")) { beginCapture() }
                                 .disabled(model.saving || model.hasPendingSave || liveCaptureBinding != captureBinding)
@@ -155,6 +155,9 @@ struct LedgerImportView: View {
                             Button(ledgerText("Edit original text")) { self.preview = nil; choices = [:]; importID = UUID() }
                                 .disabled(model.saving || model.hasPendingSave)
                         }
+                    }
+                    if typeSize.isAccessibilitySize && preview.lines.count > 1 {
+                        Section { importConfirmation(preview, review: review) }
                     }
                 } else {
                     Section {
@@ -225,7 +228,9 @@ struct LedgerImportView: View {
                                     .fixedSize(horizontal: false, vertical: true)
                                     .accessibilityIdentifier("ledgerImportSummary")
                             }
-                            importConfirmation(preview, review: review)
+                            if !typeSize.isAccessibilitySize || preview.lines.count == 1 {
+                                importConfirmation(preview, review: review)
+                            }
                         }
                         .padding(.horizontal, 16).padding(.vertical, 8)
                         .background(Theme.canvas)
@@ -659,6 +664,7 @@ struct LedgerPackLabelFacts: View {
 }
 
 private struct LedgerImportRowView: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
     let number: Int
     let similarLine: String?
     @Binding var line: StagedImportLine
@@ -691,15 +697,16 @@ private struct LedgerImportRowView: View {
         _unit = State(initialValue: invalidAmount.wrappedValue?.unit ?? line.wrappedValue.quantity?.unit ?? .count)
     }
     var body: some View {
+        let heading = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2)) : AnyLayout(HStackLayout())
         VStack(alignment: .leading, spacing: 8) {
-            HStack {
+            heading {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(line.originalText).font(.subheadline)
                     if choice == .skip {
                         Text(ledgerText("Skipped")).font(.caption).foregroundStyle(Theme.secondary)
                     }
                 }
-                Spacer()
+                if !typeSize.isAccessibilitySize { Spacer() }
                 if choice == .skip {
                     Button(action: includeLine) {
                         Text(ledgerText("Include")).frame(minWidth: 44, minHeight: 44)
