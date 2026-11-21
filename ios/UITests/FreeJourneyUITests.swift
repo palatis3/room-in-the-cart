@@ -3786,8 +3786,8 @@ import XCTest
         tap(app.buttons["dinnerManual"])
         fillDinner("Tuesday tacos", ingredient: "Tortillas")
         enableSwitch("Assign a date")
-        tap(app.buttons["ledgerReviewDinner"])
-        tap(app.buttons["dinnerApply"])
+        openManualDinnerPreview()
+        tapVisibleFormRow(app.buttons["dinnerApply"], marker: "SINGLE_SWAP_CREATE_APPLY")
         XCTAssertTrue(app.buttons["dinnerApply"].waitForNonExistence(timeout: 10), app.debugDescription)
         reopenDinners()
         let allDinners = app.buttons["All chosen dinners, including earlier dates"]
@@ -3843,8 +3843,7 @@ import XCTest
         fill("Rice", into: "Ingredient name")
         fill("1", into: "Amount, optional")
         enableSwitch("Assign a date")
-        tapVisibleFormRow(app.buttons["ledgerReviewDinner"], marker: "REPEAT_WEEK_CREATE_REVIEW")
-        XCTAssertTrue(app.navigationBars["Dinner preview"].waitForExistence(timeout: 10), app.debugDescription)
+        openManualDinnerPreview()
         let applyDinner = app.buttons["dinnerApply"]
         tapVisibleFormRow(applyDinner, marker: "REPEAT_WEEK_CREATE_APPLY")
         XCTAssertTrue(applyDinner.waitForNonExistence(timeout: 10), app.debugDescription)
@@ -3954,8 +3953,7 @@ import XCTest
             enableSwitch(assignDate)
             chooseMealWeekDate(originalDay, from: Date(), in: app.datePickers.firstMatch, formatter: dateFormatter)
         }
-        tapVisibleFormRow(app.buttons["ledgerReviewDinner"], marker: "MEAL_WEEK_CREATE_REVIEW")
-        XCTAssertTrue(app.navigationBars[copy("Dinner preview", "Vista previa de cenas")].waitForExistence(timeout: 10), app.debugDescription)
+        openManualDinnerPreview(spanish: spanish)
         applyFrom(copy("Manual dinner", "Cena manual"), returningTo: tab)
         openMealWeek(title: weekTitle)
         chooseMealWeekDate(originalDay, from: Date(), in: weekPicker, formatter: dateFormatter)
@@ -4102,6 +4100,12 @@ import XCTest
         XCTAssertEqual(element("dinnerWeekStart").buttons.firstMatch.label, selectedWeek)
         reveal(element(dinnerID))
         XCTAssertFalse(element(lunchID).exists)
+    }
+
+    private func openManualDinnerPreview(spanish: Bool = false) {
+        tapVisibleFormRow(app.buttons["ledgerReviewDinner"], marker: "MANUAL_DINNER_REVIEW")
+        let preview = app.navigationBars[spanish ? "Vista previa de cenas" : "Dinner preview"]
+        XCTAssertTrue(preview.waitForExistence(timeout: 10), app.debugDescription)
     }
 
     private func openMealWeek(title: String = "This week") {
