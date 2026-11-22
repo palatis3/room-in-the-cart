@@ -351,11 +351,17 @@ import XCTest
         let evidence = element("productBatch.barcodeEvidence")
         XCTAssertTrue(evidence.waitForExistence(timeout: 8))
         XCTAssertTrue([evidence.label, evidence.value as? String ?? ""].joined().contains("012345678905"), evidence.debugDescription)
-        XCTAssertFalse(remember.isEnabled)
         fill("Unsaved cereal", into: "productBatch.productName", requireDone: true)
+        // The compact Form creates the Remember row only after scrolling past Public product lookup.
+        for _ in 0..<8 {
+            if remember.exists { break }
+            scrollContent(upward: true, area: scrollableArea())
+        }
+        guard remember.exists else { return XCTFail("Missing pack confirmation in Review product: " + app.debugDescription) }
+        XCTAssertFalse(remember.isEnabled, "A name alone cannot confirm an exact pack size.")
         tap(app.buttons["Cancel"])
         tap(resolve)
-        XCTAssertTrue(review.exists)
+        reveal(review)
         XCTAssertEqual(lots.count, 0)
         XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Unsaved cereal")).firstMatch.exists)
 
@@ -382,7 +388,8 @@ import XCTest
         tap(resolve)
         reveal(lots.firstMatch)
         XCTAssertEqual(lots.count, 1)
-        XCTAssertTrue(lots.firstMatch.label.contains("Cereal box"))
+        XCTAssertTrue(lots.firstMatch.label.contains("Cereal box"), lots.firstMatch.label)
+        XCTAssertTrue(lots.firstMatch.label.contains("12 units"), lots.firstMatch.label)
         XCTAssertFalse(review.exists)
 
         tap(app.tabBars.buttons["Shop"])
@@ -393,7 +400,7 @@ import XCTest
         tap(barcode)
         barcode.typeText("3017620422003")
         tap(resolve)
-        XCTAssertTrue(app.staticTexts["No confirmed match. Search by product name or check the retailer."].exists)
+        reveal(app.staticTexts["No confirmed match. Search by product name or check the retailer."])
         XCTAssertFalse(review.exists, "Shopping lookup cannot start a pantry intake.")
     }
 
