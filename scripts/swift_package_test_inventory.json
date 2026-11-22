@@ -219,6 +219,7 @@
       "CoreDomainTests.PickupTests/testWrongItemNeedsReviewedMatchBeforeAllocation",
       "CoreDomainTests.QuickGroceryTests/testReviewedContainersAndIngredientAmountsOnOneLineHaveNoMeasuredTotal",
       "CoreDomainTests.QuickGroceryTests/testReviewedPackageCountSurvivesReopenWithoutSupplyingIngredientUnits",
+      "CoreDomainTests.ReceiptAcquisitionTests/testPurchaseDaySurvivesReopenAndCorrectionAcrossTimeZonesWithoutDatingLegacyReceipts",
       "CoreDomainTests.RecipeSourceEvidenceTests/testLegacyOptionalEvidenceRemainsOmittedAndCanonical",
       "CoreDomainTests.RecipeSourceEvidenceTests/testMalformedAndOversizedIdentifiersCannotBecomeMediaReferences",
       "CoreDomainTests.RecipeSourceEvidenceTests/testMalformedNestedEvidenceRejectsWorkspaceBeforeAnyRecipeMutation",
@@ -531,7 +532,9 @@
       "LocalStoreTests.LedgerStoreTests/testUnknownUnversionedSchemaIsByteForByteUnchanged",
       "LocalStoreTests.LedgerStoreTests/testVersionOneMigrationPreservesSnapshotsAndOperationRetries",
       "LocalStoreTests.LedgerStoreTests/testWholeWorkspaceErasurePurgesHistoryAndRotatesEmptyIdentity",
-      "LocalStoreTests.LedgerStoreTests/testWorkspaceErasureCheckpointsWALWhenNoReaderBlocksIt"
+      "LocalStoreTests.LedgerStoreTests/testWorkspaceErasureCheckpointsWALWhenNoReaderBlocksIt",
+      "LocalStoreTests.PrivateDeliveryPurchaseTests/testPrivateRevisionsRefundReplayAndReopen",
+      "LocalStoreTests.ReviewedPutawayReceiptTests/testLegacyReceiptsDecodeWithoutInventingAPurchaseDay"
     ],
     "RecordArchive": [
       "RecordArchiveTests.ArchiveMediaTests/testCancelledReviewUndoAndErasureKeepMediaTransactional",
