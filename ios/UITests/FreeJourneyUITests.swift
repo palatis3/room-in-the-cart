@@ -439,7 +439,12 @@ import XCTest
 
         tap(app.tabBars.buttons["Shop"])
         tap(app.buttons["openPickupList"])
-        tap(app.buttons["ledgerInStore"])
+        // Creating the first pickup finishes before its shopping-list destination appears.
+        let inStore = app.buttons["ledgerInStore"]
+        guard inStore.waitForExistence(timeout: 10), inStore.wait(for: \.isHittable, toEqual: true, timeout: 5) else {
+            return XCTFail("Shop in store must be available on the opened pickup list.")
+        }
+        inStore.tap()
         tap(app.buttons["inStoreTripOptions"])
         tap(app.buttons["Buy this pack again"])
         tap(barcode)
