@@ -1964,6 +1964,58 @@ import XCTest
         XCTAssertTrue(app.buttons["receipt.cameraRecovery.photo"].isHittable)
     }
 
+    func testCancelingManualReceiptProtectsUnsavedPrintedLines() {
+        launch(reset: true)
+        tap(app.tabBars.buttons["Records"])
+        receiptTap(app.buttons["records.privateReceipts"])
+        receiptTap(app.buttons["pantry.setup.apply"])
+        receiptTap(app.buttons["receipt.history.start"])
+        let scan = app.buttons["receipt.scan"]
+        receiptTap(scan)
+        let cancel = app.navigationBars["Review printed lines"].buttons["Cancel"]
+        let alert = app.alerts["Discard this receipt draft?"]
+        let store = app.textFields["scan.receipt.store"]
+        receiptTap(store)
+        store.typeText("Harbor Mock Market")
+        receiptTap(app.buttons["scan.sourceDone"])
+        cancel.tap()
+        XCTAssertTrue(alert.waitForExistence(timeout: 5))
+        alert.buttons["Keep editing"].tap()
+        XCTAssertEqual(store.value as? String, "Harbor Mock Market")
+
+        let source = app.textViews["scan.sourceEditor"]
+        let lines = "2x Canned lentils 3.20\nPlain yogurt 2.40\nHot lunch 5.00\nService fee 0.45"
+        receiptTap(source, initiallyUpward: false)
+        source.typeText(lines)
+        receiptTap(app.buttons["scan.sourceDone"])
+        receiptTap(app.buttons["Review printed lines"])
+        let quantity = app.textFields["Printed quantity (optional)"].firstMatch
+        receiptTap(quantity)
+        quantity.typeText("2 cans")
+        receiptTap(app.buttons["scan.sourceDone"])
+        cancel.tap()
+        XCTAssertTrue(alert.waitForExistence(timeout: 5))
+        alert.buttons["Keep editing"].tap()
+        XCTAssertEqual(quantity.value as? String, "2 cans")
+        reveal(store, initiallyUpward: false)
+        XCTAssertEqual(store.value as? String, "Harbor Mock Market")
+        reveal(source, initiallyUpward: false)
+        XCTAssertEqual(source.value as? String, lines)
+
+        cancel.tap()
+        alert.buttons["Discard draft"].tap()
+        XCTAssertTrue(scan.waitForExistence(timeout: 5))
+        receiptTap(scan)
+        XCTAssertTrue(source.waitForExistence(timeout: 5))
+        XCTAssertEqual(source.value as? String ?? "", "")
+        reveal(store)
+        XCTAssertEqual(store.value as? String ?? "", "")
+        cancel.tap()
+        XCTAssertTrue(cancel.waitForNonExistence(timeout: 5))
+        receiptTap(app.navigationBars["Review a receipt"].buttons["Close"])
+        XCTAssertTrue(app.staticTexts["No confirmed receipt lines yet."].waitForExistence(timeout: 8))
+    }
+
     func testManualReceiptNeedsPhysicalConfirmationBeforeSavingFood() throws {
         launch(reset: true)
         receiptTap(app.shopToolButton("shop.myPantry"))

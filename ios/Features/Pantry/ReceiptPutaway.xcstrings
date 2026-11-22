@@ -18,6 +18,23 @@
         }
       }
     },
+    "Keep editing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep editing"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seguir editando"
+          }
+        }
+      }
+    },
     "Include printed line": {
       "extractionState": "manual",
       "localizations": {

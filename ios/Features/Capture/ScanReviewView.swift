@@ -41,6 +41,7 @@ import CoreDomain
     let authorize: () -> Bool
     let onReviewed: (ReviewedScan) -> Void
     let correctionScope: CaptureCorrectionScope?
+    private let initialLabel: String
     private let focusReceiptText: Bool
     private var cameraPermission: SourceCameraPermission
     @StateObject private var model = ScanModel()
@@ -58,6 +59,7 @@ import CoreDomain
     @State private var matchedProduct = false
     @State private var inspectedLineID: UUID?
     @State private var receiptLines: [ScanReceiptLine]?
+    @State private var confirmingReceiptDiscard = false
     @State private var needsPrintedReviewAgain = false
     @State private var recipe: RecipeCaptureDraft?
     @State private var ingredients: [CaptureLineDraft] = []
@@ -78,6 +80,7 @@ import CoreDomain
          onReviewed: @escaping (ReviewedScan) -> Void) {
         self.kind = kind; self.target = target; self.authorize = authorize; self.onReviewed = onReviewed
         self.correctionScope = correctionScope; _label = State(initialValue: initialLabel)
+        self.initialLabel = initialLabel
         self.focusReceiptText = focusReceiptText
         cameraPermission = SourceCameraPermission(recipeScope: recipeCameraScope)
     }
@@ -206,7 +209,19 @@ import CoreDomain
             structuredFieldFocus = nil
         }
         .navigationTitle(captureText(kind == .receipt ? "Review printed lines" : "Photo and scan review"))
-        .toolbar { ToolbarItem(placement: .cancellationAction) { Button(captureText("Cancel")) { close(); dismiss() } } }
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button(captureText("Cancel")) {
+                    if hasUnsavedReceipt && authorize() { confirmingReceiptDiscard = true }
+                    else { close(); dismiss() }
+                }
+            }
+        }
+        .interactiveDismissDisabled(hasUnsavedReceipt)
+        .alert(putawayText("Discard this receipt draft?"), isPresented: $confirmingReceiptDiscard) {
+            Button(pantryText("Discard draft"), role: .destructive) { close(); dismiss() }
+            Button(putawayText("Keep editing"), role: .cancel) {}
+        }
         .sheet(isPresented: Binding(get: { inspectedLineID != nil }, set: { if !$0 { inspectedLineID = nil } })) {
             if authorize(), !model.closed, let rows = receiptLines,
                let index = rows.firstIndex(where: { $0.id == inspectedLineID }) {
@@ -264,6 +279,10 @@ import CoreDomain
             }
         }
         .onDisappear { if !showCamera { close() } }
+    }
+    private var hasUnsavedReceipt: Bool {
+        kind == .receipt && (!model.text.isEmpty || label != initialLabel || receiptLines != nil ||
+            model.candidate != nil || model.accepted != nil)
     }
     private var canReview: Bool { authorize() && !model.closed && !model.busy && !loadingPhoto && !requestingCamera && model.candidate == nil }
     private func focusSourceText(_ scroll: ScrollViewProxy) {
@@ -559,6 +578,7 @@ import CoreDomain
     }
     private func resetDerived() { barcodeID = nil; manualCode = ""; receiptLines = nil; recipe = nil; ingredients = []; matchedProduct = false; model.confirmed = false }
     private func close() {
+        confirmingReceiptDiscard = false
         permissionGeneration = UUID(); showCamera = false; storeFocusRequest = nil
         photoTask?.cancel(); photoTask = nil; model.close(); corrections.invalidate(); resetDerived()
     }
