@@ -8,7 +8,7 @@ private struct PackLookupInput: View {
     let authorized: () -> Bool
     @Binding var query: String
     @Binding var selected: ConfirmedPantryPack?
-    @Binding var unmatched: CapturedBarcode? = .constant(nil)
+    @Binding var unmatched: CapturedBarcode?
     var reviewUnmatched: ((CapturedBarcode, String, Bool, PantryDigestAccess) throws -> Void)? = nil
     @ObservedObject private var memory = PantryDigestStore.shared.packMemory
     @State private var code = ""
@@ -347,7 +347,7 @@ struct ShopPackLookupEntry: View {
                     }
                 } else {
                     PackLookupInput(workspaceID: presentationScope?.origin, access: scoped, authorized: { authorize() },
-                        query: $query, selected: $selected)
+                        query: $query, selected: $selected, unmatched: .constant(nil))
                     if !name.isEmpty, current() {
                         Section(selected?.label ?? name) {
                             let lines = shop.lines.filter { !$0.isTrashed && !$0.isHandled && $0.name.localizedCaseInsensitiveCompare(name) == .orderedSame && PackRebuyDraft.match($0, pack: selected, shop: shop) != .different }
