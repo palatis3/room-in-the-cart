@@ -155,6 +155,8 @@ import XCTest
         let review = app.buttons["pantry.voiceReview"]
         let keyboard = app.keyboards.firstMatch
         XCTAssertTrue(field.waitForExistence(timeout: 8))
+        let fullPrompt = "¿Qué usaste o qué quieres consultar?"
+        XCTAssertEqual(field.label, fullPrompt)
         let initialField = field.frame.intersection(app.frame)
         XCTAssertGreaterThanOrEqual(initialField.height, 44)
         app.coordinate(withNormalizedOffset: .zero)
@@ -172,28 +174,34 @@ import XCTest
             return frame.height > 0 && editorViewport().insetBy(dx: -1, dy: -1).contains(frame) &&
                 review.frame.height < app.frame.height / 4
         }
+        func visibleLines(_ evidenceName: String) throws -> [String] {
+            let screenshot = app.screenshot()
+            let attachment = XCTAttachment(screenshot: screenshot)
+            attachment.name = evidenceName
+            attachment.lifetime = .keepAlways
+            add(attachment)
+            let image = try XCTUnwrap(screenshot.image.cgImage)
+            let scale = CGFloat(image.width) / app.frame.width
+            let visibleEditor = field.frame.intersection(editorViewport())
+            let crop = try XCTUnwrap(image.cropping(to: visibleEditor.offsetBy(dx: -app.frame.minX, dy: -app.frame.minY)
+                .applying(CGAffineTransform(scaleX: scale, y: scale))))
+            let request = VNRecognizeTextRequest()
+            request.recognitionLevel = .fast
+            request.usesLanguageCorrection = false
+            try VNImageRequestHandler(cgImage: crop).perform([request])
+            return (request.results ?? []).compactMap { $0.topCandidates(1).first?.string }
+        }
         let firstFocus = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in editorFits() }, object: nil)
         let initiallyVisible = XCTWaiter.wait(for: [firstFocus], timeout: 5) == .completed
-        capture("Spanish pantry editor on first focus")
+        let promptLines = try visibleLines("Spanish pantry editor on first focus")
+        XCTAssertTrue(promptLines.contains { $0.range(of: "Escribe aquí", options: [.caseInsensitive, .diacriticInsensitive]) != nil },
+                      "The complete prompt should fit on one line. Visible lines: \(promptLines)")
+        XCTAssertEqual(field.label, fullPrompt)
 
         // Send input to the current responder without a second tap or an XCTest scroll.
         app.typeText(words)
         XCTAssertEqual(field.value as? String, words)
-        let visibleEditor = field.frame.intersection(editorViewport())
-        let screenshot = app.screenshot()
-        let attachment = XCTAttachment(screenshot: screenshot)
-        attachment.name = "Spanish pantry editor at the end of a wrapped instruction"
-        attachment.lifetime = .keepAlways
-        add(attachment)
-        let image = try XCTUnwrap(screenshot.image.cgImage)
-        let scale = CGFloat(image.width) / app.frame.width
-        let crop = try XCTUnwrap(image.cropping(to: visibleEditor.offsetBy(dx: -app.frame.minX, dy: -app.frame.minY)
-            .applying(CGAffineTransform(scaleX: scale, y: scale))))
-        let request = VNRecognizeTextRequest()
-        request.recognitionLevel = .fast
-        request.usesLanguageCorrection = false
-        try VNImageRequestHandler(cgImage: crop).perform([request])
-        let visibleWords = (request.results ?? []).compactMap { $0.topCandidates(1).first?.string }.joined(separator: " ")
+        let visibleWords = try visibleLines("Spanish pantry editor at the end of a wrapped instruction").joined(separator: " ")
         let finalWordVisible = visibleWords.localizedCaseInsensitiveContains("blanco")
         let stillFits = editorFits()
         XCTAssertTrue(initiallyVisible && stillFits && finalWordVisible,

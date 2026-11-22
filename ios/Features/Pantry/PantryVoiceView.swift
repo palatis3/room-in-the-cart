@@ -218,11 +218,12 @@ struct VoicePantryRow {
                                 .id("pantry.entryFeedback")
                         }
                         let prompt = pantryText("What did you use, or what would you like to check?")
+                        let visiblePrompt = largeTextEntryFocused ? pantryText("Type here") : prompt
                         TextField(prompt, text: Binding(get: { draft }, set: { text in
                             guard stage == .entry, draft != text else { return }
                             draft = text
                             resetReview()
-                        }), axis: .vertical)
+                        }), prompt: Text(verbatim: visiblePrompt).foregroundColor(Theme.secondary), axis: .vertical)
                             // Leave the entire native editor above the keyboard actions so
                             // its internal scrolling can follow the actual insertion point.
                             .lineLimit(2...(largeTextEntryFocused ? 2 : 6))

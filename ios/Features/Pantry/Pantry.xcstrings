@@ -67,6 +67,22 @@
         }
       }
     },
+    "Type here": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type here"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe aquí"
+          }
+        }
+      }
+    },
     "Try “%@”": {
       "localizations": {
         "en": {
