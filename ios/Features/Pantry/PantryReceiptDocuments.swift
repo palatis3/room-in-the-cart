@@ -46,6 +46,7 @@ struct PantryReceiptDocuments: View {
     @State private var discard: SharedReceiptItem?
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dynamicTypeSize) private var typeSize
     @FocusState private var merchantFocused: Bool
     @State private var picking = false
     @State private var photo: PhotosPickerItem?
@@ -66,12 +67,24 @@ struct PantryReceiptDocuments: View {
 
     private var reviewsEvidenceOnly: Bool { reviewsPrivateReceipt && stage != .order }
 
+    private var title: String {
+        pantryText(document == nil ? "Read a receipt file" : "Select receipt lines")
+    }
+
+    private var showsContentTitle: Bool { document != nil && typeSize.isAccessibilitySize }
+
     var body: some View {
         ScrollViewReader { scroll in form(scroll) }
     }
 
     private func form(_ scroll: ScrollViewProxy) -> some View {
         WorkingForm {
+            if showsContentTitle {
+                Text(title)
+                    .marketJournalTitle(.title2)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("receipt.document.heading")
+            }
             if let error { Text(error).accessibilityFocused($statusFocused).accessibilityIdentifier("receipt.document.status") }
             if job != nil {
                 ProgressView(pantryText("Reading receipt on this device"))
@@ -220,7 +233,8 @@ struct PantryReceiptDocuments: View {
             }
         }
         .privacySensitive()
-        .navigationTitle(document == nil ? pantryText("Read a receipt file") : pantryText("Select receipt lines"))
+        .navigationTitle(showsContentTitle ? "" : title)
+        .navigationBarTitleDisplayMode(showsContentTitle ? .inline : .automatic)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button(pantryText("Close")) { cancel(); dismiss() }
