@@ -1060,8 +1060,19 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(saved.exists)
 
         editComparisonResult()
-        type([("aQuantity", "9")])
-        XCTAssertNotEqual(comparisonInput("aQuantity").value as? String, "400")
+        let editedAmount = comparisonInput("aQuantity")
+        reveal(editedAmount)
+        XCTAssertEqual(editedAmount.value as? String, "400")
+        // Tap beyond the existing digits to place the caret at the end.
+        editedAmount.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        let amountDone = "comparison.done.aQuantity"
+        XCTAssertTrue(app.buttons[amountDone].waitForExistence(timeout: 5))
+        editedAmount.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 3))
+        let cleared = editedAmount.value as? String
+        XCTAssertTrue(cleared == nil || cleared == "" || cleared == editedAmount.placeholderValue)
+        editedAmount.typeText("9")
+        XCTAssertEqual(editedAmount.value as? String, "9")
+        dismissComparisonKeyboard(amountDone)
         backToResult()
         XCTAssertTrue(saved.exists)
         XCTAssertFalse(unsaved.exists)
