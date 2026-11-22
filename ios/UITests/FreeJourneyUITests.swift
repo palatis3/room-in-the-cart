@@ -2095,7 +2095,7 @@ import XCTest
         reveal(meal("Wednesday quesadillas")); XCTAssertEqual(meal("Wednesday quesadillas").identifier, survivorID)
         XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier == %@", removedID)).firstMatch.exists)
         openShoppingList()
-        let wraps = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label == %@", "ledgerInspect-", "Inspect Wraps")).firstMatch
+        let wraps = app.fullListGrocery(labeled: "Inspect Wraps")
         reveal(wraps); let lineID = wraps.identifier
         let lineUUID = try XCTUnwrap(UUID(uuidString: String(lineID.dropFirst("ledgerInspect-".count))))
         tap(wraps)
@@ -2109,7 +2109,7 @@ import XCTest
         reveal(meal("Wednesday quesadillas")); XCTAssertEqual(meal("Wednesday quesadillas").identifier, survivorID)
         XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier == %@", removedID)).firstMatch.exists)
         openShoppingList()
-        let restored = app.buttons.matching(NSPredicate(format: "identifier == %@", lineID)).firstMatch
+        let restored = app.collectionViews.buttons[lineID]
         reveal(restored); XCTAssertEqual(restored.label, "Inspect Wraps"); tap(restored)
         reveal(total); XCTAssertEqual(total.label, "12 items")
         assertText("Manually added")
@@ -2128,7 +2128,7 @@ import XCTest
     func testIngredientContributionActionsHaveSeparateAccessibleTargets() {
         launch(reset: true, sourceRemoval: true)
         openShoppingList()
-        tap(app.buttons["Inspect Wraps"])
+        tap(app.fullListGrocery(labeled: "Inspect Wraps"))
         XCTAssertFalse(app.buttons["ledgerEditQuantityAndNotes"].exists, "Multiple sources require choosing the specific contribution")
         let edit = app.buttons["Edit quantity and notes for Wednesday quesadillas"]
         reveal(edit)
@@ -2482,7 +2482,7 @@ import XCTest
         tap(element("ledgerCommitImport"))
         restart()
         openShoppingList()
-        reveal(app.buttons["Inspect Wraps"])
+        reveal(app.fullListGrocery(labeled: "Inspect Wraps"))
         assertText("3 items")
         capture("B09-typed-amount-reopened-after-microphone-refusal")
     }
@@ -2499,7 +2499,7 @@ import XCTest
         tap(element("ledgerReviewImport"))
         tap(element("ledgerCommitImport"))
         openShoppingList()
-        tap(app.buttons["Inspect Wraps"])
+        tap(app.fullListGrocery(labeled: "Inspect Wraps"))
         tap(element("ledger.scanReferences"))
         tap(app.buttons["Scan a code and match it manually"])
         fill("Wraps", into: "scan.sourceEditor", requireDone: true)
@@ -2545,9 +2545,9 @@ import XCTest
         tap(firstList)
         assertText(wording)
         tap(element("ledgerCommitImport"))
-        XCTAssertTrue(app.buttons["Inspect milks"].wait(for: \.isHittable, toEqual: true, timeout: 8))
+        XCTAssertTrue(app.fullListGrocery(labeled: "Inspect milks").wait(for: \.isHittable, toEqual: true, timeout: 8))
         for item in ["bread", "cereal"] {
-            reveal(app.buttons["Inspect " + item])
+            reveal(app.fullListGrocery(labeled: "Inspect " + item))
         }
         tap(element("ledgerUndoImport"))
         XCTAssertTrue(element("ledgerUndoImport").waitForNonExistence(timeout: 10))
@@ -2581,13 +2581,13 @@ import XCTest
         assertText("Pickup for all items: Next week groceries")
         tap(element("ledgerCommitImport"))
         app.assertSelectedShoppingList(named: "Friday groceries")
-        XCTAssertFalse(app.buttons["Inspect cereal"].exists)
+        XCTAssertFalse(app.fullListGrocery(labeled: "Inspect cereal").exists)
         tap(app.buttons["ledgerShopPicker"])
         tap(app.buttons["Next week groceries"])
         app.assertSelectedShoppingList(named: "Next week groceries")
-        XCTAssertTrue(app.buttons["Inspect milks"].wait(for: \.isHittable, toEqual: true, timeout: 8))
+        XCTAssertTrue(app.fullListGrocery(labeled: "Inspect milks").wait(for: \.isHittable, toEqual: true, timeout: 8))
         for item in ["bread", "cereal"] {
-            reveal(app.buttons["Inspect " + item])
+            reveal(app.fullListGrocery(labeled: "Inspect " + item))
         }
     }
 
@@ -2949,7 +2949,7 @@ import XCTest
         assertText("Unscheduled")
 
         openShoppingList()
-        tap(app.buttons["Inspect Wraps"])
+        tap(app.fullListGrocery(labeled: "Inspect Wraps"))
         tap(app.buttons["ledgerPackChoice"])
         try fillReviewedFields([
             ("First pack label", "Four wraps"), ("First pack usable amount", "4"),
@@ -3612,7 +3612,7 @@ import XCTest
         XCTAssertEqual(element("ledgerImportText").value as? String, "2 wraps")
         tap(element("ledgerReviewImport"))
         tap(element("ledgerCommitImport"))
-        let line = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "ledgerInspect-")).firstMatch
+        let line = app.fullListGrocery(labeled: "Inspect wraps")
         XCTAssertTrue(line.wait(for: \.isHittable, toEqual: true, timeout: 8), "The first reviewed grocery must be actionable when the import sheet closes.")
         let id = line.identifier
         shopRoot()
@@ -3631,7 +3631,7 @@ import XCTest
         tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Merge same need")).firstMatch)
         tap(element("ledgerCommitImport"))
         XCTAssertTrue(element(id).wait(for: \.isHittable, toEqual: true, timeout: 8))
-        XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "ledgerInspect-")).count, 1)
+        XCTAssertEqual(app.collectionViews.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "ledgerInspect-")).count, 1)
         tap(element(id.replacingOccurrences(of: "ledgerInspect-", with: "ledgerCheck-")))
         tap(app.buttons["Recently checked, Handled and Trash"])
         tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Reopen ")).firstMatch)
@@ -3702,7 +3702,7 @@ import XCTest
         openShoppingList()
         stage("2 wraps")
         tap(commit)
-        let first = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "ledgerInspect-")).firstMatch
+        let first = app.fullListGrocery(labeled: "Inspect wraps")
         XCTAssertTrue(first.wait(for: \.isHittable, toEqual: true, timeout: 8), "The first reviewed grocery must be actionable when the import sheet closes.")
         let checkFirst = first.identifier.replacingOccurrences(of: "ledgerInspect-", with: "ledgerCheck-")
 
@@ -3738,9 +3738,9 @@ import XCTest
         tap(commit)
         restart()
         openShoppingList()
-        let active = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "ledgerInspect-"))
+        let active = app.collectionViews.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "ledgerInspect-"))
         XCTAssertEqual(active.count, 1, "Reviewing the duplicate must leave the original purchase checked")
-        tap(active.firstMatch)
+        tap(app.fullListGrocery(labeled: "Inspect wraps"))
         let total = element("ledgerIngredientTotal")
         XCTAssertTrue(total.waitForExistence(timeout: 8))
         XCTAssertEqual(total.label, "15/2 items")
@@ -3769,7 +3769,7 @@ import XCTest
         tap(search); search.typeText("Wrap\n")
         XCTAssertEqual(search.value as? String, "Wrap")
         XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
-        let row = app.buttons["Inspect Wrap n"]
+        let row = app.fullListGrocery(labeled: "Inspect Wrap n")
         XCTAssertFalse(row.exists && row.isHittable, "The anchor must start beyond the filtered viewport")
         reveal(row)
         let rowID = row.identifier
@@ -3788,7 +3788,7 @@ import XCTest
         XCTAssertEqual(search.value as? String, "Wrap")
         XCTAssertTrue(retainedRow.isHittable)
         XCTAssertEqual(retainedRow.frame.minY, originalY, accuracy: 4)
-        XCTAssertFalse(app.buttons["Inspect Wrap cancelled"].exists)
+        XCTAssertFalse(app.fullListGrocery(labeled: "Inspect Wrap cancelled").exists)
 
         tap(retainedRow)
         XCTAssertTrue(app.navigationBars["Item details"].waitForExistence(timeout: 8))
@@ -3827,7 +3827,7 @@ import XCTest
         choose("List order", value: "Manual item order")
         tap(app.buttons["Move Milk up"]); tap(element("saveListOrder"))
         restart(); openShoppingList()
-        let items = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "ledgerInspect-"))
+        let items = app.collectionViews.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "ledgerInspect-"))
         XCTAssertTrue(items.firstMatch.waitForExistence(timeout: 10))
         XCTAssertTrue(items.firstMatch.label.contains("Milk"))
         chooseListOption("Large-print list")
@@ -4467,7 +4467,7 @@ import XCTest
         tap(element("ledgerReviewImport"))
         tap(element("ledgerCommitImport"))
         openShoppingList()
-        tap(app.buttons["Inspect Wraps"])
+        tap(app.fullListGrocery(labeled: "Inspect Wraps"))
         tap(element("ledger.scanReferences"))
         tap(app.buttons["Scan a code and match it manually"])
 
