@@ -174,7 +174,9 @@ import XCTest
         tap(app.buttons["tripPickPart"])
         let picked = app.textFields["tripPartialAmount"]
         tap(picked)
-        picked.typeText("1")
+        let one = app.keyboards.keys["1"]
+        XCTAssertTrue(one.waitForExistence(timeout: 5), "The first keyboard should offer numbers for the picked amount.")
+        one.tap()
         tap(app.buttons["tripPartKeyboardDone"])
         tap(app.buttons["tripSavePart"])
         let store = app.navigationBars["Shop in store"]

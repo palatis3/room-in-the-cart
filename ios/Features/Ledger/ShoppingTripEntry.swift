@@ -105,6 +105,7 @@ struct TripItemDetail: View {
                         Section {
                             if editingPart {
                                 workingTextField(tripFormat("Amount picked (%@)", measure.unit), text: $amount)
+                                    .keyboardType(.numbersAndPunctuation)
                                     .focused($editing).accessibilityIdentifier("tripPartialAmount")
                                 let value = measure.physicalAmount(amount)
                                 let remaining = try? shop.outstandingQuantity(forLineID: lineID)
@@ -221,7 +222,8 @@ struct TripFindEntry: View {
     var body: some View {
         WorkingForm {
             workingTextField(tripText("Grocery name"), text: $name).focused($editing).accessibilityIdentifier("tripFindName")
-            workingTextField(tripText("Amount picked (optional)"), text: $amount).focused($editing)
+            workingTextField(tripText("Amount picked (optional)"), text: $amount)
+                .keyboardType(.numbersAndPunctuation).focused($editing)
             Picker(tripText("Unit"), selection: $unit) {
                 ForEach(UnitOfMeasure.allCases, id: \.self) { Text($0.displayName).tag($0) }
             }
