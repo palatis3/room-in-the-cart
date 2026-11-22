@@ -318,6 +318,58 @@ import XCTest
         XCTAssertTrue(summary.label.contains("Usable amount unknown"), summary.label)
     }
 
+    func testUnknownPantryBarcodeCanBeReviewedCountedAndFoundAgain() {
+        launch(reset: true)
+        tap(app.tabBars.buttons["Pantry"])
+        tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.findPack"])
+        let barcode = app.textFields["pack.find.code"]
+        let resolve = app.buttons["pack.find.resolve"]
+        let review = app.buttons["pack.find.review"]
+        let remember = app.buttons["pack.remember"]
+        let lots = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "pack.find.lot."))
+
+        tap(barcode)
+        barcode.typeText("012345678905")
+        tap(resolve)
+        tap(review)
+        XCTAssertTrue(app.staticTexts["012345678905"].waitForExistence(timeout: 8))
+        XCTAssertFalse(remember.isEnabled)
+        fill("Unsaved cereal", into: "productBatch.productName", requireDone: true)
+        tap(app.buttons["productBatch.finishEditing"])
+        tap(app.buttons["Cancel"])
+        tap(resolve)
+        XCTAssertTrue(review.exists)
+        XCTAssertEqual(lots.count, 0)
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Unsaved cereal")).firstMatch.exists)
+
+        tap(review)
+        let name = app.textFields["productBatch.productName"]
+        XCTAssertTrue(name.waitForExistence(timeout: 8))
+        XCTAssertNotEqual(name.value as? String, "Unsaved cereal")
+        fill("Cereal box", into: "productBatch.productName", requireDone: true)
+        fill("12", into: "productBatch.packSize", requireDone: true)
+        fill("1", into: "productBatch.packCount", requireDone: true)
+        tap(remember)
+        XCTAssertTrue(remember.wait(for: \.label, toEqual: "Correct remembered pack", timeout: 8))
+        tap(app.buttons["productBatch.finishEditing"])
+        enableSwitch("productBatch.received")
+        tap(app.buttons["productBatch.review"])
+        tap(app.buttons["productBatch.commit"])
+        XCTAssertTrue(app.staticTexts["productBatch.saved"].waitForExistence(timeout: 8))
+
+        restart()
+        tap(app.tabBars.buttons["Pantry"])
+        tap(app.buttons["pantry.findPack"])
+        tap(barcode)
+        barcode.typeText("012345678905")
+        tap(resolve)
+        reveal(lots.firstMatch)
+        XCTAssertEqual(lots.count, 1)
+        XCTAssertTrue(lots.firstMatch.label.contains("Cereal box"))
+        XCTAssertFalse(review.exists)
+    }
+
     func testConfirmedPackAtHomeFindsOnlyItsTwoPhysicalBatchesAfterRelaunch() {
         launch(reset: true)
         tap(app.tabBars.buttons["Pantry"])
@@ -621,6 +673,8 @@ import XCTest
         fill(wording, into: "packageDate.wording", initiallyUpward: false)
         let fullDate = app.switches["packageDate.hasDay"]
         XCTAssertEqual(fullDate.value as? String, "0")
+        let printedSuggestion = app.buttons["packageDate.choosePrintedDay"]
+        XCTAssertFalse(printedSuggestion.exists, "An ambiguous stamp has no complete date to suggest")
         tap(app.buttons["packageDate.save"])
         let detail = app.navigationBars["Green lentils"]
         XCTAssertTrue(detail.waitForExistence(timeout: 8))
@@ -668,6 +722,17 @@ import XCTest
         XCTAssertFalse(app.buttons["packageDate.remove"].exists)
         reveal(fullDate)
         XCTAssertEqual(fullDate.value as? String, "0")
+        let explicitWording = "Consumo preferente 15 de diciembre de 2028"
+        fill(explicitWording, into: "packageDate.wording")
+        reveal(printedSuggestion)
+        XCTAssertTrue(printedSuggestion.label.contains("2028"))
+        XCTAssertEqual(fullDate.value as? String, "0", "Transcribing the wording alone must not accept a date")
+        tap(printedSuggestion)
+        XCTAssertEqual(fullDate.value as? String, "1")
+        tap(app.buttons["packageDate.save"])
+        let december = try XCTUnwrap(DateComponents(calendar: Calendar(identifier: .gregorian), timeZone: .gmt,
+                                                    year: 2028, month: 12, day: 15).date)
+        reveal(detailRow("Fecha impresa en el envase", showing: formatter.string(from: december)))
     }
 
     func testPantryManualCheckDateRemainsAvailableWhenDigestPermissionIsDenied() {
