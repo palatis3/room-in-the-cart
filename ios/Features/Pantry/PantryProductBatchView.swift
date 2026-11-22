@@ -117,6 +117,7 @@ struct PantryProductBatchView: View {
                        let access, access.canPresent(), access.scope.origin == batch.workspaceID {
                         Section {
                             PantryBatchHeading(lot: lot)
+                            barcodeLookupNote(lot.packageCode)
                             NavigationLink(pantryText("Add a date or reminder")) {
                                 PackageDateChoices(model: model, lot: lot, access: access, code: row.barcode, reviewedDateWording: row.reviewedDateWording)
                             }.accessibilityLabel(pantryText("Add a date or reminder") + " · " + lot.packageBatchLabel)
@@ -129,6 +130,7 @@ struct PantryProductBatchView: View {
                         if let lot = model.snapshot?.lots.first(where: { $0.id == row.lotID }) {
                             Section {
                                 PantryBatchHeading(lot: lot)
+                                barcodeLookupNote(lot.packageCode)
                                 NavigationLink(pantryText("Add a date or reminder")) {
                                     PackageDateChoices(model: model, lot: lot, access: access, reviewedDateWording: row.reviewedDateWording)
                                 }.accessibilityLabel(pantryText("Add a date or reminder") + " · " + lot.packageBatchLabel)
@@ -147,6 +149,7 @@ struct PantryProductBatchView: View {
                             VStack(alignment: .leading) {
                                 Text(row.name).font(.headline)
                                 Text(row.reviewEvidenceLine)
+                                barcodeLookupNote(row.barcode)
                                 if !row.onePackageUnknown {
                                     Text(pantryText("Amount usable") + " · " + pantryPrintedQuantity(row.usable.isEmpty ? row.total?.description ?? "" : row.usable, unit: row.unit))
                                 } else if let wording = row.reviewedDateWording {
@@ -161,6 +164,7 @@ struct PantryProductBatchView: View {
                         VStack(alignment: .leading) {
                             Text(row.name).font(.headline)
                             Text(verbatim: candidate?.reviewEvidenceLine ?? row.originalLine)
+                            barcodeLookupNote(candidate?.barcode)
                             Text(pantryFormat("Received %@", pantryQuantity(row.received)))
                             Text(pantryFormat("Usable %@", pantryQuantity(row.usable)))
                             switch row.stock {
@@ -331,8 +335,14 @@ struct PantryProductBatchView: View {
         }
     }
 
-    @ViewBuilder
-    private func productRow(_ row: PantryProductBatch.Candidate) -> some View {
+    @ViewBuilder private func barcodeLookupNote(_ code: CapturedBarcode?) -> some View {
+        if code?.lookupScope == .checkDigitsOrFormat {
+            Text(pantryText("These digits are kept as entered. Find this batch by food name."))
+                .font(.subheadline).accessibilityIdentifier("productBatch.findByName")
+        }
+    }
+
+    @ViewBuilder private func productRow(_ row: PantryProductBatch.Candidate) -> some View {
         let label = VStack(alignment: .leading) {
             Text(row.name.isEmpty ? (row.barcode?.value ?? pantryText("Product photo")) : row.name)
             if row.existingReceipt != nil { Text(pantryText(row.receiptLinkSaved ? "Linked to a recorded purchase" : "Existing purchase selected · excluded from new stock")).font(.caption) }
@@ -600,6 +610,10 @@ private struct PantryProductCandidateEditor: View {
                                 field = nil
                                 editingBarcode = true
                             }.accessibilityIdentifier("productBatch.editBarcode")
+                        }
+                        if code.lookupScope == .checkDigitsOrFormat {
+                            Text(pantryText("Check the barcode digits and format. You can still save the food and find it by name."))
+                                .font(.subheadline).accessibilityIdentifier("productBatch.codeNeedsReview")
                         }
                     }
                     if !row.original.isEmpty { Text(verbatim: row.original) }

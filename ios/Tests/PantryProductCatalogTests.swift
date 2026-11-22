@@ -319,6 +319,17 @@ extension PantryProductCatalogTests {
     }
 
     @MainActor func testReviewUnknownBarcodeRequiresEditableScopeAndCheckedPack() throws {
+        let mistyped = CapturedBarcode(symbology: "manual", value: "020123400007")
+        XCTAssertEqual(mistyped.lookupScope, .checkDigitsOrFormat)
+        XCTAssertNil(mistyped.associationKey(retailer: "Market"))
+        XCTAssertNil(mistyped.catalogGTIN)
+        var manualFood = PantryProductBatch(workspaceID: UUID())
+        XCTAssertTrue(try manualFood.addManual(name: "Store produce", code: mistyped.value))
+        let manualRow = try XCTUnwrap(manualFood.candidates.first)
+        XCTAssertEqual(manualRow.barcode, mistyped)
+        XCTAssertEqual(manualRow.name, "Store produce")
+        XCTAssertEqual(CapturedBarcode(symbology: "manual", value: "012345678905").lookupScope, .global)
+        XCTAssertEqual(CapturedBarcode(symbology: "UPC-A", value: "201234000006").lookupScope, .retailer)
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: folder) }
         let memory = PantryPackMemory(folder: folder)

@@ -1511,6 +1511,91 @@
         }
       }
     },
+    "Date or reminder": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date or reminder"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fecha o recordatorio"
+          }
+        }
+      }
+    },
+    "Check the barcode digits and format. You can still save the food and find it by name.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the barcode digits and format. You can still save the food and find it by name."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa los dígitos y el formato del código de barras. Puedes guardar el alimento y buscarlo por su nombre."
+          }
+        }
+      }
+    },
+    "These digits are kept as entered. Find this batch by food name.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These digits are kept as entered. Find this batch by food name."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los dígitos se guardan tal como los escribiste. Busca este lote por el nombre del alimento."
+          }
+        }
+      }
+    },
+    "Check the barcode digits and format, or search for the food by name.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the barcode digits and format, or search for the food by name."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa los dígitos y el formato del código de barras o busca el alimento por su nombre."
+          }
+        }
+      }
+    },
+    "Enter the retailer for a saved barcode match, or search by food name.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the retailer for a saved barcode match, or search by food name."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indica la tienda asociada al código guardado o busca el alimento por su nombre."
+          }
+        }
+      }
+    },
     "Check the barcode digits and format on the package, then try again.": {
       "localizations": {
         "en": {

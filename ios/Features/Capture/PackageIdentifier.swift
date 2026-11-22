@@ -60,22 +60,32 @@ extension CapturedBarcode {
     }
     var displayValue: String { value.replacingOccurrences(of: "\u{1d}", with: "␝") }
 
-    func associationKey(retailer: String) -> String? {
+    enum LookupScope { case global, retailer, checkDigitsOrFormat, unsupported }
+
+    var lookupScope: LookupScope {
         if let gtin = canonicalGTIN {
             switch circulation(gtin) {
-            case .global: return "gtin/" + gtin
-            case .nonProduct: return nil
-            case .retailer: break
+            case .global: return .global
+            case .nonProduct: return .unsupported
+            case .retailer: return .retailer
             }
         }
-        let store = retailer.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        guard !store.isEmpty, store.utf8.count <= 256 else { return nil }
-        if let gtin = canonicalGTIN { return "store/\(store.utf8.count)/\(store)/\(gtin)" }
+        if value.allSatisfy(\.isNumber), [8, 12, 13, 14].contains(value.count) { return .checkDigitsOrFormat }
         guard (try? validate()) != nil, !value.contains("://"), !value.contains("\u{1d}"),
-              !value.hasPrefix("("), !value.hasPrefix("]"), !kind.contains("qr"), !kind.contains("matrix"),
-              // Invalid or ambiguous numeric trade codes should be retyped with the correct format.
-              !(value.allSatisfy(\.isNumber) && [8,12,13,14].contains(value.count)) else { return nil }
-        return "local/\(store.utf8.count)/\(store)/\(value)"
+              !value.hasPrefix("("), !value.hasPrefix("]"), !kind.contains("qr"), !kind.contains("matrix") else { return .unsupported }
+        return .retailer
+    }
+
+    func associationKey(retailer: String) -> String? {
+        switch lookupScope {
+        case .global: return canonicalGTIN.map { "gtin/" + $0 }
+        case .retailer:
+            let store = retailer.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            guard !store.isEmpty, store.utf8.count <= 256 else { return nil }
+            if let gtin = canonicalGTIN { return "store/\(store.utf8.count)/\(store)/\(gtin)" }
+            return "local/\(store.utf8.count)/\(store)/\(value)"
+        case .checkDigitsOrFormat, .unsupported: return nil
+        }
     }
 
     var gs1: PackageGS1? {

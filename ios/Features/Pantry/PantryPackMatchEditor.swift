@@ -18,7 +18,7 @@ struct PantryPackMatchEditor: View {
     var body: some View {
         if let code = row.barcode {
             Section {
-                if code.catalogGTIN == nil {
+                if code.lookupScope == .retailer {
                     TextField(pantryText("Retailer for this code"), text: $row.retailer)
                         .accessibilityIdentifier("pack.retailer")
                 }
@@ -68,9 +68,13 @@ struct PantryPackMatchEditor: View {
                 }
                 if let status { Text(status) }
             } header: {
-                Text(pantryText("Recognize this pack next time"))
+                if code.lookupScope == .global || code.lookupScope == .retailer {
+                    Text(pantryText("Recognize this pack next time"))
+                }
             } footer: {
-                Text(pantryText("Remembering saves the barcode, name and pack size. Review the pantry count separately to add food."))
+                if code.lookupScope == .global || code.lookupScope == .retailer {
+                    Text(pantryText("Remembering saves the barcode, name and pack size. Review the pantry count separately to add food."))
+                }
             }
             .sheet(isPresented: $showingReceipts) {
                 NavigationStack {

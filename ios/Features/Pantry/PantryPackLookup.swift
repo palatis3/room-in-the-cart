@@ -32,7 +32,7 @@ private struct PackLookupInput: View {
                     Text(verbatim: "EAN-8").tag("EAN-8")
                 }.onChange(of: kind) { _, _ in lastScan = nil; clearResult() }
             }
-            if let candidate = lastScan ?? typed, candidate.catalogGTIN == nil {
+            if let candidate = lastScan ?? typed, candidate.lookupScope == .retailer {
                 TextField(pantryText("Retailer for this code"), text: $retailer)
                     .accessibilityIdentifier("pack.find.retailer")
                     .onChange(of: retailer) { _, _ in clearResult() }
@@ -103,9 +103,10 @@ private struct PackLookupInput: View {
             }
         }
         guard selected == nil else { return }
-        if reviewUnmatched != nil, code.value.utf8.allSatisfy({ (48...57).contains($0) }),
-           [8, 12, 13, 14].contains(code.value.count), code.canonicalGTIN == nil {
-            status = pantryText("Check the barcode digits and format on the package, then try again.")
+        if code.lookupScope == .checkDigitsOrFormat {
+            status = pantryText("Check the barcode digits and format, or search for the food by name.")
+        } else if code.lookupScope == .retailer && retailer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            status = pantryText("Enter the retailer for a saved barcode match, or search by food name.")
         } else {
             status = pantryText("No confirmed match. Search by product name or check the retailer.")
         }

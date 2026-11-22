@@ -333,6 +333,49 @@ import XCTest
                        "Recording a physical barcode must not invent an exact pack size.")
     }
 
+    func testInvalidStickerDigitsKeepManualFoodFindableByNameAfterColdReturn() {
+        launch(reset: true)
+        tap(app.tabBars.buttons["Pantry"])
+        tap(app.buttons["pantry.setup.products"])
+        let digits = "020123400007"
+        let name = "Store produce"
+        fill(digits, into: "productBatch.code", requireDone: true)
+        fill(name, into: "productBatch.label", requireDone: true, control: app.textViews["productBatch.label"])
+        tap(app.buttons["productBatch.add"])
+        tap(app.buttons["productBatch.row.0"])
+        XCTAssertTrue(app.staticTexts["productBatch.codeNeedsReview"].waitForExistence(timeout: 5))
+        XCTAssertEqual(element("productBatch.barcodeEvidence").value as? String, digits)
+        enableSwitch("productBatch.oneUnknown")
+        tap(app.buttons["productBatch.finishEditing"])
+        enableSwitch("productBatch.received")
+        tap(app.buttons["productBatch.review"])
+        tap(app.buttons["productBatch.commit"])
+        XCTAssertTrue(app.staticTexts["productBatch.saved"].waitForExistence(timeout: 8))
+        reveal(app.staticTexts["productBatch.findByName"])
+        tap(app.buttons["pack.date.0"])
+        XCTAssertTrue(app.navigationBars["Date or reminder"].waitForExistence(timeout: 5))
+        tap(app.buttons["No visible date"])
+        tap(app.buttons["Skip"])
+
+        restart()
+        tap(app.tabBars.buttons["Pantry"])
+        tap(app.buttons["pantry.findPack"])
+        let code = app.textFields["pack.find.code"]
+        tap(code)
+        code.typeText(digits)
+        tap(app.buttons["pack.find.resolve"])
+        let message = app.staticTexts["Check the barcode digits and format, or search for the food by name."]
+        reveal(message)
+        XCTAssertFalse(app.textFields["pack.find.retailer"].exists)
+        XCTAssertFalse(app.buttons["pack.find.review"].exists)
+        let search = app.textFields["Product name"]
+        tap(search)
+        search.typeText(name)
+        let lot = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "pack.find.lot.", name))
+        reveal(lot.firstMatch)
+        XCTAssertEqual(lot.count, 1)
+    }
+
     func testUnknownPantryBarcodeCanBeReviewedCountedAndFoundAgain() {
         launch(reset: true)
         tap(app.tabBars.buttons["Pantry"])
