@@ -101,10 +101,15 @@ import XCTest
         show(save)
         save.tap()
         waitForSubtotal("$4.25 for 1 picked item")
-        checks.firstMatch.tap()
+        let secondCheck = app.buttons[checks.firstMatch.identifier]
+        let originalRowY = secondCheck.frame.midY
+        secondCheck.tap()
         waitForSubtotal("$4.25 for 1 of 2 picked items")
         app.buttons["inStoreUndo"].tap()
         waitForSubtotal("$4.25 for 1 picked item")
+        XCTAssertTrue(secondCheck.isHittable)
+        XCTAssertEqual(secondCheck.frame.midY, originalRowY, accuracy: secondCheck.frame.height / 2,
+                       "Undo should keep a grocery that was already in view near the shopper's thumb.")
         app.buttons["Done"].tap()
         app.terminate()
         launch(fresh: false)

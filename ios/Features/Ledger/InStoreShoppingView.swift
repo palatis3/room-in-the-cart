@@ -207,7 +207,10 @@ struct InStoreShoppingView: View {
                         guard let target else { return }
                         if UIAccessibility.isVoiceOverRunning || scrollToReturn {
                             switch target {
-                            case .line, .picked: reader.scrollTo(target, anchor: .center)
+                            case .line, .picked:
+                                // Keep an already visible grocery in place when a shopper undoes a pick.
+                                let anchor: UnitPoint? = UIAccessibility.isVoiceOverRunning ? .center : nil
+                                reader.scrollTo(target, anchor: anchor)
                             case .subtotal:
                                 if typeSize.isAccessibilitySize { reader.scrollTo(Focus.subtotal, anchor: .top) }
                             }
