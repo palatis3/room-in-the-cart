@@ -1,5 +1,6 @@
 import Foundation
 import CSQLite
+import CryptoKit
 
 /// Mutable editing state excluded from ledger snapshots and Records exports.
 public struct FirstListDraftVersion: Equatable, Sendable {
@@ -17,6 +18,15 @@ public struct StoredFirstListDraft: Equatable, Sendable {
 extension LedgerStore {
     public nonisolated static let maximumFirstListDraftBytes = 1_048_576
     public nonisolated static let firstListDraftLifetime: TimeInterval = 7 * 24 * 3600
+
+    /// Keep quick-entry text distinct from bulk review, other people and other lists.
+    /// The table's workspace foreign key separately fences an erased or replaced ledger.
+    public nonisolated static func quickGroceryDraftOwner(persona: Data, shopID: UUID?) -> Data {
+        var key = Data("quick-grocery-v1".utf8)
+        key.append(persona)
+        if let shopID { key.append(contentsOf: shopID.uuidString.utf8) }
+        return Data(SHA256.hash(data: key))
+    }
 
     /// The review counts drafts from every owner affected by whole-workspace erasure.
     /// Read only opaque version tokens, never the private draft wording or owner identity.
@@ -97,11 +107,15 @@ extension LedgerStore {
         }
     }
 
-    func deleteFirstListDraft(_ draft: FirstListDraftVersion) throws {
+    @discardableResult
+    func deleteMatchingDraft(_ draft: FirstListDraftVersion) throws -> Int32 {
         guard workspaceID == draft.workspaceID else { throw LedgerStoreError.erased }
-        let removed = try database.run("DELETE FROM first_list_draft WHERE workspace_id=? AND owner=? AND token=? AND base_revision=?",
+        return try database.run("DELETE FROM first_list_draft WHERE workspace_id=? AND owner=? AND token=? AND base_revision=?",
             [.text(workspaceID.uuidString), .blob(draft.owner), .text(draft.token.uuidString), .integer(draft.baseRevision)])
-        guard removed == 1 else { throw LedgerStoreError.operationConflict }
+    }
+
+    func deleteFirstListDraft(_ draft: FirstListDraftVersion) throws {
+        guard try deleteMatchingDraft(draft) == 1 else { throw LedgerStoreError.operationConflict }
     }
 
     public func discardFirstListDraft(_ draft: FirstListDraftVersion) throws {

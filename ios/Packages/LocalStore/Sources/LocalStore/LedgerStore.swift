@@ -133,7 +133,7 @@ public actor LedgerStore {
     /// No result is returned until SQLite COMMIT succeeds.
     @discardableResult
     public func save(payload: Data, expectedRevision: Int64, operationID: UUID, savedAt: Date,
-                     consuming draft: FirstListDraftVersion? = nil) throws -> LedgerRecord {
+                     consuming draft: FirstListDraftVersion? = nil, clearingQuickDraft: FirstListDraftVersion? = nil) throws -> LedgerRecord {
         guard payload.count <= Self.maximumPayloadBytes else { throw LedgerStoreError.payloadTooLarge }
         guard expectedRevision >= 0, savedAt.timeIntervalSinceReferenceDate.isFinite
         else { throw LedgerStoreError.invalidInput }
@@ -144,6 +144,11 @@ public actor LedgerStore {
                 if try database.record(operationID: operationID, workspaceID: workspaceID) == nil {
                     try consumeFirstListDraft(draft, base: expectedRevision, now: Date())
                 }
+            }
+            if let clearingQuickDraft, try database.record(operationID: operationID, workspaceID: workspaceID) == nil {
+                // Review can update the committed wording. Clear its originating field
+                // only if another editor hasn't replaced that exact draft in the meantime.
+                try deleteMatchingDraft(clearingQuickDraft)
             }
             return try saveSnapshot(payload: payload, expectedRevision: expectedRevision, operationID: operationID, savedAt: savedAt)
         }

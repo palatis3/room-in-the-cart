@@ -12,6 +12,7 @@ private enum LedgerImportField: Hashable {
 }
 
 struct LedgerImportView: View {
+    @Environment(\.reviewedQuickGroceryDraft) private var quickDraft
     @ObservedObject var model: LedgerModel
     @EnvironmentObject private var access: WorkspaceAccess
     @EnvironmentObject private var household: HouseholdModel
@@ -442,7 +443,7 @@ struct LedgerImportView: View {
                 let decisions = review.choices
                 if let firstDraft {
                     guard preview.shopID == shopID, firstDraft.authorize(), let draft = await firstDraft.flush(firstContents) else { return }
-                    if await model.commitFirstList(preview, decisions: decisions, draft: draft, title: ledgerText("Pickup"), authorize: firstDraft.authorize) {
+                    if await model.commitFirstList(preview, decisions: decisions, draft: draft, title: ledgerText("Pickup"), quickDraft: quickDraft, authorize: firstDraft.authorize) {
                         onSaved?(shopID); dismiss()
                     } else {
                         if !model.hasPendingSave, model.error == nil {
@@ -450,7 +451,7 @@ struct LedgerImportView: View {
                         }
                         focus = .status
                     }
-                } else if await model.editShop(key: "import-\(preview.id)", shopID: preview.shopID, authorize: authorizeSave, { try $0.commitImport(preview, decisions: decisions) }) {
+                } else if await model.editShop(key: "import-\(preview.id)", shopID: preview.shopID, quickDraft: quickDraft, authorize: authorizeSave, { try $0.commitImport(preview, decisions: decisions) }) {
                     onSaved?(preview.shopID)
                     dismiss()
                 } else { focus = .status }

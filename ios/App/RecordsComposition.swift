@@ -1171,9 +1171,9 @@ private struct RecordsLedgerDeletionView: View {
                 Text(recordsText("This permanently deletes every shopping list, dinner plan, reusable dinner and saved revision in this ledger."))
                 Text(String(format: recordsText("%lld shopping lists · %lld reusable dinners"), Int64(effectiveReview.shopCount), Int64(effectiveReview.reusableDinnerCount)))
                 if let tokens = effectiveReview.draftTokens {
-                    Text(String(format: recordsText("First-list drafts to delete: %lld"), Int64(tokens.count)))
+                    Text(String(format: recordsText("Shopping drafts to delete: %lld"), Int64(tokens.count)))
                     if !tokens.isEmpty {
-                        Text(recordsText("Exports include saved lists. To keep a first-list draft, finish and save it before exporting."))
+                        Text(recordsText("Exports include saved lists. To keep a shopping draft, add its groceries to a list before exporting."))
                     }
                 }
                 Text(recordsText("Pack comparisons, pickup histories, imported recipe source files and files already shared are kept."))

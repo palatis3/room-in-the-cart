@@ -60,6 +60,41 @@ import CoreDomain
         let undone = await next.editShop(key: "undo-first", shopID: candidate.id) { try $0.undoImport(batchID: review.id) }
         XCTAssertTrue(undone); XCTAssertNotNil(next.shop?.importBatches.first?.undoneAt)
     }
+    func testQuickGroceryTypingAndExplicitAddUseOnlyTheCurrentDraft() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let ledger = LedgerModel(databaseURL: directory.appendingPathComponent("ledger.sqlite"))
+        await ledger.open()
+        let store = try XCTUnwrap(ledger.firstListStore)
+        let key = LedgerStore.quickGroceryDraftOwner(persona: Data(repeating: 3, count: 32), shopID: nil)
+        let editor = try QuickGroceryDraft(shopID: nil, store: store, owner: key, record: nil)
+        for text in ["C", "Ca", "Car"] { editor.update(text, revision: 0) }
+        let saved = await editor.prepareToSubmit("Car", revision: 0)
+        XCTAssertTrue(saved)
+        let record = try await store.firstListDraft(owner: key)
+        XCTAssertEqual(record?.payload, Data("Car".utf8))
+        XCTAssertTrue(ledger.workspace.shops.isEmpty)
+        XCTAssertFalse(String(decoding: try ledger.exportPayload(), as: UTF8.self).contains("Car"))
+
+        let resumed = try QuickGroceryDraft(shopID: nil, store: store, owner: key, record: record)
+        resumed.update("Carrots", revision: 0)
+        let ready = await resumed.prepareToSubmit("Carrots", revision: 0)
+        XCTAssertTrue(ready)
+        let version = try XCTUnwrap(resumed.version)
+        let preview = try XCTUnwrap(try QuickGrocery.stage("Carrots", in: ShoppingLedger(title: "Pickup")))
+        let denied = await ledger.addQuickGrocery(preview, selectedShopID: nil, workspaceID: store.workspaceID, quickDraft: version, authorize: { false })
+        XCTAssertFalse(denied)
+        let retained = try await store.firstListDraft(owner: key)
+        XCTAssertEqual(retained?.version, version)
+        let added = await ledger.addQuickGrocery(preview, selectedShopID: nil, workspaceID: store.workspaceID, quickDraft: version, authorize: { true })
+        XCTAssertTrue(added)
+        await resumed.committed(version, wording: "Carrots", revision: ledger.revision)
+        XCTAssertEqual(resumed.text, "")
+        let cleared = try await store.firstListDraft(owner: key)
+        XCTAssertNil(cleared)
+        XCTAssertEqual(ledger.shop?.lines.map(\.name), ["Carrots"])
+    }
+
     func testAppendingRestockPreservesReviewedDraftAcrossReopen() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }

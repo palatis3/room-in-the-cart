@@ -94,6 +94,44 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Reopen Oats (rolled)"].waitForExistence(timeout: 8))
     }
 
+    func testQuickGroceryDraftSurvivesColdRelaunchUntilExplicitAdd() {
+        launch()
+        let field = element("quickGrocery.name")
+        let rows = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "shop.inspect-"))
+        tap(field)
+        field.typeText("Milk")
+        app.terminate()
+        launch(reset: false)
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Milk"), object: field)], timeout: 10), .completed)
+        XCTAssertEqual(rows.count, 0)
+
+        tap(element("quickGrocery.add"))
+        XCTAssertTrue(rows.firstMatch.waitForExistence(timeout: 10))
+        tap(field)
+        field.typeText("Oranges\n")
+        let undoOranges = app.buttons.matching(NSPredicate(format: "identifier == %@ AND label CONTAINS %@",
+                                                           "quickGrocery.undo", "Oranges")).firstMatch
+        XCTAssertTrue(undoOranges.waitForExistence(timeout: 10))
+        field.typeText("Car")
+        XCTAssertFalse(undoOranges.exists)
+        app.terminate()
+        launch(reset: false)
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Car"), object: field)], timeout: 10), .completed)
+        XCTAssertEqual(rows.count, 2)
+        XCTAssertFalse(element("quickGrocery.added").exists)
+
+        tap(field)
+        field.typeText("rots\n")
+        let carrots = app.buttons.matching(NSPredicate(format: "identifier == %@ AND label CONTAINS %@",
+                                                       "quickGrocery.undo", "Carrots")).firstMatch
+        XCTAssertTrue(carrots.waitForExistence(timeout: 10))
+        app.terminate()
+        launch(reset: false)
+        XCTAssertTrue(rows.firstMatch.waitForExistence(timeout: 10))
+        XCTAssertFalse(element("quickGrocery.add").isEnabled)
+        XCTAssertEqual(rows.count, 3)
+    }
+
     func testReviewedQuickGroceryClearsOnlyAfterSavingToExistingPickup() {
         launch()
         let field = element("quickGrocery.name")

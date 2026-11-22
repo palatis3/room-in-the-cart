@@ -125,6 +125,7 @@ private enum LedgerDeletionJournal {
     private var deletionJournalURL: URL? { resolvedDatabaseURL?.appendingPathExtension("erase-intent.json") }
     private struct PendingSave {
         var firstListDraft: FirstListDraftVersion? = nil
+        var quickDraft: FirstListDraftVersion? = nil
         let onShopSelected: ((UUID) -> Void)?
         let key: String
         let workspace: LedgerWorkspace
@@ -290,7 +291,7 @@ private enum LedgerDeletionJournal {
     }
 
     private func change(key: String, onShopSelected: ((UUID) -> Void)?,
-                        firstListDraft: FirstListDraftVersion? = nil,
+                        firstListDraft: FirstListDraftVersion? = nil, quickDraft: FirstListDraftVersion? = nil,
                         reviewedPantryBasis: LedgerCanonicalPackStockEvidence.Basis? = nil,
                         authorize: (@MainActor () -> Bool)? = nil,
                         _ edit: (inout LedgerWorkspace) throws -> Void) async -> Bool {
@@ -334,7 +335,7 @@ private enum LedgerDeletionJournal {
             }
             if let basis = reviewedPantryBasis { try await verifyPantryBasis(basis) }
             guard actionAccess?() != false else { throw LedgerModelError.notReady }
-            let change = PendingSave(firstListDraft: firstListDraft, onShopSelected: onShopSelected, key: key, workspace: candidate, payload: payload, base: revision,
+            let change = PendingSave(firstListDraft: firstListDraft, quickDraft: quickDraft, onShopSelected: onShopSelected, key: key, workspace: candidate, payload: payload, base: revision,
                                      operationID: firstListDraft?.token ?? UUID(), savedAt: clock(), reviewedPantryBasis: reviewedPantryBasis, authorize: actionAccess)
             pending = change
             hasPendingSave = true
@@ -393,9 +394,9 @@ private enum LedgerDeletionJournal {
     }
 
     @discardableResult
-    func editShop(key: String, shopID: UUID, authorize: (@MainActor () -> Bool)? = nil,
+    func editShop(key: String, shopID: UUID, quickDraft: FirstListDraftVersion? = nil, authorize: (@MainActor () -> Bool)? = nil,
                   _ edit: (inout ShoppingLedger) throws -> Void) async -> Bool {
-        await change(key: key, onShopSelected: nil, authorize: authorize) { workspace in
+        await change(key: key, onShopSelected: nil, quickDraft: quickDraft, authorize: authorize) { workspace in
             guard let index = workspace.shops.firstIndex(where: { $0.id == shopID }) else { throw LedgerModelError.noShop }
             try edit(&workspace.shops[index])
         }
@@ -452,7 +453,7 @@ private enum LedgerDeletionJournal {
             guard privatePantryWritable else { throw LedgerModelError.notReady }
             try AdultHomeSummaryStore.shared.invalidateLedger(store.workspaceID, forget: false)
             let record = try await store.save(payload: pending.payload, expectedRevision: pending.base,
-                                              operationID: pending.operationID, savedAt: pending.savedAt, consuming: pending.firstListDraft)
+                                              operationID: pending.operationID, savedAt: pending.savedAt, consuming: pending.firstListDraft, clearingQuickDraft: pending.quickDraft)
             // No other mutation can start while saving, including during actor suspension.
             // Another store instance may have advanced after this operation's receipt.
             let current = try await store.load() ?? record
@@ -809,8 +810,8 @@ private enum LedgerDeletionJournal {
     }
 
     func commitFirstList(_ preview: StagedListImport, decisions: [UUID: ImportResolution], draft: FirstListDraftVersion,
-                         title: String, authorize: @escaping @MainActor () -> Bool) async -> Bool {
-        await change(key: "first-list-\(preview.id)", onShopSelected: nil, firstListDraft: draft, authorize: authorize) { candidate in
+                         title: String, quickDraft: FirstListDraftVersion? = nil, authorize: @escaping @MainActor () -> Bool) async -> Bool {
+        await change(key: "first-list-\(preview.id)", onShopSelected: nil, firstListDraft: draft, quickDraft: quickDraft, authorize: authorize) { candidate in
             guard !candidate.shops.contains(where: { $0.id == preview.shopID }), sourceWorkspaceID == draft.workspaceID, revision == draft.baseRevision,
                   preview.lines.contains(where: { decisions[$0.id] != nil && decisions[$0.id] != .skip }) else { throw LedgerError.stalePreview }
             var shop = ShoppingLedger(id: preview.shopID, title: title)
@@ -820,9 +821,9 @@ private enum LedgerDeletionJournal {
         }
     }
 
-    func addQuickGrocery(_ preview: StagedListImport, selectedShopID: UUID?, workspaceID: UUID,
+    func addQuickGrocery(_ preview: StagedListImport, selectedShopID: UUID?, workspaceID: UUID, quickDraft: FirstListDraftVersion? = nil,
                          authorize: @escaping @MainActor () -> Bool) async -> Bool {
-        await change(key: "quick-grocery-\(preview.id)", onShopSelected: nil, authorize: authorize) { candidate in
+        await change(key: "quick-grocery-\(preview.id)", onShopSelected: nil, quickDraft: quickDraft, authorize: authorize) { candidate in
             guard sourceWorkspaceID == workspaceID else { throw LedgerError.stalePreview }
             if candidate.selectedShopID == preview.shopID,
                let index = candidate.shops.firstIndex(where: { $0.id == preview.shopID }),
