@@ -85,6 +85,8 @@ struct PantryHomeView: View {
         }
         .navigationTitle(pantryText("My Pantry"))
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(Theme.canvas, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
         .onChange(of: model.canEdit, initial: true) { _, ready in
             if ready, accessAllowed, let initialSheet, let requested = initialSheet.wrappedValue {
                 initialSheet.wrappedValue = nil
