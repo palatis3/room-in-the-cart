@@ -132,7 +132,7 @@ struct PantryPackFind: View {
     private var authorized: Bool { model.phase == .ready && model.snapshot?.state.workspaceID == origin }
     private var scoped: PantryDigestAccess? { access?.scope.origin == origin && access?.authorized() == true ? access : nil }
     private var presentationScope: PantryDigestScope? {
-        if scene == .active, model.busy, let review, review.access.awaitingSnapshot() { return review.access.scope }
+        if let review { return review.access.forPackReview(current: access, scene: scene, saving: model.busy)?.scope }
         guard let access, access.scope.origin == origin, access.canPresent() else { return nil }
         return access.scope
     }
@@ -158,6 +158,7 @@ struct PantryPackFind: View {
         }.privacySensitive().navigationTitle(pantryText("Find a package in Pantry"))
         .sheet(item: $review) { review in
             NavigationStack { PantryProductBatchView(model: model, lookupBatch: review.batch, access: review.access) }
+                .environment(\.pantryDigestAccess, review.access.forPackReview(current: access, scene: scene, saving: model.busy))
         }
         .onChange(of: presentationScope) { _, newScope in
             selected = nil; unmatched = nil; query = ""
@@ -188,6 +189,24 @@ struct PantryPackFind: View {
         let batch = try PantryDigestStore.shared.packMemory.reviewUnmatched(barcode, retailer: retailer, productName: query,
             typed: typed, access: access, canEdit: canReview)
         review = PackageReview(batch: batch, access: access)
+    }
+}
+
+extension PantryDigestAccess {
+    // The lookup's environment can still be nil just after its snapshot returns.
+    // The access that opened this sheet rechecks its owner and generation on every call.
+    @MainActor func forPackReview(current: Self?, scene: ScenePhase, saving: Bool) -> Self? {
+        if let current, current.scope != scope { return nil }
+        let live = current ?? self
+        switch scene {
+        case .active:
+            guard (authorized() && live.authorized()) || (saving && awaitingSnapshot() && live.awaitingSnapshot()) else { return nil }
+        case .inactive:
+            guard current != nil, retainsPresentation(), live.retainsPresentation() else { return nil }
+        default:
+            return nil
+        }
+        return live
     }
 }
 

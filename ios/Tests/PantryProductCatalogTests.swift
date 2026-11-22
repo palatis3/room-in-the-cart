@@ -496,15 +496,42 @@ extension PantryProductCatalogTests {
         let access = PantryDigestAccess(scope: scope, snapshotIsCurrent: { current }, authorized: { sameOwner })
         XCTAssertTrue(access.authorized())
         XCTAssertFalse(access.awaitingSnapshot())
+        XCTAssertEqual(access.forPackReview(current: nil, scene: .active, saving: false)?.scope, scope)
+        XCTAssertNil(access.forPackReview(current: access, scene: .background, saving: true))
+
         current = false
         XCTAssertFalse(access.authorized())
         XCTAssertTrue(access.awaitingSnapshot())
+        let refreshing = access.forPackReview(current: nil, scene: .active, saving: true)
+        XCTAssertEqual(refreshing?.scope, scope)
+        XCTAssertEqual(refreshing?.authorized(), false)
+        XCTAssertNil(access.forPackReview(current: nil, scene: .active, saving: false))
+        XCTAssertNil(access.forPackReview(current: nil, scene: .inactive, saving: true))
+
+        current = true
+        XCTAssertEqual(access.forPackReview(current: nil, scene: .active, saving: false)?.authorized(), true)
+        let newOwner = CapturePrivateIdentity(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil)
+        let changedAdult = PantryDigestAccess(scope: PantryDigestScope(origin: scope.origin, identity: newOwner)) { true }
+        let newRole = CapturePrivateIdentity(actorID: owner.actorID, subject: nil, householdID: nil, memberID: nil, role: "shopper")
+        let changedRole = PantryDigestAccess(scope: PantryDigestScope(origin: scope.origin, identity: newRole)) { true }
+        let changedOrigin = PantryDigestAccess(scope: PantryDigestScope(origin: UUID(), identity: owner)) { true }
+        XCTAssertNil(access.forPackReview(current: changedAdult, scene: .active, saving: true))
+        XCTAssertNil(access.forPackReview(current: changedRole, scene: .active, saving: true))
+        XCTAssertNil(access.forPackReview(current: changedOrigin, scene: .active, saving: true))
+        let revoked = PantryDigestAccess(scope: scope) { false }
+        XCTAssertNil(access.forPackReview(current: revoked, scene: .active, saving: true))
+
         sameOwner = false
         XCTAssertFalse(access.authorized())
         XCTAssertFalse(access.awaitingSnapshot())
-        current = true
-        XCTAssertFalse(access.authorized())
+        XCTAssertNil(access.forPackReview(current: nil, scene: .active, saving: true))
+        current = false
         XCTAssertFalse(access.awaitingSnapshot())
+        XCTAssertNil(access.forPackReview(current: nil, scene: .active, saving: true))
+
+        let prompt = PantryDigestAccess(scope: scope, retainsPresentation: { true }, authorized: { false })
+        XCTAssertEqual(prompt.forPackReview(current: prompt, scene: .inactive, saving: false)?.authorized(), false)
+        XCTAssertNil(prompt.forPackReview(current: prompt, scene: .background, saving: false))
     }
 
     func testDatePhotoMustAgreeWithOrdinaryUPCAndEveryKnownPhysicalLot() throws {
