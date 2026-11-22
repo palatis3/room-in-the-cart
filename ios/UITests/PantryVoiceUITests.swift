@@ -247,6 +247,12 @@ import XCTest
         refrigerator.tap()
         XCTAssertEqual(filter.value as? String, "Refrigerador")
 
+        let cancel = app.buttons["Cancelar"]
+        filter.tap()
+        XCTAssertTrue(cancel.waitForExistence(timeout: 5), app.debugDescription)
+        cancel.tap()
+        XCTAssertEqual(filter.value as? String, "Refrigerador")
+
         let allLocations = app.buttons["Todos los lugares"]
         filter.tap()
         XCTAssertTrue(allLocations.waitForExistence(timeout: 5), app.debugDescription)

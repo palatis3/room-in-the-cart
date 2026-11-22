@@ -104,6 +104,7 @@ struct PantryHomeView: View {
                 ForEach(InventoryLocation.allCases, id: \.self) { location in
                     Button(pantryLocationName(location)) { selectedLocation = location }
                 }
+                Button(pantryText("Cancel"), role: .cancel) {}
             }
         } else {
             Picker(title, selection: $selectedLocation) {
