@@ -220,6 +220,8 @@
       "CoreDomainTests.PickupTests/testUrgentRepairUsesConfirmedStockWithoutOrderOrInventedDate",
       "CoreDomainTests.PickupTests/testUsableCorrectionPreservesReceivedFactAndRevisitsProtectedAllocations",
       "CoreDomainTests.PickupTests/testWrongItemNeedsReviewedMatchBeforeAllocation",
+      "CoreDomainTests.QuickGroceryTests/testOnlyExplicitContainerAndPlainProductWordingChangesPrivateListReview",
+      "CoreDomainTests.QuickGroceryTests/testPrivateListReviewKeepsContainerCountSeparateFromContentsAcrossReopenAndDuplicateReview",
       "CoreDomainTests.QuickGroceryTests/testReviewedContainersAndIngredientAmountsOnOneLineHaveNoMeasuredTotal",
       "CoreDomainTests.QuickGroceryTests/testReviewedPackageCountSurvivesReopenWithoutSupplyingIngredientUnits",
       "CoreDomainTests.ReceiptAcquisitionTests/testPurchaseDaySurvivesReopenAndCorrectionAcrossTimeZonesWithoutDatingLegacyReceipts",
@@ -536,6 +538,8 @@
       "LocalStoreTests.LedgerStoreTests/testVersionOneMigrationPreservesSnapshotsAndOperationRetries",
       "LocalStoreTests.LedgerStoreTests/testWholeWorkspaceErasurePurgesHistoryAndRotatesEmptyIdentity",
       "LocalStoreTests.LedgerStoreTests/testWorkspaceErasureCheckpointsWALWhenNoReaderBlocksIt",
+      "LocalStoreTests.PrivateDeliveryPurchaseTests/testDeliveryOnlyDaySurvivesStoreReopenAndFileRetry",
+      "LocalStoreTests.PrivateDeliveryPurchaseTests/testLegacyDeliveryDateDoesNotBorrowPurchaseZone",
       "LocalStoreTests.PrivateDeliveryPurchaseTests/testPrivateRevisionsRefundReplayAndReopen",
       "LocalStoreTests.ReviewedPutawayReceiptTests/testLegacyReceiptsDecodeWithoutInventingAPurchaseDay"
     ],
