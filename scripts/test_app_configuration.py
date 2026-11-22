@@ -133,6 +133,38 @@ class AppConfigurationTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "serviceURL.*separate from staging"):
                 load_configuration(root, "Release")
 
+    def test_release_support_site_fills_only_its_two_pages(self):
+        site = "https://customer.grocery-app.com"
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            config = root / "config"
+            config.mkdir()
+            (config / "public-contact.json").write_text(json.dumps({"releaseSupportPagesOrigin": site}))
+            for name in ("Staging", "Debug"):
+                pages = compiled_metadata(load_configuration(root, name), name)
+                self.assertEqual([pages[key] for key in ("PrivacyPolicyURL", "SupportURL", "SupportPagesOrigin")],
+                                 ["", "", ""])
+            release = config / "release.json"
+            for overrides in ({}, {"privacyPolicyURL": "", "supportURL": "", "householdSubscriptionProductID": "annual"}):
+                if overrides:
+                    release.write_text(json.dumps(overrides))
+                pages = compiled_metadata(load_configuration(root, "Release"), "Release")
+                self.assertEqual(pages["PrivacyPolicyURL"], site + "/privacy")
+                self.assertEqual(pages["SupportURL"], site + "/support")
+                self.assertEqual(pages["SupportPagesOrigin"], site)
+                self.assertEqual([pages[key] for key in ("TermsOfUseURL", "HelpURL", "PublicWebsiteURL",
+                                                         "HouseholdServiceURL")], ["", "", "", ""])
+                require_private_release_metadata(pages)
+            override = "https://other.grocery-app.com/help?document=support"
+            release.write_text(json.dumps({"supportURL": override}))
+            self.assertEqual(load_configuration(root, "Release")["supportURL"], override)
+            release.write_text(json.dumps({"publicWebsiteURL": "https://family.grocery-app.com"}))
+            pages = compiled_metadata(load_configuration(root, "Release"), "Release")
+            self.assertEqual([pages[key] for key in ("PrivacyPolicyURL", "SupportURL")], ["", ""])
+            (config / "staging.json").write_text(json.dumps({"serviceURL": site}))
+            with self.assertRaisesRegex(ValueError, "separate from staging"):
+                load_configuration(root, "Release")
+
     def test_public_website_is_an_optional_public_https_origin_independent_of_household(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

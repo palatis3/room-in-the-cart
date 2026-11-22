@@ -17,8 +17,9 @@ PUBLIC_SETTINGS = (
     ("RITC_OPERATOR_NAME", "operatorName", "OperatorName"),
     ("RITC_HELP_URL", "helpURL", "HelpURL"),
     ("RITC_PUBLIC_WEBSITE_URL", "publicWebsiteURL", "PublicWebsiteURL"),
+    ("RITC_SUPPORT_PAGES_ORIGIN", "supportPagesOrigin", "SupportPagesOrigin"),
 )
-PAGE_KEYS = {"privacyPolicyURL", "termsOfUseURL", "supportURL", "helpURL", "publicWebsiteURL"}
+PAGE_KEYS = {"privacyPolicyURL", "termsOfUseURL", "supportURL", "helpURL", "publicWebsiteURL", "supportPagesOrigin"}
 BACKEND_URL_KEYS = ("supabaseURL", "serviceURL")
 HTTPS_AUTHORITY = re.compile(r"(?:\[[0-9a-fA-F:.]+\]|[^:\[\]]+)(?::[0-9]+)?")
 DNS_LABEL = re.compile(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?")
@@ -148,6 +149,17 @@ def load_configuration(root, name):
     for key in ("supportEmail", "operatorName"):
         if key not in config and key in contact:
             config[key] = contact[key]
+    if name == "Release" and "releaseSupportPagesOrigin" in contact:
+        # This small site publishes only the policy and support pages. A separately
+        # configured full website keeps its own native page fallbacks.
+        origin = contact["releaseSupportPagesOrigin"]
+        if not valid_page_url(origin) or not is_origin_only(origin):
+            raise ValueError("releaseSupportPagesOrigin must be a public HTTPS origin")
+        config["supportPagesOrigin"] = origin
+        if not config.get("publicWebsiteURL"):
+            for key, route in (("privacyPolicyURL", "/privacy"), ("supportURL", "/support")):
+                if config.get(key, "") == "":
+                    config[key] = origin.rstrip("/") + route
     expected_environment = "production" if name == "Release" else "staging"
     if config.get("environment", expected_environment) != expected_environment:
         raise ValueError(f"{path.name} must identify the {expected_environment} environment")
@@ -163,8 +175,8 @@ def load_configuration(root, name):
             if not valid_page_url(value):
                 raise ValueError(f"{key} must be an operator-owned HTTPS page, without credentials or a test/example host")
             url = urlsplit(value)
-            if key == "publicWebsiteURL" and not is_origin_only(value):
-                raise ValueError("publicWebsiteURL must be the public HTTPS origin, without a path, query or fragment")
+            if key in ("publicWebsiteURL", "supportPagesOrigin") and not is_origin_only(value):
+                raise ValueError(f"{key} must be the public HTTPS origin, without a path, query or fragment")
             origins[key] = normalized_origin(url)
         if value and key in BACKEND_URL_KEYS:
             try:
