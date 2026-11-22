@@ -754,11 +754,14 @@ final class RoomInTheCartUITests: XCTestCase {
         let name = element("quickGrocery.name")
         tap(name)
         name.typeText("peras")
-        tap(app.buttons["quickGrocery.dismissKeyboard"])
+        let dismiss = app.buttons["quickGrocery.dismissKeyboard"]
+        revealFullyInShop(dismiss)
+        dismiss.tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
 
         let family = app.shopToolButton("shop.familySharing")
         XCTAssertTrue(family.wait(for: \.isHittable, toEqual: true, timeout: 8))
-        XCTAssertTrue(app.scrollViews["shopContentScroll"].frame.contains(family.frame),
+        XCTAssertTrue(shopViewport.contains(family.frame),
                       "Expanding More shopping tools should reveal the entire first action.")
         XCTAssertEqual(family.label, "Compartir en familia")
         family.tap()
@@ -776,7 +779,7 @@ final class RoomInTheCartUITests: XCTestCase {
         tap(household.buttons.element(boundBy: 0))
         tap(app.buttons["settings.done"])
 
-        reveal(name)
+        revealFullyInShop(name)
         XCTAssertEqual(name.value as? String, "peras")
         XCTAssertTrue(app.buttons["shop.addFirstList"].exists)
     }
