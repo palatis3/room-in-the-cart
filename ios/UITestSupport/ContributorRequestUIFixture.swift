@@ -103,6 +103,7 @@ import HouseholdClient
                 lifecycle.keepLocalPrivate = true
                 lifecycle.adultAttestation = true
                 lifecycle.invitationCode = server.grant + "." + String(repeating: "a", count: 43)
+                await lifecycle.previewInvitation()
                 await lifecycle.redeemInvitation()
                 guard lifecycle.isHelper else { setupFailure = true; return }
                 if server.cookingReport { lifecycle.correction = "Keep the original correction draft" }
@@ -522,6 +523,7 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
         if path == "/v1/me/workspaces" { return try response(["workspaces": helperReadback ? [] : [["householdId":household,"label":"Fixture home","role":"contributor"]]]) }
         if path.hasSuffix("/devices") { return try response(["deviceId":"fixture-device","deviceToken":"fixture-token"],201) }
         if helperReadback {
+            if path == "/v1/invites/preview" { return try response(["householdLabel": "Fixture home", "role": cookingReport ? "helper_edit" : "helper_read"]) }
             if path == "/v1/invites/redeem" { return try response(["householdId": household, "memberId": member, "role": cookingReport ? "editor" : "helper", "grantId": grant]) }
             if path.hasSuffix("/bootstrap") {
                 return try response(["household": ["id": household, "label": "Fixture home"], "memberId": member,

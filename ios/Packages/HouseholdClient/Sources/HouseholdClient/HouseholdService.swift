@@ -805,6 +805,21 @@ public actor HouseholdService {
         // It checks the original generation before executing any new intent.
         return try await perform("commands", method: "POST", body: operation.bytes, requestQueueGrant: operation.requestQueueGrant)
     }
+    public func previewInvitation(subject: String, token: String, adultAttestation: Bool) async throws -> InvitationOffer {
+        guard childAdoptionBinding == nil else { throw ClientError.accessEnded }
+        guard adultAttestation, InvitationOffer.isCompleteToken(token) else { throw ClientError.configuration }
+        let start = generation
+        let access = try await auth.access()
+        guard generation == start else { throw ClientError.cancelled }
+        guard access.identity.subject == subject else { throw ClientError.accessEnded }
+        struct Input: Encodable { let token: String; let adultAttestation: Bool }
+        let offer: InvitationOffer = try await transport.json(request(base: configuration.baseURL, path: "v1/invites/preview",
+            method: "POST", token: access.accessToken, body: encoded(Input(token: token, adultAttestation: true))))
+        guard generation == start else { throw ClientError.cancelled }
+        guard !offer.householdLabel.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              offer.householdLabel.count <= 80 else { throw ClientError.invalidResponse }
+        return offer
+    }
     public func executeMembership(_ intent: MembershipIntent) async throws -> MembershipReceipt {
         guard childAdoptionBinding == nil else { throw ClientError.accessEnded }
         let start = generation

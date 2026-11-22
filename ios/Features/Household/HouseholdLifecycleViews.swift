@@ -32,10 +32,20 @@ struct HouseholdSetupSections: View {
                 Section(ht("Use an invitation")) {
                     Text(ht("Leave your display name blank to keep your existing name in this household. If you are joining for the first time, we request “Household member” as your name.")).font(.caption)
                     SecureField(ht("Household invitation code"), text: $model.invitationCode).privacySensitive().textInputAutocapitalization(.never).autocorrectionDisabled()
-                    Text(ht("Paste the code shared by the organizer or shopper. The invitation determines your access."))
+                        .accessibilityIdentifier("household.invite.code")
+                    Text(ht("Paste the complete code and confirm you are an adult to see the household and your role."))
+                    invitationPreview
                     Button(ht("Join with invitation")) { Task { await model.redeemInvitation() } }
                         .buttonStyle(PrimaryAction())
-                        .disabled(!canContinue || model.invitationCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        .disabled(!canJoin)
+                        .accessibilityIdentifier("household.invite.join")
+                        .onChange(of: model.invitationPreviewKey, initial: true) { _, key in
+                            guard let key else { return }
+                            Task {
+                                guard model.invitationPreviewKey == key else { return }
+                                await model.previewInvitation()
+                            }
+                        }
                 }
             }
             lifecycleNotice(model)
@@ -44,6 +54,38 @@ struct HouseholdSetupSections: View {
         .confirmationDialog(ht("Clear this local retry?"), isPresented: $clearRetry, titleVisibility: .visible) {
             Button(ht("I checked my households; clear retry"), role: .destructive) { Task { await model.clearPendingMembership() } }
         } message: { Text(ht("Clearing a retry does not undo a household or membership already created by the service.")) }
+    }
+    @ViewBuilder private var invitationPreview: some View {
+        switch model.invitationPreview {
+        case .idle: EmptyView()
+        case .loading:
+            ProgressView(ht("Checking invitation…")).accessibilityIdentifier("household.invite.status")
+        case let .ready(offer):
+            VStack(alignment: .leading, spacing: 4) {
+                Text(verbatim: offer.householdLabel).font(.headline).privacySensitive()
+                    .accessibilityIdentifier("household.invite.household")
+                Text(ht("Role offered by this invitation")).font(.subheadline).foregroundStyle(.secondary)
+                Text(roleLabel(offer.role)).privacySensitive().accessibilityIdentifier("household.invite.role")
+            }
+        case .unavailable:
+            Text(ht("This invitation is unavailable. Ask the person who invited you for a current code."))
+                .accessibilityIdentifier("household.invite.status")
+        case .failed:
+            Text(ht("The invitation could not be checked. Try again.")).accessibilityIdentifier("household.invite.status")
+            Button(ht("Check invitation again")) { Task { await model.previewInvitation() } }
+                .accessibilityIdentifier("household.invite.retry")
+        }
+    }
+    private func roleLabel(_ role: InvitationOffer.Role) -> String {
+        switch role {
+        case .adultContributor: ht("Adult contributor")
+        case .helperRead: ht("Helper · view only")
+        case .helperEdit: ht("Helper · can suggest corrections")
+        }
+    }
+    private var canJoin: Bool {
+        guard canContinue, case .ready = model.invitationPreview else { return false }
+        return true
     }
     private var canContinue: Bool { model.adultAttestation && model.keepLocalPrivate }
 }

@@ -37,6 +37,47 @@ extension HouseholdClientTests {
         do { _ = try await service.executeMembership(other); XCTFail("Wrong account replay") } catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
         XCTAssertEqual(stateLock.withLock { bodies.count }, 2)
     }
+    func testInvitationPreviewUsesOnlyVerifiedBearerAndTokenAndRedeemsExactReviewedOffer() async throws {
+        let token = household + "." + String(repeating: "a", count: 43)
+        let auth = try auth()
+        let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!),
+                                       auth: auth, deviceVault: MemoryVault(), transport: transport())
+        var reads = 0
+        let stateLock = MockURLProtocol.installHandlerWithStateLock { request in
+            if let result = self.authResponse(request) { return result }
+            XCTAssertEqual(request.url?.absoluteString, "https://service.test/v1/invites/preview")
+            XCTAssertEqual(request.httpMethod, "POST")
+            XCTAssertNotNil(request.value(forHTTPHeaderField: "Authorization"))
+            XCTAssertNil(request.value(forHTTPHeaderField: "X-Device-Token"))
+            XCTAssertEqual(request.value(forHTTPHeaderField: "Cache-Control"), "no-store")
+            let body = try XCTUnwrap(JSONSerialization.jsonObject(with: self.lifecycleBytes(request)) as? [String: Any])
+            XCTAssertEqual(Set(body.keys), ["token", "adultAttestation"])
+            XCTAssertEqual(body["token"] as? String, token)
+            XCTAssertEqual(body["adultAttestation"] as? Bool, true)
+            reads += 1
+            return (200, Data(#"{"householdLabel":"Casa Sol","role":"helper_edit"}"#.utf8))
+        }
+        func assertFails(_ expected: ClientError, subject: String = "account", code: String, adult: Bool = true) async {
+            do { _ = try await service.previewInvitation(subject: subject, token: code, adultAttestation: adult); XCTFail() }
+            catch { XCTAssertEqual(error as? ClientError, expected) }
+        }
+        await assertFails(.sessionNeeded, code: token)
+        _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456")
+        await assertFails(.accessEnded, subject: "different", code: token)
+        await assertFails(.configuration, code: String(token.dropLast()))
+        await assertFails(.configuration, code: token, adult: false)
+        let offer = try await service.previewInvitation(subject: "account", token: token, adultAttestation: true)
+        XCTAssertEqual(stateLock.withLock { reads }, 1)
+        XCTAssertEqual(offer.householdLabel, "Casa Sol")
+        XCTAssertEqual(offer.role, .helperEdit)
+        let intent = try MembershipIntent.redeem(subject: "account", token: token, alias: nil, adultAttestation: true, reviewedOffer: offer)
+        let body = try XCTUnwrap(JSONSerialization.jsonObject(with: intent.bytes) as? [String: Any])
+        XCTAssertEqual(body["reviewedOffer"] as? [String: String], ["householdLabel": "Casa Sol", "role": "helper_edit"])
+        for bad in [#"{"householdLabel":"Casa Sol","role":"organizer"}"#, #"{"householdLabel":" ","role":"helper_read"}"#] {
+            MockURLProtocol.handler = { _ in (200, Data(bad.utf8)) }
+            await assertFails(.invalidResponse, code: token)
+        }
+    }
     func testInvitationRedemptionSendsTokenOnlyInBodyAndRequiresAdultDeclaration() async throws {
         let token = household + "." + String(repeating: "a", count: 43)
         XCTAssertThrowsError(try MembershipIntent.redeem(subject: "account", token: token, alias: nil, adultAttestation: false))
