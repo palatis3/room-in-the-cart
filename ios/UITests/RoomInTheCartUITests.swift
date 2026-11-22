@@ -110,7 +110,8 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(added.waitForExistence(timeout: 10))
         XCTAssertTrue(added.label.contains("Oats"))
         XCTAssertTrue(app.staticTexts["Added Oats to Pickup on this iPhone."].exists)
-        XCTAssertFalse(app.keyboards.firstMatch.exists)
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "quickGrocery.dismissKeyboard"),
+                      "Tapping Add after returning to Shop should close the keyboard.")
         tap(app.buttons["openPickupList"])
         let originalRow = app.fullListGrocery(labeled: "Inspect Oats")
         XCTAssertTrue(originalRow.waitForExistence(timeout: 8))

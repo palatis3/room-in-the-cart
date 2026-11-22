@@ -443,7 +443,11 @@ private struct QuickGroceryField: View {
         let original = text
         submitting = true
         continueTyping = keepKeyboard
-        if !keepKeyboard { editing = false }
+        if !keepKeyboard {
+            editing = false
+            // UIKit can restore the text view as first responder after returning to Shop.
+            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        }
         Task {
             defer { submitting = false }
             guard await draft.prepareToSubmit(original, revision: model.revision),
