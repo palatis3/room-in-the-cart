@@ -89,7 +89,7 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertEqual(edit.label, "Edit name, notes and department")
         XCTAssertTrue(app.staticTexts["Oats"].exists)
         tap(app.navigationBars.buttons.firstMatch)
-        tap(app.buttons["Check Oats (rolled)"])
+        tap(app.fullListCheck(labeled: "Check Oats (rolled)"))
         tap(element("ledgerRecentlyChecked"))
         XCTAssertTrue(app.buttons["Reopen Oats (rolled)"].waitForExistence(timeout: 8))
     }
@@ -159,7 +159,7 @@ final class RoomInTheCartUITests: XCTestCase {
 
         let list = app.navigationBars["Lista de compras"]
         let item = app.fullListGrocery(labeled: "Ver detalles de " + name)
-        let check = app.buttons["Marcar " + name]
+        let check = app.fullListCheck(labeled: "Marcar " + name)
         XCTAssertTrue(list.waitForExistence(timeout: 8))
         // At accessibility sizes the list controls precede the lazy grocery rows.
         reveal(item)
@@ -527,7 +527,7 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(preview.waitForNonExistence(timeout: 8))
         XCTAssertTrue(app.navigationBars["Shopping list"].waitForExistence(timeout: 8))
         XCTAssertTrue(app.fullListGrocery(labeled: "Inspect " + name).waitForExistence(timeout: 8))
-        XCTAssertTrue(app.buttons["Check " + name].exists)
+        XCTAssertTrue(app.fullListCheck(labeled: "Check " + name).exists)
     }
 
     func testHouseholdHelpShowsPrivateSharingBeforeDetailedPermissions() {
@@ -703,7 +703,7 @@ final class RoomInTheCartUITests: XCTestCase {
 
     private func spanishFamilyUncheckedRows() -> Set<String> {
         Set(spanishFamilyGroceries.map { name in
-            let check = app.buttons["Marcar " + name]
+            let check = app.fullListCheck(labeled: "Marcar " + name)
             reveal(check)
             XCTAssertTrue(check.isHittable)
             XCTAssertTrue(check.identifier.hasPrefix("ledgerCheck-"))

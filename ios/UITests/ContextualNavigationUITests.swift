@@ -34,7 +34,7 @@ import UIKit
         }
         review(english)
         tap(element("ledgerCommitImport"))
-        let food = app.buttons["Inspect arroz"]
+        let food = app.fullListGrocery(labeled: "Inspect arroz")
         XCTAssertTrue(food.wait(for: \.isHittable, toEqual: true, timeout: 8), "The reviewed ingredient must be actionable when the import sheet closes.")
         let lineID = food.identifier
         XCTAssertTrue(lineID.hasPrefix("ledgerInspect-"))
@@ -176,7 +176,7 @@ import UIKit
         XCTAssertEqual(amount.value as? String, "30")
         fill("28", into: "ledgerImportAmount-1", replacing: true)
         tap(element("ledgerCommitImport"))
-        let food = app.buttons["Inspect pinto beans"]
+        let food = app.fullListGrocery(labeled: "Inspect pinto beans")
         XCTAssertTrue(food.wait(for: \.isHittable, toEqual: true, timeout: 8), "The reviewed ingredient must be actionable when the import sheet closes.")
         let id = food.identifier
         restart()
@@ -198,7 +198,7 @@ import UIKit
         assertText("Amount per pack on the original label: 12 US fluid ounces")
         XCTAssertEqual(element("ledgerImportAmount-1").value as? String, "24")
         tap(element("ledgerCommitImport"))
-        let item = app.buttons["Inspect seltzer"]
+        let item = app.fullListGrocery(labeled: "Inspect seltzer")
         XCTAssertTrue(item.wait(for: \.isHittable, toEqual: true, timeout: 8), "The reviewed ingredient must be actionable when the import sheet closes.")
         let id = item.identifier
         restart()
@@ -394,7 +394,7 @@ import UIKit
         let uniqueToken = String(try XCTUnwrap(editedName.split(separator: " ").last))
         fill(uniqueToken + "\n", into: "ledgerSearch")
         XCTAssertTrue(keyboard.waitForNonExistence(timeout: 5), "Return must dismiss the search keyboard before revealing the saved grocery")
-        let saved = app.buttons["Inspect " + editedName]
+        let saved = app.fullListGrocery(labeled: "Inspect " + editedName)
         revealContent(saved)
         XCTAssertEqual(saved.value as? String, originalAmount + originalAmount + " items")
         capture("S02-cold-reopened-edited-grocery")

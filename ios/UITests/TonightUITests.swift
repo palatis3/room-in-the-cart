@@ -277,8 +277,8 @@ import XCTest
         tap(confirm)
         XCTAssertTrue(app.descendants(matching: .any)["dinner.handoff.saved"].waitForExistence(timeout: 10))
         tap(app.buttons["dinner.handoff.openList"])
-        XCTAssertTrue(app.buttons["Check Lemon"].waitForExistence(timeout: 8), app.debugDescription)
-        XCTAssertFalse(app.buttons["Check Chickpeas"].exists)
+        XCTAssertTrue(app.fullListCheck(labeled: "Check Lemon").waitForExistence(timeout: 8), app.debugDescription)
+        XCTAssertFalse(app.fullListCheck(labeled: "Check Chickpeas").exists)
     }
 
     func testBothPrivateTonightEntriesWorkWithoutShopAndCancelCreatesNothing() throws {
