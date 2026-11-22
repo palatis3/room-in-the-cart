@@ -189,6 +189,8 @@ struct LedgerLayoutEditor: View {
 }
 
 struct LargePrintList: View {
+    private var dinnerPantry = ShoppingDinnerPantry()
+    @Environment(\.pickupLedger) private var ledger
     @Environment(\.dismiss) private var dismiss
     let shop: ShoppingLedger
     let layout: LedgerListLayout
@@ -232,7 +234,8 @@ struct LargePrintList: View {
     }
 
     var body: some View {
-        let groups = layout.groups(shop: shop)
+        let covered = ledger.flatMap { $0.shop == shop ? dinnerPantry.covered(in: shop, ledger: $0) : nil } ?? []
+        let groups = layout.groups(shop: shop, excluding: covered)
         List {
             Section {
                 Text(shop.title).font(.largeTitle.bold())
@@ -260,6 +263,7 @@ struct LargePrintList: View {
         .toolbar { ToolbarItem(placement: .confirmationAction) { Button(ledgerText("Done")) { dismiss() } } }
         .workingSurface()
         .alert(ledgerText("Printing is unavailable"), isPresented: $printSession.showError) { Button(ledgerText("Done")) {} }
+        .onChange(of: covered) { _, _ in printSession.dismiss() }
         .onChange(of: shop) { _, _ in printSession.dismiss() }
         .onChange(of: layout) { _, _ in printSession.dismiss() }
         .onChange(of: scenePhase) { _, phase in if phase == .background { printSession.dismiss() } }
@@ -269,7 +273,7 @@ struct LargePrintList: View {
         if !group.aisle.isEmpty { return group.aisle }
         return layout.layout(for: shop).mode == .aisle ? ledgerText("No aisle assigned") : nil
     }
-    func printFormatter() -> UIPrintFormatter {
+    func printFormatter(groups: [LedgerListLayout.Group]? = nil) -> UIPrintFormatter {
         // All shopper-entered text is literal, including product names that look like markup.
         func escaped(_ text: String) -> String {
             text.replacingOccurrences(of: "&", with: "&amp;")
@@ -291,7 +295,7 @@ struct LargePrintList: View {
         """
         if !shop.basis.branch.isEmpty { html += "<p>\(escaped(shop.basis.branch))</p>" }
         html += "</header>"
-        for group in layout.groups(shop: shop) {
+        for group in groups ?? layout.groups(shop: shop) {
             if let heading = heading(group) { html += "<h2>\(escaped(heading))</h2>" }
             for line in group.lines {
                 html += "<div class='item'><strong>\(escaped(line.name))</strong>"
@@ -304,7 +308,7 @@ struct LargePrintList: View {
     }
     private func printList(_ groups: [LedgerListLayout.Group]) {
         guard scenePhase == .active, groups.contains(where: { !$0.lines.isEmpty }) else { return }
-        printSession.present(PickupPrintPageRenderer(formatter: printFormatter()))
+        printSession.present(PickupPrintPageRenderer(formatter: printFormatter(groups: groups)))
     }
 }
 

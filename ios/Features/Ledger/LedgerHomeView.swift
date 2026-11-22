@@ -11,6 +11,7 @@ private enum LedgerHomeSheet: Hashable, Identifiable {
 }
 
 struct LedgerHomeView: View {
+    private var dinnerPantry = ShoppingDinnerPantry()
     @ObservedObject var model: LedgerModel
     var onShopSelected: ((UUID) -> Void)? = nil
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -65,10 +66,11 @@ struct LedgerHomeView: View {
                         let packages = shop.itemPackages
                         let typedBatches = shop.typedItemBatchIDs
                         let departmentChoices = model.workspace.listLayout.departmentChoices(in: shop)
-                        let groups = model.workspace.listLayout.groups(shop: shop, search: model.search)
+                        let covered = dinnerPantry.covered(in: shop, ledger: model)
+                        let groups = model.workspace.listLayout.groups(shop: shop, search: model.search, excluding: covered)
                         if groups.allSatisfy({ $0.lines.isEmpty }) {
                             Section(ledgerText("Shopping list")) {
-                                Text(model.search.isEmpty && !checked.isEmpty ? quickGroceryText("No active items.") :
+                                Text(model.search.isEmpty && (!checked.isEmpty || !covered.isEmpty) ? quickGroceryText("No active items.") :
                                     ledgerText(model.search.isEmpty ? "Add the groceries you need for this pickup." : "No active items match your search."))
                                     .foregroundStyle(Theme.secondary)
                                 if checked.isEmpty { recentHistory(count: 0) }
@@ -81,6 +83,13 @@ struct LedgerHomeView: View {
                                             exclusions: exclusions[line.id], departmentChoices: departmentChoices)
                                             .id(line.id)
                                     }
+                                }
+                            }
+                        }
+                        if !covered.isEmpty {
+                            Section(dinnerText("Using food at home")) {
+                                ForEach(shop.search(model.search).filter { covered.contains($0.id) }) { line in
+                                    Label(line.name, systemImage: "house")
                                 }
                             }
                         }
@@ -343,7 +352,7 @@ struct LedgerHomeView: View {
             Button {
                 Task {
                     guard await changeCheck(line, shop: shop, checked: false) else { focus = .error; return }
-                    let visible = model.shop.map { model.workspace.listLayout.groups(shop: $0, search: model.search) } ?? []
+                    let visible = model.shop.map { model.workspace.listLayout.groups(shop: $0, search: model.search, excluding: dinnerPantry.covered(in: $0, ledger: model)) } ?? []
                     if visible.contains(where: { $0.lines.contains(where: { $0.id == line.id }) }) {
                         returnToLine = line.id
                     } else { focus = .result }
@@ -377,7 +386,7 @@ struct LedgerHomeView: View {
         }
         return HStack(alignment: .top, spacing: 10) {
             Button {
-                let visible = model.workspace.listLayout.groups(shop: shop, search: model.search).flatMap(\.lines)
+                let visible = model.workspace.listLayout.groups(shop: shop, search: model.search, excluding: dinnerPantry.covered(in: shop, ledger: model)).flatMap(\.lines)
                 let index = visible.firstIndex { $0.id == line.id }
                 let next = index.flatMap { index in
                     visible.dropFirst(index + 1).first ?? visible.prefix(index).last
@@ -508,6 +517,7 @@ struct GroceryNameAndAmount: View {
 }
 
 struct ShopGroceryPreview: View {
+    private var dinnerPantry = ShoppingDinnerPantry()
     @ObservedObject var model: LedgerModel
     let shop: ShoppingLedger
     let showsListLink: Bool
@@ -546,7 +556,7 @@ struct ShopGroceryPreview: View {
     }
 
     var body: some View {
-        let rows = model.workspace.listLayout.groups(shop: shop).flatMap(\.lines)
+        let rows = model.workspace.listLayout.groups(shop: shop, excluding: dinnerPantry.covered(in: shop, ledger: model)).flatMap(\.lines)
         let visible = previewRows(active: rows)
         let packages = shop.itemPackages
         let typedItemBatches = shop.typedItemBatchIDs

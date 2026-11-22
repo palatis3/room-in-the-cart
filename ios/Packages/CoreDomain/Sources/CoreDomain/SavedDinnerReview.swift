@@ -22,6 +22,7 @@ public struct SavedDinnerReview: Identifiable, Sendable {
     private let proposal: DinnerProposal?
     public let plannedDay: MealDay?
     public let plannedServings: Rational?
+    public let pantryProducts: DinnerPantryProducts?
     private let preparationDay: MealDay?
     public var occurrenceID: UUID? {
         guard let proposal, case let .choose(meal) = proposal.changes.first else { return nil }
@@ -29,7 +30,7 @@ public struct SavedDinnerReview: Identifiable, Sendable {
     }
 
     public init(recipe: MealTemplate, action: Action, workspace: LedgerWorkspace,
-                access: DinnerAccessContext, phase: BasketPhase, at now: Date) throws {
+                access: DinnerAccessContext, phase: BasketPhase, at now: Date, pantryReview: (match: PantryMealMatcher.Review, originID: UUID)? = nil) throws {
         guard case .local = access.scope, let shop = workspace.shops.first(where: { $0.id == workspace.selectedShopID })
         else { throw DinnerPlanningError.forbidden }
         try access.validate(shopID: shop.id, at: now, applying: true)
@@ -43,6 +44,10 @@ public struct SavedDinnerReview: Identifiable, Sendable {
         originalRevision = shop.revisionID
         planningRevision = workspace.dinnerPlanning.revisionID
         id = UUID()
+        if let pantryReview {
+            guard case .local = access.scope, pantryReview.match.recipe == recipe else { throw DinnerPlanningError.forbidden }
+            pantryProducts = try DinnerPantryProducts(review: pantryReview.match, workspace: workspace, originID: pantryReview.originID)
+        } else { pantryProducts = nil }
         switch action {
         case .planTonight, .plan:
             let tonight = try MealDay(date: now, timeZoneIdentifier: shop.basis.timeZoneIdentifier)
@@ -53,7 +58,8 @@ public struct SavedDinnerReview: Identifiable, Sendable {
             } else {
                 chosenDay = tonight; servings = recipe.servings
             }
-            var meal = PlannedDinner(acceptedDinnerID: accepted?.id, template: recipe, day: chosenDay)
+            var meal = PlannedDinner(acceptedDinnerID: accepted?.id, template: recipe, lineIDs: pantryProducts?.lineIDs(for: recipe), day: chosenDay)
+            meal.pantryProducts = pantryProducts
             if servings != recipe.servings { meal.plannedServings = servings }
             proposal = try DinnerPlanningEngine.preview(id: id, changes: [.choose(meal)], tool: accepted == nil ? .manual : .reusableDinner,
                 ledger: shop, state: workspace.dinnerPlanning, access: access, phase: phase, at: now).proposal
@@ -61,6 +67,7 @@ public struct SavedDinnerReview: Identifiable, Sendable {
             ingredients = recipe.ingredients
             plansDinner = true
         case .groceries(let ids):
+            guard pantryProducts == nil else { throw DinnerPlanningError.stalePreview }
             ingredients = recipe.ingredients.filter { ids.contains($0.id) }
             guard !ids.isEmpty, ingredients.count == ids.count else { throw DinnerPlanningError.reviewRequired("ingredients") }
             proposal = nil
@@ -96,6 +103,7 @@ public struct SavedDinnerReview: Identifiable, Sendable {
         guard let shop = workspace.shops.first(where: { $0.id == shopID }), workspace.selectedShopID == shopID,
               shop.revisionID == originalRevision, shop.title == destinationTitle,
               workspace.dinnerPlanning.revisionID == planningRevision else { throw DinnerPlanningError.stalePreview }
+        try pantryProducts?.verifyNewLines(in: workspace)
         _ = try Self.source(recipe, workspace: workspace, access: access)
         if let preparationDay, preparationDay != (try MealDay(date: now, timeZoneIdentifier: shop.basis.timeZoneIdentifier)) { throw DinnerPlanningError.stalePreview }
     }

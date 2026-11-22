@@ -70,3 +70,137 @@ public struct DinnerShoppingCheck {
         return .buy(remaining)
     }
 }
+
+/// Allocate a fresh shopping identity only for an explicitly matched, fully
+/// covered ingredient. The canonical checkout allocator identifies food by
+/// shopping line ID. Reusing any existing line here could claim someone else's
+/// purchase, import history or meal, so an ambiguous match rejects the review.
+public struct DinnerPantryProducts: Codable, Equatable, Sendable {
+    /// The existing pack format retains offer IDs on export and undo. This
+    /// allows an orphaned choice to fail closed if its dinner receipt is absent.
+    public static let atHomeOfferID = "dinner-at-home-v1"
+    public static let alternateOfferID = "dinner-at-home-review-v1"
+    public let originID: UUID
+    public let matches: [UUID: UUID]
+
+    public init(review: PantryMealMatcher.Review, workspace: LedgerWorkspace, originID: UUID) throws {
+        guard review.eligibility.eligible,
+              review.preferenceRevision == workspace.dinnerPlanning.privateMealPreferences?.revision
+        else { throw DinnerPlanningError.stalePreview }
+        var matches = [UUID: UUID]()
+        for row in review.ingredients where row.foodID != nil {
+            guard let food = row.foodID, row.covered, let required = row.ingredient.quantity,
+                  required.amount > .zero else { throw DinnerPlanningError.reviewRequired("pantryProduct") }
+            matches[row.id] = food
+        }
+        guard !matches.isEmpty, Set(matches.values).count == matches.count
+        else { throw DinnerPlanningError.reviewRequired("pantryProduct") }
+        self.originID = originID
+        self.matches = matches
+        try verifyNewLines(in: workspace)
+    }
+
+    private struct Binding: Codable {
+        let ingredientID: UUID
+        let foodID: UUID
+    }
+    private enum CodingKeys: String, CodingKey { case originID, matches }
+
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        originID = try values.decode(UUID.self, forKey: .originID)
+        let entries = try values.decode([Binding].self, forKey: .matches)
+        guard !entries.isEmpty, Set(entries.map(\.ingredientID)).count == entries.count,
+              Set(entries.map(\.foodID)).count == entries.count else { throw DinnerPlanningError.invalid("pantryProduct") }
+        matches = Dictionary(uniqueKeysWithValues: entries.map { ($0.ingredientID, $0.foodID) })
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var values = encoder.container(keyedBy: CodingKeys.self)
+        try values.encode(originID, forKey: .originID)
+        let ordered = matches.sorted { $0.key.uuidString < $1.key.uuidString }
+        try values.encode(ordered.map { Binding(ingredientID: $0.key, foodID: $0.value) }, forKey: .matches)
+    }
+
+    public func verifyNewLines(in workspace: LedgerWorkspace) throws {
+        let ids = Set(matches.values)
+        guard workspace.shops.allSatisfy({ shop in
+            shop.lines.allSatisfy { !ids.contains($0.id) }
+        }) else { throw DinnerPlanningError.reviewRequired("pantryProduct") }
+    }
+
+    func lineIDs(for recipe: MealTemplate) -> [UUID] {
+        recipe.ingredients.map { matches[$0.id] ?? UUID() }
+    }
+}
+
+extension LedgerWorkspace {
+    /// Only the local planner can act on the exact, untouched contributions
+    /// recorded by their reviewed dinner. Later merges and edits require review.
+    public func dinnerPantryLines(shop: ShoppingLedger, workspaceID: UUID, originID: UUID, actorID: String,
+                                 occurrenceID: UUID? = nil) -> Set<UUID> {
+        let plans = dinnerPlanning.applyReceipts.compactMap { receipt -> PlannedDinner? in
+            let proposal = receipt.proposal
+            guard proposal.shopID == shop.id, proposal.namespace == "local:\(workspaceID.uuidString)",
+                  proposal.authorID == actorID, proposal.preferenceRevision == dinnerPlanning.privateMealPreferences?.revision,
+                  proposal.changes.count == 1, case .choose(let planned) = proposal.changes[0],
+                  planned.pantryProducts?.originID == originID, occurrenceID == nil || planned.occurrenceID == occurrenceID
+            else { return nil }
+            return planned
+        }
+        guard !plans.isEmpty else { return [] }
+        let otherLines = Set(shops.filter { $0.id != shop.id }.flatMap { $0.lines.filter { !$0.isHandled && !$0.isTrashed }.map(\.id) })
+        let lines = Dictionary(uniqueKeysWithValues: shop.lines.map { ($0.id, $0) })
+        let sources = Dictionary(grouping: shop.contributions.filter { $0.removedAt == nil }, by: \.lineID)
+        let meals = Dictionary(uniqueKeysWithValues: shop.mealOccurrences.map { ($0.id, $0) })
+        var result = Set<UUID>()
+        for planned in plans {
+            guard let products = planned.pantryProducts, let meal = meals[planned.occurrenceID],
+                  !meal.isHidden, meal.removedAt == nil, meal.carryover == nil,
+                  planned.template.ingredients.count == planned.contributionIDs.count,
+                  planned.lineIDs.count == planned.contributionIDs.count,
+                  meal.ingredientContributionIDs == planned.contributionIDs else { continue }
+            for (index, ingredient) in planned.template.ingredients.enumerated() {
+                guard let product = products.matches[ingredient.id], planned.lineIDs[index] == product,
+                      !otherLines.contains(product), let line = lines[product], !line.isChecked, !line.isHandled, !line.isTrashed,
+                      line.tripPick == nil, line.packagePick == nil, line.stopObservation == nil,
+                      line.name == ingredient.name, line.notes == ingredient.notes,
+                      let active = sources[product], active.count == 1, let source = active.first,
+                      source.id == planned.contributionIDs[index], source.source == .meal(occurrenceID: meal.id),
+                      source.quantity == ingredient.quantity, source.productName == ingredient.name,
+                      source.exclusions == planned.template.exclusions + ingredient.exclusions, source.notes == ingredient.notes
+                else { continue }
+                result.insert(product)
+            }
+        }
+        return result
+    }
+}
+
+extension LedgerWorkspace {
+    /// Ordinary pack choices keep their existing semantics. A dinner's linked
+    /// products can credit pantry stock only in its original local adult scope.
+    public func dinnerAuthorizedPacks(in selections: [LedgerPackSelection], shop: ShoppingLedger,
+                                      workspaceID: UUID, originID: UUID?, actorID: String?) -> [LedgerPackSelection] {
+        guard !selections.isEmpty else { return [] }
+        var linked = Set<UUID>()
+        for receipt in dinnerPlanning.applyReceipts where receipt.proposal.shopID == shop.id {
+            for change in receipt.proposal.changes {
+                if case .choose(let dinner) = change, let products = dinner.pantryProducts {
+                    linked.formUnion(products.matches.values)
+                }
+            }
+        }
+        guard !linked.isEmpty else {
+            return selections.filter { $0.shopID != shop.id || $0.request.offerA.id != DinnerPantryProducts.atHomeOfferID }
+        }
+        let allowed = originID.flatMap { origin in actorID.map {
+            dinnerPantryLines(shop: shop, workspaceID: workspaceID, originID: origin, actorID: $0)
+        }} ?? []
+        return selections.filter {
+            !$0.isNoPurchase || $0.shopID != shop.id ||
+                (!linked.contains($0.lineID) && $0.request.offerA.id != DinnerPantryProducts.atHomeOfferID) ||
+                (allowed.contains($0.lineID) && $0.canonicalStockEvidence?.basis.originID == originID)
+        }
+    }
+}

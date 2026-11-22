@@ -55,6 +55,8 @@ struct LedgerPackReview {
     @MainActor func save(offerID: String, ledger: LedgerModel, pickup: PickupModel? = nil) async throws -> Bool {
         let selection = try LedgerPackSelection(id: operationID, workspaceID: sourceWorkspaceID,
             shop: sourceShop, lineID: lineID, request: request, selectedOfferID: offerID, at: reviewedAt, source: source, bindings: bindings, stockEvidence: stockEvidence, canonicalStockEvidence: canonicalStockEvidence)
+        if let pickup, selection.isNoPurchase,
+           pickup.dinnerAuthorizedPacks([selection], ledger: ledger, shop: sourceShop).isEmpty { throw LedgerPackError.staleSource }
         if let inventoryOrigin = canonicalStockEvidence?.basis.originID ?? grossBasis?.originID {
             guard let pickup else { throw LedgerPackError.staleSource }
             let port = try pickup.makePantryPackSelectionPort()

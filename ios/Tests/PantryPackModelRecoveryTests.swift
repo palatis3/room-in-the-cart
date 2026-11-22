@@ -22,7 +22,7 @@ import SQLite3
         let shop: UUID
         let food: UUID
     }
-    private func fixture() async throws -> Fixture {
+    private func fixture(privateDinnerActorID: UUID? = nil) async throws -> Fixture {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let cleanup = SQLiteFixtureDirectory(directory, test: self), gate = PantryMutationGate(), instant = now
@@ -60,7 +60,7 @@ import SQLite3
         let pending = try PantryPickupPendingStore(directory: directory.appendingPathComponent("pending"),
             inventoryWorkspaceID: inventory.workspaceID, ledgerWorkspaceID: ledgerStore.workspaceID)
         let pickup = PickupModel(store: inventory, clock: { instant }, pantry: .init(ledger: ledgerStore,
-            pendingStore: pending, gate: gate, authorize: { state.allowed }))
+            pendingStore: pending, gate: gate, authorize: { state.allowed }, privateDinnerActorID: privateDinnerActorID))
         cleanup.track(pickup)
         await pickup.load()
         XCTAssertTrue(pickup.ready)
@@ -340,5 +340,134 @@ import SQLite3
         let saved = await restored.retrySave()
         XCTAssertTrue(saved); XCTAssertNil(try f.journal.read())
         XCTAssertEqual(restored.workspace.packSelections.first?.id, original.selection.id)
+    }
+}
+
+extension PantryPackModelRecoveryTests {
+    func testBowlDinnerLinksPantryProductsAndAtomicallyRemovesOnlyTheirPurchases() async throws {
+        let actorID = UUID()
+        let f = try await fixture(privateDinnerActorID: actorID)
+        try await f.ledger.configurePantryPackRecovery(f.port)
+        let pantry = PantryRepository(store: f.inventory, mutationGate: f.gate, authorize: { f.state.allowed })
+        f.cleanup.track(pantry)
+        let actor = CapturePrivateIdentity(actorID: actorID, subject: nil, householdID: nil, memberID: nil, role: nil)
+        let origin = f.inventory.workspaceID, workspaceID = f.ledgerStore.workspaceID
+        func cups(_ n: Int64) -> Quantity { .init(amount: try! Rational(n), unit: .cup, originalLiteral: String(n)) }
+        let rice = UUID(), lentils = UUID(), riceLot = UUID(), lentilLot = UUID()
+        for (product, lot, name, quantity) in [(rice, riceLot, "Rice", cups(3)), (lentils, lentilLot, "Lentils", cups(2))] {
+            let before = try await pantry.load(at: now)
+            _ = try await pantry.apply(.init(id: UUID(), originID: origin, lotID: lot, eventID: UUID(), expectedRevision: nil,
+                occurredAt: now, change: .create(.init(foodID: product, name: name, source: .manual(originID: origin, sourceID: UUID()),
+                    location: .cupboard, unit: .cup, count: .exact(quantity)), observationID: UUID())),
+                reviewedInventoryRevision: before.state.revision, at: now)
+        }
+        var market = ShoppingLedger(title: "After work market", basis: .init(branch: "Main", timeZoneIdentifier: "America/New_York"))
+        _ = try market.addManualLine(name: "Coffee", quantity: q(2))
+        let recipe = MealTemplate(title: "Lentil and tomato bowls", ingredients: [
+            .init(name: "Lentils", quantity: cups(1)), .init(name: "Tomatoes", quantity: q(2)), .init(name: "Rice", quantity: cups(1))])
+        let weekend = ShoppingLedger(title: "Weekend market")
+        let seeded = await f.ledger.change(key: "bowl-ingredients") {
+            $0.shops.append(contentsOf: [market, weekend]); $0.selectedShopID = market.id; $0.mealTemplates.append(recipe)
+        }
+        XCTAssertTrue(seeded)
+        let refreshed = await f.pickup.refreshPantryStock()
+        XCTAssertTrue(refreshed)
+        let context = try XCTUnwrap(f.pickup.quickGroceryPantryContext(ledgerWorkspaceID: workspaceID))
+        let input = try TonightMealModel.input(workspace: f.ledger.workspace, ledgerRevision: f.ledger.revision, context: context, sources: [])
+        let match = try PantryMealMatcher.review(recipe: recipe,
+            reviewedFoods: [recipe.ingredients[0].id: lentils, recipe.ingredients[2].id: rice],
+            globallyFreeLots: input.freeLots, unresolvedFoods: input.unresolvedFoods, profile: nil)
+        let access = DinnerAccessContext(scope: .local(workspaceID: workspaceID), actorID: actor.actorID.uuidString, shopID: market.id,
+            assignedShopperID: actor.actorID.uuidString, canPlan: true, canReadBudget: false, hasPaidTools: false, roleRevision: 0,
+            verifiedAt: now, validUntil: now.addingTimeInterval(30))
+        let choice = try SavedDinnerReview(recipe: recipe, action: .plan(day: MealDay(date: now, timeZoneIdentifier: market.basis.timeZoneIdentifier),
+            servings: Rational(3)), workspace: f.ledger.workspace, access: access, phase: .draft, at: now, pantryReview: (match, origin))
+        let stock = try await pantry.load(at: now)
+        let planned = await f.ledger.change(key: "bowls", reviewedPantryBasis: context.dinnerBasis, authorize: { f.state.allowed }) {
+            try choice.apply(to: &$0, access: access, phase: .draft, at: self.now)
+        }
+        XCTAssertTrue(planned)
+        let justPlanned = try await pantry.load(at: now)
+        XCTAssertEqual(justPlanned.lots, stock.lots)
+        XCTAssertEqual(justPlanned.reservations, stock.reservations)
+        let shop = try XCTUnwrap(f.ledger.shop), occurrence = try XCTUnwrap(choice.occurrenceID)
+        let allocation = try DinnerAllocationChoice(ledger: f.ledger, pickup: f.pickup, shop: shop, occurrenceID: occurrence,
+            identity: actor, linked: [rice, lentils])
+        let originalRice = try XCTUnwrap(justPlanned.lots.first { $0.id == riceLot })
+        _ = try await pantry.apply(.init(id: UUID(), originID: origin, lotID: riceLot, eventID: UUID(), expectedRevision: originalRice.revision,
+            occurredAt: now, change: .count(.exact(cups(3)), observationID: UUID())),
+            reviewedInventoryRevision: justPlanned.state.revision, at: now)
+        do {
+            let stale = try await LedgerCheckoutAdapter.apply(allocation.checkout, ledger: f.ledger, pickup: f.pickup,
+                freshDinnerBasis: allocation.basis, authorize: { true })
+            XCTAssertFalse(stale)
+        } catch { XCTAssertEqual(error as? LedgerCheckoutError, .staleSource) }
+        XCTAssertFalse(f.pickup.journeys.contains { $0.id == market.id })
+        let checked = await f.pickup.refreshPantryStock()
+        XCTAssertTrue(checked)
+        let freshAllocation = try DinnerAllocationChoice(ledger: f.ledger, pickup: f.pickup, shop: shop, occurrenceID: occurrence,
+            identity: actor, linked: [rice, lentils])
+        let physicalBefore = try await pantry.load(at: now)
+        XCTAssertEqual(physicalBefore.reservations, justPlanned.reservations)
+        let gross = freshAllocation.checkout
+        XCTAssertEqual(gross.lines.count, 4)
+        let allocated = try await LedgerCheckoutAdapter.apply(gross, ledger: f.ledger, pickup: f.pickup,
+            freshDinnerBasis: freshAllocation.basis, authorize: { true })
+        XCTAssertTrue(allocated, f.pickup.error ?? "")
+        let beforeChoices = try await pantry.load(at: now)
+        XCTAssertEqual(beforeChoices.lots, physicalBefore.lots)
+        func decision() throws -> DinnerPurchaseDecision {
+            try DinnerPurchaseDecision(ledger: f.ledger, pickup: f.pickup, shop: shop, occurrenceID: occurrence,
+                identity: actor, linked: [lentils, rice])
+        }
+        let expired = try decision()
+        let lot = try XCTUnwrap(beforeChoices.lots.first { $0.id == lentilLot })
+        _ = try await pantry.apply(.init(id: UUID(), originID: origin, lotID: lot.id, eventID: UUID(),
+            expectedRevision: lot.revision, occurredAt: now, change: .count(.exact(cups(2)), observationID: UUID())),
+            reviewedInventoryRevision: beforeChoices.state.revision, at: now)
+        let rejected = await expired.save(ledger: f.ledger, authorize: { true })
+        XCTAssertFalse(rejected)
+        XCTAssertTrue(f.ledger.workspace.packSelections.isEmpty)
+        let fresh = await f.pickup.refreshPantryStock()
+        XCTAssertTrue(fresh)
+        let confirmed = try decision()
+        let denied = await confirmed.save(ledger: f.ledger, authorize: { false })
+        XCTAssertFalse(denied)
+        let saved = await confirmed.save(ledger: f.ledger, authorize: { true })
+        XCTAssertTrue(saved, f.ledger.error ?? "")
+        let revision = f.ledger.revision
+        let replay = await confirmed.save(ledger: f.ledger, authorize: { true })
+        XCTAssertTrue(replay); XCTAssertEqual(f.ledger.revision, revision)
+        let reopened = await reopen(f)
+        let reopenedShop = try XCTUnwrap(reopened.shop)
+        let covered = DinnerPantryPurchases.lines(ledger: reopened, pickup: f.pickup, shop: reopenedShop, identity: actor)
+        XCTAssertEqual(covered, [lentils, rice])
+        XCTAssertEqual(reopened.workspace.listLayout.groups(shop: reopenedShop, excluding: covered).flatMap(\.lines).map(\.name),
+            ["Coffee", "Tomatoes"])
+        XCTAssertTrue(DinnerPantryPurchases.lines(ledger: reopened, pickup: f.pickup, shop: reopenedShop, identity: nil).isEmpty)
+        let live = try XCTUnwrap(f.pickup.quickGroceryPantryContext(ledgerWorkspaceID: workspaceID))
+        let net = try LedgerCheckoutAdapter.review(shop: reopenedShop, workspaceRevision: reopened.revision,
+            previous: f.pickup.journeys.first { $0.id == market.id }, packSelections: reopened.workspace.packSelections,
+            workspaceID: workspaceID, pickupWorkspaceID: origin, pantryContext: live, pantryIsActive: true)
+        XCTAssertEqual(net.lines.map(\.name), ["Coffee", "Tomatoes"])
+        XCTAssertEqual(net.needs, gross.needs)
+        let savedBasket = try await LedgerCheckoutAdapter.apply(net, ledger: reopened, pickup: f.pickup)
+        XCTAssertTrue(savedBasket, f.pickup.error ?? "")
+        let persisted = try XCTUnwrap(f.pickup.journeys.first { $0.id == market.id })
+        XCTAssertEqual(persisted.basket?.current.lines.map(\.name), ["Coffee", "Tomatoes"])
+        XCTAssertEqual(persisted.plannedNeeds, gross.needs)
+        let retained = DinnerPantryPurchases.lines(ledger: reopened, pickup: f.pickup, shop: reopenedShop, identity: actor)
+        XCTAssertEqual(retained, covered)
+        let undone = await DinnerPurchaseDecision.restore(retained, shop: reopenedShop, occurrenceID: occurrence,
+            ledger: reopened, pickup: f.pickup, identity: actor, authorize: { true })
+        XCTAssertTrue(undone, reopened.error ?? "")
+        XCTAssertTrue(reopened.workspace.packSelections.isEmpty)
+        XCTAssertTrue(DinnerPantryPurchases.lines(ledger: reopened, pickup: f.pickup, shop: reopenedShop, identity: actor).isEmpty)
+        XCTAssertEqual(reopened.shop?.mealOccurrences, shop.mealOccurrences)
+        XCTAssertEqual(reopened.workspace.shops.first { $0.id == weekend.id }, weekend)
+        let after = try await pantry.load(at: now)
+        XCTAssertEqual(after.reservations, beforeChoices.reservations)
+        XCTAssertEqual(after.lots.first { $0.id == riceLot }?.count, .exact(cups(3)))
+        XCTAssertEqual(after.lots.first { $0.id == lentilLot }?.count, .exact(cups(2)))
     }
 }

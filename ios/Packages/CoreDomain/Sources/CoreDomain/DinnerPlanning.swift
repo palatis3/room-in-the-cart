@@ -94,6 +94,7 @@ public struct PlannedDinner: Codable, Equatable, Sendable {
     public var plannedServings: Rational?
     public var lunchHold: ServingGroup?
     public var reviewedGroceryLines: [Int: UUID]?
+    public internal(set) var pantryProducts: DinnerPantryProducts? = nil
     public init(acceptedDinnerID: UUID? = nil, template: MealTemplate, occurrenceID: UUID = UUID(),
                 lineIDs: [UUID]? = nil, contributionIDs: [UUID]? = nil, day: MealDay? = nil) {
         self.acceptedDinnerID = acceptedDinnerID; self.template = template; self.occurrenceID = occurrenceID
@@ -110,6 +111,15 @@ public struct PlannedDinner: Codable, Equatable, Sendable {
         }
         guard lineIDs.count == template.ingredients.count, contributionIDs.count == lineIDs.count else { throw DinnerPlanningError.invalid("plannedIDs") }
         try dinnerUnique(lineIDs + contributionIDs + [occurrenceID])
+        if let pantryProducts {
+            let matches = pantryProducts.matches
+            guard !matches.isEmpty, Set(matches.values).count == matches.count,
+                  reviewedGroceryLines == nil,
+                  matches.keys.allSatisfy({ id in
+                      guard let i = template.ingredients.firstIndex(where: { $0.id == id }) else { return false }
+                      return matches[id] == lineIDs[i] && (template.ingredients[i].quantity?.amount ?? .zero) > .zero
+                  }) else { throw DinnerPlanningError.invalid("pantryProduct") }
+        }
         if let lunchHold {
             try dinnerText(lunchHold.name)
             let assigned = try template.servingGroups.reduce(Rational.zero) { try $0.adding($1.servings) }
@@ -358,6 +368,12 @@ public struct DinnerPlanningState: Codable, Equatable, Sendable {
     static func validate(_ proposal: DinnerProposal) throws {
         if proposal.swapOriginalID != nil { _ = try DinnerSwapEffect.shape(proposal) }
         try dinnerDate(proposal.createdAt); try dinnerText(proposal.authorID); try dinnerText(proposal.namespace)
+        if proposal.changes.contains(where: { if case .choose(let meal) = $0 { return meal.pantryProducts != nil }; return false }) {
+            guard proposal.changes.count == 1, !proposal.isIsolatedPreview, proposal.repeatWeek == nil,
+                  proposal.tool == .manual || proposal.tool == .reusableDinner, proposal.namespace.hasPrefix("local:"),
+                  UUID(uuidString: String(proposal.namespace.dropFirst("local:".count))) != nil
+            else { throw DinnerPlanningError.invalid("pantryProduct") }
+        }
         if let repeatWeek = proposal.repeatWeek {
             try repeatWeek.validate()
             guard proposal.tool == .manual, !proposal.isIsolatedPreview, repeatWeek.meals.count == proposal.changes.count,

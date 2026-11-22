@@ -330,7 +330,8 @@ struct GroceryWindow: View {
         do {
             let persona = ReceiptAcquisition.identity(["private-receipt-aliases", identity.actorID.uuidString,
                 identity.subject ?? "", identity.householdID ?? "", identity.memberID ?? ""])
-            try await pickup.bindPrivatePantry(ledger: ledger, receiptAliasPersona: persona, authorize: authorize)
+            try await pickup.bindPrivatePantry(ledger: ledger, receiptAliasPersona: persona,
+                privateDinnerActorID: identity.subject == nil && identity.householdID == nil ? identity.actorID : nil, authorize: authorize)
             if !pickup.ready { await pickup.load() }
             if pickup.pantryRouteAvailable { Diagnostics.record(.pantryRouteReady) }
             else if !pickup.pantryRestartAvailable {

@@ -19,7 +19,7 @@ import CoreDomain
 
     static func prepare(match: PantryMealMatcher.Review, pantryBasis: LedgerCanonicalPackStockEvidence.Basis,
                         destinationShopID: UUID?, newShopTitle: String, ledger: LedgerModel, pickup: PickupModel,
-                        plannedDate: Date? = nil, currentIdentity: () -> CapturePrivateIdentity?) throws -> Review {
+                        plannedDate: Date? = nil, linkPantryProducts: Bool = false, currentIdentity: () -> CapturePrivateIdentity?) throws -> Review {
         guard let identity = currentIdentity(), ledger.ready, !ledger.saving, !ledger.hasPendingSave,
               let ledgerID = ledger.sourceWorkspaceID, let current = try pickup.pantryReviewContext() else {
             throw DinnerPlanningError.forbidden
@@ -31,6 +31,10 @@ import CoreDomain
             inventoryRevision: current.snapshot.state.revision, sourceHeads: heads.sorted { $0.journeyID.uuidString < $1.journeyID.uuidString })
         guard pantryBasis == basis else { throw DinnerPlanningError.stalePreview }
 
+        if linkPantryProducts {
+            guard identity.subject == nil, identity.householdID == nil, pickup.currentDinnerActorID == identity.actorID, current.mapping.sourceHeads.allSatisfy({ $0.id != destinationShopID })
+            else { throw DinnerPlanningError.stalePreview }
+        }
         let destination: ShoppingLedger
         if let destinationShopID {
             guard let shop = ledger.workspace.shops.first(where: { $0.id == destinationShopID }) else { throw DinnerPlanningError.stalePreview }
@@ -43,7 +47,7 @@ import CoreDomain
         let now = Date()
         let context = access(identity, ledgerID: ledgerID, shopID: destination.id, now: now)
         let selection = try TonightDinnerSelection.prepare(match: match, destination: destination, createsPickup: destinationShopID == nil,
-            workspace: ledger.workspace, access: context, phase: phase(pickup, shopID: destination.id), now: now, plannedDate: plannedDate)
+            workspace: ledger.workspace, access: context, phase: phase(pickup, shopID: destination.id), now: now, plannedDate: plannedDate, pantryProductOrigin: linkPantryProducts ? basis.originID : nil)
         let estimate = try? TonightPurchaseEstimate.estimate(match, workspace: ledger.workspace,
             workspaceID: ledgerID, shopID: destinationShopID, at: now)
         return Review(selection: selection, identity: identity, ledgerID: ledgerID,
@@ -125,6 +129,8 @@ struct SavedDinnerHandoffView: View {
     @State private var plannedDate: Date?
     @State private var plannedServings: Rational
     @State private var editingPlan = false
+    @State private var choosingProducts = false
+    @State private var productChoice: SavedDinnerProductChoice?
     @State private var review: SavedDinnerReview?
     @State private var error: String?
     @State private var busy = false
@@ -170,7 +176,7 @@ struct SavedDinnerHandoffView: View {
                         }.accessibilityIdentifier("dinner.handoff.openPlan")
                     }
                     if let occurrenceID = review.occurrenceID {
-                        DinnerShoppingCheckLink(shopID: review.shopID, occurrenceID: occurrenceID)
+                        DinnerShoppingCheckLink(shopID: review.shopID, occurrenceID: occurrenceID, linkedProducts: review.pantryProducts != nil)
                     }
                     NavigationLink(ledgerText("Shopping list")) {
                         LedgerHomeView(model: ledger).navigationTitle(ledgerText("Shopping list")).navigationBarTitleDisplayMode(.inline)
@@ -218,13 +224,24 @@ struct SavedDinnerHandoffView: View {
                         if let day = review.plannedDay, let count = review.plannedServings {
                             Text(planSummary(day, count)).font(.headline)
                             Text(dinnerFormat("Planning adds all the ingredient amounts shown to %@.", review.destinationTitle))
+                            if review.pantryProducts != nil {
+                                Text(dinnerText("Review the linked products after saving the dinner to choose which purchases to remove."))
+                            }
                         } else {
                             Text(dinnerText("Only the selected groceries go on this list. Your dinner schedule stays as it is."))
                         }
                         Button(review.plansDinner ? dinnerText(isTonight(review) ? "Plan for tonight" : "Plan for this day") : countLabel(review)) {
                             Task { await apply(review) }
                         }.buttonStyle(PrimaryAction()).accessibilityIdentifier("dinner.handoff.confirm")
-                        if review.plansDinner { shopInstead }
+                        if review.plansDinner {
+                            if privateProductAccess() {
+                                Button(dinnerText("Match food at home")) { choosingProducts = true }
+                                if productChoice != nil {
+                                    Button(dinnerText("Clear product matches")) { productChoice = nil; prepare(.planTonight) }
+                                }
+                            }
+                            shopInstead
+                        }
                         else { Button(tonightText("Keep editing")) { self.review = nil; error = nil } }
                     }.disabled(busy || ledger.saving || ledger.hasPendingSave)
                 } else if selectingGroceries {
@@ -279,12 +296,28 @@ struct SavedDinnerHandoffView: View {
                     }
                 }
             }
+            .sheet(isPresented: $choosingProducts) {
+                NavigationStack {
+                    SavedDinnerProductPicker(recipe: recipe, ledger: ledger, pickup: pickup, authorize: privateProductAccess) { choice in
+                        productChoice = choice
+                        prepare(.planTonight)
+                    }
+                }
+            }
             .sheet(isPresented: $startingPickup) {
                 NavigationStack {
                     LedgerNewShopView(model: ledger, title: suggestedListName, namingShoppingList: true, authorize: canChangePickup,
                         onShopSelected: didSelectPickup)
                 }
             }
+    }
+
+    private func privateProductAccess() -> Bool {
+        authorized && originalIdentity?.subject == nil && originalIdentity?.householdID == nil &&
+            pickup.currentDinnerActorID == originalIdentity?.actorID &&
+            !household.guardianChildOnly && !ledger.hasPendingLedgerDeletion && !ledger.hasPendingPantryProjection &&
+            destinationID == ledger.shop?.id && pickup.pantryIsActive && pickup.pantryRouteAvailable &&
+            !pickup.journeys.contains { $0.id == destinationID }
     }
 
     private var planZone: TimeZone {
@@ -315,6 +348,7 @@ struct SavedDinnerHandoffView: View {
     private var shopInstead: some View {
         Button {
             selectingGroceries = true
+            productChoice = nil
             review = nil
             error = nil
         } label: { Label(dinnerText("Shop for ingredients only"), systemImage: "checklist") }
@@ -343,7 +377,7 @@ struct SavedDinnerHandoffView: View {
     }
 
     private func didSelectPickup(_ id: UUID) {
-        if authorized { destinationID = id; review = nil; error = nil }
+        if authorized { productChoice = nil; destinationID = id; review = nil; error = nil }
     }
 
     private func ingredientRow(_ ingredient: MealIngredient) -> some View {
@@ -368,9 +402,10 @@ struct SavedDinnerHandoffView: View {
                 requested = .plan(day: day, servings: plannedServings)
             }
             review = try SavedDinnerReview(recipe: recipe, action: requested, workspace: ledger.workspace, access: access,
-                phase: TonightPlanChoice.phase(pickup, shopID: access.shopID), at: now)
+                phase: TonightPlanChoice.phase(pickup, shopID: access.shopID), at: now,
+                pantryReview: productChoice.map { ($0.match, $0.basis.originID) })
             error = nil
-        } catch { self.error = message(error) }
+        } catch { review = nil; self.error = message(error) }
     }
     private func message(_ error: Error) -> String {
         switch error {
@@ -385,13 +420,18 @@ struct SavedDinnerHandoffView: View {
         busy = true
         defer { busy = false }
         func validate() throws {
+            if let choice = productChoice {
+                guard privateProductAccess(), choice.generation == pickup.privatePantryGeneration,
+                      choice.basis.originID == pickup.sourceWorkspaceID, review.pantryProducts?.originID == choice.basis.originID
+                else { throw DinnerPlanningError.stalePreview }
+            } else if review.pantryProducts != nil { throw DinnerPlanningError.stalePreview }
             let now = Date()
             try review.validateDestination(in: ledger.workspace, access: context(at: now),
                 phase: TonightPlanChoice.phase(pickup, shopID: review.shopID), at: now)
         }
         do {
             try validate()
-            let saved = await ledger.change(key: "saved-dinner-\(review.id)", reviewedPantryBasis: nil, authorize: { (try? validate()) != nil }) { workspace in
+            let saved = await ledger.change(key: "saved-dinner-\(review.id)", reviewedPantryBasis: productChoice?.basis, authorize: { (try? validate()) != nil }) { workspace in
                 let now = Date()
                 try review.apply(to: &workspace, access: context(at: now), phase: TonightPlanChoice.phase(pickup, shopID: review.shopID), at: now)
             }

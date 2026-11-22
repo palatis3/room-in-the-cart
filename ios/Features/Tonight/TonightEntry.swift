@@ -50,6 +50,8 @@ struct TonightEntry: View {
     @State private var query = ""
     @State private var pinnedOnly = false
     @State private var plannedDate = Date()
+    @State private var linkPantryProducts = false
+    @State private var linkedReceipt: (shop: UUID, meal: UUID, owner: UUID)?
     @State private var preview: TonightPlanChoice.Review?
     @State private var message: String?
     @State private var applying = false
@@ -249,6 +251,10 @@ struct TonightEntry: View {
                     Section { Text(tonightText("Recipes or pantry changed or could not be read. Refresh before reviewing a meal.")) }
                 }
                 if let message { Section { Text(message).accessibilityIdentifier("tonight.status") } }
+                if let receipt = linkedReceipt, scope?.adult.actorID == receipt.owner, pickup.currentDinnerActorID == receipt.owner,
+                   ledger.shop?.id == receipt.shop, choosing == nil {
+                    Section { DinnerShoppingCheckLink(shopID: receipt.shop, occurrenceID: receipt.meal, linkedProducts: true) }
+                }
                 if let preview {
                     Section(tonightText("Review dinner choice")) {
                         Text(preview.recipe.title).font(.system(.title2, design: .serif, weight: .semibold))
@@ -277,6 +283,9 @@ struct TonightEntry: View {
                         }
                         DatePicker(tonightText("Plan for a day"), selection: $plannedDate, displayedComponents: .date)
                             .environment(\.timeZone, destinationZone)
+                        if canLinkProducts(for: choosing) {
+                            Toggle(dinnerText("Link matched pantry products for purchase review"), isOn: $linkPantryProducts)
+                        }
                         if destination == nil { TextField(tonightText("New pickup name"), text: $newTitle) }
                         Button(tonightText("Preview dinner choice")) { Task { await prepareChoice(choosing) } }
                             .disabled(model.busy || (destination == nil && newTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
@@ -644,10 +653,19 @@ struct TonightEntry: View {
                             authorize: { scope == original })
         }
     }
+    private func canLinkProducts(for recipe: MealTemplate) -> Bool {
+        guard let scope, scope.adult.subject == nil, scope.adult.householdID == nil,
+              pickup.currentDinnerActorID == scope.adult.actorID, !pickup.journeys.contains(where: { $0.id == destination }),
+              let match = model.reviews.first(where: { $0.recipe == recipe }) else { return false }
+        return (try? DinnerPantryProducts(review: match, workspace: ledger.workspace, originID: scope.inventory)) != nil
+    }
+
     private func beginChoice(_ recipe: MealTemplate) {
+        linkedReceipt = nil
         closeRecipe()
         plannedDate = Date()
         choosing = recipe
+        linkPantryProducts = false
         destination = ledger.workspace.selectedShopID
         preview = nil
         message = nil
@@ -665,7 +683,7 @@ struct TonightEntry: View {
             guard let review = model.reviews.first(where: { $0.recipe == recipe }), canChoose(review) else { throw TonightMealModel.Failure.stale }
             preview = try TonightPlanChoice.prepare(match: review, pantryBasis: original.basis,
                 destinationShopID: destination, newShopTitle: newTitle, ledger: ledger, pickup: pickup,
-                plannedDate: plannedDate, currentIdentity: currentIdentity)
+                plannedDate: plannedDate, linkPantryProducts: linkPantryProducts, currentIdentity: currentIdentity)
             requestedSection = .review
         } catch { preview = nil; message = tonightText("The recipe, preferences, pantry or destination changed. Review the current information again.") }
     }
@@ -675,7 +693,12 @@ struct TonightEntry: View {
         let ok = await TonightPlanChoice.apply(review, ledger: ledger, pickup: pickup, currentIdentity: currentIdentity)
         applying = false
         guard scope == startingScope else { return }
-        if ok { preview = nil; choosing = nil; message = tonightText("One dinner was added to your pickup."); await refresh() }
+        if ok {
+            if case .choose(let meal) = review.preview.proposal.changes.first, meal.pantryProducts != nil {
+                linkedReceipt = (review.preview.proposal.shopID, meal.occurrenceID, startingScope.adult.actorID)
+            }
+            preview = nil; choosing = nil; message = tonightText("One dinner was added to your pickup."); await refresh()
+        }
         else { message = tonightText("Dinner was not confirmed. Review changed information or retry the pending save.") }
     }
 }

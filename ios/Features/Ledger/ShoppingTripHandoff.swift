@@ -44,6 +44,7 @@ struct TripHandoffRow: Identifiable, Equatable {
 }
 
 struct TripHandoffEntry: View {
+    private var dinnerPantry = ShoppingDinnerPantry()
     @ObservedObject var model: LedgerModel
     let shopID: UUID
     @Environment(\.shoppingListAuthorization) private var authorize
@@ -56,7 +57,8 @@ struct TripHandoffEntry: View {
     var body: some View {
         WorkingForm {
             if authorize(), let shop = model.shop, shop.id == shopID {
-                let rows = TripHandoffRow.outstanding(in: shop)
+                let covered = dinnerPantry.covered(in: shop, ledger: model)
+                let rows = TripHandoffRow.outstanding(in: shop).filter { !covered.contains($0.id) }
                 if let preview, preview.revision == shop.revisionID {
                     Section(tripText("Message preview")) {
                         Text(verbatim: preview.text).accessibilityIdentifier("tripShareBody")
@@ -93,6 +95,7 @@ struct TripHandoffEntry: View {
                 }
             }
         }.navigationTitle(tripText("Preview list copy"))
+        .onChange(of: model.shop.map { dinnerPantry.covered(in: $0, ledger: model) }) { _, _ in preview = nil; sharing = false }
         .onChange(of: model.shop?.revisionID) { _, _ in preview = nil; sharing = false }
     }
 
@@ -104,6 +107,7 @@ struct TripHandoffEntry: View {
 }
 
 struct TripNextStoreEntry: View {
+    private var dinnerPantry = ShoppingDinnerPantry()
     @ObservedObject var model: LedgerModel
     let shopID: UUID
     @State private var name = ""
@@ -114,7 +118,8 @@ struct TripNextStoreEntry: View {
     var body: some View {
         WorkingForm {
             if let shop = model.shop, shop.id == shopID {
-                let rows = TripHandoffRow.outstanding(in: shop)
+                let covered = dinnerPantry.covered(in: shop, ledger: model)
+                let rows = TripHandoffRow.outstanding(in: shop).filter { !covered.contains($0.id) }
                 let byID = Dictionary(uniqueKeysWithValues: shop.lines.map { ($0.id, $0) })
                 let store = name.trimmingCharacters(in: .whitespacesAndNewlines)
                 Section {

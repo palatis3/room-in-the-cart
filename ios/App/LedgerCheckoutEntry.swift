@@ -260,7 +260,11 @@ enum LedgerCheckoutAdapter {
         return (namedAmount, needs, details)
     }
 
-    @MainActor static func apply(_ review: LedgerCheckoutReview, ledger: LedgerModel, pickup: PickupModel) async throws -> Bool {
+    @MainActor static func apply(_ review: LedgerCheckoutReview, ledger: LedgerModel, pickup: PickupModel,
+                                 freshDinnerBasis: LedgerCanonicalPackStockEvidence.Basis? = nil,
+                                 authorize: (@MainActor () -> Bool)? = nil) async throws -> Bool {
+        guard authorize?() != false, freshDinnerBasis == nil || (pickup.pantryIsActive && review.previousJourneyRevision == nil)
+        else { throw LedgerCheckoutError.staleSource }
         guard ledger.ready, !ledger.saving, !ledger.hasPendingSave, pickup.ready,
               !pickup.saving, !pickup.hasPendingSave else { throw LedgerCheckoutError.staleSource }
         try review.assertCurrent(shop: ledger.shop, workspaceRevision: ledger.revision,
@@ -272,13 +276,18 @@ enum LedgerCheckoutAdapter {
             guard await pickup.refreshPantryStock() else { throw LedgerCheckoutError.staleSource }
         }
         let previous = pickup.journeys.first { $0.id == review.source.id }
+        if let freshDinnerBasis {
+            guard authorize?() == true, let id = ledger.sourceWorkspaceID, previous == nil,
+                  try pickup.quickGroceryPantryContext(ledgerWorkspaceID: id)?.dinnerBasis == freshDinnerBasis
+            else { throw LedgerCheckoutError.staleSource }
+        }
         try review.assertCurrent(shop: ledger.shop, workspaceRevision: ledger.revision, journey: previous)
         guard ledger.ready, !ledger.saving, !ledger.hasPendingSave,
               pickup.ready, !pickup.saving, !pickup.hasPendingSave else { throw LedgerCheckoutError.staleSource }
         guard previous?.basket?.phase != .reportedPlaced else { throw LedgerCheckoutError.placedOrder }
         let pantryContext = try previous == nil ? nil : pickup.canonicalPackContext(for: review.source.id)
         let current = try self.review(shop: review.source, workspaceRevision: ledger.revision, previous: previous,
-            packSelections: ledger.workspace.packSelections, workspaceID: ledger.sourceWorkspaceID,
+            packSelections: pickup.dinnerAuthorizedPacks(ledger.workspace.packSelections, ledger: ledger, shop: review.source), workspaceID: ledger.sourceWorkspaceID,
             pickupWorkspaceID: pickup.sourceWorkspaceID, bindings: ledger.workspace.dinnerPlanning.portionBindings,
             pantryContext: pantryContext, pantryIsActive: pickup.pantryIsActive)
         guard current.lines == review.lines, current.needs == review.needs, current.details == review.details,
@@ -314,7 +323,8 @@ enum LedgerCheckoutAdapter {
         }
         return await pickup.start(from: review.lines, shopID: review.source.id, context: review.context, cap: review.cap,
                                   plannedNeeds: review.needs, ledgerBasis: review.source.basis,
-                                  ledgerSourceRevisionID: review.source.revisionID, needDetails: review.details, ledgerPackSelections: review.packSelections, mealSource: mealSource, reviewedLedger: reviewedLedger)
+                                  ledgerSourceRevisionID: review.source.revisionID, needDetails: review.details, ledgerPackSelections: review.packSelections, mealSource: mealSource, reviewedLedger: reviewedLedger,
+                                  reviewedPantryBasis: freshDinnerBasis, authorize: authorize)
     }
 
     /// A stable shop ID makes resuming after either store commits retry-safe.
@@ -494,7 +504,7 @@ struct LedgerCheckoutEntry: View {
             let previous = pickup.journeys.first { $0.id == shop.id }
             let pantryContext = try previous == nil ? nil : pickup.canonicalPackContext(for: shop.id)
             let value = try LedgerCheckoutAdapter.review(shop: shop, workspaceRevision: ledger.revision, previous: previous,
-                packSelections: ledger.workspace.packSelections, workspaceID: ledger.sourceWorkspaceID,
+                packSelections: pickup.dinnerAuthorizedPacks(ledger.workspace.packSelections, ledger: ledger, shop: shop), workspaceID: ledger.sourceWorkspaceID,
                 pickupWorkspaceID: pickup.sourceWorkspaceID, bindings: ledger.workspace.dinnerPlanning.portionBindings,
                 pantryContext: pantryContext, pantryIsActive: pickup.pantryIsActive)
             if !value.needsApplication { pickup.selectedID = shop.id; opened = true }

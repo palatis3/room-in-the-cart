@@ -209,10 +209,10 @@ public struct LedgerListLayout: Codable, Equatable, Sendable {
         return Set(aisleNames(in: shop) + defaults).sorted { $0.localizedStandardCompare($1) == .orderedAscending }
     }
 
-    public func groups(shop: ShoppingLedger, search: String = "") -> [Group] {
+    public func groups(shop: ShoppingLedger, search: String = "", excluding lineIDs: Set<UUID> = []) -> [Group] {
         let layout = layout(for: shop)
         let matches = shop.search(search, department: { department(for: $0, in: shop) })
-        var lines = matches.filter { !$0.isChecked && !$0.isHandled && !$0.isTrashed }
+        var lines = matches.filter { !$0.isChecked && !$0.isHandled && !$0.isTrashed && !lineIDs.contains($0.id) }
         if layout.mode != .entered {
             let rank = Dictionary(uniqueKeysWithValues: layout.lineOrder.enumerated().map { ($0.element,$0.offset) })
             lines.sort { (rank[$0.id] ?? Int.max,$0.originalOrder) < (rank[$1.id] ?? Int.max,$1.originalOrder) }

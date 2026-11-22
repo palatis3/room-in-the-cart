@@ -19,7 +19,8 @@
   "03 · Carry the missing recipe ingredient into a named pickup": [
     "RoomInTheCartUITests/TonightUITests/testFirstSavedDinnerCarriesIntoNewPickupAndAddsOnlySelectedIngredient",
     "RoomInTheCartUITests/RoomInTheCartUITests/testOpenPantryDinnerChooserWithAnActivePickup",
-    "RoomInTheCartTests/DinnerPantrySupplyTests/testDinnerShoppingCheckUsesOnlyFreeStockAndKeepsTheListAndOtherShopsLunch"
+    "RoomInTheCartTests/DinnerPantrySupplyTests/testDinnerShoppingCheckUsesOnlyFreeStockAndKeepsTheListAndOtherShopsLunch",
+    "RoomInTheCartTests/PantryPackModelRecoveryTests/testBowlDinnerLinksPantryProductsAndAtomicallyRemovesOnlyTheirPurchases"
   ],
   "Record actual dinner ingredients and refresh pantry counts": [
     "RoomInTheCartTests/CookCompletionEditorTests/testReturningFromASuggestedSubstituteToTheUniquePlannedFoodClearsTheSavedSubstitution",

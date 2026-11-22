@@ -93,6 +93,7 @@ struct GroceryCheckInset: View {
 }
 
 struct InStoreShoppingView: View {
+    private var dinnerPantry = ShoppingDinnerPantry()
     @ObservedObject var model: LedgerModel
     let shopID: UUID
     @Environment(\.shoppingListAuthorization) private var authorize
@@ -119,7 +120,7 @@ struct InStoreShoppingView: View {
     var body: some View {
         Group {
             if let shop = model.shop, shop.id == shopID {
-                let groups = model.workspace.listLayout.groups(shop: shop)
+                let groups = model.workspace.listLayout.groups(shop: shop, excluding: dinnerPantry.covered(in: shop, ledger: model))
                 let visible = groups.flatMap(\.lines).filter { available($0, shop: shop) }
                 let outstanding = groups.flatMap(\.lines).filter { shop.outcomeAtCurrentStop($0) != nil }
                 let picked = shop.inStorePickedLines
