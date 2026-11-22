@@ -18,6 +18,11 @@
   "03 · Carry the missing recipe ingredient into a named pickup": [
     "RoomInTheCartUITests/TonightUITests/testFirstSavedDinnerCarriesIntoNewPickupAndAddsOnlySelectedIngredient"
   ],
+  "Record actual dinner ingredients and refresh pantry counts": [
+    "RoomInTheCartTests/CookCompletionEditorTests/testReturningFromASuggestedSubstituteToTheUniquePlannedFoodClearsTheSavedSubstitution",
+    "RoomInTheCartTests/CookCompletionEditorTests/testChangingSuggestedBatchWithAmbiguousNamesRequiresReviewAndPreservesAnExplicitDescription",
+    "RoomInTheCartTests/CookCompletionEditorTests/testMountedPantryShelfUpdatesAfterDinnerAndKeepsAnOpenRecountUntilDismissed"
+  ],
   "04 · Move a planned family dinner and reopen it": [
     "RoomInTheCartUITests/TonightUITests/testPastedFamilyNotePlansTomorrowAndChangesOccurrenceBeforeColdReturn",
     "RoomInTheCartUITests/TonightUITests/testLargestTextKeepsScheduleOnlyConfirmationAheadOfOptionalPriceReview"

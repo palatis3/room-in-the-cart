@@ -68,6 +68,7 @@ struct PantrySetupView: View {
                                    household: household, holdsLoadedReview: {
                         pantryVoicePrompt?.holdsPresentation() == true && scope == original
                     }, initialSheet: $initialSheet)
+                    .modifier(LivePantryShelfRefresh(pickup: pickup, model: model))
                 }
             } else {
                 JournalList {
@@ -224,6 +225,30 @@ struct PantrySetupView: View {
             }
         }
         return counts.keys.sorted().map { ($0, counts[$0]?.count ?? 0) }
+    }
+}
+
+/// Tabs can keep the shelf mounted while cooking changes the same inventory.
+struct LivePantryShelfRefresh: ViewModifier {
+    @ObservedObject var pickup: PickupModel
+    @ObservedObject var model: PantryModel
+
+    private var newerRevision: Int64? {
+        guard model.canEdit, !pickup.saving, pickup.pantryRouteAvailable, pickup.pantryReadIsCurrent,
+              let current = pickup.pantrySnapshot?.state, let shown = model.snapshot?.state,
+              current.workspaceID == shown.workspaceID, current.revision > shown.revision else { return nil }
+        return current.revision
+    }
+
+    func body(content: Content) -> some View {
+        content.onChange(of: newerRevision, initial: true) { _, revision in
+            guard let revision else { return }
+            Task { @MainActor in
+                // A newly opened review keeps its exact basis. Once it closes,
+                // newerRevision changes again and the shelf can take a fresh read.
+                if newerRevision == revision { await model.load() }
+            }
+        }
     }
 }
 

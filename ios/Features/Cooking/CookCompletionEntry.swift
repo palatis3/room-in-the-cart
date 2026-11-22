@@ -235,7 +235,7 @@ private struct CookCompletionPartView: View {
 
     @ViewBuilder private var batchFields: some View {
         Picker(cookCompletionText("Actual batch used"), selection: Binding(get: { part.lotID }, set: { id in
-            part.selectBatch(model.context?.inventory.lots.first { $0.id == id })
+            model.selectBatch(id, ingredientID: ingredientID, partID: part.id)
         })) {
             Text(cookCompletionText("Choose a batch")).tag(UUID?.none)
             ForEach(model.context?.inventory.lots ?? []) { lot in
