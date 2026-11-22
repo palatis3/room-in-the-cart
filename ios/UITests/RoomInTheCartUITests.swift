@@ -1210,6 +1210,40 @@ final class RoomInTheCartUITests: XCTestCase {
         screenshot("Spanish-reopened-result")
     }
 
+    func testLargestTextSpanishComparisonCanSetAsideAPackAndKeepBothAgain() {
+        launch(language: "es", largeDark: true)
+        openEmptyComparison()
+        type([("itemName", "Tortillas")])
+        compare()
+
+        let menu = app.buttons["comparison.setAsidePack"]
+        let keep = app.buttons["Conservar ambas opciones"]
+        let packB = app.buttons["Paquete B"]
+        func isChecked(_ choice: XCUIElement) -> Bool {
+            choice.isSelected || choice.value as? String == "1"
+        }
+
+        revealFullyInComparison(menu)
+        XCTAssertEqual(menu.label, "Descartar una opción")
+        XCTAssertEqual(menu.value as? String, "Conservar ambas opciones")
+        menu.tap()
+        XCTAssertTrue(keep.waitForExistence(timeout: 5))
+        XCTAssertTrue(isChecked(keep))
+        packB.tap()
+
+        XCTAssertTrue(packB.waitForNonExistence(timeout: 5))
+        revealFullyInComparison(menu)
+        XCTAssertEqual(menu.value as? String, "Paquete B")
+        menu.tap()
+        XCTAssertTrue(packB.waitForExistence(timeout: 5))
+        XCTAssertTrue(isChecked(packB))
+        XCTAssertFalse(isChecked(keep))
+        keep.tap()
+
+        XCTAssertTrue(keep.waitForNonExistence(timeout: 5))
+        XCTAssertEqual(menu.value as? String, "Conservar ambas opciones")
+    }
+
     func testLargestDynamicTypeAndDarkAppearanceComparisonSmoke() throws {
         launch(largeDark: true)
         reveal(app.buttons["newComparison"])
