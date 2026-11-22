@@ -656,6 +656,12 @@ import XCTest
         launch(reset: true, spanish: true, contentSize: .extraLarge)
         tap(app.tabBars.buttons["Despensa"])
         tap(app.buttons["pantry.setup.receipt"])
+        XCTAssertTrue(app.staticTexts["Borrador privado"].waitForExistence(timeout: 8))
+        let openFile = app.buttons["receipt.document"]
+        XCTAssertEqual(openFile.label, "Abrir archivo")
+        receiptTap(openFile)
+        XCTAssertTrue(app.navigationBars["Abrir archivo"].waitForExistence(timeout: 8))
+        receiptTap(app.buttons["receipt.document.close"])
         receiptTap(app.buttons["receipt.scan"])
         let wording = app.textViews["scan.sourceEditor"]
         receiptTap(wording)

@@ -2241,13 +2241,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Private receipt draft"
+            "value": "Private draft"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Borrador privado del recibo"
+            "value": "Borrador privado"
           }
         }
       }
@@ -6983,13 +6983,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Read a receipt file"
+            "value": "Open receipt file"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Leer un archivo de recibo"
+            "value": "Abrir archivo"
           }
         }
       }
