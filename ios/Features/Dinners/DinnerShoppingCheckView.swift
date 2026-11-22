@@ -191,6 +191,38 @@ extension DinnerShoppingCheck {
 /// The saved checkout proof is the single authority for both purchase views.
 /// Missing authority, replacement stock and reopened edits all show the gross row.
 @MainActor enum DinnerPantryPurchases {
+    struct Pending: Identifiable, Equatable {
+        let id: UUID
+        let mealTitle: String
+        let lines: [ShoppingLine]
+        let servingsChanged: Bool
+    }
+
+    static func pending(in workspace: LedgerWorkspace, shop: ShoppingLedger, workspaceID: UUID, originID: UUID,
+                        actorID: UUID, journey: PickupJourney, covered: Set<UUID>) -> [Pending] {
+        guard journey.id == shop.id, journey.closedAt == nil, journey.pickup == nil,
+              journey.basket?.phase == .draft, journey.mealRecovery == nil else { return [] }
+        let choices = workspace.packSelections.filter { $0.shopID == shop.id && $0.sourceWorkspaceID == workspaceID }
+        let latest = Dictionary(choices.map { ($0.lineID, $0) }, uniquingKeysWith: { _, new in new })
+        let needsReview = Set(latest.values.filter { $0.isNoPurchase && $0.request.offerA.id == DinnerPantryProducts.atHomeOfferID &&
+            $0.canonicalStockEvidence?.basis.originID == originID }.map(\.lineID)).subtracting(covered)
+        guard !needsReview.isEmpty else { return [] }
+        let eligible = workspace.dinnerPantryLines(shop: shop, workspaceID: workspaceID, originID: originID,
+            actorID: actorID.uuidString).intersection(needsReview)
+        let cooked = Set((journey.cookedMeals ?? []).filter(\.isActive).map { $0.draft.meal.id })
+        let owners = shop.contributions.reduce(into: [UUID: Set<UUID>]()) { result, source in
+            if source.removedAt == nil, eligible.contains(source.lineID), case .meal(let mealID) = source.source {
+                result[mealID, default: []].insert(source.lineID)
+            }
+        }
+        return shop.mealOccurrences.compactMap { meal in
+            guard !cooked.contains(meal.id), let ids = owners[meal.id] else { return nil }
+            let prior = journey.mealSource?.shop.mealOccurrences.first { $0.id == meal.id }
+            return .init(id: meal.id, mealTitle: meal.title, lines: shop.lines.filter { ids.contains($0.id) },
+                servingsChanged: prior.map { $0.servings != meal.servings } ?? false)
+        }
+    }
+
     static func lines(ledger: LedgerModel, pickup: PickupModel, shop: ShoppingLedger,
                       identity: CapturePrivateIdentity?, occurrenceID: UUID? = nil) -> Set<UUID> {
         guard let identity, identity.subject == nil, identity.householdID == nil, pickup.currentDinnerActorID == identity.actorID, ledger.ready,
@@ -213,9 +245,18 @@ extension DinnerShoppingCheck {
 }
 
 extension PickupJourney {
+    /// A spent ingredient can be absent from an applied basket without a pack
+    /// choice. Recheck those omissions before reusing that basket, including after cook undo.
+    var cookPurchaseOmissions: Set<UUID> {
+        guard let cookedMeals, let source = mealSource, let basket else { return [] }
+        let cookedRows = Set(cookedMeals.flatMap { $0.draft.ingredientRowIDs })
+        let lines = source.shop.contributions.filter { cookedRows.contains($0.id) }.map(\.lineID)
+        return Set(lines).subtracting(basket.current.lines.map(\.id)).subtracting(ledgerPackSelections.map(\.lineID))
+    }
+
     func usedDinnerPantryLines(in shop: ShoppingLedger, workspace: LedgerWorkspace, workspaceID: UUID,
                              actorID: UUID, context: PantryPackStockReview.Context) -> Set<UUID> {
-        guard id == shop.id, closedAt == nil, pickup == nil, basket?.phase == .draft, mealRecovery == nil,
+        guard id == shop.id, closedAt == nil, pickup == nil, let basket, basket.phase != .reportedPlaced, mealRecovery == nil,
               let cooks = cookedMeals, cooks.contains(where: \.isActive) else { return [] }
         let origin = context.snapshot.state.workspaceID
         let lots = Dictionary(uniqueKeysWithValues: context.snapshot.lots.map { ($0.id, $0.foodID) })
@@ -236,6 +277,7 @@ struct ShoppingDinnerPantry: DynamicProperty {
     struct Status {
         var atHome = Set<UUID>()
         var used = Set<UUID>()
+        var pending: [DinnerPantryPurchases.Pending] = []
         var covered: Set<UUID> { atHome.union(used) }
     }
 
@@ -247,15 +289,36 @@ struct ShoppingDinnerPantry: DynamicProperty {
               ledger.ready, !ledger.saving, !ledger.hasPendingSave, !ledger.hasPendingPantryProjection,
               ledger.shop == shop, let id = ledger.sourceWorkspaceID else { return .init() }
         let atHome = DinnerPantryPurchases.lines(ledger: ledger, pickup: pickup, shop: shop, identity: identity)
-        guard let journey = pickup.journeys.first(where: { $0.id == shop.id }), journey.cookedMeals != nil,
+        guard let journey = pickup.journeys.first(where: { $0.id == shop.id }),
+              journey.cookedMeals != nil || ledger.workspace.packSelections.contains(where: { $0.shopID == shop.id && $0.isNoPurchase }),
               let context = try? pickup.quickGroceryPantryContext(ledgerWorkspaceID: id),
               context.mapping.sourceHeads.contains(where: { $0.id == journey.id && $0.revision == journey.revision })
         else { return .init(atHome: atHome) }
         let used = journey.usedDinnerPantryLines(in: shop, workspace: ledger.workspace, workspaceID: id, actorID: identity.actorID, context: context)
-        return .init(atHome: atHome.subtracting(used), used: used)
+        let pending = DinnerPantryPurchases.pending(in: ledger.workspace, shop: shop, workspaceID: id,
+            originID: context.snapshot.state.workspaceID, actorID: identity.actorID, journey: journey, covered: atHome.union(used))
+        return .init(atHome: atHome.subtracting(used), used: used, pending: pending)
     }
 
     @MainActor func covered(in shop: ShoppingLedger, ledger: LedgerModel) -> Set<UUID> { status(in: shop, ledger: ledger).covered }
+}
+
+struct DinnerPantryReviewSection: View {
+    let shopID: UUID
+    let reviews: [DinnerPantryPurchases.Pending]
+    var matching: Set<UUID>? = nil
+    var body: some View {
+        ForEach(reviews.filter { review in matching.map { ids in review.lines.contains { ids.contains($0.id) } } ?? true }) { review in
+            Section(dinnerText("Review before buying")) {
+                Text(verbatim: review.mealTitle).font(.headline)
+                Text(dinnerText(review.servingsChanged
+                    ? "Servings changed. Check the pantry allocation before buying these ingredients."
+                    : "Check the earlier pantry allocation before buying these ingredients."))
+                ForEach(review.lines.filter { matching?.contains($0.id) ?? true }) { line in Text(verbatim: line.name) }
+                DinnerShoppingCheckLink(shopID: shopID, occurrenceID: review.id, linkedProducts: true)
+            }
+        }
+    }
 }
 
 struct SavedDinnerProductChoice {

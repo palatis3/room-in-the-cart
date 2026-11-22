@@ -120,7 +120,8 @@ struct InStoreShoppingView: View {
     var body: some View {
         Group {
             if let shop = model.shop, shop.id == shopID {
-                let groups = model.workspace.listLayout.groups(shop: shop, excluding: dinnerPantry.covered(in: shop, ledger: model))
+                let dinner = dinnerPantry.status(in: shop, ledger: model)
+                let groups = model.workspace.listLayout.groups(shop: shop, excluding: dinner.covered)
                 let visible = groups.flatMap(\.lines).filter { available($0, shop: shop) }
                 let outstanding = groups.flatMap(\.lines).filter { shop.outcomeAtCurrentStop($0) != nil }
                 let picked = shop.inStorePickedLines
@@ -128,6 +129,7 @@ struct InStoreShoppingView: View {
                 let packages = shop.itemPackages
                 ScrollViewReader { reader in
                     JournalList {
+                        DinnerPantryReviewSection(shopID: shop.id, reviews: dinner.pending)
                         if model.error != nil || model.hasPendingSave { LedgerSaveStatus(model: model) }
                         if !shop.currentStop.name.isEmpty {
                             Section { Label(shop.currentStop.name, systemImage: "storefront").font(.headline) }

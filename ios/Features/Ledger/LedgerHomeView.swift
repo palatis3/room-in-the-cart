@@ -68,10 +68,13 @@ struct LedgerHomeView: View {
                         let departmentChoices = model.workspace.listLayout.departmentChoices(in: shop)
                         let dinner = dinnerPantry.status(in: shop, ledger: model)
                         let covered = dinner.covered
-                        let groups = model.workspace.listLayout.groups(shop: shop, search: model.search, excluding: covered)
+                        let reviewIDs = Set(dinner.pending.flatMap { $0.lines.map(\.id) })
+                        DinnerPantryReviewSection(shopID: shop.id, reviews: dinner.pending,
+                            matching: model.search.isEmpty || dinner.pending.isEmpty ? nil : Set(shop.search(model.search).map(\.id)))
+                        let groups = model.workspace.listLayout.groups(shop: shop, search: model.search, excluding: covered.union(reviewIDs))
                         if groups.allSatisfy({ $0.lines.isEmpty }) {
                             Section(ledgerText("Shopping list")) {
-                                Text(model.search.isEmpty && (!checked.isEmpty || !covered.isEmpty) ? quickGroceryText("No active items.") :
+                                Text(model.search.isEmpty && (!checked.isEmpty || !covered.isEmpty || !reviewIDs.isEmpty) ? quickGroceryText("No active items.") :
                                     ledgerText(model.search.isEmpty ? "Add the groceries you need for this pickup." : "No active items match your search."))
                                     .foregroundStyle(Theme.secondary)
                                 if checked.isEmpty { recentHistory(count: 0) }
@@ -564,13 +567,23 @@ struct ShopGroceryPreview: View {
     }
 
     var body: some View {
-        let rows = model.workspace.listLayout.groups(shop: shop, excluding: dinnerPantry.covered(in: shop, ledger: model)).flatMap(\.lines)
-        let visible = previewRows(active: rows)
+        let dinner = dinnerPantry.status(in: shop, ledger: model)
+        let reviewIDs = Set(dinner.pending.flatMap { $0.lines.map(\.id) })
+        let excluded = dinner.covered.union(reviewIDs)
+        let rows = model.workspace.listLayout.groups(shop: shop, excluding: excluded).flatMap(\.lines)
+        let visible = previewRows(active: rows).filter { !excluded.contains($0.id) }
         let packages = shop.itemPackages
         let typedItemBatches = shop.typedItemBatchIDs
         VStack(alignment: .leading, spacing: 0) {
             if model.error != nil || model.hasPendingSave {
                 LedgerSaveStatus(model: model, showsLastSave: false)
+            }
+            ForEach(dinner.pending) { review in
+                VStack(alignment: .leading) {
+                    Text(verbatim: review.mealTitle).font(.headline)
+                    Text(verbatim: review.lines.map(\.name).formatted(.list(type: .and)))
+                    DinnerShoppingCheckLink(shopID: shop.id, occurrenceID: review.id, linkedProducts: true)
+                }
             }
             ForEach(visible) { line in
                 let measure = TripMeasure(shop, line: line, packages: packages[line.id] ?? [])

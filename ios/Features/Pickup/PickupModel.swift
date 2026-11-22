@@ -734,12 +734,23 @@ struct PickupPersistenceLocation {
             // An actual placed order remains an immutable historical fact.
             if value.basket?.phase == .reportedPlaced { return true }
             guard pantryConfiguration?.authorize() == true, pantryReadIsCurrent else { return false }
-            if value.ledgerPackSelections.isEmpty { return true } // No pantry credit in a gross basket.
+            let cookedOmissions = value.cookPurchaseOmissions
+            if value.ledgerPackSelections.isEmpty && cookedOmissions.isEmpty { return true }
             guard let ledger = cookLedger, ledger.ready, !ledger.saving, !ledger.hasPendingSave,
                   let workspaceID = ledger.sourceWorkspaceID,
                   let shop = ledger.workspace.shops.first(where: { $0.id == value.id }),
                   let context = try? canonicalPackContext(for: value.id) else { return false }
-            guard dinnerAuthorizedPacks(value.ledgerPackSelections, ledger: ledger, shop: shop) == value.ledgerPackSelections else { return false }
+            let authorized = dinnerAuthorizedPacks(value.ledgerPackSelections, ledger: ledger, shop: shop)
+            guard authorized == value.ledgerPackSelections else { return false }
+            if !cookedOmissions.isEmpty {
+                guard value.ledgerSourceRevisionID == shop.revisionID,
+                      let review = try? LedgerCheckoutAdapter.review(shop: shop, workspaceRevision: ledger.revision, previous: value,
+                          packSelections: dinnerAuthorizedPacks(ledger.workspace.packSelections, ledger: ledger, shop: shop),
+                          workspaceID: workspaceID, pickupWorkspaceID: sourceWorkspaceID, bindings: ledger.workspace.dinnerPlanning.portionBindings,
+                          pantryContext: context, pantryIsActive: true, dinnerWorkspace: ledger.workspace, dinnerActorID: currentDinnerActorID),
+                      cookedOmissions.isDisjoint(with: review.lines.map(\.id)) else { return false }
+            }
+            if authorized.isEmpty { return true }
             return PantryPackStockReview.basketBasisIsCurrent(value, shop: shop, workspaceID: workspaceID,
                 bindings: ledger.workspace.dinnerPlanning.portionBindings, context: context)
         }

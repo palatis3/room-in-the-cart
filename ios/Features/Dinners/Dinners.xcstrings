@@ -1,6 +1,57 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Review before buying": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review before buying"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar antes de comprar"
+          }
+        }
+      }
+    },
+    "Servings changed. Check the pantry allocation before buying these ingredients.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servings changed. Check the pantry allocation before buying these ingredients."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las porciones cambiaron. Revisa la cantidad reservada en la despensa antes de comprar estos ingredientes."
+          }
+        }
+      }
+    },
+    "Check the earlier pantry allocation before buying these ingredients.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the earlier pantry allocation before buying these ingredients."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa la cantidad reservada en la despensa antes de comprar estos ingredientes."
+          }
+        }
+      }
+    },
     "Used for dinner": {
       "extractionState": "manual",
       "localizations": {
