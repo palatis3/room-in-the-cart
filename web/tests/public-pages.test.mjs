@@ -165,6 +165,9 @@ test('the overview uses the chosen language for its real app screen, guide and p
     assert.equal(dom.window.location.hash, '');
     assert.equal(dom.window.document.activeElement.id, 'public-language');
     assert.equal(root.querySelectorAll('h1').length, 1);
+    const requests = root.querySelector('header a[href^="/requests"]');
+    assert.equal(requests.getAttribute('href'), '/requests?lang=' + language);
+    assert.equal(requests.textContent, language === 'en' ? 'Open household requests' : 'Abrir solicitudes del hogar');
     const photo = root.querySelector('figure img');
     assert.equal(photo.getAttribute('src'), '/overview/compare-packs-' + locale + '.jpg');
     assert.match(photo.alt, /\$6\.40.*\$5\.40/);
