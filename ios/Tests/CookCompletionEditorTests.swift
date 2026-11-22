@@ -447,23 +447,7 @@ import LocalStore
     func testMountedPantryShelfUpdatesAfterDinnerAndKeepsAnOpenRecountUntilDismissed() async throws {
         let f = try await fixture()
         let shelf = try XCTUnwrap(f.pickup.makePantryModel())
-        await shelf.loadOnAppearance(accessAllowed: true)
         func amount() -> Rational? { shelf.snapshot?.lots.first { $0.id == f.lots[0] }?.count.quantity?.amount }
-        XCTAssertEqual(amount(), try Rational(4))
-
-        let mounted = expectation(description: "The pantry shelf observes live inventory")
-        let controller = UIHostingController(rootView: Color.clear
-            .modifier(LivePantryShelfRefresh(pickup: f.pickup, model: shelf))
-            .onAppear { mounted.fulfill() })
-        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
-        let window = UIWindow(windowScene: scene)
-        window.windowLevel = .normal - 1
-        window.rootViewController = controller
-        window.isHidden = false
-        defer { window.isHidden = true }
-        await fulfillment(of: [mounted], timeout: 5)
-
-        _ = try await cookWithLunchAndDinner(f)
         func waitForShelf(_ expected: Rational) async throws {
             let deadline = ContinuousClock.now + .seconds(5)
             while (!shelf.canEdit || amount() != expected) && ContinuousClock.now < deadline {
@@ -472,6 +456,21 @@ import LocalStore
             XCTAssertEqual(amount(), expected)
             XCTAssertTrue(shelf.canEdit)
         }
+        let controller = UIHostingController(rootView: NavigationStack {
+            LivePantryHomeView(pickup: f.pickup, model: shelf, household: HouseholdModel(),
+                               holdsLoadedReview: { false }, initialSheet: .constant(nil))
+        })
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let window = UIWindow(windowScene: scene)
+        window.windowLevel = .normal - 1
+        window.rootViewController = controller
+        window.isHidden = false
+        defer { window.isHidden = true }
+
+        // The mounted production shelf does its normal appearance read. It stays
+        // mounted through the cook and undo, so a fresh appearance cannot mask a stale shelf.
+        try await waitForShelf(Rational(4))
+        _ = try await cookWithLunchAndDinner(f)
         try await waitForShelf(Rational(3))
 
         await shelf.prepare(lotID: f.lots[0], action: .someLeft)
