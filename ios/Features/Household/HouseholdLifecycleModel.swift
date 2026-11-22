@@ -23,8 +23,17 @@ import HouseholdClient
     @Published private(set) var proposals: [HelperProposal] = []
     @Published var householdLabel = ""
     @Published var alias = ""
-    @Published var invitationCode = ""
-    @Published var adultAttestation = false
+    enum InvitationPreview: Equatable {
+        case idle, loading, ready(InvitationOffer), unavailable, failed
+    }
+    @Published private(set) var invitationPreview = InvitationPreview.idle
+    private var previewGeneration = UUID()
+    @Published var invitationCode = "" {
+        didSet { if oldValue != invitationCode { invalidateInvitationPreview() } }
+    }
+    @Published var adultAttestation = false {
+        didSet { if oldValue != adultAttestation { invalidateInvitationPreview() } }
+    }
     @Published var keepLocalPrivate = false
     @Published var expiryHours = 24
     @Published var correction = ""
@@ -80,6 +89,7 @@ import HouseholdClient
     }
     func setScope(_ value: HouseholdBootstrap) { clearScope(); scope = value }
     func clearScope() {
+        invalidateInvitationPreview()
         safetyReviews.clear()
         scopeGeneration = UUID(); scope = nil; members = []; invitations = []; managedViews = []; managementReviewed = false
         proposalsGrantID = nil; proposalCursor = nil; consents = []; issued = nil; helperView = nil
@@ -94,10 +104,14 @@ import HouseholdClient
         let start = generation
         do {
             let saved = try await store.read()
-            guard start == generation else { return }
-            pendingMembership = saved.membership?.subject == subject ? saved.membership : nil
-            activation = saved.activation?.subject == subject ? saved.activation?.receipt : nil
-        } catch { notice = ht("Saved household actions could not be read. Nothing was sent.") }
+            guard start == generation, !busy else { return }
+            restoreMembership(from: saved)
+        } catch { if start == generation { notice = ht("Saved household actions could not be read. Nothing was sent.") } }
+    }
+    private func restoreMembership(from saved: LifecyclePendingState) {
+        pendingMembership = saved.membership?.subject == subject ? saved.membership : nil
+        activation = saved.activation?.subject == subject ? saved.activation?.receipt : nil
+        if pendingMembership != nil || activation != nil { invalidateInvitationPreview() }
     }
     func createHousehold() async {
         guard scope == nil, !busy, pendingMembership == nil, activation == nil, adultAttestation, keepLocalPrivate else { return }
@@ -107,33 +121,66 @@ import HouseholdClient
             await saveAndSend(intent)
         } catch { notice = ht("Enter a household name and your alias, each up to 80 characters, and confirm the adult declaration.") }
     }
+    private var normalizedInvitationCode: String { invitationCode.trimmingCharacters(in: .whitespacesAndNewlines) }
+    var invitationPreviewKey: UUID? {
+        guard scope == nil, pendingMembership == nil, activation == nil,
+              adultAttestation, InvitationOffer.isCompleteToken(normalizedInvitationCode) else { return nil }
+        return previewGeneration
+    }
+    func invalidateInvitationPreview() {
+        previewGeneration = UUID()
+        invitationPreview = .idle
+    }
+    func previewInvitation() async {
+        guard let key = invitationPreviewKey, invitationPreview != .loading else { return }
+        if case .ready = invitationPreview { return }
+        invitationPreview = .loading
+        do {
+            let offer = try await service.previewInvitation(subject: subject, token: normalizedInvitationCode, adultAttestation: adultAttestation)
+            guard invitationPreviewKey == key else { return }
+            invitationPreview = Task.isCancelled ? .idle : .ready(offer)
+        } catch {
+            guard invitationPreviewKey == key else { return }
+            switch error as? ClientError {
+            case .sessionNeeded, .accessEnded:
+                invalidateInvitationPreview()
+                await handle(error)
+            case .service(404, _, _, _): invitationPreview = .unavailable
+            case .cancelled: invitationPreview = .idle
+            default: invitationPreview = .failed
+            }
+        }
+    }
     func redeemInvitation() async {
-        guard scope == nil, !busy, pendingMembership == nil, activation == nil, adultAttestation, keepLocalPrivate else { return }
+        guard !busy, keepLocalPrivate, invitationPreviewKey != nil, case let .ready(offer) = invitationPreview else { return }
         let name = alias.trimmingCharacters(in: .whitespacesAndNewlines)
         do {
-            let intent = try MembershipIntent.redeem(subject: subject, token: invitationCode.trimmingCharacters(in: .whitespacesAndNewlines),
+            let intent = try MembershipIntent.redeem(subject: subject, token: normalizedInvitationCode,
                 alias: name.isEmpty ? nil : name, adultAttestation: adultAttestation,
-                defaultAliasLocale: Locale(identifier: Bundle.main.preferredLocalizations.first ?? "en"))
+                defaultAliasLocale: Locale(identifier: Bundle.main.preferredLocalizations.first ?? "en"), reviewedOffer: offer)
             await saveAndSend(intent)
         } catch { notice = ht("Paste the complete invitation code and confirm the adult declaration. An alias can have up to 80 characters.") }
     }
     private func saveAndSend(_ intent: MembershipIntent) async {
         busy = true; notice = nil; defer { busy = false }; let start = generation
         do {
-            var saved = try await store.read(); saved.membership = intent
+            var saved = try await store.read()
             guard start == generation else { return }
+            restoreMembership(from: saved)
+            guard pendingMembership == nil, activation == nil else { return }
+            saved.membership = intent
             try await store.save(saved)
             guard start == generation else { return }
-            pendingMembership = intent; attempts = 0
-            await sendMembership(intent, start: start)
+            invalidateInvitationPreview(); pendingMembership = intent; attempts = 0; retryAfter = .distantPast
+            await sendMembership(intent, start: start, isFirstSubmission: true)
         } catch { if start == generation { notice = ht("The action was not saved on this phone. Nothing was sent.") } }
     }
     func retryMembership() async {
         guard !busy, scope == nil, let pendingMembership else { return }
         guard Date() >= retryAfter, attempts < 5 else { notice = ht("Wait before retrying, or review this action after several failed attempts."); return }
-        busy = true; defer { busy = false }; await sendMembership(pendingMembership, start: generation)
+        busy = true; defer { busy = false }; await sendMembership(pendingMembership, start: generation, isFirstSubmission: false)
     }
-    private func sendMembership(_ intent: MembershipIntent, start: UUID) async {
+    private func sendMembership(_ intent: MembershipIntent, start: UUID, isFirstSubmission: Bool) async {
         attempts += 1
         do {
             let receipt = try await service.executeMembership(intent)
@@ -147,6 +194,26 @@ import HouseholdClient
         } catch {
             guard start == generation else { return }
             if activation != nil { notice = ht("Membership was confirmed, but its local recovery record could not be saved. Connect again to continue."); return }
+            if case let .service(status, code, _, _) = error as? ClientError, let draft = intent.invitationDraft,
+               (status == 409 && code == "refresh_required") || (status == 404 && isFirstSubmission) {
+                do {
+                    try await store.discardRejectedInvitation(intent)
+                    guard start == generation else { return }
+                    invalidateInvitationPreview()
+                    invitationCode = draft.token
+                    alias = draft.alias ?? ""
+                    pendingMembership = nil
+                    if status == 404 {
+                        invitationPreview = .unavailable
+                        notice = nil
+                    } else {
+                        notice = ht("The invitation changed. Review the updated household and role before joining.")
+                    }
+                } catch {
+                    if start == generation { notice = ht("The local retry could not be cleared.") }
+                }
+                return
+            }
             if let failure = error as? ClientError, let delay = RetryPolicy().delay(attempt: attempts, error: failure) { retryAfter = Date().addingTimeInterval(delay) }
             await handle(error, scoped: false)
         }

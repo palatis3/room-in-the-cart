@@ -492,7 +492,7 @@ func membershipStatusMessageText(_ message: MembershipModel.StatusMessage) -> St
 
 func membershipNoticeText(_ notice: MembershipModel.Notice) -> String {
     switch notice {
-    case .pending: return mtr("Purchase pending. You can keep planning while Apple reviews it.")
+    case .pending: return mtr("The App Store reported this purchase as pending. You can keep planning.")
     case .cancelled: return mtr("Purchase canceled.")
     case .restored: return mtr("Your verified Household membership was restored.")
     case .restoredFree: return mtr("Restore finished. This account currently has Free access.")

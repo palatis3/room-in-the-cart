@@ -129,7 +129,7 @@ struct PantryPackageDateSection: View {
                         LabeledContent(value.sourceLabel, value: dinnerDay(day))
                         Button(pantryText("Review a printed date instead")) { choosePrinted() }
                     } else {
-                        printedControls
+                        printedControls(showsDateSuggestion: gs1 == nil)
                     }
                     LabeledContent(pantryText("Label source"), value: proposal?.selectedAI != nil ? pantryText("Encoded package date") : (photoText == nil ? pantryText("Entered by hand") : pantryText("Selected label photo")))
                     if let photoText {
@@ -209,7 +209,7 @@ struct PantryPackageDateSection: View {
         if let printed { date = printed }
     }
 
-    @ViewBuilder private var printedControls: some View {
+    @ViewBuilder private func printedControls(showsDateSuggestion: Bool) -> some View {
         ForEach(PrintedPackageDate.monthDayChoices(in: wording), id: \.self) { choice in
             Button(choice.label(locale: locale)) {
                 hasDay = false; selectedAI = nil; pendingMonthDay = choice; printedYear = ""; confirmingCalendar = false
@@ -231,12 +231,21 @@ struct PantryPackageDateSection: View {
             if let full = choice.confirmed(year: printedYear, zone: zone), let chosen = full.date {
                 Button(pantryText("Confirm printed date") + " · " + dinnerDay(full)) {
                     date = chosen; hasDay = true; pendingMonthDay = nil; printedYear = ""; editing = nil
-                }.accessibilityIdentifier("packageDate.confirmYear")
+                }.buttonStyle(.bordered).accessibilityIdentifier("packageDate.confirmYear")
             }
         } else {
+            if !hasDay, !confirmingCalendar, showsDateSuggestion,
+               let printed = PrintedPackageDate.proposedDay(in: wording, zone: zone), let chosen = printed.date {
+                Button(pantryText("Choose printed date") + " · " + dinnerDay(printed)) {
+                    date = chosen; hasDay = true; editing = nil
+                }.buttonStyle(.bordered).accessibilityIdentifier("packageDate.choosePrintedDay")
+            }
             Toggle(pantryText("The full calendar date is clear"), isOn: Binding(
                 get: { hasDay || confirmingCalendar },
-                set: { enabled in hasDay = false; confirmingCalendar = enabled }
+                set: { enabled in
+                    if enabled, let printed = PrintedPackageDate.proposedDay(in: wording, zone: zone)?.date { date = printed }
+                    hasDay = false; confirmingCalendar = enabled
+                }
             )).accessibilityIdentifier("packageDate.hasDay")
             if hasDay || confirmingCalendar {
                 DatePicker(pantryText("Printed calendar date"), selection: Binding(get: { date }, set: { chosen in
@@ -246,7 +255,7 @@ struct PantryPackageDateSection: View {
                 if confirmingCalendar, let full = try? MealDay(date: date, timeZoneIdentifier: zone) {
                     Button(pantryText("Confirm printed date") + " · " + dinnerDay(full)) {
                         hasDay = true; confirmingCalendar = false
-                    }.accessibilityIdentifier("packageDate.confirmCalendar")
+                    }.buttonStyle(.bordered).accessibilityIdentifier("packageDate.confirmCalendar")
                 }
             }
         }

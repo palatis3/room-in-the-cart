@@ -49,7 +49,7 @@ import {HouseholdDeviceManagement,deviceRevocationSchema} from './device-managem
 import {PrivacyService,deletionSchema,exitSchema,childAccountDeletionSchema} from './privacy.js';
 import {privacyHTTPCall,type PrivacyCall} from './privacy-call.js';
 import {GuardianEnrollmentService,guardianCreateSchema,childDeletionReviewSchema,manualChildDeletionSchema,guardianActionSchema,guardianConsentSchema,guardianInvitationSchema,guardianConfirmSchema,childClaimSchema,childFinishSchema,childAuthStartSchema,childNativeStartSchema,childNativeAdmitSchema} from './guardian.js';
-import {viewReplacementSchema,proposalResolutionSchema,householdCreateSchema,inviteCreateSchema,inviteRedeemSchema,viewCreateSchema,viewUpdateSchema,proposalSchema,revocationSchema, parseCommand,previewSchema,uuid } from './contracts.js';
+import {viewReplacementSchema,proposalResolutionSchema,householdCreateSchema,inviteCreateSchema,invitePreviewSchema,inviteRedeemSchema,viewCreateSchema,viewUpdateSchema,proposalSchema,revocationSchema, parseCommand,previewSchema,uuid } from './contracts.js';
 import { SharedFallbackRegistry } from './shared-fallback-registry.js';
 export interface HTTPOptions { repository:HouseholdRepository; receiptAssistance?:ReceiptAssistance; voiceAssistance?:VoiceAssistance; verifier?:IdentityVerifier; webOrigin?:string; maxRequestsPerMinute?:number; billing?:BillingService; browserAuth?:BrowserAuthService; privacy?:PrivacyService; guardian?:GuardianEnrollmentService; clientAddress?:(request:IncomingMessage)=>string|undefined }
 async function rawBody(req:IncomingMessage,maxBytes=65_536):Promise<Buffer> {
@@ -158,6 +158,8 @@ export function createHTTPServer(options:HTTPOptions) {
         throw new ServiceError(404,'unavailable','Return to sign-in.');
       }
       let auth:AuthContext|undefined,session:Awaited<ReturnType<HouseholdRepository['webIdentity']>>|undefined,browserIdentity:BrowserIdentity|undefined;
+      const invitationPreview=method==='POST'&&url.pathname==='/v1/invites/preview';
+      const invitationAction=invitationPreview||(method==='POST'&&url.pathname==='/v1/invites/redeem');
       const authorization=req.headers.authorization;
       if(authorization) {
         const match=/^Bearer ([A-Za-z0-9_.-]+)$/.exec(authorization);
@@ -165,8 +167,8 @@ export function createHTTPServer(options:HTTPOptions) {
         const identity=await withinCall(()=>verifier.verify(match[1]!));
         auth={identity,...(typeof req.headers['x-device-token']==='string'?{deviceToken:req.headers['x-device-token']}:{}),...(req.headers['x-view-grant-id']!==undefined?{viewGrantId:uuid.parse(req.headers['x-view-grant-id'])}:{}),...(req.headers['x-shop-id']!==undefined?{selectedShopId:uuid.parse(req.headers['x-shop-id'])}:{})};
       }else {
-        if(browserCookie&&options.browserAuth){try{browserIdentity=await withinCall(()=>options.browserAuth!.authenticate(browserCookie));auth={identity:browserIdentity.identity};}catch(error){if(!(error instanceof ServiceError)||error.code!=='session_needed')throw error; if(url.pathname!=='/v1/session'||method!=='GET')throw error;}}
-        const value=cookie(req);if(value){session=await withinCall(()=>repository.webIdentity(value,browserIdentity?.identity));auth=session.auth;}
+        if(browserCookie&&options.browserAuth){try{browserIdentity=await withinCall(()=>options.browserAuth!.authenticate(browserCookie,invitationPreview?'preview':'current'));auth={identity:browserIdentity.identity};}catch(error){if(!(error instanceof ServiceError)||error.code!=='session_needed')throw error; if(url.pathname!=='/v1/session'||method!=='GET')throw error;}}
+        const value=cookie(req);if(value){session=await withinCall(()=>repository.webIdentity(value,browserIdentity?.identity,invitationPreview));auth=session.auth;}
       }
       if(auth && req.headers['x-shared-content-safety']==='1') auth={...auth,sharedContentSafety:true};
       if(method==='GET'&&url.pathname==='/v1/session'&&!session){send(200,{authenticated:false});return;}
@@ -179,14 +181,14 @@ export function createHTTPServer(options:HTTPOptions) {
       if(auth.viewGrantId){
         const helperView=url.pathname===`/v1/views/${auth.viewGrantId}/current`&&method==='GET';
         const helperProposal=(url.pathname===`/v1/views/${auth.viewGrantId}/proposals`&&(method==='POST'||method==='GET'))||(new RegExp('^/v1/views/'+auth.viewGrantId+'/proposals/[^/]+$').test(url.pathname)&&method==='GET');
-        const helperSession=url.pathname==='/v1/session'||(url.pathname==='/v1/invites/redeem'&&method==='POST');
+        const helperSession=url.pathname==='/v1/session'||invitationAction;
         const helperHousehold=/^\/v1\/households\/[^/]+\/(bootstrap|replay-windows|devices(?:\/current)?)$/.test(url.pathname);
         const helperSafety=method==='POST' && /^\/v1\/households\/[^/]+\/moderation\/actions$/.test(url.pathname);
         if(!helperView&&!helperProposal&&!helperSession&&!helperHousehold&&!helperSafety)throw new ServiceError(404,'unavailable','Use the selected helper view.');
       }
       if(session?.auth.ownRequestsOnly){
         const base='/v1/households/'+session.householdId;
-        const allowed=url.pathname==='/v1/session'||(method==='POST'&&url.pathname==='/v1/invites/redeem')
+        const allowed=url.pathname==='/v1/session'||invitationAction
           ||(method==='GET'&&(url.pathname===base+'/requests/mine'||url.pathname===base+'/requests/pickups'))||(method==='POST'&&url.pathname===base+'/commands')
           ||(method==='PUT'&&url.pathname===base+'/devices/current/request-queue')||(method==='POST'&&url.pathname===base+'/moderation/actions');
         if(!allowed)throw unavailable();
@@ -219,6 +221,16 @@ export function createHTTPServer(options:HTTPOptions) {
         }
       }
       if(url.pathname==='/v1/households'&&method==='POST'){send(201,await lifecycle.create(auth.identity,householdCreateSchema.parse(await body(req))));return;}
+      if(invitationPreview){
+        const input=invitePreviewSchema.safeParse(await body(req));
+        if(!input.success)throw unavailable();
+        if(!session&&auth.viewGrantId){
+          const scope=uuid.safeParse(req.headers['x-household-id']);
+          if(!scope.success)throw unavailable();
+          await repository.authorized(scope.data,auth,async()=>undefined,true);
+        }
+        send(200,await lifecycle.previewInvite(auth.identity,input.data));return;
+      }
       if(url.pathname==='/v1/invites/redeem'&&method==='POST'){
         const review=inviteRedeemSchema.parse(await body(req));
         const language=req.headers['accept-language']?.toLowerCase()==='es'?'es':'en';

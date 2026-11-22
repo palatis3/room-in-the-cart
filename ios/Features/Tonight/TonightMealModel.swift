@@ -47,6 +47,7 @@ import RecordArchive
         let freeLots: [ConfirmedStockLot]
         let unresolvedFoods: Set<UUID>
         let sources: [Source]
+        var reservedFoods: Set<UUID> = []
         var feedbackOwner: String? = nil
         var rememberedProducts: [RecipeProductMatch] = []
     }
@@ -315,6 +316,6 @@ import RecordArchive
         let unresolved = Set(live.lots.filter { $0.free == nil }.map(\.current.foodID)).subtracting(resolved)
             .union(context.snapshot.reservations.filter { $0.state == .unresolved }.map(\.foodID))
         return Input(workspace: workspace, ledgerRevision: ledgerRevision, basis: basis, foods: foods,
-                     freeLots: live.canonicalFreeLots, unresolvedFoods: unresolved, sources: sources)
+                     freeLots: live.canonicalFreeLots, unresolvedFoods: unresolved, sources: sources, reservedFoods: context.reservedFoods)
     }
 }

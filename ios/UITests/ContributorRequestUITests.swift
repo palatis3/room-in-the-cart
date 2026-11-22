@@ -238,17 +238,19 @@ import XCTest
                 XCTAssertTrue(tip.waitForNonExistence(timeout: 5))
             }
         }
-        func allBatchIDs(prefix: String) -> Set<String> {
-            // SwiftUI creates the remaining stock and correction rows as the list scrolls.
-            let list = app.collectionViews.firstMatch
-            let batches = list.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", prefix))
-            list.swipeDown()
-            list.swipeDown()
-            var ids = Set(batches.allElementsBoundByIndex.map(\.identifier))
-            for _ in 0..<3 {
-                list.swipeUp()
+        func allBatchIDs(prefix: String, from startID: String, through footerID: String) -> Set<String> {
+            // Start on the newly opened pantry and stop at a known control below all batches.
+            // Pulling down from the top can dismiss the household's Settings sheet.
+            XCTAssertTrue(app.buttons[startID].waitForExistence(timeout: 10), "The pantry must finish loading before checking its batches")
+            let batches = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", prefix))
+            let footer = app.buttons[footerID]
+            var ids = Set<String>()
+            for _ in 0..<24 {
                 ids.formUnion(batches.allElementsBoundByIndex.map(\.identifier))
+                if footer.exists && footer.isHittable { return ids }
+                scrollContent(upward: true)
             }
+            XCTFail("Did not reach \(footerID) while enumerating \(prefix)")
             return ids
         }
         func back(from title: String) { tap(app.navigationBars[title].buttons.element(boundBy: 0)) }
@@ -340,6 +342,7 @@ import XCTest
         XCTAssertTrue(confirm.waitForNonExistence(timeout: 10), app.debugDescription)
         back(from: "Household pantry")
         tap(entry)
+        XCTAssertEqual(allBatchIDs(prefix: "householdPantry.correct.", from: "householdPantry.receipt", through: "householdPantry.refresh").count, 2)
         for (original, received, usable, price) in [
             ("Oats 3 count USD 4.20", "3 units", "2 units", "$4.20"),
             ("Beans 5 count USD 6.10", "5 units", "4 units", "Paid price unknown")
@@ -351,14 +354,13 @@ import XCTest
             XCTAssertTrue(lot.label.contains("Usable " + usable), lot.label)
             XCTAssertTrue(lot.label.contains(price), lot.label)
         }
-        XCTAssertEqual(allBatchIDs(prefix: "householdPantry.correct.").count, 2)
         back(from: "Household pantry")
         tap(app.navigationBars["Settings"].buttons["Done"])
         tap(app.shopToolButton("shop.myPantry"))
+        XCTAssertEqual(allBatchIDs(prefix: "pantry.lot.", from: "pantry.add", through: "pantry.receiptHistory"), [privateID])
         let samePrivateLot = app.buttons[privateID]
         reveal(samePrivateLot)
         XCTAssertEqual(samePrivateLot.label, privateLabel)
-        XCTAssertEqual(allBatchIDs(prefix: "pantry.lot."), [privateID])
         privateHistoryIsEmpty()
     }
 
@@ -523,7 +525,13 @@ import XCTest
         XCTAssertTrue(secondPickup.waitForExistence(timeout: 8), app.debugDescription)
         secondPickup.tap()
         tap(app.buttons["guardian.childRequestsRefresh"])
-        tap(review)
+        tap(app.textFields["guardian.childRequestItem"])
+        XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
+        let keyboardReview = app.buttons["guardian.childKeyboardAction"]
+        XCTAssertTrue(keyboardReview.waitForExistence(timeout: 5) && keyboardReview.isHittable)
+        XCTAssertEqual(keyboardReview.label, "Review request")
+        XCTAssertLessThanOrEqual(keyboardReview.frame.maxY, keyboard.frame.minY + 2)
+        keyboardReview.tap()
         XCTAssertTrue(app.navigationBars["Review your request"].waitForExistence(timeout: 10))
         let reviewedPickup = element("guardian.childReviewedPickup")
         let destination = reviewedPickup.label + (reviewedPickup.value as? String ?? "")
@@ -550,6 +558,36 @@ import XCTest
         XCTAssertTrue(app.staticTexts["Withdrawn"].firstMatch.waitForExistence(timeout: 10), app.debugDescription)
         XCTAssertFalse(withdraw.exists)
         XCTAssertEqual(app.staticTexts["fixture.requestPosts"].label, "Fixture request POSTs: 2")
+    }
+
+    func testSpanishGuardianChildSendsRequestForFirstCurrentPickup() {
+        app.launchArguments = ["--ui-testing", "--guardian-request-pickups-fixture", "-AppleLanguages", "(es)", "-AppleLocale", "es_US"]
+        app.launch()
+        XCTAssertTrue(app.navigationBars["Mis solicitudes"].waitForExistence(timeout: 30))
+        tap(app.buttons["guardian.childRequestPickup"])
+        let firstPickup = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Esta recogida · ID ")).firstMatch
+        XCTAssertTrue(firstPickup.waitForExistence(timeout: 5) && firstPickup.isHittable, app.debugDescription)
+        let selectedPickup = firstPickup.label
+        firstPickup.tap()
+
+        fill("Arroz", into: "guardian.childRequestItem", dismissAfterEntry: false)
+        let review = app.buttons["guardian.childKeyboardAction"]
+        XCTAssertEqual(review.label, "Revisar solicitud")
+        tap(review)
+        XCTAssertTrue(app.navigationBars["Revisar tu solicitud"].waitForExistence(timeout: 10))
+        let pickup = element("guardian.childReviewedPickup")
+        XCTAssertTrue((pickup.label + (pickup.value as? String ?? "")).contains(selectedPickup))
+        let route = element("household.request.reviewDestination")
+        XCTAssertTrue((route.label + (route.value as? String ?? "")).contains("Solicitud para esta recogida"))
+        enableSwitch("Revisé el producto, la cantidad y la compra.")
+        tap(app.buttons["household.request.sendReviewed"])
+
+        reveal(app.staticTexts["Recibido por el hogar"].firstMatch)
+        tap(app.buttons["guardian.childRequestsRefresh"])
+        reveal(app.staticTexts["Arroz"].firstMatch)
+        reveal(app.staticTexts["Recibido, pendiente de revisión"].firstMatch)
+        XCTAssertEqual(app.staticTexts["fixture.requestRows"].label, "Fixture saved requests: 1")
+        XCTAssertEqual(app.staticTexts["fixture.requestPosts"].label, "Fixture request POSTs: 1")
     }
 
     func testSpanishContributorReadsOnlyExplicitPurchaseStatusOnTheirOwnRequests() {

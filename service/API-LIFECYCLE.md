@@ -10,10 +10,13 @@ Implemented service contracts, 2026-11-03. All IDs are opaque UUIDs. Mutation ob
 | `POST /v1/households/{h}/devices` | `{}` | HTTP 201 `{deviceId,deviceToken}`. Enroll only after membership exists. |
 | `GET /v1/households/{h}/members` | — | Organizer only: `{members:[{memberId,alias,kind,state,role}]}`. No credential, guardian proof, budget or billing data. |
 | `POST /v1/households/{h}/invites` | `{kind:'adult_contributor',expiresInHours?:1..168}` | `{inviteId,token,expiresAt}`; default expiry 24 hours. Organizer only. |
-| `POST /v1/invites/redeem` | `{token,intent:'join',adultAttestation:true,alias?:string}` | `{householdId,memberId,role:'contributor'|'helper'|'editor',grantId?:UUID}`. Bearer identity or current authenticated cookie with CSRF. |
+| `POST /v1/invites/preview` | `{token,adultAttestation:true}` | `{householdLabel,role:'adult_contributor'\|'helper_read'\|'helper_edit'}` for a live, unused ordinary invitation. Browser requests require the current CSRF token and configured origin. |
+| `POST /v1/invites/redeem` | `{token,intent:'join',adultAttestation:true,alias?:string,reviewedOffer?:{householdLabel,role}}` | `{householdId,memberId,role:'contributor'|'helper'|'editor',grantId?:UUID}`. Bearer identity or current authenticated cookie with CSRF. |
 | `POST /v1/households/{h}/revocations` | `{kind:'member'|'invite'|'view',targetId}` | `{revoked:true,kind,targetId}`. Organizer manages membership/invitations; assigned shopper may revoke a view for their shop. |
 
 Labels and aliases are 1–80 characters. Adult attestation is a self-declaration, not provider-verified age evidence. An identity already enrolled as a child cannot acquire adult authority through creation or redemption. Child invitation kind `child_contributor` returns `503 consent_unavailable`; no client payload records verification evidence.
+
+Any signed-in adult who holds a forwarded ordinary invitation can review the two offered fields. Preview creates no record and leaves the invitation available for a later Join. A previously used, expired or revoked code, a child invitation or profile, and a helper offer with an unavailable grant return `404 unavailable`. Previewing clients submit the displayed offer as `reviewedOffer` on explicit Join. A changed household label or offered role prompts a fresh review with `409 refresh_required`. Previously shipped callers can continue to join without sending the optional offer.
 
 Invite tokens have format `householdUUID.randomSecret` and only a SHA-256 hash is stored. Redemption, membership and helper grant binding are one transaction. A different identity cannot redeem a consumed token. The original identity may retry while its membership, invitation and any view grant remain valid. Revoked/expired links return `404 unavailable`; no secret is returned by a read endpoint. Rejoining a revoked membership needs a new invite. An active shopper must be transferred before member revocation.
 

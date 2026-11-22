@@ -23,6 +23,44 @@ struct PantryCookRecord: Codable, Equatable {
     var undo: PantryCookUndoReceipt? = nil
     var isActive: Bool { undo == nil }
 
+    /// The retained checkout can carry its original meal need after the
+    /// purchase disappears. Its exact canonical claim must have been spent by
+    /// this meal, for the full amount of the original, unshared contribution.
+    func fulfilledPurchaseNeeds(in source: PickupCheckoutMealSource) -> [UUID: AllocationNeed] {
+        guard draft.shopID == source.shop.id, draft.ledgerID == source.ledgerWorkspaceID,
+              draft.recoveredMeal == nil, !fulfilledNeeds.isEmpty else { return [:] }
+        let needs = Dictionary(grouping: source.needs, by: \.id)
+        let details = Dictionary(grouping: source.details, by: \.id)
+        let claims = Dictionary(grouping: priorClaims, by: \.id)
+        let rows = Dictionary(grouping: source.shop.contributions.filter { $0.removedAt == nil }, by: \.lineID)
+        let parts = Dictionary(grouping: draft.parts, by: \.contributionID)
+        var result = [UUID: AllocationNeed]()
+        for spent in fulfilledNeeds {
+            guard let captured = needs[spent.id], captured.count == 1, let need = captured.first,
+                  need.orderLineID == spent.foodID, need.priority == .required, spent.priority == need.priority,
+                  let provenance = details[need.id], provenance.count == 1, let detail = provenance.first,
+                  detail.sourceOccurrenceID == draft.meal.id, detail.sourceContributionID == need.id, detail.sourceGroupID == nil,
+                  draft.ingredientRowIDs.contains(need.id), let members = rows[need.orderLineID], members.count == 1,
+                  members[0].id == need.id, members[0].source == .meal(occurrenceID: draft.meal.id),
+                  let claimID = try? PantryLegacyMigration.claimIdentity(originID: draft.inventoryID, needID: need.id, foodID: spent.foodID),
+                  let owners = claims[claimID], owners.count == 1, let claim = owners.first, claim.state == .active,
+                  claim.originID == draft.inventoryID, claim.foodID == spent.foodID, claim.priority == need.priority,
+                  let held = claim.amount, let heldAmount = try? held.converted(to: need.amount.unit),
+                  let used = try? spent.amount.converted(to: need.amount.unit),
+                  need.amount.amount > .zero, used == need.amount.amount, heldAmount >= used,
+                  let actual = parts[need.id], !actual.isEmpty else { continue }
+            let measured = actual.compactMap { part -> Rational? in
+                guard part.substitution == nil, case .lot(let lotID, _, let amount?) = part.use,
+                      amount.amount > .zero, resultingObservations[lotID] != nil else { return nil }
+                return try? amount.converted(to: need.amount.unit, using: amount.confirmedConversion ?? need.amount.confirmedConversion)
+            }
+            guard measured.count == actual.count, let total = try? measured.reduce(Rational.zero, { try $0.adding($1) }),
+                  total >= need.amount.amount else { continue }
+            result[need.id] = need
+        }
+        return result
+    }
+
     func validate(shopID: UUID) throws {
         let inputs = Set(draft.parts.compactMap { part -> UUID? in
             if case .lot(let id, _, _) = part.use { return id }

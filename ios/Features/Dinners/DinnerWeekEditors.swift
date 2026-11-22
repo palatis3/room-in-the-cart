@@ -112,6 +112,13 @@ struct DinnerOccurrenceView: View {
                 if model.store === ledger, model.localIdeaWorkspaceID == ledger.sourceWorkspaceID, let shop = model.shop {
                     if model.phaseProvider(shop.id) == .draft {
                         Section {
+                            let linked = ledger.sourceWorkspaceID.flatMap { id in
+                                pickup.sourceWorkspaceID.flatMap { origin in pickup.currentDinnerActorID.map { actor in
+                                    ledger.workspace.dinnerPantryLines(shop: shop, workspaceID: id, originID: origin,
+                                        actorID: actor.uuidString, occurrenceID: meal.id)
+                                }}
+                            } ?? []
+                            DinnerShoppingCheckLink(shopID: shop.id, occurrenceID: meal.id, linkedProducts: !linked.isEmpty)
                             DinnerDecisionButton(model: model, title: dinnerText("Swap this dinner"), identifier: "dinner.swap") {
                                 DinnerSwapView(model: model, meal: meal)
                             }.disabled(!model.editable)
@@ -294,6 +301,13 @@ struct DinnerManualAdjustmentView: View {
             Section {
                 DinnerServingField(count: $servings, identifier: "dinner.occurrence.servings")
                 if editsPlan {
+                    if servings != meal.servings.description, let shop = model.shop,
+                       model.workspace.packSelections.contains(where: { selection in
+                           selection.shopID == shop.id && selection.isNoPurchase && selection.request.offerA.id == DinnerPantryProducts.atHomeOfferID &&
+                           shop.contributions(forLineID: selection.lineID).contains { $0.source == .meal(occurrenceID: meal.id) }
+                       }) {
+                        Text(dinnerText("After changing servings, open Review pantry purchases in this dinner to confirm what you still need to buy."))
+                    }
                     reviewButton.buttonStyle(PrimaryAction())
                 } else {
                     Text(dinnerText("Enter each resulting amount explicitly. This Free editor does not scale ingredients automatically."))

@@ -19,11 +19,11 @@ struct FirstListContents: Equatable, Codable {
         guard shop.id == shopID else { throw LedgerError.stalePreview }
         let combinedWording = [original, wording].filter { !$0.isEmpty }.joined(separator: "\n")
         try StagedListImport.validateSourceText(combinedWording, maximumLines: StagedListImport.maximumLines)
-        let before = try preview ?? shop.stageImport(text: original, source: source, importID: importID)
+        let before = try preview ?? shop.stageImport(text: original, source: source, importID: importID, reviewPackageCounts: true)
         guard before.id == importID, before.originalText == original else { throw LedgerError.stalePreview }
         let addition = try pantryFood
             ? PantryRestockReview.stage(food: wording, text: wording, source: .typed, id: UUID(), shop: shop, suggestedAmount: pantrySuggestedAmount, productLink: pantryProductLink)
-            : shop.stageImport(text: wording)
+            : shop.stageImport(text: wording, reviewPackageCounts: true)
         let combined = try shop.appendingImport(addition, to: before)
         var next = self
         next.original = combined.originalText
@@ -158,6 +158,7 @@ struct FirstListResumeButton: View {
 struct FirstListEntry: View {
     @ObservedObject var model: LedgerModel
     var prefill: String = ""
+    var opensListAfterSave = false
     var pantryFoodPrefill = false
     var pantrySuggestedAmount: Quantity? = nil
     var pantryProductLink: UUID? = nil
@@ -184,7 +185,7 @@ struct FirstListEntry: View {
     var body: some View {
         Group {
             if let editor, editor.authorize() {
-                FirstListForm(model: model, editor: editor, prefill: prefill, pantryFoodPrefill: pantryFoodPrefill, pantrySuggestedAmount: pantrySuggestedAmount, pantryProductLink: pantryProductLink, onSaved: onSaved)
+                FirstListForm(model: model, editor: editor, prefill: prefill, opensListAfterSave: opensListAfterSave, pantryFoodPrefill: pantryFoodPrefill, pantrySuggestedAmount: pantrySuggestedAmount, pantryProductLink: pantryProductLink, onSaved: onSaved)
             } else if committedHere {
                 // Committing our own batch advanced the revision before its sheet finished closing.
                 ProgressView()
@@ -224,6 +225,7 @@ private struct FirstListForm: View {
     @ObservedObject var model: LedgerModel
     @ObservedObject var editor: FirstListEditor
     let prefill: String
+    let opensListAfterSave: Bool
     let pantryFoodPrefill: Bool
     let pantrySuggestedAmount: Quantity?
     let pantryProductLink: UUID?
@@ -235,10 +237,10 @@ private struct FirstListForm: View {
                 Text(ledgerText("The shopping workspace changed. Review your draft wording again before creating a pickup."))
                 Text(verbatim: editor.content.original)
                 Button(ledgerText("Review as a new pickup")) { Task { await editor.reviewAgain() } }
-                Button(ledgerText("Discard draft"), role: .destructive) { Task { if await editor.discard() { dismiss() } } }
+                FirstListDiscardButton(editor: editor, blocked: false)
             }.toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Close")) { dismiss() } } }
         } else {
-            LedgerImportView(model: model, shopID: editor.content.shopID, firstDraft: editor, prefill: prefill, pantryFoodPrefill: pantryFoodPrefill, pantrySuggestedAmount: pantrySuggestedAmount, pantryProductLink: pantryProductLink, authorizeEntry: editor.authorize, onSaved: onSaved)
+            LedgerImportView(model: model, shopID: editor.content.shopID, firstDraft: editor, prefill: prefill, opensListAfterSave: opensListAfterSave, pantryFoodPrefill: pantryFoodPrefill, pantrySuggestedAmount: pantrySuggestedAmount, pantryProductLink: pantryProductLink, authorizeEntry: editor.authorize, onSaved: onSaved)
         }
     }
 }
@@ -265,10 +267,27 @@ struct FirstListDraftStatus: View {
                 Button(ledgerText("Close without saving these changes")) { dismiss() }
             }
             if editor.version != nil || !contents.original.isEmpty {
-                Button(ledgerText("Discard draft"), role: .destructive) {
-                    Task { if await editor.discard() { dismiss() } }
-                }.disabled(blocked).accessibilityIdentifier("firstList.discard")
+                FirstListDiscardButton(editor: editor, blocked: blocked)
             }
         }
+    }
+}
+
+private struct FirstListDiscardButton: View {
+    @ObservedObject var editor: FirstListEditor
+    let blocked: Bool
+    @Environment(\.dismiss) private var dismiss
+    @State private var confirming = false
+
+    var body: some View {
+        Button(ledgerText("Discard draft"), role: .destructive) { confirming = true }
+            .disabled(blocked)
+            .accessibilityIdentifier("firstList.discard")
+            .alert(ledgerText("Discard this shopping list draft?"), isPresented: $confirming) {
+                Button(ledgerText("Discard draft"), role: .destructive) {
+                    Task { if !blocked, await editor.discard() { dismiss() } }
+                }
+                Button(ledgerText("Keep editing"), role: .cancel) {}
+            }
     }
 }

@@ -330,7 +330,8 @@ struct GroceryWindow: View {
         do {
             let persona = ReceiptAcquisition.identity(["private-receipt-aliases", identity.actorID.uuidString,
                 identity.subject ?? "", identity.householdID ?? "", identity.memberID ?? ""])
-            try await pickup.bindPrivatePantry(ledger: ledger, receiptAliasPersona: persona, authorize: authorize)
+            try await pickup.bindPrivatePantry(ledger: ledger, receiptAliasPersona: persona,
+                privateDinnerActorID: identity.subject == nil && identity.householdID == nil ? identity.actorID : nil, authorize: authorize)
             if !pickup.ready { await pickup.load() }
             if pickup.pantryRouteAvailable { Diagnostics.record(.pantryRouteReady) }
             else if !pickup.pantryRestartAvailable {
@@ -450,6 +451,8 @@ struct ShopView: View {
     private struct InStoreSelection: Identifiable { let id: UUID }
     @State private var inStoreShop: InStoreSelection?
     @State private var shopWithListLink: UUID?
+    private static let moreToolsID = "shop.moreTools"
+    @State private var showingSettings = false
     @State private var showingMoreTools = false
     @State private var showingStandingList = false
     @State private var showingFirstList = false
@@ -458,18 +461,31 @@ struct ShopView: View {
     @EnvironmentObject private var pickup: PickupModel
     var body: some View {
         VStack(spacing: 0) {
-            shopContent
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .clipped()
+            ScrollViewReader { reader in
+                shopContent
+                    .onChange(of: showingMoreTools) { _, expanded in
+                        if expanded { reader.scrollTo(Self.moreToolsID, anchor: .top) }
+                    }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .clipped()
             // Reserve space above bottom navigation while the scroll view
             // takes its size directly from the available navigation content.
             Theme.canvas.frame(height: 8)
                 .background(Theme.canvas.ignoresSafeArea(edges: .bottom))
                 .accessibilityHidden(true)
-        }.workingSurface().navigationTitle(tr("Shop")).navigationBarTitleDisplayMode(.inline).settingsButton()
+        }.workingSurface().navigationTitle(tr("Shop")).navigationBarTitleDisplayMode(.inline)
+            .settingsButton(presentation: $showingSettings)
             .task { await model.refresh() }
             .sheet(item: $inStoreShop) { shop in
-                PrivateShoppingSheet(model: ledger) { InStoreShoppingView(model: ledger, shopID: shop.id) }
+                PrivateShoppingSheet(model: ledger) {
+                    InStoreShoppingView(model: ledger, shopID: shop.id) { selected in
+                        guard inStoreShop?.id == shop.id, navigation.selection == .shop,
+                              navigation.shopPath.isEmpty, let workspace = ledger.sourceWorkspaceID else { return }
+                        inStoreShop = nil
+                        navigation.setPath([.shoppingList(actorID: access.localActorID, workspaceID: workspace, shopID: selected)], for: .shop)
+                    }
+                }
             }
             .sheet(isPresented: $showingPantry) {
                 NavigationStack {
@@ -486,7 +502,7 @@ struct ShopView: View {
             }
             .sheet(isPresented: $showingFirstList) {
                 NavigationStack {
-                    FirstListEntry(model: ledger) { id in
+                    FirstListEntry(model: ledger, opensListAfterSave: true) { id in
                         guard access.unlocked, ledger.shop?.id == id, let workspace = ledger.sourceWorkspaceID else { return }
                         showingFirstList = false
                         navigation.setPath([.shoppingList(actorID: access.localActorID, workspaceID: workspace, shopID: id)], for: .shop)
@@ -641,7 +657,8 @@ struct ShopView: View {
                 DisclosureGroup(isExpanded: $showingMoreTools) { secondaryShopTools } label: {
                     Text(quickGroceryText("More shopping tools")).font(.headline)
                 }
-                .disclosureGroupStyle(LabeledFormDisclosureStyle(label: quickGroceryText("More shopping tools"), identifier: "shop.moreTools"))
+                .disclosureGroupStyle(LabeledFormDisclosureStyle(label: quickGroceryText("More shopping tools"), identifier: Self.moreToolsID))
+                .id(Self.moreToolsID)
             } else {
                 Text(quickGroceryText("Shopping tools")).font(.title2.weight(.semibold)).accessibilityAddTraits(.isHeader)
                 secondaryShopTools
@@ -652,6 +669,10 @@ struct ShopView: View {
 
     private var secondaryShopTools: some View {
         VStack(alignment: .leading, spacing: 0) {
+            Button { showingSettings = true } label: {
+                ShopToolLabel(quickGroceryText("Family sharing"), "person.2", chevron: true)
+            }
+            .accessibilityIdentifier("shop.familySharing")
             if ledger.shop == nil {
                 Button { showingStandingList = true } label: { ShopToolLabel(shoppingText("Standing list"), "list.star") }
                     .disabled(!ledger.ready).accessibilityIdentifier("shop.standingList")
@@ -903,20 +924,27 @@ struct RecordsView: View {
 }
 
 private struct SettingsButton: ViewModifier {
-    @State private var presented = false
+    let presentation: Binding<Bool>?
+    @State private var showingSettings = false
+
     func body(content: Content) -> some View {
+        let presented = presentation ?? $showingSettings
         content.toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button { presented = true } label: { Image(systemName: "gearshape").frame(minWidth: 44, minHeight: 44) }
+                Button { presented.wrappedValue = true } label: { Image(systemName: "gearshape").frame(minWidth: 44, minHeight: 44) }
                     .accessibilityLabel(tr("Settings")).accessibilityIdentifier("settings")
             }
-        }.sheet(isPresented: $presented) {
+        }.sheet(isPresented: presented) {
             NavigationStack { SettingsView() }
-                .environment(\.returnFromMembershipSettings, { presented = false })
+                .environment(\.returnFromMembershipSettings, { presented.wrappedValue = false })
         }
     }
 }
-extension View { func settingsButton() -> some View { modifier(SettingsButton()) } }
+extension View {
+    func settingsButton(presentation: Binding<Bool>? = nil) -> some View {
+        modifier(SettingsButton(presentation: presentation))
+    }
+}
 
 struct SettingsView: View {
     @ObservedObject private var feedbackConsent = LocalPickupFeedbackConsent.shared

@@ -1,5 +1,6 @@
 import CoreDomain
 import LocalStore
+import UIKit
 import XCTest
 @testable import RoomInTheCart
 
@@ -17,6 +18,194 @@ import XCTest
         result.dateConfirmed = true
         result.reference = "TICKET-18"
         return result
+    }
+
+    func testExactImportedFileCanReopenOnlyItsOwnersSavedReceiptBeforeReview() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let cleanup = SQLiteFixtureDirectory(directory, test: self)
+        let store = try ComparisonStore(url: directory.appendingPathComponent("pantry.sqlite"), inventoryEnabled: true)
+        cleanup.track(store)
+        let token = try await store.inventorySourceToken()
+        try await store.commitInventory(.init(workspaceID: store.workspaceID, operationID: UUID(), expectedRevision: 0,
+            request: Data([1]), mode: .activate, sourceToken: token), at: now)
+        var allowed = true
+        let owner = UUID()
+        let repo = PantryRepository(store: store, aliasPersonaID: owner, authorize: { allowed })
+        cleanup.track(repo)
+        let model = PantryModel(repository: repo, clock: { self.now })
+        await model.load()
+        let bytes = Data("Soup 2.40\nFee 1.00".utf8)
+        let document = try await ReceiptDocumentReader().extract(.init(data: bytes, kind: .text))
+        let target = CaptureTarget(workspaceID: store.workspaceID, containerID: UUID(), objectID: UUID(),
+                                   revision: 1, kind: .receiptEvidence)
+        let source = try document.source(target: target, merchant: "Mercado", stage: .receipt,
+                                         selection: [.init(page: 1, line: 1), .init(page: 1, line: 2)], at: now)
+        var imported = try ReceiptImportDraft(source: source, now: now)
+        imported.tracksPutaway = true
+        imported.dateConfirmed = true
+        imported.reference = "FILE-18"
+        imported.lines[0].treatment = .eaten
+        imported.lines[1].treatment = .chargeOrReturn
+
+        var manual = try receipt(store: store, lines: ["Soup 2.40", "Fee 1.00"])
+        manual.lines[0].treatment = .eaten
+        let manualReview = try await model.reviewReceipt(manual)
+        try await model.saveReceipt(manualReview)
+        let beforeFile = try await model.savedReceipt(fileDigest: document.digest)
+        XCTAssertNil(beforeFile)
+
+        let review = try await model.reviewReceipt(imported)
+        try await model.saveReceipt(review)
+        let state = try await store.inventoryState()
+        let reopened = try await model.savedReceipt(fileDigest: document.digest)
+        XCTAssertEqual(reopened?.id, imported.receiptID)
+        let savedDecisions = try await model.reviewedReceiptDecisions(imported.receiptID, after: nil)
+        XCTAssertEqual(Set(savedDecisions.map(\.original)), Set(["Soup 2.40", "Fee 1.00"]))
+        let alternate = try await ReceiptDocumentReader().extract(.init(data: bytes + Data([10]), kind: .text))
+        XCTAssertNotEqual(alternate.digest, document.digest)
+        let pdf = UIGraphicsPDFRenderer(bounds: CGRect(x: 0, y: 0, width: 320, height: 320)).pdfData { context in
+            context.beginPage()
+            ("Soup 2.40\nFee 1.00" as NSString).draw(at: CGPoint(x: 15, y: 15), withAttributes: nil)
+        }
+        let otherDocument = try await ReceiptDocumentReader().extract(.init(data: pdf, kind: .pdf))
+        let otherMedium = try await model.savedReceipt(fileDigest: otherDocument.digest)
+        XCTAssertNil(otherMedium)
+        let otherBytes = try await model.savedReceipt(fileDigest: alternate.digest)
+        let absent = try await model.savedReceipt(fileDigest: Data())
+        XCTAssertNil(otherBytes)
+        XCTAssertNil(absent)
+        let outsider = PantryRepository(store: store, aliasPersonaID: UUID(), authorize: { true })
+        let hidden = try await outsider.putawayReceipt(fileDigest: document.digest)
+        XCTAssertNil(hidden)
+        let afterLookup = try await store.inventoryState()
+        XCTAssertEqual(afterLookup, state)
+        let anotherReview = try await model.reviewReceipt(imported)
+        XCTAssertNil(anotherReview.batch)
+        allowed = false
+        let revoked = try await model.savedReceipt(fileDigest: document.digest)
+        XCTAssertNil(revoked)
+    }
+
+    func testReviewedReceiptCopyUsesOnlySelectedFieldsInTheLiveOwnerScope() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let cleanup = SQLiteFixtureDirectory(directory, test: self)
+        let store = try ComparisonStore(url: directory.appendingPathComponent("pantry.sqlite"), inventoryEnabled: true)
+        cleanup.track(store)
+        let token = try await store.inventorySourceToken()
+        try await store.commitInventory(.init(workspaceID: store.workspaceID, operationID: UUID(), expectedRevision: 0,
+            request: Data([1]), mode: .activate, sourceToken: token), at: now)
+        var allowed = true
+        let owner = UUID()
+        let repo = PantryRepository(store: store, aliasPersonaID: owner, authorize: { allowed })
+        cleanup.track(repo)
+        let model = PantryModel(repository: repo, clock: { self.now })
+        await model.load()
+        var draft = try receipt(store: store, lines: ["Soup 2.40", "Bread 1.10"])
+        draft.lines[0].treatment = .eaten
+        draft.lines[0].name = "Bean soup"
+        draft.lines[0].paid = "2.40"
+        draft.lines[1].treatment = .eaten
+        draft.lines[1].paid = "1.10"
+        draft.receiptTotal = "3.50"
+        let review = try await model.reviewReceipt(draft)
+        try await model.saveReceipt(review)
+        let headers = try await model.reviewedReceiptHeaders(after: nil)
+        let header = try XCTUnwrap(headers.first)
+        let rows = try await model.reviewedReceiptDecisions(header.id, after: nil)
+        let soup = try XCTUnwrap(rows.first { $0.name == "Bean soup" })
+        XCTAssertTrue(model.permitsReceiptCopy(header))
+        var selection = ReviewedReceiptCopySelection()
+        func text() -> String { selection.text(header: header, purchaseDay: "Reviewed day", rows: rows) }
+        XCTAssertEqual(text(), "")
+        let linePrice = pantryFormat("Paid line total %@", receiptMoney(Money(minorUnits: 240)))
+        selection.amounts.insert(soup.id)
+        XCTAssertEqual(text(), linePrice)
+        selection.names.insert(soup.id)
+        XCTAssertEqual(text(), "Bean soup\n" + linePrice)
+        selection.store = true
+        selection.date = true
+        selection.total = true
+        selection.amounts.remove(soup.id)
+        let total = putawayText("Paid receipt total") + " · " + receiptMoney(Money(minorUnits: 350))
+        XCTAssertEqual(text(), [header.merchant, "Reviewed day", total, "Bean soup"].joined(separator: "\n"))
+
+        for persona: UUID? in [UUID(), nil] {
+            let scoped = PantryRepository(store: store, aliasPersonaID: persona, authorize: { true })
+            cleanup.track(scoped)
+            let other = PantryModel(repository: scoped)
+            await other.load()
+            XCTAssertFalse(other.permitsReceiptCopy(header))
+        }
+        allowed = false
+        XCTAssertFalse(model.permitsReceiptCopy(header))
+    }
+
+    func testPurchaseDayReopensAndExportsInBothLanguagesAndRescansAcrossTimeZones() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let cleanup = SQLiteFixtureDirectory(directory, test: self)
+        let url = directory.appendingPathComponent("pantry.sqlite")
+        let store = try ComparisonStore(url: url, inventoryEnabled: true)
+        cleanup.track(store)
+        let token = try await store.inventorySourceToken()
+        _ = try await store.commitInventory(.init(workspaceID: store.workspaceID, operationID: UUID(),
+            expectedRevision: 0, request: Data([1]), mode: .activate, sourceToken: token, writes: []))
+        let owner = UUID()
+        let repository = PantryRepository(store: store, aliasPersonaID: owner, authorize: { true })
+        let source = SourceMediaRecord(id: UUID(), target: .init(workspaceID: store.workspaceID, containerID: UUID(), objectID: UUID(),
+            revision: 1, kind: .receiptEvidence), originalText: "Beans", reviewedLabel: "Market", imageJPEG: nil, barcode: nil,
+            receiptLines: [.init(originalText: "Beans")], capturedAt: now)
+        func draft(zone: String, day: Int, reference: String) throws -> ReceiptImportDraft {
+            var calendar = Calendar(identifier: .gregorian)
+            calendar.timeZone = try XCTUnwrap(TimeZone(identifier: zone))
+            var receipt = try ReceiptImportDraft(source: source, now: now, timeZone: calendar.timeZone)
+            receipt.selectedPurchaseDate = try XCTUnwrap(calendar.date(from: DateComponents(year: 2026, month: 11, day: day)))
+            receipt.dateConfirmed = true
+            receipt.tracksPutaway = true
+            receipt.reference = reference
+            receipt.lines[0].treatment = .add
+            receipt.lines[0].received = "1"
+            receipt.lines[0].usable = "1"
+            return receipt
+        }
+        let eastern = try draft(zone: "America/New_York", day: 20, reference: "TICKET-18")
+        let reviewed = try await repository.reviewReceipt(eastern, expected: store.inventoryState(), at: now)
+        try await repository.applyReceipt(reviewed, at: now)
+        try await store.close()
+        let reopened = try ComparisonStore(url: url, inventoryEnabled: true)
+        cleanup.track(reopened)
+        let reader = PantryRepository(store: reopened, aliasPersonaID: owner, authorize: { true })
+        let headers = try await reader.putawayHeaders(after: nil)
+        let header = try XCTUnwrap(headers.first)
+        let facts = try await reader.acquisitionHistory(receiptID: header.id)
+        XCTAssertEqual(header.purchaseDay, "2026-11-20")
+        XCTAssertEqual(facts.first?.purchaseDay?.iso8601, header.purchaseDay)
+        let western = try draft(zone: "America/Los_Angeles", day: 20, reference: "TICKET-18")
+        XCTAssertNotEqual(eastern.purchaseDate, western.purchaseDate)
+        let state = try await reopened.inventoryState()
+        let replay = try await reader.reviewReceipt(western, expected: state, at: now)
+        XCTAssertNil(replay.batch)
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try XCTUnwrap(western.purchaseTimeZone)
+        var copy = ReviewedReceiptCopySelection()
+        copy.date = true
+        for (locale, expected) in [("en_US", "November 20, 2026"), ("es_US", "20 de noviembre de 2026")] {
+            let wording = ReceiptDateDisplay.storedPurchaseDay(header.purchaseDay, recordedAt: header.date,
+                locale: Locale(identifier: locale), calendar: calendar)
+            XCTAssertEqual(copy.text(header: header, purchaseDay: wording, rows: []), expected)
+            let legacy = ReceiptDateDisplay.storedPurchaseDay(nil, recordedAt: header.date, locale: Locale(identifier: locale), calendar: calendar)
+            XCTAssertTrue(legacy.contains("UTC"))
+            XCTAssertNotEqual(legacy, wording)
+        }
+        let differentDay = try draft(zone: "America/Los_Angeles", day: 19, reference: "TICKET-18")
+        do {
+            _ = try await reader.reviewReceipt(differentDay, expected: state, at: now)
+            XCTFail("A conflicting day cannot extend the saved transaction.")
+        } catch PantryReceiptError.changedEvidence {}
+        let afterConflict = try await reopened.inventoryState()
+        XCTAssertEqual(afterConflict, state)
     }
 
     func testKeptPortionCorrectionIdentifiesOriginalLineAndAcceptsFractions() {
@@ -164,6 +353,60 @@ import XCTest
             _ = try await SavedCouponReceipt.load(header: header, from: outsider, authorize: { true })
             XCTFail("Another receipt owner must not supply coupon evidence")
         } catch ComparisonStoreError.operationConflict { }
+    }
+
+    func testTypedReceiptKeepsCorrectedFieldsSeparateFromConfirmedStockAndPayment() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let cleanup = SQLiteFixtureDirectory(directory, test: self)
+        let store = try ComparisonStore(url: directory.appendingPathComponent("pantry.sqlite"), inventoryEnabled: true)
+        cleanup.track(store)
+        let token = try await store.inventorySourceToken()
+        try await store.commitInventory(.init(workspaceID: store.workspaceID, operationID: UUID(), expectedRevision: 0,
+            request: Data([1]), mode: .activate, sourceToken: token), at: now)
+        let repo = PantryRepository(store: store, authorize: { true })
+        cleanup.track(repo)
+        let text = "2x Canned lentils 3.20\nPlain yogurt 2.40\nHot lunch 5.00\nService fee 0.45"
+        let scan = ScanModel(text: text, capturedAt: now)
+        var rows = try ScanLimits.receiptLines(scan.text)
+        let original = rows[0].originalText
+        rows[0].quantityNote = "2 units"
+        rows[0].priceNote = "USD 3.20"
+        let target = CaptureTarget(workspaceID: store.workspaceID, containerID: UUID(), objectID: UUID(),
+                                   revision: 1, kind: .receiptEvidence)
+        XCTAssertThrowsError(try scan.reviewed(target: target, label: "Market", barcode: nil, receiptLines: rows))
+        scan.confirmed = true
+        let source = try scan.reviewed(target: target, label: "Market", barcode: nil, receiptLines: rows)
+        XCTAssertEqual(source.originalText, text)
+        var draft = try ReceiptImportDraft(source: source, now: now)
+        draft.purchaseDate = now
+        draft.tracksPutaway = true
+        draft.dateConfirmed = true
+        XCTAssertTrue(draft.selectedLines.isEmpty)
+        XCTAssertTrue(draft.lines[0].received.isEmpty)
+        XCTAssertTrue(draft.lines[0].usable.isEmpty)
+        XCTAssertTrue(draft.lines[0].paid.isEmpty)
+        XCTAssertEqual(draft.lines[0].printed?.quantity, "2")
+        XCTAssertEqual(draft.lines[0].printed?.priceWording, "USD 3.20")
+        draft.lines[0].treatment = .add
+        draft.lines[0].usePrintedQuantity()
+        XCTAssertTrue(draft.lines[0].usable.isEmpty)
+        draft.lines[0].usable = draft.lines[0].received
+        let before = try await store.inventoryState()
+        let unpaid = try await repo.reviewReceipt(draft, expected: before, at: now)
+        XCTAssertNil(unpaid.facts.first?.paidLineTotal)
+        draft.lines[0].paid = try XCTUnwrap(draft.lines[0].printed?.amount)
+        let preview = try await repo.reviewReceipt(draft, expected: before, at: now)
+        XCTAssertEqual(preview.putaway?.decisions.map(\.original), [original])
+        XCTAssertEqual(preview.facts.first?.paidLineTotal?.minorUnits, 320)
+        XCTAssertNil(preview.putaway?.header.totalMinor)
+        try await repo.applyReceipt(preview, at: now)
+        let after = try await repo.load(at: now)
+        XCTAssertEqual(after.lots.map(\.name), ["Canned lentils"])
+        XCTAssertEqual(after.lots.first?.count.quantity?.amount, try Rational(2))
+        let saved = try await repo.putawayDecisions(receiptID: draft.receiptID, after: nil)
+        XCTAssertEqual(saved.map(\.original), [original])
+        XCTAssertEqual(saved.first?.paidMinor, 320)
     }
 
     func testNoStockReceiptKeepsUnknownTotalAndPackRequiresIndividualReview() async throws {

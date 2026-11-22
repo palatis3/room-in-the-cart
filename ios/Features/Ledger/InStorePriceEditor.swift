@@ -69,7 +69,9 @@ struct InStorePriceEditor: View {
     var body: some View {
         WorkingForm {
             Section {
-                if let quantity = try? shop.quantity(forLineID: line.id) {
+                if let summary = shop.packagePickSummary(line) {
+                    Text(summary)
+                } else if let quantity = try? shop.quantity(forLineID: line.id) {
                     Text(shelfFormat("Requested · %@", ledgerQuantity(quantity)))
                 }
                 Picker(shelfText("Price basis"), selection: $mode) {

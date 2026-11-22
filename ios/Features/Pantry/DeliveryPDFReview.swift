@@ -65,12 +65,14 @@ struct DeliveryPDFReview {
     var total = ""
     var kind: PrivateDeliveryRevision.Kind = .finalReceipt
     var rows: [Row] = []
+    let receiptTimeZone: TimeZone
     var purchaseDate: Date?
     var deliveryDate: Date?
     var incomplete = false
     var possibleConfirmation = false
 
-    init(document: ExtractedReceiptDocument, origin: UUID) {
+    init(document: ExtractedReceiptDocument, origin: UUID, timeZone: TimeZone = .current) {
+        receiptTimeZone = timeZone
         digest = document.digest
         var coordinates = ["receipt-file-layout-v1", origin.uuidString]
         var candidates: Set<String> = []
@@ -165,7 +167,8 @@ struct DeliveryPDFReview {
                   var evidence = row.evidence
                   evidence.cents = Self.cents(row.amount)
                   return evidence
-              })
+              }, purchaseTimeZoneIdentifier: purchaseDate == nil ? nil : receiptTimeZone.identifier,
+              deliveryTimeZoneIdentifier: deliveryDate == nil ? nil : receiptTimeZone.identifier)
     }
 }
 

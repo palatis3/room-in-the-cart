@@ -9,6 +9,58 @@ import XCTest
 @testable import RoomInTheCart
 
 @MainActor final class ReceiptDocumentTests: XCTestCase {
+    func testSelectedDocumentFoodsStartPutawayWithoutAssumingAmountsOrChangingOtherDecisions() async throws {
+        let foods = ["2 LATAS LENTEJAS 3.20", "YOGUR NATURAL 2.40", "ARROZ 1.50",
+                     "No salt added beans", "Yogur sin azúcar", "No added sugar applesauce received"]
+        let otherLines = ["CARGO 0.45", "DESCUENTO -1.00", "Faltó leche", "Prepared lunch",
+                          "Partly eaten sandwich", "Broken eggs", "Delivery fee", "2 packs of peas", "$4.00", "Oats 2 units",
+                          "VOID MILK", "ANULADO LECHE", "No se entregó el yogur", "No milk received",
+                          "Milk not delivered", "Canceled lentils", "Cancelled yogurt", "Tortillas canceladas",
+                          "Milk was never delivered", "Yogur no recibido", "Arroz sin entregar", "Void beans 2 units"]
+        let words = foods + otherLines
+        let document = try await ReceiptDocumentReader().extract(.init(data: Data(words.joined(separator: "\n").utf8), kind: .text))
+        let target = CaptureTarget(workspaceID: UUID(), containerID: UUID(), objectID: UUID(), revision: 1, kind: .receiptEvidence)
+        let source = try document.source(target: target, merchant: "Mercado", stage: .receipt,
+            selection: Set(words.indices.map { .init(page: 1, line: $0 + 1) }), at: Date())
+        var draft = try ReceiptImportDraft(source: source)
+        draft.tracksPutaway = true
+        XCTAssertTrue(draft.selectedLines.isEmpty)
+        let originals = draft.lines
+        for index in words.indices {
+            draft.lines[index].startDocumentPutaway(deliveries: [])
+            if foods.indices.contains(index) {
+                var expected = originals[index]
+                expected.treatment = .add
+                XCTAssertEqual(draft.lines[index], expected)
+                XCTAssertEqual(draft.lines[index].amountCorrection?.field, .received)
+                draft.lines[index].received = "1"
+                XCTAssertEqual(draft.lines[index].amountCorrection?.field, .usable)
+            } else {
+                XCTAssertEqual(draft.lines[index], originals[index], words[index])
+            }
+        }
+        let countedVoid = try XCTUnwrap(originals.last)
+        XCTAssertEqual(countedVoid.printed?.quantity, "2")
+        XCTAssertFalse(countedVoid.permitsIntactSelection(deliveries: []))
+        XCTAssertFalse(draft.dateConfirmed)
+        XCTAssertTrue(draft.receiptTotal.isEmpty)
+        for treatment in [ReceiptImportDraft.Treatment.keptSome, .eaten, .missing, .chargeOrReturn, .link(UUID())] {
+            var reviewed = originals[0]
+            reviewed.treatment = treatment
+            reviewed.name = "Lentejas"
+            reviewed.usable = "1"
+            reviewed.paid = "3.20"
+            var retained = reviewed
+            retained.startDocumentPutaway(deliveries: [])
+            XCTAssertEqual(retained, reviewed)
+        }
+        var row = originals[0]
+        row.documentLine = .init(method: .textFile, stage: .order, page: 1, line: 1)
+        XCTAssertFalse(row.permitsDocumentPutaway(deliveries: []))
+        row.documentLine = nil
+        XCTAssertFalse(row.permitsDocumentPutaway(deliveries: []))
+    }
+
     func testOriginalSharedTextReopensAsReceiptWithItsExactFileDigestAndEncoding() async throws {
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
@@ -259,6 +311,100 @@ import XCTest
             XCTAssertNil(result.quantity, note)
             XCTAssertNil(result.unit, note)
         }
+    }
+
+    func testAmbiguousItemAcceptsOnlyExplicitPrintedFieldCorrections() {
+        func proposal(_ text: String, quantity: String = "", price: String = "") -> ReceiptPrintedEvidence {
+            ReceiptPrintedEvidence(.init(originalText: text, quantityNote: quantity, priceNote: price), knownStorage: [:])
+        }
+        for (wording, note, product) in [("2x Canned lentils 3.20", "2 units", "Canned lentils"),
+                                          ("2 × Lentejas en lata 3,20", "2 unidades", "Lentejas en lata"),
+                                          ("Plain yogurt 2.40", "500 g", "Plain yogurt")] {
+            XCTAssertNil(proposal(wording).quantity)
+            XCTAssertNil(proposal(wording).amount)
+            let quantityOnly = proposal(wording, quantity: note)
+            XCTAssertEqual(quantityOnly.name, product)
+            XCTAssertEqual(quantityOnly.quantity, note.components(separatedBy: " ").first)
+            XCTAssertEqual(quantityOnly.unit, note == "500 g" ? .gram : .count)
+            XCTAssertNil(quantityOnly.amount)
+            XCTAssertNil(proposal(wording, quantity: note, price: "3.20").amount)
+            let priceOnly = proposal(wording, price: "USD 3,20")
+            XCTAssertEqual(priceOnly.amount, "3.20")
+            XCTAssertEqual(priceOnly.priceWording, "USD 3,20")
+            XCTAssertNil(priceOnly.quantity)
+            XCTAssertFalse(proposal(wording, quantity: note, price: "USD 3.20").uncertain)
+        }
+        for wording in ["2x Beans NZD $3.20", "2x Beans HKD $3.20", "2x Lentejas CLP $3,20",
+                        "2x Beans chf 3.20", "2x Beans 3.20 NZD", "2x Beans (NZD) $3.20",
+                        "2x Beans NZD: $3.20", "2x Beans ( NZD ) : $3.20", "2x Beans $3.20 (NZD)", "2x Arroz HK $3,20",
+                        "2x Beans NZ $3.20", "2x Frijoles R$3,20", "2x Beans kr 3.20", "2x Arroz S/ 3,20", "2x Arroz CLP $320",
+                        "2x Beans ¥3.20", "2x Arroz ₱3,20", "2x Frijoles pesos $3,20"] {
+            for correction in ["", "3.20", "USD 3.20"] {
+                let result = proposal(wording, price: correction)
+                XCTAssertNil(result.amount, wording)
+                XCTAssertNil(result.priceWording, wording)
+            }
+            let renamed = ScanReceiptLine(originalText: wording, reviewedText: "Beans", priceNote: "USD 3.20")
+            XCTAssertNil(ReceiptPrintedEvidence(renamed, knownStorage: [:]).amount, wording)
+        }
+        for (wording, price) in [("2x Beans USD 3.20", "USD 3.20"), ("2x Frijoles US$3,20", "US$3,20"),
+                                 ("2x RED PEPPERS $3.20", "$3.20"), ("2x ALL PURPOSE FLOUR $3.20", "$3.20"),
+                                 ("ACEITE 0,50 L USD 3,20", "USD 3,20"), ("Arroz 125.00 g $3.20", "$3.20"),
+                                 ("EGGS GRADE A $3.20", "$3.20")] {
+            XCTAssertEqual(proposal(wording).priceWording, price, wording)
+        }
+        for letter in ["D", "C", "B", "E"] {
+            let name = "Vitamin " + letter
+            XCTAssertEqual(proposal(name + " $3.20").name, name)
+            XCTAssertEqual(proposal(name + " $3.20").priceWording, "$3.20")
+            XCTAssertEqual(proposal("2x " + name + " $3.20").priceWording, "$3.20")
+        }
+        let measured = proposal("Medicine Vitamin D 2 units USD 3.20")
+        XCTAssertEqual(measured.name, "Medicine Vitamin D")
+        XCTAssertEqual(measured.quantity, "2")
+        XCTAssertEqual(measured.priceWording, "USD 3.20")
+        let renamedForeign = ScanReceiptLine(originalText: "2x Beans (NZD) $3.20", reviewedText: "Plain beans",
+                                             quantityNote: "2 units", priceNote: "USD 3.20")
+        let correctedFields = ReceiptPrintedEvidence(renamedForeign, knownStorage: [:])
+        XCTAssertEqual(correctedFields.name, "Plain beans")
+        XCTAssertEqual(correctedFields.quantity, "2")
+        XCTAssertNil(correctedFields.amount)
+        for (wording, unit) in [("Beans 2 kg at $1.60/kg USD 3.20", UnitOfMeasure.kilogram),
+                                ("Beans 2 units at $1.60 USD 3.20", .count),
+                                ("Beans 2 kg @ $1.60/kg $3.20", .kilogram),
+                                ("Beans 2 units @ $1.60 $3.20", .count),
+                                ("Frijoles 2 kg a $1,60/kg USD 3,20", .kilogram),
+                                ("Frijoles 2 unidades a $1,60 USD 3,20", .count)] {
+            let printed = proposal(wording)
+            XCTAssertEqual(printed.name, wording.components(separatedBy: " ").first, wording)
+            XCTAssertEqual(printed.quantity, "2", wording)
+            XCTAssertEqual(printed.unit, unit, wording)
+            XCTAssertEqual(printed.amount, "3.20", wording)
+            XCTAssertEqual(proposal(wording, price: "USD 3.10").amount, "3.10", wording)
+        }
+        let rateOnly = "Frijoles 2 kg a $1,60/kg"
+        XCTAssertNil(proposal(rateOnly).amount)
+        XCTAssertEqual(proposal(rateOnly, price: "USD 3,20").amount, "3.20")
+        let marked = proposal("2x Canned lentils $3.20", quantity: "2 units", price: "3,20")
+        XCTAssertEqual(marked.priceWording, "$3.20")
+        XCTAssertEqual(marked.quantity, "2")
+        for note in ["2 cans", "2 latas", "2", "0 units", "-2 units", "2 units per pack"] {
+            XCTAssertNil(proposal("2x Canned lentils 3.20", quantity: note).quantity, note)
+        }
+        for wording in ["Service fee 0.45", "2x TOTAL 3.20", "Fecha: 2024-11-18", "2x Lentejas EUR 3,20",
+                        "2x Beans 2 kg 3.20", "2x Beans 4 x 2 3.20", "Beans 3.20 4.20", "2x Beans @ 1.60",
+                        "Beans 1.60 USD 3.20", "2x Beans 1.60 USD 3.20", "2x Beans NZ$3.20",
+                        "2x Beans at $1.60 USD 3.20", "2x Beans 3.20 at $1.60",
+                        "2x Beans -3.20", "2x Beans ? 3.20", "2x Beans per pack 3.20"] {
+            let result = proposal(wording, quantity: "2 units", price: "USD 3.20")
+            XCTAssertNil(result.quantity, wording)
+            XCTAssertNil(result.amount, wording)
+        }
+        var blurry = ScanReceiptLine(originalText: "2x Canned lentils 3.20", quantityNote: "2 units", priceNote: "USD 3.20")
+        blurry.uncertainOCR = true
+        let blocked = ReceiptPrintedEvidence(blurry, knownStorage: [:])
+        XCTAssertNil(blocked.quantity)
+        XCTAssertNil(blocked.amount)
     }
 
     func testBarePrintedAmountOnlyKeepsTheSameExplicitCurrencyEvidence() throws {

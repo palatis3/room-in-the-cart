@@ -44,6 +44,7 @@ public struct ReceiptAcquisition: Codable, Equatable, Sendable, Identifiable {
     public let supersedesID: UUID?
     public let merchant: String
     public let purchaseDate: Date
+    public let purchaseDay: MealDay?
     public let transactionReference: String?
     public let imageDigest: Data?
     public let ordinal: Int
@@ -57,7 +58,7 @@ public struct ReceiptAcquisition: Codable, Equatable, Sendable, Identifiable {
     public init(receiptID: UUID, ordinal: Int, lotID: UUID, foodID: UUID, merchant: String, purchaseDate: Date,
                 transactionReference: String?, imageDigest: Data?, originalLine: String, name: String,
                 received: Quantity, usable: Quantity, paidLineTotal: Money?, stock: Stock,
-                revision: Int64 = 1, supersedesID: UUID? = nil, savedPickup: SavedPickup? = nil, documentLine: DocumentLine? = nil, lineDocumentID: UUID? = nil) {
+                revision: Int64 = 1, supersedesID: UUID? = nil, savedPickup: SavedPickup? = nil, documentLine: DocumentLine? = nil, lineDocumentID: UUID? = nil, purchaseDay: MealDay? = nil) {
         self.lineDocumentID = lineDocumentID
         self.documentLine = documentLine
         self.savedPickup = savedPickup
@@ -69,6 +70,7 @@ public struct ReceiptAcquisition: Codable, Equatable, Sendable, Identifiable {
         self.foodID = foodID
         self.merchant = merchant
         self.purchaseDate = purchaseDate
+        self.purchaseDay = purchaseDay
         self.transactionReference = transactionReference
         self.imageDigest = imageDigest
         self.originalLine = originalLine
@@ -83,12 +85,16 @@ public struct ReceiptAcquisition: Codable, Equatable, Sendable, Identifiable {
 
     /// Merchant transaction references must be explicitly confirmed. Filename,
     /// wording, date and total are never identities for a physical purchase.
+    public static func imageIdentity(_ digest: Data) -> UUID {
+        identity(["image", digest.base64EncodedString()])
+    }
+
     public static func receiptID(merchant: String, transactionReference: String?, imageDigest: Data?, draftID: UUID) -> UUID {
         if let transactionReference {
             return identity(["transaction", merchant.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
                              transactionReference.trimmingCharacters(in: .whitespacesAndNewlines)])
         }
-        if let imageDigest { return identity(["image", imageDigest.base64EncodedString()]) }
+        if let imageDigest { return imageIdentity(imageDigest) }
         return draftID
     }
 
@@ -111,12 +117,18 @@ public struct ReceiptAcquisition: Codable, Equatable, Sendable, Identifiable {
                            digest[8], digest[9], digest[10], digest[11], digest[12], digest[13], digest[14], digest[15]))
     }
 
+    /// Compares date evidence only after the caller has identified the physical receipt.
+    public func matchesPurchaseDate(_ date: Date, day: MealDay?) -> Bool {
+        guard let purchaseDay else { return purchaseDate == date }
+        return day.map { purchaseDay.hasSameCivilDate(as: $0) } ?? false
+    }
+
     public func correctingPaidTotal(_ total: Money?) throws -> Self {
         guard revision < Int64.max, total != paidLineTotal else { throw InventoryError.invalid("receiptCorrection") }
         let corrected = Self(receiptID: receiptID, ordinal: ordinal, lotID: lotID, foodID: foodID, merchant: merchant,
             purchaseDate: purchaseDate, transactionReference: transactionReference, imageDigest: imageDigest, originalLine: originalLine,
             name: name, received: received, usable: usable, paidLineTotal: total, stock: stock,
-            revision: revision + 1, supersedesID: id, savedPickup: savedPickup, documentLine: documentLine, lineDocumentID: lineDocumentID)
+            revision: revision + 1, supersedesID: id, savedPickup: savedPickup, documentLine: documentLine, lineDocumentID: lineDocumentID, purchaseDay: purchaseDay)
         try corrected.validate()
         return corrected
     }
@@ -125,6 +137,11 @@ public struct ReceiptAcquisition: Codable, Equatable, Sendable, Identifiable {
         for (text, limit) in [(merchant, 256), (originalLine, 2_048), (name, 512)] {
             guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, text.utf8.count <= limit,
                   !text.contains("\0") else { throw InventoryError.invalid("receiptText") }
+        }
+        if let purchaseDay {
+            guard purchaseDay == (try MealDay(date: purchaseDate, timeZoneIdentifier: purchaseDay.timeZoneIdentifier)) else {
+                throw InventoryError.invalid("receiptPurchaseDay")
+            }
         }
         if let documentLine { try documentLine.validate(ordinal: ordinal, digest: imageDigest) }
         else if !(0..<200).contains(ordinal) { throw InventoryError.invalid("receiptLine") }

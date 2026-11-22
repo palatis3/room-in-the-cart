@@ -102,6 +102,14 @@ public struct MealDay: Codable, Equatable, Hashable, Sendable {
                       timeZoneIdentifier: timeZoneIdentifier)
     }
 
+    public init?(iso8601: String, timeZoneIdentifier: String) {
+        let parts = iso8601.split(separator: "-", omittingEmptySubsequences: false)
+        guard parts.count == 3, let year = Int(parts[0]), let month = Int(parts[1]), let day = Int(parts[2]),
+              let saved = try? Self(year: year, month: month, day: day, timeZoneIdentifier: timeZoneIdentifier),
+              saved.iso8601 == iso8601 else { return nil }
+        self = saved
+    }
+
     public var date: Date? {
         guard let zone = TimeZone(identifier: timeZoneIdentifier) else { return nil }
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = zone
@@ -245,6 +253,41 @@ public enum ContributionSource: Codable, Equatable, Sendable {
     public var canSupplyExistingQuantity: Bool { !isProtected && !isMeal }
 }
 
+/// A shopper-entered number of containers with unknown contents.
+public struct GroceryPackageCount: Codable, Equatable, Sendable {
+    public enum Kind: String, CaseIterable, Codable, Sendable {
+        case carton, bag, bottle, can, box, pack
+    }
+
+    public let count: Int64
+    public let kind: Kind
+
+    public init(count: Int64, kind: Kind) {
+        self.count = count
+        self.kind = kind
+    }
+
+    /// Active sources must all describe the same reviewed container kind.
+    public init?(reviewedSources: [LedgerContribution]) {
+        guard let kind = reviewedSources.first?.reviewedPackages?.kind else { return nil }
+        var count: Int64 = 0
+        for source in reviewedSources {
+            guard let packages = source.reviewedPackages, packages.count > 0, packages.kind == kind else { return nil }
+            let sum = count.addingReportingOverflow(packages.count)
+            guard !sum.overflow else { return nil }
+            count = sum.partialValue
+        }
+        self.init(count: count, kind: kind)
+    }
+
+    public func remaining(after pick: GroceryPackagePick?) -> Self? {
+        guard count > 0 else { return nil }
+        guard let pick else { return self }
+        guard pick.packages.kind == kind, pick.packages.count > 0 else { return nil }
+        return Self(count: max(0, count - pick.packages.count), kind: kind)
+    }
+}
+
 public struct LedgerContribution: Codable, Equatable, Sendable, Identifiable {
     public let id: UUID
     public var lineID: UUID
@@ -258,6 +301,11 @@ public struct LedgerContribution: Codable, Equatable, Sendable, Identifiable {
     public var capture: CaptureImportMetadata? = nil
     public var originalPack: ListQuantityParser.PackLabel? = nil
     public var checkedWithoutAmount: Bool? = nil
+    public var reviewedPackages: GroceryPackageCount? = nil
+
+    public var canEditPackageCount: Bool {
+        source.canSupplyExistingQuantity && capture == nil && originalPack == nil
+    }
 
     public var isHandCheckedUnmeasuredIngredient: Bool {
         source.isMeal && checkedWithoutAmount == true && quantity == nil
@@ -290,6 +338,7 @@ public struct ShoppingLine: Codable, Equatable, Sendable, Identifiable {
     public internal(set) var flexiblePick: Bool? = nil
     public internal(set) var pinnedCoupon: PinnedShopCoupon? = nil
     public internal(set) var tripPick: PhysicalGroceryPick?
+    public internal(set) var packagePick: GroceryPackagePick?
     public internal(set) var stopObservation: ShoppingStopObservation?
     public internal(set) var tripUndo: GroceryTripUndo?
     public internal(set) var preferredStores: [String]?
@@ -326,17 +375,21 @@ public struct StagedImportLine: Codable, Equatable, Sendable, Identifiable {
     /// Opaque private product reference from an explicitly reviewed pantry suggestion.
     public var pantryProductLink: UUID?
     public let originalPack: ListQuantityParser.PackLabel?
+    /// Suggested or edited in private list review. Confirmation saves the count as containers only.
+    public var reviewedPackages: GroceryPackageCount?
 
     public init(id: UUID, proposedLineID: UUID, originalText: String, name: String, quantity: Quantity?,
                 unresolvedReason: String?, duplicateLineIDs: [UUID], exclusions: [String] = [],
-                capture: CaptureImportMetadata? = nil, originalPack: ListQuantityParser.PackLabel? = nil, pantryProductLink: UUID? = nil) {
+                capture: CaptureImportMetadata? = nil, originalPack: ListQuantityParser.PackLabel? = nil,
+                pantryProductLink: UUID? = nil, reviewedPackages: GroceryPackageCount? = nil) {
+        self.reviewedPackages = reviewedPackages
         self.pantryProductLink = pantryProductLink
         self.id = id; self.proposedLineID = proposedLineID; self.originalText = originalText; self.name = name
         self.quantity = quantity; self.unresolvedReason = unresolvedReason; self.duplicateLineIDs = duplicateLineIDs
         self.exclusions = exclusions; self.capture = capture; self.originalPack = originalPack
     }
     private enum CodingKeys: String, CodingKey {
-        case id, proposedLineID, originalText, name, quantity, unresolvedReason, duplicateLineIDs, exclusions, capture, originalPack, pantryProductLink
+        case id, proposedLineID, originalText, name, quantity, unresolvedReason, duplicateLineIDs, exclusions, capture, originalPack, pantryProductLink, reviewedPackages
     }
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -349,6 +402,7 @@ public struct StagedImportLine: Codable, Equatable, Sendable, Identifiable {
         capture = try c.decodeIfPresent(CaptureImportMetadata.self, forKey: .capture)
         pantryProductLink = try c.decodeIfPresent(UUID.self, forKey: .pantryProductLink)
         originalPack = try c.decodeIfPresent(ListQuantityParser.PackLabel.self, forKey: .originalPack)
+        reviewedPackages = try c.decodeIfPresent(GroceryPackageCount.self, forKey: .reviewedPackages)
     }
 }
 
@@ -358,7 +412,7 @@ private extension StagedImportLine {
             productName: name, quantity: quantity, originalText: originalText,
             notes: [capture?.purpose, capture?.destination, unresolvedReason]
                 .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: "\n"),
-            exclusions: exclusions, removedAt: nil, capture: capture, originalPack: originalPack)
+            exclusions: exclusions, removedAt: nil, capture: capture, originalPack: originalPack, reviewedPackages: reviewedPackages)
     }
 }
 
@@ -546,6 +600,20 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         self.id = id; self.title = title; self.basis = basis; basisRevision = 0; revision = 0
         revisionID = UUID(); revisions = []; quoteReference = nil
         lines = []; contributions = []; allocations = []; mealOccurrences = []; importBatches = []
+    }
+
+    /// Recognizes one direct child revision whose only material change is this meal's yield.
+    public func changesOnlyServings(of mealID: UUID, from previous: Self) -> Bool {
+        guard let head = revisions.last, head.parentID == previous.revisionID,
+              let index = previous.mealOccurrences.firstIndex(where: { $0.id == mealID }),
+              let meal = mealOccurrences.first(where: { $0.id == mealID }),
+              meal.servings != previous.mealOccurrences[index].servings else { return false }
+        var expected = previous
+        expected.mealOccurrences[index].servings = meal.servings
+        expected.revision = revision
+        expected.revisionID = head.id
+        expected.revisions.append(head)
+        return self == expected
     }
 
     /// Shopping restrictions stay in source order and keep the shopper's wording.
@@ -776,17 +844,19 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     /// Reuse its full bytes for retries; re-staging a new preview with this ID is
     /// deliberately not equivalent to replaying an already committed preview.
     public func stageImport(text: String, source: ImportSource = .typed, importID: UUID = UUID(),
-                            maximumLines: Int = StagedListImport.maximumLines) throws -> StagedListImport {
+                            maximumLines: Int = StagedListImport.maximumLines, reviewPackageCounts: Bool = false) throws -> StagedListImport {
         let originals = try StagedListImport.sourceLines(text, maximum: maximumLines)
         var staged: [StagedImportLine] = []
         var candidatesByName = importCandidatesByName()
+        let reviewContainers = reviewPackageCounts && (source == .typed || source == .paste)
         for slice in originals {
             let original = String(slice)
-            let parsed = Self.parseLine(original)
+            let request = reviewContainers ? QuickGrocery.packageRequest(original) : nil
+            let parsed = request.map { (name: $0.name, quantity: nil, reason: nil, pack: nil) } ?? Self.parseLine(original)
             let name = normalizedProduct(parsed.name), proposedLineID = UUID()
             staged.append(StagedImportLine(id: UUID(), proposedLineID: proposedLineID, originalText: original,
                 name: parsed.name, quantity: parsed.quantity, unresolvedReason: parsed.reason,
-                duplicateLineIDs: candidatesByName[name] ?? [], originalPack: parsed.pack))
+                duplicateLineIDs: candidatesByName[name] ?? [], originalPack: parsed.pack, reviewedPackages: request?.packages))
             candidatesByName[name, default: []].append(proposedLineID)
         }
         return StagedListImport(id: importID, shopID: id, baseRevision: revision, source: source, originalText: text, lines: staged)
@@ -989,10 +1059,19 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     }
 
     public mutating func updateContribution(contributionID: UUID, quantity: Quantity?, notes: String, at: Date = Date()) throws {
+        let source = contributions[try contributionIndex(contributionID)]
+        try updateContribution(contributionID: contributionID, quantity: quantity, notes: notes,
+                               reviewedPackages: quantity == nil ? source.reviewedPackages : nil, at: at)
+    }
+
+    public mutating func updateContribution(contributionID: UUID, quantity: Quantity?, notes: String,
+                                            reviewedPackages: GroceryPackageCount?, at: Date = Date()) throws {
         try mutate("updateContribution", at: at) { next in
             let index = try next.contributionIndex(contributionID)
             guard next.contributions[index].removedAt == nil else { throw LedgerError.invalid("removedContribution") }
-            next.contributions[index].quantity = quantity; next.contributions[index].notes = notes
+            next.contributions[index].quantity = quantity
+            next.contributions[index].notes = notes
+            next.contributions[index].reviewedPackages = reviewedPackages
         }
     }
 
@@ -1056,11 +1135,15 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
                 next.lines[index].tripPick = try amount.flatMap {
                     $0.amount > .zero ? try next.cumulativePick(for: before, total: $0, requested: $0, at: at) : nil
                 }
+                if amount == nil, let packages = GroceryPackageCount(reviewedSources: next.contributions(forLineID: lineID)) {
+                    next.lines[index].packagePick = GroceryPackagePick(packages: packages, at: at)
+                }
                 next.lines[index].checkedAt = at
                 next.lines[index].stopObservation = nil
             } else {
                 next.lines[index].tripUndo = nil
                 next.lines[index].tripPick = nil
+                next.lines[index].packagePick = nil
                 next.lines[index].checkedAt = nil
                 next.lines[index].stopObservation = nil
             }
@@ -1100,7 +1183,8 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     public mutating func reopen(lineID: UUID, at: Date = Date()) throws {
         try mutate("reopen", at: at) { next in
             let index = try next.lineIndex(lineID)
-            next.lines[index].tripPick = nil; next.lines[index].tripUndo = nil; next.lines[index].stopObservation = nil
+            next.lines[index].tripPick = nil; next.lines[index].packagePick = nil
+            next.lines[index].tripUndo = nil; next.lines[index].stopObservation = nil
             next.lines[index].checkedAt = nil; next.lines[index].handledBy = nil; next.lines[index].handledAt = nil
         }
     }
@@ -1300,6 +1384,11 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
             guard lineIDs.contains(source.lineID) else { throw LedgerError.notFound(source.lineID) }
             try ledgerText(source.productName, nonempty: true, maximum: 512); try ledgerText(source.originalText)
             try ledgerText(source.notes); try source.quantity?.validate(); try validateExclusions(source.exclusions)
+            if let packages = source.reviewedPackages {
+                guard source.canEditPackageCount, packages.count > 0, source.quantity == nil else {
+                    throw LedgerError.invalid("groceryPackageCount")
+                }
+            }
             try source.originalPack?.validate()
             _ = try source.capture?.resolvedQuantity()
             try permittedProduct(source.productName, exclusions: source.exclusions); try ledgerDate(source.removedAt)
@@ -1360,13 +1449,15 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         let membersByLine = Dictionary(grouping: contributions.filter { $0.removedAt == nil }, by: \.lineID)
         let edgesByLine = Dictionary(grouping: allocations) { sources[$0.demandContributionID]?.lineID }
         for line in lines {
-            let requested = try quantity(for: line, members: membersByLine[line.id] ?? [], edges: edgesByLine[line.id] ?? [])
+            let members = membersByLine[line.id] ?? []
+            let requested = try quantity(for: line, members: members, edges: edgesByLine[line.id] ?? [])
+            try line.packagePick?.validate(members: members, physical: line.tripPick, checkedAt: line.checkedAt)
+            try line.tripUndo?.packagePick?.validate(members: members, physical: line.tripUndo?.pick, checkedAt: line.tripUndo?.checkedAt)
             if let actual = line.tripPick {
                 if let requested {
                     guard let picked = try actual.amount.converted(to: requested.unit),
                           line.isChecked == (picked >= requested.amount) else { throw LedgerError.invalid("tripPickAmount") }
                 } else {
-                    let members = membersByLine[line.id] ?? []
                     guard line.isChecked, !members.isEmpty, members.allSatisfy(\.isHandCheckedUnmeasuredIngredient)
                     else { throw LedgerError.invalid("tripPickAmount") }
                 }
@@ -1545,7 +1636,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     /// A later edit may change what is needed. Preserve an observed pick in a
     /// compatible unit, reopen an increased need, and retire its old undo review.
     private mutating func reconcileTripNeeds(previous: Self) throws {
-        let tracked = lines.indices.filter { lines[$0].tripPick != nil || lines[$0].tripUndo != nil || lines[$0].stopObservation != nil }
+        let tracked = lines.indices.filter { lines[$0].tripPick != nil || lines[$0].packagePick != nil || lines[$0].tripUndo != nil || lines[$0].stopObservation != nil }
         guard !tracked.isEmpty else { return }
         let old = Dictionary(uniqueKeysWithValues: previous.lines.map { ($0.id, $0) })
         let changedSources = contributions != previous.contributions || allocations != previous.allocations
@@ -1567,9 +1658,18 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
             }
             guard identityChanged || membersChanged || edgesChanged else { continue }
             lines[index].stopObservation = nil
+            let members = (newMembers[line.id] ?? []).filter { $0.removedAt == nil }
+            if let pick = line.packagePick {
+                if !identityChanged, let total = GroceryPackageCount(reviewedSources: members), total.kind == pick.packages.kind {
+                    lines[index].checkedAt = pick.packages.count >= total.count ? pick.at : nil
+                } else {
+                    lines[index].packagePick = nil
+                    lines[index].checkedAt = nil
+                }
+                continue
+            }
             guard var pick = line.tripPick else { continue }
             let checked: Bool
-            let members = (newMembers[line.id] ?? []).filter { $0.removedAt == nil }
             if !identityChanged, let need = try quantity(forLineID: line.id),
                let physical = try pick.amount.converted(to: need.unit) {
                 checked = physical >= need.amount
@@ -1616,7 +1716,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
             let line = lines[index]
             guard let before = oldLines[line.id], line.pickedPrice == before.pickedPrice,
                   basisRevision == previous.basisRevision, line.checkedAt == before.checkedAt, line.tripPick == before.tripPick,
-                  !line.isHandled, !line.isTrashed, line.name == before.name, line.notes == before.notes,
+                  line.packagePick == before.packagePick, !line.isHandled, !line.isTrashed, line.name == before.name, line.notes == before.notes,
                   old.sources[line.id] == current.sources[line.id], old.edges[line.id] == current.edges[line.id]
             else { lines[index].pickedPrice = nil; continue }
         }
@@ -1805,6 +1905,10 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
             try ledgerText(line.originalText, maximum: StagedListImport.maximumOriginalLineBytes); try ledgerText(line.name, nonempty: true, maximum: 512)
             try line.quantity?.validate()
             try line.originalPack?.validate()
+            if let packages = line.reviewedPackages {
+                guard packages.count > 0, line.quantity == nil, line.originalPack == nil, line.capture == nil,
+                      line.pantryProductLink == nil else { throw LedgerError.invalid("groceryPackageCount") }
+            }
             try validateExclusions(line.exclusions)
             if let capture = line.capture {
                 guard line.quantity == (try capture.resolvedQuantity()) else { throw CaptureImportError.conflictingQuantity }

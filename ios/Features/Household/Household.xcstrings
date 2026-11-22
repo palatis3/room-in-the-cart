@@ -1,6 +1,134 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Role offered by this invitation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Role offered by this invitation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Función que ofrece esta invitación"
+          }
+        }
+      }
+    },
+    "Paste the complete code and confirm you are an adult to see the household and your role.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste the complete code and confirm you are an adult to see the household and your role."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pega el código completo y confirma que eres mayor de edad para ver el hogar y tu función."
+          }
+        }
+      }
+    },
+    "Checking invitation…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking invitation…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comprobando la invitación…"
+          }
+        }
+      }
+    },
+    "The invitation could not be checked. Try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The invitation could not be checked. Try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo comprobar la invitación. Vuelve a intentarlo."
+          }
+        }
+      }
+    },
+    "Check invitation again": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check invitation again"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a comprobar la invitación"
+          }
+        }
+      }
+    },
+    "Helper · view only": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Helper · view only"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayudante · solo lectura"
+          }
+        }
+      }
+    },
+    "Helper · can suggest corrections": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Helper · can suggest corrections"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayudante · puede sugerir correcciones"
+          }
+        }
+      }
+    },
+    "The invitation changed. Review the updated household and role before joining.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The invitation changed. Review the updated household and role before joining."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La invitación cambió. Revisa el hogar y la función actualizados antes de unirte."
+          }
+        }
+      }
+    },
     "Sending a request to someone else requires access to their household.": {
       "localizations": {
         "en": {

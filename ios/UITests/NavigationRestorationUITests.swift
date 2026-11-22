@@ -92,6 +92,84 @@ import XCTest
         XCTAssertTrue(otherCheck.exists)
     }
 
+    func testNumberOpensQuantityEditorInShopAndFullListAndCartonsSurviveRelaunch() {
+        launch(reset: true)
+        let entry = element("quickGrocery.name")
+        tap(entry)
+        entry.typeText("2 Milk\n")
+        XCTAssertTrue(app.buttons["quickGrocery.undo"].waitForExistence(timeout: 8))
+        tap(app.buttons["quickGrocery.dismissKeyboard"])
+        let inspect = app.buttons["Inspect Milk"]
+        let editor = app.navigationBars["Quantity and notes"]
+        XCTAssertTrue(inspect.waitForExistence(timeout: 8))
+        let id = inspect.identifier.replacingOccurrences(of: "shop.inspect-", with: "")
+        func tapNumber(_ button: XCUIElement, beside inspect: XCUIElement, checkbox: XCUIElement) {
+            reveal(button)
+            XCTAssertGreaterThanOrEqual(button.frame.width, 44)
+            XCTAssertGreaterThanOrEqual(button.frame.height, 44)
+            XCTAssertFalse(button.frame.intersects(inspect.frame))
+            XCTAssertFalse(button.frame.intersects(checkbox.frame))
+            button.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5)).tap()
+            XCTAssertTrue(editor.waitForExistence(timeout: 8))
+        }
+        let quickAmount = app.buttons["shop.editAmount-" + id]
+        tapNumber(quickAmount, beside: inspect, checkbox: app.buttons["shop.check-" + id])
+        XCTAssertEqual(app.staticTexts["ledgerContributionName"].label, "Milk")
+        XCTAssertTrue(app.staticTexts["Original wording: 2 Milk"].exists)
+        let unit = app.buttons["ledgerContributionUnit"]
+        tap(unit)
+        tap(app.buttons["cartons"])
+        XCTAssertEqual(unit.value as? String, "cartons")
+        tap(app.buttons["ledgerSaveContributionChanges"])
+        XCTAssertTrue(editor.waitForNonExistence(timeout: 8))
+
+        app.terminate()
+        launch(reset: false)
+        XCTAssertTrue(quickAmount.waitForExistence(timeout: 8))
+        XCTAssertEqual(quickAmount.value as? String, "Milk, 2 cartons")
+        tap(app.buttons["openPickupList"])
+        let fullAmount = app.buttons["ledgerEditAmount-" + id]
+        let fullCheck = app.buttons["ledgerCheck-" + id]
+        tapNumber(fullAmount, beside: app.fullListGrocery(labeled: "Inspect Milk"), checkbox: fullCheck)
+        XCTAssertEqual(app.textFields["Quantity (optional)"].value as? String, "2")
+        XCTAssertEqual(unit.value as? String, "cartons")
+        tap(editor.buttons["Cancel"])
+        XCTAssertTrue(fullCheck.waitForExistence(timeout: 8))
+        XCTAssertEqual(fullAmount.value as? String, "Milk, 2 cartons")
+
+        tap(app.buttons["ledgerInStore"])
+        let tripRow = app.buttons["tripDetails-" + id]
+        tap(tripRow)
+        tap(app.buttons["tripPickPart"])
+        let picked = app.textFields["tripPartialAmount"]
+        XCTAssertTrue(picked.waitForExistence(timeout: 8))
+        XCTAssertTrue([picked.label, picked.placeholderValue ?? ""].contains("Amount picked (cartons)"))
+        tap(picked)
+        let one = app.keyboards.keys["1"]
+        XCTAssertTrue(one.waitForExistence(timeout: 5))
+        one.tap()
+        tap(app.buttons["tripPartKeyboardDone"])
+        tap(app.buttons["tripSavePart"])
+        let store = app.navigationBars["Shop in store"]
+        tap(store.buttons["Done"])
+        tap(app.navigationBars["Shopping list"].buttons.firstMatch)
+        let summary = "1 carton of 2 cartons picked · 1 carton still needed"
+        XCTAssertTrue(quickAmount.waitForExistence(timeout: 8))
+        XCTAssertEqual(quickAmount.value as? String, "Milk, " + summary)
+
+        app.terminate()
+        launch(reset: false)
+        XCTAssertTrue(quickAmount.waitForExistence(timeout: 8))
+        XCTAssertEqual(quickAmount.value as? String, "Milk, " + summary)
+        tap(app.buttons["openPickupList"])
+        tap(app.buttons["ledgerInStore"])
+        tap(tripRow)
+        tap(app.buttons["Undo for Milk"])
+        XCTAssertTrue(tripRow.waitForExistence(timeout: 8))
+        XCTAssertTrue(tripRow.label.contains("2 cartons"))
+        XCTAssertFalse(tripRow.label.contains("still needed"))
+    }
+
     func testShopShowsRemainingQuantityAfterAPartialPick() {
         launch(reset: true)
         let entry = element("quickGrocery.name")
@@ -106,8 +184,10 @@ import XCTest
         let quantity = app.textFields["Quantity (optional)"]
         quantity.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.7)).tap()
         app.typeText("4")
-        tap(app.buttons["ledgerContributionDone"])
-        tap(app.buttons["ledgerSaveContributionChanges"])
+        let saveQuantity = app.buttons["ledgerSaveContributionChanges"]
+        XCTAssertTrue(app.waitForDoneAboveKeyboard(identifier: "ledgerSaveContributionChanges"))
+        XCTAssertTrue(saveQuantity.isEnabled && saveQuantity.isHittable)
+        saveQuantity.tap()
         XCTAssertTrue(details.waitForExistence(timeout: 8))
         tap(details.buttons["Close"])
         XCTAssertTrue(inspect.waitForExistence(timeout: 8))
@@ -130,8 +210,15 @@ import XCTest
         tap(app.buttons["tripPickPart"])
         let picked = app.textFields["tripPartialAmount"]
         tap(picked)
-        picked.typeText("1")
-        tap(app.buttons["tripPartKeyboardDone"])
+        let one = app.keyboards.keys["1"]
+        XCTAssertTrue(one.waitForExistence(timeout: 5), "The first keyboard should offer numbers for the picked amount.")
+        one.tap()
+        let dismissKeyboard = app.buttons["tripPartKeyboardDone"]
+        XCTAssertTrue(dismissKeyboard.waitForExistence(timeout: 5))
+        XCTAssertEqual(dismissKeyboard.label, "Dismiss keyboard")
+        tap(dismissKeyboard)
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+        XCTAssertTrue(picked.exists)
         tap(app.buttons["tripSavePart"])
         let store = app.navigationBars["Shop in store"]
         tap(store.buttons["Done"])
@@ -223,6 +310,74 @@ import XCTest
         app.assertSelectedShoppingList(named: firstName)
         app.terminate(); launch(reset: false)
         app.assertSelectedShoppingList(named: firstName)
+    }
+
+    func testInStoreListPickerOpensTheChosenListAndPreservesItsStopAndGroceries() {
+        launch(reset: true)
+        let entry = element("quickGrocery.name")
+        func addGrocery(_ text: String) {
+            tap(entry)
+            entry.typeText(text + "\n")
+            XCTAssertTrue(app.buttons["quickGrocery.undo"].waitForExistence(timeout: 8))
+            tap(app.buttons["quickGrocery.dismissKeyboard"])
+        }
+        addGrocery("Rice")
+        tap(app.buttons["openPickupList"])
+        let picker = app.buttons["ledgerShopPicker"]
+        XCTAssertTrue(picker.waitForExistence(timeout: 8))
+        let firstList = picker.label
+        let secondList = "Weekend groceries"
+        tap(picker)
+        tap(app.buttons["Start another pickup"])
+        let name = element("ledgerShopName")
+        tap(name)
+        name.typeText(secondList)
+        tap(app.buttons["ledgerCreateShop"])
+        app.assertSelectedShoppingList(named: secondList)
+        addGrocery("3 Pears")
+        let inStore = app.buttons["ledgerInStore"]
+        tap(inStore)
+
+        tap(app.buttons["tripNextStore"])
+        let stop = app.textFields["Store name"]
+        tap(stop)
+        stop.typeText("Corner market")
+        tap(app.buttons["tripStoreKeyboardDone"])
+        tap(app.buttons["Start this stop"])
+        let pear = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
+                                                     "tripDetails-", "Pears")).firstMatch
+        tap(pear)
+        tap(app.buttons["tripPickPart"])
+        let picked = app.textFields["tripPartialAmount"]
+        tap(picked)
+        tap(app.keyboards.keys["1"])
+        tap(app.buttons["tripPartKeyboardDone"])
+        tap(app.buttons["tripSavePart"])
+        XCTAssertTrue(pear.waitForExistence(timeout: 8))
+        let partial = pear.label
+        XCTAssertTrue(partial.contains("2 items still needed"), partial)
+
+        let choose = app.buttons["inStoreListPicker"]
+        func chooseList(_ title: String) {
+            tap(choose)
+            XCTAssertTrue(app.staticTexts["Open another shopping list"].waitForExistence(timeout: 5))
+            tap(app.buttons[title])
+            app.assertSelectedShoppingList(named: title)
+        }
+        XCTAssertEqual(choose.label, "Shopping list · " + secondList)
+        XCTAssertTrue(app.staticTexts["Corner market"].exists)
+        chooseList(firstList)
+        XCTAssertTrue(app.fullListGrocery(labeled: "Inspect Rice").exists)
+        XCTAssertFalse(app.fullListGrocery(labeled: "Inspect Pears").exists)
+        tap(inStore)
+        chooseList(secondList)
+        app.terminate()
+        launch(reset: false)
+        app.assertSelectedShoppingList(named: secondList)
+        tap(inStore)
+        XCTAssertTrue(pear.waitForExistence(timeout: 8))
+        XCTAssertEqual(pear.label, partial)
+        XCTAssertTrue(app.staticTexts["Corner market"].exists)
     }
 
     func testKillRelaunchRestoresRecordsDetailAndIndependentShoppingList() {
@@ -444,6 +599,9 @@ extension XCUIApplication {
             format: "identifier == %@ AND label == %@", "ledgerShopPicker", name
         )).firstMatch
         XCTAssertTrue(selectedPickup.waitForExistence(timeout: 8), "Expected the selected pickup to be \(name)", file: file, line: line)
+        let titleBar = navigationBars["Shopping list"]
+        XCTAssertLessThanOrEqual(titleBar.frame.maxY, selectedPickup.frame.minY + 1,
+                                 "The restored title must leave the list selector visible.", file: file, line: line)
     }
 
     func renameSelectedPickup(_ title: String, file: StaticString = #filePath, line: UInt = #line) {

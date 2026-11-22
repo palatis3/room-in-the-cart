@@ -136,7 +136,10 @@ export function parseCommand(value: unknown): Envelope {
 const alias=z.string().trim().min(1).max(80);
 export const householdCreateSchema=z.object({clientKey:uuid,label:alias,alias,adultAttestation:z.literal(true)}).strict();
 export const inviteCreateSchema=z.object({kind:z.enum(['adult_contributor','child_contributor']),expiresInHours:z.number().int().min(1).max(168).default(24)}).strict();
-export const inviteRedeemSchema=z.object({token:z.string().regex(/^[0-9a-f-]{36}\.[A-Za-z0-9_-]{43}$/),intent:z.literal('join'),alias:alias.optional(),adultAttestation:z.literal(true)}).strict();
+const inviteToken=z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.[A-Za-z0-9_-]{43}$/);
+export const invitePreviewSchema=z.object({token:inviteToken,adultAttestation:z.literal(true)}).strict();
+const inviteOfferSchema=z.object({householdLabel:z.string().min(1).max(80),role:z.enum(['adult_contributor','helper_read','helper_edit'])}).strict();
+export const inviteRedeemSchema=invitePreviewSchema.extend({intent:z.literal('join'),alias:alias.optional(),reviewedOffer:inviteOfferSchema.optional()});
 export const viewProjectionSchema=z.object({shopLabel:alias,language:z.enum(['en','es']),items:z.array(z.object({label:item,amount:z.string().trim().min(1).max(80).nullable(),unit:z.string().trim().min(1).max(80).nullable(),action:z.string().trim().min(1).max(500)}).strict()).max(200)}).strict();
 export const viewCreateSchema=viewProjectionSchema.extend({shopId:uuid,mode:z.enum(['read','edit']),expiresInHours:z.number().int().min(1).max(168).default(24)}).strict();
 export const viewUpdateSchema=viewProjectionSchema.extend({baseRevision:z.number().int().positive()}).strict();

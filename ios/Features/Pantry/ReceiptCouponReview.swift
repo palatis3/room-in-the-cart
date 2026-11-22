@@ -206,6 +206,7 @@ private struct ReceiptCouponEditor: View {
     @State private var amount: String
     @State private var count: String
     @State private var size: CouponPackCheck.Size
+    @State private var legacyPurchaseDate: Date?
     @State private var checking = false
     @State private var sourceChanged = false
     @FocusState private var field: Bool
@@ -232,7 +233,10 @@ private struct ReceiptCouponEditor: View {
     }
 
     private var day: MealDay? {
-        try? MealDay(date: saved.header.date, timeZoneIdentifier: TimeZone.current.identifier)
+        let zone = coupon.terms.validThrough.timeZoneIdentifier
+        if let day = saved.header.purchaseDay { return MealDay(iso8601: day, timeZoneIdentifier: zone) }
+        if let legacyPurchaseDate { return try? MealDay(date: legacyPurchaseDate, timeZoneIdentifier: zone) }
+        return coupon.receipt.flatMap { $0.receiptID == saved.header.id ? $0.day : nil }
     }
 
     private func evidence(from source: SavedCouponReceipt) -> CouponReceiptEvidence? {
@@ -258,6 +262,15 @@ private struct ReceiptCouponEditor: View {
                 if let previous = coupon.receipt, previous.receiptID != saved.header.id {
                     Text(shelfText("This coupon is linked to another purchase. Clear its receipt link to review this purchase."))
                 } else {
+                    if saved.header.purchaseDay == nil, coupon.receipt?.receiptID != saved.header.id {
+                        let zone = TimeZone(identifier: coupon.terms.validThrough.timeZoneIdentifier) ?? .current
+                        ReceiptDatePicker(title: pantryText("Purchase date"), identifier: "receipt.couponPurchaseDate",
+                            date: Binding(get: { legacyPurchaseDate ?? saved.header.date }, set: { legacyPurchaseDate = $0 }))
+                            .environment(\.timeZone, zone)
+                        Toggle(pantryText("I checked the purchase date."), isOn: Binding(
+                            get: { legacyPurchaseDate != nil },
+                            set: { legacyPurchaseDate = $0 ? (legacyPurchaseDate ?? saved.header.date) : nil }))
+                    }
                     itemSection
                     if sourceChanged { Text(shelfText("The saved receipt changed. Reopen the purchase to review its lines.")) }
                     Button(shelfText("Save receipt coupon review")) { Task { await save() } }

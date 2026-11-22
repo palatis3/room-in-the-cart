@@ -300,34 +300,105 @@ private struct GroceryEditStatus: View {
     }
 }
 
+enum GroceryEntryUnit: Hashable {
+    case measure(UnitOfMeasure)
+    case package(GroceryPackageCount.Kind)
+
+    init(_ contribution: LedgerContribution) {
+        if let packages = contribution.reviewedPackages { self = .package(packages.kind) }
+        else { self = .measure(contribution.quantity?.unit ?? .count) }
+    }
+
+    var displayName: String {
+        switch self {
+        case .measure(let measure): measure.displayName
+        case .package(let kind): kind.label()
+        }
+    }
+
+    var invalidAmountMessage: String {
+        switch self {
+        case .package: quickGroceryText("Enter a positive whole number of packages, or leave the quantity blank.")
+        case .measure: ledgerText("Enter a nonnegative amount with up to six decimal places, or leave it unknown.")
+        }
+    }
+
+    @MainActor func parse(_ text: String) throws -> (quantity: Quantity?, packages: GroceryPackageCount?) {
+        switch self {
+        case .package(let kind):
+            guard let count = try LedgerEntry.rational(text) else { return (nil, nil) }
+            guard count.denominator == 1, count > .zero else { throw EntryError.invalidNumber }
+            return (nil, GroceryPackageCount(count: count.numerator, kind: kind))
+        case .measure(let measure):
+            return (try LedgerEntry.quantity(text, measure), nil)
+        }
+    }
+}
+
+struct GroceryUnitPicker: View {
+    @Binding var unit: GroceryEntryUnit
+    let allowsPackages: Bool
+
+    var body: some View {
+        Picker(ledgerText("Unit"), selection: $unit) {
+            Text(UnitOfMeasure.count.displayName).tag(GroceryEntryUnit.measure(.count))
+            if allowsPackages {
+                ForEach(GroceryPackageCount.Kind.allCases, id: \.self) { kind in
+                    Text(kind.label()).tag(GroceryEntryUnit.package(kind))
+                }
+            }
+            ForEach(UnitOfMeasure.allCases.filter { $0 != .count }, id: \.self) { unit in
+                Text(unit.displayName).tag(GroceryEntryUnit.measure(unit))
+            }
+        }
+        .accessibilityValue(Text(verbatim: unit.displayName))
+    }
+}
+
+private extension LedgerContribution {
+    var editableAmount: String {
+        if let packages = reviewedPackages { return String(packages.count) }
+        return quantity.map { ledgerAmountInput($0.amount) } ?? ""
+    }
+}
+
 struct LedgerContributionEditor: View {
     @ObservedObject var model: LedgerModel
     let shopID: UUID
     let contribution: LedgerContribution
     @Environment(\.dismiss) private var dismiss
     @State private var amount: String
-    @State private var unit: UnitOfMeasure
+    @State private var unit: GroceryEntryUnit
     @State private var notes: String
     @State private var validation: String?
     @State private var confirmingRemoval = false
     @FocusState private var focusedField: String?
     private var hasEdits: Bool {
-        amount != (contribution.quantity.map { ledgerAmountInput($0.amount) } ?? "") ||
-            unit != (contribution.quantity?.unit ?? .count) || notes != ledgerEditableNote(contribution)
+        amount != contribution.editableAmount || unit != GroceryEntryUnit(contribution) || notes != ledgerEditableNote(contribution)
     }
 
     init(model: LedgerModel, shopID: UUID, contribution: LedgerContribution) {
         self.model = model; self.shopID = shopID; self.contribution = contribution
-        _amount = State(initialValue: contribution.quantity.map { ledgerAmountInput($0.amount) } ?? "")
-        _unit = State(initialValue: contribution.quantity?.unit ?? .count)
+        _amount = State(initialValue: contribution.editableAmount)
+        _unit = State(initialValue: GroceryEntryUnit(contribution))
         _notes = State(initialValue: ledgerEditableNote(contribution))
     }
     var body: some View {
         WorkingForm {
-            Section(ledgerText("Original wording")) { Text(contribution.originalText) }
             Section {
-                LedgerQuantityFields(amount: $amount, unit: $unit, amountFocus: ($focusedField, "amount"),
-                                     amountLabel: shoppingText("Quantity (optional)"))
+                Text(verbatim: contribution.productName)
+                    .font(.headline)
+                    .accessibilityAddTraits(.isHeader)
+                    .accessibilityIdentifier("ledgerContributionName")
+                if contribution.originalText != contribution.productName {
+                    Text(verbatim: ledgerFormat("Original wording: %@", contribution.originalText))
+                        .font(.subheadline).foregroundStyle(Theme.secondary)
+                }
+            }
+            Section {
+                LedgerAmountField(amount: $amount, amountFocus: ($focusedField, "amount"), amountLabel: shoppingText("Quantity (optional)"))
+                GroceryUnitPicker(unit: $unit, allowsPackages: contribution.canEditPackageCount)
+                    .accessibilityIdentifier("ledgerContributionUnit")
                 WorkingField(ledgerText("Contribution notes")) {
                     TextField(ledgerText("Contribution notes"), text: $notes, prompt: Text(verbatim: ""), axis: .vertical)
                         .textFieldStyle(.roundedBorder)
@@ -335,15 +406,6 @@ struct LedgerContributionEditor: View {
                         .accessibilityIdentifier("ledgerContributionNotes")
                 }
             }.disabled(model.saving || model.hasPendingSave)
-            Button(ledgerText("Save changes")) {
-                do {
-                    let quantity = try LedgerEntry.quantity(amount, unit)
-                    let savedNotes = notes == ledgerEditableNote(contribution) ? contribution.notes : notes
-                    focusedField = nil
-                    Task { if await model.editShop(key: "contribution-\(contribution.id)", shopID: shopID, { try $0.updateContribution(contributionID: contribution.id, quantity: quantity, notes: savedNotes) }) { dismiss() } }
-                } catch { validation = ledgerText("Enter a nonnegative amount with up to six decimal places, or leave it unknown.") }
-            }.buttonStyle(PrimaryAction()).disabled(!hasEdits || model.saving || model.hasPendingSave)
-                .accessibilityIdentifier("ledgerSaveContributionChanges")
             Button(ledgerText("Remove only this contribution"), role: .destructive) { confirmingRemoval = true }
                 .foregroundStyle(Theme.error)
                 .disabled(model.saving || model.hasPendingSave)
@@ -352,13 +414,25 @@ struct LedgerContributionEditor: View {
         }.scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(quickGroceryText("Quantity and notes"))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() }.disabled(model.saving) }
-                if focusedField != nil {
-                    ToolbarItem(placement: .topBarTrailing) {
+            }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                HStack(spacing: 12) {
+                    if focusedField != nil {
                         Button { focusedField = nil } label: {
-                            Text(ledgerText("Done")).frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
-                        }.accessibilityIdentifier("ledgerContributionDone")
+                            Image(systemName: "keyboard.chevron.compact.down")
+                                .frame(minWidth: 44, minHeight: 44)
+                        }
+                        .accessibilityLabel(quickGroceryText("Dismiss keyboard"))
+                        .accessibilityIdentifier("ledgerContributionDone")
                     }
+                    Button(ledgerText("Save changes"), action: save)
+                        .buttonStyle(PrimaryAction())
+                        .disabled(!hasEdits || model.saving || model.hasPendingSave)
+                        .accessibilityIdentifier("ledgerSaveContributionChanges")
                 }
+                .padding(.horizontal)
+                .padding(.vertical, 4)
+                .background(.bar)
             }
             .interactiveDismissDisabled(model.saving)
             .confirmationDialog(ledgerText("Remove only this contribution?"), isPresented: $confirmingRemoval, titleVisibility: .visible) {
@@ -367,6 +441,25 @@ struct LedgerContributionEditor: View {
                 }
             } message: { Text(ledgerText("Other sources remain saved. Needs linked to this quantity may require another source.")) }
     }
+
+    private func save() {
+        let quantity: Quantity?
+        let packages: GroceryPackageCount?
+        if amount == contribution.editableAmount && unit == GroceryEntryUnit(contribution) {
+            (quantity, packages) = (contribution.quantity, contribution.reviewedPackages)
+        } else {
+            do { (quantity, packages) = try unit.parse(amount) }
+            catch { validation = unit.invalidAmountMessage; return }
+        }
+        let savedNotes = notes == ledgerEditableNote(contribution) ? contribution.notes : notes
+        focusedField = nil
+        Task {
+            let saved = await model.editShop(key: "contribution-\(contribution.id)", shopID: shopID) { current in
+                try current.updateContribution(contributionID: contribution.id, quantity: quantity, notes: savedNotes, reviewedPackages: packages)
+            }
+            if saved { dismiss() }
+        }
+    }
 }
 
 struct LedgerQuantityFields: View {
@@ -374,6 +467,19 @@ struct LedgerQuantityFields: View {
     @Binding var unit: UnitOfMeasure
     var amountFocus: (binding: FocusState<String?>.Binding, id: String)? = nil
     var amountLabel: String? = nil
+
+    var body: some View {
+        LedgerAmountField(amount: $amount, amountFocus: amountFocus, amountLabel: amountLabel)
+        Picker(ledgerText("Unit"), selection: $unit) {
+            ForEach(UnitOfMeasure.allCases, id: \.self) { Text($0.displayName).tag($0) }
+        }
+    }
+}
+
+private struct LedgerAmountField: View {
+    @Binding var amount: String
+    let amountFocus: (binding: FocusState<String?>.Binding, id: String)?
+    let amountLabel: String?
 
     @ViewBuilder private var amountField: some View {
         let title = amountLabel ?? ledgerText("Amount, unknown if blank")
@@ -393,9 +499,6 @@ struct LedgerQuantityFields: View {
                 row
             }
         } else { amountField }
-        Picker(ledgerText("Unit"), selection: $unit) {
-            ForEach(UnitOfMeasure.allCases, id: \.self) { Text($0.displayName).tag($0) }
-        }
     }
 }
 

@@ -10,6 +10,41 @@ import XCTest
             lines: lines.enumerated().map { .init(id: $0.offset + 1, text: $0.element) })])
     }
 
+    func testPrintedDeliveryDayRendersInEnglishAndSpanishWithOrWithoutAPurchaseDate() throws {
+        var eastern = Calendar(identifier: .gregorian)
+        eastern.timeZone = try XCTUnwrap(TimeZone(identifier: "America/New_York"))
+        var western = Calendar(identifier: .gregorian)
+        western.timeZone = try XCTUnwrap(TimeZone(identifier: "America/Los_Angeles"))
+        let delivered = try XCTUnwrap(eastern.date(from: DateComponents(year: 2026, month: 11, day: 20)))
+        let purchased = try XCTUnwrap(eastern.date(from: DateComponents(year: 2026, month: 11, day: 17)))
+        let imported = delivered.addingTimeInterval(80_123)
+        var review = DeliveryPDFReview(document: document(["Order #Delivery-123", "Total $2.00"]),
+                                       origin: UUID(), timeZone: eastern.timeZone)
+        review.deliveryDate = delivered
+        let deliveryOnly = review.record(at: imported)
+        XCTAssertNil(deliveryOnly.purchaseDay)
+        XCTAssertNil(deliveryOnly.purchaseTimeZoneIdentifier)
+        review.purchaseDate = purchased
+        let withPurchase = review.record(at: imported)
+        XCTAssertEqual(withPurchase.purchaseDay, "2026-11-17")
+        for record in [deliveryOnly, withPurchase] {
+            XCTAssertEqual(record.deliveryDate, delivered)
+            XCTAssertEqual(record.importedAt, imported)
+            XCTAssertEqual(record.deliveryDay, "2026-11-20")
+            XCTAssertEqual(record.deliveryTimeZoneIdentifier, eastern.timeZone.identifier)
+            for calendar in [eastern, western] {
+                for (locale, expected) in [("en_US", "November 20, 2026"), ("es_US", "20 de noviembre de 2026")] {
+                    let text = ReceiptDateDisplay.storedPrintedDay(record.deliveryDay, recordedAt: delivered,
+                        style: .long, locale: Locale(identifier: locale), calendar: calendar, field: .delivery)
+                    XCTAssertEqual(text, expected)
+                }
+            }
+        }
+        let legacy = ReceiptDateDisplay.storedPrintedDay(nil, recordedAt: delivered, style: .long,
+            locale: Locale(identifier: "en_US"), calendar: western, field: .delivery)
+        XCTAssertEqual(legacy, pantryFormat("Original delivery day unknown · recorded %@ (UTC)", "November 20, 2026"))
+    }
+
     func testMixedOrderRemainsLineSpecificAndUsesOriginalPutawayCoordinates() throws {
         let file = document(["Order #ABC-123", "Milk $3.00", "Eggs 12 count $4.00", "Hot hamburger $8.00",
                              "Frozen beef patties 4 count $5.00", "Burger $6.00", "Delivery fee $3.00",

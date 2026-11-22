@@ -212,36 +212,36 @@
         }
       }
     },
-    "Exports include saved lists. To keep a first-list draft, finish and save it before exporting.": {
+    "Exports include saved lists. To keep a shopping draft, add its groceries to a list before exporting.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Exports include saved lists. To keep a first-list draft, finish and save it before exporting."
+            "value": "Exports include saved lists. To keep a shopping draft, add its groceries to a list before exporting."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "La exportación incluye las listas guardadas. Para conservar un borrador de la primera lista, termínalo y guárdalo antes de exportar."
+            "value": "La exportación incluye las listas guardadas. Para conservar un borrador de compras, añade sus productos a una lista antes de exportar."
           }
         }
       }
     },
-    "First-list drafts to delete: %lld": {
+    "Shopping drafts to delete: %lld": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "First-list drafts to delete: %lld"
+            "value": "Shopping drafts to delete: %lld"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Borradores de la primera lista que se eliminarán: %lld"
+            "value": "Borradores de compras que se eliminarán: %lld"
           }
         }
       }
@@ -1788,23 +1788,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Aún no hay copias recuperadas."
-          }
-        }
-      }
-    },
-    "No saved source records yet.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No saved source records yet."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aún no hay registros de origen guardados."
           }
         }
       }
@@ -6265,6 +6248,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Revisa el título, el enlace de origen y el texto. Elige una colección de Paprika o un archivo Recipe JSON-LD, o introduce la receta manualmente."
+          }
+        }
+      }
+    },
+    "Choose a reviewed receipt to share": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a reviewed receipt to share"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir un recibo revisado para compartir"
+          }
+        }
+      }
+    },
+    "There are no records in this export list.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There are no records in this export list."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay registros en esta lista de exportación."
           }
         }
       }

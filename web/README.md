@@ -11,7 +11,7 @@ Use Node 22.23.5 and `npm ci`, then `npm run dev` in `web/`. The development ser
 ## Public routes and service contract
 
 - `/` and `/requests`: authenticated contributor's own requests, editable pending entries, received outcomes and follow-ups.
-- `/invite#token=…`: invitation token is immediately removed with `history.replaceState`; it exists only in memory during explicit redemption. Authentication and consent are enforced by the server. No local alias can enroll someone.
+- `/invite#token=…`: invitation token is immediately removed with `history.replaceState`; it stays in memory while the recipient reviews the invitation. A signed-in recipient confirms they are 18 or older to check the inviting household name and offered access. Join sends those reviewed details for verification before redemption.
 - iPhone browser shares give the recipient a public entry address and a separate code. Adult and cook addresses use `enterCode=1` to open manual entry even when the browser already has a household session. Opening the address never redeems the code. Child shares use `/child-invite`.
 - `/view#token=…`: same secret exchange; a helper session opens its single granted shop and dated instructions. Editor grants may submit a correction for shopper review; they cannot apply a basket change.
 
@@ -25,7 +25,7 @@ The bilingual product overview opens at `/about?lang=en` and `/about?lang=es`. I
 
 Implemented service alignment uses `GET /v1/session`, `DELETE /v1/session`, own `GET /v1/households/{h}/requests/mine`, and `POST /v1/households/{h}/commands`. Command envelopes import `shared/contracts/service-v1.d.ts`. Requests are sent once with stable client IDs and operation keys; uncertain responses retry the original operation.
 
-Invitation redemption sends `POST /v1/invites/redeem {token,intent:'join',adultAttestation:true,alias?}` only after an explicit adult checkbox. The response must identify the joined household/member and contributor or helper role. The client then activates that household using `POST /v1/session {householdId,grantId?}` and verifies the resulting authenticated identity. A successful redemption is retained in memory if session activation needs retry, so activation retry does not consume the invite again.
+The age checkbox permits an authenticated `POST /v1/invites/preview {token,adultAttestation:true}`. Its reply contains the verified household label and offered role. Selecting Join sends `POST /v1/invites/redeem {token,intent:'join',adultAttestation:true,reviewedOffer,alias?}`. If the reviewed details changed, the client fetches the current offer for another explicit decision. The redemption receipt must match the offered role. The client activates a contributor session with `{householdId,scope:'own_requests'}` or the exact helper grant with `{householdId,grantId}`, then verifies the household, member and role. A successful redemption stays in memory across activation retries.
 
 Helper adapters use `GET /v1/views/{grant}/current` and `POST /v1/views/{grant}/proposals {clientKey,baseRevision,correction}`. The selected helper grant is bound into session activation; another most-recent grant is rejected. The view must identify the session's grant/shop, positive revision, valid `asOf`/`expiresAt`, read/edit mode, language, and narrow `items[{label,amount,unit,action}]`. A proposal succeeds only with `{proposalId,grantId,baseRevision,status:'pending'}` matching the viewed grant and revision. It never applies the basket change.
 

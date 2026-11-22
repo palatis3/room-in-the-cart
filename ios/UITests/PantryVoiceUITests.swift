@@ -1,3 +1,5 @@
+import UIKit
+import Vision
 import XCTest
 
 /// Uses ordinary private pantry records, the shipping review controls and the system keyboard.
@@ -143,6 +145,179 @@ import XCTest
 
     func testEnglishLowStockKeepsItsWordingAndOffersRestockingSeparately() {
         checkLowStock(spanish: false)
+    }
+
+    func testSpanishLargestTextExactAmountOpensVisibleAndReadyForTyping() {
+        openPantry(reset: true, spanish: true)
+        let eggs = addLot("Huevos", amount: "8")
+        app.terminate()
+        openPantry(reset: false, spanish: true, accessibilityText: true, locale: "es_MX")
+        let batch = app.buttons[eggs]
+        reveal(batch)
+        tap(batch)
+        let use = app.buttons["pantry.voiceUsedSome"]
+        reveal(use)
+        tap(use)
+        let exact = app.buttons["pantry.voiceUseAmount.0"]
+        reveal(exact)
+        let keyboard = app.keyboards.firstMatch
+        XCTAssertFalse(keyboard.exists)
+        tap(exact)
+
+        let field = element("pantry.voiceAmount.0")
+        let done = app.buttons["pantry.voiceKeyboardDone"]
+        XCTAssertTrue(keyboard.waitForExistence(timeout: 8))
+        let visibleAmount = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard field.exists, field.isHittable, done.exists, keyboard.exists else { return false }
+            let top = self.app.navigationBars.firstMatch.frame.maxY
+            let bottom = min(keyboard.frame.minY, done.frame.minY)
+            return field.frame.maxY <= bottom + 2 && field.frame.maxY - max(field.frame.minY, top) >= 44
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [visibleAmount], timeout: 8), .completed, app.debugDescription)
+        app.typeText("2")
+        XCTAssertEqual(field.value as? String, "2")
+        capture("Cantidad utilizada visible al escribir con texto de accesibilidad")
+        tap(done)
+        XCTAssertTrue(keyboard.waitForNonExistence(timeout: 8))
+        let preview = app.buttons["pantry.voicePreview"]
+        reveal(preview)
+        tap(preview)
+        let summary = element("pantry.voiceSummary.0")
+        XCTAssertTrue(summary.waitForExistence(timeout: 8))
+        XCTAssertTrue(summary.label.contains("6 unidades"), summary.label)
+    }
+
+    func testSpanishLargeTextKeepsPantryInputAndClarificationVisible() throws {
+        openPantry(reset: true, spanish: true, accessibilityText: true, locale: "es_MX")
+        tapPantryEntry(app.buttons["pantry.voiceEntry"])
+        let words = "Gasté dos huevos y un poco de harina. Me queda menos de media botella de kétchup. Se acabó el pan blanco."
+        let field = element("pantry.voiceText")
+        let review = app.buttons["pantry.voiceReview"]
+        let keyboard = app.keyboards.firstMatch
+        XCTAssertTrue(field.waitForExistence(timeout: 8))
+        let fullPrompt = "¿Qué usaste o qué quieres consultar?"
+        XCTAssertEqual(field.label, fullPrompt)
+        let initialField = field.frame.intersection(app.frame)
+        XCTAssertGreaterThanOrEqual(initialField.height, 44)
+        app.coordinate(withNormalizedOffset: .zero)
+            .withOffset(CGVector(dx: initialField.midX - app.frame.minX, dy: initialField.midY - app.frame.minY)).tap()
+        XCTAssertTrue(keyboard.waitForExistence(timeout: 8))
+
+        func editorViewport() -> CGRect {
+            let top = app.navigationBars.firstMatch.frame.maxY
+            let bottom = min(review.frame.minY, keyboard.frame.minY)
+            return CGRect(x: app.frame.minX, y: top, width: app.frame.width, height: max(0, bottom - top))
+        }
+        func editorFits() -> Bool {
+            guard field.exists, field.isHittable, review.exists, keyboard.exists else { return false }
+            let frame = field.frame
+            return frame.height > 0 && editorViewport().insetBy(dx: -1, dy: -1).contains(frame) &&
+                review.frame.height < app.frame.height / 4
+        }
+        func visibleLines(_ evidenceName: String) throws -> [String] {
+            let screenshot = app.screenshot()
+            let attachment = XCTAttachment(screenshot: screenshot)
+            attachment.name = evidenceName
+            attachment.lifetime = .keepAlways
+            add(attachment)
+            let image = try XCTUnwrap(screenshot.image.cgImage)
+            let scale = CGFloat(image.width) / app.frame.width
+            let visibleEditor = field.frame.intersection(editorViewport())
+            let crop = try XCTUnwrap(image.cropping(to: visibleEditor.offsetBy(dx: -app.frame.minX, dy: -app.frame.minY)
+                .applying(CGAffineTransform(scaleX: scale, y: scale))))
+            let request = VNRecognizeTextRequest()
+            request.recognitionLevel = .fast
+            request.usesLanguageCorrection = false
+            try VNImageRequestHandler(cgImage: crop).perform([request])
+            return (request.results ?? []).compactMap { $0.topCandidates(1).first?.string }
+        }
+        let firstFocus = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in editorFits() }, object: nil)
+        let initiallyVisible = XCTWaiter.wait(for: [firstFocus], timeout: 5) == .completed
+        let promptLines = try visibleLines("Spanish pantry editor on first focus")
+        XCTAssertTrue(promptLines.contains { $0.range(of: "Escribe aquí", options: [.caseInsensitive, .diacriticInsensitive]) != nil },
+                      "The complete prompt should fit on one line. Visible lines: \(promptLines)")
+        XCTAssertEqual(field.label, fullPrompt)
+
+        // Send input to the current responder without a second tap or an XCTest scroll.
+        app.typeText(words)
+        XCTAssertEqual(field.value as? String, words)
+        let visibleWords = try visibleLines("Spanish pantry editor at the end of a wrapped instruction").joined(separator: " ")
+        let finalWordVisible = visibleWords.localizedCaseInsensitiveContains("blanco")
+        let stillFits = editorFits()
+        XCTAssertTrue(initiallyVisible && stillFits && finalWordVisible,
+                      "Complete field visible on focus: \(initiallyVisible), after typing: \(stillFits). Visible words: \(visibleWords)")
+        review.tap()
+        let message = element("pantry.voiceStatus")
+        let messageVisible = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard message.exists, message.isHittable, !keyboard.exists else { return false }
+            return message.frame.minY >= self.app.navigationBars.firstMatch.frame.maxY - 2 &&
+                message.frame.minY < self.app.frame.midY
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [messageVisible], timeout: 8), .completed)
+        XCTAssertTrue(message.label.contains("La despensa sigue igual"))
+        XCTAssertEqual(field.value as? String, words)
+        XCTAssertFalse(app.buttons["pantry.voiceConfirm"].exists)
+    }
+
+    func testSpanishAccessibilityStorageFilterDisplaysAndChangesTheFullSelection() throws {
+        openPantry(reset: true, spanish: true, accessibilityText: true, locale: "es_MX")
+        let filter = app.buttons["pantry.locationFilter"]
+        reveal(filter)
+        XCTAssertEqual(filter.label, "Filtrar por lugar")
+        XCTAssertEqual(filter.value as? String, "Todos los lugares")
+
+        func visibleText(of element: XCUIElement, named name: String) throws -> String {
+            let screenshot = element.screenshot()
+            let attachment = XCTAttachment(screenshot: screenshot)
+            attachment.name = name
+            attachment.lifetime = .keepAlways
+            add(attachment)
+            let request = VNRecognizeTextRequest()
+            request.recognitionLevel = .accurate
+            request.recognitionLanguages = ["es-ES"]
+            request.usesLanguageCorrection = false
+            try VNImageRequestHandler(cgImage: try XCTUnwrap(screenshot.image.cgImage)).perform([request])
+            return (request.results ?? []).compactMap { $0.topCandidates(1).first?.string }.joined(separator: " ")
+        }
+
+        func assertSelection(_ value: String, file: StaticString = #filePath, line: UInt = #line) {
+            let selected = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", value), object: filter)
+            XCTAssertEqual(XCTWaiter.wait(for: [selected], timeout: 5), .completed, file: file, line: line)
+        }
+
+        let visible = try visibleText(of: filter, named: "Spanish storage filter at accessibility size")
+        XCTAssertTrue(visible.localizedCaseInsensitiveContains("Filtrar por lugar"), visible)
+        XCTAssertTrue(visible.localizedCaseInsensitiveContains("Todos los lugares"), visible)
+
+        let refrigerator = app.buttons["Refrigerador"]
+        filter.tap()
+        XCTAssertTrue(refrigerator.waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertTrue(refrigerator.isHittable)
+        refrigerator.tap()
+        assertSelection("Refrigerador")
+        let renderedValue = filter.staticTexts["Refrigerador"]
+        XCTAssertTrue(renderedValue.waitForExistence(timeout: 5), app.debugDescription)
+        let selectedText = try visibleText(of: renderedValue, named: "Spanish selected refrigerator value")
+        // Join a word hyphenated at a line break by Dynamic Type.
+        let joined = selectedText.replacingOccurrences(of: #"[-\u2010\u2011\u00AD]\s+"#, with: "", options: .regularExpression)
+        XCTAssertTrue(joined.localizedCaseInsensitiveContains("Refrigerador"), selectedText)
+
+        let cancel = app.buttons["pantry.cancelLocationFilter"]
+        filter.tap()
+        XCTAssertTrue(cancel.waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertEqual(cancel.label, "Cancelar")
+        XCTAssertTrue(cancel.isHittable)
+        XCTAssertTrue(refrigerator.isSelected)
+        cancel.tap()
+        XCTAssertTrue(cancel.waitForNonExistence(timeout: 5))
+        assertSelection("Refrigerador")
+
+        let allLocations = app.buttons["Todos los lugares"]
+        filter.tap()
+        XCTAssertTrue(allLocations.waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertTrue(allLocations.isHittable)
+        allLocations.tap()
+        assertSelection("Todos los lugares")
     }
 
     func testSpanishLowStockKeepsItsWordingAndOffersRestockingSeparately() {
@@ -323,6 +498,52 @@ import XCTest
         XCTAssertEqual(app.switches["packageDate.hasDay"].value as? String, "0")
     }
 
+    func testReturningFromConfirmedRemainingEstimateNamesTheFoodAndOriginalWording() {
+        openPantry(reset: true)
+        _ = addLot("Ketchup", amount: "1")
+        enterCommand("My ketchup bottle is almost empty.")
+        tap(app.buttons["pantry.voicePreview"])
+        tap(app.buttons["pantry.voiceConfirm"])
+        XCTAssertTrue(element("pantry.voiceSavedWording.0").waitForExistence(timeout: 10))
+        tap(app.buttons["Done"])
+        let notice = element("pantry.status")
+        XCTAssertTrue(notice.wait(for: \.label, toEqual: "Saved remaining estimate for Ketchup: almost empty", timeout: 8),
+                      app.debugDescription)
+    }
+
+    func testReturningFromConfirmedFlourUseShowsTheSameReceiptOnce() {
+        openPantry(reset: true)
+        let flour = addLot("Flour", amount: "2")
+        enterCommand("I used some flour.")
+        tap(app.buttons["pantry.voicePreview"])
+        tap(app.buttons["pantry.voiceConfirm"])
+        let receipt = app.staticTexts.matching(NSPredicate(format: "label == %@", "Recorded one use of Flour.")).firstMatch
+        XCTAssertTrue(receipt.wait(for: \.isHittable, toEqual: true, timeout: 8), app.debugDescription)
+        XCTAssertEqual(receipt.identifier, "pantry.voiceSaved")
+        let savedRow = app.cells.containing(.staticText, identifier: "pantry.voiceSaved").firstMatch
+        XCTAssertTrue(savedRow.exists)
+        XCTAssertEqual(savedRow.images.count, 0, "The receipt has a single accessible reading.")
+        capture("Confirmed flour use")
+        tap(app.buttons["Done"])
+        let shelf = app.navigationBars["My Pantry"]
+        XCTAssertTrue(shelf.waitForExistence(timeout: 8))
+        XCTAssertTrue(receipt.wait(for: \.isHittable, toEqual: true, timeout: 8), app.debugDescription)
+        XCTAssertEqual(receipt.identifier, "pantry.status")
+        let statusRow = app.cells.containing(.staticText, identifier: "pantry.status").firstMatch
+        XCTAssertTrue(statusRow.exists)
+        XCTAssertEqual(statusRow.images.count, 0, "The shelf status must not announce a separate status image.")
+        capture("Flour use receipt on returning to My Pantry")
+
+        enterCommand("I used some flour.")
+        tap(app.buttons["pantry.voiceCancel"])
+        XCTAssertTrue(shelf.waitForExistence(timeout: 8))
+        XCTAssertFalse(receipt.exists)
+        tap(app.buttons[flour])
+        tap(app.buttons["pantry.usageHistory"])
+        XCTAssertTrue(element("pantry.usageEvent.0").waitForExistence(timeout: 8))
+        XCTAssertFalse(element("pantry.usageEvent.1").exists)
+    }
+
     func testUsedSomeFromBatchAndTypedUseProduceTwoPrivateHistoryEntries() {
         openPantry(reset: true)
         let id = addLot("Ketchup", amount: "3")
@@ -447,22 +668,32 @@ import XCTest
 
     private func tapPantryEntry(_ entry: XCUIElement) {
         let list = app.collectionViews.firstMatch
-        // After a lot is saved, the form may scroll to its status or last focused row.
-        // Wait for an unobscured, settled row before using its center hit point.
-        let area = app.frame.insetBy(dx: 12, dy: 130)
-        for _ in 0..<5 {
-            if entry.exists, entry.isHittable, area.contains(CGPoint(x: entry.frame.midX, y: entry.frame.midY)) { break }
-            list.swipeDown()
+        let top = max(list.frame.minY, app.navigationBars.firstMatch.frame.maxY) + 4
+        let tabs = app.tabBars.firstMatch
+        let bottom = min(list.frame.maxY, tabs.exists ? tabs.frame.minY : app.frame.maxY) - 4
+        let area = CGRect(x: list.frame.minX + 8, y: top, width: list.frame.width - 16, height: bottom - top)
+        func visibleRow() -> CGRect? {
+            guard entry.exists, entry.isHittable else { return nil }
+            let visible = entry.frame.intersection(area)
+            return visible.height >= 44 && visible.width >= 44 ? visible : nil
+        }
+        for attempt in 0..<10 {
+            if visibleRow() != nil { break }
+            // The last save can leave the list near its bottom. Large text can instead move
+            // the entry below the initial viewport. Search above first only when virtualized.
+            let searchAbove = entry.exists ? entry.frame.midY < area.midY : attempt < 3
+            if searchAbove { list.swipeDown(velocity: .slow) } else { list.swipeUp(velocity: .slow) }
         }
         var prior: CGRect?
         let settled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            guard entry.exists, entry.isHittable else { return false }
-            let frame = entry.frame
-            defer { prior = frame }
-            return frame == prior && area.contains(CGPoint(x: frame.midX, y: frame.midY))
+            guard let visible = visibleRow() else { return false }
+            defer { prior = visible }
+            return visible == prior
         }, object: nil)
         XCTAssertEqual(XCTWaiter.wait(for: [settled], timeout: 8), .completed, app.debugDescription)
-        entry.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        guard let visible = visibleRow() else { return XCTFail("Pantry entry is outside the visible list") }
+        entry.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: visible.midX - entry.frame.minX,
+                                                                         dy: visible.midY - entry.frame.minY)).tap()
     }
 
     private func assertDictationIdle() {
@@ -480,19 +711,33 @@ import XCTest
     private func enterCommand(_ wording: String) {
         tapPantryEntry(app.buttons["pantry.voiceEntry"])
         assertDictationIdle()
-        fill(wording, into: "pantry.voiceText")
+        let field = element("pantry.voiceText")
+        reveal(field)
+        let bounds = app.frame
+        let visible = field.frame.intersection(bounds)
+        XCTAssertFalse(visible.isEmpty)
+        // On iOS 17 the multiline editor's synthesized AX tap can miss its editable surface.
+        app.coordinate(withNormalizedOffset: .zero)
+            .withOffset(CGVector(dx: visible.midX - bounds.minX, dy: visible.midY - bounds.minY)).tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 8))
+        app.typeText(wording)
+        XCTAssertEqual(field.value as? String, wording)
         dismissVoiceKeyboard()
         tap(app.buttons["pantry.voiceReview"])
         XCTAssertFalse(element("pantry.voice.listening").exists)
         XCTAssertFalse(system.alerts.firstMatch.exists)
     }
 
-    private func openPantry(reset: Bool, spanish: Bool = false, expectEmptyShop: Bool = false) {
+    private func openPantry(reset: Bool, spanish: Bool = false, expectEmptyShop: Bool = false, accessibilityText: Bool = false,
+                            locale: String? = nil) {
         app.launchArguments = [
             "--ui-testing", "-AppleLanguages", spanish ? "(es)" : "(en)",
-            "-AppleLocale", spanish ? "es_US" : "en_US"
+            "-AppleLocale", locale ?? (spanish ? "es_US" : "en_US")
         ]
         if reset { app.launchArguments.append("--reset-test-workspace") }
+        if accessibilityText {
+            app.launchArguments += ["-UIPreferredContentSizeCategoryName", UIContentSizeCategory.accessibilityExtraExtraExtraLarge.rawValue]
+        }
         app.launch()
         if expectEmptyShop {
             tap(app.tabBars.buttons[spanish ? "Compras" : "Shop"])

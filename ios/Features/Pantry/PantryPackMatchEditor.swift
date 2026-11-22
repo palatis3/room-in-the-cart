@@ -17,8 +17,8 @@ struct PantryPackMatchEditor: View {
 
     var body: some View {
         if let code = row.barcode {
-            Section(pantryText("Recognize this pack next time")) {
-                if code.catalogGTIN == nil {
+            Section {
+                if code.lookupScope == .retailer {
                     TextField(pantryText("Retailer for this code"), text: $row.retailer)
                         .accessibilityIdentifier("pack.retailer")
                 }
@@ -30,7 +30,7 @@ struct PantryPackMatchEditor: View {
                 }
                 if let source {
                     Text(verbatim: source.originalLine)
-                    Text(source.merchant + " · " + dates.purchaseDay(source.purchaseDate, style: .abbreviated))
+                    Text(source.merchant + " · " + dates.purchaseDay(source, style: .abbreviated))
                     if row.receiptLinkSaved {
                         Text(pantryText("Linked to the saved receipt line. Stock stays the same."))
                     } else {
@@ -67,6 +67,14 @@ struct PantryPackMatchEditor: View {
                     }
                 }
                 if let status { Text(status) }
+            } header: {
+                if code.lookupScope == .global || code.lookupScope == .retailer {
+                    Text(pantryText("Recognize this pack next time"))
+                }
+            } footer: {
+                if code.lookupScope == .global || code.lookupScope == .retailer {
+                    Text(pantryText("Remembering saves the barcode, name and pack size. Review the pantry count separately to add food."))
+                }
             }
             .sheet(isPresented: $showingReceipts) {
                 NavigationStack {
@@ -149,7 +157,7 @@ private struct PackReceiptPicker: View {
                         VStack(alignment: .leading) {
                             Text(line.name).font(.headline)
                             Text(verbatim: line.originalLine)
-                            Text(line.merchant + " · " + dates.purchaseDay(line.purchaseDate, style: .abbreviated))
+                            Text(line.merchant + " · " + dates.purchaseDay(line, style: .abbreviated))
                             Text(pantryQuantity(line.received))
                         }
                     }

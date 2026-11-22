@@ -177,6 +177,31 @@ final class SharedFallbackUITests: XCTestCase {
         verifyRetainedAccessAfterExpiry()
     }
 
+    func testPackNameDoneDismissesKeyboardAndTheNextQuantityRemainsEditable() {
+        launch()
+        tap(app.buttons["fallback.target." + target])
+        toggle(app.switches["fallback.trip.include"])
+        let larger = candidateID(1)
+        toggle(app.switches["fallback.select." + larger])
+        let details = app.buttons["fallback.food." + larger]
+        tap(details)
+        toggle(app.switches["Enter a reviewed pack offer"])
+        enter("Two wraps", "Pack name", done: "fallback.food.done")
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 3))
+        let quantity = app.textFields["Usable food per pack"]
+        tap(quantity)
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 3))
+        quantity.typeText("2")
+        XCTAssertEqual(quantity.value as? String, "2")
+        back("Review ingredients, food and time")
+        tap(details)
+        let name = app.textFields["Pack name"]
+        reveal(name)
+        XCTAssertEqual(name.value as? String, "Two wraps")
+        reveal(quantity)
+        XCTAssertEqual(quantity.value as? String, "2")
+    }
+
     func testFiveUsableWrapsProtectLunchAndCompareUsualDinnerWithTwoPackTrip() throws {
         launch()
         tap(app.buttons["fallback.target." + target])
@@ -196,14 +221,25 @@ final class SharedFallbackUITests: XCTestCase {
         enter("0.50","Extra charges and travel cost (USD)",done:"fallback.trip.done")
         tap(app.buttons["fallback.food." + larger])
         toggle(app.switches["Enter a reviewed pack offer"])
-        enter("Two wraps","Pack name",done:"fallback.food.done")
-        for label in ["Usable food per pack", "Price per pack (USD)", "Packs available"] {
+        let offerFields = [("Pack name", "Two wraps"), ("Usable food per pack", "2"),
+                           ("Price per pack (USD)", "2"), ("Packs available", "2")]
+        for (label, value) in offerFields {
             let field = app.textFields[label]
             tap(field)
-            field.typeText("2")
-            XCTAssertEqual(field.value as? String, "2", label)
+            if label == "Pack name" {
+                XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 3))
+                XCTAssertTrue(app.buttons["fallback.food.done"].waitForExistence(timeout: 3))
+            }
+            field.typeText(value)
+            XCTAssertEqual(field.value as? String, value, label)
         }
-        XCTAssertEqual(app.textFields["Pack name"].value as? String, "Two wraps")
+        back("Review ingredients, food and time")
+        tap(app.buttons["fallback.food." + larger])
+        for (label, value) in offerFields {
+            let field = app.textFields[label]
+            reveal(field)
+            XCTAssertEqual(field.value as? String, value, label)
+        }
         back("Review ingredients, food and time")
         toggle(app.switches["fallback.select." + usual])
         tap(app.buttons["fallback.food." + usual]); toggle(try sourceToggle(for: 0)); back("Review ingredients, food and time")

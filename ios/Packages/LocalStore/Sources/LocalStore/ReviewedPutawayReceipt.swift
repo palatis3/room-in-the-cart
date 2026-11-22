@@ -6,14 +6,28 @@ public struct ReviewedReceiptHeader: Equatable, Codable, Identifiable, Sendable 
     public let owner: UUID
     public let merchant: String
     public let date: Date
+    public let purchaseDay: String?
     public let totalMinor: Int64?
     public let reference: String?
 
-    public init(id: UUID, owner: UUID, merchant: String, date: Date, totalMinor: Int64?, reference: String? = nil) {
+    static func validDay(_ text: String) -> Bool {
+        guard text.utf8.count == 10 else { return false }
+        let parts = text.split(separator: "-")
+        guard parts.count == 3, let year = Int(parts[0]), let month = Int(parts[1]), let day = Int(parts[2]),
+              (1...9999).contains(year), (1...12).contains(month), (1...31).contains(day),
+              String(format: "%04d-%02d-%02d", year, month, day) == text else { return false }
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = .gmt
+        let components = DateComponents(year: year, month: month, day: day)
+        return components.isValidDate(in: calendar)
+    }
+
+    public init(id: UUID, owner: UUID, merchant: String, date: Date, totalMinor: Int64?, reference: String? = nil, purchaseDay: String? = nil) {
         self.id = id
         self.owner = owner
         self.merchant = merchant
         self.date = date
+        self.purchaseDay = purchaseDay
         self.totalMinor = totalMinor
         self.reference = reference
     }
@@ -61,6 +75,7 @@ public struct ReviewedPutawayReceipt: Equatable, Codable, Sendable {
         }
         guard (layout == nil) == (ordinals == nil),
               ordinals.map({ $0.count == decisions.count && Set($0).count == $0.count && $0.allSatisfy { (0..<4000).contains($0) } }) ?? true,
+              header.purchaseDay.map(ReviewedReceiptHeader.validDay) ?? true,
               validText(header.merchant, 256), header.date.timeIntervalSinceReferenceDate.isFinite,
               header.totalMinor.map({ $0 >= 0 }) ?? true, header.reference.map({ validText($0, 256) }) ?? true, (1...50).contains(decisions.count),
               identities.count <= 2, Set(decisions.map(\.id)).count == decisions.count,
@@ -96,7 +111,7 @@ extension ComparisonDatabase {
     func savePutaway(_ review: ReviewedPutawayReceipt) throws {
         let header = review.header
         if let prior = try putawayHeader(header.id) {
-            guard prior.owner == header.owner, prior.date == header.date, prior.merchant == header.merchant,
+            guard prior.owner == header.owner, prior.date == header.date, prior.purchaseDay == header.purchaseDay, prior.merchant == header.merchant,
                   prior.reference == nil || prior.reference == header.reference,
                   prior.totalMinor == nil || prior.totalMinor == header.totalMinor else { throw ComparisonStoreError.operationConflict }
         }
@@ -163,6 +178,26 @@ extension ComparisonStore {
         let header = try database.putawayHeader(id)
         guard header == nil || header?.owner == owner else { throw ComparisonStoreError.operationConflict }
         return header
+    }
+
+    /// Look up an existing image-evidence index entry only in this owner's reviewed history.
+    public func reviewedReceiptHeader(imageIdentity: UUID, owner: UUID) throws -> ReviewedReceiptHeader? {
+        guard try inventoryState().active else { throw ComparisonStoreError.inventoryInactive }
+        let row = try database.statement("""
+            SELECT r.id, r.header FROM inventory_acquisition_identities i
+            JOIN putaway_receipts r ON r.id=i.receipt_id WHERE i.identity=? AND r.owner=?
+            """, values: [.text(imageIdentity.uuidString), .text(owner.uuidString)])
+        defer { sqlite3_finalize(row) }
+        switch sqlite3_step(row) {
+        case SQLITE_DONE: return nil
+        case SQLITE_ROW:
+            let header = try JSONDecoder().decode(ReviewedReceiptHeader.self, from: database.inventoryBlob(row, column: 1, maximum: 2048))
+            guard header.owner == owner, header.id.uuidString == (try database.text(row, column: 0)) else {
+                throw ComparisonStoreError.corruptRecord
+            }
+            return header
+        default: throw ComparisonStoreError.corruptRecord
+        }
     }
 
     public func reviewedReceiptHeaders(owner: UUID, after: UUID?, limit: Int = 30) throws -> [ReviewedReceiptHeader] {

@@ -53,7 +53,7 @@ struct LedgerCheckoutReview {
 enum LedgerCheckoutAdapter {
     static func review(shop: ShoppingLedger, workspaceRevision: Int64, previous: PickupJourney?,
                        packSelections: [LedgerPackSelection] = [], workspaceID: UUID? = nil, pickupWorkspaceID: UUID? = nil, bindings: [DinnerPortionBinding] = [],
-                       canonicalEvidence: [UUID: LedgerCanonicalPackStockEvidence] = [:], pantryIsActive: Bool = false) throws -> LedgerCheckoutReview {
+                       canonicalEvidence: [UUID: LedgerCanonicalPackStockEvidence] = [:], pantryIsActive: Bool = false, usedForDinner: Set<UUID> = []) throws -> LedgerCheckoutReview {
         try shop.validate()
         let handChecked = shop.handCheckedOnlyLineIDs
         let sourceNeedLines = shop.lines.filter { !$0.isTrashed && !$0.isHandled }
@@ -68,7 +68,7 @@ enum LedgerCheckoutAdapter {
         var selectedPacks: [UUID: LedgerPackSelection] = [:]
         for selection in packSelections where selection.shopID == shop.id {
             try selection.validateReference(in: shop)
-            guard let line = activeByID[selection.lineID], let workspaceID else { continue }
+            guard !usedForDinner.contains(selection.lineID), let line = activeByID[selection.lineID], let workspaceID else { continue }
             if let pick = line.tripPick {
                 guard let packages = try shop.physicalPackages(for: line, requested: shop.quantity(forLineID: line.id),
                                                                sourcePackages: itemPackages[line.id] ?? []),
@@ -88,7 +88,7 @@ enum LedgerCheckoutAdapter {
         let reviewedPackLineIDs = Set(packSelections.filter { $0.shopID == shop.id }.map(\.lineID)).union(priorPackLineIDs)
         let itemExclusions = shop.itemExclusions
         let sourceLines = try activeLines.compactMap { line -> BasketLine? in
-            if selectedPacks[line.id]?.isNoPurchase == true { return nil }
+            if usedForDinner.contains(line.id) || selectedPacks[line.id]?.isNoPurchase == true { return nil }
             let requested = try shop.quantity(forLineID: line.id)
             guard let quantity = line.tripPick?.amount ?? requested else { throw LedgerCheckoutError.missingQuantity }
             let exclusions = itemExclusions[line.id] ?? []
@@ -178,7 +178,7 @@ enum LedgerCheckoutAdapter {
         if !unchanged, !reused.isEmpty {
             return try review(shop: shop, workspaceRevision: workspaceRevision, previous: previous,
                 packSelections: packSelections.filter { !reused.contains($0.id) }, workspaceID: workspaceID,
-                pickupWorkspaceID: pickupWorkspaceID, bindings: bindings, canonicalEvidence: canonicalEvidence, pantryIsActive: pantryIsActive)
+                pickupWorkspaceID: pickupWorkspaceID, bindings: bindings, canonicalEvidence: canonicalEvidence, pantryIsActive: pantryIsActive, usedForDinner: usedForDinner)
         }
         let proposal: BasketProposal?
         if let basket = previous?.basket, !unchanged {
@@ -193,7 +193,7 @@ enum LedgerCheckoutAdapter {
             previousJourneyRevision: previous?.revision, previousBasketRevision: previous?.basket?.current.id,
             lines: lines, needs: plannedNeeds, sourceNeeds: needs, deferredLineIDs: deferredLineIDs, details: details, packSelections: currentPacks,
             unreviewedPackLineIDs: activeLines.filter { line in
-                selectedPacks[line.id] == nil && reviewedPackLineIDs.contains(line.id)
+                !usedForDinner.contains(line.id) && selectedPacks[line.id] == nil && reviewedPackLineIDs.contains(line.id)
             }.map(\.id), context: unchanged ? previous?.context ?? context : context, cap: unchanged ? previous?.cap : cap,
             proposal: proposal, needsApplication: !unchanged)
     }
@@ -203,7 +203,9 @@ enum LedgerCheckoutAdapter {
     @MainActor static func review(shop: ShoppingLedger, workspaceRevision: Int64, previous: PickupJourney?,
                                   packSelections: [LedgerPackSelection] = [], workspaceID: UUID? = nil,
                                   pickupWorkspaceID: UUID? = nil, bindings: [DinnerPortionBinding] = [],
-                                  pantryContext: PantryPackStockReview.Context?, pantryIsActive: Bool) throws -> LedgerCheckoutReview {
+                                  pantryContext: PantryPackStockReview.Context?, pantryIsActive: Bool,
+                                  dinnerWorkspace: LedgerWorkspace? = nil, dinnerActorID: UUID? = nil) throws -> LedgerCheckoutReview {
+        var usedForDinner = Set<UUID>()
         var evidence: [UUID: LedgerCanonicalPackStockEvidence] = [:]
         if pantryIsActive, let pantryContext {
             guard pantryContext.snapshot.state.active,
@@ -214,6 +216,10 @@ enum LedgerCheckoutAdapter {
             if let previous {
                 guard let head = pantryContext.mapping.sourceHeads.first(where: { $0.id == previous.id }),
                       try JSONDecoder().decode(PickupJourney.self, from: head.payload) == previous else { throw LedgerCheckoutError.staleCheckout }
+                if let dinnerWorkspace, let workspaceID, let dinnerActorID {
+                    usedForDinner = previous.usedDinnerPantryLines(in: shop, workspace: dinnerWorkspace,
+                        workspaceID: workspaceID, actorID: dinnerActorID, context: pantryContext)
+                }
             }
             for selection in packSelections where selection.shopID == shop.id && selection.canonicalStockEvidence != nil {
                 evidence[selection.id] = try? PantryPackStockReview.currentEvidence(for: selection, shop: shop,
@@ -222,7 +228,7 @@ enum LedgerCheckoutAdapter {
         }
         return try review(shop: shop, workspaceRevision: workspaceRevision, previous: previous, packSelections: packSelections,
             workspaceID: workspaceID, pickupWorkspaceID: pickupWorkspaceID, bindings: bindings,
-            canonicalEvidence: evidence, pantryIsActive: pantryIsActive)
+            canonicalEvidence: evidence, pantryIsActive: pantryIsActive, usedForDinner: usedForDinner)
     }
 
     static func namedReservations(shop: ShoppingLedger, lineID: UUID, unit: UnitOfMeasure, bindings: [DinnerPortionBinding]) throws
@@ -260,7 +266,11 @@ enum LedgerCheckoutAdapter {
         return (namedAmount, needs, details)
     }
 
-    @MainActor static func apply(_ review: LedgerCheckoutReview, ledger: LedgerModel, pickup: PickupModel) async throws -> Bool {
+    @MainActor static func apply(_ review: LedgerCheckoutReview, ledger: LedgerModel, pickup: PickupModel,
+                                 freshDinnerBasis: LedgerCanonicalPackStockEvidence.Basis? = nil,
+                                 authorize: (@MainActor () -> Bool)? = nil) async throws -> Bool {
+        guard authorize?() != false, freshDinnerBasis == nil || (pickup.pantryIsActive && review.previousJourneyRevision == nil)
+        else { throw LedgerCheckoutError.staleSource }
         guard ledger.ready, !ledger.saving, !ledger.hasPendingSave, pickup.ready,
               !pickup.saving, !pickup.hasPendingSave else { throw LedgerCheckoutError.staleSource }
         try review.assertCurrent(shop: ledger.shop, workspaceRevision: ledger.revision,
@@ -272,15 +282,21 @@ enum LedgerCheckoutAdapter {
             guard await pickup.refreshPantryStock() else { throw LedgerCheckoutError.staleSource }
         }
         let previous = pickup.journeys.first { $0.id == review.source.id }
+        if let freshDinnerBasis {
+            guard authorize?() == true, let id = ledger.sourceWorkspaceID, previous == nil,
+                  try pickup.quickGroceryPantryContext(ledgerWorkspaceID: id)?.dinnerBasis == freshDinnerBasis
+            else { throw LedgerCheckoutError.staleSource }
+        }
         try review.assertCurrent(shop: ledger.shop, workspaceRevision: ledger.revision, journey: previous)
         guard ledger.ready, !ledger.saving, !ledger.hasPendingSave,
               pickup.ready, !pickup.saving, !pickup.hasPendingSave else { throw LedgerCheckoutError.staleSource }
         guard previous?.basket?.phase != .reportedPlaced else { throw LedgerCheckoutError.placedOrder }
         let pantryContext = try previous == nil ? nil : pickup.canonicalPackContext(for: review.source.id)
         let current = try self.review(shop: review.source, workspaceRevision: ledger.revision, previous: previous,
-            packSelections: ledger.workspace.packSelections, workspaceID: ledger.sourceWorkspaceID,
+            packSelections: pickup.dinnerAuthorizedPacks(ledger.workspace.packSelections, ledger: ledger, shop: review.source), workspaceID: ledger.sourceWorkspaceID,
             pickupWorkspaceID: pickup.sourceWorkspaceID, bindings: ledger.workspace.dinnerPlanning.portionBindings,
-            pantryContext: pantryContext, pantryIsActive: pickup.pantryIsActive)
+            pantryContext: pantryContext, pantryIsActive: pickup.pantryIsActive,
+                dinnerWorkspace: ledger.workspace, dinnerActorID: pickup.currentDinnerActorID)
         guard current.lines == review.lines, current.needs == review.needs, current.details == review.details,
               current.packSelections == review.packSelections, current.context == review.context, current.cap == review.cap,
               current.needsApplication == review.needsApplication else { throw LedgerCheckoutError.staleSource }
@@ -314,7 +330,8 @@ enum LedgerCheckoutAdapter {
         }
         return await pickup.start(from: review.lines, shopID: review.source.id, context: review.context, cap: review.cap,
                                   plannedNeeds: review.needs, ledgerBasis: review.source.basis,
-                                  ledgerSourceRevisionID: review.source.revisionID, needDetails: review.details, ledgerPackSelections: review.packSelections, mealSource: mealSource, reviewedLedger: reviewedLedger)
+                                  ledgerSourceRevisionID: review.source.revisionID, needDetails: review.details, ledgerPackSelections: review.packSelections, mealSource: mealSource, reviewedLedger: reviewedLedger,
+                                  reviewedPantryBasis: freshDinnerBasis, authorize: authorize)
     }
 
     /// A stable shop ID makes resuming after either store commits retry-safe.
@@ -383,6 +400,9 @@ struct LedgerCheckoutEntry: View {
                                         if let pick = line.tripPick {
                                             Text(shelfFormat("Picked · %@", pQuantity(pick.amount)))
                                         }
+                                    } else if let summary = shop.packagePickSummary(line) {
+                                        Text(summary)
+                                        Text(pTr("Quantity unresolved"))
                                     } else if let requested, let pick = line.tripPick,
                                               (try? pick.amount.converted(to: requested.unit)) != requested.amount {
                                         Text(shelfFormat("Requested · %@", pQuantity(requested)))
@@ -491,9 +511,10 @@ struct LedgerCheckoutEntry: View {
             let previous = pickup.journeys.first { $0.id == shop.id }
             let pantryContext = try previous == nil ? nil : pickup.canonicalPackContext(for: shop.id)
             let value = try LedgerCheckoutAdapter.review(shop: shop, workspaceRevision: ledger.revision, previous: previous,
-                packSelections: ledger.workspace.packSelections, workspaceID: ledger.sourceWorkspaceID,
+                packSelections: pickup.dinnerAuthorizedPacks(ledger.workspace.packSelections, ledger: ledger, shop: shop), workspaceID: ledger.sourceWorkspaceID,
                 pickupWorkspaceID: pickup.sourceWorkspaceID, bindings: ledger.workspace.dinnerPlanning.portionBindings,
-                pantryContext: pantryContext, pantryIsActive: pickup.pantryIsActive)
+                pantryContext: pantryContext, pantryIsActive: pickup.pantryIsActive,
+                dinnerWorkspace: ledger.workspace, dinnerActorID: pickup.currentDinnerActorID)
             if !value.needsApplication { pickup.selectedID = shop.id; opened = true }
             else if pickup.journeys.first(where: { $0.id == shop.id })?.basket?.phase == .reportedPlaced {
                 error = pTr("This order was reported placed. Its original lines and terms remain locked; review retailer-confirmed amendments separately.")

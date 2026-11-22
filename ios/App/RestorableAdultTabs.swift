@@ -43,7 +43,9 @@ struct RestoredDestinationView: View {
                        ledger.sourceWorkspaceID == workspace, ledger.shop?.id == shop {
                         LedgerHomeView(model: ledger, onShopSelected: { [weak navigation] id in
                             navigation?.replaceShoppingList(destination, with: id)
-                        }).navigationTitle(ledgerText("Shopping list"))
+                        })
+                        .navigationTitle(ledgerText("Shopping list"))
+                        .navigationBarTitleDisplayMode(.inline)
                     } else { unavailable }
                 case .comparison(let actor, let workspace, let id):
                     if actor == access.localActorID, app.ready, app.hasLoadedRecords, app.error == nil, app.store?.workspaceID == workspace,

@@ -4,7 +4,10 @@ import DeviceSurfaces
 
 struct InvalidImportAmount: Codable, Equatable {
     let text: String
-    let unit: UnitOfMeasure
+    let unit: UnitOfMeasure?
+    var packageKind: GroceryPackageCount.Kind? = nil
+
+    var selection: GroceryEntryUnit { packageKind.map(GroceryEntryUnit.package) ?? .measure(unit ?? .count) }
 }
 
 private enum LedgerImportField: Hashable {
@@ -12,6 +15,7 @@ private enum LedgerImportField: Hashable {
 }
 
 struct LedgerImportView: View {
+    @Environment(\.reviewedQuickGroceryDraft) private var quickDraft
     @ObservedObject var model: LedgerModel
     @EnvironmentObject private var access: WorkspaceAccess
     @EnvironmentObject private var household: HouseholdModel
@@ -46,15 +50,17 @@ struct LedgerImportView: View {
     let onSaved: ((UUID) -> Void)?
     let authorizeEntry: @MainActor () -> Bool
     private let prefill: String
+    private let opensListAfterSave: Bool
     private let pantryFoodPrefill: Bool
     private let pantrySuggestedAmount: Quantity?
     private let pantryProductLink: UUID?
     @State private var incomingWording: String?
     @State private var appendError: String?
-    init(model: LedgerModel, shopID: UUID, firstDraft: FirstListEditor? = nil, prefill: String = "", initialPreview: StagedListImport? = nil, pantryFoodPrefill: Bool = false, pantrySuggestedAmount: Quantity? = nil, pantryProductLink: UUID? = nil, authorizeEntry: @escaping @MainActor () -> Bool = { true }, onSaved: ((UUID) -> Void)? = nil) {
+    init(model: LedgerModel, shopID: UUID, firstDraft: FirstListEditor? = nil, prefill: String = "", opensListAfterSave: Bool = false, initialPreview: StagedListImport? = nil, pantryFoodPrefill: Bool = false, pantrySuggestedAmount: Quantity? = nil, pantryProductLink: UUID? = nil, authorizeEntry: @escaping @MainActor () -> Bool = { true }, onSaved: ((UUID) -> Void)? = nil) {
         self.model = model; self.shopID = shopID; self.firstDraft = firstDraft; self.onSaved = onSaved
         self.authorizeEntry = authorizeEntry
         self.prefill = prefill
+        self.opensListAfterSave = opensListAfterSave
         self.pantryFoodPrefill = pantryFoodPrefill
         self.pantrySuggestedAmount = pantrySuggestedAmount
         self.pantryProductLink = pantryProductLink
@@ -153,6 +159,9 @@ struct LedgerImportView: View {
                             LedgerImportRowView(number: index + 1, similarLine: review.similarEarlierLines[row.id].map {
                                 ledgerFormat("Similar to line %lld: %@", Int64($0 + 1), preview.lines[$0].originalText)
                             }, line: rowBinding(row, at: index, previewID: preview.id),
+                                                allowsPackages: row.reviewedPackages != nil || (!pantryFoodPrefill
+                                                    && (preview.source == .typed || preview.source == .paste)
+                                                    && row.pantryProductLink == nil && row.originalPack == nil && row.capture == nil),
                                                 inputFocus: $inputFocus, invalidAmount: Binding(get: { invalidAmounts[row.id] },
                                                     set: { invalidAmounts[row.id] = $0 }),
                                                 matches: review.matches[row.id] ?? [],
@@ -181,6 +190,7 @@ struct LedgerImportView: View {
                             .frame(height: min(importEditorHeight, 240))
                             .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Theme.controlEdge).allowsHitTesting(false))
                             .focused($inputFocus, equals: .original)
+                            .id(LedgerImportField.original)
                             .accessibilityLabel(ledgerText("List to review")).accessibilityIdentifier("ledgerImportText")
                         PasteButton(payloadType: String.self) { values in
                             original = values.joined(separator: "\n")
@@ -225,7 +235,9 @@ struct LedgerImportView: View {
             }
                 .background(Theme.canvas)
                 .navigationTitle(ledgerText("Bring the list"))
-                .navigationBarTitleDisplayMode(preview == nil ? .inline : .automatic)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbarBackground(Theme.canvas, for: .navigationBar)
+                .toolbarBackground(.visible, for: .navigationBar)
                 .safeAreaInset(edge: .bottom, spacing: 0) {
                     if let preview, let review, inputFocus == nil {
                         Group {
@@ -252,10 +264,10 @@ struct LedgerImportView: View {
                 }
                 .keyboardDoneAction(visible: inputFocus == .original, title: ledgerText("Done")) { inputFocus = nil }
                 .onChange(of: inputFocus) { _, field in
-                    if let field, field != .original { scroll.scrollTo(field, anchor: .center) }
+                    if let field { scroll.scrollTo(field, anchor: .center) }
                 }
                 .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidShowNotification)) { _ in
-                    if let field = inputFocus, field != .original { scroll.scrollTo(field, anchor: .center) }
+                    if let field = inputFocus { scroll.scrollTo(field, anchor: .center) }
                 }
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
@@ -390,7 +402,7 @@ struct LedgerImportView: View {
                 }
                 Button(ledgerText("Done"), role: .cancel) {}
             } message: { Text(verbatim: totals.summary) }
-            importConfirmation(preview, review: review, title: ledgerFormat("Add %lld", Int64(totals.included)))
+            importConfirmation(preview, review: review, title: ledgerFormat(opensListAfterSave ? "Add %lld and open list" : "Add %lld", Int64(totals.included)))
                 .accessibilityValue(Text(verbatim: totals.summary))
         }
     }
@@ -402,7 +414,7 @@ struct LedgerImportView: View {
             do {
                 let staged = try pantryFoodPrefill
                     ? PantryRestockReview.stage(food: prefill, text: original, source: source, id: importID, shop: shop, suggestedAmount: pantrySuggestedAmount, productLink: pantryProductLink)
-                    : shop.stageImport(text: original, source: source, importID: importID)
+                    : shop.stageImport(text: original, source: source, importID: importID, reviewPackageCounts: true)
                 invalidAmounts = [:]
                 preview = staged
                 choices = LedgerImportReview.initialChoices(staged)
@@ -428,7 +440,8 @@ struct LedgerImportView: View {
         let authorizeSave: @MainActor () -> Bool = {
             authorizeEntry() && (reminderBinding == nil || reminderCopyBinding == reminderBinding)
         }
-        return Button(title ?? ledgerText("Add reviewed list")) {
+        let actionLabel = ledgerText(opensListAfterSave ? "Add and open list" : "Add reviewed list")
+        return Button(title ?? actionLabel) {
             guard inputFocus == nil else { return }
             Task {
                 guard authorizeSave(), self.preview == preview, captureBinding == reviewedBinding,
@@ -439,7 +452,7 @@ struct LedgerImportView: View {
                 let decisions = review.choices
                 if let firstDraft {
                     guard preview.shopID == shopID, firstDraft.authorize(), let draft = await firstDraft.flush(firstContents) else { return }
-                    if await model.commitFirstList(preview, decisions: decisions, draft: draft, title: ledgerText("Pickup"), authorize: firstDraft.authorize) {
+                    if await model.commitFirstList(preview, decisions: decisions, draft: draft, title: ledgerText("Pickup"), quickDraft: quickDraft, authorize: firstDraft.authorize) {
                         onSaved?(shopID); dismiss()
                     } else {
                         if !model.hasPendingSave, model.error == nil {
@@ -447,13 +460,13 @@ struct LedgerImportView: View {
                         }
                         focus = .status
                     }
-                } else if await model.editShop(key: "import-\(preview.id)", shopID: preview.shopID, authorize: authorizeSave, { try $0.commitImport(preview, decisions: decisions) }) {
+                } else if await model.editShop(key: "import-\(preview.id)", shopID: preview.shopID, quickDraft: quickDraft, authorize: authorizeSave, { try $0.commitImport(preview, decisions: decisions) }) {
                     onSaved?(preview.shopID)
                     dismiss()
                 } else { focus = .status }
             }
         }.buttonStyle(PrimaryAction()).disabled(model.saving || model.hasPendingSave || !matchesAreCurrent || !review.isComplete || needsAmountCorrection || (firstDraft != nil && !review.choices.values.contains(where: { $0 != .skip })))
-            .accessibilityLabel(ledgerText("Add reviewed list"))
+            .accessibilityLabel(actionLabel)
             .accessibilityIdentifier("ledgerCommitImport")
     }
 
@@ -765,6 +778,7 @@ private struct LedgerImportRowView: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     let number: Int
     let similarLine: String?
+    let allowsPackages: Bool
     @Binding var line: StagedImportLine
     let inputFocus: FocusState<LedgerImportField?>.Binding
     @Binding var invalidAmount: InvalidImportAmount?
@@ -776,13 +790,14 @@ private struct LedgerImportRowView: View {
     @State private var previousWasExplicit = false
     let onEdited: () -> Void
     @State private var amount: String
-    @State private var unit: UnitOfMeasure
-    init(number: Int, similarLine: String?, line: Binding<StagedImportLine>, inputFocus: FocusState<LedgerImportField?>.Binding,
+    @State private var unit: GroceryEntryUnit
+    init(number: Int, similarLine: String?, line: Binding<StagedImportLine>, allowsPackages: Bool, inputFocus: FocusState<LedgerImportField?>.Binding,
          invalidAmount: Binding<InvalidImportAmount?>, matches: [LedgerImportReview.Match],
          explicitlySeparate: Bool, restoreChoice: @escaping (ImportResolution?, Bool) -> Void,
          choice: Binding<ImportResolution?>, onEdited: @escaping () -> Void) {
         self.number = number
         self.similarLine = similarLine
+        self.allowsPackages = allowsPackages
         _line = line
         self.inputFocus = inputFocus
         _invalidAmount = invalidAmount
@@ -791,8 +806,11 @@ private struct LedgerImportRowView: View {
         self.restoreChoice = restoreChoice
         _choice = choice
         self.onEdited = onEdited
-        _amount = State(initialValue: invalidAmount.wrappedValue?.text ?? line.wrappedValue.quantity.map { ledgerAmountInput($0.amount) } ?? "")
-        _unit = State(initialValue: invalidAmount.wrappedValue?.unit ?? line.wrappedValue.quantity?.unit ?? .count)
+        let row = line.wrappedValue
+        let amount = row.reviewedPackages.map { String($0.count) } ?? row.quantity.map { ledgerAmountInput($0.amount) } ?? ""
+        let unit = row.reviewedPackages.map { GroceryEntryUnit.package($0.kind) } ?? .measure(row.quantity?.unit ?? .count)
+        _amount = State(initialValue: invalidAmount.wrappedValue?.text ?? amount)
+        _unit = State(initialValue: invalidAmount.wrappedValue?.selection ?? unit)
     }
     var body: some View {
         let heading = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2)) : AnyLayout(HStackLayout())
@@ -878,18 +896,17 @@ private struct LedgerImportRowView: View {
                     .accessibilityIdentifier("ledgerImportAmount-\(number)")
                     .id(LedgerImportField.amount(line.id))
             }
-            Picker(ledgerText("Unit"), selection: $unit) {
-                ForEach(UnitOfMeasure.allCases, id: \.self) { Text($0.displayName).tag($0) }
-            }
+            GroceryUnitPicker(unit: $unit, allowsPackages: allowsPackages)
+                .accessibilityIdentifier("ledgerImportUnit-\(number)")
         }
         if invalidAmount != nil && choice != .skip {
-            Text(ledgerText("Enter a nonnegative amount with up to six decimal places, or leave it unknown."))
+            Text(unit.invalidAmountMessage)
                 .foregroundStyle(Theme.warning)
                 .accessibilityIdentifier("ledgerImportAmountError-\(number)")
-        } else if line.quantity == nil, line.originalPack == nil, line.capture == nil,
+        } else if line.reviewedPackages == nil, line.quantity == nil, line.originalPack == nil, line.capture == nil,
                   QuickGrocery.plainName(line.originalText) != nil, QuickGrocery.plainName(line.name) != nil {
             Text(ledgerText("Quantity optional")).font(.footnote).foregroundStyle(Theme.secondary)
-        } else if line.quantity == nil && line.originalPack?.count == nil {
+        } else if line.reviewedPackages == nil && line.quantity == nil && line.originalPack?.count == nil {
             Label(ledgerText("Quantity unresolved"), systemImage: "questionmark.circle").foregroundStyle(Theme.warning)
             if let reason = line.unresolvedReason { Text(ledgerContributionNote(reason)).font(.footnote) }
         }
@@ -904,12 +921,18 @@ private struct LedgerImportRowView: View {
 
     private func updateQuantity() {
         do {
-            line.quantity = try LedgerEntry.quantity(amount, unit)
-            line.unresolvedReason = line.quantity == nil ? "quantityUnknown" : nil
+            let parsed = try unit.parse(amount)
+            line.quantity = parsed.quantity
+            line.reviewedPackages = parsed.packages
+            line.unresolvedReason = parsed.quantity == nil && parsed.packages == nil ? "quantityUnknown" : nil
             invalidAmount = nil
         } catch {
-            invalidAmount = InvalidImportAmount(text: amount, unit: unit)
+            switch unit {
+            case .measure(let measure): invalidAmount = InvalidImportAmount(text: amount, unit: measure)
+            case .package(let kind): invalidAmount = InvalidImportAmount(text: amount, unit: nil, packageKind: kind)
+            }
             line.quantity = nil
+            line.reviewedPackages = nil
             line.unresolvedReason = nil
         }
         onEdited()

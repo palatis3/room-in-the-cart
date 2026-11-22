@@ -1,5 +1,6 @@
 import DeviceSurfaces
 import CoreDomain
+import LocalStore
 import PhotosUI
 import SwiftUI
 
@@ -46,6 +47,7 @@ struct PantryReceiptDocuments: View {
     @State private var discard: SharedReceiptItem?
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dynamicTypeSize) private var typeSize
     @FocusState private var merchantFocused: Bool
     @State private var picking = false
     @State private var photo: PhotosPickerItem?
@@ -54,6 +56,9 @@ struct PantryReceiptDocuments: View {
     @State private var document: ExtractedReceiptDocument?
     @State private var documentDateWording: String?
     @State private var inspectedLine: ExtractedReceiptDocument.Selection?
+    @State private var savedFileReceipt: ReviewedReceiptHeader?
+    @State private var savedFileGeneration: UUID?
+    @State private var openedSavedReceipt: ReviewedReceiptHeader?
     @State private var fileBytes: ReceiptDocumentBytes?
     @State private var selection = Set<ExtractedReceiptDocument.Selection>()
     @State private var linkedAmountItems = Set<ExtractedReceiptDocument.Selection>()
@@ -66,12 +71,24 @@ struct PantryReceiptDocuments: View {
 
     private var reviewsEvidenceOnly: Bool { reviewsPrivateReceipt && stage != .order }
 
+    private var title: String {
+        pantryText(document == nil ? "Read a receipt file" : "Select receipt lines")
+    }
+
+    private var showsContentTitle: Bool { document != nil && typeSize.isAccessibilitySize }
+
     var body: some View {
         ScrollViewReader { scroll in form(scroll) }
     }
 
     private func form(_ scroll: ScrollViewProxy) -> some View {
         WorkingForm {
+            if showsContentTitle {
+                Text(title)
+                    .marketJournalTitle(.title2)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("receipt.document.heading")
+            }
             if let error { Text(error).accessibilityFocused($statusFocused).accessibilityIdentifier("receipt.document.status") }
             if job != nil {
                 ProgressView(pantryText("Reading receipt on this device"))
@@ -85,6 +102,12 @@ struct PantryReceiptDocuments: View {
                 let linkedAmounts = Set(linkedAmountItems.compactMap { pairs[$0] ?? splitAmounts[$0] })
                 let included = selection.union(linkedAmounts)
                 let storeIssue = receiptStoreIssue(merchant)
+                if reviewsEvidenceOnly, let model, let savedFileReceipt, let savedFileGeneration {
+                    SavedFileReceiptLink(model: model, header: savedFileReceipt, session: savedFileGeneration,
+                                         digest: document.digest, opened: $openedSavedReceipt, authorize: {
+                        authorize() && self.document?.digest == document.digest && reviewsEvidenceOnly
+                    })
+                }
                 Section(pantryText("Receipt source")) {
                     let name = captureText("Store or receipt name (required)")
                     WorkingField(name) {
@@ -139,6 +162,11 @@ struct PantryReceiptDocuments: View {
                         if page.skipped == .pixels { Text(pantryText("This page exceeds 25 megapixels. Choose a smaller image to review it.")) }
                         else if page.skipped == .lineLimit { Text(putawayText("This page exceeds the line limit. You can type the receipt lines instead.")) }
                         else if page.lines.isEmpty { Text(pantryText("No readable lines on this page. You can type them in the receipt scanner.")) }
+                        if !page.lines.isEmpty, page.method == .imageOCR || page.method == .pdfOCR {
+                            Text(putawayText("Check the text read from this image against your receipt before selecting lines."))
+                                .font(.subheadline).foregroundStyle(Theme.secondary)
+                                .accessibilityIdentifier("receipt.document.ocrGuidance.\(page.id)")
+                        }
                         ForEach(page.lines.filter { !omittedLines.contains(.init(page: page.id, line: $0.id)) }) { line in
                             let position = ExtractedReceiptDocument.Selection(page: page.id, line: line.id)
                             let price = pairs[position] ?? (linkedAmountItems.contains(position) ? splitAmounts[position] : nil)
@@ -220,7 +248,8 @@ struct PantryReceiptDocuments: View {
             }
         }
         .privacySensitive()
-        .navigationTitle(document == nil ? pantryText("Read a receipt file") : pantryText("Select receipt lines"))
+        .navigationTitle(showsContentTitle ? "" : title)
+        .navigationBarTitleDisplayMode(showsContentTitle ? .inline : .automatic)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button(pantryText("Close")) { cancel(); dismiss() }
@@ -245,7 +274,7 @@ struct PantryReceiptDocuments: View {
         }
         .fileImporter(isPresented: $picking, allowedContentTypes: [.pdf, .jpeg, .png, .heic, .heif, .plainText]) { result in
             switch result {
-            case .success(let url): start { try await ReceiptDocumentBytes.picked(url) }
+            case .success(let url): start(pickedFile: true) { try await ReceiptDocumentBytes.picked(url) }
             case .failure(let error):
                 if (error as NSError).code != NSUserCancelledError { show(error) }
             }
@@ -276,9 +305,9 @@ struct PantryReceiptDocuments: View {
                   }, secondaryButton: .cancel(Text(pantryText("Cancel"))))
         }
         .onDisappear {
-            // A replacement camera can cover the review. Keep the current selections
-            // until a different image is successfully read, or the capture is closed.
-            if changePhoto == nil { cancel() }
+            // The camera and the saved receipt can cover this form. Returning
+            // to it should preserve the shopper's current line selections.
+            if changePhoto == nil && openedSavedReceipt == nil { cancel() }
             inbox = []
         }
         .task { if let initialDocument { document = initialDocument } else { await loadInbox() } }
@@ -339,6 +368,11 @@ struct PantryReceiptDocuments: View {
                         ? captureText("Select to keep this amount separate, or link it from the item.") : "")
                     .disabled(!canInclude)
                 }
+            }
+            if line.uncertain {
+                Label(pantryText("Unclear printed line. Check the original wording before using it."), systemImage: "exclamationmark.circle")
+                    .font(.subheadline).foregroundStyle(Theme.warning)
+                    .accessibilityIdentifier("receipt.document.uncertain.\(position.page).\(line.id)")
             }
             if attached {
                 Text(captureText("Linked as printed amount")).font(.subheadline).foregroundStyle(Theme.secondary)
@@ -404,7 +438,7 @@ struct PantryReceiptDocuments: View {
         }
     }
 
-    private func start(shared: SharedReceiptItem? = nil, _ read: @escaping () async throws -> ReceiptDocumentBytes) {
+    private func start(shared: SharedReceiptItem? = nil, pickedFile: Bool = false, _ read: @escaping () async throws -> ReceiptDocumentBytes) {
         cancel()
         guard authorize() else { return }
         let token = generation
@@ -417,6 +451,15 @@ struct PantryReceiptDocuments: View {
                 guard token == generation, authorize() else { return }
                 let extracted = try await ReceiptDocumentReader().extract(bytes)
                 guard !Task.isCancelled, token == generation, authorize() else { return }
+                if pickedFile, reviewsPrivateReceipt, let model {
+                    let session = model.generation
+                    let saved = try? await model.savedReceipt(fileDigest: extracted.digest)
+                    guard !Task.isCancelled, token == generation, authorize() else { return }
+                    if model.generation == session {
+                        savedFileGeneration = session
+                        savedFileReceipt = saved
+                    }
+                }
                 fileBytes = bytes
                 document = extracted
             } catch { if !Task.isCancelled, token == generation, authorize() { show(error) } }
@@ -428,6 +471,7 @@ struct PantryReceiptDocuments: View {
         job?.cancel(); job = nil
         storeFocusRequest = nil
         inspectedLine = nil; fileBytes = nil
+        savedFileReceipt = nil; savedFileGeneration = nil; openedSavedReceipt = nil
         openedShare = nil; selection = []; linkedAmountItems = []; document = nil; photo = nil; merchant = ""; confirmed = false; error = nil; stage = .receipt
     }
 
@@ -625,5 +669,41 @@ private final class ReceiptPageCanvas: UIScrollView, UIScrollViewDelegate {
         let magnification = zoomScale / minimumZoomScale
         accessibilityValue = Double(magnification).formatted(.percent.precision(.fractionLength(0)))
         zoomChanged?(magnification, maximumZoomScale / minimumZoomScale)
+    }
+}
+
+private struct SavedFileReceiptLink: View {
+    @ObservedObject var model: PantryModel
+    let header: ReviewedReceiptHeader
+    let session: UUID
+    let digest: Data
+    @Binding var opened: ReviewedReceiptHeader?
+    let authorize: @MainActor () -> Bool
+
+    private var current: Bool {
+        model.generation == session && authorize() && model.permitsReceiptCopy(header)
+    }
+
+    var body: some View {
+        if current {
+            Button(putawayText("Open saved receipt")) {
+                Task {
+                    guard current, let latest = try? await model.savedReceipt(fileDigest: digest),
+                          latest.id == header.id, current else { return }
+                    opened = latest
+                }
+            }
+            .accessibilityIdentifier("receipt.document.openSaved")
+            .sheet(item: $opened) { saved in
+                if current {
+                    NavigationStack {
+                        PutawayHistoryDetail(model: model, header: saved)
+                            .toolbar {
+                                ToolbarItem(placement: .confirmationAction) { Button(pantryText("Done")) { opened = nil } }
+                            }
+                    }
+                }
+            }
+        }
     }
 }

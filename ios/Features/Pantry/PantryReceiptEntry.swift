@@ -108,7 +108,7 @@ struct PantryReceiptEntry: View {
                     } else if let first = review.facts.first {
                         VStack(alignment: .leading, spacing: 3) {
                             Text(first.merchant).font(.headline)
-                            Text(dates.purchaseDay(first.purchaseDate))
+                            Text(dates.purchaseDay(first))
                                 .font(.subheadline).foregroundStyle(Theme.secondary)
                             if let reference = first.transactionReference { Text(reference).font(.subheadline) }
                         }
@@ -522,7 +522,12 @@ struct PantryReceiptEntry: View {
         guard var current = draft, current.draftID == source.id else { return }
         current.tracksPutaway = false
         current.reference = original.order
-        if let date = original.purchaseDate { current.purchaseDate = date }
+        if let date = original.purchaseDate {
+            current.purchaseDate = date
+            // New delivery receipts retain the zone used to choose this day.
+            // Older imports still require the shopper to check the visible calendar.
+            if let zone = original.purchaseTimeZoneIdentifier.flatMap(TimeZone.init(identifier:)) { current.purchaseTimeZone = zone }
+        }
         let reviewed = Dictionary(uniqueKeysWithValues: original.lines.filter { selected.contains($0.id) }.map { ($0.id, $0) })
         for index in current.lines.indices {
             guard let item = reviewed[current.lines[index].ordinal] else { continue }
@@ -588,6 +593,40 @@ struct ReceiptDateDisplay: DynamicProperty {
         date.formatted(Self.format(date: style, time: .omitted, locale: locale, calendar: calendar, timeZone: timeZone))
     }
 
+    func storedPurchaseDay(_ day: String?, recordedAt date: Date, style: Date.FormatStyle.DateStyle = .long) -> String {
+        Self.storedPurchaseDay(day, recordedAt: date, style: style, locale: locale, calendar: calendar)
+    }
+
+    static func storedPurchaseDay(_ day: String?, recordedAt date: Date, style: Date.FormatStyle.DateStyle = .long,
+                                  locale: Locale, calendar: Calendar) -> String {
+        storedPrintedDay(day, recordedAt: date, style: style, locale: locale, calendar: calendar, field: .purchase)
+    }
+
+    func storedDeliveryDay(_ day: String?, recordedAt date: Date) -> String {
+        Self.storedPrintedDay(day, recordedAt: date, style: .long, locale: locale, calendar: calendar, field: .delivery)
+    }
+
+    enum PrintedField { case purchase, delivery }
+
+    static func storedPrintedDay(_ day: String?, recordedAt date: Date, style: Date.FormatStyle.DateStyle,
+                                 locale: Locale, calendar: Calendar, field: PrintedField) -> String {
+        if let day { return civilDay(day, style: style, locale: locale, calendar: calendar, zone: .gmt) }
+        let utc = date.formatted(format(date: style, time: .omitted, locale: locale, calendar: calendar, timeZone: .gmt))
+        return pantryFormat(field == .purchase ? "Original purchase day unknown · recorded %@ (UTC)" :
+                            "Original delivery day unknown · recorded %@ (UTC)", utc)
+    }
+
+    func purchaseDay(_ receipt: ReceiptAcquisition, style: Date.FormatStyle.DateStyle = .long) -> String {
+        storedPurchaseDay(receipt.purchaseDay?.iso8601, recordedAt: receipt.purchaseDate, style: style)
+    }
+
+    func purchaseDay(_ price: PrivatePriceEvidence) -> String {
+        if case .paidReceipt(let source) = price.source {
+            return storedPurchaseDay(source.purchaseDay?.iso8601, recordedAt: price.date)
+        }
+        return purchaseDay(price.date)
+    }
+
     func civilDay(_ day: String, zone: TimeZone = .gmt, style: Date.FormatStyle.DateStyle = .long) -> String {
         Self.civilDay(day, style: style, locale: locale, calendar: calendar, zone: zone)
     }
@@ -613,13 +652,7 @@ struct ReceiptDateDisplay: DynamicProperty {
 
     static func civilDay(_ day: String, style: Date.FormatStyle.DateStyle = .long, locale: Locale,
                          calendar: Calendar, zone: TimeZone) -> String {
-        let parts = day.split(separator: "-", omittingEmptySubsequences: false)
-        // Resolve a stored civil day in its source zone. A record without a source
-        // zone uses GMT as a calendar anchor, so the viewer's zone cannot move that day.
-        guard parts.count == 3,
-              let year = Int(parts[0]), let month = Int(parts[1]), let number = Int(parts[2]),
-              let saved = try? MealDay(year: year, month: month, day: number, timeZoneIdentifier: zone.identifier),
-              saved.iso8601 == day, let date = saved.date else { return day }
+        guard let date = MealDay(iso8601: day, timeZoneIdentifier: zone.identifier)?.date else { return day }
         return date.formatted(format(date: style, time: .omitted, locale: locale, calendar: calendar, timeZone: zone))
     }
 }
@@ -676,6 +709,7 @@ struct ReceiptPurchaseDateFields: View {
                           date: $draft.selectedPurchaseDate) {
             scroll.scrollTo(Self.confirmationID, anchor: .center)
         }
+        .environment(\.timeZone, draft.purchaseTimeZone ?? .current)
         Toggle(pantryText("I checked the purchase date."), isOn: $draft.dateConfirmed)
             .id(Self.confirmationID)
             .accessibilityIdentifier(Self.confirmationID)
@@ -708,7 +742,7 @@ struct PantryReceiptLineEditor: View {
 
     private func labeledField(_ title: String, text: Binding<String>, focusKey: String,
                               identifier: String? = nil, keyboard: UIKeyboardType = .default,
-                              stacked: Bool = false) -> some View {
+                              stacked: Bool = false, axis: Axis = .horizontal) -> some View {
         let request = correction?.focusKey == focusKey ? correctionRequest : nil
         let viewport = correctionViewport
         return VStack(alignment: .leading, spacing: 4) {
@@ -717,7 +751,7 @@ struct PantryReceiptLineEditor: View {
                     .font(.subheadline.weight(.medium)).foregroundStyle(Theme.warning)
                     .accessibilityIdentifier("receipt.error." + correction.field.rawValue + "." + String(correction.ordinal))
             }
-            let layout = typeSize.isAccessibilitySize || stacked
+            let layout = typeSize.isAccessibilitySize || stacked || axis == .vertical
                 ? AnyLayout(VStackLayout(alignment: .leading, spacing: 4))
                 : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: 12))
             layout {
@@ -727,7 +761,8 @@ struct PantryReceiptLineEditor: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .accessibilityHidden(true)
-                TextField(title, text: text, prompt: Text(""))
+                TextField(title, text: text, prompt: Text(""), axis: axis)
+                    .fixedSize(horizontal: false, vertical: axis == .vertical)
                     .keyboardType(keyboard)
                     .monospacedDigit()
                     .receiptInputChrome()
@@ -768,6 +803,20 @@ struct PantryReceiptLineEditor: View {
         if permitsPutaway {
             if !grouped, line.permitsIntactSelection(deliveries: lots), line.treatment == .skip || line.selectedIntact {
                 ReceiptIntactToggle(line: $line, lots: lots)
+            } else if !grouped, line.permitsDocumentPutaway(deliveries: lots) {
+                Button {
+                    guard matchesCurrent() else { return }
+                    line.startDocumentPutaway(deliveries: lots)
+                } label: {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(verbatim: line.name).font(.headline).foregroundStyle(Theme.ink)
+                        Label(putawayText("Put this food away"), systemImage: "shippingbox")
+                            .font(.subheadline.weight(.semibold)).foregroundStyle(Theme.action)
+                    }
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                    .contentShape(Rectangle())
+                }
+                .accessibilityIdentifier("receipt.putAway.\(line.ordinal)")
             } else if !grouped { Text(verbatim: line.name).font(.headline) }
         }
         ReceiptPaperLine(wording: line.original, provenance: line.documentLine.map(receiptProvenance),
@@ -778,7 +827,12 @@ struct PantryReceiptLineEditor: View {
             case .date: Text(pantryText("Receipt date wording. This line starts skipped.")).font(.caption)
             case .unclear: Text(pantryText("Unclear printed line. Check the original wording before using it.")).font(.caption)
             case .item:
-                if printed.uncertain { Text(pantryText("Some printed fields are unclear. Review them or leave the price unknown.")).font(.caption) }
+                if printed.quantity == nil {
+                    Text(pantryText("Printed quantity unknown. If you put this food away, enter how much you received.")).font(.caption)
+                }
+                if printed.amount == nil {
+                    Text(pantryText("Printed line total unknown. Leave the paid total blank unless you know what you paid.")).font(.caption)
+                }
             }
         }
         if permitsPutaway, line.documentLine?.stage != .order, CouponReceiptEvidence.isDiscountLine(line.original) {
@@ -896,7 +950,7 @@ struct PantryReceiptLineEditor: View {
                 Button(pantryText("Undo saved spelling")) { line.clearAlias() }
             }
             labeledField(pantryText("Food name"), text: Binding(get: { line.name }, set: { line.clearAlias(); line.name = $0 }),
-                         focusKey: "name-\(line.ordinal)")
+                         focusKey: "name-\(line.ordinal)", identifier: "receipt.name.\(line.ordinal)", axis: .vertical)
             receivedFields
             labeledField(line.treatment == .keptSome ? putawayText("Usable portion taken home") : pantryText("Amount usable"), text: $line.usable, focusKey: "usable-\(line.ordinal)",
                          identifier: "receipt.usable.\(line.ordinal)", keyboard: .numbersAndPunctuation)
@@ -1008,7 +1062,7 @@ struct PantryReceiptHistory: View {
             ForEach(facts) { row in
                 VStack(alignment: .leading, spacing: 5) {
                     Text(row.name).font(.headline)
-                    Text(row.merchant + " · " + dates.purchaseDay(row.purchaseDate))
+                    Text(row.merchant + " · " + dates.purchaseDay(row))
                         .font(.subheadline).foregroundStyle(Theme.secondary)
                     ReceiptPaperLine(wording: row.originalLine, provenance: row.documentLine.map(receiptProvenance))
                     Text(pantryFormat("Received %@", pantryQuantity(row.received))).monospacedDigit()
@@ -1152,7 +1206,7 @@ private struct ReceiptPriceCorrection: View {
             if let correctionMessage { Text(correctionMessage) }
             VStack(alignment: .leading, spacing: 4) {
                 Text(verbatim: original.name).font(.title3.weight(.semibold))
-                Text(original.merchant + " · " + dates.purchaseDay(original.purchaseDate, style: .abbreviated))
+                Text(original.merchant + " · " + dates.purchaseDay(original, style: .abbreviated))
                     .font(.subheadline).foregroundStyle(Theme.secondary)
             }
             ReceiptPaperLine(wording: original.originalLine, provenance: original.documentLine.map(receiptProvenance))

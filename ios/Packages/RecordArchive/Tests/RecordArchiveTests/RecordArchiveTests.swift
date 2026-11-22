@@ -148,8 +148,13 @@ final class RecordArchiveTests: XCTestCase {
         XCTAssertFalse(text.contains("privateCost"))
         XCTAssertNil(projected.payload.records[0].nativePayload)
         XCTAssertNotEqual(projected.projectionID, ArchiveCodec.projection(for: .personalRecovery))
-        let readable = ReadableArchive.text([record()], owner: false)
-        XCTAssertTrue(readable.contains("Rice")); XCTAssertFalse(readable.contains("12.50"))
+        for (language, source) in [("en_US", "Source: "), ("es_US", "Fuente: ")] {
+            let readable = ReadableArchive.text([record()], owner: false, locale: Locale(identifier: language))
+            let lines = readable.components(separatedBy: "\n")
+            XCTAssertEqual(Array(lines.prefix(2)), ["Dinner", "Rice · 2 · packs"])
+            XCTAssertTrue(lines.dropFirst(2).contains(source + "local-origin"))
+            XCTAssertFalse(readable.contains("12.50"))
+        }
         XCTAssertTrue(ReadableArchive.text([record()], owner: true).contains("12.50"))
     }
     func testPersonalRecipeTextKeepsOriginalIngredientsAndOrderedInstructionsInBothLanguages() throws {

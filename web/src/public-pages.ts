@@ -11,6 +11,7 @@ const labels = {
   contents: { en: 'On this page', es: 'En esta página' },
   staleSection: { en: 'This section has moved. Choose a topic below.', es: 'Esta sección cambió de lugar. Elige un tema a continuación.' },
   invited: { en: 'Open the invited app', es: 'Abrir la app por invitación' },
+  householdRequests: { en: 'Open household requests', es: 'Abrir solicitudes del hogar' },
   support: { en: 'Contact support', es: 'Contactar con soporte' },
   emailSupport: { en: 'Email support', es: 'Enviar correo a soporte' },
   operator: { en: 'Operator', es: 'Operador' },
@@ -100,7 +101,14 @@ export function mountPublicPage(root: HTMLElement, configuration: PublicSiteConf
       window.history.replaceState(null, '', '/' + key + '?lang=' + language + currentAnchor());
       render(true);
     });
-    languageGroup.append(languageLabel, languageSelect); header.append(brand, languageGroup); root.append(header);
+    languageGroup.append(languageLabel, languageSelect); header.append(brand, languageGroup);
+    if (key === 'about') {
+      const requests = element('a', labels.householdRequests[language]);
+      requests.className = 'overview-requests';
+      requests.href = '/requests?lang=' + language;
+      header.append(requests);
+    }
+    root.append(header);
     if (key === 'about') {
       renderProductOverview(root, language, operatorName);
       if (restoreLanguageFocus) languageSelect.focus();

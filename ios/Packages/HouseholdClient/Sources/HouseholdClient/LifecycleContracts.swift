@@ -3,6 +3,22 @@ import Foundation
 public struct MembershipReceipt: Codable, Equatable, Sendable {
     public let householdId: String; public let memberId: String; public let role: String; public let grantId: String?
 }
+public struct InvitationOffer: Codable, Equatable, Sendable {
+    public enum Role: String, Codable, Sendable {
+        case adultContributor = "adult_contributor"
+        case helperRead = "helper_read"
+        case helperEdit = "helper_edit"
+    }
+
+    public let householdLabel: String
+    public let role: Role
+
+    public static func isCompleteToken(_ token: String) -> Bool {
+        token.utf8.count == 80 && UUID(uuidString: String(token.prefix(36))) != nil &&
+            token.range(of: #"^[0-9a-f-]{36}\.[A-Za-z0-9_-]{43}$"#, options: .regularExpression) != nil
+    }
+}
+
 /// Only the same verified account may retry these fixed bytes. Tokens never enter URLs or logs.
 public struct MembershipIntent: Codable, Equatable, Identifiable, Sendable {
     public enum Kind: String, Codable, Sendable { case create, redeem }
@@ -14,14 +30,39 @@ public struct MembershipIntent: Codable, Equatable, Identifiable, Sendable {
         struct Input: Encodable { let clientKey: String; let label: String; let alias: String; let adultAttestation: Bool }
         return Self(id: id, subject: subject, kind: .create, bytes: try encoded(Input(clientKey: id, label: label, alias: alias, adultAttestation: true)), defaultAliasLanguage: nil)
     }
-    public static func redeem(subject: String, token: String, alias: String?, adultAttestation: Bool, defaultAliasLocale: Locale? = nil) throws -> Self {
-        guard adultAttestation, token.range(of: "^[0-9a-f-]{36}\\.[A-Za-z0-9_-]{43}$", options: .regularExpression) != nil,
-              UUID(uuidString: String(token.prefix(36))) != nil, alias.map(validAlias) ?? true else { throw ClientError.configuration }
-        struct Input: Encodable { let token: String; let intent = "join"; let alias: String?; let adultAttestation = true }
+    public static func redeem(subject: String, token: String, alias: String?, adultAttestation: Bool, defaultAliasLocale: Locale? = nil, reviewedOffer: InvitationOffer? = nil) throws -> Self {
+        guard adultAttestation, InvitationOffer.isCompleteToken(token), alias.map(validAlias) ?? true else { throw ClientError.configuration }
+        struct Input: Encodable { let token: String; let intent = "join"; let alias: String?; let adultAttestation = true; let reviewedOffer: InvitationOffer? }
         let language = defaultAliasLocale.map { $0.language.languageCode?.identifier == "es" ? "es" : "en" }
-        let input = Input(token: token, alias: alias)
+        let input = Input(token: token, alias: alias, reviewedOffer: reviewedOffer)
         return Self(id: UUID().uuidString.lowercased(), subject: subject, kind: .redeem, bytes: try encoded(input),
                     defaultAliasLanguage: alias == nil ? language : nil)
+    }
+    private struct Redemption: Decodable {
+        let token: String
+        let alias: String?
+        let reviewedOffer: InvitationOffer?
+    }
+    private var redemption: Redemption? {
+        guard kind == .redeem, let draft = try? JSONDecoder().decode(Redemption.self, from: bytes),
+              InvitationOffer.isCompleteToken(draft.token) else { return nil }
+        return draft
+    }
+    public var invitationDraft: (token: String, alias: String?)? {
+        redemption.map { ($0.token, $0.alias) }
+    }
+    func validateRedemptionReceipt(_ receipt: MembershipReceipt) throws {
+        guard let draft = redemption,
+              let household = UUID(uuidString: receipt.householdId),
+              household == UUID(uuidString: String(draft.token.prefix(36))) else { throw ClientError.invalidResponse }
+        let offeredRole: InvitationOffer.Role
+        switch (receipt.role, receipt.grantId) {
+        case ("contributor", nil): offeredRole = .adultContributor
+        case let ("helper", grant?) where UUID(uuidString: grant) != nil: offeredRole = .helperRead
+        case let ("editor", grant?) where UUID(uuidString: grant) != nil: offeredRole = .helperEdit
+        default: throw ClientError.invalidResponse
+        }
+        if let reviewed = draft.reviewedOffer, reviewed.role != offeredRole { throw ClientError.invalidResponse }
     }
     private static func validAlias(_ value: String) -> Bool { !value.isEmpty && value.count <= 80 }
 }
@@ -159,6 +200,12 @@ public actor LifecycleIntentStore {
         var merged = state
         merged.reviewActions = try read().reviewActions
         try write(merged)
+    }
+    public func discardRejectedInvitation(_ intent: MembershipIntent) throws {
+        var state = try read()
+        guard state.membership == intent, intent.kind == .redeem else { throw ClientError.cancelled }
+        state.membership = nil
+        try write(state)
     }
     private func write(_ state: LifecyclePendingState) throws {
         try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)

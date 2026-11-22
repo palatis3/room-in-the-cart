@@ -137,13 +137,18 @@ import UIKit
         amount.tap()
         let keyboard = app.keyboards.firstMatch
         XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
+        func assertAmountAppears(_ value: String, line: UInt = #line) {
+            let updated = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", value), object: amount)
+            XCTAssertEqual(XCTWaiter.wait(for: [updated], timeout: 3), .completed,
+                           "Expected \(value) after typing, saw \(String(describing: amount.value))", line: line)
+        }
         app.typeText("1/0")
-        XCTAssertEqual(amount.value as? String, "1/0")
+        assertAmountAppears("1/0")
         XCTAssertFalse(element("ledgerCommitImport").exists)
         XCTAssertTrue(element("ledgerImportAmountError-1").exists)
         app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 3))
         app.typeText("14")
-        XCTAssertEqual(amount.value as? String, "14")
+        assertAmountAppears("14")
         let commit = app.buttons["ledgerCommitImport"]
         XCTAssertFalse(commit.exists)
         tap(app.buttons["Done"])

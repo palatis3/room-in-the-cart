@@ -142,6 +142,9 @@ import LocalStore
         let prior = try await model.usageHistory(lotID: fridge.id, basis: start.state)
         XCTAssertTrue(prior.isEmpty)
         try await model.saveConsumption(review)
+        XCTAssertEqual(model.notice, .recordedUse(fridge.name))
+        await model.loadOnAppearance(accessAllowed: true)
+        XCTAssertEqual(model.notice, .recordedUse(fridge.name))
 
         let fresh = try ComparisonStore(url: f.directory.appendingPathComponent("pickup.sqlite"), inventoryEnabled: true)
         f.cleanup.track(fresh)
@@ -157,6 +160,7 @@ import LocalStore
 
         await model.prepareNewFood(name: "Ajonjolí", location: .fridge, amount: "2", unit: .count)
         await model.confirmReview(acknowledgingReservations: false)
+        XCTAssertEqual(model.notice, .saved)
         let twoFridgeBatches = try XCTUnwrap(model.snapshot?.lots)
         XCTAssertEqual(PantryVoiceBatchMatcher.suggestions(for: row.food, in: twoFridgeBatches).count, 2)
         XCTAssertNil(PantryVoiceBatchMatcher.uniqueExact(for: row.food, in: twoFridgeBatches))
@@ -180,6 +184,7 @@ import LocalStore
         XCTAssertNil(unknown.availability.lots.first?.free)
         try await submit(.usedSome(remainingWording: "less than half a bottle"))
         let estimated = try XCTUnwrap(model.snapshot)
+        XCTAssertEqual(model.notice, .recordedUse("Ketchup"))
         XCTAssertEqual(estimated.lots.first?.countWording, "less than half a bottle")
         XCTAssertEqual(estimated.lots.first?.count, .someLeft)
         let original = try await model.usageHistory(lotID: id, basis: estimated.state)
@@ -187,8 +192,16 @@ import LocalStore
         XCTAssertEqual(Set(original.map(\.id)).count, 2)
         XCTAssertTrue(original.allSatisfy { $0.kind == .some && $0.occurredAt == now })
         XCTAssertEqual(original.compactMap(\.remainingWording), ["less than half a bottle"])
-        try await submit(.low("nearly empty"))
+        try await submit(.low("almost empty"))
+        let receipt = PantryModel.Notice.savedEstimate(food: "Ketchup", wording: "almost empty")
+        XCTAssertEqual(model.notice, receipt)
+        await model.loadOnAppearance(accessAllowed: true)
+        XCTAssertEqual(model.notice, receipt)
+        let observedState = try XCTUnwrap(model.snapshot?.state)
+        let observedHistory = try await model.usageHistory(lotID: id, basis: observedState)
+        XCTAssertEqual(observedHistory, original)
         try await submit(.unknown)
+        XCTAssertEqual(model.notice, .saved)
         try await submit(.empty)
         let empty = try XCTUnwrap(model.snapshot)
         for use in [PantryConsumptionSelection.Use.usedSome(remainingWording: nil), .usedSome(remainingWording: "a little left"), .all] {
@@ -211,6 +224,42 @@ import LocalStore
         _ = try await fresh.eraseInventoryOrigin(expectedRevision: final.state.revision, sourceToken: token, operationID: UUID(), at: now)
         do { _ = try await reopened.usageHistory(lotID: id, basis: final.state); XCTFail("Retired inventory exposed use history") }
         catch { XCTAssertEqual(error as? ComparisonStoreError, .erased) }
+    }
+
+    func testRemainingEstimateReceiptClearsOnChangedShelfAndRevokedAccess() async throws {
+        let f = try await fixture()
+        var authorized = true
+        let model = editor(f, authorize: { authorized })
+        await model.load()
+        await model.prepareNewFood(name: "Salsa", location: .fridge, amount: "1", unit: .count)
+        await model.confirmReview(acknowledgingReservations: false)
+        let id = try XCTUnwrap(model.snapshot?.lots.first?.id)
+        func saveEstimate(_ wording: String) async throws {
+            let state = try XCTUnwrap(model.snapshot?.state)
+            let review = try await model.reviewConsumption([.init(lotID: id, use: .low(wording))], basis: state)
+            try await model.saveConsumption(review)
+            XCTAssertEqual(model.notice, .savedEstimate(food: "Salsa", wording: wording))
+        }
+
+        try await saveEstimate("casi vacía")
+        let other = editor(f)
+        await other.load()
+        await other.prepare(lotID: id, action: .recount("2", .count))
+        await other.confirmReview(acknowledgingReservations: false)
+        await model.loadOnAppearance(accessAllowed: true)
+        XCTAssertNil(model.notice)
+        XCTAssertNil(model.snapshot?.lots.first?.countWording)
+
+        try await saveEstimate("menos de la mitad")
+        authorized = false
+        await model.loadOnAppearance(accessAllowed: true)
+        XCTAssertEqual(model.phase, .accessDenied)
+        XCTAssertNil(model.notice)
+        XCTAssertNil(model.snapshot)
+        authorized = true
+        await model.loadOnAppearance(accessAllowed: true)
+        XCTAssertNil(model.notice)
+        XCTAssertEqual(model.snapshot?.lots.first?.countWording, "menos de la mitad")
     }
 
     func testConsumptionRequiresExactLotFreeQuantityAndCurrentAuthorizedBasis() async throws {

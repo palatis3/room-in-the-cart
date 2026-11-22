@@ -11,25 +11,74 @@ private enum LedgerHomeSheet: Hashable, Identifiable {
 }
 
 struct LedgerHomeView: View {
+    private var dinnerPantry = ShoppingDinnerPantry()
     @ObservedObject var model: LedgerModel
-    var onShopSelected: ((UUID) -> Void)? = nil
+    var onShopSelected: ((UUID) -> Void)?
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var sheet: LedgerHomeSheet?
     @State private var showingShopPicker = false
     @State private var showingListOptions = false
     @State private var stapleRecallShopID: UUID?
     private enum Focus: Hashable { case result, error, undo, line(UUID) }
+    private enum SearchAnchor { case empty }
+    @State private var submittedSearch = false
     @State private var returnToLine: UUID?
     @State private var checkCue: GroceryCheckCue?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scene
     @AccessibilityFocusState private var focus: Focus?
 
+    init(model: LedgerModel, onShopSelected: ((UUID) -> Void)? = nil) {
+        self.model = model
+        self.onShopSelected = onShopSelected
+    }
+
     var body: some View {
+        ledgerContent
+            .background(Theme.canvas)
+            .task { await model.open() }
+            .navigationDestination(item: $stapleRecallShopID) { shopID in
+                StapleRecallView(ledger: model, targetID: shopID)
+            }
+            .sheet(item: $sheet) { destination in
+                switch destination {
+                case .shareItems(let id):
+                    PrivateShoppingSheet(model: model) {
+                        TripHandoffEntry(model: model, shopID: id)
+                            .toolbar {
+                                ToolbarItem(placement: .cancellationAction) {
+                                    Button(ledgerText("Close")) { sheet = nil }
+                                        .accessibilityIdentifier("tripShare.close")
+                                }
+                            }
+                    }
+                case .inStore(let id):
+                    PrivateShoppingSheet(model: model) {
+                        InStoreShoppingView(model: model, shopID: id) { selected in
+                            sheet = nil
+                            onShopSelected?(selected)
+                        }
+                    }
+                case .kits(let id):
+                    PrivateShoppingSheet(model: model) { ShoppingKitsView(model: model, shopID: id) }
+                case .standing:
+                    PrivateShoppingSheet(model: model) { StandingListView(model: model) }
+                default:
+                    NavigationStack { existingSheet(destination) }
+                }
+            }
+            .onChange(of: model.error) { _, error in if error != nil { focus = .error } }
+    }
+
+    private var ledgerContent: some View {
         VStack(spacing: 0) {
             if model.ready, let shop = model.shop {
                 if !dynamicTypeSize.isAccessibilitySize { controls(shop) }
                 ScrollViewReader { reader in
+                    let dinner = dinnerPantry.status(in: shop, ledger: model)
+                    let covered = dinner.covered
+                    let reviewIDs = Set(dinner.pending.flatMap { $0.lines.map(\.id) })
+                    let groups = model.workspace.listLayout.groups(shop: shop, search: model.search, excluding: covered.union(reviewIDs))
                     JournalList {
                         if dynamicTypeSize.isAccessibilitySize {
                             Section {
@@ -61,29 +110,9 @@ struct LedgerHomeView: View {
                                 recentHistory(count: checked.count)
                             }
                         }
-                        let exclusions = shop.listExclusions
-                        let packages = shop.itemPackages
-                        let typedBatches = shop.typedItemBatchIDs
-                        let departmentChoices = model.workspace.listLayout.departmentChoices(in: shop)
-                        let groups = model.workspace.listLayout.groups(shop: shop, search: model.search)
-                        if groups.allSatisfy({ $0.lines.isEmpty }) {
-                            Section(ledgerText("Shopping list")) {
-                                Text(model.search.isEmpty && !checked.isEmpty ? quickGroceryText("No active items.") :
-                                    ledgerText(model.search.isEmpty ? "Add the groceries you need for this pickup." : "No active items match your search."))
-                                    .foregroundStyle(Theme.secondary)
-                                if checked.isEmpty { recentHistory(count: 0) }
-                            }
-                        } else {
-                            ForEach(groups) { group in
-                                Section(group.aisle.isEmpty ? ledgerText(model.workspace.listLayout.layout(for: shop).mode == .aisle ? "No aisle assigned" : "Shopping list") : group.aisle) {
-                                    ForEach(group.lines) { line in
-                                        row(line, shop: shop, packages: packages[line.id] ?? [], typedBatches: typedBatches,
-                                            exclusions: exclusions[line.id], departmentChoices: departmentChoices)
-                                            .id(line.id)
-                                    }
-                                }
-                            }
-                        }
+                        grocerySections(in: shop, groups: groups, dinner: dinner,
+                                        hasExcludedLines: !covered.isEmpty || !reviewIDs.isEmpty,
+                                        hasCheckedItems: !checked.isEmpty)
                         Section {
                             factsSummary(shop)
                         }
@@ -112,6 +141,16 @@ struct LedgerHomeView: View {
                             Section { LedgerSaveStatus(model: model).accessibilityFocused($focus, equals: .result) }
                         }
                     }.listStyle(.plain)
+                    .onChange(of: submittedSearch) { _, _ in
+                        guard !model.search.isEmpty else { return }
+                        if let first = groups.first(where: { !$0.lines.isEmpty })?.lines.first {
+                            reader.scrollTo(first.id, anchor: .top)
+                        } else if let first = shop.search(model.search).first(where: { covered.contains($0.id) || reviewIDs.contains($0.id) }) {
+                            reader.scrollTo(first.id, anchor: .top)
+                        } else {
+                            reader.scrollTo(SearchAnchor.empty, anchor: .top)
+                        }
+                    }
                     .onChange(of: returnToLine) { _, line in
                         guard let line else { return }
                         reader.scrollTo(line, anchor: .center)
@@ -147,34 +186,50 @@ struct LedgerHomeView: View {
                 }.frame(maxWidth: .infinity)
             }
         }
-        .background(Theme.canvas)
-        .task { await model.open() }
-        .navigationDestination(item: $stapleRecallShopID) { shopID in
-            StapleRecallView(ledger: model, targetID: shopID)
-        }
-        .sheet(item: $sheet) { destination in
-            switch destination {
-            case .shareItems(let id):
-                PrivateShoppingSheet(model: model) {
-                    TripHandoffEntry(model: model, shopID: id)
-                        .toolbar {
-                            ToolbarItem(placement: .cancellationAction) {
-                                Button(ledgerText("Close")) { sheet = nil }
-                                    .accessibilityIdentifier("tripShare.close")
-                            }
-                        }
+    }
+
+    @ViewBuilder private func grocerySections(in shop: ShoppingLedger, groups: [LedgerListLayout.Group],
+                                            dinner: ShoppingDinnerPantry.Status, hasExcludedLines: Bool,
+                                            hasCheckedItems: Bool) -> some View {
+        let exclusions = shop.listExclusions
+        let packages = shop.itemPackages
+        let typedBatches = shop.typedItemBatchIDs
+        let departmentChoices = model.workspace.listLayout.departmentChoices(in: shop)
+        DinnerPantryReviewSection(shopID: shop.id, reviews: dinner.pending,
+            matching: model.search.isEmpty || dinner.pending.isEmpty ? nil : Set(shop.search(model.search).map(\.id)))
+        if groups.allSatisfy({ $0.lines.isEmpty }) {
+            Section(ledgerText("Shopping list")) {
+                Text(model.search.isEmpty && (hasCheckedItems || hasExcludedLines) ? quickGroceryText("No active items.") :
+                    ledgerText(model.search.isEmpty ? "Add the groceries you need for this pickup." : "No active items match your search."))
+                    .foregroundStyle(Theme.secondary)
+                    .id(SearchAnchor.empty)
+                if !hasCheckedItems { recentHistory(count: 0) }
+            }
+        } else {
+            ForEach(groups) { group in
+                Section(group.aisle.isEmpty ? ledgerText(model.workspace.listLayout.layout(for: shop).mode == .aisle ? "No aisle assigned" : "Shopping list") : group.aisle) {
+                    ForEach(group.lines) { line in
+                        row(line, shop: shop, packages: packages[line.id] ?? [], typedBatches: typedBatches,
+                            exclusions: exclusions[line.id], departmentChoices: departmentChoices)
+                            .id(line.id)
+                    }
                 }
-            case .inStore(let id):
-                PrivateShoppingSheet(model: model) { InStoreShoppingView(model: model, shopID: id) }
-            case .kits(let id):
-                PrivateShoppingSheet(model: model) { ShoppingKitsView(model: model, shopID: id) }
-            case .standing:
-                PrivateShoppingSheet(model: model) { StandingListView(model: model) }
-            default:
-                NavigationStack { existingSheet(destination) }
             }
         }
-        .onChange(of: model.error) { _, error in if error != nil { focus = .error } }
+        if !dinner.atHome.isEmpty {
+            Section(dinnerText("Using food at home")) {
+                ForEach(shop.search(model.search).filter { dinner.atHome.contains($0.id) }) { line in
+                    Label(line.name, systemImage: "house").id(line.id)
+                }
+            }
+        }
+        if !dinner.used.isEmpty {
+            Section(dinnerText("Used for dinner")) {
+                ForEach(shop.search(model.search).filter { dinner.used.contains($0.id) }) { line in
+                    Label(line.name, systemImage: "fork.knife").id(line.id)
+                }
+            }
+        }
     }
 
     @ViewBuilder private func existingSheet(_ destination: LedgerHomeSheet) -> some View {
@@ -240,8 +295,8 @@ struct LedgerHomeView: View {
         }
         .disabled(model.saving || model.hasPendingSave)
         .accessibilityIdentifier("ledgerShopPicker")
-        .confirmationDialog(shop.title, isPresented: $showingShopPicker, titleVisibility: .visible) {
-            ForEach(model.workspace.shops, id: \.id) { item in
+        .confirmationDialog(ledgerFormat("Current list: %@", shop.title), isPresented: $showingShopPicker, titleVisibility: .visible) {
+            ForEach(model.workspace.shops.filter { $0.id != shop.id }, id: \.id) { item in
                 Button(item.title) { Task { await model.selectShop(item.id, onSelected: onShopSelected) } }
             }
             Button(ledgerText("Rename pickup")) { sheet = .renameShop(id: shop.id, title: shop.title) }
@@ -280,6 +335,8 @@ struct LedgerHomeView: View {
         let prompt = dynamicTypeSize.isAccessibilitySize ? Text(verbatim: "") : Text(title).foregroundStyle(Theme.secondary)
         return HStack {
             TextField(title, text: $model.search, prompt: prompt)
+                .submitLabel(.search)
+                .onSubmit { submittedSearch.toggle() }
                 .textFieldStyle(.roundedBorder).accessibilityLabel(title).accessibilityIdentifier("ledgerSearch")
             if !model.search.isEmpty {
                 Button { model.search = "" } label: {
@@ -343,7 +400,7 @@ struct LedgerHomeView: View {
             Button {
                 Task {
                     guard await changeCheck(line, shop: shop, checked: false) else { focus = .error; return }
-                    let visible = model.shop.map { model.workspace.listLayout.groups(shop: $0, search: model.search) } ?? []
+                    let visible = model.shop.map { model.workspace.listLayout.groups(shop: $0, search: model.search, excluding: dinnerPantry.covered(in: $0, ledger: model)) } ?? []
                     if visible.contains(where: { $0.lines.contains(where: { $0.id == line.id }) }) {
                         returnToLine = line.id
                     } else { focus = .result }
@@ -377,7 +434,7 @@ struct LedgerHomeView: View {
         }
         return HStack(alignment: .top, spacing: 10) {
             Button {
-                let visible = model.workspace.listLayout.groups(shop: shop, search: model.search).flatMap(\.lines)
+                let visible = model.workspace.listLayout.groups(shop: shop, search: model.search, excluding: dinnerPantry.covered(in: shop, ledger: model)).flatMap(\.lines)
                 let index = visible.firstIndex { $0.id == line.id }
                 let next = index.flatMap { index in
                     visible.dropFirst(index + 1).first ?? visible.prefix(index).last
@@ -396,36 +453,36 @@ struct LedgerHomeView: View {
             .accessibilityHint(ledgerText("Moves this item to Recently checked."))
             .accessibilityFocused($focus, equals: .line(line.id))
             .accessibilityIdentifier("ledgerCheck-\(line.id)")
-            VStack(alignment: .leading, spacing: 0) {
-                NavigationLink {
-                    LedgerIngredientView(model: model, shopID: shop.id, lineID: line.id)
-                } label: {
-                    VStack(alignment: .leading, spacing: 5) {
-                        GroceryNameAndAmount(name: line.name, amount: quantity)
-                        if let exclusions { Text(verbatim: exclusions) }
-                        if !line.notes.isEmpty { Text(line.notes) }
-                    }.padding(.vertical, 6).fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                        .contentShape(Rectangle())
-                }.accessibilityLabel(ledgerFormat("Inspect %@", line.name))
-                    .buttonStyle(.plain)
-                    .accessibilityValue(Text(verbatim: details))
-                    .accessibilityIdentifier("ledgerInspect-\(line.id)")
-                    .accessibilityAction(named: Text(ledgerText("Edit item")), editItem)
-                LedgerDepartmentPicker(model: model, shop: shop, line: line, labels: departmentChoices)
-            }
-            if let source, let workspace = model.sourceWorkspaceID {
-                Button {
-                    sheet = .editAmount(workspace: workspace, shop: shop.id, line: line.id, source: source.id)
-                } label: {
-                    Image(systemName: "pencil").foregroundStyle(Theme.action)
-                        .frame(width: 44, height: 44).contentShape(Rectangle())
+            let layout = dynamicTypeSize.isAccessibilitySize
+                ? AnyLayout(VStackLayout(alignment: .leading, spacing: 0))
+                : AnyLayout(HStackLayout(alignment: .top, spacing: 6))
+            layout {
+                VStack(alignment: .leading, spacing: 0) {
+                    NavigationLink {
+                        LedgerIngredientView(model: model, shopID: shop.id, lineID: line.id)
+                    } label: {
+                        VStack(alignment: .leading, spacing: 5) {
+                            GroceryNameAndAmount(name: line.name, amount: source == nil || model.sourceWorkspaceID == nil ? quantity : nil)
+                            if let exclusions { Text(verbatim: exclusions) }
+                            if !line.notes.isEmpty { Text(line.notes) }
+                        }.padding(.vertical, 6).fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                            .contentShape(Rectangle())
+                    }.accessibilityLabel(ledgerFormat("Inspect %@", line.name))
+                        .buttonStyle(.plain)
+                        .accessibilityValue(Text(verbatim: details))
+                        .accessibilityIdentifier("ledgerInspect-\(line.id)")
+                        .accessibilityAction(named: Text(ledgerText("Edit item")), editItem)
+                    LedgerDepartmentPicker(model: model, shop: shop, line: line, labels: departmentChoices)
                 }
-                .buttonStyle(.borderless)
-                .accessibilityLabel(quickGroceryText("Edit quantity and notes"))
-                .accessibilityValue(Text(verbatim: line.name))
-                .accessibilityIdentifier("ledgerEditAmount-\(line.id)")
-                .disabled(model.saving || model.hasPendingSave)
+
+                if let source, let workspace = model.sourceWorkspaceID {
+                    GroceryAmountEditButton(amount: quantity, name: line.name, spokenAmount: spokenAmount) {
+                        sheet = .editAmount(workspace: workspace, shop: shop.id, line: line.id, source: source.id)
+                    }
+                    .accessibilityIdentifier("ledgerEditAmount-\(line.id)")
+                    .disabled(model.saving || model.hasPendingSave)
+                }
             }
         }
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
@@ -457,6 +514,31 @@ extension LedgerModel {
     }
 }
 
+private struct GroceryAmountEditButton: View {
+    let amount: String?
+    let name: String
+    let spokenAmount: String?
+    let edit: () -> Void
+
+    var body: some View {
+        Button(action: edit) {
+            HStack(spacing: 6) {
+                if let amount {
+                    Text(verbatim: amount).monospacedDigit().foregroundStyle(Theme.ink)
+                }
+                Image(systemName: "pencil").font(.footnote).foregroundStyle(Theme.action)
+            }
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal, 6)
+            .frame(minWidth: 48, minHeight: 48)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.borderless)
+        .accessibilityLabel(quickGroceryText("Edit quantity and notes"))
+        .accessibilityValue([name, spokenAmount].compactMap { $0 }.joined(separator: ", "))
+    }
+}
+
 /// Keep the shopping amount beside the name where space permits. An amount can be
 /// absent on an ordinary typed grocery, or carry a meaningful unresolved state.
 struct GroceryNameAndAmount: View {
@@ -483,6 +565,7 @@ struct GroceryNameAndAmount: View {
 }
 
 struct ShopGroceryPreview: View {
+    private var dinnerPantry = ShoppingDinnerPantry()
     @ObservedObject var model: LedgerModel
     let shop: ShoppingLedger
     let showsListLink: Bool
@@ -505,6 +588,13 @@ struct ShopGroceryPreview: View {
         }
     }
 
+    init(model: LedgerModel, shop: ShoppingLedger, showsListLink: Bool, authorize: @escaping @MainActor () -> Bool) {
+        self.model = model
+        self.shop = shop
+        self.showsListLink = showsListLink
+        self.authorize = authorize
+    }
+
     private func releaseRows() {
         retainedIDs = []
         retainedHeights = [:]
@@ -521,13 +611,23 @@ struct ShopGroceryPreview: View {
     }
 
     var body: some View {
-        let rows = model.workspace.listLayout.groups(shop: shop).flatMap(\.lines)
-        let visible = previewRows(active: rows)
+        let dinner = dinnerPantry.status(in: shop, ledger: model)
+        let reviewIDs = Set(dinner.pending.flatMap { $0.lines.map(\.id) })
+        let excluded = dinner.covered.union(reviewIDs)
+        let rows = model.workspace.listLayout.groups(shop: shop, excluding: excluded).flatMap(\.lines)
+        let visible = previewRows(active: rows).filter { !excluded.contains($0.id) }
         let packages = shop.itemPackages
         let typedItemBatches = shop.typedItemBatchIDs
         VStack(alignment: .leading, spacing: 0) {
             if model.error != nil || model.hasPendingSave {
                 LedgerSaveStatus(model: model, showsLastSave: false)
+            }
+            ForEach(dinner.pending) { review in
+                VStack(alignment: .leading) {
+                    Text(verbatim: review.mealTitle).font(.headline)
+                    Text(verbatim: review.lines.map(\.name).formatted(.list(type: .and)))
+                    DinnerShoppingCheckLink(shopID: shop.id, occurrenceID: review.id, linkedProducts: true)
+                }
             }
             ForEach(visible) { line in
                 let measure = TripMeasure(shop, line: line, packages: packages[line.id] ?? [])
@@ -552,7 +652,7 @@ struct ShopGroceryPreview: View {
                         .accessibilityAddTraits(line.isChecked ? .isSelected : [])
                         .accessibilityIdentifier("shop.check-\(line.id)")
                     let amount = shop.groceryRowAmount(line, measure: measure)
-                    let source = measure == nil ? nil : shop.ordinaryQuantitySource(for: line,
+                    let source = shop.ordinaryQuantitySource(for: line,
                         contributions: shop.contributions(forLineID: line.id), typedItemBatches: typedItemBatches)
                     let layout = typeSize.isAccessibilitySize
                         ? AnyLayout(VStackLayout(alignment: .leading, spacing: 0))
@@ -566,16 +666,9 @@ struct ShopGroceryPreview: View {
                         .accessibilityValue(shop.tripAmountLabel(line, measure: measure) ?? "")
                         .accessibilityIdentifier("shop.inspect-\(line.id)")
                         if let source, let amount {
-                            Button { destination = .amount(line: line.id, source: source.id) } label: {
-                                HStack(spacing: 6) {
-                                    Text(verbatim: amount).monospacedDigit().foregroundStyle(Theme.ink)
-                                    Image(systemName: "pencil").font(.footnote).foregroundStyle(Theme.action)
-                                }
-                                .fixedSize(horizontal: false, vertical: true)
-                                .frame(minWidth: 44, minHeight: 48).contentShape(Rectangle())
+                            GroceryAmountEditButton(amount: amount, name: line.name, spokenAmount: shop.tripAmountLabel(line, measure: measure)) {
+                                destination = .amount(line: line.id, source: source.id)
                             }
-                            .accessibilityLabel(quickGroceryText("Edit quantity and notes"))
-                            .accessibilityValue([line.name, shop.tripAmountLabel(line, measure: measure)].compactMap { $0 }.joined(separator: ", "))
                             .accessibilityIdentifier("shop.editAmount-\(line.id)")
                         }
                     }

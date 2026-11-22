@@ -143,6 +143,26 @@ struct JournalActionLabel: View {
     }
 }
 
+/// Give a menu label and its selected value separate lines at accessibility text sizes.
+func journalStackedMenu<Content: View>(_ title: String, value: String, id: String,
+                                        @ViewBuilder content: () -> Content) -> some View {
+    Menu(content: content) {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title).font(.subheadline).foregroundStyle(Theme.secondary)
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(value).foregroundStyle(Theme.action)
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.up.chevron.down").imageScale(.small)
+                    .foregroundStyle(Theme.action).accessibilityHidden(true)
+            }
+        }
+        .fixedSize(horizontal: false, vertical: true)
+        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+        .contentShape(Rectangle())
+    }
+    .accessibilityLabel(title).accessibilityValue(value).accessibilityIdentifier(id)
+}
+
 /// One input with a name that remains visible after a value has been entered.
 struct WorkingField<Content: View>: View {
     let title: String

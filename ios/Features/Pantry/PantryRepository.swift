@@ -298,13 +298,15 @@ final class PantryRepository {
     /// An editor may publish an editable snapshot only after checking the journal
     /// under the same lease as this complete read. Competing confirmations fail
     /// closed and are restored on the next load.
-    func loadForEditing(at now: Date) async throws -> Snapshot {
+    func loadForEditing(at now: @autoclosure () -> Date, waitForShelfRead: Bool = false) async throws -> Snapshot {
         try requireAccess()
-        guard let pendingStore else { return try await load(at: now) }
+        guard let pendingStore else { return try await load(at: now()) }
         guard let mutationGate, pendingStore.inventoryWorkspaceID == store.workspaceID else { throw Failure.pendingUnavailable }
-        let lease = try mutationGate.beginExclusiveWrite(); defer { mutationGate.endExclusiveWrite(lease) }
+        let lease = waitForShelfRead ? try await mutationGate.beginShelfRead() : try mutationGate.beginExclusiveWrite()
+        defer { mutationGate.endExclusiveWrite(lease) }
+        try requireAccess()
         guard try pendingStore.read() == nil else { throw PantryPendingStore.Failure.occupied }
-        let current = try await load(at: now)
+        let current = try await load(at: now())
         try requireAccess()
         guard try pendingStore.read() == nil else { throw PantryPendingStore.Failure.occupied }
         return current
@@ -715,6 +717,7 @@ final class PantryRepository {
         let before = try await loadForEditing(at: now)
         guard before.state == expected else { throw PantryReceiptError.stale }
         guard draft.workspaceID == originID, draft.dateConfirmed, draft.purchaseDate <= now,
+              draft.purchaseTimeZone == nil || draft.purchaseDay != nil,
               !draft.merchant.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw PantryReceiptError.invalid }
         let selected = draft.selectedLines
         guard (1...50).contains(selected.count), Set(selected.map(\.ordinal)).count == selected.count else { throw PantryReceiptError.selection }
@@ -746,14 +749,23 @@ final class PantryRepository {
             cursor = page.count == 200 ? page.last?.id : nil
         } while cursor != nil
         var source = draft
-        if let old = prior.values.first, plan.document != nil {
-            guard ReceiptRecognition.normalize(old.merchant) == ReceiptRecognition.normalize(draft.merchant) else { throw PantryReceiptError.changedEvidence }
-            source.merchant = old.merchant
+        if let old = prior.values.first {
+            if plan.document != nil {
+                guard ReceiptRecognition.normalize(old.merchant) == ReceiptRecognition.normalize(draft.merchant) else { throw PantryReceiptError.changedEvidence }
+                source.merchant = old.merchant
+            }
+            // Exact document/reference identification precedes this comparison.
+            // Legacy rows retain their original instant and unknown local day.
+            let linkedLegacyDocument = old.purchaseDay == nil && plan.document != nil
+            guard linkedLegacyDocument || old.matchesPurchaseDate(draft.purchaseDate, day: draft.purchaseDay) else {
+                throw PantryReceiptError.changedEvidence
+            }
             source.purchaseDate = old.purchaseDate
+            source.purchaseTimeZone = old.purchaseDay.flatMap { TimeZone(identifier: $0.timeZoneIdentifier) }
         }
         var facts = try source.facts(receiptID: receiptID, snapshot: before, at: now, lineDocumentID: plan.document)
         for value in prior.values {
-            guard value.merchant == source.merchant.trimmingCharacters(in: .whitespacesAndNewlines), value.purchaseDate == source.purchaseDate else { throw PantryReceiptError.changedEvidence }
+            guard value.merchant == source.merchant.trimmingCharacters(in: .whitespacesAndNewlines), value.purchaseDate == source.purchaseDate, value.purchaseDay == source.purchaseDay else { throw PantryReceiptError.changedEvidence }
             if let old = value.transactionReference, let new = facts.first?.transactionReference, old != new { throw PantryReceiptError.changedEvidence }
         }
         let priorByID = Dictionary(uniqueKeysWithValues: prior.values.map { ($0.id,$0) })
@@ -776,7 +788,7 @@ final class PantryRepository {
                       old.originalLine == fact.originalLine || (mapped != nil && ReceiptRecognition.normalize(old.originalLine) == ReceiptRecognition.normalize(fact.originalLine)),
                       old.received == fact.received,
                       old.usable == fact.usable, old.paidLineTotal == fact.paidLineTotal, old.stock == fact.stock,
-                      old.purchaseDate == fact.purchaseDate, old.merchant == fact.merchant else { throw PantryReceiptError.changedEvidence }
+                      old.purchaseDate == fact.purchaseDate, old.purchaseDay == fact.purchaseDay, old.merchant == fact.merchant else { throw PantryReceiptError.changedEvidence }
                 if let recognition, !plan.bound.contains(line.ordinal), plan.authorizedRows.contains(old.id) {
                     bindings.append(recognition.binding(old, ordinal: line.ordinal, additionalDocument: plan.document != nil))
                 }

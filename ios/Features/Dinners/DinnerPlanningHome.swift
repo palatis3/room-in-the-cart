@@ -108,6 +108,7 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
     }
     @State private var editingRecipe: RecipeEditor?
     @State private var handoff: MealTemplate?
+    @State private var showingTonight = false
     var body: some View {
         List {
             Group {
@@ -224,6 +225,16 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                 Section { saveStatus() }
             }.listRowBackground(Theme.surface)
         }.workingSurface().navigationTitle(dinnerText("Dinners")).navigationBarTitleDisplayMode(.inline).listStyle(.insetGrouped)
+        .sheet(isPresented: $showingTonight) {
+            NavigationStack {
+                TonightEntry()
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button(ledgerText("Close")) { showingTonight = false }
+                        }
+                    }
+            }
+        }
         .sheet(item: $editingRecipe) { editor in
             if let library = privateRecipeLibrary {
                 NavigationStack { DinnerPrivateRecipeEditor(ledger: library, recipe: editor.recipe, pasteEntry: editor.pasteEntry) }
@@ -264,12 +275,21 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
     }
 
     private var tonightLink: some View {
-        NavigationLink { TonightEntry() } label: {
-            VStack(alignment: .leading, spacing: 4) {
-                Label(dinnerText("Find a dinner from the pantry"), systemImage: "carrot")
-                if needsPantrySetup { Text(dinnerText("Set up My Pantry to use food you have at home.")).font(.footnote).foregroundStyle(Theme.secondary) }
+        Group {
+            if #available(iOS 18, *) {
+                NavigationLink { TonightEntry() } label: { tonightLabel }
+            } else {
+                // Pushing from this observed list can stall during layout on iOS 17.
+                Button { showingTonight = true } label: { tonightLabel }
             }
         }.accessibilityIdentifier("dinner.tonight")
+    }
+
+    private var tonightLabel: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Label(dinnerText("Find a dinner from the pantry"), systemImage: "carrot")
+            if needsPantrySetup { Text(dinnerText("Set up My Pantry to use food you have at home.")).font(.footnote).foregroundStyle(Theme.secondary) }
+        }
     }
 }
 

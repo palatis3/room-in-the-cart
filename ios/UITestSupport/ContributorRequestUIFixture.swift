@@ -102,7 +102,8 @@ import HouseholdClient
             if server.helperReadback, let lifecycle = model.lifecycle {
                 lifecycle.keepLocalPrivate = true
                 lifecycle.adultAttestation = true
-                lifecycle.invitationCode = server.grant + "." + String(repeating: "a", count: 43)
+                lifecycle.invitationCode = server.household + "." + String(repeating: "a", count: 43)
+                await lifecycle.previewInvitation()
                 await lifecycle.redeemInvitation()
                 guard lifecycle.isHelper else { setupFailure = true; return }
                 if server.cookingReport { lifecycle.correction = "Keep the original correction draft" }
@@ -227,6 +228,7 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
     private var pantryRow: [String: Any]?
     private var pantryReceipts: [String: [String: Any]] = [:]
     let childPickups = ProcessInfo.processInfo.arguments.contains("--guardian-request-pickups-fixture")
+    private let rejectCurrentChildPickup = ProcessInfo.processInfo.arguments.contains("--reject-current-child-pickup-fixture")
     private let nextOnlyPickup = "22222222-2222-4222-8222-222222222222"
     private let childSession = UUID().uuidString.lowercased()
 
@@ -521,6 +523,7 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
         if path == "/v1/me/workspaces" { return try response(["workspaces": helperReadback ? [] : [["householdId":household,"label":"Fixture home","role":"contributor"]]]) }
         if path.hasSuffix("/devices") { return try response(["deviceId":"fixture-device","deviceToken":"fixture-token"],201) }
         if helperReadback {
+            if path == "/v1/invites/preview" { return try response(["householdLabel": "Fixture home", "role": cookingReport ? "helper_edit" : "helper_read"]) }
             if path == "/v1/invites/redeem" { return try response(["householdId": household, "memberId": member, "role": cookingReport ? "editor" : "helper", "grantId": grant]) }
             if path.hasSuffix("/bootstrap") {
                 return try response(["household": ["id": household, "label": "Fixture home"], "memberId": member,
@@ -635,8 +638,11 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
             }
             guard json["kind"] as? String == "request.send", let key = json["clientKey"] as? String,
                   let targetShop = json["shopId"] as? String, let body = json["body"] as? [String: Any] else { throw URLError(.unsupportedURL) }
-            if childPickups, (targetShop != nextOnlyPickup || body["route"] as? String != "next") {
-                throw URLError(.badServerResponse)
+            if childPickups {
+                let route = body["route"] as? String
+                let currentPickupAllowed = !rejectCurrentChildPickup && targetShop == shop && (route == "current" || route == "next")
+                let nextPickupAllowed = targetShop == nextOnlyPickup && route == "next"
+                guard currentPickupAllowed || nextPickupAllowed else { throw URLError(.badServerResponse) }
             }
             posts += 1
             if let receipt = receipts[key] { changed?(posts, rows.count); return try response(receipt) }

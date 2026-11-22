@@ -64,8 +64,7 @@ struct PantrySetupView: View {
                 case .prices: PantryPriceHistoryView(model: model, startEntry: $startPriceEntry)
                 case .receipts: PantryReceiptHistory(model: model, showsDone: false)
                 case .home:
-                    PantryHomeView(model: model, accessAllowed: true, offersTonight: true, offersStaplePrompts: true,
-                                   household: household, holdsLoadedReview: {
+                    LivePantryHomeView(pickup: pickup, model: model, household: household, holdsLoadedReview: {
                         pantryVoicePrompt?.holdsPresentation() == true && scope == original
                     }, initialSheet: $initialSheet)
                 }
@@ -224,6 +223,36 @@ struct PantrySetupView: View {
             }
         }
         return counts.keys.sorted().map { ($0, counts[$0]?.count ?? 0) }
+    }
+}
+
+/// Tabs can keep the shelf mounted while cooking changes the same inventory.
+struct LivePantryHomeView: View {
+    @ObservedObject var pickup: PickupModel
+    @ObservedObject var model: PantryModel
+    let household: HouseholdModel
+    let holdsLoadedReview: () -> Bool
+    @Binding var initialSheet: PantrySheet?
+
+    private var newerRevision: Int64? {
+        guard model.canEdit, !pickup.saving, pickup.pantryRouteAvailable, pickup.pantryReadIsCurrent,
+              let current = pickup.pantrySnapshot?.state, let shown = model.snapshot?.state,
+              current.workspaceID == shown.workspaceID, current.revision > shown.revision else { return nil }
+        return current.revision
+    }
+
+    var body: some View {
+        PantryHomeView(model: model, accessAllowed: true, offersTonight: true, offersStaplePrompts: true,
+                       allowsPackageReview: true, household: household, holdsLoadedReview: holdsLoadedReview,
+                       initialSheet: $initialSheet)
+            .onChange(of: newerRevision, initial: true) { _, revision in
+                guard let revision else { return }
+                Task { @MainActor in
+                    // A newly opened review keeps its exact basis. Once it closes,
+                    // newerRevision changes again and the shelf can take a fresh read.
+                    if newerRevision == revision { await model.load() }
+                }
+            }
     }
 }
 

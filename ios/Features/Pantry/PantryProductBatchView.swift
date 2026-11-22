@@ -14,16 +14,19 @@ struct PantryProductBatchView: View {
     @State private var repeatedScan: CapturedBarcode?
     @State private var savedRows: [UUID: UUID] = [:]
     @State private var merchant = ""
+    @State private var purchaseTimeZone = TimeZone.current
     @State private var date = Calendar.current.startOfDay(for: Date())
     @State private var confirmed = false
     @State private var photoConsent = false
     @State private var editingCount = false
     @State private var repeatedProductID: UUID?
     @State private var editingProduct: PantryProductBatch.Candidate?
+    @State private var reviewingLookup = false
     @State private var review: PantryReceiptReview?
     @State private var result: String?
     @State private var inputMessage: String?
-    private let didFinishWithLot: (UUID) -> Void
+    private let didFinishWithLot: ((UUID) -> Void)?
+    private let lookupAccess: PantryDigestAccess?
     @State private var savedLotID: UUID?
     @State private var initialAccess: PantryDigestAccess?
     @Environment(\.scenePhase) private var scene
@@ -37,11 +40,21 @@ struct PantryProductBatchView: View {
     @FocusState private var focus: String?
     @Environment(\.dismiss) private var dismiss
 
-    init(model: PantryModel, workspaceID: UUID, didFinishWithLot: @escaping (UUID) -> Void = { _ in }) {
+    init(model: PantryModel, workspaceID: UUID, didFinishWithLot: ((UUID) -> Void)? = nil) {
+        lookupAccess = nil
         self.didFinishWithLot = didFinishWithLot
         self.model = model
         _batch = State(initialValue: PantryProductBatch(workspaceID: workspaceID))
     }
+    init(model: PantryModel, lookupBatch: PantryProductBatch, access: PantryDigestAccess) {
+        self.model = model
+        lookupAccess = access
+        didFinishWithLot = nil
+        _batch = State(initialValue: lookupBatch)
+        _initialAccess = State(initialValue: access)
+        _reviewingLookup = State(initialValue: true)
+    }
+
     private var confirmationText: String {
         guard atHome else { return pantryText("I received these packages and checked the date and usable quantities.") }
         if batch.candidates.contains(where: { $0.included && $0.onePackageUnknown }) {
@@ -52,6 +65,7 @@ struct PantryProductBatchView: View {
 
     private var authorized: Bool {
         scene == .active && model.phase == .ready && model.snapshot?.state.workspaceID == batch.workspaceID &&
+            (lookupAccess?.authorized() ?? true) &&
             (initialAccess == nil || (access?.scope == initialAccess?.scope && access?.authorized() == true))
     }
     private var canPresent: Bool {
@@ -63,6 +77,17 @@ struct PantryProductBatchView: View {
     }
 
     var body: some View {
+        if reviewingLookup, authorized, let row = batch.candidates.first {
+            candidateEditor(row, finishEditing: { reviewingLookup = false }, current: { authorized })
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) { Button(pantryText("Cancel")) { dismiss() } }
+                }
+        } else {
+            batchForm
+        }
+    }
+
+    private var batchForm: some View {
         WorkingForm {
             if !canPresent {
                 if working, model.busy, model.phase == .ready, scene == .active, let initialAccess,
@@ -92,6 +117,7 @@ struct PantryProductBatchView: View {
                        let access, access.canPresent(), access.scope.origin == batch.workspaceID {
                         Section {
                             PantryBatchHeading(lot: lot)
+                            barcodeLookupNote(lot.packageCode)
                             NavigationLink(pantryText("Add a date or reminder")) {
                                 PackageDateChoices(model: model, lot: lot, access: access, code: row.barcode, reviewedDateWording: row.reviewedDateWording)
                             }.accessibilityLabel(pantryText("Add a date or reminder") + " · " + lot.packageBatchLabel)
@@ -104,6 +130,7 @@ struct PantryProductBatchView: View {
                         if let lot = model.snapshot?.lots.first(where: { $0.id == row.lotID }) {
                             Section {
                                 PantryBatchHeading(lot: lot)
+                                barcodeLookupNote(lot.packageCode)
                                 NavigationLink(pantryText("Add a date or reminder")) {
                                     PackageDateChoices(model: model, lot: lot, access: access, reviewedDateWording: row.reviewedDateWording)
                                 }.accessibilityLabel(pantryText("Add a date or reminder") + " · " + lot.packageBatchLabel)
@@ -112,9 +139,8 @@ struct PantryProductBatchView: View {
                     }
                 }
                 Button(pantryText("Done")) {
-                    if let savedLotID { didFinishWithLot(savedLotID) }
-                    dismiss()
-                }
+                    finish(with: savedLotID)
+                }.accessibilityIdentifier("productBatch.done")
             } else if let review {
                 Section(pantryText(atHome ? "Review pantry count" : "Review received products")) {
                     if atHome {
@@ -122,6 +148,7 @@ struct PantryProductBatchView: View {
                             VStack(alignment: .leading) {
                                 Text(row.name).font(.headline)
                                 Text(row.reviewEvidenceLine)
+                                barcodeLookupNote(row.barcode)
                                 if !row.onePackageUnknown {
                                     Text(pantryText("Amount usable") + " · " + pantryPrintedQuantity(row.usable.isEmpty ? row.total?.description ?? "" : row.usable, unit: row.unit))
                                 } else if let wording = row.reviewedDateWording {
@@ -136,6 +163,7 @@ struct PantryProductBatchView: View {
                         VStack(alignment: .leading) {
                             Text(row.name).font(.headline)
                             Text(verbatim: candidate?.reviewEvidenceLine ?? row.originalLine)
+                            barcodeLookupNote(candidate?.barcode)
                             Text(pantryFormat("Received %@", pantryQuantity(row.received)))
                             Text(pantryFormat("Usable %@", pantryQuantity(row.usable)))
                             switch row.stock {
@@ -252,13 +280,14 @@ struct PantryProductBatchView: View {
                     }
                     if batch.candidates.allSatisfy({ !$0.included }), let linked = batch.candidates.first(where: { $0.receiptLinkSaved }),
                        let existing = linked.existingReceipt {
-                        Button(pantryText("Done")) { didFinishWithLot(existing.lotID); dismiss() }.buttonStyle(PrimaryAction())
+                        Button(pantryText("Done")) { finish(with: existing.lotID) }.buttonStyle(PrimaryAction())
                     } else {
                     Section(pantryText("Record these packages")) {
                         if !atHome {
                         TextField(pantryText("Store or branch"), text: $merchant).focused($focus, equals: "merchant")
                             .accessibilityIdentifier("productBatch.merchant")
                         ReceiptDatePicker(title: pantryText("Purchase date"), identifier: "productBatch.purchaseDate", date: $date)
+                            .environment(\.timeZone, purchaseTimeZone)
                         }
                         Toggle(confirmationText, isOn: $confirmed)
                             .accessibilityIdentifier("productBatch.received")
@@ -279,11 +308,9 @@ struct PantryProductBatchView: View {
         .sheet(item: $editingProduct) { selection in
             NavigationStack {
                 if authorized, let row = batch.candidates.first(where: { $0.id == selection.id }) {
-                    PantryProductCandidateEditor(row: captureDraftBinding(row, in: $batch.candidates),
-                        model: model, access: access, atHome: atHome, deliveries: atHome ? [] : model.productDeliveries, scope: catalogScope.id, focusCount: editingCount,
-                        finishEditing: { editingProduct = nil }, correctBarcode: correctBarcode, authorized: {
-                            authorized && editingProduct?.id == selection.id && batch.candidates.contains { $0.id == selection.id }
-                        })
+                    candidateEditor(row, focusCount: editingCount, finishEditing: { editingProduct = nil }, current: {
+                        authorized && editingProduct?.id == selection.id && batch.candidates.contains { $0.id == selection.id }
+                    })
                 }
             }
         }
@@ -307,8 +334,22 @@ struct PantryProductBatchView: View {
         }
     }
 
-    @ViewBuilder
-    private func productRow(_ row: PantryProductBatch.Candidate) -> some View {
+    private func finish(with lotID: UUID?) {
+        if let lotID, let didFinishWithLot {
+            didFinishWithLot(lotID)
+        } else {
+            dismiss()
+        }
+    }
+
+    @ViewBuilder private func barcodeLookupNote(_ code: CapturedBarcode?) -> some View {
+        if code?.lookupScope == .checkDigitsOrFormat {
+            Text(pantryText("These digits are kept as entered. Find this batch by food name."))
+                .font(.subheadline).accessibilityIdentifier("productBatch.findByName")
+        }
+    }
+
+    @ViewBuilder private func productRow(_ row: PantryProductBatch.Candidate) -> some View {
         let label = VStack(alignment: .leading) {
             Text(row.name.isEmpty ? (row.barcode?.value ?? pantryText("Product photo")) : row.name)
             if row.existingReceipt != nil { Text(pantryText(row.receiptLinkSaved ? "Linked to a recorded purchase" : "Existing purchase selected · excluded from new stock")).font(.caption) }
@@ -322,8 +363,7 @@ struct PantryProductBatchView: View {
         }
         if #available(iOS 18, *) {
             NavigationLink {
-                PantryProductCandidateEditor(row: captureDraftBinding(row, in: $batch.candidates),
-                    model: model, access: access, atHome: atHome, deliveries: atHome ? [] : model.productDeliveries, scope: catalogScope.id, correctBarcode: correctBarcode, authorized: { authorized })
+                candidateEditor(row, current: { authorized })
             } label: { label }
         } else {
             // A link attached to this mutable form row can stall the iOS 17 navigation stack.
@@ -335,6 +375,14 @@ struct PantryProductBatchView: View {
                 label.frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
             }.buttonStyle(.plain)
         }
+    }
+
+    private func candidateEditor(_ row: PantryProductBatch.Candidate, focusCount: Bool = false,
+                                 finishEditing: (() -> Void)? = nil, current: @escaping () -> Bool) -> some View {
+        PantryProductCandidateEditor(row: captureDraftBinding(row, in: $batch.candidates),
+            model: model, access: access, atHome: atHome, deliveries: atHome ? [] : model.productDeliveries,
+            scope: catalogScope.id, focusCount: focusCount, finishEditing: finishEditing,
+            correctBarcode: correctBarcode, authorized: current)
     }
 
     private func scanned(_ code: CapturedBarcode) {
@@ -390,7 +438,7 @@ struct PantryProductBatchView: View {
                 let rows = batch.candidates
                 let store = merchant, purchaseDate = date
                 try verifyMatches()
-                let proposal = try await atHome ? model.reviewHomePacks(batch) : model.reviewProducts(batch, merchant: store, purchaseDate: purchaseDate, confirmed: confirmed)
+                let proposal = try await atHome ? model.reviewHomePacks(batch) : model.reviewProducts(batch, merchant: store, purchaseDate: purchaseDate, confirmed: confirmed, timeZone: purchaseTimeZone)
                 guard authorized, confirmed, batch.candidates == rows, merchant == store, date == purchaseDate else { return }
                 review = proposal; result = nil
             } catch ProductBatchError.chooseStockAction {
@@ -561,11 +609,18 @@ private struct PantryProductCandidateEditor: View {
                         .disabled(row.existingReceipt != nil).accessibilityIdentifier("productBatch.include")
                     if let code = row.barcode {
                         LabeledContent(pantryText("Barcode"), value: code.displayValue)
+                            .accessibilityElement(children: .ignore)
+                            .accessibilityLabel(pantryText("Barcode")).accessibilityValue(code.displayValue)
+                            .accessibilityIdentifier("productBatch.barcodeEvidence")
                         if row.enteredByHand && row.existingReceipt == nil {
                             Button(pantryText("Edit barcode")) {
                                 field = nil
                                 editingBarcode = true
                             }.accessibilityIdentifier("productBatch.editBarcode")
+                        }
+                        if code.lookupScope == .checkDigitsOrFormat {
+                            Text(pantryText("Check the barcode digits and format. You can still save the food and find it by name."))
+                                .font(.subheadline).accessibilityIdentifier("productBatch.codeNeedsReview")
                         }
                     }
                     if !row.original.isEmpty { Text(verbatim: row.original) }

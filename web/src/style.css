@@ -104,6 +104,16 @@ button:disabled { opacity: .65; cursor: default; }
     border-color: var(--control-edge);
   }
 }
+section[aria-labelledby="invitation-household"] {
+  margin-block: 1.5rem;
+  padding-block: 1rem;
+  border-block: 1px solid var(--divider);
+}
+#invitation-change { margin-bottom: 1rem; scroll-margin-top: .5rem; }
+#invitation-change h2 { margin: 0; font-size: 1.125rem; line-height: 1.25; }
+#invitation-change:focus { outline: 3px solid var(--focus); outline-offset: 3px; }
+#invitation-household { margin: .25rem 0; }
+section[aria-labelledby="invitation-household"] p { margin-block: .4rem; }
 #pairing-code { font-size: 1.5rem; font-weight: 650; font-variant-numeric: tabular-nums; letter-spacing: .1em; }
 @media (max-width: 360px) { button { width: 100%; margin-right: 0; } }
 @media (forced-colors: active) {

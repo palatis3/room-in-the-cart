@@ -1,4 +1,5 @@
 import XCTest
+import SwiftUI
 import CoreDomain
 import LocalStore
 @testable import RoomInTheCart
@@ -10,6 +11,7 @@ import LocalStore
         let ledger: LedgerModel
         let pickup: PickupModel
         let store: ComparisonStore
+        let inventoryURL: URL
         let gate: PantryMutationGate
         let session: PantryCookSession
         let editor: CookCompletionEditorModel
@@ -21,7 +23,7 @@ import LocalStore
     }
     private func quantity(_ n: Int64) throws -> Quantity { .init(amount: try Rational(n), unit: .count, originalLiteral: String(n)) }
     private func fixture(firstUnit: UnitOfMeasure = .count, secondUnit: UnitOfMeasure = .count,
-                         firstConversion: UnitBasis? = nil) async throws -> Fixture {
+                         firstConversion: UnitBasis? = nil, duplicatePlannedName: Bool = false) async throws -> Fixture {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let cleanup = SQLiteFixtureDirectory(directory, test: self), now = Date().addingTimeInterval(-60)
@@ -39,13 +41,15 @@ import LocalStore
             $0.shops = [shop]; $0.selectedShopID = shop.id; $0.mealTemplates = [recipe]
         }
         XCTAssertTrue(saved)
-        let store = try ComparisonStore(url: directory.appendingPathComponent("pickup.sqlite"), inventoryEnabled: true)
+        let inventoryURL = directory.appendingPathComponent("pickup.sqlite")
+        let store = try ComparisonStore(url: inventoryURL, inventoryEnabled: true)
         cleanup.track(store)
-        let lots = [UUID(), UUID()]
+        let names = ["Wraps", "Rice wraps"] + (duplicatePlannedName ? ["Wraps"] : [])
+        let lots = names.map { _ in UUID() }
         var writes: [InventoryWrite] = []
         for (index, lot) in lots.enumerated() {
             let unit = index == 0 ? firstUnit : secondUnit
-            let seed = InventoryLotSeed(foodID: UUID(), name: index == 0 ? "Wraps" : "Rice wraps",
+            let seed = InventoryLotSeed(foodID: UUID(), name: names[index],
                 source: .manual(originID: store.workspaceID, sourceID: lot), location: index == 0 ? .cupboard : .freezer,
                 unit: unit, count: .exact(Quantity(amount: try Rational(4), unit: unit, originalLiteral: "4",
                     confirmedConversion: index == 0 ? firstConversion : nil)))
@@ -66,7 +70,7 @@ import LocalStore
         let editor = CookCompletionEditorModel()
         await editor.open(session: session, shopID: shop.id, mealID: meal, authorize: { access.allowed })
         XCTAssertNotNil(editor.context)
-        return Fixture(cleanup: cleanup, ledger: ledger, pickup: pickup, store: store, gate: gate,
+        return Fixture(cleanup: cleanup, ledger: ledger, pickup: pickup, store: store, inventoryURL: inventoryURL, gate: gate,
             session: session, editor: editor, access: access, shop: shop.id, meal: meal, lots: lots, now: now)
     }
     private func explicitNoUse(_ model: CookCompletionEditorModel) {
@@ -397,6 +401,156 @@ import LocalStore
         await model.reload(); await model.confirm()
         let reopened = try await f.session.load(shopID: f.shop, mealID: f.meal)
         XCTAssertEqual(reopened.completed, original); XCTAssertEqual(reopened.inventory.state.revision, revision)
+    }
+
+    func testReturningFromASuggestedSubstituteToTheUniquePlannedFoodClearsTheSavedSubstitution() async throws {
+        let f = try await fixture(firstUnit: .cup), editor = f.editor
+        explicitNoUse(editor)
+        editor.ingredients[0].use = .used
+        let ingredient = editor.ingredients[0].id, part = editor.ingredients[0].parts[0].id
+        let suggestion = try XCTUnwrap(editor.suggestions(for: ingredient).first { $0.id == f.lots[1] })
+        try editor.chooseSuggestion(suggestion, ingredientID: ingredient, partID: part)
+        XCTAssertEqual(editor.ingredients[0].parts[0].substitution, "Rice wraps")
+
+        editor.selectBatch(f.lots[0], ingredientID: ingredient, partID: part)
+        XCTAssertEqual(editor.ingredients[0].parts[0].relation, .ingredient)
+        XCTAssertEqual(editor.ingredients[0].parts[0].substitution, "")
+        XCTAssertEqual(editor.ingredients[0].parts[0].unit, .cup)
+        editor.ingredients[0].parts[0].amount = "1/2"
+        await editor.prepareReview()
+        let draft = try XCTUnwrap(editor.review?.draft)
+        XCTAssertNil(draft.parts.first?.substitution)
+        await editor.confirm()
+        let saved = try await f.session.load(shopID: f.shop, mealID: f.meal)
+        XCTAssertEqual(saved.completed, draft)
+        XCTAssertEqual(saved.inventory.lots.first { $0.id == f.lots[0] }?.count.quantity?.amount, try Rational(7, 2))
+        XCTAssertEqual(saved.inventory.lots.first { $0.id == f.lots[1] }?.count.quantity?.amount, try Rational(4))
+    }
+
+    func testChangingSuggestedBatchWithAmbiguousNamesRequiresReviewAndPreservesAnExplicitDescription() async throws {
+        let f = try await fixture(duplicatePlannedName: true), editor = f.editor
+        explicitNoUse(editor)
+        editor.ingredients[0].use = .used
+        editor.ingredients[0].parts[0].use = .unmeasured
+        let ingredient = editor.ingredients[0].id, part = editor.ingredients[0].parts[0].id
+        let suggestion = try XCTUnwrap(editor.suggestions(for: ingredient).first { $0.id == f.lots[1] })
+        try editor.chooseSuggestion(suggestion, ingredientID: ingredient, partID: part)
+        editor.selectBatch(f.lots[0], ingredientID: ingredient, partID: part)
+        XCTAssertEqual(editor.ingredients[0].parts[0].relation, .undecided)
+        XCTAssertThrowsError(try editor.makeDraft())
+
+        editor.ingredients[0].parts[0].relation = .substitution
+        editor.ingredients[0].parts[0].substitution = "The gluten-free wraps from the freezer"
+        editor.selectBatch(f.lots[2], ingredientID: ingredient, partID: part)
+        await editor.prepareReview()
+        XCTAssertEqual(editor.review?.draft.parts.first?.substitution, "The gluten-free wraps from the freezer")
+    }
+
+    func testFirstPantryVisitAfterCookingWaitsForTheOtherReadAndReopensWithItsAllocations() async throws {
+        let f = try await fixture()
+        let cooking = try await cookWithLunchAndDinner(f)
+        XCTAssertEqual(f.editor.notice, .saved)
+        let shelf = try XCTUnwrap(f.pickup.makePantryModel())
+        let second = try XCTUnwrap(f.pickup.makePantryModel())
+        let lease = try f.gate.beginExclusiveWrite()
+        // Dinner detail and the retained Pantry tab use this same exclusive lease.
+        // Hold it across both appearances to make the scheduling independent of SQLite speed.
+        let firstVisit = Task { await shelf.loadOnAppearance(accessAllowed: true) }
+        let secondVisit = Task { await second.loadOnAppearance(accessAllowed: true) }
+        let deadline = ContinuousClock.now + .seconds(3)
+        while (!shelf.busy || !second.busy) && shelf.notice == nil && second.notice == nil && ContinuousClock.now < deadline {
+            await Task.yield()
+        }
+        // SwiftUI can cancel and restart an appearance while the same retained shelf is waiting.
+        XCTAssertTrue(shelf.busy)
+        XCTAssertTrue(second.busy)
+        firstVisit.cancel()
+        let reappeared = Task { await shelf.loadOnAppearance(accessAllowed: true) }
+        f.gate.endExclusiveWrite(lease)
+        await reappeared.value
+        await firstVisit.value
+        await secondVisit.value
+        let persisted = try await f.store.inventoryState()
+        for model in [shelf, second] {
+            let snapshot = try XCTUnwrap(model.snapshot)
+            XCTAssertEqual(model.phase, .ready)
+            XCTAssertNil(model.notice)
+            XCTAssertEqual(snapshot.state, persisted)
+            XCTAssertEqual(snapshot.lots.first { $0.id == f.lots[0] }?.count.quantity?.amount, try Rational(3))
+            XCTAssertEqual(Set(snapshot.reservations.map(\.id)), Set(cooking.outputReservations.map(\.id)))
+        }
+        try await f.store.close()
+        await shelf.load()
+        XCTAssertEqual(shelf.phase, .unavailable)
+        XCTAssertEqual(shelf.notice, .loadFailed)
+        XCTAssertNil(shelf.snapshot)
+        let reopened = try ComparisonStore(url: f.inventoryURL, inventoryEnabled: true)
+        f.cleanup.track(reopened)
+        let cold = try await PantryRepository(store: reopened, authorize: { true }).load(at: f.now)
+        XCTAssertEqual(cold.state, persisted)
+        XCTAssertEqual(cold.lots, second.snapshot?.lots)
+        XCTAssertEqual(cold.reservations, second.snapshot?.reservations)
+        try await reopened.close()
+    }
+
+    func testSupersededPantryAppearanceCannotPublishAfterAccessChangesWhileWaiting() async throws {
+        let f = try await fixture()
+        let shelf = try XCTUnwrap(f.pickup.makePantryModel())
+        let lease = try f.gate.beginExclusiveWrite()
+        let appearance = Task { await shelf.loadOnAppearance(accessAllowed: true) }
+        let deadline = ContinuousClock.now + .seconds(3)
+        while !shelf.busy && shelf.notice == nil && ContinuousClock.now < deadline { await Task.yield() }
+        appearance.cancel()
+        f.access.allowed = false
+        shelf.accessLost()
+        f.gate.endExclusiveWrite(lease)
+        await appearance.value
+        XCTAssertNil(shelf.snapshot)
+        XCTAssertNil(shelf.notice)
+        XCTAssertEqual(shelf.phase, .accessDenied)
+        f.access.allowed = true
+        await shelf.loadOnAppearance(accessAllowed: true)
+        XCTAssertTrue(shelf.canEdit)
+    }
+
+    func testMountedPantryShelfUpdatesAfterDinnerAndKeepsAnOpenRecountUntilDismissed() async throws {
+        let f = try await fixture()
+        let shelf = try XCTUnwrap(f.pickup.makePantryModel())
+        func amount() -> Rational? { shelf.snapshot?.lots.first { $0.id == f.lots[0] }?.count.quantity?.amount }
+        func waitForShelf(_ expected: Rational) async throws {
+            let deadline = ContinuousClock.now + .seconds(5)
+            while (!shelf.canEdit || amount() != expected) && ContinuousClock.now < deadline {
+                try await Task.sleep(for: .milliseconds(20))
+            }
+            XCTAssertEqual(amount(), expected)
+            XCTAssertTrue(shelf.canEdit)
+        }
+        let controller = UIHostingController(rootView: NavigationStack {
+            LivePantryHomeView(pickup: f.pickup, model: shelf, household: HouseholdModel(),
+                               holdsLoadedReview: { false }, initialSheet: .constant(nil))
+        })
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let window = UIWindow(windowScene: scene)
+        window.windowLevel = .normal - 1
+        window.rootViewController = controller
+        window.isHidden = false
+        defer { window.isHidden = true }
+
+        // The mounted production shelf does its normal appearance read. It stays
+        // mounted through the cook and undo, so a fresh appearance cannot mask a stale shelf.
+        try await waitForShelf(Rational(4))
+        _ = try await cookWithLunchAndDinner(f)
+        try await waitForShelf(Rational(3))
+
+        await shelf.prepare(lotID: f.lots[0], action: .someLeft)
+        let original = try XCTUnwrap(shelf.review?.command.id)
+        await f.editor.prepareUndo()
+        await f.editor.confirmUndo()
+        XCTAssertEqual(f.editor.notice, .undone)
+        XCTAssertEqual(shelf.review?.command.id, original)
+        XCTAssertEqual(amount(), try Rational(3))
+        shelf.cancelReview()
+        try await waitForShelf(Rational(4))
     }
 
     func testUsedSomeFromReviewedSubstitutePreservesChoiceAndOneHistoryRowThroughCorrectionAndUndo() async throws {

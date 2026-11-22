@@ -11,9 +11,14 @@ if(root && !mountPublicPage(root) && !mountChildInvitationPage(root)) {
   const token=consumeInvitation(window.location,window.history);
   const app=new WebApp(root,undefined,undefined,token);
   if(document.visibilityState==='hidden')app.suspendForHistory();else void app.start();
+  window.addEventListener('hashchange',()=>{
+    const replacement=consumeInvitation(window.location,window.history);
+    if(replacement!==null)app.openInvitation(replacement);
+  });
   window.setInterval(()=>app.checkExpiry(),1000);
   window.addEventListener('pagehide',()=>app.suspendForHistory());
   window.addEventListener('pageshow',event=>{if(event.persisted&&document.visibilityState==='visible')app.resumeWithFreshAuthority();});
+  window.addEventListener('offline',()=>app.concealOfflineInvitation());
   window.addEventListener('online',()=>void app.start());
   window.addEventListener('storage',event=>{if(event.key===browserSignOutKey&&event.newValue==='1')void app.start();});
   document.addEventListener('visibilitychange',()=>{

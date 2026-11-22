@@ -1,6 +1,34 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Recalculate": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Recalculate" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Recalcular" } }
+      }
+    },
+    "Set aside for this trip": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Set aside for this trip" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Descartada para esta compra" } }
+      }
+    },
+    "Keep both options": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Keep both options" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Conservar ambas opciones" } }
+      }
+    },
+    "Set aside an option": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Set aside an option" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Descartar una opción" } }
+      }
+    },
     "about %@": {
       "extractionState": "manual",
       "localizations": {
@@ -886,6 +914,13 @@
             "value": "Tamaño máximo de texto dinámico"
           }
         }
+      }
+    },
+    "Left over: %@ %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Left over: %@ %@" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Sobrante: %@ %@" } }
       }
     },
     "Left after the total need: %@ %@": {

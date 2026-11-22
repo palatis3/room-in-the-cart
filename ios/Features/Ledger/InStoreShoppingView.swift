@@ -93,8 +93,10 @@ struct GroceryCheckInset: View {
 }
 
 struct InStoreShoppingView: View {
+    private var dinnerPantry = ShoppingDinnerPantry()
     @ObservedObject var model: LedgerModel
     let shopID: UUID
+    let openSelectedList: (UUID) -> Void
     @Environment(\.shoppingListAuthorization) private var authorize
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -109,166 +111,217 @@ struct InStoreShoppingView: View {
         var id: Self { self }
     }
     @State private var destination: Destination?
-    @SceneStorage("inStoreScrollRow") private var savedRow = ""
+    @State private var choosingList = false
+    @SceneStorage("inStoreScrollRow") private var previousSavedRow = ""
+    @SceneStorage private var savedRow: String
     @State private var trackingAisle = false
     @State private var completedDetailRow: UUID?
     @State private var scrollToReturn = false
     @AccessibilityFocusState private var focus: Focus?
     @State private var pendingFocus: Focus?
 
+    init(model: LedgerModel, shopID: UUID, openSelectedList: @escaping (UUID) -> Void) {
+        self.model = model
+        self.shopID = shopID
+        self.openSelectedList = openSelectedList
+        _savedRow = SceneStorage(wrappedValue: "", "inStoreScrollRow-\(shopID)")
+    }
+
     var body: some View {
+        currentShopContent
+            .navigationTitle(typeSize.isAccessibilitySize ? shoppingText("In store") : shoppingText("Shop in store"))
+            .navigationBarTitleDisplayMode(typeSize.isAccessibilitySize ? .inline : .automatic)
+            .toolbar {
+                if model.shop?.id == shopID && authorize() {
+                    ToolbarItemGroup(placement: .topBarLeading) {
+                        Button { destination = .options } label: {
+                            Label(ledgerText("List options"), systemImage: "ellipsis.circle")
+                        }
+                        .accessibilityIdentifier("inStoreTripOptions")
+                        Button { destination = .find } label: {
+                            Label(tripText("Add a find"), systemImage: "plus")
+                        }
+                        .accessibilityIdentifier("tripAddFind")
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) { Button(ledgerText("Done")) { dismiss() } }
+            }
+            .modifier(InStoreDisplayPreference(trip: shopID, owner: displayOwner, available: model.shop?.id == shopID && authorize()))
+    }
+
+    private var currentShopContent: some View {
         Group {
             if let shop = model.shop, shop.id == shopID {
-                let groups = model.workspace.listLayout.groups(shop: shop)
-                let visible = groups.flatMap(\.lines).filter { available($0, shop: shop) }
-                let outstanding = groups.flatMap(\.lines).filter { shop.outcomeAtCurrentStop($0) != nil }
-                let picked = shop.inStorePickedLines
-                let exclusions = shop.listExclusions
-                let packages = shop.itemPackages
-                ScrollViewReader { reader in
-                    JournalList {
-                        if model.error != nil || model.hasPendingSave { LedgerSaveStatus(model: model) }
-                        if !shop.currentStop.name.isEmpty {
-                            Section { Label(shop.currentStop.name, systemImage: "storefront").font(.headline) }
+                shoppingList(in: shop)
+                    .sheet(item: $editingPrice) { line in
+                        NavigationStack { InStorePriceEditor(model: model, shop: shop, line: line) }
+                    }
+                    .sheet(item: $destination, onDismiss: {
+                        if let completedDetailRow {
+                            returnToRow(completedDetailRow)
+                            self.completedDetailRow = nil
                         }
-                        ForEach(groups) { group in
-                            let rows = group.lines.filter { available($0, shop: shop) }
-                            if !rows.isEmpty {
-                                Section(group.aisle.isEmpty ? shoppingText("To pick") : group.aisle) {
-                                    ForEach(rows) { line in
-                                        outstandingRow(line, shop: shop, visible: visible, exclusions: exclusions[line.id],
-                                                       packages: packages[line.id] ?? [])
-                                    }
-                                }
-                            }
-                        }
-                        if visible.isEmpty {
-                            Text(groups.allSatisfy { $0.lines.isEmpty } ? shoppingText("No items left to pick.") : tripText("Nothing else to pick at this stop."))
-                        }
-                        if !outstanding.isEmpty {
-                            Section(tripText("Still needed")) {
-                                ForEach(outstanding) { line in
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Button { destination = .details(line.id) } label: {
-                                            VStack(alignment: .leading) {
-                                                Text(line.name).font(.headline)
-                                                let measure = TripMeasure(shop, line: line, packages: packages[line.id] ?? [])
-                                                if let quantity = shop.tripAmountLabel(line, measure: measure) { Text(quantity) }
-                                                Text(tripText(shop.isLeftForNextTrip(line) ? "Left for next time" : "Couldn’t find it at this stop"))
-                                                    .foregroundStyle(Theme.secondary)
-                                            }.frame(minHeight: 44)
-                                        }.accessibilityFocused($focus, equals: .line(line.id))
-                                        if line.tripUndo != nil {
-                                            Button(tripFormat("Undo for %@", line.name)) { undo(line, in: shop) }.frame(minHeight: 44)
-                                        }
-                                    }.buttonStyle(.borderless).id(Focus.line(line.id))
-                                        .background(TripRowPosition(row: line.id))
-                                }
-                            }
-                        }
-                        if !picked.isEmpty {
-                            Section(shoppingText("Picked items")) {
-                                ForEach(picked) { line in
-                                    pickedRow(line, in: shop, packages: packages[line.id] ?? [])
-                                }
-                            }
-                        }
-                        Section {
-                            Button { destination = .nextStore } label: { Label(tripText("Next store"), systemImage: "storefront") }
-                                .accessibilityIdentifier("tripNextStore")
-                        }.frame(minHeight: 44)
-                        if typeSize.isAccessibilitySize {
-                            Section { subtotalSummary(shop, last: picked.first).id(Focus.subtotal) }
+                    }) { value in
+                        NavigationStack {
+                            destinationContent(value, in: shop)
                         }
                     }
-                    .listStyle(.plain)
-                    .coordinateSpace(name: "shoppingAisles")
-                    .onAppear {
-                        if let id = restoredRow(), visible.contains(where: { $0.id == id }) || outstanding.contains(where: { $0.id == id }) {
-                            reader.scrollTo(Focus.line(id), anchor: .top)
-                        }
-                        Task { @MainActor in await Task.yield(); trackingAisle = true }
-                    }
-                    .onPreferenceChange(TripVisibleRows.self) { rows in
-                        guard trackingAisle, scene == .active, authorize(),
-                              let top = rows.filter({ $0.value.maxY > 0 }).min(by: { $0.value.minY < $1.value.minY })
-                        else { return }
-                        remember(top.key)
-                    }
-                    .disabled(model.saving)
-                    .safeAreaInset(edge: .bottom, spacing: 0) {
-                        if !typeSize.isAccessibilitySize {
-                            subtotalSummary(shop, last: picked.first)
-                                .padding(.horizontal).padding(.vertical, 6).background(Theme.surface)
-                                .overlay(alignment: .top) { Divider() }
-                        }
-                    }
-                    .onChange(of: pendingFocus) { _, target in
-                        guard let target else { return }
-                        if UIAccessibility.isVoiceOverRunning || scrollToReturn {
-                            switch target {
-                            case .line, .picked: reader.scrollTo(target, anchor: .center)
-                            case .subtotal:
-                                if typeSize.isAccessibilitySize { reader.scrollTo(Focus.subtotal, anchor: .top) }
-                            }
-                        }
-                        Task { @MainActor in
-                            await Task.yield()
-                            focus = target
-                            scrollToReturn = false
-                            pendingFocus = nil
-                        }
-                    }
-                }
-                .sheet(item: $editingPrice) { line in
-                    NavigationStack { InStorePriceEditor(model: model, shop: shop, line: line) }
-                }
-                .sheet(item: $destination, onDismiss: {
-                    if let completedDetailRow {
-                        returnToRow(completedDetailRow)
-                        self.completedDetailRow = nil
-                    }
-                }) { value in
-                    NavigationStack {
-                        switch value {
-                        case let .details(id):
-                            TripItemDetail(model: model, shopID: shopID, lineID: id, onSaved: { completedDetailRow = $0 })
-                                .toolbar { closeSheet }
-                        case .find:
-                            TripFindEntry(model: model, shop: shop, onSaved: { completedDetailRow = $0 }).toolbar { closeSheet }
-                        case .nextStore:
-                            TripNextStoreEntry(model: model, shopID: shopID).toolbar { closeSheet }
-                        case .options:
-                            List {
-                                NavigationLink(tripText("Preview list copy")) { TripHandoffEntry(model: model, shopID: shopID) }
-                                    .accessibilityIdentifier("tripShare.previewCopy")
-                                FamilyPermissionGuideLink(title: GuardianCopy.text("Child permissions")) { destination = nil }
-                                NavigationLink(pantryText("Buy this pack again")) { ShopPackLookupEntry(ledger: model, shopID: shopID) }
-                                PantryShelfPhotoLink()
-                                InStoreDisplayToggle(owner: displayOwner)
-                            }.workingSurface().navigationTitle(ledgerText("List options")).toolbar { closeSheet }
-                        }
-                    }
-                }
             }
-        }.navigationTitle(typeSize.isAccessibilitySize ? shoppingText("In store") : shoppingText("Shop in store"))
-        .navigationBarTitleDisplayMode(typeSize.isAccessibilitySize ? .inline : .automatic)
-        .toolbar {
-            if model.shop?.id == shopID && authorize() {
-                ToolbarItemGroup(placement: .topBarLeading) {
-                    Button { destination = .options } label: {
-                        Label(ledgerText("List options"), systemImage: "ellipsis.circle")
-                    }
-                    .accessibilityIdentifier("inStoreTripOptions")
-                    Button { destination = .find } label: {
-                        Label(tripText("Add a find"), systemImage: "plus")
-                    }
-                    .accessibilityIdentifier("tripAddFind")
-                }
-            }
-            ToolbarItem(placement: .confirmationAction) { Button(ledgerText("Done")) { dismiss() } }
         }
-        .modifier(InStoreDisplayPreference(trip: shopID, owner: displayOwner, available: model.shop?.id == shopID && authorize()))
+    }
+
+    private func shoppingList(in shop: ShoppingLedger) -> some View {
+        let dinner = dinnerPantry.status(in: shop, ledger: model)
+        let groups = model.workspace.listLayout.groups(shop: shop, excluding: dinner.covered)
+        let visible = groups.flatMap(\.lines).filter { available($0, shop: shop) }
+        let outstanding = groups.flatMap(\.lines).filter { shop.outcomeAtCurrentStop($0) != nil }
+        let picked = shop.inStorePickedLines
+        let exclusions = shop.listExclusions
+        let packages = shop.itemPackages
+        return ScrollViewReader { reader in
+            JournalList {
+                DinnerPantryReviewSection(shopID: shop.id, reviews: dinner.pending)
+                if model.error != nil || model.hasPendingSave { LedgerSaveStatus(model: model) }
+                listAndStop(shop)
+                ForEach(groups) { group in
+                    let rows = group.lines.filter { available($0, shop: shop) }
+                    if !rows.isEmpty {
+                        Section(group.aisle.isEmpty ? shoppingText("To pick") : group.aisle) {
+                            ForEach(rows) { line in
+                                outstandingRow(line, shop: shop, visible: visible, exclusions: exclusions[line.id],
+                                               packages: packages[line.id] ?? [])
+                            }
+                        }
+                    }
+                }
+                if visible.isEmpty {
+                    Text(groups.allSatisfy { $0.lines.isEmpty } ? shoppingText("No items left to pick.") : tripText("Nothing else to pick at this stop."))
+                }
+                if !outstanding.isEmpty {
+                    Section(tripText("Still needed")) {
+                        ForEach(outstanding) { line in
+                            stillNeededRow(line, in: shop, packages: packages[line.id] ?? [])
+                        }
+                    }
+                }
+                if !picked.isEmpty {
+                    Section(shoppingText("Picked items")) {
+                        ForEach(picked) { line in
+                            pickedRow(line, in: shop, packages: packages[line.id] ?? [])
+                        }
+                    }
+                }
+                Section {
+                    Button { destination = .nextStore } label: { Label(tripText("Next store"), systemImage: "storefront") }
+                        .accessibilityIdentifier("tripNextStore")
+                }.frame(minHeight: 44)
+                if typeSize.isAccessibilitySize {
+                    Section { subtotalSummary(shop, last: picked.first).id(Focus.subtotal) }
+                }
+            }
+            .listStyle(.plain)
+            .coordinateSpace(name: "shoppingAisles")
+            .onAppear {
+                if let id = restoredRow(), id != visible.first?.id,
+                   visible.contains(where: { $0.id == id }) || outstanding.contains(where: { $0.id == id }) {
+                    reader.scrollTo(Focus.line(id), anchor: .top)
+                }
+                Task { @MainActor in await Task.yield(); trackingAisle = true }
+            }
+            .onPreferenceChange(TripVisibleRows.self) { rows in
+                guard trackingAisle, scene == .active, authorize(),
+                      let top = rows.filter({ $0.value.maxY > 0 }).min(by: { $0.value.minY < $1.value.minY })
+                else { return }
+                remember(top.key)
+            }
+            .disabled(model.saving)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if !typeSize.isAccessibilitySize {
+                    subtotalSummary(shop, last: picked.first)
+                        .padding(.horizontal).padding(.vertical, 6).background(Theme.surface)
+                        .overlay(alignment: .top) { Divider() }
+                }
+            }
+            .onChange(of: pendingFocus) { _, target in
+                guard let target else { return }
+                if UIAccessibility.isVoiceOverRunning || scrollToReturn {
+                    switch target {
+                    case .line, .picked:
+                        // Keep an already visible grocery in place when a shopper undoes a pick.
+                        let anchor: UnitPoint? = UIAccessibility.isVoiceOverRunning ? .center : nil
+                        reader.scrollTo(target, anchor: anchor)
+                    case .subtotal:
+                        if typeSize.isAccessibilitySize { reader.scrollTo(Focus.subtotal, anchor: .top) }
+                    }
+                }
+                Task { @MainActor in
+                    await Task.yield()
+                    focus = target
+                    scrollToReturn = false
+                    pendingFocus = nil
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private func destinationContent(_ value: Destination, in shop: ShoppingLedger) -> some View {
+        switch value {
+        case let .details(id):
+            TripItemDetail(model: model, shopID: shopID, lineID: id, onSaved: { completedDetailRow = $0 })
+                .toolbar { closeSheet }
+        case .find:
+            TripFindEntry(model: model, shop: shop, onSaved: { completedDetailRow = $0 }).toolbar { closeSheet }
+        case .nextStore:
+            TripNextStoreEntry(model: model, shopID: shopID).toolbar { closeSheet }
+        case .options:
+            List {
+                NavigationLink(tripText("Preview list copy")) { TripHandoffEntry(model: model, shopID: shopID) }
+                    .accessibilityIdentifier("tripShare.previewCopy")
+                FamilyPermissionGuideLink(title: GuardianCopy.text("Child permissions")) { destination = nil }
+                NavigationLink(pantryText("Buy this pack again")) { ShopPackLookupEntry(ledger: model, shopID: shopID) }
+                PantryShelfPhotoLink()
+                InStoreDisplayToggle(owner: displayOwner)
+            }.workingSurface().navigationTitle(ledgerText("List options")).toolbar { closeSheet }
+        }
+    }
+
+    @ViewBuilder private func listAndStop(_ shop: ShoppingLedger) -> some View {
+        let others = model.workspace.shops.filter { $0.id != shop.id }
+        if !others.isEmpty {
+            Section {
+                Button { choosingList = true } label: {
+                    HStack {
+                        Text(tripFormat("Shopping list · %@", shop.title)).font(.headline)
+                        Image(systemName: "chevron.down").imageScale(.small).accessibilityHidden(true)
+                    }
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                    .contentShape(Rectangle())
+                }
+                .accessibilityHint(tripText("Open another shopping list"))
+                .accessibilityIdentifier("inStoreListPicker")
+                .disabled(model.saving || model.hasPendingSave)
+                .confirmationDialog(tripText("Open another shopping list"), isPresented: $choosingList, titleVisibility: .visible) {
+                    ForEach(others, id: \.id) { item in
+                        Button(item.title) {
+                            Task {
+                                await model.selectShop(item.id, authorize: {
+                                    authorize() && model.shop?.id == shopID &&
+                                        model.workspace.shops.contains { $0.id == item.id }
+                                }, onSelected: { id in
+                                    if authorize() { openSelectedList(id) }
+                                })
+                            }
+                        }
+                    }
+                    Button(ledgerText("Cancel"), role: .cancel) {}
+                }
+                if !shop.currentStop.name.isEmpty, shop.currentStop.name != shop.title {
+                    Label(shop.currentStop.name, systemImage: "storefront").font(.headline)
+                }
+            }
+        } else if !shop.currentStop.name.isEmpty {
+            Section { Label(shop.currentStop.name, systemImage: "storefront").font(.headline) }
+        }
     }
 
     private var closeSheet: some ToolbarContent {
@@ -279,6 +332,24 @@ struct InStoreShoppingView: View {
 
     private func available(_ line: ShoppingLine, shop: ShoppingLedger) -> Bool {
         shop.outcomeAtCurrentStop(line) == nil && line.eligibleForStop(named: shop.currentStop.name)
+    }
+
+    private func stillNeededRow(_ line: ShoppingLine, in shop: ShoppingLedger, packages: [BasketPackage]) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Button { destination = .details(line.id) } label: {
+                VStack(alignment: .leading) {
+                    Text(line.name).font(.headline)
+                    let measure = TripMeasure(shop, line: line, packages: packages)
+                    if let quantity = shop.tripAmountLabel(line, measure: measure) { Text(quantity) }
+                    Text(tripText(shop.isLeftForNextTrip(line) ? "Left for next time" : "Couldn’t find it at this stop"))
+                        .foregroundStyle(Theme.secondary)
+                }.frame(minHeight: 44)
+            }.accessibilityFocused($focus, equals: .line(line.id))
+            if line.tripUndo != nil {
+                Button(tripFormat("Undo for %@", line.name)) { undo(line, in: shop) }.frame(minHeight: 44)
+            }
+        }.buttonStyle(.borderless).id(Focus.line(line.id))
+            .background(TripRowPosition(row: line.id))
     }
 
     private func outstandingRow(_ line: ShoppingLine, shop: ShoppingLedger, visible: [ShoppingLine], exclusions: String?,
@@ -329,7 +400,7 @@ struct InStoreShoppingView: View {
     }
 
     private func restoredRow() -> UUID? {
-        let parts = savedRow.split(separator: "/").map(String.init)
+        let parts = (savedRow.isEmpty ? previousSavedRow : savedRow).split(separator: "/").map(String.init)
         guard authorize(), parts.count == 3, parts[0] == model.sourceWorkspaceID?.uuidString,
               parts[1] == shopID.uuidString else { return nil }
         return UUID(uuidString: parts[2])
@@ -368,7 +439,9 @@ struct InStoreShoppingView: View {
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(line.name).font(.headline).foregroundStyle(Theme.ink)
-                        if let picked = try? shop.pickedQuantity(forLineID: line.id) {
+                        if let pick = line.packagePick {
+                            Text(pick.packages.shoppingLabel).foregroundStyle(Theme.secondary)
+                        } else if let picked = try? shop.pickedQuantity(forLineID: line.id) {
                             let measure = TripMeasure(shop, line: line, packages: packages)
                             let label = measure.flatMap { measure in
                                 (try? picked.converted(to: measure.need.unit)).map { measure.display($0) }

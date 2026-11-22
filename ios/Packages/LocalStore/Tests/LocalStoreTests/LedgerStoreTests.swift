@@ -63,6 +63,61 @@ final class LedgerStoreTests: XCTestCase {
         catch { XCTAssertEqual(error as? LedgerStoreError, .erased) }
     }
 
+    func testQuickDraftScopesColdRestoreEraseExpiryAndExplicitAtomicAdd() async throws {
+        let actor = Data(repeating: 7, count: 32), otherActor = Data(repeating: 9, count: 32)
+        let list = UUID()
+        let initial = LedgerStore.quickGroceryDraftOwner(persona: actor, shopID: nil)
+        let selected = LedgerStore.quickGroceryDraftOwner(persona: actor, shopID: list)
+        let otherList = LedgerStore.quickGroceryDraftOwner(persona: actor, shopID: UUID())
+        let otherPerson = LedgerStore.quickGroceryDraftOwner(persona: otherActor, shopID: list)
+        let store = try LedgerStore(url: url)
+        let first = try await store.replaceFirstListDraft(owner: initial, expected: nil, baseRevision: 0, payload: Data("Oat".utf8))
+        let bulk = try await store.replaceFirstListDraft(owner: actor, expected: nil, baseRevision: 0, payload: Data("bulk review".utf8))
+        let partial = try await store.replaceFirstListDraft(owner: selected, expected: nil, baseRevision: 0, payload: Data("Car".utf8))
+        try await store.close()
+
+        let reopened = try LedgerStore(url: url)
+        let review = try await reopened.workspaceErasureBasis()
+        XCTAssertNil(review.head)
+        XCTAssertEqual(Set(review.draftTokens), [first.token, bulk.token, partial.token])
+        for (key, wording) in [(actor, "bulk review"), (initial, "Oat"), (selected, "Car")] {
+            let record = try await reopened.firstListDraft(owner: key)
+            XCTAssertEqual(record?.payload, Data(wording.utf8))
+        }
+        for key in [otherPerson, otherList] {
+            let record = try await reopened.firstListDraft(owner: key)
+            XCTAssertNil(record)
+        }
+        // Another window continues typing before the reviewed import is accepted.
+        let updated = try await reopened.replaceFirstListDraft(owner: selected, expected: partial, baseRevision: 0, payload: Data("Carrots".utf8))
+        let receipt = try await reopened.save(payload: Data("reviewed list".utf8), expectedRevision: 0,
+            operationID: bulk.token, savedAt: Date(), consuming: bulk, clearingQuickDraft: partial)
+        let replay = try await reopened.save(payload: receipt.payload, expectedRevision: 0, operationID: bulk.token,
+            savedAt: Date(), consuming: bulk, clearingQuickDraft: partial)
+        XCTAssertEqual(replay, receipt)
+        let fresh = try await reopened.firstListDraft(owner: selected), consumed = try await reopened.firstListDraft(owner: actor)
+        XCTAssertEqual(fresh?.version, updated)
+        XCTAssertNil(consumed)
+        do {
+            _ = try await reopened.save(payload: Data([2]), expectedRevision: 0, operationID: UUID(), savedAt: Date(), clearingQuickDraft: updated)
+            XCTFail("Stale Add must roll back its draft deletion")
+        } catch { XCTAssertEqual(error as? LedgerStoreError, .staleRevision(expected: 0, actual: 1)) }
+        let retained = try await reopened.firstListDraft(owner: selected)
+        XCTAssertEqual(retained?.version, updated)
+        let added = try await reopened.save(payload: Data("added carrots".utf8), expectedRevision: 1, operationID: UUID(), savedAt: Date(), clearingQuickDraft: updated)
+        let retry = try await reopened.save(payload: added.payload, expectedRevision: 1, operationID: added.operationID, savedAt: Date(), clearingQuickDraft: updated)
+        let cleared = try await reopened.firstListDraft(owner: selected)
+        XCTAssertNil(cleared)
+        XCTAssertEqual(added, retry)
+        let expired = try await reopened.firstListDraft(owner: initial, now: Date().addingTimeInterval(LedgerStore.firstListDraftLifetime + 1))
+        XCTAssertNil(expired)
+        let last = try await reopened.replaceFirstListDraft(owner: initial, expected: nil, baseRevision: 2, payload: Data("private".utf8))
+        _ = try await reopened.eraseWorkspace(workspaceID: reopened.workspaceID, expectedRevision: 2, expectedDraftTokens: [last.token], operationID: UUID(), at: Date())
+        let replacement = try LedgerStore(url: url)
+        let afterErasure = try await replacement.firstListDraft(owner: initial)
+        XCTAssertNil(afterErasure)
+    }
+
     func testSavedOperationLookupAfterRestartReturnsHistoricalBytesWithoutChangingCurrentHead() async throws {
         let store = try LedgerStore(url: url), operation = UUID()
         let original = try await store.save(payload: Data([1, 4]), expectedRevision: 0,

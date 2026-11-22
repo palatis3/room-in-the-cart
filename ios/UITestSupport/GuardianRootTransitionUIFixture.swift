@@ -28,6 +28,7 @@ private final class GuardianRootFixtureProtocol: URLProtocol {
             body = ["available":false,"reason":"provider_configuration_required"]
             status = 200
         } else if ProcessInfo.processInfo.arguments.contains("--household-first-sign-in") {
+            let adultInvite = ProcessInfo.processInfo.arguments.contains("--adult-invitation-preview")
             let user = ["id":"fixture-first-shopper","email_confirmed_at":"date"]
             let home = "10000000-0000-4000-8000-000000000001"
             switch url.path {
@@ -45,9 +46,13 @@ private final class GuardianRootFixtureProtocol: URLProtocol {
                 }
                 let memberships = [["householdId":home,"label":"Fixture family","role":"shopper"]]
                 body = ["workspaces":ProcessInfo.processInfo.arguments.contains("--no-existing-households") ? [] : memberships]
+            case "/v1/invites/preview" where adultInvite:
+                body = ["householdLabel": "Fixture family", "role": "adult_contributor"]
+            case "/v1/invites/redeem" where adultInvite:
+                body = ["householdId": home, "memberId": "fixture-shopper", "role": "contributor"]
             case "/v1/households/\(home)/devices": body = ["deviceId":"fixture-device","deviceToken":"fictional-device-access"]
             case "/v1/households/\(home)/bootstrap":
-                body = ["household":["id":home,"label":"Fixture family"],"memberId":"fixture-shopper","role":"shopper",
+                body = ["household":["id":home,"label":"Fixture family"],"memberId":"fixture-shopper","role":adultInvite ? "contributor" : "shopper",
                     "enrolled":true,"queueConsent":false,"capabilities":[]]
             case "/v1/households/\(home)/guardian/notice":
                 body = ["available":false, "reason":"provider_configuration_required"]

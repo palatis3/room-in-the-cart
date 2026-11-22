@@ -53,6 +53,14 @@ extension PantryErasureObserver {
         guard migration == nil, exclusiveWrite == nil, writes.isEmpty else { throw Failure.busy }
         let id = UUID(); exclusiveWrite = id; return id
     }
+    /// A shelf read may share a store with a finishing dinner or another shelf.
+    /// Take the lease in the same turn that observes it free, even when several readers wake together.
+    func beginShelfRead() async throws -> UUID {
+        while true {
+            do { return try beginExclusiveWrite() }
+            catch Failure.busy { await waitUntilIdle() }
+        }
+    }
     func endExclusiveWrite(_ id: UUID) { if exclusiveWrite == id { exclusiveWrite = nil; resumeIdleWaiters() } }
     func beginMigration() throws -> UUID {
         guard migration == nil, exclusiveWrite == nil, writes.isEmpty else { throw Failure.busy }

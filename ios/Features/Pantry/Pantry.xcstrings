@@ -1,6 +1,56 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Printed quantity unknown. If you put this food away, enter how much you received.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Printed quantity unknown. If you put this food away, enter how much you received."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se desconoce la cantidad impresa. Si guardaste este alimento, indica la cantidad que recibiste."
+          }
+        }
+      }
+    },
+    "Printed line total unknown. Leave the paid total blank unless you know what you paid.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Printed line total unknown. Leave the paid total blank unless you know what you paid."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se desconoce el total impreso de la línea. Deja el importe pagado en blanco si no sabes cuánto pagaste."
+          }
+        }
+      }
+    },
+    "Hide keyboard": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide keyboard"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ocultar teclado"
+          }
+        }
+      }
+    },
     "I have about half a bottle of ketchup left": {
       "localizations": {
         "en": {
@@ -13,6 +63,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Me queda como media botella de kétchup"
+          }
+        }
+      }
+    },
+    "Type here": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type here"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe aquí"
           }
         }
       }
@@ -262,6 +328,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Guarda en este iPhone un precio del estante, una cotización al pagar o el importe que pagaste."
+          }
+        }
+      }
+    },
+    "Original delivery day unknown · recorded %@ (UTC)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original delivery day unknown · recorded %@ (UTC)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se desconoce el día original de entrega · fecha registrada: %@ (UTC)"
+          }
+        }
+      }
+    },
+    "Original purchase day unknown · recorded %@ (UTC)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original purchase day unknown · recorded %@ (UTC)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se desconoce el día original de compra · fecha registrada: %@ (UTC)"
           }
         }
       }
@@ -1427,6 +1527,171 @@
         }
       }
     },
+    "Date or reminder": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date or reminder"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fecha o recordatorio"
+          }
+        }
+      }
+    },
+    "Check the barcode digits and format. You can still save the food and find it by name.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the barcode digits and format. You can still save the food and find it by name."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa los dígitos y el formato del código de barras. Puedes guardar el alimento y buscarlo por su nombre."
+          }
+        }
+      }
+    },
+    "These digits are kept as entered. Find this batch by food name.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These digits are kept as entered. Find this batch by food name."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los dígitos se guardan tal como los escribiste. Busca este lote por el nombre del alimento."
+          }
+        }
+      }
+    },
+    "Check the barcode digits and format, or search for the food by name.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the barcode digits and format, or search for the food by name."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa los dígitos y el formato del código de barras o busca el alimento por su nombre."
+          }
+        }
+      }
+    },
+    "Enter the retailer for a saved barcode match, or search by food name.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the retailer for a saved barcode match, or search by food name."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indica la tienda asociada al código guardado o busca el alimento por su nombre."
+          }
+        }
+      }
+    },
+    "Check the barcode digits and format on the package, then try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the barcode digits and format on the package, then try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa los dígitos y el formato del código de barras en el paquete y vuelve a intentarlo."
+          }
+        }
+      }
+    },
+    "Batches with this barcode": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Batches with this barcode"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lotes con este código de barras"
+          }
+        }
+      }
+    },
+    "Open Scan products to finish your pending pack save first.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Scan products to finish your pending pack save first."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre Escanear productos para terminar de guardar los paquetes pendientes."
+          }
+        }
+      }
+    },
+    "Remembering saves the barcode, name and pack size. Review the pantry count separately to add food.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remembering saves the barcode, name and pack size. Review the pantry count separately to add food."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al recordar el paquete se guardan el código de barras, el nombre y el tamaño. Para añadir alimentos, revisa el recuento de la despensa por separado."
+          }
+        }
+      }
+    },
+    "Review this package": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review this package"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar este paquete"
+          }
+        }
+      }
+    },
     "Remember this exact pack": {
       "localizations": {
         "en": {
@@ -1891,6 +2156,22 @@
         }
       }
     },
+    "Filter by location": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter by location"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filtrar por lugar"
+          }
+        }
+      }
+    },
     "All locations": {
       "localizations": {
         "en": {
@@ -1960,13 +2241,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Private receipt draft"
+            "value": "Private draft"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Borrador privado del recibo"
+            "value": "Borrador privado"
           }
         }
       }
@@ -6702,13 +6983,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Read a receipt file"
+            "value": "Open receipt file"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Leer un archivo de recibo"
+            "value": "Abrir archivo"
           }
         }
       }
@@ -6724,7 +7005,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Seleccionar líneas del recibo"
+            "value": "Líneas del recibo"
           }
         }
       }
@@ -11000,23 +11281,6 @@
         }
       }
     },
-    "Some printed fields are unclear. Review them or leave the price unknown.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Some printed fields are unclear. Review them or leave the price unknown."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Algunos datos impresos no están claros. Revísalos o deja el precio sin especificar."
-          }
-        }
-      }
-    },
     "I received the printed quantity": {
       "extractionState": "manual",
       "localizations": {
@@ -11823,18 +12087,18 @@
         }
       }
     },
-    "Edit your words and try again. Include the food and what you used, what remains, or the date you want to check.": {
+    "Nothing changed. Try one instruction, like “I used two eggs.”": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Edit your words and try again. Include the food and what you used, what remains, or the date you want to check."
+            "value": "Nothing changed. Try one instruction, like “I used two eggs.”"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Modifica el texto y vuelve a intentarlo. Indica el alimento y cuánto usaste, cuánto queda o qué fecha quieres consultar."
+            "value": "La despensa sigue igual. Prueba con una instrucción, por ejemplo: «Usé dos huevos»."
           }
         }
       }
@@ -14818,6 +15082,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Usé un poco · %@"
+          }
+        }
+      }
+    },
+    "Saved remaining estimate for %@: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved remaining estimate for %1$@: %2$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estimación guardada de lo que queda de %1$@: %2$@"
           }
         }
       }

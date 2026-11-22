@@ -19,7 +19,7 @@ const setup = async (api,language='en',outbox=new Outbox(new IDBFactory())) => {
 const click=(root,label)=>{const b=[...root.querySelectorAll('button')].find(b=>b.textContent===label);assert.ok(b,`button ${label}`);b.click();};
 const type=(dom,id,value)=>{const input=dom.window.document.getElementById(id);assert.ok(input,id);input.value=value;input.dispatchEvent(new dom.window.Event('input',{bubbles:true}));};
 const submit=(root,dom)=>root.querySelector('form').dispatchEvent(new dom.window.Event('submit',{cancelable:true,bubbles:true}));
-const fakeAPI=(overrides={})=>({authState:async()=>({available:true,authenticated:true,csrf:'csrf-test'}),session:async()=>session(),requests:async()=>[],receivedProposals:async()=>({proposals:[],nextCursor:null}),command:async()=>{},logout:async()=>{},...overrides});
+const fakeAPI=(overrides={})=>({previewInvite:async()=>({householdLabel:'Inviting household',role:'adult_contributor'}),authState:async()=>({available:true,authenticated:true,csrf:'csrf-test'}),session:async()=>session(),requests:async()=>[],receivedProposals:async()=>({proposals:[],nextCursor:null}),command:async()=>{},logout:async()=>{},...overrides});
 
 test('only a generation and its live expiry authorize storage in a decoded session',async()=>{
  const base={...session(),queueConsent:false,capabilities:['own_requests','request_queue_permission']};
@@ -332,6 +332,8 @@ test('explicitly consented disconnected request is durably queued, never labeled
  const consent=root.querySelector('input[type=checkbox]');consent.checked=true;consent.dispatchEvent(new dom.window.Event('change'));
  type(dom,'item','Rice');submit(root,dom);submit(root,dom);await waitForIdle(root);
  assert.match(root.textContent,/Saved on this browser. Receipt unconfirmed./);assert.doesNotMatch(root.textContent,/Received by the shopper/);
+ const copy = [...root.querySelectorAll('form button')].find(button => button.textContent === 'Copy your text');
+ assert.ok(copy.closest('[hidden]'));
  app.suspendForHistory();
  assert.doesNotMatch(root.textContent,/Saved on this browser. Receipt unconfirmed.|Rice|Family A/);
  app.resumeFromHistory();await waitForIdle(root);
@@ -478,6 +480,45 @@ test('authorized Refresh clears an old mutation access denial without discarding
   if(storageClearFails)assert.match(root.textContent,/Access has ended.*Clear site data/);
   else assert.doesNotMatch(root.textContent,/Access has ended/,'Successful authenticated refresh must remove the stale denial');
   assert.equal(commands,0);
+ }
+});
+
+test('an unsent request explains its lifetime and copies only explicitly in edit and review', async t => {
+ for (const [language, copy, hint] of [
+  ['en', 'Copy your text', 'A new or reloaded page starts blank.'],
+  ['es', 'Copiar tu texto', 'Si la recargas o abres otra, el formulario estará vacío.']
+ ]) {
+  const writes = [], sends = [];
+  const api = fakeAPI({command: async (_, command) => { sends.push(command); }});
+  const outbox = new Outbox(new IDBFactory());
+  const {root, dom} = await setup(api, language, outbox);
+  t.after(() => dom.window.close());
+  Object.defineProperty(dom.window.navigator, 'clipboard', {value: {writeText: async text => { writes.push(text); }}});
+  const copyOptions = () => [...root.querySelectorAll('form button')].find(button => button.textContent === copy).parentElement;
+  assert.ok(copyOptions().hidden);
+  type(dom, 'item', 'Rolled oats');
+  assert.equal(copyOptions().hidden, false);
+  assert.ok(copyOptions().textContent.includes(hint));
+  type(dom, 'amount', '400 g');
+  assert.deepEqual(writes, []);
+  click(root, copy); await waitForIdle(root);
+  assert.deepEqual(writes, ['Rolled oats\n400 g']);
+  type(dom, 'amount', '500 g');
+  submit(root, dom);
+  assert.equal(copyOptions().hidden, false);
+  assert.ok(copyOptions().textContent.includes(hint));
+  assert.equal(writes.length, 1);
+  click(root, copy); await waitForIdle(root);
+  assert.deepEqual(writes, ['Rolled oats\n400 g', 'Rolled oats\n500 g']);
+  dom.window.navigator.clipboard.writeText = async () => { throw new Error('Clipboard unavailable'); };
+  click(root, copy); await waitForIdle(root);
+  assert.match(root.querySelector('[role=status]').textContent, language === 'en' ? /copy them manually/ : /cópialos manualmente/);
+  assert.deepEqual(sends, []);
+  assert.deepEqual(await outbox.list(scopeFor(session())), []);
+  const fresh = await setup(api, language, outbox);
+  t.after(() => fresh.dom.window.close());
+  assert.equal(fresh.root.querySelector('#item').value, '');
+  assert.equal(fresh.root.querySelector('#amount').value, '');
  }
 });
 
@@ -749,7 +790,7 @@ test('denying access to indexedDB itself still lets an invite open and a contrib
  const token=consumeInvitation(dom.window.location,dom.window.history);
  const app=new WebApp(root,api,undefined,token);
  await app.start();assert.equal(dom.window.location.hash,'');
- root.querySelector('#adult-attestation').click();submit(root,dom);await waitForIdle(root);
+ root.querySelector('#adult-attestation').click();await waitForIdle(root);submit(root,dom);await waitForIdle(root);
  assert.match(root.textContent,/Ask the shopper/);assert.match(root.textContent,/pending requests could not be opened/);
  root.querySelector('input[type=checkbox]').click();
  type(dom,'item','Rolled oats');submit(root,dom);submit(root,dom);await waitForIdle(root);
@@ -855,6 +896,7 @@ test('uncertain memory retry cannot cross identities or silently make another op
  let current=session(),sent=[];
  const {root,dom}=await setup(fakeAPI({session:async()=>current,requests:async()=>[own()],command:async(s,c)=>{sent.push(c);throw new ApiError('network',0);}}));
  type(dom,'item','Private original');submit(root,dom);submit(root,dom);await waitForIdle(root);
+ assert.doesNotMatch(root.querySelector('form').textContent, /This draft stays on this page/);
  click(root,'Edit');assert.match(root.textContent,/Private original/);assert.equal(root.querySelector('#item'),null);
  current={...session(),memberId:'other-member'};submit(root,dom);await waitForIdle(root);
  assert.equal(sent.length,1);assert.doesNotMatch(root.textContent,/Private original|No-salt frijoles/);
@@ -1137,15 +1179,16 @@ test('unknown and adult routes do not fetch or display household data',async()=>
 });
 
 test('invitation requires explicit adult review and validates the redemption receipt',async()=>{
+ const reviewedOffer={householdLabel:'Inviting household',role:'adult_contributor'};
  const calls=[];const api=new API(async(path,options)=>{calls.push({path,options});return new Response(JSON.stringify({householdId:'household-b',memberId:'member-b',role:'contributor'}),{status:200});});
  await assert.rejects(api.redeem('invite-secret','csrf-test',{adultAttestation:false}),e=>e.status===422);assert.equal(calls.length,0);
- assert.deepEqual(await api.redeem('invite-secret','csrf-test',{adultAttestation:true,alias:'Mia',defaultAliasLanguage:'es'}),{householdId:'household-b',memberId:'member-b',role:'contributor'});
- assert.deepEqual(JSON.parse(calls[0].options.body),{token:'invite-secret',intent:'join',adultAttestation:true,alias:'Mia'});
- await api.redeem('invite-secret','csrf-test',{adultAttestation:true,alias:'  ',defaultAliasLanguage:'es'});
- assert.deepEqual(JSON.parse(calls[1].options.body),{token:'invite-secret',intent:'join',adultAttestation:true});
+ assert.deepEqual(await api.redeem('invite-secret','csrf-test',{reviewedOffer,adultAttestation:true,alias:'Mia',defaultAliasLanguage:'es'}),{householdId:'household-b',memberId:'member-b',role:'contributor'});
+ assert.deepEqual(JSON.parse(calls[0].options.body),{reviewedOffer,token:'invite-secret',intent:'join',adultAttestation:true,alias:'Mia'});
+ await api.redeem('invite-secret','csrf-test',{reviewedOffer,adultAttestation:true,alias:'  ',defaultAliasLanguage:'es'});
+ assert.deepEqual(JSON.parse(calls[1].options.body),{reviewedOffer,token:'invite-secret',intent:'join',adultAttestation:true});
  assert.equal(calls[1].options.headers['Accept-Language'],'es');
  const invalid=new API(async()=>new Response(JSON.stringify({ok:true}),{status:200}));
- await assert.rejects(invalid.redeem('invite-secret',undefined,{adultAttestation:true}),e=>e.code==='invalid_response');
+ await assert.rejects(invalid.redeem('invite-secret',undefined,{reviewedOffer,adultAttestation:true}),e=>e.code==='invalid_response');
 });
 
 test('session activation requires an authenticated response for the redeemed household',async()=>{
@@ -1160,14 +1203,14 @@ test('joined invitation retries session activation without redeeming a single-us
  let current=null,redeems=0,activations=0;
  const {root,dom}=await setup(fakeAPI({session:async()=>current,redeem:async()=>{redeems++;return {householdId:'household-a',memberId:'member-a',role:'contributor'};},activateSession:async()=>{activations++;if(activations===1)throw new ApiError('network',0);current=session();}}));
  type(dom,'invitation','single-use-secret');submit(root,dom);await waitForIdle(root);assert.equal(redeems,0);
- const adult=root.querySelector('#adult-attestation');adult.checked=true;adult.dispatchEvent(new dom.window.Event('change'));
+ const adult=root.querySelector('#adult-attestation');adult.checked=true;adult.dispatchEvent(new dom.window.Event('change'));await waitForIdle(root);
  submit(root,dom);await waitForIdle(root);assert.equal(redeems,1);assert.equal(activations,1);assert.doesNotMatch(root.textContent,/Ask the shopper/);
  submit(root,dom);await waitForIdle(root);assert.equal(redeems,1);assert.equal(activations,2);assert.match(root.textContent,/Ask the shopper/);
 });
 
 test('child enrollment unavailable is an explicit failure in Spanish',async()=>{
  const {root,dom}=await setup(fakeAPI({session:async()=>null,redeem:async()=>{throw new ApiError('consent_unavailable',503);}}),'es-US');
- type(dom,'invitation','invite-code');const adult=root.querySelector('#adult-attestation');adult.checked=true;adult.dispatchEvent(new dom.window.Event('change'));
+ type(dom,'invitation','invite-code');const adult=root.querySelector('#adult-attestation');adult.checked=true;adult.dispatchEvent(new dom.window.Event('change'));await waitForIdle(root);
  submit(root,dom);await waitForIdle(root);assert.match(root.textContent,/registro de menores aún no está disponible/);assert.doesNotMatch(root.textContent,/Pedir a quien hace la compra/);
 });
 
@@ -1191,7 +1234,7 @@ test('redeeming a helper link never opens a different most-recent grant',async()
  let current=null;
  const dom=new JSDOM('<div id="app"></div>',{url:'https://food.example/view'}),root=dom.window.document.getElementById('app');
  const app=new WebApp(root,fakeAPI({session:async()=>current,redeem:async()=>({householdId:'household-a',memberId:'member-a',role:'helper',grantId:'requested-grant'}),activateSession:async()=>{current={...session(),role:'helper',grantId:'wrong-grant'};},view:async()=>({grantId:'wrong-grant',shopId:'shop-a',shopLabel:'Different shop',revision:1,asOf:'2026-01-01T12:00:00Z',expiresAt:'2099-01-01T00:00:00Z',canPropose:false,instructions:[{item:'Different private ingredient',amount:'one',action:'Do not display'}]})}),new Outbox(new IDBFactory()),'secret');
- await app.start();const adult=root.querySelector('#adult-attestation');adult.checked=true;adult.dispatchEvent(new dom.window.Event('change'));
+ await app.start();const adult=root.querySelector('#adult-attestation');adult.checked=true;adult.dispatchEvent(new dom.window.Event('change'));await waitForIdle(root);
  submit(root,dom);await waitForIdle(root);assert.doesNotMatch(root.textContent,/Different shop|Different private ingredient/);assert.match(root.textContent,/information changed/);
 });
 
@@ -1208,7 +1251,7 @@ test('an enrolled adult accepting a cook invitation never reads another grant af
  });
  const token=consumeInvitation(dom.window.location,dom.window.history);
  await new WebApp(root,api,new Outbox(new IDBFactory()),token).start();
- type(dom,'invitation','fictional');root.querySelector('#adult-attestation').click();
+ type(dom,'invitation','fictional');root.querySelector('#adult-attestation').click();await waitForIdle(root);
  submit(root,dom);await waitForIdle(root);
  assert.equal(reads,0);assert.ok(root.querySelector('#adult-attestation'));assert.match(root.textContent,/information changed/);
  click(root,'Refresh');await waitForIdle(root);assert.equal(reads,0);assert.ok(root.querySelector('#adult-attestation'));
@@ -1767,3 +1810,114 @@ test('posting suspension keeps cook instructions and reopens an editable suggest
  assert.equal(root.querySelector('#correction').value,'Keep one portion');
  assert.doesNotMatch(root.textContent,/Receipt unconfirmed|Access has ended/);
 });
+
+for (const [language, edit, retry, refresh, unavailable] of [
+ ['en','Edit','Retry','Refresh','This edit is unavailable. Select Refresh to check Your requests before retrying.'],
+ ['es','Editar','Reintentar','Actualizar','No se puede editar esta solicitud ahora. Selecciona Actualizar para revisar Tus solicitudes antes de volver a intentarlo.']
+]) {
+ for (const mode of ['immediate', 'immediate with storage', 'queued retry']) {
+  test(`an unavailable request edit preserves the original retry in ${language} (${mode})`,async t=>{
+   const active={...session(),queueConsent:mode!=='immediate',canSetRequestQueue:true};
+   const outbox=new Outbox(new IDBFactory()), commands=[];
+   let row=own(), connected=true, accepted=false, reads=0;
+   const api=fakeAPI({
+    session:async()=>{if(!connected)throw new ApiError('network',0);return active;},
+    requests:async()=>{reads++;return [row];},
+    command:async(_,c)=>{
+     commands.push(structuredClone(c));
+     if(!accepted)throw new ApiError('unavailable',404);
+     row={...row,revision:2,originalItem:c.body.originalItem,ownQuantity:c.body.ownQuantity};
+     return row;
+    }
+   });
+   const {root,dom}=await setup(api,language,outbox);t.after(()=>dom.window.close());
+   click(root,edit);type(dom,'item','Rolled oats at Harbor Market');type(dom,'amount','400 g');
+   connected=mode!=='queued retry';submit(root,dom);submit(root,dom);await waitForIdle(root);
+   if(mode==='queued retry'){
+    assert.deepEqual(commands,[]);
+    connected=true;click(root,retry);await waitForIdle(root);
+   }
+   assert.equal(root.querySelector('[role=status]').textContent,unavailable);
+   assert.equal(root.querySelector('[data-request-id] h3').textContent,own().originalItem);
+   assert.equal(commands.length,1);assert.equal(commands[0].kind,'request.edit');
+   const original=commands[0], before=reads;
+   click(root,refresh);await waitForIdle(root);
+   assert.ok(reads>before);assert.deepEqual(commands,[original]);
+   assert.equal(root.querySelector('[role=status]').textContent,'');
+   accepted=true;
+   if(mode==='immediate'){
+    assert.match(root.querySelector('form').textContent,/Rolled oats at Harbor Market/);
+    assert.match(root.querySelector('form').textContent,/400 g/);
+    submit(root,dom);
+   }else{
+    const [saved]=await outbox.list(scopeFor(active));assert.deepEqual(saved.command,original);
+    const reopened=await setup(api,language,outbox);t.after(()=>reopened.dom.window.close());
+    click(reopened.root,retry);await waitForIdle(reopened.root);
+    assert.equal(reopened.root.querySelector('[data-request-id] h3').textContent,'Rolled oats at Harbor Market');
+    assert.deepEqual(await outbox.list(scopeFor(active)),[]);
+   }
+   await waitForIdle(root);
+   assert.deepEqual(commands,[original,original]);
+   assert.equal(row.requestId,own().requestId);assert.equal(row.ownQuantity,'400 g');
+  });
+ }
+}
+
+test('a mismatched invitation receipt cannot open a different role or a stray grant',async()=>{
+ const reviewedOffer={householdLabel:'Picnic house',role:'helper_read'};
+ for(const receipt of [
+   {role:'contributor'}, {role:'editor',grantId:'grant'}, {role:'helper'}
+ ]){
+   const api=new API(async()=>Response.json({householdId:'home',memberId:'member',...receipt}));
+   await assert.rejects(api.redeem('invite','csrf',{adultAttestation:true,reviewedOffer}),e=>e.code==='invalid_response');
+ }
+ const api=new API(async()=>Response.json({householdId:'home',memberId:'member',role:'contributor',grantId:'unreviewed'}));
+ await assert.rejects(api.redeem('invite','csrf',{adultAttestation:true,reviewedOffer:{...reviewedOffer,role:'adult_contributor'}}),e=>e.code==='invalid_response');
+});
+
+for(const language of ['en','es']){
+ test(`an ordinary invitation retries its original household when the join receipt names a different one (${language})`,async t=>{
+  const destination='a73adb10-b84d-402b-9619-06560281846b';
+  const otherHouse='b54acd22-b84d-402b-9619-06560281846b';
+  const offer={householdLabel:'Casa Rosa',role:'adult_contributor'};
+  const token=destination+'.'+'k'.repeat(43);
+  const dom=new JSDOM('<div id="app"></div>',{url:'https://food.example/invite?lang='+language+(language==='en'?'#token='+token:'&enterCode=1')});
+  t.after(()=>dom.window.close());
+  const root=dom.window.document.getElementById('app'),calls=[],attempts=[];
+  const joined={...session(),household:{id:destination,label:offer.householdLabel}};
+  let active=false;
+  const api=new API(async(path,options)=>{
+   calls.push([options.method,path]);
+   if(path==='/v1/invites/preview')return Response.json(offer);
+   if(path==='/v1/invites/redeem'){
+    attempts.push(JSON.parse(options.body));
+    return Response.json({householdId:attempts.length===1?otherHouse:destination.toUpperCase(),memberId:joined.memberId,role:'contributor'});
+   }
+   if(path==='/v1/session'){
+    if(options.method==='POST'){
+     assert.deepEqual(JSON.parse(options.body),{householdId:destination,scope:'own_requests'});
+     active=true;
+    }
+    return Response.json(active?joined:{authenticated:false});
+   }
+   if(path==='/v1/auth/session')return Response.json({authenticated:true,available:true,csrf:'identity'});
+   assert.equal(path,'/v1/households/'+destination+'/requests/mine');
+   return Response.json({requests:[],nextCursor:null});
+  });
+  const app=new WebApp(root,api,new Outbox(new IDBFactory()),consumeInvitation(dom.window.location,dom.window.history));
+  await app.start();
+  if(language==='es')type(dom,'invitation',token);
+  root.querySelector('#adult-attestation').click();await waitForIdle(root);
+  assert.equal(root.querySelector('#invitation-household').textContent,offer.householdLabel);
+  type(dom,'invite-alias','Mar');
+  const beforeJoin=calls.length;
+  submit(root,dom);await waitForIdle(root);
+  assert.deepEqual(calls.slice(beforeJoin),[['POST','/v1/invites/redeem']]);
+  assert.match(root.querySelector('[role=status]').textContent,language==='en'?/join could not be confirmed/:/No se pudo confirmar si te uniste/);
+  click(root,language==='en'?'Retry joining':'Volver a intentar unirme');await waitForIdle(root);
+  assert.deepEqual(attempts[0],{token,intent:'join',adultAttestation:true,reviewedOffer:offer,alias:'Mar'});
+  assert.deepEqual(attempts[1],attempts[0]);
+  assert.deepEqual(calls.slice(beforeJoin+1),[['POST','/v1/invites/redeem'],['POST','/v1/session'],['GET','/v1/session'],['GET','/v1/auth/session'],['GET','/v1/households/'+destination+'/requests/mine']]);
+  assert.match(root.querySelector('[role=status]').textContent,language==='en'?/You joined Casa Rosa/:/Te uniste a Casa Rosa/);
+ });
+}

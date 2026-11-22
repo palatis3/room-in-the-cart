@@ -950,11 +950,15 @@ public actor RecoveryRegistry {
 
 public enum ReadableArchive {
     public static func heading(_ record: ArchiveRecord, locale: Locale) -> String {
+        record.title + "\n" + provenance(record, locale: locale)
+    }
+
+    private static func provenance(_ record: ArchiveRecord, locale: Locale) -> String {
         let spanish = locale.language.languageCode?.identifier == "es"
         let saved = record.savedAtMilliseconds == 0
             ? (spanish ? "Fecha de guardado no indicada" : "Saved date not supplied")
             : (spanish ? "Guardado: " : "Saved: ") + Date(timeIntervalSince1970: Double(record.savedAtMilliseconds) / 1000).formatted(.iso8601)
-        return [record.title, (spanish ? "Fuente: " : "Source: ") + record.origin,
+        return [(spanish ? "Fuente: " : "Source: ") + record.origin,
                 (spanish ? "Revisión: " : "Revision: ") + record.revision, saved].joined(separator: "\n")
     }
 
@@ -964,7 +968,7 @@ public enum ReadableArchive {
                             }) -> String {
         let spanish = locale.language.languageCode?.identifier == "es"
         return records.map { record in
-            var lines = [heading(record, locale: locale)]
+            var lines = [owner ? heading(record, locale: locale) : record.title]
             if owner, record.kind == .recipe, let payload = record.nativePayload,
                let recipe = try? JSONDecoder().decode(ImportedRecipe.self, from: payload).validated() {
                 if !recipe.yieldText.isEmpty { lines.append((spanish ? "Rinde: " : "Yield: ") + recipe.yieldText) }
@@ -984,6 +988,7 @@ public enum ReadableArchive {
                 [line.label, quantityText(line), line.purpose, line.action, line.foodStatus].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
             }
             if owner, let bytes = record.nativePayload, let text = String(data: bytes, encoding: .utf8) { lines.append(text) }
+            if !owner { lines.append(provenance(record, locale: locale)) }
             return lines.joined(separator: "\n")
         }.joined(separator: "\n\n")
     }

@@ -95,11 +95,15 @@ struct VoicePantryRow {
     @Environment(\.guardianChildCoordinator) private var child
     @Environment(\.pantryDigestAccess) private var digestAccess
     @Environment(\.locale) private var locale
+    @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.scenePhase) private var scene
     @Environment(\.pantryVoicePrompt) private var pantryVoicePrompt
     @Environment(\.dismiss) private var dismiss
     @StateObject private var voice = PantryVoiceSession()
-    @FocusState private var editing: Bool
+    private enum Editor: Hashable { case entry, amount(Int), remaining(Int) }
+    @FocusState private var focusedEditor: Editor?
+    @State private var requestedAmount: Int?
+    private var editing: Bool { focusedEditor != nil }
     @State private var reviewAfterEditing = false
     @State private var remainingChoices: Int?
     @State private var identity: CapturePrivateIdentity?
@@ -129,6 +133,7 @@ struct VoicePantryRow {
     @State private var recordedUseIDs: Set<UUID> = []
     @State private var working = false
     @State private var message: String?
+    @AccessibilityFocusState private var entryFeedbackFocused: Bool
 
     private var currentIdentity: CapturePrivateIdentity? {
         let retainingPrompt = identity != nil && scene != .background && pantryVoicePrompt?.holdsPresentation() == true
@@ -163,6 +168,43 @@ struct VoicePantryRow {
     }
 
     var body: some View {
+        ScrollViewReader { scroll in
+            voiceForm
+                .task(id: token) {
+                    guard stage == .entry, startingLot == nil, message != nil else { return }
+                    await Task.yield()
+                    guard !Task.isCancelled else { return }
+                    scroll.scrollTo("pantry.entryFeedback", anchor: .top)
+                    entryFeedbackFocused = true
+                }
+                .task(id: requestedAmount) {
+                    guard let index = requestedAmount else { return }
+                    await Task.yield()
+                    guard !Task.isCancelled, requestedAmount == index, canFocusAmount(index) else { return }
+                    scroll.scrollTo(Editor.amount(index), anchor: .center)
+                    await Task.yield()
+                    guard !Task.isCancelled, requestedAmount == index, canFocusAmount(index) else { return }
+                    focusedEditor = .amount(index)
+                    requestedAmount = nil
+                }
+                .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidShowNotification)) { _ in
+                    if focusedEditor == .entry, stage == .entry, startingLot == nil {
+                        scroll.scrollTo("pantry.entryEditor", anchor: .bottom)
+                    } else if case .amount(let index) = focusedEditor, canFocusAmount(index) {
+                        scroll.scrollTo(Editor.amount(index), anchor: .bottom)
+                    }
+                }
+        }
+    }
+
+    private func canFocusAmount(_ index: Int) -> Bool {
+        authorized && model.canEdit && !working && stage == .choices && basis == model.snapshot?.state &&
+            rows.indices.contains(index) && rows[index].mode == .amount
+    }
+
+    private var largeTextEntryFocused: Bool { editing && typeSize.isAccessibilitySize }
+
+    private var voiceForm: some View {
         WorkingForm {
             if !boundScope {
                 Text(pantryText("Unlock the authorized private workspace to view pantry food."))
@@ -181,26 +223,43 @@ struct VoicePantryRow {
             } else {
                 if startingLot == nil && stage == .entry {
                     Section {
-                        Text(pantryText("What changed in your pantry?"))
-                            .marketJournalTitle()
-                        TextField(pantryText("What did you use, or what would you like to check?"),
-                                  text: Binding(get: { draft }, set: { text in
-                                      guard stage == .entry, draft != text else { return }
-                                      draft = text
-                                      resetReview()
-                                  }), axis: .vertical)
-                            .lineLimit(2...6)
+                        if !largeTextEntryFocused {
+                            Text(pantryText("What changed in your pantry?"))
+                                .marketJournalTitle()
+                        }
+                        if let message {
+                            Label(message, systemImage: "exclamationmark.circle")
+                                .fixedSize(horizontal: false, vertical: true)
+                                .accessibilityElement(children: .ignore)
+                                .accessibilityLabel(Text(message))
+                                .accessibilityAddTraits(.isStaticText)
+                                .accessibilityFocused($entryFeedbackFocused)
+                                .accessibilityIdentifier("pantry.voiceStatus")
+                                .id("pantry.entryFeedback")
+                        }
+                        let prompt = pantryText("What did you use, or what would you like to check?")
+                        let visiblePrompt = largeTextEntryFocused ? pantryText("Type here") : prompt
+                        TextField(prompt, text: Binding(get: { draft }, set: { text in
+                            guard stage == .entry, draft != text else { return }
+                            draft = text
+                            resetReview()
+                        }), prompt: Text(verbatim: visiblePrompt).foregroundColor(Theme.secondary), axis: .vertical)
+                            // Leave the entire native editor above the keyboard actions so
+                            // its internal scrolling can follow the actual insertion point.
+                            .lineLimit(2...(largeTextEntryFocused ? 2 : 6))
                             .padding(12)
                             .background(Theme.canvas, in: RoundedRectangle(cornerRadius: 10))
                             .overlay { RoundedRectangle(cornerRadius: 10).strokeBorder(Theme.controlEdge) }
-                            .focused($editing)
+                            .focused($focusedEditor, equals: .entry)
+                            .accessibilityLabel(prompt)
                             .accessibilityIdentifier("pantry.voiceText")
                             .disabled(working || !model.canEdit)
+                            .id("pantry.entryEditor")
                         if draft.isEmpty && !editing {
                             let example = pantryText("I have about half a bottle of ketchup left")
                             Button {
                                 draft = example
-                                editing = true
+                                focusedEditor = .entry
                             } label: {
                                 Label(pantryFormat("Try “%@”", example), systemImage: "text.quote")
                                     .multilineTextAlignment(.leading)
@@ -222,7 +281,7 @@ struct VoicePantryRow {
                         resetReview()
                     }
                     if !editing {
-                        reviewWordsButton.buttonStyle(PrimaryAction())
+                        reviewWordsButton().buttonStyle(PrimaryAction())
                     }
                 } else if let balanceFood {
                     balanceSection(balanceFood)
@@ -256,7 +315,7 @@ struct VoicePantryRow {
                         editedBasis = basis
                         editedRows = rows
                         resetReview()
-                        editing = true
+                        focusedEditor = .entry
                     } label: {
                         HStack(alignment: .firstTextBaseline, spacing: 10) {
                             Image(systemName: "text.quote").foregroundStyle(Theme.secondary)
@@ -276,7 +335,9 @@ struct VoicePantryRow {
                     .accessibilityValue(draft)
                     .accessibilityIdentifier("pantry.voiceTranscript")
                 }
-                if let message { Text(message).accessibilityIdentifier("pantry.voiceStatus") }
+                if let message, stage != .entry || startingLot != nil {
+                    Text(message).accessibilityIdentifier("pantry.voiceStatus")
+                }
                 if working { ProgressView(pantryText("Working…")) }
             }
         }
@@ -295,15 +356,18 @@ struct VoicePantryRow {
         .navigationTitle(pantryText(stage == .review ? "Review pantry changes" : (startingLot == nil ? "Talk or type" : "Record use")))
         .toolbar(.hidden, for: .tabBar)
         .privacySensitive()
-        .keyboardDoneAction(visible: editing && stage != .entry, title: pantryText("Done"), identifier: "pantry.voiceKeyboardDone") { editing = false }
+        .keyboardDoneAction(visible: editing && stage != .entry, title: pantryText("Done"), identifier: "pantry.voiceKeyboardDone") { focusedEditor = nil }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if editing, stage == .entry {
                 HStack(spacing: 12) {
-                    Button(pantryText("Done")) { editing = false }
-                        .frame(minHeight: 44)
+                    Button { focusedEditor = nil } label: {
+                        Image(systemName: "keyboard.chevron.compact.down")
+                            .frame(minWidth: 44, minHeight: 44)
+                    }
+                        .accessibilityLabel(pantryText("Hide keyboard"))
                         .accessibilityIdentifier("pantry.voiceKeyboardDone")
                     Spacer(minLength: 0)
-                    reviewWordsButton.buttonStyle(PrimaryAction())
+                    reviewWordsButton(compact: true).buttonStyle(PrimaryAction())
                 }
                 .padding(.horizontal).background(.bar)
             }
@@ -313,6 +377,10 @@ struct VoicePantryRow {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(pantryText("Cancel")) { erase(); dismiss() }.disabled(working)
                         .accessibilityIdentifier("pantry.voiceCancel")
+                }
+            } else {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(pantryText("Done")) { dismiss() }
                 }
             }
         }
@@ -349,20 +417,22 @@ struct VoicePantryRow {
         }
     }
 
-    private var reviewWordsButton: some View {
-        Button(pantryText("Review my words")) {
+    private func reviewWordsButton(compact: Bool = false) -> some View {
+        Button(pantryText(compact ? "Review" : "Review my words")) {
             if editing {
                 reviewAfterEditing = true
-                editing = false
+                focusedEditor = nil
             } else {
                 parse()
             }
         }
         .disabled(!model.canEdit || draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        .accessibilityLabel(pantryText("Review my words"))
         .accessibilityIdentifier("pantry.voiceReview")
     }
 
     private func resetReview() {
+        requestedAmount = nil
         remainingChoices = nil
         closeRemaining()
         token = UUID(); basis = nil; rows = []; review = nil; dateOnly = false
@@ -373,13 +443,13 @@ struct VoicePantryRow {
     private func erase() {
         reviewAfterEditing = false
         voice.cancel()
-        draft = ""; resetReview(); editedRows = []; editedBasis = nil; saved = nil; savedRevision = nil; identity = nil; generation = nil; editing = false
+        draft = ""; resetReview(); editedRows = []; editedBasis = nil; saved = nil; savedRevision = nil; identity = nil; generation = nil; focusedEditor = nil
     }
 
     private func parse() {
         guard authorized, model.canEdit, let snapshot = model.snapshot else { return }
         voice.cancel()
-        editing = false; resetReview()
+        focusedEditor = nil; resetReview()
         switch PantryVoiceParser.parse(draft, localeIdentifier: locale.identifier) {
         case .consume(let items):
             rows = items.map(VoicePantryRow.consumption)
@@ -394,7 +464,7 @@ struct VoicePantryRow {
         case .dateQuery(let food):
             dateOnly = true; rows = [.init(food: food, original: draft, mode: .skip)]
         case .needsReview:
-            message = pantryText("Edit your words and try again. Include the food and what you used, what remains, or the date you want to check.")
+            message = pantryText("Nothing changed. Try one instruction, like “I used two eggs.”")
             return
         }
         for index in rows.indices where !rows[index].food.isEmpty {
@@ -451,6 +521,7 @@ struct VoicePantryRow {
 
     private func change(_ index: Int, _ update: (inout VoicePantryRow) -> Void) {
         guard authorized, !working, rows.indices.contains(index) else { return }
+        requestedAmount = nil
         closeRemaining()
         update(&rows[index]); dateEvidence = nil; review = nil; message = nil; token = UUID()
     }
@@ -512,16 +583,29 @@ struct VoicePantryRow {
         if row.mode == .amount {
             WorkingField(pantryText("Amount used")) {
                 TextField(pantryText("Amount used"), text: Binding(get: { row.amount }, set: { text in change(index) { $0.amount = text } }))
-                    .focused($editing).accessibilityIdentifier("pantry.voiceAmount.\(index)")
-            }
-            Menu {
-                ForEach(UnitOfMeasure.allCases.filter { $0.dimension == lot?.unit.dimension }, id: \.self) { unit in
+                    .focused($focusedEditor, equals: .amount(index)).accessibilityIdentifier("pantry.voiceAmount.\(index)")
+            }.id(Editor.amount(index))
+            let unitTitle = pantryText("Unit")
+            let unitValue = row.unit.map { pantryUnit($0) } ?? pantryText("Choose a unit")
+            if startingLot != nil, lot?.unit == .count, row.unit == .count {
+                if typeSize.isAccessibilitySize {
+                    reviewAmount(unitTitle, value: unitValue)
+                        .accessibilityElement(children: .combine)
+                } else {
+                    LabeledContent(unitTitle, value: unitValue)
+                }
+            } else {
+                let options = ForEach(UnitOfMeasure.allCases.filter { $0.dimension == lot?.unit.dimension }, id: \.self) { unit in
                     Button(pantryUnit(unit)) { change(index) { $0.unit = unit } }
                 }
-            } label: {
-                LabeledContent(pantryText("Unit"), value: row.unit.map { pantryUnit($0) } ?? pantryText("Choose a unit"))
+                if typeSize.isAccessibilitySize {
+                    journalStackedMenu(unitTitle, value: unitValue, id: "pantry.voiceUnit.\(index)") { options }
+                        .disabled(lot == nil)
+                } else {
+                    Menu { options } label: { LabeledContent(unitTitle, value: unitValue) }
+                        .disabled(lot == nil).accessibilityIdentifier("pantry.voiceUnit.\(index)")
+                }
             }
-            .disabled(lot == nil).accessibilityIdentifier("pantry.voiceUnit.\(index)")
         } else if row.mode == .remaining && row.estimate.isEmpty {
             Text(pantryText("How much is left?")).font(.title3.weight(.semibold)).accessibilityAddTraits(.isHeader)
         } else {
@@ -596,7 +680,7 @@ struct VoicePantryRow {
         if let reply = remainingReply, reply.rowIndex == index, currentReply(reply) {
             TextField(pantryText("How much is left in this batch?"),
                       text: Binding(get: { remainingReply?.text ?? "" }, set: { updateRemaining($0, reply: reply) }))
-                .focused($editing)
+                .focused($focusedEditor, equals: .remaining(index))
                 .accessibilityIdentifier("pantry.voiceRemainingText.\(index)")
             if let clarification = reply.clarification { Text(clarification) }
             Button(pantryText("Use this estimate")) { applyRemaining(reply) }
@@ -614,7 +698,12 @@ struct VoicePantryRow {
         }
         if row.mode != .amount {
             Button {
-                change(index) { $0.mode = .amount; $0.reportsUse = true }
+                change(index) {
+                    $0.mode = .amount
+                    $0.reportsUse = true
+                    if startingLot != nil, lot?.unit == .count { $0.unit = .count }
+                }
+                if canFocusAmount(index) { requestedAmount = index }
             } label: {
                 Label(pantryText("Enter amount used"), systemImage: "number")
                     .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
@@ -654,7 +743,7 @@ struct VoicePantryRow {
             remainingReply?.clarification = pantryText("If you used the whole batch, choose Used it all.")
             return
         }
-        editing = false
+        focusedEditor = nil
         change(reply.rowIndex) { $0.applyRemaining(result) }
     }
 
@@ -675,7 +764,7 @@ struct VoicePantryRow {
 
     private func prepare(confirmUse: Bool = false) async {
         guard readyToReview, let basis else { return }
-        editing = false
+        focusedEditor = nil
         let selections = rows.compactMap(\.selection)
         guard !selections.isEmpty else {
             message = pantryText("No pantry changes selected."); return
@@ -704,17 +793,24 @@ struct VoicePantryRow {
                 VStack(alignment: .leading, spacing: 12) {
                     batchHeading(line.lot, includeCount: false)
                     VStack(alignment: .leading, spacing: 4) {
-                        Label(pantryText("After this change"), systemImage: "arrow.right")
-                            .font(.subheadline.weight(.medium))
+                        Group {
+                            if typeSize.isAccessibilitySize {
+                                Text(pantryText("After this change"))
+                                    .fixedSize(horizontal: false, vertical: true)
+                            } else {
+                                Label(pantryText("After this change"), systemImage: "arrow.right")
+                            }
+                        }
+                        .font(.subheadline.weight(.medium))
                         Text(pantryCount(line.after, estimate: use?.remainingWording)).font(.title3.weight(.semibold))
                     }
                     .foregroundStyle(Theme.onSelection)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(12).background(Theme.selection, in: RoundedRectangle(cornerRadius: 12))
-                    LabeledContent(pantryText("Previously recorded"), value: pantryCount(line.before, estimate: line.lot.countWording))
-                        .font(.subheadline).foregroundStyle(Theme.secondary)
+                    reviewAmount(pantryText("Previously recorded"), value: pantryCount(line.before, estimate: line.lot.countWording))
+                        .foregroundStyle(Theme.secondary)
                     if let used = line.used {
-                        LabeledContent(pantryText("Amount used"), value: pantryQuantity(used)).font(.subheadline)
+                        reviewAmount(pantryText("Amount used"), value: pantryQuantity(used))
                     }
                     if let use {
                         switch use {
@@ -772,12 +868,11 @@ struct VoicePantryRow {
 
     private func savedSection(_ saved: [InventoryLot]) -> some View {
         Section {
-            Label {
-                if saved.count == 1, let lot = saved.first, recordedUseIDs.contains(lot.id) {
-                    Text(pantryFormat("Recorded one use of %@.", lot.name))
-                } else { Text(pantryText("Food saved on this device.")) }
-            } icon: { Image(systemName: "checkmark.circle") }
-            .accessibilityIdentifier("pantry.voiceSaved")
+            if saved.count == 1, let lot = saved.first, recordedUseIDs.contains(lot.id) {
+                PantryNoticeLabel(notice: .recordedUse(lot.name), identifier: "pantry.voiceSaved")
+            } else {
+                PantryNoticeLabel(notice: .saved, identifier: "pantry.voiceSaved")
+            }
             ForEach(Array(saved.enumerated()), id: \.element.id) { index, lot in
                 Text(pantryLocationName(lot.location))
                 if let wording = lot.countWording {
@@ -793,7 +888,17 @@ struct VoicePantryRow {
                     })
                 }
             }
-            Button(pantryText("Done")) { dismiss() }
+        }
+    }
+
+    @ViewBuilder private func reviewAmount(_ title: String, value: String) -> some View {
+        if typeSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                Text(verbatim: value).fontWeight(.medium)
+            }.font(.subheadline)
+        } else {
+            LabeledContent(title, value: value).font(.subheadline)
         }
     }
 
@@ -815,7 +920,7 @@ struct VoicePantryRow {
         guard authorized, model.canEdit, !working, dateOnly, basis == model.snapshot?.state,
               let lot = lots.first(where: { $0.id == rows.first?.lotID }), let digestAccess else { return }
         let request = token
-        working = true; dateEvidence = nil; editing = false
+        working = true; dateEvidence = nil; focusedEditor = nil
         defer { if request == token { working = false } }
         do {
             let result = try await PantryVoiceDateEvidence.read(lot: lot, model: model, access: digestAccess)

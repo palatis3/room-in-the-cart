@@ -1,6 +1,54 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Add and open list": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add and open list"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir y abrir lista"
+          }
+        }
+      }
+    },
+    "Add %lld and open list": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add %lld and open list"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir %lld y abrir lista"
+          }
+        }
+      }
+    },
+    "Current list: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current list: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lista actual: %@"
+          }
+        }
+      }
+    },
     "This pickup changed. Review the current details alongside your edits before saving.": {
       "localizations": {
         "en": {
@@ -6641,6 +6689,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Revisar como un nuevo pedido para recoger"
+          }
+        }
+      }
+    },
+    "Discard this shopping list draft?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard this shopping list draft?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Descartar este borrador de la lista de compras?"
           }
         }
       }

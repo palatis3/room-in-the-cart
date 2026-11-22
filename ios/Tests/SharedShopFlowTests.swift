@@ -463,6 +463,173 @@ import LocalAuthentication
         let cleared = try await outbox.operations(); XCTAssertTrue(cleared.isEmpty)
         XCTAssertEqual(fixture.commandBodies.filter { $0.kind == kind }.count, 1)
     }
+    func testAdultInvitationPreviewsOnlyACompleteAttestedCodeAndRequiresExplicitJoin() async throws {
+        let fixture = SharedFlowService()
+        let household = try await model("sam", fixture: fixture)
+        let join = try XCTUnwrap(household.lifecycle)
+        let token = fixture.household + "." + String(repeating: "a", count: 43)
+        join.keepLocalPrivate = true
+        join.invitationCode = token
+        await join.previewInvitation()
+        join.invitationCode = String(token.dropLast())
+        join.adultAttestation = true
+        await join.previewInvitation()
+        XCTAssertEqual(fixture.invitationReads, 0)
+        join.invitationCode = token
+        await join.redeemInvitation()
+        XCTAssertTrue(fixture.invitationWrites.isEmpty)
+        await join.previewInvitation()
+        guard case let .ready(offer) = join.invitationPreview else { return XCTFail("Missing preview") }
+        XCTAssertEqual(offer.householdLabel, "Our home")
+        XCTAssertEqual(offer.role, .adultContributor)
+        XCTAssertFalse(fixture.joined.contains("sam"))
+        join.invitationCode = fixture.household + "." + String(repeating: "b", count: 43)
+        XCTAssertEqual(join.invitationPreview, .idle)
+        await join.redeemInvitation()
+        XCTAssertTrue(fixture.invitationWrites.isEmpty)
+        fixture.invitationRole = "helper_read"
+        await join.previewInvitation()
+        guard case let .ready(helper) = join.invitationPreview else { return XCTFail("Missing helper preview") }
+        XCTAssertEqual(helper.role, .helperRead)
+        join.adultAttestation = false
+        XCTAssertEqual(join.invitationPreview, .idle)
+        join.adultAttestation = true
+        fixture.invitationReadStatus = 503
+        await join.previewInvitation()
+        XCTAssertEqual(join.invitationPreview, .failed)
+        fixture.invitationReadStatus = 404
+        await join.previewInvitation()
+        XCTAssertEqual(join.invitationPreview, .unavailable)
+        fixture.invitationReadStatus = 200
+        fixture.invitationRole = "helper_edit"
+        await join.previewInvitation()
+        guard case let .ready(editor) = join.invitationPreview else { return XCTFail("Missing helper preview") }
+        XCTAssertEqual(editor.role, .helperEdit)
+        household.lock()
+        XCTAssertEqual(join.invitationPreview, .idle)
+        XCTAssertNil(join.invitationPreviewKey)
+        XCTAssertTrue(fixture.invitationWrites.isEmpty)
+    }
+
+    func testLateInvitationPreviewCannotReappearAfterEditingOrLocking() async throws {
+        enum Interruption { case editCode, lock, switchAccount }
+        for interruption in [Interruption.editCode, .lock, .switchAccount] {
+            let fixture = SharedFlowService()
+            let household = try await model("sam", fixture: fixture)
+            let join = try XCTUnwrap(household.lifecycle)
+            let token = fixture.household + "." + String(repeating: "a", count: 43)
+            join.adultAttestation = true
+            join.invitationCode = token
+            let arrived = expectation(description: "Invitation preview in flight")
+            let held = SharedFlowHeldRead(pathSuffix: "/v1/invites/preview", arrived: { arrived.fulfill() })
+            SharedFlowURLProtocol.heldRead = held
+            defer { held.release(); SharedFlowURLProtocol.heldRead = nil }
+            let reading = Task { await join.previewInvitation() }
+            await fulfillment(of: [arrived], timeout: 3)
+            switch interruption {
+            case .editCode:
+                join.invitationCode = ""
+                join.invitationCode = token
+            case .lock:
+                household.lock()
+            case .switchAccount:
+                household.email = "mia@example.test"; household.code = "123456"
+                await household.verifyCode()
+                XCTAssertEqual(household.lifecycle?.subject, "mia")
+                XCTAssertEqual(household.lifecycle?.invitationPreview, .idle)
+            }
+            held.release()
+            await reading.value
+            XCTAssertEqual(join.invitationPreview, .idle)
+            XCTAssertTrue(fixture.invitationWrites.isEmpty)
+        }
+    }
+
+    func testFirstUnavailableJoinAllowsNewCodeButUncertainJoinKeepsExactRetry() async throws {
+        let fixture = SharedFlowService()
+        let queue = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathComponent("outbox.json")
+        let household = try await model("sam", fixture: fixture, queue: queue)
+        let join = try XCTUnwrap(household.lifecycle)
+        join.adultAttestation = true
+        join.keepLocalPrivate = true
+        join.invitationCode = fixture.household + "." + String(repeating: "a", count: 43)
+        await join.previewInvitation()
+        fixture.invitationJoinUnavailable = true
+        await join.redeemInvitation()
+        XCTAssertNil(join.pendingMembership)
+        XCTAssertEqual(join.invitationPreview, .unavailable)
+        join.invitationCode = fixture.household + "." + String(repeating: "b", count: 43)
+        XCTAssertEqual(join.invitationPreview, .idle)
+        fixture.invitationJoinUnavailable = false
+        await join.previewInvitation()
+        fixture.loseInvitationResponse = true
+        await join.redeemInvitation()
+        let pending = try XCTUnwrap(join.pendingMembership)
+        let resumed = try await model("sam", fixture: fixture, queue: queue)
+        let retry = try XCTUnwrap(resumed.lifecycle)
+        await retry.restorePending()
+        fixture.invitationJoinUnavailable = true
+        await retry.retryMembership()
+        XCTAssertEqual(retry.pendingMembership, pending)
+        fixture.invitationJoinUnavailable = false
+        await retry.retryMembership()
+        XCTAssertNil(retry.pendingMembership)
+        XCTAssertEqual(fixture.invitationWrites.suffix(3), [pending.bytes, pending.bytes, pending.bytes])
+        XCTAssertEqual(fixture.invitationReads, 2)
+    }
+
+    func testExistingOrganizerCanJoinContributorOfferWithCurrentHouseholdRole() async throws {
+        let fixture = SharedFlowService()
+        fixture.joined.insert("mia")
+        let household = try await model("mia", fixture: fixture)
+        let join = try XCTUnwrap(household.lifecycle)
+        join.adultAttestation = true
+        join.keepLocalPrivate = true
+        join.invitationCode = fixture.household + "." + String(repeating: "a", count: 43)
+        await join.previewInvitation()
+        guard case let .ready(offer) = join.invitationPreview else { return XCTFail("Missing offer") }
+        XCTAssertEqual(offer.role, .adultContributor)
+        await join.redeemInvitation()
+        XCTAssertEqual(household.projection?.role, "organizer")
+        XCTAssertTrue(join.canAdminister)
+        XCTAssertNil(join.activation)
+        XCTAssertNil(join.pendingMembership)
+    }
+
+    func testChangedInvitationNeedsNewReviewAndLostJoinResponseRetriesOriginalBytes() async throws {
+        let fixture = SharedFlowService()
+        let queue = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathComponent("outbox.json")
+        let household = try await model("sam", fixture: fixture, queue: queue)
+        let join = try XCTUnwrap(household.lifecycle)
+        let token = fixture.household + "." + String(repeating: "a", count: 43)
+        join.adultAttestation = true
+        join.keepLocalPrivate = true
+        join.invitationCode = token
+        await join.previewInvitation()
+        fixture.invitationLabel = "New name"
+        await join.redeemInvitation()
+        XCTAssertNil(join.pendingMembership)
+        XCTAssertEqual(join.invitationPreview, .idle)
+        await join.redeemInvitation()
+        XCTAssertEqual(fixture.invitationWrites.count, 1)
+        XCTAssertFalse(fixture.joined.contains("sam"))
+        await join.previewInvitation()
+        guard case let .ready(updated) = join.invitationPreview else { return XCTFail("Missing updated offer") }
+        XCTAssertEqual(updated.householdLabel, "New name")
+        fixture.loseInvitationResponse = true
+        await join.redeemInvitation()
+        let pending = try XCTUnwrap(join.pendingMembership)
+        XCTAssertTrue(fixture.joined.contains("sam"))
+        let resumed = try await model("sam", fixture: fixture, queue: queue)
+        let restored = try XCTUnwrap(resumed.lifecycle)
+        await restored.restorePending()
+        XCTAssertEqual(restored.pendingMembership, pending)
+        await restored.retryMembership()
+        XCTAssertEqual(fixture.invitationReads, 2)
+        XCTAssertEqual(fixture.invitationWrites.suffix(2), [pending.bytes, pending.bytes])
+        XCTAssertEqual(resumed.projection?.role, "contributor")
+    }
+
     func testFreshHouseholdNativeFlowCreatesInvitesReceivesApprovesFreezesAndReopens() async throws {
         let fixture = SharedFlowService(); let mia = try await createdHousehold(fixture)
         let shared = try XCTUnwrap(mia.sharedShop); XCTAssertTrue(shared.canCreate)
@@ -473,6 +640,7 @@ import LocalAuthentication
         let invitation = try XCTUnwrap(people.issued)
         let sam = try await model("sam", fixture: fixture); let join = try XCTUnwrap(sam.lifecycle)
         join.alias = "Sam"; join.invitationCode = invitation.token; join.adultAttestation = true; join.keepLocalPrivate = true
+        await join.previewInvitation()
         await join.redeemInvitation()
         XCTAssertEqual(sam.projection?.role, "contributor"); XCTAssertNil(sam.sharedShop); XCTAssertNil(sam.shopperInbox)
         sam.item = "Cereal"; sam.quantity = "one box"; await sam.sendRequest()
@@ -507,6 +675,7 @@ import LocalAuthentication
         let invitation = try XCTUnwrap(people.issued)
         let sam = try await model("sam", fixture: fixture); let join = try XCTUnwrap(sam.lifecycle)
         join.alias = "Sam"; join.invitationCode = invitation.token; join.adultAttestation = true; join.keepLocalPrivate = true
+        await join.previewInvitation()
         await join.redeemInvitation()
         sam.item = "Cereal"; sam.quantity = "one box"; await sam.sendRequest()
         let inbox = try XCTUnwrap(mia.shopperInbox); await inbox.load()
@@ -833,6 +1002,11 @@ import LocalAuthentication
 /// HTTP contract fixture: starts with no household or shop. PostgreSQL acceptance is run separately by the service owner.
 private final class SharedFlowService {
     let household = UUID().uuidString.lowercased(), miaID = UUID().uuidString.lowercased(), samID = UUID().uuidString.lowercased()
+    var invitationReads = 0, invitationReadStatus = 200
+    var invitationLabel = "Our home", invitationRole = "adult_contributor"
+    var invitationWrites: [Data] = []
+    var loseInvitationResponse = false, invitationJoinUnavailable = false
+    var usedInvitationTokens: Set<String> = []
     var householdCreates = 0, sharedShopCreates = 0, privateReads = 0
     var meals: [[String: Any]] = []
     var joined = Set<String>(), shopID: String?, revision = 0, phase = "draft"
@@ -877,7 +1051,27 @@ private final class SharedFlowService {
         if path == "/auth/v1/user" { return try ok(["id":actor,"email_confirmed_at":"date"]) }
         if path == "/v1/households" { householdCreates += 1; joined.insert(actor); return try ok(["householdId":household,"memberId":miaID,"role":"organizer"],201) }
         if path == "/v1/me/workspaces" { return try ok(["workspaces":joined.contains(actor) ? [["householdId":household,"label":"Our home","role":actor == "mia" ? "organizer" : "contributor"]] : []]) }
-        if path == "/v1/invites/redeem" { joined.insert(actor); return try ok(["householdId":household,"memberId":samID,"role":"contributor"]) }
+        if path == "/v1/invites/preview" {
+            invitationReads += 1
+            guard let token = json["token"] as? String, !usedInvitationTokens.contains(token) else {
+                return try ok(["error": ["code": "unavailable"]], 404)
+            }
+            guard invitationReadStatus == 200 else { return try ok(["error": ["code": "unavailable"]], invitationReadStatus) }
+            return try ok(["householdLabel": invitationLabel, "role": invitationRole])
+        }
+        if path == "/v1/invites/redeem" {
+            invitationWrites.append(input)
+            if invitationJoinUnavailable { return try ok(["error": ["code": "unavailable"]], 404) }
+            guard (json["reviewedOffer"] as? [String: String]) == ["householdLabel": invitationLabel, "role": invitationRole] else {
+                return try ok(["error": ["code": "refresh_required"]], 409)
+            }
+            let organizer = actor == "mia" && joined.contains(actor)
+            joined.insert(actor)
+            usedInvitationTokens.insert(try XCTUnwrap(json["token"] as? String))
+            if loseInvitationResponse { loseInvitationResponse = false; throw URLError(.networkConnectionLost) }
+            // The receipt describes this invitation. Bootstrap supplies the member's current permissions.
+            return try ok(["householdId": household, "memberId": organizer ? miaID : samID, "role": "contributor"])
+        }
         if path.hasSuffix("/devices") { return try ok(["deviceId":actor+"-device","deviceToken":actor+"-device-token"],201) }
         XCTAssertEqual(request.value(forHTTPHeaderField: "X-Device-Token"), actor+"-device-token")
         if path.hasSuffix("/bootstrap") {

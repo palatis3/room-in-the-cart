@@ -1775,13 +1775,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open Read a receipt file in My Pantry to review within seven days. Sharing keeps the file on this device until review, discard or expiry."
+            "value": "In My Pantry, choose “Open receipt file” to review it within seven days. Sharing keeps the file on this device until review, discard or expiry."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abre Leer un archivo de recibo en Mi despensa para revisarlo en un plazo de siete días. El archivo se conserva en este dispositivo hasta que se revise, se descarte o venza."
+            "value": "En Mi despensa, elige «Abrir archivo» para revisar el recibo en un plazo de siete días. El archivo se conserva en este dispositivo hasta que se revise, se descarte o venza."
           }
         }
       }

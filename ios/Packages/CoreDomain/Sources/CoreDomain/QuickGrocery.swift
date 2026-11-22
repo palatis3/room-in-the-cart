@@ -56,6 +56,34 @@ public enum QuickGrocery {
         return names
     }
 
+    /// Only the private shopping-list review interprets a container count without a printed size.
+    static func packageRequest(_ text: String) -> (name: String, packages: GroceryPackageCount)? {
+        var wording = text.trimmingCharacters(in: .whitespaces)
+        if wording.hasPrefix("- ") || wording.hasPrefix("• ") || wording.hasPrefix("* ") { wording.removeFirst(2) }
+        let parts = wording.split(maxSplits: 3, whereSeparator: \.isWhitespace)
+        guard parts.count == 4 else { return nil }
+        let kind: GroceryPackageCount.Kind
+        switch (parts[1].lowercased(), parts[2].lowercased()) {
+        case ("carton", "of"), ("cartons", "of"), ("cartón", "de"), ("cartones", "de"): kind = .carton
+        case ("bag", "of"), ("bags", "of"), ("bolsa", "de"), ("bolsas", "de"): kind = .bag
+        case ("bottle", "of"), ("bottles", "of"), ("botella", "de"), ("botellas", "de"): kind = .bottle
+        case ("can", "of"), ("cans", "of"), ("lata", "de"), ("latas", "de"): kind = .can
+        case ("box", "of"), ("boxes", "of"), ("caja", "de"), ("cajas", "de"): kind = .box
+        case ("pack", "of"), ("packs", "of"), ("paquete", "de"), ("paquetes", "de"): kind = .pack
+        default: return nil
+        }
+        let literal = parts[0]
+        guard literal.utf8.allSatisfy({ (48...57).contains($0) }) || literal.allSatisfy(\.isLetter) else { return nil }
+        var countTokens = [String(literal)][...]
+        guard let count = try? ListQuantityParser.takeAmount(from: &countTokens, allowingWords: true),
+              countTokens.isEmpty, count.denominator == 1, count > .zero,
+              let name = plainName(String(parts[3])) else { return nil }
+        let words = name.lowercased().split(whereSeparator: \.isWhitespace)
+        guard words.first != "of", words.first != "de",
+              words.allSatisfy({ !["per", "por", "each", "cada", "to", "destino"].contains($0) }) else { return nil }
+        return (name, GroceryPackageCount(count: count.numerator, kind: kind))
+    }
+
     /// Commit through the ordinary import receipt. An omitted quantity stays unknown.
     public static func stage(_ text: String, in shop: ShoppingLedger) throws -> StagedListImport? {
         guard text.utf8.count <= 512, !text.contains(where: \.isNewline) else { return nil }

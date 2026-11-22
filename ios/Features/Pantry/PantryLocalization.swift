@@ -34,6 +34,7 @@ func pantryQuantity(_ quantity: Quantity?) -> String {
     return "\(quantity.amount.description) \(pantryUnit(quantity.unit, amount: quantity.amount))"
 }
 func pantryPrintedQuantity(_ literal: String, unit: UnitOfMeasure) -> String {
+    guard !literal.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return pantryText("Unknown") }
     let measured = try? ComparisonModel.quantity(literal, unit)
     return literal + " " + pantryUnit(unit, amount: measured?.amount)
 }
@@ -58,6 +59,8 @@ func pantryPhase(_ phase: PantryModel.Phase) -> String {
 func pantryNotice(_ notice: PantryModel.Notice) -> String {
     switch notice {
     case .saved: return pantryText("Food saved on this device.")
+    case .recordedUse(let name): return pantryFormat("Recorded one use of %@.", name)
+    case .savedEstimate(let food, let wording): return pantryFormat("Saved remaining estimate for %@: %@", food, wording)
     case .saveFailed: return pantryText("Could not confirm the save. Retry the exact reviewed change.")
     case .stale: return pantryText("Food or reservations changed. Refresh and review again before saving.")
     case .loadFailed: return pantryText("Could not load a complete pantry. No partial availability is shown.")

@@ -393,6 +393,43 @@ import SQLite3
         XCTAssertEqual(pickup.journey?.notes.last?.text, "Current checkout")
     }
 
+    func testTonightPreferenceRefreshWaitsForShelfAndPublishesOnlyTheNewReview() async throws {
+        let f = try await fixture(), pickup = await model(f), meals = TonightMealModel()
+        let recipe = MealTemplate(title: "Tortilla bowls", ingredients: [MealIngredient(name: "Wraps", quantity: try q(2))])
+        let before = LedgerWorkspace(mealTemplates: [recipe])
+        var after = before
+        var preferences = MealPreferenceSettings()
+        preferences.availableAppliances = []
+        try after.dinnerPlanning.updateMealPreferences(preferences, expectedRevision: nil)
+        func reload(_ workspace: LedgerWorkspace, revision: Int64) async {
+            await meals.refresh(authorize: { true }) {
+                guard await pickup.refreshPantryStock(waitForShelf: true), let context = try pickup.pantryReviewContext() else {
+                    throw TonightMealModel.Failure.unavailable
+                }
+                return try TonightMealModel.input(workspace: workspace, ledgerRevision: revision, context: context, sources: [])
+            }
+        }
+
+        let shelf = try f.gate.beginExclusiveWrite()
+        let first = Task { await reload(before, revision: 1) }
+        let deadline = ContinuousClock.now + .seconds(3)
+        while !pickup.saving && !meals.failed && ContinuousClock.now < deadline { await Task.yield() }
+        XCTAssertTrue(pickup.saving)
+        meals.invalidate()
+        let replacement = Task { await reload(after, revision: 2) }
+        while !meals.busy && !meals.failed && ContinuousClock.now < deadline { await Task.yield() }
+        XCTAssertTrue(meals.busy)
+        XCTAssertNil(meals.input)
+        f.gate.endExclusiveWrite(shelf)
+
+        await first.value
+        await replacement.value
+        XCTAssertFalse(meals.failed)
+        XCTAssertEqual(meals.input?.ledgerRevision, 2)
+        XCTAssertEqual(meals.input?.workspace.dinnerPlanning.privateMealPreferences, after.dinnerPlanning.privateMealPreferences)
+        XCTAssertEqual(meals.reviews.map(\.recipe.id), [recipe.id])
+    }
+
     func testBusyRefreshWithholdsOldCoverageUntilFreshSnapshotCanBeRead() async throws {
         let f = try await fixture(), pickup = await model(f)
         XCTAssertNotNil(pickup.allocation)

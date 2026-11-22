@@ -73,6 +73,81 @@ import CoreDomain
         XCTAssertEqual(source.notes, "Review the pack count and usable amount in each pack.")
     }
 
+    func testEditedGroceryPackagesAppearInWorkingRowsDetailsAndHandoff() throws {
+        var shop = ShoppingLedger()
+        let milk = try XCTUnwrap(QuickGrocery.stage("Milk", in: shop))
+        try shop.commitImport(milk)
+        let line = try XCTUnwrap(shop.lines.first)
+        let source = try XCTUnwrap(shop.contributions.first)
+        try shop.updateContribution(contributionID: source.id, quantity: nil, notes: "Private note",
+                                    reviewedPackages: .init(count: 2, kind: .carton))
+        let saved = try JSONDecoder().decode(ShoppingLedger.self, from: JSONEncoder().encode(shop))
+        let label = "2 " + quickGroceryText("cartons")
+        let edited = try XCTUnwrap(saved.contributions.first)
+        XCTAssertEqual(edited.sourceQuantityLabel, label)
+        XCTAssertEqual(saved.shoppingRowQuantity(for: line), label)
+        XCTAssertEqual(saved.groceryRowAmount(line, measure: nil), label)
+        XCTAssertEqual(saved.tripAmountLabel(line, measure: nil), label)
+        XCTAssertEqual(TripHandoffRow.outstanding(in: saved).first?.text(includePack: true), "Milk · " + label)
+        XCTAssertEqual(saved.ordinaryQuantitySource(for: line, contributions: [edited], typedItemBatches: saved.typedItemBatchIDs), edited)
+
+        try shop.updateContribution(contributionID: source.id, quantity: nil, notes: "cartons", reviewedPackages: nil)
+        XCTAssertNil(shop.shoppingRowQuantity(for: line))
+        XCTAssertEqual(GroceryPackageCount(count: 1, kind: .bag).shoppingLabel, "1 " + quickGroceryText("bag"))
+    }
+
+    func testPartialCartonPickKeepsWorkingReceiptAndCheckoutQuantitiesDistinct() throws {
+        struct Document: Encodable {
+            let formatVersion = 1
+            let workspace: LedgerWorkspace
+        }
+        var shop = ShoppingLedger()
+        try shop.commitImport(XCTUnwrap(QuickGrocery.stage("2 Milk", in: shop)))
+        let one = GroceryPackageCount(count: 1, kind: .carton)
+        let two = GroceryPackageCount(count: 2, kind: .carton)
+        let sourceID = try XCTUnwrap(shop.contributions.first?.id)
+        let id = try XCTUnwrap(shop.lines.first?.id)
+        try shop.updateContribution(contributionID: sourceID, quantity: nil, notes: "Private", reviewedPackages: two)
+        try shop.pickPackages(lineID: id, packages: one, expectedRevision: shop.revisionID)
+        let document = Document(workspace: LedgerWorkspace(shops: [shop], selectedShopID: shop.id))
+        let data = try RecordsNativeCodec.canonical(document)
+        let saved = try XCTUnwrap(RecordsNativeCodec.ledger(data).shops.first)
+        let line = try XCTUnwrap(saved.lines.first)
+        let remaining = tripFormat("%@ still needed", one.shoppingLabel)
+        let summary = tripFormat("%@ of %@ picked · %@ still needed", one.shoppingLabel, two.shoppingLabel, one.shoppingLabel)
+        XCTAssertEqual(saved.groceryRowAmount(line, measure: nil), remaining)
+        XCTAssertEqual(saved.shoppingRowQuantity(for: line), remaining)
+        XCTAssertEqual(saved.tripAmountLabel(line, measure: nil), summary)
+        let handoff = try XCTUnwrap(TripHandoffRow.outstanding(in: saved).first)
+        XCTAssertEqual(handoff.text(includePack: true), "Milk · " + one.shoppingLabel)
+        let text = try LedgerReadableRecord.text(data)
+        for field in [summary, two.shoppingLabel, "2 Milk", "Private", ledgerText("Quantity unresolved")] {
+            XCTAssertTrue(text.contains(field), text)
+        }
+        XCTAssertThrowsError(try LedgerCheckoutAdapter.review(shop: saved, workspaceRevision: 1, previous: nil)) {
+            XCTAssertEqual($0 as? LedgerCheckoutError, .missingQuantity)
+        }
+    }
+
+    func testMixedGroceryPackageSourcesKeepTheirOwnUnits() throws {
+        var shop = ShoppingLedger()
+        let lineID = try shop.addManualLine(name: "Milk", quantity: .init(amount: .one, unit: .count, originalLiteral: "1"))
+        let line = try XCTUnwrap(shop.lines.first)
+        let first = try XCTUnwrap(shop.contributions.first)
+        let other = try shop.stageImport(text: "2 Milk")
+        try shop.commitImport(other, decisions: [other.lines[0].id: .addToLine(lineID)])
+        try shop.updateContribution(contributionID: first.id, quantity: nil, notes: "", reviewedPackages: .init(count: 2, kind: .carton))
+        XCTAssertEqual(shop.shoppingRowQuantity(for: line), ledgerQuantity(nil))
+        try shop.updateContribution(contributionID: other.lines[0].id, quantity: nil, notes: "", reviewedPackages: .init(count: 1, kind: .bottle))
+        let label = "2 " + quickGroceryText("cartons") + " + 1 " + quickGroceryText("bottle")
+        XCTAssertEqual(shop.shoppingRowQuantity(for: line), label)
+        XCTAssertEqual(TripHandoffRow.outstanding(in: shop).first?.amount, label)
+        XCTAssertNil(try shop.quantity(forLineID: lineID))
+        try shop.updateContribution(contributionID: other.lines[0].id, quantity: nil, notes: "", reviewedPackages: .init(count: 1, kind: .carton))
+        XCTAssertEqual(shop.shoppingRowQuantity(for: line), "3 " + quickGroceryText("cartons"))
+        XCTAssertNil(try shop.quantity(forLineID: lineID))
+    }
+
     func testBulkPluralHintComparesOnlyIncludedRowsWithTheSameMeasuredAmount() throws {
         let shop = ShoppingLedger()
         let preview = try shop.stageImport(text: "2 manzanas\n2 manzana\n1 manzana\n2 kg manzana\n2 manzanas verdes")

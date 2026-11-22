@@ -1,6 +1,652 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Servings changed. Keep using these pantry amounts to leave these ingredients off your shopping list.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servings changed. Keep using these pantry amounts to leave these ingredients off your shopping list."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambió el número de porciones. Si mantienes estas cantidades de la despensa, estos ingredientes quedarán fuera de tu lista de compras."
+          }
+        }
+      }
+    },
+    "Keep these amounts for dinner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep these amounts for dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mantener estas cantidades para la cena"
+          }
+        }
+      }
+    },
+    "Review before buying": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review before buying"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar antes de comprar"
+          }
+        }
+      }
+    },
+    "Servings changed. Check the pantry allocation before buying these ingredients.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servings changed. Check the pantry allocation before buying these ingredients."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las porciones cambiaron. Revisa la cantidad reservada en la despensa antes de comprar estos ingredientes."
+          }
+        }
+      }
+    },
+    "Check the earlier pantry allocation before buying these ingredients.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the earlier pantry allocation before buying these ingredients."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa la cantidad reservada en la despensa antes de comprar estos ingredientes."
+          }
+        }
+      }
+    },
+    "Used for dinner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Used for dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usados para la cena"
+          }
+        }
+      }
+    },
+    "After changing servings, open Review pantry purchases in this dinner to confirm what you still need to buy.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After changing servings, open Review pantry purchases in this dinner to confirm what you still need to buy."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Después de cambiar las porciones, abre «Revisar las compras de despensa» en esta cena para confirmar qué te falta comprar."
+          }
+        }
+      }
+    },
+    "Save a draft checkout for %@ with these needs. This sets aside available food without changing physical counts.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save a draft checkout for %@ with these needs. This sets aside available food without changing physical counts."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guarda un borrador de compra de %@ con estas cantidades. Se reservan los alimentos disponibles y se conservan los recuentos de la despensa."
+          }
+        }
+      }
+    },
+    "Save meal allocations": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save meal allocations"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar las cantidades asignadas"
+          }
+        }
+      }
+    },
+    "Link matched pantry products for purchase review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link matched pantry products for purchase review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vincular los productos de la despensa para revisar la compra"
+          }
+        }
+      }
+    },
+    "Using food at home": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Using food at home"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Con alimentos de casa"
+          }
+        }
+      }
+    },
+    "Choose each pantry product you want to use. Only a separately confirmed allocation can remove a purchase.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose each pantry product you want to use. Only a separately confirmed allocation can remove a purchase."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige los productos que quieres usar de la despensa. Para quitar una compra, confirma después la cantidad asignada."
+          }
+        }
+      }
+    },
+    "Use these product matches": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use these product matches"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar estos productos"
+          }
+        }
+      }
+    },
+    "Check the product, available amount and other list commitments before trying again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the product, available amount and other list commitments before trying again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa el producto, la cantidad disponible y los compromisos de otras listas antes de volver a intentarlo."
+          }
+        }
+      }
+    },
+    "Clear product matches": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear product matches"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar los productos vinculados"
+          }
+        }
+      }
+    },
+    "Use food at home": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use food at home"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar alimentos de casa"
+          }
+        }
+      }
+    },
+    "Review this list’s checkout copy to allocate confirmed pantry food to its meal needs. Saving the copy keeps pantry counts intact.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review this list’s checkout copy to allocate confirmed pantry food to its meal needs. Saving the copy keeps pantry counts intact."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa la copia de compra de esta lista para asignar los alimentos confirmados a las comidas. Guardar la copia conserva las cantidades de la despensa."
+          }
+        }
+      }
+    },
+    "Review shopping allocations": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review shopping allocations"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar las cantidades asignadas"
+          }
+        }
+      }
+    },
+    "Put these ingredients back on the shopping list": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Put these ingredients back on the shopping list"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a poner estos ingredientes en la lista"
+          }
+        }
+      }
+    },
+    "Remove the following purchases from %@ using the confirmed food allocated to this dinner.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove the following purchases from %@ using the confirmed food allocated to this dinner."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quita estas compras de %@ usando los alimentos confirmados que se asignaron a esta cena."
+          }
+        }
+      }
+    },
+    "Every meal ingredient stays in the plan. Cooking records the amount actually used.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every meal ingredient stays in the plan. Cooking records the amount actually used."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todos los ingredientes siguen en el plan. Al registrar la preparación se descuenta la cantidad que usaste."
+          }
+        }
+      }
+    },
+    "Use the allocated food": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use the allocated food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar los alimentos asignados"
+          }
+        }
+      }
+    },
+    "Review food to use at home": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review food to use at home"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar los alimentos de casa"
+          }
+        }
+      }
+    },
+    "Review pantry purchases": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review pantry purchases"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar las compras de despensa"
+          }
+        }
+      }
+    },
+    "Putting these back restores the purchases. The meal keeps its allocation in the checkout copy.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Putting these back restores the purchases. The meal keeps its allocation in the checkout copy."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si los vuelves a poner en la lista, se restauran las compras. La comida conserva su asignación en la copia de compra."
+          }
+        }
+      }
+    },
+    "Review the linked products after saving the dinner to choose which purchases to remove.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the linked products after saving the dinner to choose which purchases to remove."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Después de guardar la cena, revisa los productos vinculados para elegir qué compras quitar."
+          }
+        }
+      }
+    },
+    "This dinner has no planned ingredients.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This dinner has no planned ingredients."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta cena no tiene ingredientes previstos."
+          }
+        }
+      }
+    },
+    "Check what to buy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check what to buy"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver qué comprar"
+          }
+        }
+      }
+    },
+    "Review the current shopping list for this dinner’s purchases and allocations.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the current shopping list for this dinner’s purchases and allocations."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consulta las compras y las cantidades asignadas a esta cena en la lista de compras actual."
+          }
+        }
+      }
+    },
+    "Preview for this dinner only. Your matches last until you leave. The shopping list and pantry stay as they are.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview for this dinner only. Your matches last until you leave. The shopping list and pantry stay as they are."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta vista previa solo incluye esta cena. Los productos que elijas se muestran hasta que salgas. La lista de compras y la despensa se conservan tal como están."
+          }
+        }
+      }
+    },
+    "Still to buy or check": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Still to buy or check"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Por comprar o comprobar"
+          }
+        }
+      }
+    },
+    "No additional amount needed for this dinner.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No additional amount needed for this dinner."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hace falta comprar más ingredientes para esta cena."
+          }
+        }
+      }
+    },
+    "Check amount": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check amount"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comprobar cantidad"
+          }
+        }
+      }
+    },
+    "Planned ingredients": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planned ingredients"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredientes previstos"
+          }
+        }
+      }
+    },
+    "Pantry availability could not be verified.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pantry availability could not be verified."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo comprobar cuánto hay disponible en la despensa."
+          }
+        }
+      }
+    },
+    "Check meal preferences and ingredient details before using these pantry matches.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check meal preferences and ingredient details before using these pantry matches."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa las preferencias de comida y los detalles de los ingredientes antes de usar estos productos de la despensa."
+          }
+        }
+      }
+    },
+    "Match food at home": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Match food at home"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir los productos que tengo en casa"
+          }
+        }
+      }
+    },
+    "Choose the pantry product for each ingredient you have. Only its unreserved amount counts. Unmatched ingredients show their full planned amount.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the pantry product for each ingredient you have. Only its unreserved amount counts. Unmatched ingredients show their full planned amount."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige el producto de la despensa que corresponde a cada ingrediente que tengas. Solo cuenta la cantidad sin reservar. Los ingredientes sin producto elegido muestran la cantidad prevista completa."
+          }
+        }
+      }
+    },
     "Choose a shopping list": {
       "extractionState": "manual",
       "localizations": {

@@ -23,12 +23,31 @@ import CoreDomain
         }
         var unit: UnitOfMeasure = .count
         private(set) var needsNewMeasurement = false
-        var relation: Relation = .undecided
-        var substitution = ""
+        var relation: Relation = .undecided {
+            didSet { suggestedFoodID = nil }
+        }
+        var substitution = "" {
+            didSet { suggestedFoodID = nil }
+        }
+        private(set) var suggestedFoodID: UUID?
         init(id: UUID = UUID()) { self.id = id }
 
-        @MainActor mutating func selectBatch(_ lot: InventoryLot?) {
+        @MainActor mutating func chooseSubstitute(_ lot: InventoryLot) {
+            selectBatch(lot)
+            relation = .substitution
+            substitution = lot.name
+            suggestedFoodID = lot.foodID
+            if use != .unmeasured { use = .measured }
+        }
+
+        @MainActor mutating func selectBatch(_ lot: InventoryLot?, plannedFoodID: UUID? = nil) {
             guard lotID != lot?.id else { return }
+            if let suggestedFoodID, lot?.foodID != suggestedFoodID {
+                // The suggestion described a different food. Only a confirmed or unique
+                // exact pantry identity can resolve this change back to the planned food.
+                relation = lot != nil && lot?.foodID == plannedFoodID ? .ingredient : .undecided
+                substitution = ""
+            }
             lotID = lot?.id
             needsNewMeasurement = false
             guard let lot, unit != lot.unit else { return }
@@ -51,6 +70,7 @@ import CoreDomain
         let id: UUID
         let name: String
         let planned: Quantity?
+        let plannedFoodID: UUID?
         let exclusions: [String]
         let notUsedID = UUID()
         var use: IngredientUse = .undecided
@@ -141,13 +161,15 @@ import CoreDomain
                 let rules = Dictionary(uniqueKeysWithValues: recovery.ingredientRules.map { ($0.needID, $0.exclusions) })
                 loadedIngredients = try recovery.meal.ingredients.map { row in
                     guard let exclusions = rules[row.need.id] else { throw Failure.stale }
-                    return Ingredient(id: row.need.id, name: row.foodName, planned: row.need.amount, exclusions: exclusions)
+                    return Ingredient(id: row.need.id, name: row.foodName, planned: row.need.amount, plannedFoodID: row.need.foodID, exclusions: exclusions)
                 }
             } else {
+                let stockedFoods = Set(loaded.inventory.lots.map(\.foodID))
                 let contributions = Dictionary(uniqueKeysWithValues: loaded.shop.contributions.filter { $0.removedAt == nil }.map { ($0.id, $0) })
                 loadedIngredients = try CookCompletionDraft.activeIngredientIDs(for: loaded.meal, in: loaded.shop).map { id in
                     guard let row = contributions[id], row.source == .meal(occurrenceID: loaded.meal.id) else { throw Failure.stale }
-                    return Ingredient(id: id, name: row.productName, planned: row.quantity, exclusions: row.exclusions)
+                    return Ingredient(id: id, name: row.productName, planned: row.quantity,
+                                      plannedFoodID: stockedFoods.contains(row.lineID) ? row.lineID : nil, exclusions: row.exclusions)
                 }
             }
             context = loaded; completed = loaded.completed; review = nil; attemptedApply = false; notice = nil
@@ -179,16 +201,23 @@ import CoreDomain
         guard !attemptedApply, !busy, authorize() else { return }
         review = nil; notice = nil
     }
+    func selectBatch(_ id: UUID?, ingredientID: UUID, partID: UUID) {
+        guard canEdit, let lots = context?.inventory.lots,
+              let ingredient = ingredients.firstIndex(where: { $0.id == ingredientID }),
+              let part = ingredients[ingredient].parts.firstIndex(where: { $0.id == partID }) else { return }
+        let selected = id.flatMap { id in lots.first { $0.id == id } }
+        var plannedFoodID = ingredients[ingredient].plannedFoodID
+        if plannedFoodID == nil, selected != nil, ingredients[ingredient].parts[part].suggestedFoodID != nil {
+            plannedFoodID = GroceryPantryCandidates(name: ingredients[ingredient].name,
+                products: lots.map { ($0.foodID, $0.name) }, confirmedAliases: []).unambiguous
+        }
+        ingredients[ingredient].parts[part].selectBatch(selected, plannedFoodID: plannedFoodID)
+    }
     func chooseSuggestion(_ suggestion: Suggestion, ingredientID: UUID, partID: UUID) throws {
         guard canEdit, let ingredient = ingredients.firstIndex(where: { $0.id == ingredientID }),
               let part = ingredients[ingredient].parts.firstIndex(where: { $0.id == partID }),
               suggestions(for: ingredientID).contains(where: { $0.lot == suggestion.lot && $0.eligible }) else { throw Failure.stale }
-        ingredients[ingredient].parts[part].selectBatch(suggestion.lot)
-        ingredients[ingredient].parts[part].relation = .substitution
-        ingredients[ingredient].parts[part].substitution = suggestion.lot.name
-        if ingredients[ingredient].parts[part].use != .unmeasured {
-            ingredients[ingredient].parts[part].use = .measured
-        }
+        ingredients[ingredient].parts[part].chooseSubstitute(suggestion.lot)
     }
     func reviewFoodDetails(lot: InventoryLot, evidence: MealEligibilityEvidence) throws {
         guard canEdit, context?.inventory.lots.contains(lot) == true else { throw Failure.stale }

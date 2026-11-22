@@ -3,6 +3,7 @@ import test from 'node:test';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { chromium } from 'playwright-core';
+import { preview } from 'vite';
 
 let browser;
 test.before(async () => {
@@ -178,5 +179,187 @@ test('history restoration conceals private content until fresh authority succeed
         } finally { gate?.release.resolve(); state.gate = null; await context.close(); }
       });
     }
+  }
+});
+
+test('a second invitation link resets same-document review and waits for fresh authority', async t => {
+  const server = await preview({ configFile: false, build: { outDir: 'public-build' }, preview: { host: '127.0.0.1', port: 0 } });
+  t.after(() => server.close());
+  const origin = new URL(server.resolvedUrls.local[0]).origin;
+  const context = await browser.newContext({ locale: 'en-US' });
+  t.after(() => context.close());
+  const page = await context.newPage();
+  page.setDefaultTimeout(5000);
+  const writes = [], reads = [], previews = [];
+  let actor = 'A', signedIn = true, sessionGate;
+  await page.route('**/v1/**', async route => {
+    const request = route.request(), path = new URL(request.url()).pathname;
+    let json;
+    if (request.method() === 'GET') {
+      reads.push(path);
+      if (path === '/v1/session') {
+        if (sessionGate) await sessionGate.promise;
+        json = actor ? session(actor) : { authenticated: false };
+      } else if (path === '/v1/auth/session') json = { available: true, authenticated: signedIn, csrf: signedIn ? 'verified-identity' : 'challenge' };
+      else if (path === `/v1/households/${actor}/requests/mine`) json = { requests: [], nextCursor: null };
+    } else {
+      const body = request.postDataJSON();
+      if (path === '/v1/invites/preview') {
+        previews.push(body);
+        json = { householdLabel:body.token==='old-invite'?'Old invitation household':'Household B', role:'adult_contributor' };
+      } else writes.push({ path, body });
+      if (path === '/v1/auth/email/start') json = { status: 'check_email' };
+      if (path === '/v1/auth/email/verify') {
+        signedIn = true;
+        json = { available: true, authenticated: true, csrf: 'verified-identity' };
+      }
+      if (path === '/v1/invites/redeem' && body.token === 'new-invite') {
+        json = { householdId: 'B', memberId: 'member-B', role: 'contributor' };
+      }
+      if (path === '/v1/session' && body.householdId === 'B') { actor = 'B'; json = session(actor); }
+    }
+    await route.fulfill(json ? { json } : { status: 404, json: { error: { code: 'unavailable' } } });
+  });
+  // Let the browser deliver a real same-document navigation to the built entry point.
+  const followFragment = hash => page.evaluate(hash => new Promise(resolve => {
+    addEventListener('hashchange', () => resolve(), { once: true });
+    location.assign(hash);
+  }), hash);
+  const age = page.locator('#adult-attestation'), alias = page.locator('#invite-alias');
+  const join = page.getByRole('button', { name: 'Join this household', exact: true });
+  const idle = () => page.locator('main[aria-busy="false"]').waitFor();
+  await page.goto(origin + '/invite#token=old-invite');
+  await age.waitFor(); await idle();
+  const documentId = await page.evaluate(() => window.documentId = crypto.randomUUID());
+  await age.check(); await alias.fill('Old name');
+  const readCount = reads.length;
+  await followFragment('#details');
+  assert.equal(await alias.inputValue(), 'Old name');
+  assert.ok(await age.isChecked());
+  assert.equal(reads.length, readCount);
+
+  // The old household signed out elsewhere before the new link opened.
+  actor = null; signedIn = false; sessionGate = deferred();
+  try {
+    await followFragment('#token=new-invite');
+    assert.equal(await page.evaluate(() => location.hash), '');
+    assert.equal(await age.count(), 0, 'The old review must disappear while session authority is unknown');
+    assert.equal(await page.evaluate(() => window.documentId), documentId);
+    assert.deepEqual(writes, []);
+  } finally { sessionGate.resolve(); sessionGate = null; }
+  await page.locator('#login-email').fill('fixture@example.test');
+  await page.getByRole('button', { name: 'Send sign-in code', exact: true }).click();
+  await page.locator('#login-code').fill('123456');
+  await page.getByRole('button', { name: 'Verify code', exact: true }).click();
+  await page.getByText('Invitation code received.', { exact: true }).waitFor();
+  assert.equal(await alias.count(), 0);
+  assert.equal(await age.isChecked(), false);
+  assert.equal(await join.count(),0);
+  assert.deepEqual(previews,[{token:'old-invite',adultAttestation:true}]);
+  assert.deepEqual(writes.map(w => w.path), ['/v1/auth/email/start', '/v1/auth/email/verify']);
+  await age.check();
+  await page.getByRole('heading',{name:'Household B',exact:true}).waitFor();
+  assert.deepEqual(previews.at(-1),{token:'new-invite',adultAttestation:true});
+  await join.click();
+  await page.locator('#item').waitFor(); await idle();
+  assert.match(await page.getByRole('status').innerText(), /You joined Household B/);
+  assert.deepEqual(writes.slice(2), [
+    { path: '/v1/invites/redeem', body: { token: 'new-invite', intent: 'join', adultAttestation: true, reviewedOffer:{householdLabel:'Household B',role:'adult_contributor'} } },
+    { path: '/v1/session', body: { householdId: 'B', scope: 'own_requests' } }
+  ]);
+});
+
+test('a signed-in adult reviews the current offer before joining at large text sizes', async t => {
+  const server=await preview({configFile:false,build:{outDir:'public-build'},preview:{host:'127.0.0.1',port:0}});
+  t.after(()=>server.close());
+  const origin=new URL(server.resolvedUrls.local[0]).origin;
+  for(const language of ['en','es']){
+    await t.test(language,async t=>{
+      const context=await browser.newContext({locale:language,viewport:{width:320,height:568},colorScheme:language==='en'?'dark':'light',reducedMotion:'reduce'});
+      t.after(()=>context.close());
+      const page=await context.newPage();
+      const offers=[
+        {householdLabel:'Familia de San Bartolomé Cuauhtenco',role:'helper_read'},
+        {householdLabel:'Familia de San Bartolomé Cuauhtenco',role:'helper_edit'}
+      ];
+      const token='private-manually-entered-code';
+      const reads=[],joins=[],activations=[];
+      let current=0, authenticated=true;
+      await page.route('**/v1/**',async route=>{
+        const req=route.request(),path=new URL(req.url()).pathname;
+        assert.ok(!req.url().includes(token));
+        if(path==='/v1/session' && req.method()==='GET')return route.fulfill({json:{authenticated:false}});
+        if(path==='/v1/auth/session')return route.fulfill({json:{available:true,authenticated,csrf:authenticated?'adult-csrf':'challenge'}});
+        const body=req.postDataJSON();
+        assert.equal(req.headers()['x-csrf-token'],'adult-csrf');
+        if(path==='/v1/invites/preview'){
+          reads.push(body);
+          return route.fulfill({json:{...offers[current],irrelevant:'PRIVATE_MEMBER_DETAIL'}});
+        }
+        if(path==='/v1/invites/redeem'){
+          joins.push(body);
+          return route.fulfill({status:409,json:{error:{code:'refresh_required'}}});
+        }
+        if(path==='/v1/session')activations.push(body);
+        return route.fulfill({status:404,json:{error:{code:'unavailable'}}});
+      });
+      await page.goto(origin+'/invite?lang='+language+'&enterCode=1');
+      await page.addStyleTag({content:'html { font-size: 200%; }'});
+      const entry=page.locator('#invitation'),name=page.locator('#invitation-household');
+      await page.locator('#adult-attestation').check();
+      await entry.pressSequentially(token);
+      assert.deepEqual(reads,[]);
+      const join=page.getByRole('button',{name:language==='en'?'Join this household':'Unirme a esta familia',exact:true});
+      const check=page.getByRole('button',{name:language==='en'?'Check invitation':'Revisar invitación',exact:true});
+      assert.equal(await join.count(),0);
+      await check.click();
+      await page.getByRole('heading',{name:offers[0].householdLabel}).waitFor();
+      assert.deepEqual(reads,[{token,adultAttestation:true}]);
+      assert.deepEqual(joins,[]);
+      assert.deepEqual(activations,[]);
+      const offered=page.locator('section[aria-labelledby="invitation-household"]');
+      assert.match(await offered.innerText(),language==='en'?/read the shared pickup instructions/:/leer las instrucciones compartidas/);
+      assert.doesNotMatch(await offered.innerText(),/suggest|sugerir/);
+      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+      await page.locator('#invite-alias').fill('Mar');
+      current=1;
+      await join.click();
+      const changed=page.getByRole('group',{name:language==='en'?'This invitation changed':'Esta invitación cambió'});
+      await changed.waitFor();
+      assert.match(await changed.innerText(),language==='en'?/suggest changes/:/sugerir cambios/);
+      assert.equal(await page.getByRole('status').innerText(),'');
+      const geometry=await changed.evaluate((summary,phrase)=>{
+        const access=summary.querySelector('p').firstChild;
+        const range=document.createRange();
+        range.setStart(access,0);range.setEnd(access,access.textContent.indexOf(phrase)+phrase.length);
+        const rects=[summary.querySelector('h2').getBoundingClientRect(),...range.getClientRects()];
+        return {focused:document.activeElement===summary,visible:rects.every(r=>r.top>=0 && r.bottom<=innerHeight && r.left>=0 && r.right<=innerWidth),
+          outlined:getComputedStyle(summary).outlineStyle!=='none',fits:document.documentElement.scrollWidth<=innerWidth};
+      },language==='en'?'suggest changes':'sugerir cambios');
+      assert.deepEqual(geometry,{focused:true,visible:true,outlined:true,fits:true});
+      assert.deepEqual(joins.map(j=>j.reviewedOffer),[offers[0]]);
+      assert.deepEqual(activations,[]);
+
+      await context.setOffline(true);
+      await name.waitFor({state:'detached'});
+      assert.equal(await join.count(),0);
+      assert.match(await page.getByRole('status').innerText(),language==='en'?/Reconnect/:/conectarte/);
+      await context.setOffline(false);
+      await page.getByRole('heading',{name:offers[1].householdLabel}).waitFor();
+      assert.deepEqual(joins.map(j=>j.reviewedOffer),[offers[0]]);
+      assert.equal(await page.locator('#invite-alias').inputValue(),'Mar');
+      await join.click();
+      await page.getByRole('heading',{name:offers[1].householdLabel}).waitFor();
+      assert.deepEqual(joins.map(j=>j.reviewedOffer),offers);
+      assert.deepEqual(activations,[]);
+      const privateState=await page.evaluate(()=>[document.body.innerHTML,location.href,JSON.stringify(localStorage),JSON.stringify(sessionStorage)]);
+      assert.ok(privateState.every(value=>!value.includes(token)&&!value.includes('PRIVATE_MEMBER_DETAIL')));
+      authenticated=false;
+      await page.getByRole('button',{name:language==='en'?'Refresh':'Actualizar',exact:true}).click();
+      await page.locator('#login-email').waitFor();
+      assert.equal(await name.count(),0);
+      assert.equal(await join.count(),0);
+      assert.equal(await page.locator('#invite-alias').count(),0);
+    });
   }
 });

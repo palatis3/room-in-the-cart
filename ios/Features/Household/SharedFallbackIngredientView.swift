@@ -61,7 +61,9 @@ struct SharedFallbackIngredientView: View {
                 }
             }
         }
+        .onAppear { draft = editor.draft }
         .onChange(of: draft) { _, current in
+            guard editor.draft != current else { return }
             editor.draft = current
             edited()
         }

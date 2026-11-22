@@ -7,6 +7,8 @@ public struct TonightDinnerSelection: Equatable, Sendable {
     public let recipe: MealTemplate
     public let destinationTitle: String
     public var createsPickup: Bool { newPickup != nil }
+    public let pantryProducts: DinnerPantryProducts?
+    private let reservedFoods: Set<UUID>
     private let newPickup: ShoppingLedger?
     private let originalSelection: UUID?
     public let plannedDay: MealDay
@@ -14,7 +16,7 @@ public struct TonightDinnerSelection: Equatable, Sendable {
 
     public static func prepare(match: PantryMealMatcher.Review, destination: ShoppingLedger, createsPickup: Bool,
                                workspace: LedgerWorkspace, access: DinnerAccessContext,
-                               phase: BasketPhase, now: Date, plannedDate: Date? = nil) throws -> Self {
+                               phase: BasketPhase, now: Date, plannedDate: Date? = nil, pantryProductOrigin: UUID? = nil, reservedFoods: Set<UUID> = []) throws -> Self {
         guard case .local = access.scope else { throw DinnerPlanningError.forbidden }
         guard match.canChooseUsingPantry else { throw DinnerPlanningError.reviewRequired("tonightSupply") }
         try access.validate(shopID: destination.id, at: now, applying: true)
@@ -26,11 +28,13 @@ public struct TonightDinnerSelection: Equatable, Sendable {
               contains(match.recipe, in: workspace) else { throw DinnerPlanningError.stalePreview }
         let day = try MealDay(date: now, timeZoneIdentifier: destination.basis.timeZoneIdentifier)
         let plannedDay = try plannedDate.map { try MealDay(date: $0, timeZoneIdentifier: day.timeZoneIdentifier) } ?? day
-        let meal = PlannedDinner(template: match.recipe, day: plannedDay)
+        let products = try pantryProductOrigin.map { try DinnerPantryProducts(review: match, workspace: workspace, originID: $0, destinationShopID: destination.id, reservedFoods: reservedFoods) }
+        var meal = PlannedDinner(template: match.recipe, lineIDs: products?.lineIDs(for: match.recipe), day: plannedDay)
+        meal.pantryProducts = products
         let preview = try DinnerPlanningEngine.preview(changes: [.choose(meal)], tool: .manual, ledger: destination,
             state: workspace.dinnerPlanning, access: access, phase: phase, at: now)
         return Self(preview: preview, recipe: match.recipe, destinationTitle: destination.title,
-                    newPickup: createsPickup ? destination : nil, originalSelection: workspace.selectedShopID, plannedDay: plannedDay, previewedDay: day)
+                    pantryProducts: products, reservedFoods: reservedFoods, newPickup: createsPickup ? destination : nil, originalSelection: workspace.selectedShopID, plannedDay: plannedDay, previewedDay: day)
     }
 
     private static func contains(_ recipe: MealTemplate, in workspace: LedgerWorkspace) -> Bool {
@@ -45,6 +49,7 @@ public struct TonightDinnerSelection: Equatable, Sendable {
         let index = workspace.shops.firstIndex { $0.id == proposal.shopID }
         let replay = workspace.dinnerPlanning.applyReceipts.contains { $0.id == proposal.id }
         if !replay {
+            try pantryProducts?.verifyNewLines(in: workspace, destinationShopID: proposal.shopID, reservedFoods: reservedFoods)
             guard workspace.selectedShopID == originalSelection,
                   Self.contains(recipe, in: workspace),
                   (newPickup != nil ? index == nil : index != nil),

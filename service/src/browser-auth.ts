@@ -74,8 +74,8 @@ export class BrowserAuthService {
   private open(value:string,binding:string):unknown{try{const[v,iv,tag,data]=value.split('.');if(v!=='v1'||!iv||!tag||!data)throw new Error('envelope');const decipher=createDecipheriv('aes-256-gcm',this.key,Buffer.from(iv,'base64url'));decipher.setAAD(Buffer.from(binding));decipher.setAuthTag(Buffer.from(tag,'base64url'));return JSON.parse(Buffer.concat([decipher.update(Buffer.from(data,'base64url')),decipher.final()]).toString('utf8'));}catch{throw sessionNeeded();}}
   private csrf(row:AuthRow,value:string){const a=Buffer.from(row.csrf),b=Buffer.from(value);if(a.length!==b.length||!timingSafeEqual(a,b))throw new ServiceError(403,'csrf_failed','Reload sign-in and try again.');}
   private hash(cookie:string){if(!/^[A-Za-z0-9_-]{43}$/.test(cookie))throw sessionNeeded();return tokenHash(cookie);}
-  private async transaction<T>(hash:string,fn:(db:Transaction,now:Date)=>Promise<T>):Promise<T>{
-    const db=await this.repo.pool.connect();try{await db.query('BEGIN');await db.query("SET LOCAL statement_timeout='10s'; SET LOCAL lock_timeout='3s'");await db.query("SELECT set_config('app.browser_token_hash',$1,true)",[hash]);const now=(await db.query<{now:Date}>('SELECT clock_timestamp() AS now')).rows[0]!.now;const result=await fn(db,now);await db.query('COMMIT');return result;}catch(e){await db.query('ROLLBACK');throw e;}finally{db.release();}
+  private async transaction<T>(hash:string,fn:(db:Transaction,now:Date)=>Promise<T>,readOnly=false):Promise<T>{
+    const db=await this.repo.pool.connect();try{await db.query('BEGIN');await db.query("SET LOCAL statement_timeout='10s'; SET LOCAL lock_timeout='3s'");await db.query("SELECT set_config('app.browser_token_hash',$1,true)",[hash]);const now=(await db.query<{now:Date}>('SELECT clock_timestamp() AS now')).rows[0]!.now;const result=await fn(db,now);await db.query(readOnly?'ROLLBACK':'COMMIT');return result;}catch(e){await db.query('ROLLBACK');throw e;}finally{db.release();}
   }
   private async record(db:Transaction,hash:string,now:Date){const row=(await db.query<AuthRow>('SELECT * FROM ritc.browser_auth WHERE token_hash=$1 FOR UPDATE',[hash])).rows[0];if(!row||row.revoked_at||row.expires_at<=now)throw sessionNeeded();return row;}
   private unwrap<T>(outcome:Outcome<T>):T{if(outcome.failure)throw outcome.failure;return outcome.value!;}
@@ -158,7 +158,7 @@ export class BrowserAuthService {
       return{cookie:nextCookie,csrf:nextCSRF,authenticated:true as const,expiresIn:7*24*60*60};
     });
   }
-  async authenticate(cookie:string,refresh=false):Promise<BrowserIdentity>{
+  async authenticate(cookie:string,mode:'current'|'refresh'|'preview'='current'):Promise<BrowserIdentity>{
     const hash=this.hash(cookie);
     const result=await this.transaction<Outcome<BrowserIdentity>>(hash,async(db,now)=>{
       const row=await this.record(db,hash,now);if(row.phase!=='authenticated'||!row.secret_cipher||!row.access_expires_at)return{failure:sessionNeeded()};
@@ -166,7 +166,7 @@ export class BrowserAuthService {
       try{
         await this.repo.assertIdentityAllowed(db,row.issuer!,row.subject!);
         tokens=tokensSchema.parse(this.open(row.secret_cipher,hash));
-        if(refresh||row.access_expires_at.getTime()<=now.getTime()+60_000){
+        if(mode==='refresh'||(mode==='current'&&row.access_expires_at.getTime()<=now.getTime()+60_000)){
           // Check the stored, previously verified binding before contacting the refresh endpoint.
           // Signature validity or a cached refresh token cannot revive a revoked provider session.
           const live=(await db.query('SELECT ritc.provider_session_refreshable($1::uuid,$2::uuid) AND NOT ritc.identity_blocked($3,$2::text) AS live',[row.session_id,row.subject,row.issuer])).rows[0]?.live;
@@ -178,18 +178,19 @@ export class BrowserAuthService {
         await this.repo.assertSession(db,identity,now);
       }catch(e){
         if(e instanceof ServiceError&&[401,422].includes(e.status)){
-          await db.query('UPDATE ritc.browser_auth SET revoked_at=$2 WHERE token_hash=$1',[hash,now]);return{failure:sessionNeeded()};
+          if(mode!=='preview')await db.query('UPDATE ritc.browser_auth SET revoked_at=$2 WHERE token_hash=$1',[hash,now]);
+          return{failure:sessionNeeded()};
         }
         return{failure:e instanceof ServiceError?e:unavailable()};
       }
-      await db.query('UPDATE ritc.browser_auth SET secret_cipher=$2,access_expires_at=$3 WHERE token_hash=$1',[hash,this.seal(tokens,hash),identity.expiresAt]);
+      if(mode!=='preview')await db.query('UPDATE ritc.browser_auth SET secret_cipher=$2,access_expires_at=$3 WHERE token_hash=$1',[hash,this.seal(tokens,hash),identity.expiresAt]);
       return{value:{identity,csrf:row.csrf,cookie}};
-    });return this.unwrap(result);
+    },mode==='preview');return this.unwrap(result);
   }
   async childBinding(cookie:string):Promise<ChildSigninBinding|undefined>{return this.transaction(this.hash(cookie),async(db,now)=>{const row=await this.record(db,this.hash(cookie),now);return row.guardian_household_id&&row.guardian_invite_id?{householdId:row.guardian_household_id,inviteId:row.guardian_invite_id}:undefined;});}
   async refresh(cookie:string,csrf:string){
     await this.transaction(this.hash(cookie),async(db,now)=>{this.csrf(await this.record(db,this.hash(cookie),now),csrf);});
-    const identity=await this.authenticate(cookie,true);return{authenticated:true as const,csrf:identity.csrf};
+    const identity=await this.authenticate(cookie,'refresh');return{authenticated:true as const,csrf:identity.csrf};
   }
   async logout(cookie:string,csrf:string){
     const hash=this.hash(cookie);let tokens:ProviderTokens|null=null;

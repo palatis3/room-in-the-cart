@@ -102,6 +102,109 @@ final class ShoppingTripTests: XCTestCase {
         XCTAssertEqual(try shop.outstandingQuantity(forLineID: id)?.amount, try Rational(3))
     }
 
+    func testReviewedCartonPickPersistsWithoutAQuantityAndCanBeCompletedDeferredAndUndone() throws {
+        var shop = ShoppingLedger()
+        try shop.commitImport(XCTUnwrap(QuickGrocery.stage("2 Milk", in: shop)))
+        let id = try XCTUnwrap(shop.lines.first?.id)
+        let sourceID = try XCTUnwrap(shop.contributions.first?.id)
+        let two = GroceryPackageCount(count: 2, kind: .carton)
+        let one = GroceryPackageCount(count: 1, kind: .carton)
+        try shop.updateContribution(contributionID: sourceID, quantity: nil, notes: "Keep cold", reviewedPackages: two)
+        // Older full checkoffs have only a timestamp, even when their source was reviewed.
+        var legacy = shop
+        try legacy.setChecked(lineID: id, checked: true)
+        var json = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(legacy)) as? [String: Any])
+        var lines = try XCTUnwrap(json["lines"] as? [[String: Any]])
+        lines[0].removeValue(forKey: "packagePick")
+        json["lines"] = lines
+        legacy = try JSONDecoder().decode(ShoppingLedger.self, from: JSONSerialization.data(withJSONObject: json))
+        try legacy.validate()
+        XCTAssertTrue(legacy.lines[0].isChecked)
+        XCTAssertNil(legacy.lines[0].packagePick)
+        XCTAssertNil(try legacy.pickedQuantity(forLineID: id))
+        try legacy.undoInStore(lineID: id, expectedRevision: legacy.revisionID)
+        XCTAssertTrue(legacy.inStorePickedLines.isEmpty)
+
+        let revision = shop.revisionID
+        XCTAssertThrowsError(try shop.pickPart(lineID: id, amount: .one, expectedRevision: revision))
+        try shop.pickPackages(lineID: id, packages: one, expectedRevision: revision)
+        shop = try reopen(shop)
+        XCTAssertNil(try shop.quantity(forLineID: id))
+        XCTAssertNil(try shop.pickedQuantity(forLineID: id))
+        XCTAssertNil(try shop.outstandingQuantity(forLineID: id))
+        XCTAssertTrue(shop.itemPackages.isEmpty)
+        XCTAssertFalse(shop.lines[0].isChecked)
+        XCTAssertEqual(shop.inStorePickedLines.map(\.id), [id])
+        XCTAssertEqual(two.remaining(after: shop.lines[0].packagePick), one)
+        XCTAssertThrowsError(try shop.pickPackages(lineID: id, packages: one, expectedRevision: revision))
+        XCTAssertThrowsError(try shop.pickPackages(lineID: id, packages: two, expectedRevision: shop.revisionID))
+
+        var undone = shop
+        try undone.undoInStore(lineID: id, expectedRevision: undone.revisionID)
+        XCTAssertNil(undone.lines[0].packagePick)
+        XCTAssertTrue(undone.inStorePickedLines.isEmpty)
+        try shop.recordPickedPrice(lineID: id, expectedRevision: shop.revisionID, total: Money(minorUnits: 200),
+                                   membership: false, weighted: false, conditionsConfirmed: false)
+        try shop.setBudgetFlexible(lineID: id, expectedRevision: shop.revisionID, flexible: true)
+        try shop.leaveForNextTrip(lineID: id, expectedRevision: shop.revisionID)
+        XCTAssertTrue(shop.inStorePickedLines.isEmpty)
+        try shop.undoInStore(lineID: id, expectedRevision: shop.revisionID)
+        XCTAssertEqual(shop.pickedCartSubtotal.total.minorUnits, 200)
+        for completeWithCheckbox in [false, true] {
+            var complete = shop
+            if completeWithCheckbox { try complete.setChecked(lineID: id, checked: true) }
+            else { try complete.pickPackages(lineID: id, packages: one, expectedRevision: complete.revisionID) }
+            complete = try reopen(complete)
+            XCTAssertTrue(complete.lines[0].isChecked)
+            XCTAssertEqual(complete.lines[0].packagePick?.packages, two)
+            XCTAssertNil(complete.priceForCurrentPick(lineID: id))
+            XCTAssertNil(try complete.pickedQuantity(forLineID: id))
+            try complete.undoInStore(lineID: id, expectedRevision: complete.revisionID)
+            XCTAssertEqual(complete.lines[0].packagePick?.packages, one)
+            XCTAssertEqual(complete.pickedCartSubtotal.total.minorUnits, 200)
+            try complete.setChecked(lineID: id, checked: false)
+            XCTAssertTrue(complete.inStorePickedLines.isEmpty)
+            XCTAssertEqual(complete.contributions[0].notes, "Keep cold")
+        }
+    }
+
+    func testPackagePickOnlyCountsMatchingReviewedSourcesAndReconcilesEdits() throws {
+        var shop = ShoppingLedger()
+        let id = try shop.addManualLine(name: "Milk", quantity: .init(amount: .one, unit: .count, originalLiteral: "1"))
+        let first = shop.contributions[0].id
+        let second = try shop.stageImport(text: "2 Milk")
+        try shop.commitImport(second, decisions: [second.lines[0].id: .addToLine(id)])
+        let one = GroceryPackageCount(count: 1, kind: .carton)
+        let bottle = GroceryPackageCount(count: 1, kind: .bottle)
+        func rejects(_ packages: GroceryPackageCount) {
+            let unchanged = shop
+            XCTAssertThrowsError(try shop.pickPackages(lineID: id, packages: packages, expectedRevision: shop.revisionID))
+            XCTAssertEqual(shop, unchanged)
+        }
+        try shop.updateContribution(contributionID: first, quantity: nil, notes: "", reviewedPackages: one)
+        rejects(one)
+        try shop.updateContribution(contributionID: second.lines[0].id, quantity: nil, notes: "", reviewedPackages: bottle)
+        rejects(one)
+        try shop.updateContribution(contributionID: second.lines[0].id, quantity: nil, notes: "", reviewedPackages: one)
+        rejects(bottle)
+        rejects(.init(count: 0, kind: .carton))
+        try shop.pickPackages(lineID: id, packages: one, expectedRevision: shop.revisionID)
+        let reviewed = shop.revisionID
+        try shop.updateContribution(contributionID: first, quantity: nil, notes: "", reviewedPackages: .init(count: 3, kind: .carton))
+        XCTAssertNil(shop.lines[0].tripUndo)
+        XCTAssertEqual(shop.lines[0].packagePick?.packages, one)
+        XCTAssertThrowsError(try shop.pickPackages(lineID: id, packages: one, expectedRevision: reviewed))
+        try shop.removeContribution(contributionID: first)
+        XCTAssertTrue(shop.lines[0].isChecked)
+        try shop.updateContribution(contributionID: second.lines[0].id, quantity: nil, notes: "", reviewedPackages: bottle)
+        XCTAssertFalse(shop.lines[0].isChecked)
+        XCTAssertNil(shop.lines[0].packagePick)
+        rejects(one)
+        try shop.updateContribution(contributionID: second.lines[0].id, quantity: nil, notes: "bottles", reviewedPackages: nil)
+        rejects(bottle)
+        XCTAssertNil(try reopen(shop).pickedQuantity(forLineID: id))
+    }
+
     private func reopen(_ shop: ShoppingLedger) throws -> ShoppingLedger {
         let value = try JSONDecoder().decode(ShoppingLedger.self, from: JSONEncoder().encode(shop))
         try value.validate()

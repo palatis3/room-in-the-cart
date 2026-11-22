@@ -266,7 +266,10 @@ struct HouseholdSettingsView: View {
             if model.busy { ProgressView(ht("Checking service…")) }
         }
         .onAppear { visibleEntry = UUID() }
-        .onDisappear { visibleEntry = nil }
+        .onDisappear {
+            visibleEntry = nil
+            model.lifecycle?.invalidateInvitationPreview()
+        }
         .disabled(model.busy)
         .navigationTitle(ht("Household"))
         .sheet(item: $requestReview, onDismiss: {

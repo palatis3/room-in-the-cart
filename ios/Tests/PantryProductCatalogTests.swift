@@ -318,6 +318,77 @@ extension PantryProductCatalogTests {
         XCTAssertTrue(PrintedPackageDate.monthDayChoices(in: "03/04/2027").isEmpty)
     }
 
+    @MainActor func testReviewUnknownBarcodeRequiresEditableScopeAndCheckedPack() throws {
+        let mistyped = CapturedBarcode(symbology: "manual", value: "020123400007")
+        XCTAssertEqual(mistyped.lookupScope, .checkDigitsOrFormat)
+        XCTAssertNil(mistyped.associationKey(retailer: "Market"))
+        XCTAssertNil(mistyped.catalogGTIN)
+        var manualFood = PantryProductBatch(workspaceID: UUID())
+        XCTAssertTrue(try manualFood.addManual(name: "Store produce", code: mistyped.value))
+        let manualRow = try XCTUnwrap(manualFood.candidates.first)
+        XCTAssertEqual(manualRow.barcode, mistyped)
+        XCTAssertEqual(manualRow.name, "Store produce")
+        XCTAssertEqual(CapturedBarcode(symbology: "manual", value: "012345678905").lookupScope, .global)
+        XCTAssertEqual(CapturedBarcode(symbology: "UPC-A", value: "201234000006").lookupScope, .retailer)
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let memory = PantryPackMemory(folder: folder)
+        let owner = CapturePrivateIdentity(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil)
+        let scope = PantryDigestScope(origin: UUID(), identity: owner)
+        var allowed = true
+        let access = PantryDigestAccess(scope: scope) { allowed }
+        // UPC number system 2 becomes GS1 prefix 020 after the leading EAN zero is restored.
+        let sticker = CapturedBarcode(symbology: "UPC-A", value: "201234000006")
+
+        func open(_ code: CapturedBarcode, store: String, edit: Bool = true) throws -> PantryProductBatch {
+            try memory.reviewUnmatched(code, retailer: store, productName: "Cereal", typed: false, access: access, canEdit: edit)
+        }
+        XCTAssertThrowsError(try open(sticker, store: "Market", edit: false))
+        allowed = false
+        XCTAssertThrowsError(try open(sticker, store: "Market"))
+        allowed = true
+        XCTAssertThrowsError(try open(sticker, store: ""))
+        XCTAssertThrowsError(try open(.init(symbology: "manual", value: "020123400007"), store: "Market"))
+        XCTAssertThrowsError(try open(.init(symbology: "manual", value: "01234558"), store: "Market"))
+        XCTAssertThrowsError(try open(.init(symbology: "QR", value: "https://example.org/pack"), store: "Market"))
+
+        let batch = try open(sticker, store: "Market")
+        XCTAssertEqual(batch.workspaceID, scope.origin)
+        var row = try XCTUnwrap(batch.candidates.first)
+        XCTAssertEqual(row.barcode, sticker)
+        XCTAssertEqual(row.name, "Cereal")
+        XCTAssertEqual(row.retailer, "Market")
+        XCTAssertFalse(row.enteredByHand)
+        XCTAssertNil(row.total)
+        XCTAssertNil(row.dateWordingDraft)
+        XCTAssertNil(row.remembered)
+        XCTAssertThrowsError(try row.homeCount())
+        row.onePackageUnknown = true
+        XCTAssertEqual(try row.homeCount(), .unknown)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: folder.path), "Opening and dropping a review must write nothing.")
+
+        let size = Quantity(amount: try Rational(375), unit: .gram, originalLiteral: "375")
+        let checked = ConfirmedPantryPack(id: UUID(), barcode: sticker, retailer: row.retailer,
+            name: row.name, size: size, attribution: nil, confirmedAt: Date())
+        try memory.replace(nil, with: checked, scope: scope, authorized: access.authorized)
+        let reopened = PantryPackMemory(folder: folder)
+        XCTAssertEqual(try reopened.match(sticker, retailer: "market", scope: scope), checked)
+        XCTAssertEqual(try reopened.match(.init(symbology: "EAN-13", value: "0201234000006"),
+                                          retailer: "Market", scope: scope), checked)
+        XCTAssertNil(try reopened.match(sticker, retailer: "Other market", scope: scope))
+        XCTAssertNil(try reopened.match(sticker, retailer: "Market", scope: .init(origin: UUID(), identity: owner)))
+        XCTAssertThrowsError(try open(sticker, store: "Market"), "A stale no-match screen must not create a new intake.")
+        let upc = CapturedBarcode(symbology: "manual", value: "012345678905")
+        let cereal = try memory.reviewUnmatched(upc, retailer: "Other market", productName: "", typed: true, access: access, canEdit: true)
+        let typed = try XCTUnwrap(cereal.candidates.first)
+        XCTAssertTrue(typed.enteredByHand)
+        XCTAssertEqual(typed.barcode, upc)
+        XCTAssertEqual(typed.retailer, "")
+        XCTAssertTrue(typed.name.isEmpty)
+        let globalUPC = CapturedBarcode(symbology: "UPC-A", value: "020123400006")
+        XCTAssertEqual(try open(globalUPC, store: "").candidates.first?.retailer, "")
+    }
+
     @MainActor func testRememberedPackReopensPerOwnerAndCorrectsAndForgetsOnlyThatSize() throws {
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: folder) }
@@ -425,15 +496,42 @@ extension PantryProductCatalogTests {
         let access = PantryDigestAccess(scope: scope, snapshotIsCurrent: { current }, authorized: { sameOwner })
         XCTAssertTrue(access.authorized())
         XCTAssertFalse(access.awaitingSnapshot())
+        XCTAssertEqual(access.forPackReview(current: nil, scene: .active, saving: false)?.scope, scope)
+        XCTAssertNil(access.forPackReview(current: access, scene: .background, saving: true))
+
         current = false
         XCTAssertFalse(access.authorized())
         XCTAssertTrue(access.awaitingSnapshot())
+        let refreshing = access.forPackReview(current: nil, scene: .active, saving: true)
+        XCTAssertEqual(refreshing?.scope, scope)
+        XCTAssertEqual(refreshing?.authorized(), false)
+        XCTAssertNil(access.forPackReview(current: nil, scene: .active, saving: false))
+        XCTAssertNil(access.forPackReview(current: nil, scene: .inactive, saving: true))
+
+        current = true
+        XCTAssertEqual(access.forPackReview(current: nil, scene: .active, saving: false)?.authorized(), true)
+        let newOwner = CapturePrivateIdentity(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil)
+        let changedAdult = PantryDigestAccess(scope: PantryDigestScope(origin: scope.origin, identity: newOwner)) { true }
+        let newRole = CapturePrivateIdentity(actorID: owner.actorID, subject: nil, householdID: nil, memberID: nil, role: "shopper")
+        let changedRole = PantryDigestAccess(scope: PantryDigestScope(origin: scope.origin, identity: newRole)) { true }
+        let changedOrigin = PantryDigestAccess(scope: PantryDigestScope(origin: UUID(), identity: owner)) { true }
+        XCTAssertNil(access.forPackReview(current: changedAdult, scene: .active, saving: true))
+        XCTAssertNil(access.forPackReview(current: changedRole, scene: .active, saving: true))
+        XCTAssertNil(access.forPackReview(current: changedOrigin, scene: .active, saving: true))
+        let revoked = PantryDigestAccess(scope: scope) { false }
+        XCTAssertNil(access.forPackReview(current: revoked, scene: .active, saving: true))
+
         sameOwner = false
         XCTAssertFalse(access.authorized())
         XCTAssertFalse(access.awaitingSnapshot())
-        current = true
-        XCTAssertFalse(access.authorized())
+        XCTAssertNil(access.forPackReview(current: nil, scene: .active, saving: true))
+        current = false
         XCTAssertFalse(access.awaitingSnapshot())
+        XCTAssertNil(access.forPackReview(current: nil, scene: .active, saving: true))
+
+        let prompt = PantryDigestAccess(scope: scope, retainsPresentation: { true }, authorized: { false })
+        XCTAssertEqual(prompt.forPackReview(current: prompt, scene: .inactive, saving: false)?.authorized(), false)
+        XCTAssertNil(prompt.forPackReview(current: prompt, scene: .background, saving: false))
     }
 
     func testDatePhotoMustAgreeWithOrdinaryUPCAndEveryKnownPhysicalLot() throws {

@@ -30,7 +30,7 @@ struct PantryReceiptRescanView: View {
 
     private func title(for candidate: ReceiptRescanPrompt.Candidate) -> String {
         let first = candidate.original.first
-        let date = first.map { dates.purchaseDay($0.purchaseDate, style: .abbreviated) }
+        let date = first.map { dates.purchaseDay($0, style: .abbreviated) }
         let reference = first?.transactionReference ?? String(candidate.id.uuidString.suffix(8))
         return [first?.merchant, date, reference].compactMap { $0 }.joined(separator: " · ")
     }
@@ -78,8 +78,9 @@ struct PantryReceiptRescanView: View {
             Text(verbatim: row.original)
             Text(verbatim: row.name)
             if row.treatment == .add { Text(pantryLocationName(row.location)) }
-            Text(pantryFormat("Received %@", row.received + " " + pantryUnit(row.unit)))
-            Text(pantryFormat("Usable %@", row.usable + " " + pantryUnit(row.unit)))
+            Text(pantryFormat("Received %@", pantryPrintedQuantity(row.received, unit: row.unit)))
+            Text(pantryFormat("Usable %@", pantryPrintedQuantity(row.usable, unit: row.unit)))
+                .accessibilityIdentifier("receipt.rescan.usable.\(row.ordinal)")
             if !row.paid.isEmpty { Text(pantryFormat("Paid line total %@", row.paid)) }
             lineMatch(for: row.ordinal, candidate: candidate)
         }

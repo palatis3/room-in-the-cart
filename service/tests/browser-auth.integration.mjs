@@ -72,6 +72,37 @@ async function createScope(logged,label='Fictional OTP household'){
 }
 function cookieHash(client){return createHash('sha256').update(client.jar.get('__Host-ritc_auth')).digest('hex');}
 
+test('browser invitation preview verifies CSRF and live sign-in without changing either session',async t=>{
+  const server=createHTTPServer({repository:repo,verifier,webOrigin,browserAuth:bff,clientAddress:()=>'127.0.0.2'});
+  const base=await listen(server);t.after(()=>new Promise(resolve=>server.close(resolve)));
+  const owner=await signIn(browser(()=>base)),recipient=await signIn(browser(()=>base)),{householdId,session}=await createScope(owner);
+  const issued=await owner.client.call('/v1/households/'+householdId+'/invites','POST',{kind:'adult_contributor'},session.csrf);
+  assert.equal(issued.status,200);
+  const route='/v1/invites/preview',body={token:issued.data.token,adultAttestation:true};
+  const preview=(csrf,extra)=>recipient.client.call(route,'POST',body,csrf,extra);
+  const snapshot=async()=>({
+    auth:(await admin.query('SELECT xmin::text FROM ritc.browser_auth WHERE token_hash=$1',[cookieHash(recipient.client)])).rows,
+    scope:(await admin.query('SELECT s.xmin::text FROM ritc.web_session s JOIN ritc.member m USING(household_id,member_id) WHERE m.subject=$1',[accounts.get(recipient.email).subject])).rows
+  });
+  const before=await snapshot(),refreshCount=calls.refresh;
+  assert.equal((await browser(()=>base).call(route,'POST',body)).status,401);
+  assert.equal((await preview()).status,403);
+  assert.equal((await preview(recipient.csrf,{Origin:'https://other.fixture.invalid'})).status,403);
+  const expected={householdLabel:'Fictional OTP household',role:'adult_contributor'};
+  for(let i=0;i<2;i++){
+    const r=await preview(recipient.csrf);assert.equal(r.status,200);assert.deepEqual(r.data,expected);
+    assert.equal(r.headers.has('set-cookie'),false);assert.equal(r.headers.get('cache-control'),'no-store');
+  }
+  assert.deepEqual(await snapshot(),before);assert.equal(calls.refresh,refreshCount);
+  const other=await createScope(recipient,'Existing workspace'),scoped=await snapshot();
+  assert.equal((await preview(recipient.csrf)).status,403);
+  assert.deepEqual((await preview(other.session.csrf)).data,expected);
+  assert.deepEqual(await snapshot(),scoped);
+  await admin.query('DELETE FROM auth.sessions WHERE id=$1',[accounts.get(recipient.email).sessionId]);
+  assert.equal((await preview(other.session.csrf)).status,401);
+  assert.deepEqual(await snapshot(),scoped);
+});
+
 test('email code login stores encrypted provider state and grants no household authority',async()=>{
   const logged=await signIn();const state=await logged.client.call('/v1/auth/session');assert.deepEqual(Object.keys(state.data).sort(),['available','authenticated','csrf'].sort());assert.equal(state.data.authenticated,true);
   assert.deepEqual((await logged.client.call('/v1/me/workspaces')).data,{workspaces:[]});

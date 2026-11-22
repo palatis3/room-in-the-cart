@@ -91,6 +91,33 @@ import LocalStore
         XCTAssertEqual(first.stockLots.first?.usable, q(8), "Historical copies are not rewritten")
     }
 
+    func testDinnerShoppingCheckUsesOnlyFreeStockAndKeepsTheListAndOtherShopsLunch() async throws {
+        var shop = ShoppingLedger()
+        let wraps = UUID(), recipe = MealTemplate(title: "Wrap dinner", ingredients: [
+            .init(name: "Wraps", quantity: q(4)), .init(name: "Tomatoes", quantity: q(2))
+        ])
+        let dinner = try shop.chooseMeal(recipe)
+        var lunch = PickupJourney(id: UUID(), savedAt: now)
+        lunch.stockLots = [.init(id: wraps, foodID: wraps, name: "Wraps", usable: q(5), confirmedAt: now, source: .pantry)]
+        lunch.stockNeeds = [.init(id: UUID(), foodID: wraps, name: "Lunch", amount: q(2), priority: .protected)]
+        let f = try await activate([lunch])
+        let original = try await f.repository.load(at: now)
+        let workspace = LedgerWorkspace(shops: [shop], mealTemplates: [recipe], selectedShopID: shop.id)
+        let check = try DinnerShoppingCheck(shop: shop, occurrenceID: dinner, savedTemplates: [recipe])
+        let input = try TonightMealModel.input(workspace: workspace, ledgerRevision: 1,
+            context: .init(snapshot: original, mapping: f.mapping, asOf: now), sources: [])
+        let reviewed = try check.review(matches: [check.recipe.ingredients[0].id: wraps], input: input, workspace: workspace, journeys: [lunch])
+        XCTAssertEqual(reviewed.ingredients.map(DinnerShoppingCheck.remainder), [.buy(q(1)), .buy(q(2))])
+        let cleared = try check.review(matches: [:], input: input, workspace: workspace, journeys: [lunch])
+        XCTAssertEqual(cleared.ingredients.map(DinnerShoppingCheck.remainder), [.buy(q(4)), .buy(q(2))])
+        let after = try await f.repository.load(at: now)
+        XCTAssertEqual(after.state, original.state)
+        XCTAssertEqual(after.lots, original.lots)
+        XCTAssertEqual(after.reservations, original.reservations)
+        XCTAssertEqual(workspace.shops, [shop])
+        XCTAssertEqual(workspace.shops[0].contributions.map(\.quantity), [q(4), q(2)])
+    }
+
     func testNoJourneyPantryAndQualitativeObservationNeverUseOldNumericCount() async throws {
         let f = try await activate([]), shop = ShoppingLedger(), food = UUID(), scope = UUID()
         let lot = try await add(f, foodID: food, count: .exact(q(6)))

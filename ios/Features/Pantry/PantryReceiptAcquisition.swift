@@ -69,12 +69,17 @@ struct ReceiptImportDraft {
     var printedPaidTotal: ExtractedReceiptDocument.PrintedPaidTotal?
     var overlapChoices: [UUID: PutawayOverlap.Choice] = [:]
     var reference = ""
-    var purchaseDate = Calendar.current.startOfDay(for: Date())
+    // A nil zone is reserved for an identified legacy receipt during a replay.
+    var purchaseTimeZone: TimeZone?
+    var purchaseDate: Date
+    var purchaseDay: MealDay? {
+        purchaseTimeZone.flatMap { try? MealDay(date: purchaseDate, timeZoneIdentifier: $0.identifier) }
+    }
     var printedDate: ReceiptPrintedDate?
     var dateConfirmed = false
     var lines: [Line]
 
-    init(source: SourceMediaRecord, fromSavedPickup: Bool = false, lots: [InventoryLot] = [], now: Date = Date()) throws {
+    init(source: SourceMediaRecord, fromSavedPickup: Bool = false, lots: [InventoryLot] = [], now: Date = Date(), timeZone: TimeZone = .current) throws {
         try source.validate()
         guard source.target.kind == .receiptEvidence, !source.receiptLines.isEmpty else { throw ScanFailure.needsReview }
         savedPickup = fromSavedPickup ? .init(originID: source.target.workspaceID, id: source.target.containerID) : nil
@@ -84,8 +89,11 @@ struct ReceiptImportDraft {
         firstSectionDigest = source.firstSectionDigest
         imageDigest = source.documentDigest ?? source.imageJPEG.map { Data(SHA256.hash(data: $0)) }
         merchant = source.reviewedLabel
-        printedDate = ReceiptPrintedDate.unique(in: source.receiptLines, now: now)
-        if let printedDate { purchaseDate = printedDate.day }
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = timeZone
+        purchaseTimeZone = timeZone
+        printedDate = ReceiptPrintedDate.unique(in: source.receiptLines, now: now, calendar: calendar)
+        purchaseDate = printedDate?.day ?? calendar.startOfDay(for: now)
         var knownStorage: [String:Set<InventoryLocation>] = [:]
         for lot in lots { knownStorage[InventoryReceiptAlias.key(lot.name), default: []].insert(lot.location) }
         let linkedAmountIDs = Set(source.receiptLines.compactMap(\.linkedAmountLineID))
@@ -122,7 +130,7 @@ struct ReceiptImportDraft {
 
     var evidenceIdentities: [UUID] {
         var ids: [UUID] = []
-        if let imageDigest { ids.append(ReceiptAcquisition.identity(["image", imageDigest.base64EncodedString()])) }
+        if let imageDigest { ids.append(ReceiptAcquisition.imageIdentity(imageDigest)) }
         if !cleaned(reference).isEmpty { ids.append(receiptID) }
         return ids
     }
@@ -139,6 +147,7 @@ struct ReceiptImportDraft {
 
     func facts(receiptID: UUID, snapshot: PantryRepository.Snapshot, at now: Date, lineDocumentID: UUID? = nil) throws -> [ReceiptAcquisition] {
         guard snapshot.state.workspaceID == workspaceID, dateConfirmed, purchaseDate <= now,
+              purchaseTimeZone == nil || purchaseDay != nil,
               !cleaned(merchant).isEmpty else { throw PantryReceiptError.invalid }
         let selected = stockLines
         guard (1...50).contains(selectedLines.count) else { throw PantryReceiptError.selection }
@@ -169,7 +178,7 @@ struct ReceiptImportDraft {
                 foodID: foodID, merchant: cleaned(merchant), purchaseDate: purchaseDate,
                 transactionReference: cleaned(reference).isEmpty ? nil : cleaned(reference), imageDigest: imageDigest,
                 originalLine: row.original, name: cleaned(row.name), received: received, usable: usable,
-                paidLineTotal: cleaned(row.paid).isEmpty ? nil : Money(decimal: cleaned(row.paid)), stock: stock, savedPickup: savedPickup, documentLine: row.documentLine, lineDocumentID: lineDocumentID)
+                paidLineTotal: cleaned(row.paid).isEmpty ? nil : Money(decimal: cleaned(row.paid)), stock: stock, savedPickup: savedPickup, documentLine: row.documentLine, lineDocumentID: lineDocumentID, purchaseDay: purchaseDay)
             try fact.validate()
             return fact
         }
@@ -226,7 +235,7 @@ enum PantryAcquisitionCodec {
         try value.validate()
         return .init(id: value.id, receiptID: value.receiptID, lineID: value.lineID, lotID: value.lotID, revision: value.revision,
                      supersedesID: value.supersedesID, payload: try data(value),
-                     imageIdentity: value.imageDigest.map { ReceiptAcquisition.identity(["image", $0.base64EncodedString()]) },
+                     imageIdentity: value.imageDigest.map(ReceiptAcquisition.imageIdentity),
                      transactionIdentity: value.transactionReference.map {
                          ReceiptAcquisition.receiptID(merchant: value.merchant, transactionReference: $0, imageDigest: nil, draftID: value.receiptID)
                      })

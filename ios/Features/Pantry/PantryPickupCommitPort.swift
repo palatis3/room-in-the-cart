@@ -94,9 +94,10 @@ import LocalStore
             resultingReservations: delta.reservations, sourceRevisions: Dictionary(uniqueKeysWithValues: current.sources.map { ($0.id, $0.revision) }))
     }
 
-    func loadCurrent() async throws -> CurrentSnapshot {
+    func loadCurrent(waitForShelf: Bool = false) async throws -> CurrentSnapshot {
         try requireAccess()
-        let lease = try gate.beginExclusiveWrite(); defer { gate.endExclusiveWrite(lease) }
+        let lease = waitForShelf ? try await gate.beginShelfRead() : try gate.beginExclusiveWrite()
+        defer { gate.endExclusiveWrite(lease) }
         let current = try await readCurrent(at: clock())
         return CurrentSnapshot(inventory: current.inventory, sources: current.sources)
     }

@@ -55,16 +55,34 @@ extension ReceiptImportDraft.Line {
         original.contains(#/(?i)\b(?:packs?|pk|multipacks?|paquetes?)\b|\d\s*[x×]\s*\d/#)
     }
 
-    /// Only a shopper's explicit selection confirms that this printed quantity came home intact.
-    func permitsIntactSelection(deliveries: [InventoryLot]) -> Bool {
-        guard !needsPackReview, canComparePurchase, let printed, printed.kind == .item,
-              printed.quantity != nil, printed.unit != nil, printed.name != nil,
+    private func permitsPutawayShortcut(deliveries: [InventoryLot]) -> Bool {
+        guard !needsPackReview, canComparePurchase, printed?.kind == .item,
+              !ReceiptPrintedEvidence.isVoidedOrUnreceived(original),
               !original.contains(#/(?i)\b(?:missing|damaged|broken|cracked|substitut\w*|replacement|unweighed|unknown|faltante|sin pesar|peso desconocido|dañad\w*|rot[oa]s?|quebrad\w*|sustitu\w*|reemplaz\w*|return\w*|devuelt\w*|refund\w*|eaten|consumid\w*)\b/#)
         else { return false }
         let key = InventoryReceiptAlias.key(name)
         return !deliveries.contains {
             PantryReceiptDelivery.fragment(of: $0) != nil && InventoryReceiptAlias.key($0.name) == key
         }
+    }
+
+    /// Only a shopper's explicit selection confirms that this printed quantity came home intact.
+    func permitsIntactSelection(deliveries: [InventoryLot]) -> Bool {
+        printed?.quantity != nil && printed?.unit != nil && printed?.name != nil
+            && permitsPutawayShortcut(deliveries: deliveries)
+    }
+
+    func permitsDocumentPutaway(deliveries: [InventoryLot]) -> Bool {
+        guard documentLine != nil, treatment == .skip, printed?.quantity == nil,
+              appliedAlias == nil, !CouponReceiptEvidence.isDiscountLine(original),
+              ReceiptPrintedEvidence.permitsPutawayWording(original)
+        else { return false }
+        return permitsPutawayShortcut(deliveries: deliveries)
+    }
+
+    mutating func startDocumentPutaway(deliveries: [InventoryLot]) {
+        guard permitsDocumentPutaway(deliveries: deliveries) else { return }
+        treatment = .add
     }
 
     mutating func selectIntact(deliveries: [InventoryLot]) {
@@ -100,11 +118,16 @@ extension PantryRepository {
         try requireAccess()
         let money = try ComparisonModel.money(draft.receiptTotal)
         let reference = draft.reference.trimmingCharacters(in: .whitespacesAndNewlines)
-        let header = ReviewedReceiptHeader(id: receiptID, owner: receiptOwner,
-            merchant: draft.merchant.trimmingCharacters(in: .whitespacesAndNewlines), date: draft.purchaseDate,
-            totalMinor: money?.minorUnits ?? prior?.totalMinor, reference: reference.isEmpty ? prior?.reference : reference)
+        let selectedDay = draft.purchaseDay?.iso8601
         if let prior {
-            guard prior.date == header.date, prior.merchant == header.merchant,
+            guard prior.purchaseDay.map({ $0 == selectedDay }) ?? (prior.date == draft.purchaseDate) else { throw PantryReceiptError.changedEvidence }
+        }
+        let header = ReviewedReceiptHeader(id: receiptID, owner: receiptOwner,
+            merchant: draft.merchant.trimmingCharacters(in: .whitespacesAndNewlines), date: prior?.date ?? draft.purchaseDate,
+            totalMinor: money?.minorUnits ?? prior?.totalMinor, reference: reference.isEmpty ? prior?.reference : reference,
+            purchaseDay: prior == nil ? selectedDay : prior?.purchaseDay)
+        if let prior {
+            guard prior.merchant == header.merchant,
                   prior.reference == nil || prior.reference == header.reference,
                   prior.totalMinor == nil || prior.totalMinor == header.totalMinor else { throw PantryReceiptError.changedEvidence }
         }
@@ -195,6 +218,14 @@ extension PantryRepository {
         }
         let value = ReviewedPutawayReceipt(header: header, decisions: decisions, identities: draft.evidenceIdentities, layout: layout, ordinals: ordinals)
         return (value, prior != header || saved.count != decisions.count || newIdentity || coordinates.count != decisions.count)
+    }
+
+    func putawayReceipt(fileDigest: Data) async throws -> ReviewedReceiptHeader? {
+        try requireAccess()
+        guard let owner = aliasPersonaID, fileDigest.count == 32 else { return nil }
+        let header = try await store.reviewedReceiptHeader(imageIdentity: ReceiptAcquisition.imageIdentity(fileDigest), owner: owner)
+        try requireAccess()
+        return header
     }
 
     func putawayHeaders(after: UUID?) async throws -> [ReviewedReceiptHeader] {

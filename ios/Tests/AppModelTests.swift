@@ -7,6 +7,45 @@ import SQLite3
 
 final class AppModelTests: XCTestCase {
     @MainActor
+    func testSettingAsideOneOfferRemainsPrivateReversibleAndPreservesBothPricesAfterReopen() async throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("packs.sqlite")
+        let store = try ComparisonStore(url: url)
+        let original = makeDraft(unknownSecondYield: false)
+        let model = ComparisonModel(draft: original)
+        model.compare()
+        let reference = try XCTUnwrap(model.result)
+        model.setAside(.a)
+        XCTAssertEqual(model.result, reference)
+        let unchangedUnit = model.draft.aUnit
+        model.draft.setPackUnit(unchangedUnit, for: .a)
+        XCTAssertEqual(model.draft.setAsidePack, .a)
+        XCTAssertEqual(model.result, reference)
+        await model.save(in: store)
+        XCTAssertNotNil(model.savedAt)
+        try await store.close()
+
+        let reopenedStore = try ComparisonStore(url: url)
+        let stored = try await reopenedStore.load(id: original.id)
+        let record = try XCTUnwrap(stored)
+        let saved = try JSONDecoder().decode(SavedPayload.self, from: record.payload)
+        XCTAssertEqual(saved.draft.setAsidePack, .a)
+        XCTAssertEqual(saved.answer, reference)
+        XCTAssertEqual(saved.draft.aPrice, original.aPrice)
+        XCTAssertEqual(saved.draft.bPrice, original.bPrice)
+        let reopened = ComparisonModel(draft: saved.draft, savedRevision: record.revision)
+        reopened.setAside(nil)
+        XCTAssertNil(reopened.draft.setAsidePack)
+        XCTAssertEqual(reopened.result, reference)
+        reopened.setAside(.b)
+        reopened.draft.aPrice = "99.00"
+        XCTAssertNil(reopened.draft.setAsidePack)
+        XCTAssertNil(reopened.result)
+        try await reopenedStore.close()
+    }
+
+    @MainActor
     func testCornmealPackDefaultsAndReadableConvertedTotals() throws {
         var draft = ComparisonDraft()
         draft.item = "Cornmeal"

@@ -65,6 +65,7 @@
 /* The product overview shares the app's cream, plum and pear colors. */
 .public-site[data-public-page=about] { --page-width: 76rem; }
 [data-public-page=about] header { padding-block: 1rem; }
+.overview-requests { display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; }
 [data-public-page=about] main { padding-block: .5rem 2rem; }
 .overview-hero {
   background: #532847;

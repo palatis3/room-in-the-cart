@@ -63,6 +63,7 @@ struct PackageDateChoices: View {
                 }
                 Button(pantryText("Skip")) { dismiss() }
             }
-        }.disabled(!access.authorized()).privacySensitive().navigationTitle(pantryText("Add a date or reminder"))
+        }.disabled(!access.authorized()).privacySensitive()
+            .navigationTitle(pantryText("Date or reminder")).navigationBarTitleDisplayMode(.inline)
     }
 }

@@ -58,6 +58,7 @@ struct ComparisonView: View {
     @EnvironmentObject private var household: HouseholdModel
     @EnvironmentObject private var child: GuardianChildCoordinator
     private let allowsPersonalPrices: Bool
+    private let applyEdits: ((ComparisonDraft) -> Void)?
     private var priceIdentity: CapturePrivateIdentity? {
         guard allowsPersonalPrices, scene == .active, UIApplication.shared.isProtectedDataAvailable,
               !child.presented, household.projection?.grantId == nil else { return nil }
@@ -74,14 +75,17 @@ struct ComparisonView: View {
         var id: Self { self }
     }
     @State private var missingInput: MissingInput?
-    @State private var toolbarSaveError: String?
+    @State private var toolbarError: String?
+    @State private var editingPreviousResult = false
     @State private var reviewing: Bool
     private enum ResultFocus: Hashable { case summary, saved, toolbarSaved, error }
     @AccessibilityFocusState private var resultFocused: ResultFocus?
     @FocusState private var inputFocused: String?
 
-    init(draft: ComparisonDraft = ComparisonDraft(), saved: SavedComparison? = nil, allowsPersonalPrices: Bool = true) {
+    init(draft: ComparisonDraft = ComparisonDraft(), saved: SavedComparison? = nil, allowsPersonalPrices: Bool = true,
+         applyEdits: ((ComparisonDraft) -> Void)? = nil) {
         self.allowsPersonalPrices = allowsPersonalPrices
+        self.applyEdits = applyEdits
         let model = ComparisonModel(draft: draft, savedRevision: saved?.revision ?? 0)
         model.savedAt = saved?.savedAt
         _model = StateObject(wrappedValue: model)
@@ -96,15 +100,15 @@ struct ComparisonView: View {
                     .toolbar {
                         ToolbarItem(placement: .topBarTrailing) { toolbarSaveControl }
                     }
-                    .alert(tr("Save"), isPresented: Binding(
-                        get: { toolbarSaveError != nil },
-                        set: { if !$0 { toolbarSaveError = nil } }
-                    ), presenting: toolbarSaveError) { _ in
-                        Button(tr("Done"), role: .cancel) {}
-                    } message: { error in
-                        Text(error)
-                    }
                     .sheet(item: $missingInput) { input in missingInputEditor(input) }
+                    .navigationDestination(isPresented: $editingPreviousResult) {
+                        // Back discards this editor's private working copy, including invalid input.
+                        ComparisonView(draft: model.draft, allowsPersonalPrices: allowsPersonalPrices) { revised in
+                            model.draft = revised
+                            editingPreviousResult = false
+                            updateResult()
+                        }
+                    }
             } else {
                 editor
                     .toolbar {
@@ -117,9 +121,24 @@ struct ComparisonView: View {
                                 }
                                 .accessibilityIdentifier("comparison.done." + inputFocused)
                             }
+                        } else if applyEdits != nil {
+                            ToolbarItem(placement: .topBarTrailing) {
+                                Button(tr("Recalculate")) {
+                                    updateResult()
+                                    toolbarError = model.error
+                                }.accessibilityIdentifier("comparison.recalculate")
+                            }
                         }
                     }
             }
+        }
+        .alert(tr(reviewing ? "Save" : "Recalculate"), isPresented: Binding(
+            get: { toolbarError != nil },
+            set: { if !$0 { toolbarError = nil } }
+        ), presenting: toolbarError) { _ in
+            Button(tr("Done"), role: .cancel) {}
+        } message: { error in
+            Text(error)
         }
         .workingSurface()
         .navigationTitle(tr("Compare packs"))
@@ -158,7 +177,7 @@ struct ComparisonView: View {
             if model.savedAt != nil {
                 resultFocused = focusAfterSave
             } else if let error = model.error {
-                if focusAfterSave == .toolbarSaved { toolbarSaveError = error }
+                if focusAfterSave == .toolbarSaved { toolbarError = error }
                 else { resultFocused = .error }
             }
         }
@@ -183,14 +202,19 @@ struct ComparisonView: View {
     }
 
     private func updateResult() {
+        inputFocused = nil
         missingInput = nil
         model.compare()
+        if let applyEdits, model.result != nil {
+            applyEdits(model.draft)
+            return
+        }
         reviewing = model.result != nil
         resultFocused = reviewing ? .summary : .error
     }
 
     private var editRow: some View {
-        Button { reviewing = false } label: {
+        Button { editingPreviousResult = true } label: {
             HStack(spacing: 12) {
                 Label(tr("Edit"), systemImage: "pencil")
                 Spacer(minLength: 8)
@@ -239,12 +263,7 @@ struct ComparisonView: View {
             }
             if let error = model.error { errorRow(error) }
             Section {
-                Button {
-                    inputFocused = nil
-                    model.compare()
-                    if model.result != nil, model.error == nil { reviewing = true; resultFocused = .summary }
-                    else { resultFocused = .error }
-                } label: { Text(tr("Compare enough food")) }
+                Button(tr("Compare enough food"), action: updateResult)
                 .buttonStyle(PrimaryAction()).accessibilityIdentifier("compare")
                 .listRowBackground(Color.clear).listRowInsets(EdgeInsets())
             }
@@ -272,24 +291,9 @@ struct ComparisonView: View {
             ForEach(UnitOfMeasure.allCases, id: \.self) { unit in Text(unit.displayName).tag(unit) }
         }
         if typeSize.isAccessibilitySize {
-            let value = selection.wrappedValue.displayName
-            Menu {
+            journalStackedMenu(title, value: selection.wrappedValue.displayName, id: id) {
                 picker.pickerStyle(.inline)
-            } label: {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(title).font(.subheadline).foregroundStyle(Theme.secondary)
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text(value).foregroundStyle(Theme.action)
-                        Spacer(minLength: 0)
-                        Image(systemName: "chevron.up.chevron.down").imageScale(.small)
-                            .foregroundStyle(Theme.action).accessibilityHidden(true)
-                    }
-                }
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                .contentShape(Rectangle())
             }
-            .accessibilityLabel(title).accessibilityValue(value).accessibilityIdentifier(id)
         } else {
             picker.frame(minHeight: 44).accessibilityIdentifier(id)
         }
@@ -383,6 +387,7 @@ struct ComparisonView: View {
                 recoveryActions(for: .a, result: result.offerA)
                 recoveryActions(for: .b, result: result.offerB)
                 editRow
+                setAsidePicker(inputs)
             }
             Section {
                 Text(tr("Other groceries, fees and taxes are not included. This does not establish whether the whole pickup fits your budget."))
@@ -452,6 +457,16 @@ struct ComparisonView: View {
         .foregroundStyle(Theme.action).accessibilityIdentifier(id)
     }
 
+    private func setAsidePicker(_ inputs: ComparisonRequest) -> some View {
+        let title = tr("Set aside an option")
+        let keep = tr("Keep both options")
+        let packA = inputs.offerA.label.isEmpty ? tr("Pack A") : tr("Pack A") + " · " + inputs.offerA.label
+        let packB = inputs.offerB.label.isEmpty ? tr("Pack B") : tr("Pack B") + " · " + inputs.offerB.label
+        return ComparisonSetAsideMenu(title: title, keepBoth: keep, packA: packA, packB: packB,
+                                      selected: model.draft.setAsidePack, select: model.setAside)
+            .frame(minHeight: 44)
+    }
+
     private func costLine(_ offer: PackOffer, result: OfferResult, fallback: String,
                           unitPrice: Rational?, unit: UnitOfMeasure?) -> some View {
         let title = offer.label.isEmpty ? fallback : fallback + " · " + offer.label
@@ -468,8 +483,16 @@ struct ComparisonView: View {
                     Text(verbatim: cost).fontWeight(.semibold).monospacedDigit()
                 }
             }
+            if model.draft.setAsidePack?.rawValue == offer.id {
+                Label(tr("Set aside for this trip"), systemImage: "minus.circle")
+                    .font(.subheadline)
+            }
             if let packs = result.packsToBuy, packs > 0, let price = offer.price {
                 WholePackCalculation(count: packs, price: price)
+            }
+            if let unit, let leftover = result.leftover {
+                Text(message("Left over: %@ %@", comparisonAmountText(leftover, locale: locale), unit.comparisonLabel(for: leftover)))
+                    .font(.subheadline).monospacedDigit()
             }
             if let unitPrice, let unit {
                 Text(verbatim: comparisonUnitPriceText(unitPrice, in: unit, locale: locale))
@@ -805,6 +828,76 @@ private struct ComparisonMetric: UIViewRepresentable {
         guard width > 0 else { return .zero }
         let measured = uiView.sizeThatFits(CGSize(width: width, height: .greatestFiniteMagnitude))
         return CGSize(width: width, height: ceil(measured.height))
+    }
+}
+
+/// The result above this menu can grow several screens tall when text size changes.
+private struct ComparisonSetAsideMenu: UIViewRepresentable {
+    let title: String
+    let keepBoth: String
+    let packA: String
+    let packB: String
+    let selected: ComparisonPack?
+    let select: (ComparisonPack?) -> Void
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    func makeUIView(context: Context) -> UIButton {
+        let button = UIButton(type: .system)
+        button.contentHorizontalAlignment = .fill
+        button.showsMenuAsPrimaryAction = true
+        button.accessibilityIdentifier = "comparison.setAsidePack"
+        return button
+    }
+
+    func updateUIView(_ button: UIButton, context: Context) {
+        let value = switch selected {
+        case .a: packA
+        case .b: packB
+        case nil: keepBoth
+        }
+        let traits = UITraitCollection(preferredContentSizeCategory: UIContentSizeCategory(typeSize))
+        var configuration = UIButton.Configuration.plain()
+        configuration.title = title
+        configuration.subtitle = value
+        configuration.titleLineBreakMode = .byWordWrapping
+        configuration.subtitleLineBreakMode = .byWordWrapping
+        configuration.titleAlignment = .leading
+        configuration.titlePadding = 4
+        configuration.contentInsets = .zero
+        configuration.image = UIImage(systemName: "chevron.up.chevron.down")
+        configuration.imagePlacement = .trailing
+        configuration.imagePadding = 8
+        configuration.preferredSymbolConfigurationForImage = .init(textStyle: .body, scale: .small)
+        configuration.baseForegroundColor = UIColor(Theme.action)
+        configuration.titleTextAttributesTransformer = attributes(for: .subheadline, color: Theme.secondary, traits: traits)
+        configuration.subtitleTextAttributesTransformer = attributes(for: .body, color: Theme.action, traits: traits)
+        button.configuration = configuration
+        button.titleLabel?.adjustsFontForContentSizeCategory = true
+        button.subtitleLabel?.adjustsFontForContentSizeCategory = true
+        button.accessibilityLabel = title
+        button.accessibilityValue = value
+        button.menu = UIMenu(children: [choice(keepBoth, pack: nil), choice(packA, pack: .a), choice(packB, pack: .b)])
+    }
+
+    private func attributes(for style: UIFont.TextStyle, color: Color,
+                            traits: UITraitCollection) -> UIConfigurationTextAttributesTransformer {
+        UIConfigurationTextAttributesTransformer { incoming in
+            var result = incoming
+            result.font = .preferredFont(forTextStyle: style, compatibleWith: traits)
+            result.foregroundColor = UIColor(color)
+            return result
+        }
+    }
+
+    private func choice(_ label: String, pack: ComparisonPack?) -> UIAction {
+        UIAction(title: label, state: selected == pack ? .on : .off) { _ in select(pack) }
+    }
+
+    func sizeThatFits(_ proposal: ProposedViewSize, uiView: UIButton, context: Context) -> CGSize? {
+        guard let width = proposal.width, width.isFinite else { return nil }
+        guard width > 0 else { return .zero }
+        let size = uiView.sizeThatFits(CGSize(width: width, height: .greatestFiniteMagnitude))
+        return CGSize(width: width, height: max(44, ceil(size.height)))
     }
 }
 

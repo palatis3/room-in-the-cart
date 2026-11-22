@@ -41,6 +41,7 @@ import CoreDomain
     let authorize: () -> Bool
     let onReviewed: (ReviewedScan) -> Void
     let correctionScope: CaptureCorrectionScope?
+    private let initialLabel: String
     private let focusReceiptText: Bool
     private var cameraPermission: SourceCameraPermission
     @StateObject private var model = ScanModel()
@@ -58,6 +59,7 @@ import CoreDomain
     @State private var matchedProduct = false
     @State private var inspectedLineID: UUID?
     @State private var receiptLines: [ScanReceiptLine]?
+    @State private var confirmingReceiptDiscard = false
     @State private var needsPrintedReviewAgain = false
     @State private var recipe: RecipeCaptureDraft?
     @State private var ingredients: [CaptureLineDraft] = []
@@ -78,6 +80,7 @@ import CoreDomain
          onReviewed: @escaping (ReviewedScan) -> Void) {
         self.kind = kind; self.target = target; self.authorize = authorize; self.onReviewed = onReviewed
         self.correctionScope = correctionScope; _label = State(initialValue: initialLabel)
+        self.initialLabel = initialLabel
         self.focusReceiptText = focusReceiptText
         cameraPermission = SourceCameraPermission(recipeScope: recipeCameraScope)
     }
@@ -206,7 +209,19 @@ import CoreDomain
             structuredFieldFocus = nil
         }
         .navigationTitle(captureText(kind == .receipt ? "Review printed lines" : "Photo and scan review"))
-        .toolbar { ToolbarItem(placement: .cancellationAction) { Button(captureText("Cancel")) { close(); dismiss() } } }
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button(captureText("Cancel")) {
+                    if hasUnsavedReceipt && authorize() { confirmingReceiptDiscard = true }
+                    else { close(); dismiss() }
+                }
+            }
+        }
+        .interactiveDismissDisabled(hasUnsavedReceipt)
+        .alert(putawayText("Discard this receipt draft?"), isPresented: $confirmingReceiptDiscard) {
+            Button(pantryText("Discard draft"), role: .destructive) { close(); dismiss() }
+            Button(putawayText("Keep editing"), role: .cancel) {}
+        }
         .sheet(isPresented: Binding(get: { inspectedLineID != nil }, set: { if !$0 { inspectedLineID = nil } })) {
             if authorize(), !model.closed, let rows = receiptLines,
                let index = rows.firstIndex(where: { $0.id == inspectedLineID }) {
@@ -264,6 +279,10 @@ import CoreDomain
             }
         }
         .onDisappear { if !showCamera { close() } }
+    }
+    private var hasUnsavedReceipt: Bool {
+        kind == .receipt && (!model.text.isEmpty || label != initialLabel || receiptLines != nil ||
+            model.candidate != nil || model.accepted != nil)
     }
     private var canReview: Bool { authorize() && !model.closed && !model.busy && !loadingPhoto && !requestingCamera && model.candidate == nil }
     private func focusSourceText(_ scroll: ScrollViewProxy) {
@@ -395,8 +414,8 @@ import CoreDomain
                                 .receiptInputChrome()
                                 .focused($focusedField, equals: .receiptQuantity(snapshot.id))
                         }
-                        if let proposal, !edited.quantityNote.isEmpty, proposal.quantity == nil {
-                            receiptFormatHint(captureText("Include the printed unit, such as 2 units or 500 g."),
+                        if let proposal, proposal.acceptsFieldNotes, !edited.quantityNote.isEmpty, proposal.quantity == nil {
+                            receiptFormatHint(captureText("Enter individual items as “2 units” or a measure such as “500 g”. Leave blank if you only know the number of packages."),
                                               identifier: "scan.receipt.printedQuantityHint")
                         }
                         let priceLabel = captureText("Printed amount (optional)")
@@ -405,9 +424,17 @@ import CoreDomain
                                 .receiptInputChrome()
                                 .focused($focusedField, equals: .receiptPrice(snapshot.id))
                         }
-                        if let proposal, !edited.priceNote.isEmpty, proposal.amount == nil {
-                            receiptFormatHint(captureText("Include the printed currency, such as USD 4.82."),
+                        if let proposal, !edited.priceNote.isEmpty, proposal.amount == nil,
+                           proposal.acceptsFieldNotes || proposal.hasConflictingCurrency {
+                            receiptFormatHint(captureText(proposal.hasConflictingCurrency
+                                ? "The receipt shows another currency. Leave the USD line total blank."
+                                : "Enter the printed line total in USD, such as USD 4.82. Leave blank if the currency is unclear."),
                                               identifier: "scan.receipt.printedAmountHint")
+                        }
+                        if let proposal, !proposal.acceptsFieldNotes,
+                           edited.priceNote.isEmpty || !proposal.hasConflictingCurrency {
+                            receiptFormatHint(captureText("Check the reviewed line wording. You can enter quantities and payments separately in receipt details."),
+                                              identifier: "scan.receipt.printedLineHint")
                         }
                     }
                 }
@@ -559,6 +586,7 @@ import CoreDomain
     }
     private func resetDerived() { barcodeID = nil; manualCode = ""; receiptLines = nil; recipe = nil; ingredients = []; matchedProduct = false; model.confirmed = false }
     private func close() {
+        confirmingReceiptDiscard = false
         permissionGeneration = UUID(); showCamera = false; storeFocusRequest = nil
         photoTask?.cancel(); photoTask = nil; model.close(); corrections.invalidate(); resetDerived()
     }

@@ -1,6 +1,40 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Check the text read from this image against your receipt before selecting lines.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the text read from this image against your receipt before selecting lines."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Antes de seleccionar las líneas, compara el texto leído de la imagen con tu recibo."
+          }
+        }
+      }
+    },
+    "Open saved receipt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open saved receipt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir el recibo guardado"
+          }
+        }
+      }
+    },
     "Discard this receipt draft?": {
       "extractionState": "manual",
       "localizations": {
@@ -14,6 +48,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "¿Descartar este borrador del recibo?"
+          }
+        }
+      }
+    },
+    "Keep editing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep editing"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seguir editando"
           }
         }
       }
@@ -1021,6 +1072,108 @@
           "stringUnit": {
             "state": "translated",
             "value": "La cantidad aprovechable de %@ no puede superar la cantidad recibida."
+          }
+        }
+      }
+    },
+    "Choose receipt details to share": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose receipt details to share"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir qué datos del recibo compartir"
+          }
+        }
+      }
+    },
+    "Choose receipt details": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose receipt details"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir datos del recibo"
+          }
+        }
+      }
+    },
+    "Reviewed receipt lines": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed receipt lines"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Líneas revisadas del recibo"
+          }
+        }
+      }
+    },
+    "Preview receipt copy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview receipt copy"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver la copia del recibo"
+          }
+        }
+      }
+    },
+    "Receipt copy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt copy"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copia del recibo"
+          }
+        }
+      }
+    },
+    "Item names are copied as shown, including any amounts in the name.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item names are copied as shown, including any amounts in the name."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los nombres se copian tal como aparecen, incluidos los importes que formen parte del nombre."
           }
         }
       }
