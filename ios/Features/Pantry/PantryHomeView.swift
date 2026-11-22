@@ -79,7 +79,7 @@ struct PantryHomeView: View {
     }
 
     @ViewBuilder private var locationFilter: some View {
-        let title = pantryText("Storage location")
+        let title = pantryText("Filter by location")
         let picker = Picker(title, selection: $selectedLocation) {
             Text(pantryText("All locations")).tag(nil as InventoryLocation?)
             ForEach(InventoryLocation.allCases, id: \.self) { location in

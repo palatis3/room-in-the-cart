@@ -2156,6 +2156,22 @@
         }
       }
     },
+    "Filter by location": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter by location"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filtrar por lugar"
+          }
+        }
+      }
+    },
     "All locations": {
       "localizations": {
         "en": {

@@ -223,7 +223,7 @@ import XCTest
         openPantry(reset: true, spanish: true, accessibilityText: true, locale: "es_MX")
         let filter = app.buttons["pantry.locationFilter"]
         reveal(filter)
-        XCTAssertEqual(filter.label, "Lugar de almacenamiento")
+        XCTAssertEqual(filter.label, "Filtrar por lugar")
         XCTAssertEqual(filter.value as? String, "Todos los lugares")
 
         let screenshot = filter.screenshot()
@@ -237,7 +237,7 @@ import XCTest
         request.usesLanguageCorrection = false
         try VNImageRequestHandler(cgImage: try XCTUnwrap(screenshot.image.cgImage)).perform([request])
         let visible = (request.results ?? []).compactMap { $0.topCandidates(1).first?.string }.joined(separator: " ")
-        XCTAssertTrue(visible.localizedCaseInsensitiveContains("almacenamiento"), visible)
+        XCTAssertTrue(visible.localizedCaseInsensitiveContains("Filtrar por lugar"), visible)
         XCTAssertTrue(visible.localizedCaseInsensitiveContains("Todos los lugares"), visible)
 
         tap(filter)
