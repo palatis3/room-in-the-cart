@@ -753,8 +753,15 @@ struct VoicePantryRow {
                 VStack(alignment: .leading, spacing: 12) {
                     batchHeading(line.lot, includeCount: false)
                     VStack(alignment: .leading, spacing: 4) {
-                        Label(pantryText("After this change"), systemImage: "arrow.right")
-                            .font(.subheadline.weight(.medium))
+                        Group {
+                            if typeSize.isAccessibilitySize {
+                                Text(pantryText("After this change"))
+                                    .fixedSize(horizontal: false, vertical: true)
+                            } else {
+                                Label(pantryText("After this change"), systemImage: "arrow.right")
+                            }
+                        }
+                        .font(.subheadline.weight(.medium))
                         Text(pantryCount(line.after, estimate: use?.remainingWording)).font(.title3.weight(.semibold))
                     }
                     .foregroundStyle(Theme.onSelection)
