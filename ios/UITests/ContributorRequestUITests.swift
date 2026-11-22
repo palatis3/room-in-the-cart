@@ -238,17 +238,19 @@ import XCTest
                 XCTAssertTrue(tip.waitForNonExistence(timeout: 5))
             }
         }
-        func allBatchIDs(prefix: String) -> Set<String> {
-            // SwiftUI creates the remaining stock and correction rows as the list scrolls.
-            let list = app.collectionViews.firstMatch
-            let batches = list.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", prefix))
-            list.swipeDown()
-            list.swipeDown()
-            var ids = Set(batches.allElementsBoundByIndex.map(\.identifier))
-            for _ in 0..<3 {
-                list.swipeUp()
+        func allBatchIDs(prefix: String, from startID: String, through footerID: String) -> Set<String> {
+            // Start on the newly opened pantry and stop at a known control below all batches.
+            // Pulling down from the top can dismiss the household's Settings sheet.
+            XCTAssertTrue(app.buttons[startID].waitForExistence(timeout: 10), "The pantry must finish loading before checking its batches")
+            let batches = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", prefix))
+            let footer = app.buttons[footerID]
+            var ids = Set<String>()
+            for _ in 0..<24 {
                 ids.formUnion(batches.allElementsBoundByIndex.map(\.identifier))
+                if footer.exists && footer.isHittable { return ids }
+                scrollContent(upward: true)
             }
+            XCTFail("Did not reach \(footerID) while enumerating \(prefix)")
             return ids
         }
         func back(from title: String) { tap(app.navigationBars[title].buttons.element(boundBy: 0)) }
@@ -340,6 +342,7 @@ import XCTest
         XCTAssertTrue(confirm.waitForNonExistence(timeout: 10), app.debugDescription)
         back(from: "Household pantry")
         tap(entry)
+        XCTAssertEqual(allBatchIDs(prefix: "householdPantry.correct.", from: "householdPantry.receipt", through: "householdPantry.refresh").count, 2)
         for (original, received, usable, price) in [
             ("Oats 3 count USD 4.20", "3 units", "2 units", "$4.20"),
             ("Beans 5 count USD 6.10", "5 units", "4 units", "Paid price unknown")
@@ -351,14 +354,13 @@ import XCTest
             XCTAssertTrue(lot.label.contains("Usable " + usable), lot.label)
             XCTAssertTrue(lot.label.contains(price), lot.label)
         }
-        XCTAssertEqual(allBatchIDs(prefix: "householdPantry.correct.").count, 2)
         back(from: "Household pantry")
         tap(app.navigationBars["Settings"].buttons["Done"])
         tap(app.shopToolButton("shop.myPantry"))
+        XCTAssertEqual(allBatchIDs(prefix: "pantry.lot.", from: "pantry.add", through: "pantry.receiptHistory"), [privateID])
         let samePrivateLot = app.buttons[privateID]
         reveal(samePrivateLot)
         XCTAssertEqual(samePrivateLot.label, privateLabel)
-        XCTAssertEqual(allBatchIDs(prefix: "pantry.lot."), [privateID])
         privateHistoryIsEmpty()
     }
 
