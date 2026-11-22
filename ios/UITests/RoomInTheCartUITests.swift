@@ -229,17 +229,21 @@ final class RoomInTheCartUITests: XCTestCase {
             reveal(amount)
             XCTAssertEqual(amount.value as? String, "2")
             let unit = app.buttons["ledgerImportUnit-1"]
-            reveal(unit)
+            let commit = app.buttons["ledgerCommitImport"]
+            revealReviewAction(unit, above: commit)
             XCTAssertEqual(unit.value as? String, cartons)
-            tap(unit)
-            tap(app.buttons[bottles])
+            unit.tap()
+            let bottleOption = app.buttons[bottles]
+            XCTAssertTrue(bottleOption.waitForExistence(timeout: 5))
+            bottleOption.tap()
             XCTAssertEqual(unit.value as? String, bottles)
             if !spanish {
-                tap(unit)
+                revealReviewAction(unit, above: commit)
+                unit.tap()
                 tap(app.buttons[cartons])
             }
             let savedUnit = spanish ? bottles : cartons
-            tap(app.buttons["ledgerCommitImport"])
+            tap(commit)
             XCTAssertTrue(form.waitForNonExistence(timeout: 8))
             app.terminate()
             launch(language: language, reset: false)
