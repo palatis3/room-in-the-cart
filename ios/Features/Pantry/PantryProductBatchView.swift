@@ -25,7 +25,7 @@ struct PantryProductBatchView: View {
     @State private var review: PantryReceiptReview?
     @State private var result: String?
     @State private var inputMessage: String?
-    private let didFinishWithLot: (UUID) -> Void
+    private let didFinishWithLot: ((UUID) -> Void)?
     private let lookupAccess: PantryDigestAccess?
     @State private var savedLotID: UUID?
     @State private var initialAccess: PantryDigestAccess?
@@ -40,7 +40,7 @@ struct PantryProductBatchView: View {
     @FocusState private var focus: String?
     @Environment(\.dismiss) private var dismiss
 
-    init(model: PantryModel, workspaceID: UUID, didFinishWithLot: @escaping (UUID) -> Void = { _ in }) {
+    init(model: PantryModel, workspaceID: UUID, didFinishWithLot: ((UUID) -> Void)? = nil) {
         lookupAccess = nil
         self.didFinishWithLot = didFinishWithLot
         self.model = model
@@ -49,7 +49,7 @@ struct PantryProductBatchView: View {
     init(model: PantryModel, lookupBatch: PantryProductBatch, access: PantryDigestAccess) {
         self.model = model
         lookupAccess = access
-        didFinishWithLot = { _ in }
+        didFinishWithLot = nil
         _batch = State(initialValue: lookupBatch)
         _initialAccess = State(initialValue: access)
         _reviewingLookup = State(initialValue: true)
@@ -139,9 +139,8 @@ struct PantryProductBatchView: View {
                     }
                 }
                 Button(pantryText("Done")) {
-                    if let savedLotID { didFinishWithLot(savedLotID) }
-                    dismiss()
-                }
+                    finish(with: savedLotID)
+                }.accessibilityIdentifier("productBatch.done")
             } else if let review {
                 Section(pantryText(atHome ? "Review pantry count" : "Review received products")) {
                     if atHome {
@@ -281,7 +280,7 @@ struct PantryProductBatchView: View {
                     }
                     if batch.candidates.allSatisfy({ !$0.included }), let linked = batch.candidates.first(where: { $0.receiptLinkSaved }),
                        let existing = linked.existingReceipt {
-                        Button(pantryText("Done")) { didFinishWithLot(existing.lotID); dismiss() }.buttonStyle(PrimaryAction())
+                        Button(pantryText("Done")) { finish(with: existing.lotID) }.buttonStyle(PrimaryAction())
                     } else {
                     Section(pantryText("Record these packages")) {
                         if !atHome {
@@ -332,6 +331,14 @@ struct PantryProductBatchView: View {
                 let scope = catalogScope.id
                 Task { await PantryProductCatalog.shared.close(scope: scope) }
             }
+        }
+    }
+
+    private func finish(with lotID: UUID?) {
+        if let lotID, let didFinishWithLot {
+            didFinishWithLot(lotID)
+        } else {
+            dismiss()
         }
     }
 

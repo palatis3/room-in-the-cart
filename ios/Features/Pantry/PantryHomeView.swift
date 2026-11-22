@@ -422,12 +422,12 @@ struct PantryEntryPresentation: ViewModifier {
                 if let value = sheet {
                     switch value {
                     case .found(let location): PantryFoodEditor(model: model, lotID: nil, accessAllowed: accessAllowed, initialLocation: location)
-                    case .add: PantryFoodEditor(model: model, lotID: nil, accessAllowed: accessAllowed)
+                    case .add: PantryFoodEditor(model: model, lotID: nil, accessAllowed: accessAllowed, finishScan: finishProductScan)
                     case .recount(let id): PantryFoodEditor(model: model, lotID: id, accessAllowed: accessAllowed)
                     case .purchase(let row): PantryFoodEditor(model: model, lotID: row.id, accessAllowed: accessAllowed, purchase: row)
                     case .products:
                         if let state = model.snapshot?.state {
-                            PantryProductBatchView(model: model, workspaceID: state.workspaceID, didFinishWithLot: { lotToReveal = $0 })
+                            PantryProductBatchView(model: model, workspaceID: state.workspaceID, didFinishWithLot: finishProductScan)
                         }
                     case .receipt: PantryReceiptEntry(model: model, didFinishWithLot: { lotToReveal = $0 })
                     case .aliases: PantryReceiptAliasList(model: model)
@@ -438,6 +438,11 @@ struct PantryEntryPresentation: ViewModifier {
                 }
             }
         }
+    }
+
+    private func finishProductScan(_ lotID: UUID) {
+        lotToReveal = lotID
+        sheet = nil
     }
 }
 
@@ -691,6 +696,7 @@ private struct PantryFoodEditor: View {
     var reviewedFood: PantryReviewedFood? = nil
     var purchase: PantryRecentPurchase? = nil
     var initialLocation: InventoryLocation? = nil
+    var finishScan: ((UUID) -> Void)? = nil
     @Environment(\.dismiss) private var dismiss
     private struct ProductScan: Identifiable { let id: UUID }
     @State private var productScan: ProductScan?
@@ -705,6 +711,12 @@ private struct PantryFoodEditor: View {
         var seen = Set<UUID>()
         return (model.snapshot?.lots ?? []).sorted { $0.id.uuidString < $1.id.uuidString }.filter { seen.insert($0.foodID).inserted }
     }
+    // Return to an unfinished manual entry even when a separate scan succeeds.
+    private var finishScanFromEmptyEditor: ((UUID) -> Void)? {
+        guard name.isEmpty, amount.isEmpty, existingFoodID == nil, unit == .count,
+              location == (initialLocation ?? .cupboard) else { return nil }
+        return finishScan
+    }
     private var scanProductsLabel: some View {
         Label(pantryText("Scan products"), systemImage: "barcode.viewfinder")
     }
@@ -716,7 +728,7 @@ private struct PantryFoodEditor: View {
                     if reviewedFood == nil, let origin = model.snapshot?.state.workspaceID {
                         if #available(iOS 18, *) {
                             NavigationLink {
-                                PantryProductBatchView(model: model, workspaceID: origin)
+                                PantryProductBatchView(model: model, workspaceID: origin, didFinishWithLot: finishScanFromEmptyEditor)
                             } label: { scanProductsLabel }
                         } else {
                             // Present independently of the editor’s form on iOS 17.
@@ -801,7 +813,7 @@ private struct PantryFoodEditor: View {
         }
         .onAppear { if let lot { amount = lot.count.quantity?.amount.description ?? ""; unit = lot.unit; location = lot.location } else if let initialLocation { location = initialLocation } }
         .sheet(item: $productScan) { scan in
-            NavigationStack { PantryProductBatchView(model: model, workspaceID: scan.id) }
+            NavigationStack { PantryProductBatchView(model: model, workspaceID: scan.id, didFinishWithLot: finishScanFromEmptyEditor) }
         }
         .interactiveDismissDisabled(model.busy)
         .privacySensitive()

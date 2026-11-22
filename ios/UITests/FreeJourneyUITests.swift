@@ -336,7 +336,9 @@ import XCTest
     func testInvalidStickerDigitsKeepManualFoodFindableByNameAfterColdReturn() {
         launch(reset: true)
         tap(app.tabBars.buttons["Pantry"])
-        tap(app.buttons["pantry.setup.products"])
+        tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.add"])
+        tap(app.buttons["Scan products"])
         let digits = "020123400007"
         let name = "Store produce"
         fill(digits, into: "productBatch.code", requireDone: true)
@@ -356,6 +358,9 @@ import XCTest
         XCTAssertTrue(app.navigationBars["Date or reminder"].waitForExistence(timeout: 5))
         tap(app.buttons["No visible date"])
         tap(app.buttons["Skip"])
+        tap(app.buttons["productBatch.done"])
+        XCTAssertTrue(app.navigationBars["My Pantry"].waitForExistence(timeout: 8))
+        XCTAssertFalse(app.textFields["pantry.foodName"].exists)
 
         restart()
         tap(app.tabBars.buttons["Pantry"])
