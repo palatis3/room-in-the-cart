@@ -328,6 +328,7 @@ import XCTest
         reveal(found.firstMatch)
         XCTAssertEqual(found.count, 1)
         XCTAssertTrue(found.firstMatch.label.contains("Butter beans"))
+        XCTAssertFalse(app.buttons["pack.find.review"].exists, "The recorded batch already matches this barcode.")
         XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "pack.find.recent.")).firstMatch.exists,
                        "Recording a physical barcode must not invent an exact pack size.")
     }

@@ -9,6 +9,7 @@ private struct PackLookupInput: View {
     @Binding var query: String
     @Binding var selected: ConfirmedPantryPack?
     @Binding var unmatched: CapturedBarcode?
+    var hasRecordedBatch = false
     var reviewUnmatched: ((CapturedBarcode, String, Bool, PantryDigestAccess) throws -> Void)? = nil
     @ObservedObject private var memory = PantryDigestStore.shared.packMemory
     @State private var code = ""
@@ -47,8 +48,8 @@ private struct PackLookupInput: View {
                 }
                 lastScan = code; resolve(code)
             }, revoke: { lastScan = nil; clearResult() })
-            if let status, selected == nil { Text(status) }
-            if reviewUnmatched != nil, let unmatched, let access, authorized(), access.authorized(),
+            if let status, selected == nil, !hasRecordedBatch { Text(status) }
+            if !hasRecordedBatch, reviewUnmatched != nil, let unmatched, let access, authorized(), access.authorized(),
                unmatched.associationKey(retailer: retailer) != nil {
                 Button(pantryText("Review this package")) {
                     openReview(unmatched, access: access)
@@ -137,11 +138,12 @@ struct PantryPackFind: View {
     var body: some View {
         WorkingForm {
             if authorized {
+                let recorded = recordedBarcodeBatches
                 PackLookupInput(workspaceID: origin, access: scoped, authorized: { authorized && scene == .active },
-                    query: $query, selected: $selected, unmatched: $unmatched,
+                    query: $query, selected: $selected, unmatched: $unmatched, hasRecordedBatch: !recorded.isEmpty,
                     reviewUnmatched: canReview ? startReview : nil)
                     .id(presentationScope?.owner)
-                if let result = batchResults {
+                if let result = batchResults(recorded: recorded) {
                     Section(result.title) {
                         if result.lots.isEmpty { Text(pantryText("No recorded batches.")) }
                         ForEach(result.lots) { lot in
@@ -162,17 +164,20 @@ struct PantryPackFind: View {
         }
     }
 
-    private var batchResults: (title: String, lots: [InventoryLot])? {
+    // A counted package may have an unknown pack size. Local stickers additionally require a saved retailer match.
+    private var recordedBarcodeBatches: [InventoryLot] {
+        guard allowsPackageReview, scoped != nil, let unmatched, unmatched.catalogGTIN != nil,
+              let gtin = unmatched.canonicalGTIN else { return [] }
+        return (model.snapshot?.lots ?? []).filter { $0.packageCode?.canonicalGTIN == gtin }
+    }
+
+    private func batchResults(recorded: [InventoryLot]) -> (title: String, lots: [InventoryLot])? {
         let lots = model.snapshot?.lots ?? []
         if let selected, let scoped,
            (try? PantryDigestStore.shared.packMemory.match(selected.barcode, retailer: selected.retailer, scope: scoped.scope)) == selected {
             return (selected.label, lots.filter { $0.foodID == selected.id })
         }
-        // A counted package may have an unknown pack size. Local stickers additionally require a saved retailer match.
-        if allowsPackageReview, scoped != nil, let unmatched, unmatched.catalogGTIN != nil, let gtin = unmatched.canonicalGTIN {
-            let recorded = lots.filter { $0.packageCode?.canonicalGTIN == gtin }
-            if !recorded.isEmpty { return (pantryText("Batches with this barcode"), recorded) }
-        }
+        if !recorded.isEmpty { return (pantryText("Batches with this barcode"), recorded) }
         guard !query.isEmpty else { return nil }
         return (query, lots.filter { $0.name.localizedCaseInsensitiveContains(query) })
     }
