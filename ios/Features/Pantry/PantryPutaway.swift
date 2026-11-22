@@ -57,6 +57,7 @@ extension ReceiptImportDraft.Line {
 
     private func permitsPutawayShortcut(deliveries: [InventoryLot]) -> Bool {
         guard !needsPackReview, canComparePurchase, printed?.kind == .item,
+              !ReceiptPrintedEvidence.isVoidedOrUnreceived(original),
               !original.contains(#/(?i)\b(?:missing|damaged|broken|cracked|substitut\w*|replacement|unweighed|unknown|faltante|sin pesar|peso desconocido|dañad\w*|rot[oa]s?|quebrad\w*|sustitu\w*|reemplaz\w*|return\w*|devuelt\w*|refund\w*|eaten|consumid\w*)\b/#)
         else { return false }
         let key = InventoryReceiptAlias.key(name)

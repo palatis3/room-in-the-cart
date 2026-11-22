@@ -10,9 +10,13 @@ import XCTest
 
 @MainActor final class ReceiptDocumentTests: XCTestCase {
     func testSelectedDocumentFoodsStartPutawayWithoutAssumingAmountsOrChangingOtherDecisions() async throws {
-        let foods = ["2 LATAS LENTEJAS 3.20", "YOGUR NATURAL 2.40", "ARROZ 1.50"]
+        let foods = ["2 LATAS LENTEJAS 3.20", "YOGUR NATURAL 2.40", "ARROZ 1.50",
+                     "No salt added beans", "Yogur sin azúcar", "No added sugar applesauce received"]
         let otherLines = ["CARGO 0.45", "DESCUENTO -1.00", "Faltó leche", "Prepared lunch",
-                          "Partly eaten sandwich", "Broken eggs", "Delivery fee", "2 packs of peas", "$4.00", "Oats 2 units"]
+                          "Partly eaten sandwich", "Broken eggs", "Delivery fee", "2 packs of peas", "$4.00", "Oats 2 units",
+                          "VOID MILK", "ANULADO LECHE", "No se entregó el yogur", "No milk received",
+                          "Milk not delivered", "Canceled lentils", "Cancelled yogurt", "Tortillas canceladas",
+                          "Milk was never delivered", "Yogur no recibido", "Arroz sin entregar", "Void beans 2 units"]
         let words = foods + otherLines
         let document = try await ReceiptDocumentReader().extract(.init(data: Data(words.joined(separator: "\n").utf8), kind: .text))
         let target = CaptureTarget(workspaceID: UUID(), containerID: UUID(), objectID: UUID(), revision: 1, kind: .receiptEvidence)
@@ -35,6 +39,9 @@ import XCTest
                 XCTAssertEqual(draft.lines[index], originals[index], words[index])
             }
         }
+        let countedVoid = try XCTUnwrap(originals.last)
+        XCTAssertEqual(countedVoid.printed?.quantity, "2")
+        XCTAssertFalse(countedVoid.permitsIntactSelection(deliveries: []))
         XCTAssertFalse(draft.dateConfirmed)
         XCTAssertTrue(draft.receiptTotal.isEmpty)
         for treatment in [ReceiptImportDraft.Treatment.keptSome, .eaten, .missing, .chargeOrReturn, .link(UUID())] {

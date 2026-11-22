@@ -1352,6 +1352,7 @@ import XCTest
         let oats = app.switches["receipt.document.line.1.1"], fee = app.switches["receipt.document.line.1.2"]
         XCTAssertTrue(oats.waitForExistence(timeout: 15), app.debugDescription)
         XCTAssertTrue(oats.label.contains("OATS"))
+        XCTAssertFalse(element("receipt.document.ocrGuidance.1").exists)
         XCTAssertTrue(fee.label.contains("SERVICE FEE"))
         XCTAssertEqual(fee.value as? String, "0")
         let inspectOats = app.buttons["receipt.document.inspect.1.1"]
@@ -1386,6 +1387,13 @@ import XCTest
         XCTAssertFalse(app.buttons["receipt.commit"].exists)
 
         receiptTap(app.buttons["receipt.putAway.0"], initiallyUpward: false)
+        let foodName = element("receipt.name.0")
+        reveal(foodName)
+        let shortHeight = foodName.frame.height
+        let longName = "Rolled oats with toasted almonds, sunflower seeds, pumpkin seeds, dried apricots, raisins and cinnamon"
+        enterReceiptField(longName, id: "receipt.name.0", replacing: true)
+        reveal(foodName)
+        XCTAssertGreaterThan(foodName.frame.height, shortHeight)
         let received = app.textFields["receipt.received.0"]
         reveal(received)
         XCTAssertEqual(received.value as? String ?? "", "")
@@ -1676,6 +1684,7 @@ import XCTest
         let oats = app.switches["receipt.document.line.1.1"]
         XCTAssertTrue(oats.waitForExistence(timeout: 25), app.debugDescription)
         XCTAssertTrue(oats.label.uppercased().contains("OATS"))
+        reveal(element("receipt.document.ocrGuidance.1"), initiallyUpward: false)
         XCTAssertEqual(oats.value as? String, "0")
         let fee = app.switches["receipt.document.line.1.2"]
         XCTAssertTrue(fee.exists && fee.label.uppercased().contains("SERVICE FEE"))
@@ -1758,7 +1767,7 @@ import XCTest
         XCTAssertEqual(date.value as? String, "1")
         receiptTap(app.buttons["receipt.action.0"])
         receiptTap(app.buttons["Put this food away"])
-        enterReceiptField("Rolled oats", id: "Food name", replacing: true)
+        enterReceiptField("Rolled oats", id: "receipt.name.0", replacing: true)
         enterReceiptField("3", id: "receipt.received.0")
         enterReceiptField("2", id: "receipt.usable.0")
         receiptTap(app.buttons["receipt.review"])
@@ -1867,7 +1876,7 @@ import XCTest
     }
 
     private func enterReceiptField(_ text: String, id: String, replacing: Bool = false) {
-        let field = app.textFields[id]
+        let field = element(id)
         // iOS 17 exposes the field and its caption as one row. The editable value sits below the caption.
         let input = CGVector(dx: 0.5, dy: 0.7)
         reveal(field, requiredHit: input)
@@ -1922,7 +1931,7 @@ import XCTest
         checkReceiptSwitch("I checked the purchase date.")
         receiptTap(app.buttons["receipt.action.0"])
         receiptTap(app.buttons["Put this food away"])
-        if let correctedName { enterReceiptField(correctedName, id: "Food name", replacing: true) }
+        if let correctedName { enterReceiptField(correctedName, id: "receipt.name.0", replacing: true) }
         let received = app.textFields["receipt.received.0"]
         receiptTap(app.buttons["receipt.printedQuantity.0"])
         XCTAssertEqual(received.value as? String, "3")

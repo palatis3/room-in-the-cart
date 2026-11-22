@@ -1,6 +1,23 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Check the text read from this image against your receipt before selecting lines.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the text read from this image against your receipt before selecting lines."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Antes de seleccionar las líneas, compara el texto leído de la imagen con tu recibo."
+          }
+        }
+      }
+    },
     "Open saved receipt": {
       "extractionState": "manual",
       "localizations": {

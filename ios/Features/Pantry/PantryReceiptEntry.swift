@@ -742,7 +742,7 @@ struct PantryReceiptLineEditor: View {
 
     private func labeledField(_ title: String, text: Binding<String>, focusKey: String,
                               identifier: String? = nil, keyboard: UIKeyboardType = .default,
-                              stacked: Bool = false) -> some View {
+                              stacked: Bool = false, axis: Axis = .horizontal) -> some View {
         let request = correction?.focusKey == focusKey ? correctionRequest : nil
         let viewport = correctionViewport
         return VStack(alignment: .leading, spacing: 4) {
@@ -751,7 +751,7 @@ struct PantryReceiptLineEditor: View {
                     .font(.subheadline.weight(.medium)).foregroundStyle(Theme.warning)
                     .accessibilityIdentifier("receipt.error." + correction.field.rawValue + "." + String(correction.ordinal))
             }
-            let layout = typeSize.isAccessibilitySize || stacked
+            let layout = typeSize.isAccessibilitySize || stacked || axis == .vertical
                 ? AnyLayout(VStackLayout(alignment: .leading, spacing: 4))
                 : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: 12))
             layout {
@@ -761,7 +761,8 @@ struct PantryReceiptLineEditor: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .accessibilityHidden(true)
-                TextField(title, text: text, prompt: Text(""))
+                TextField(title, text: text, prompt: Text(""), axis: axis)
+                    .fixedSize(horizontal: false, vertical: axis == .vertical)
                     .keyboardType(keyboard)
                     .monospacedDigit()
                     .receiptInputChrome()
@@ -949,7 +950,7 @@ struct PantryReceiptLineEditor: View {
                 Button(pantryText("Undo saved spelling")) { line.clearAlias() }
             }
             labeledField(pantryText("Food name"), text: Binding(get: { line.name }, set: { line.clearAlias(); line.name = $0 }),
-                         focusKey: "name-\(line.ordinal)")
+                         focusKey: "name-\(line.ordinal)", identifier: "receipt.name.\(line.ordinal)", axis: .vertical)
             receivedFields
             labeledField(line.treatment == .keptSome ? putawayText("Usable portion taken home") : pantryText("Amount usable"), text: $line.usable, focusKey: "usable-\(line.ordinal)",
                          identifier: "receipt.usable.\(line.ordinal)", keyboard: .numbersAndPunctuation)

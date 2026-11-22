@@ -94,6 +94,13 @@ struct ReceiptPrintedEvidence: Equatable {
         text.trimmingCharacters(in: .whitespaces).wholeMatch(of: price).map { normalizedAmount($0.1) }
     }
 
+    static func isVoidedOrUnreceived(_ wording: String) -> Bool {
+        let cancellation = #/(?i)\b(?:void(?:ed)?|cancel(?:led|ed|lation)?|anulad[oa]s?|cancelad[oa]s?|anulaci[oó]n|cancelaci[oó]n|unreceived|undelivered)\b/#
+        let english = #/(?i)\b(?:(?:not|never)\s+(?:received|delivered)|(?:did\s+not|didn['’]t)\s+(?:receive|deliver)|no\s+(?!added\b|[\p{L}-]+\s+added\b)(?:[\p{L}\p{N}’'-]+\s+)+(?:received|delivered))\b/#
+        let spanish = #/(?i)\b(?:sin\s+(?:recibir|entregar)|no\s+(?:se\s+)?(?:entreg(?:[oó]|aron|ad[oa]s?)|recib(?:[ií]|i[oó]|imos|ieron|id[oa]s?)|lleg(?:[oó]|aron)))\b/#
+        return wording.contains(cancellation) || wording.contains(english) || wording.contains(spanish)
+    }
+
     static func permitsPutawayWording(_ wording: String) -> Bool {
         !wording.contains(nonItem) && !wording.contains(mixed) && !wording.contains(signedValue)
             && !wording.contains(#/(?i)\b(?:unusable|inservibles?|falt[oó]|no lleg[oó]|sin recibir|prepared|preparad[oa]s?|hot lunch|almuerzo caliente|a medio comer)\b/#)

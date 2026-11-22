@@ -162,6 +162,11 @@ struct PantryReceiptDocuments: View {
                         if page.skipped == .pixels { Text(pantryText("This page exceeds 25 megapixels. Choose a smaller image to review it.")) }
                         else if page.skipped == .lineLimit { Text(putawayText("This page exceeds the line limit. You can type the receipt lines instead.")) }
                         else if page.lines.isEmpty { Text(pantryText("No readable lines on this page. You can type them in the receipt scanner.")) }
+                        if !page.lines.isEmpty, page.method == .imageOCR || page.method == .pdfOCR {
+                            Text(putawayText("Check the text read from this image against your receipt before selecting lines."))
+                                .font(.subheadline).foregroundStyle(Theme.secondary)
+                                .accessibilityIdentifier("receipt.document.ocrGuidance.\(page.id)")
+                        }
                         ForEach(page.lines.filter { !omittedLines.contains(.init(page: page.id, line: $0.id)) }) { line in
                             let position = ExtractedReceiptDocument.Selection(page: page.id, line: line.id)
                             let price = pairs[position] ?? (linkedAmountItems.contains(position) ? splitAmounts[position] : nil)
@@ -363,6 +368,11 @@ struct PantryReceiptDocuments: View {
                         ? captureText("Select to keep this amount separate, or link it from the item.") : "")
                     .disabled(!canInclude)
                 }
+            }
+            if line.uncertain {
+                Label(pantryText("Unclear printed line. Check the original wording before using it."), systemImage: "exclamationmark.circle")
+                    .font(.subheadline).foregroundStyle(Theme.warning)
+                    .accessibilityIdentifier("receipt.document.uncertain.\(position.page).\(line.id)")
             }
             if attached {
                 Text(captureText("Linked as printed amount")).font(.subheadline).foregroundStyle(Theme.secondary)
