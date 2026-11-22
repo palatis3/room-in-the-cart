@@ -282,6 +282,24 @@ import XCTest
             XCTAssertNil(priceOnly.quantity)
             XCTAssertFalse(proposal(wording, quantity: note, price: "USD 3.20").uncertain)
         }
+        for wording in ["2x Beans NZD $3.20", "2x Beans HKD $3.20", "2x Lentejas CLP $3,20",
+                        "2x Beans chf 3.20", "2x Beans 3.20 NZD", "2x Arroz HK $3,20",
+                        "2x Frijoles R$3,20", "2x Beans kr 3.20", "2x Arroz S/ 3,20", "2x Arroz CLP $320",
+                        "2x Beans ¥3.20", "2x Arroz ₱3,20", "2x Frijoles pesos $3,20"] {
+            for correction in ["", "3.20", "USD 3.20"] {
+                let result = proposal(wording, price: correction)
+                XCTAssertNil(result.amount, wording)
+                XCTAssertNil(result.priceWording, wording)
+            }
+            let renamed = ScanReceiptLine(originalText: wording, reviewedText: "Beans", priceNote: "USD 3.20")
+            XCTAssertNil(ReceiptPrintedEvidence(renamed, knownStorage: [:]).amount, wording)
+        }
+        for (wording, price) in [("2x Beans USD 3.20", "USD 3.20"), ("2x Frijoles US$3,20", "US$3,20"),
+                                 ("2x RED PEPPERS $3.20", "$3.20"), ("2x ALL PURPOSE FLOUR $3.20", "$3.20"),
+                                 ("ACEITE 0,50 L USD 3,20", "USD 3,20"), ("Arroz 125.00 g $3.20", "$3.20"),
+                                 ("EGGS GRADE A $3.20", "$3.20")] {
+            XCTAssertEqual(proposal(wording).priceWording, price, wording)
+        }
         let marked = proposal("2x Canned lentils $3.20", quantity: "2 units", price: "3,20")
         XCTAssertEqual(marked.priceWording, "$3.20")
         XCTAssertEqual(marked.quantity, "2")

@@ -38,6 +38,37 @@ struct ReceiptPrintedEvidence: Equatable {
     private static let nonItem = #/(?i)\b(?:total|subtotal|balance|saldo|amount due|change due|importe|a pagar|monto|tax|impuestos?|iva|vat|cash|efectivo|credit|cr[eé]dito|debit|d[eé]bito|card|tarjeta|payment|pagos?|visa|mastercard|discount|descuento|coupon|cup[oó]n|deposit|dep[oó]sito|fee|cargo|service charge|env[ií]o|shipping|tip|propina|refund|reembolso|return|devoluci[oó]n|unit price|precio unitario|precio por|ticket|receipt|recibo|invoice|factura)\b/#
     private static let rateByUnit = #/(?i)(?:@|\b(?:per|por)\s+(?:kg|lb|g|unidad|unit|oz|ea)\b|\/\s*(?:kg|lb|g|unidad|unit|oz|ea)\b)/#
 
+    // Currency codes and local symbols can sit outside the amount matched by price
+    // (for example, “NZD $3.20”). Only the letters next to a price are qualifiers.
+    private static let currencyBeforePrice = #/(?i)([\p{L}]+)[./]?\s*(US\$|USD\s*\$?|\$)?\s*[0-9]+(?:[.,][0-9]+)?\b/#
+    private static let currencyAfterPrice = #/(?i)\b[0-9]+(?:[.,][0-9]+)?\s*([\p{L}]+)\b/#
+    private static let dollarRegions = Set(Locale.Region.isoRegions.map(\.identifier)).subtracting(["US"])
+    private static let foreignCurrencyMarkers: Set<String> = {
+        var markers = Set(Locale.Currency.isoCurrencies.map(\.identifier))
+        for id in Locale.availableIdentifiers {
+            let locale = Locale(identifier: id)
+            guard let code = locale.currency?.identifier, code != "USD", let symbol = locale.currencySymbol else { continue }
+            // Punctuation is already excluded from the accepted product name, but a
+            // separately edited name must still respect local forms such as R$ and S/.
+            let letters = symbol.trimmingCharacters(in: CharacterSet.letters.inverted).uppercased()
+            if !letters.isEmpty { markers.insert(letters) }
+        }
+        markers.formUnion(["PESO", "PESOS", "EURO", "EUROS"])
+        return markers.subtracting(["US", "USD"])
+    }()
+
+    private static func hasForeignCurrency(_ text: String) -> Bool {
+        guard text.contains(where: \.isNumber) else { return false }
+        // Measurement units such as g and L can also be local currency abbreviations.
+        let wording = text.replacing(measure, with: " ")
+        if wording.unicodeScalars.contains(where: { $0.properties.generalCategory == .currencySymbol && $0 != "$" }) { return true }
+        for match in wording.matches(of: currencyBeforePrice) {
+            let token = match.1.uppercased()
+            if foreignCurrencyMarkers.contains(token) || (match.2 == "$" && dollarRegions.contains(token)) { return true }
+        }
+        return wording.matches(of: currencyAfterPrice).contains { foreignCurrencyMarkers.contains($0.1.uppercased()) }
+    }
+
     static func isStandaloneAmount(_ text: String) -> Bool {
         standaloneAmount(text) != nil
     }
@@ -60,7 +91,8 @@ struct ReceiptPrintedEvidence: Equatable {
         guard !text.isEmpty, text.count <= 512, text.contains(where: \.isLetter),
               !text.contains("?"), !text.contains("�"), row.uncertainOCR != true else { kind = .unclear; uncertain = true; return }
         kind = .item
-        guard !text.contains(Self.mixed), !text.contains(Self.signedValue) else { uncertain = true; return }
+        guard !text.contains(Self.mixed), !text.contains(Self.signedValue), !Self.hasForeignCurrency(text),
+              text == row.originalText || !Self.hasForeignCurrency(row.originalText) else { uncertain = true; return }
         var candidate = text
         Self.removeUnitPrice(from: &candidate)
         if let total = candidate.firstMatch(of: Self.price) {
