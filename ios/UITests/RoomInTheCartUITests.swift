@@ -1694,7 +1694,9 @@ final class RoomInTheCartUITests: XCTestCase {
             let viewport = comparisonViewport
             guard target.exists, viewport.height > 0 else { break }
             let frame = target.frame
-            if target.isHittable && viewport.contains(frame) { return }
+            // UIKit can report the same aligned edge a few floating-point steps apart.
+            let tolerance = 4 * max(viewport.maxX.ulp, viewport.maxY.ulp)
+            if target.isHittable && viewport.insetBy(dx: -tolerance, dy: -tolerance).contains(frame) { return }
             guard frame.height <= viewport.height, frame.width <= viewport.width else { break }
             // Center the measured row and hold before lifting to stop momentum.
             // Default-velocity drags oscillated past this tall row in the first run.
