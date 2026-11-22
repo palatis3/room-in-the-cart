@@ -202,6 +202,14 @@ extension PantryRepository {
         return (value, prior != header || saved.count != decisions.count || newIdentity || coordinates.count != decisions.count)
     }
 
+    func putawayReceipt(fileDigest: Data) async throws -> ReviewedReceiptHeader? {
+        try requireAccess()
+        guard let owner = aliasPersonaID, fileDigest.count == 32 else { return nil }
+        let header = try await store.reviewedReceiptHeader(imageIdentity: ReceiptAcquisition.imageIdentity(fileDigest), owner: owner)
+        try requireAccess()
+        return header
+    }
+
     func putawayHeaders(after: UUID?) async throws -> [ReviewedReceiptHeader] {
         try requireAccess()
         let result = try await store.reviewedReceiptHeaders(owner: receiptOwner, after: after)

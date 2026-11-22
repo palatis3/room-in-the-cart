@@ -48,6 +48,12 @@ final class ReviewedPutawayReceiptTests: XCTestCase {
         XCTAssertEqual(headers, [header])
         XCTAssertEqual(decisions.sorted { $0.ordinal < $1.ordinal }, [physical, eaten])
         XCTAssertEqual(origin, header.id)
+        let savedFile = try await reopened.reviewedReceiptHeader(imageIdentity: identity, owner: owner)
+        let unrelatedFileOwner = try await reopened.reviewedReceiptHeader(imageIdentity: identity, owner: UUID())
+        let onlyReceiptID = try await reopened.reviewedReceiptHeader(imageIdentity: header.id, owner: owner)
+        XCTAssertEqual(savedFile, header)
+        XCTAssertNil(unrelatedFileOwner)
+        XCTAssertNil(onlyReceiptID)
         let coordinates = try await reopened.reviewedReceiptCoordinates(receipt: header.id, owner: owner, layout: layout, ordinals: [3,5])
         XCTAssertEqual(coordinates, [3: physical.id, 5: eaten.id])
 

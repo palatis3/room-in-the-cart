@@ -130,7 +130,7 @@ struct ReceiptImportDraft {
 
     var evidenceIdentities: [UUID] {
         var ids: [UUID] = []
-        if let imageDigest { ids.append(ReceiptAcquisition.identity(["image", imageDigest.base64EncodedString()])) }
+        if let imageDigest { ids.append(ReceiptAcquisition.imageIdentity(imageDigest)) }
         if !cleaned(reference).isEmpty { ids.append(receiptID) }
         return ids
     }
@@ -235,7 +235,7 @@ enum PantryAcquisitionCodec {
         try value.validate()
         return .init(id: value.id, receiptID: value.receiptID, lineID: value.lineID, lotID: value.lotID, revision: value.revision,
                      supersedesID: value.supersedesID, payload: try data(value),
-                     imageIdentity: value.imageDigest.map { ReceiptAcquisition.identity(["image", $0.base64EncodedString()]) },
+                     imageIdentity: value.imageDigest.map(ReceiptAcquisition.imageIdentity),
                      transactionIdentity: value.transactionReference.map {
                          ReceiptAcquisition.receiptID(merchant: value.merchant, transactionReference: $0, imageDigest: nil, draftID: value.receiptID)
                      })

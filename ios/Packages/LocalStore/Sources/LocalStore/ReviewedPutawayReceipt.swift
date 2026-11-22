@@ -180,6 +180,26 @@ extension ComparisonStore {
         return header
     }
 
+    /// Look up an existing image-evidence index entry only in this owner's reviewed history.
+    public func reviewedReceiptHeader(imageIdentity: UUID, owner: UUID) throws -> ReviewedReceiptHeader? {
+        guard try inventoryState().active else { throw ComparisonStoreError.inventoryInactive }
+        let row = try database.statement("""
+            SELECT r.id, r.header FROM inventory_acquisition_identities i
+            JOIN putaway_receipts r ON r.id=i.receipt_id WHERE i.identity=? AND r.owner=?
+            """, values: [.text(imageIdentity.uuidString), .text(owner.uuidString)])
+        defer { sqlite3_finalize(row) }
+        switch sqlite3_step(row) {
+        case SQLITE_DONE: return nil
+        case SQLITE_ROW:
+            let header = try JSONDecoder().decode(ReviewedReceiptHeader.self, from: database.inventoryBlob(row, column: 1, maximum: 2048))
+            guard header.owner == owner, header.id.uuidString == (try database.text(row, column: 0)) else {
+                throw ComparisonStoreError.corruptRecord
+            }
+            return header
+        default: throw ComparisonStoreError.corruptRecord
+        }
+    }
+
     public func reviewedReceiptHeaders(owner: UUID, after: UUID?, limit: Int = 30) throws -> [ReviewedReceiptHeader] {
         guard try inventoryState().active, (1...50).contains(limit) else { throw ComparisonStoreError.invalidInput }
         let row = try database.statement("SELECT header FROM putaway_receipts WHERE owner=? AND id>? ORDER BY id LIMIT ?",

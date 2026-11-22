@@ -213,7 +213,7 @@ struct PutawayHistory: View {
     }
 }
 
-private struct PutawayHistoryDetail: View {
+struct PutawayHistoryDetail: View {
     @ObservedObject var model: PantryModel
     let header: ReviewedReceiptHeader
     @State private var rows: [ReviewedReceiptDecision] = []

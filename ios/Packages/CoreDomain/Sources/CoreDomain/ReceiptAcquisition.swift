@@ -85,12 +85,16 @@ public struct ReceiptAcquisition: Codable, Equatable, Sendable, Identifiable {
 
     /// Merchant transaction references must be explicitly confirmed. Filename,
     /// wording, date and total are never identities for a physical purchase.
+    public static func imageIdentity(_ digest: Data) -> UUID {
+        identity(["image", digest.base64EncodedString()])
+    }
+
     public static func receiptID(merchant: String, transactionReference: String?, imageDigest: Data?, draftID: UUID) -> UUID {
         if let transactionReference {
             return identity(["transaction", merchant.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
                              transactionReference.trimmingCharacters(in: .whitespacesAndNewlines)])
         }
-        if let imageDigest { return identity(["image", imageDigest.base64EncodedString()]) }
+        if let imageDigest { return imageIdentity(imageDigest) }
         return draftID
     }
 

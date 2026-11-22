@@ -1,5 +1,6 @@
 import CoreDomain
 import LocalStore
+import UIKit
 import XCTest
 @testable import RoomInTheCart
 
@@ -17,6 +18,73 @@ import XCTest
         result.dateConfirmed = true
         result.reference = "TICKET-18"
         return result
+    }
+
+    func testExactImportedFileCanReopenOnlyItsOwnersSavedReceiptBeforeReview() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let cleanup = SQLiteFixtureDirectory(directory, test: self)
+        let store = try ComparisonStore(url: directory.appendingPathComponent("pantry.sqlite"), inventoryEnabled: true)
+        cleanup.track(store)
+        let token = try await store.inventorySourceToken()
+        try await store.commitInventory(.init(workspaceID: store.workspaceID, operationID: UUID(), expectedRevision: 0,
+            request: Data([1]), mode: .activate, sourceToken: token), at: now)
+        var allowed = true
+        let owner = UUID()
+        let repo = PantryRepository(store: store, aliasPersonaID: owner, authorize: { allowed })
+        cleanup.track(repo)
+        let model = PantryModel(repository: repo, clock: { self.now })
+        await model.load()
+        let bytes = Data("Soup 2.40\nFee 1.00".utf8)
+        let document = try await ReceiptDocumentReader().extract(.init(data: bytes, kind: .text))
+        let target = CaptureTarget(workspaceID: store.workspaceID, containerID: UUID(), objectID: UUID(),
+                                   revision: 1, kind: .receiptEvidence)
+        let source = try document.source(target: target, merchant: "Mercado", stage: .receipt,
+                                         selection: [.init(page: 1, line: 1), .init(page: 1, line: 2)], at: now)
+        var imported = try ReceiptImportDraft(source: source, now: now)
+        imported.tracksPutaway = true
+        imported.dateConfirmed = true
+        imported.reference = "FILE-18"
+        imported.lines[0].treatment = .eaten
+        imported.lines[1].treatment = .chargeOrReturn
+
+        var manual = try receipt(store: store, lines: ["Soup 2.40", "Fee 1.00"])
+        manual.lines[0].treatment = .eaten
+        let manualReview = try await model.reviewReceipt(manual)
+        try await model.saveReceipt(manualReview)
+        let beforeFile = try await model.savedReceipt(fileDigest: document.digest)
+        XCTAssertNil(beforeFile)
+
+        let review = try await model.reviewReceipt(imported)
+        try await model.saveReceipt(review)
+        let state = try await store.inventoryState()
+        let reopened = try await model.savedReceipt(fileDigest: document.digest)
+        XCTAssertEqual(reopened?.id, imported.receiptID)
+        let savedDecisions = try await model.reviewedReceiptDecisions(imported.receiptID, after: nil)
+        XCTAssertEqual(Set(savedDecisions.map(\.original)), Set(["Soup 2.40", "Fee 1.00"]))
+        let alternate = try await ReceiptDocumentReader().extract(.init(data: bytes + Data([10]), kind: .text))
+        XCTAssertNotEqual(alternate.digest, document.digest)
+        let pdf = UIGraphicsPDFRenderer(bounds: CGRect(x: 0, y: 0, width: 320, height: 320)).pdfData { context in
+            context.beginPage()
+            ("Soup 2.40\nFee 1.00" as NSString).draw(at: CGPoint(x: 15, y: 15), withAttributes: nil)
+        }
+        let otherDocument = try await ReceiptDocumentReader().extract(.init(data: pdf, kind: .pdf))
+        let otherMedium = try await model.savedReceipt(fileDigest: otherDocument.digest)
+        XCTAssertNil(otherMedium)
+        let otherBytes = try await model.savedReceipt(fileDigest: alternate.digest)
+        let absent = try await model.savedReceipt(fileDigest: Data())
+        XCTAssertNil(otherBytes)
+        XCTAssertNil(absent)
+        let outsider = PantryRepository(store: store, aliasPersonaID: UUID(), authorize: { true })
+        let hidden = try await outsider.putawayReceipt(fileDigest: document.digest)
+        XCTAssertNil(hidden)
+        let afterLookup = try await store.inventoryState()
+        XCTAssertEqual(afterLookup, state)
+        let anotherReview = try await model.reviewReceipt(imported)
+        XCTAssertNil(anotherReview.batch)
+        allowed = false
+        let revoked = try await model.savedReceipt(fileDigest: document.digest)
+        XCTAssertNil(revoked)
     }
 
     func testReviewedReceiptCopyUsesOnlySelectedFieldsInTheLiveOwnerScope() async throws {

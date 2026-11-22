@@ -58,6 +58,7 @@
     "RoomInTheCartTests/ReceiptDocumentTests/testPrintedPaidTotalRemainsUnknownUntilTheShopperAdoptsIt",
     "RoomInTheCartTests/ReceiptDocumentTests/testPrintedPaidTotalRejectsSubtotalConflictsAndUncertainAmounts",
     "RoomInTheCartTests/ReceiptDocumentTests/testAmbiguousItemAcceptsOnlyExplicitPrintedFieldCorrections",
+    "RoomInTheCartTests/MixedReceiptPutawayTests/testExactImportedFileCanReopenOnlyItsOwnersSavedReceiptBeforeReview",
     "RoomInTheCartTests/DeliveryPDFReviewTests/testPrintedDeliveryDayRendersInEnglishAndSpanishWithOrWithoutAPurchaseDate"
   ],
   "08 · Type a receipt after denying camera access and review the portion kept": [

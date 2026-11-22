@@ -267,6 +267,14 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
         permitsReceiptSource && repository.aliasPersonaID == header.owner
     }
 
+    func savedReceipt(fileDigest: Data) async throws -> ReviewedReceiptHeader? {
+        guard permitsReceiptSource else { return nil }
+        let token = generation
+        let header = try await repository.putawayReceipt(fileDigest: fileDigest)
+        guard token == generation, let header, permitsReceiptCopy(header) else { return nil }
+        return header
+    }
+
     func reviewedReceiptHeaders(after: UUID?) async throws -> [ReviewedReceiptHeader] {
         guard canEdit else { throw PantryReceiptError.stale }
         let token = generation

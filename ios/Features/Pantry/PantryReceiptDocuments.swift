@@ -1,5 +1,6 @@
 import DeviceSurfaces
 import CoreDomain
+import LocalStore
 import PhotosUI
 import SwiftUI
 
@@ -55,6 +56,9 @@ struct PantryReceiptDocuments: View {
     @State private var document: ExtractedReceiptDocument?
     @State private var documentDateWording: String?
     @State private var inspectedLine: ExtractedReceiptDocument.Selection?
+    @State private var savedFileReceipt: ReviewedReceiptHeader?
+    @State private var savedFileGeneration: UUID?
+    @State private var openedSavedReceipt: ReviewedReceiptHeader?
     @State private var fileBytes: ReceiptDocumentBytes?
     @State private var selection = Set<ExtractedReceiptDocument.Selection>()
     @State private var linkedAmountItems = Set<ExtractedReceiptDocument.Selection>()
@@ -98,6 +102,12 @@ struct PantryReceiptDocuments: View {
                 let linkedAmounts = Set(linkedAmountItems.compactMap { pairs[$0] ?? splitAmounts[$0] })
                 let included = selection.union(linkedAmounts)
                 let storeIssue = receiptStoreIssue(merchant)
+                if reviewsEvidenceOnly, let model, let savedFileReceipt, let savedFileGeneration {
+                    SavedFileReceiptLink(model: model, header: savedFileReceipt, session: savedFileGeneration,
+                                         digest: document.digest, opened: $openedSavedReceipt, authorize: {
+                        authorize() && self.document?.digest == document.digest && reviewsEvidenceOnly
+                    })
+                }
                 Section(pantryText("Receipt source")) {
                     let name = captureText("Store or receipt name (required)")
                     WorkingField(name) {
@@ -259,7 +269,7 @@ struct PantryReceiptDocuments: View {
         }
         .fileImporter(isPresented: $picking, allowedContentTypes: [.pdf, .jpeg, .png, .heic, .heif, .plainText]) { result in
             switch result {
-            case .success(let url): start { try await ReceiptDocumentBytes.picked(url) }
+            case .success(let url): start(pickedFile: true) { try await ReceiptDocumentBytes.picked(url) }
             case .failure(let error):
                 if (error as NSError).code != NSUserCancelledError { show(error) }
             }
@@ -290,9 +300,9 @@ struct PantryReceiptDocuments: View {
                   }, secondaryButton: .cancel(Text(pantryText("Cancel"))))
         }
         .onDisappear {
-            // A replacement camera can cover the review. Keep the current selections
-            // until a different image is successfully read, or the capture is closed.
-            if changePhoto == nil { cancel() }
+            // The camera and the saved receipt can cover this form. Returning
+            // to it should preserve the shopper's current line selections.
+            if changePhoto == nil && openedSavedReceipt == nil { cancel() }
             inbox = []
         }
         .task { if let initialDocument { document = initialDocument } else { await loadInbox() } }
@@ -418,7 +428,7 @@ struct PantryReceiptDocuments: View {
         }
     }
 
-    private func start(shared: SharedReceiptItem? = nil, _ read: @escaping () async throws -> ReceiptDocumentBytes) {
+    private func start(shared: SharedReceiptItem? = nil, pickedFile: Bool = false, _ read: @escaping () async throws -> ReceiptDocumentBytes) {
         cancel()
         guard authorize() else { return }
         let token = generation
@@ -431,6 +441,15 @@ struct PantryReceiptDocuments: View {
                 guard token == generation, authorize() else { return }
                 let extracted = try await ReceiptDocumentReader().extract(bytes)
                 guard !Task.isCancelled, token == generation, authorize() else { return }
+                if pickedFile, reviewsPrivateReceipt, let model {
+                    let session = model.generation
+                    let saved = try? await model.savedReceipt(fileDigest: extracted.digest)
+                    guard !Task.isCancelled, token == generation, authorize() else { return }
+                    if model.generation == session {
+                        savedFileGeneration = session
+                        savedFileReceipt = saved
+                    }
+                }
                 fileBytes = bytes
                 document = extracted
             } catch { if !Task.isCancelled, token == generation, authorize() { show(error) } }
@@ -442,6 +461,7 @@ struct PantryReceiptDocuments: View {
         job?.cancel(); job = nil
         storeFocusRequest = nil
         inspectedLine = nil; fileBytes = nil
+        savedFileReceipt = nil; savedFileGeneration = nil; openedSavedReceipt = nil
         openedShare = nil; selection = []; linkedAmountItems = []; document = nil; photo = nil; merchant = ""; confirmed = false; error = nil; stage = .receipt
     }
 
@@ -639,5 +659,41 @@ private final class ReceiptPageCanvas: UIScrollView, UIScrollViewDelegate {
         let magnification = zoomScale / minimumZoomScale
         accessibilityValue = Double(magnification).formatted(.percent.precision(.fractionLength(0)))
         zoomChanged?(magnification, maximumZoomScale / minimumZoomScale)
+    }
+}
+
+private struct SavedFileReceiptLink: View {
+    @ObservedObject var model: PantryModel
+    let header: ReviewedReceiptHeader
+    let session: UUID
+    let digest: Data
+    @Binding var opened: ReviewedReceiptHeader?
+    let authorize: @MainActor () -> Bool
+
+    private var current: Bool {
+        model.generation == session && authorize() && model.permitsReceiptCopy(header)
+    }
+
+    var body: some View {
+        if current {
+            Button(putawayText("Open saved receipt")) {
+                Task {
+                    guard current, let latest = try? await model.savedReceipt(fileDigest: digest),
+                          latest.id == header.id, current else { return }
+                    opened = latest
+                }
+            }
+            .accessibilityIdentifier("receipt.document.openSaved")
+            .sheet(item: $opened) { saved in
+                if current {
+                    NavigationStack {
+                        PutawayHistoryDetail(model: model, header: saved)
+                            .toolbar {
+                                ToolbarItem(placement: .confirmationAction) { Button(pantryText("Done")) { opened = nil } }
+                            }
+                    }
+                }
+            }
+        }
     }
 }
