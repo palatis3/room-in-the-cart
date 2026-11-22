@@ -639,6 +639,8 @@ private struct PantryFoodEditor: View {
     var purchase: PantryRecentPurchase? = nil
     var initialLocation: InventoryLocation? = nil
     @Environment(\.dismiss) private var dismiss
+    private struct ProductScan: Identifiable { let id: UUID }
+    @State private var productScan: ProductScan?
     @State private var existingFoodID: UUID?
     @State private var name = ""
     @State private var amount = ""
@@ -650,14 +652,23 @@ private struct PantryFoodEditor: View {
         var seen = Set<UUID>()
         return (model.snapshot?.lots ?? []).sorted { $0.id.uuidString < $1.id.uuidString }.filter { seen.insert($0.foodID).inserted }
     }
+    private var scanProductsLabel: some View {
+        Label(pantryText("Scan products"), systemImage: "barcode.viewfinder")
+    }
+
     var body: some View {
         WorkingForm {
             if accessAllowed && model.phase == .ready {
                 if lotID == nil {
                     if reviewedFood == nil, let origin = model.snapshot?.state.workspaceID {
-                        NavigationLink {
-                            PantryProductBatchView(model: model, workspaceID: origin)
-                        } label: { Label(pantryText("Scan products"), systemImage: "barcode.viewfinder") }
+                        if #available(iOS 18, *) {
+                            NavigationLink {
+                                PantryProductBatchView(model: model, workspaceID: origin)
+                            } label: { scanProductsLabel }
+                        } else {
+                            // Present independently of the editor’s form on iOS 17.
+                            Button { productScan = ProductScan(id: origin) } label: { scanProductsLabel }
+                        }
                     }
                     Section {
                         if let reviewedFood {
@@ -736,6 +747,9 @@ private struct PantryFoodEditor: View {
             }
         }
         .onAppear { if let lot { amount = lot.count.quantity?.amount.description ?? ""; unit = lot.unit; location = lot.location } else if let initialLocation { location = initialLocation } }
+        .sheet(item: $productScan) { scan in
+            NavigationStack { PantryProductBatchView(model: model, workspaceID: scan.id) }
+        }
         .interactiveDismissDisabled(model.busy)
         .privacySensitive()
     }

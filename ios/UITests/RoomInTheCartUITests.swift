@@ -17,6 +17,46 @@ final class RoomInTheCartUITests: XCTestCase {
         app.terminate()
     }
 
+    func testOpenPantryDinnerChooserWithAnActivePickup() {
+        launch()
+        let grocery = element("quickGrocery.name")
+        tap(grocery)
+        grocery.typeText("Lentils")
+        tap(app.buttons["quickGrocery.add"])
+        XCTAssertTrue(app.buttons["quickGrocery.undo"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+
+        tap(tabButton("Pantry", symbol: "cabinet"))
+        tap(app.buttons["pantry.setup.apply"])
+        XCTAssertTrue(app.buttons["pantry.add"].waitForExistence(timeout: 8))
+        tap(tabButton("Dinners", symbol: "fork.knife"))
+        tap(app.buttons["dinner.tonight"])
+        XCTAssertTrue(app.navigationBars["Tonight"].waitForExistence(timeout: 8))
+        tap(app.buttons["tonight.addRecipe"])
+        XCTAssertTrue(app.navigationBars["Enter a recipe"].waitForExistence(timeout: 8))
+        tap(app.buttons["Cancel"])
+        let chooser = app.navigationBars["Tonight"]
+        XCTAssertTrue(chooser.waitForExistence(timeout: 8))
+        tap(chooser.buttons.firstMatch)
+        XCTAssertTrue(app.navigationBars["Dinners"].waitForExistence(timeout: 8))
+    }
+
+    func testOpenProductScannerFromAddFoodAndEnterABarcode() {
+        launch()
+        tap(tabButton("Pantry", symbol: "cabinet"))
+        tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.add"])
+        tap(app.buttons["Scan products"])
+        XCTAssertTrue(app.navigationBars["Scan products"].waitForExistence(timeout: 8))
+        let code = app.textFields["productBatch.code"]
+        tap(code)
+        code.typeText("1234")
+        XCTAssertEqual(code.value as? String, "1234")
+        tap(app.navigationBars["Scan products"].buttons["Cancel"])
+        XCTAssertTrue(app.navigationBars["Add food"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.textFields["pantry.foodName"].isHittable)
+    }
+
     func testLargestTextQuickGroceryFitsAndSubmitsWithReturn() {
         launch(language: "es", largeDark: true)
         let field = element("quickGrocery.name")
