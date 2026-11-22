@@ -61,8 +61,6 @@ import RecordArchive
     @Published private(set) var busy = false
     @Published private(set) var failed = false
     private var generation = UUID()
-    private var reading = false
-    private var readWaiters: [CheckedContinuation<Void, Never>] = []
     private var manualMatches: [UUID: [UUID: UUID]] = [:]
     private var overriddenIngredients: [UUID: Set<UUID>] = [:]
     private var selectedVersions: [UUID: MealTemplate] = [:]
@@ -134,21 +132,7 @@ import RecordArchive
         guard !busy else { return }
         let token = generation
         busy = true
-        // Invalidation clears the visible data immediately. Let its old pantry read finish
-        // before the replacement request uses the same pickup model.
-        if reading {
-            await withCheckedContinuation { readWaiters.append($0) }
-            guard generation == token else { return }
-            guard authorize() else { invalidate(); return }
-        }
-        reading = true
-        defer {
-            reading = false
-            let waiters = readWaiters
-            readWaiters.removeAll()
-            for waiter in waiters { waiter.resume() }
-            if generation == token { busy = false }
-        }
+        defer { if generation == token { busy = false } }
         do {
             let next = try await load()
             guard token == generation else { return }

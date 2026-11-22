@@ -460,6 +460,8 @@ struct PickupPersistenceLocation {
     var hasPendingPantrySave: Bool { pendingPantry != nil }
     func isValidatingRecoverySave(_ operationID: UUID) -> Bool { validatingRecoveryOperationID == operationID }
     private var opening = false
+    private var readingPantryStock = false
+    private var pantryStockReadWaiters: [CheckedContinuation<Void, Never>] = []
     private var storeRevisions: [UUID: Int64] = [:]
     private weak var cookLedger: LedgerModel?
     private struct Pending {
@@ -914,24 +916,40 @@ struct PickupPersistenceLocation {
     /// pending submission, acknowledges it, or copies its old authorization.
     @discardableResult func refreshPantryStock(waitForShelf: Bool = false) async -> Bool {
         guard let configuration = pantryConfiguration, let store else { return false }
+        let generation = privatePantryGeneration
+        // Saving preferences can reopen Tonight before its first stock read has finished.
+        // Let that read finish before starting a fresh one for the updated preferences.
+        while waitForShelf && readingPantryStock {
+            await withCheckedContinuation { pantryStockReadWaiters.append($0) }
+        }
+        guard generation == privatePantryGeneration, !waitForShelf || !Task.isCancelled else { return false }
         pantryReadIsCurrent = false
         guard !saving, !opening else { return false }
-        saving = true; defer { saving = false }
+        readingPantryStock = true
+        saving = true
+        defer {
+            readingPantryStock = false
+            saving = false
+            let waiters = pantryStockReadWaiters
+            pantryStockReadWaiters.removeAll()
+            for waiter in waiters { waiter.resume() }
+        }
         do {
             let current = try await pantryPort(configuration: configuration, store: store).loadCurrent(waitForShelf: waitForShelf)
             let (mapping, decoded) = try PantryLegacyMigration.mapWithJourneys(originID: current.inventory.state.workspaceID,
                 heads: current.sources, ledger: .unavailable, at: clock())
-            guard configuration.authorize() else { throw PickupModelError.missing }
+            guard generation == privatePantryGeneration, configuration.authorize() else { throw PickupModelError.missing }
             journeys = decoded.sorted { $0.savedAt == $1.savedAt ? $0.id.uuidString < $1.id.uuidString : $0.savedAt > $1.savedAt }
             storeRevisions = Dictionary(uniqueKeysWithValues: current.sources.map { ($0.id, $0.revision) })
             pantryReaderMapping = mapping; pantrySnapshot = current.inventory; pantryReadIsCurrent = true; pantryIsActive = true; pantrySetupIsStaging = false; pantryOriginReadable = true
             try await bindLiveLedgerRecovery(configuration)
-            guard configuration.authorize() else { throw PickupModelError.missing }
+            guard generation == privatePantryGeneration, configuration.authorize() else { throw PickupModelError.missing }
             if !journeys.contains(where: { $0.id == selectedID }) { selectedID = journeys.first?.id }
             ready = true
             if !hasPendingSave { error = nil }
             return true
         } catch {
+            guard generation == privatePantryGeneration else { return false }
             if !configuration.authorize() {
                 journeys = []; storeRevisions = [:]; pantrySnapshot = nil; pantryReaderMapping = nil
                 pending = nil; pendingPantry = nil; hasPendingSave = false; ready = false
