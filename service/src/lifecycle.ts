@@ -4,9 +4,9 @@ import {proposalDTO} from './helper-review.js';
 import type {z} from 'zod';
 import type {VerifiedIdentity} from './auth.js';
 import {HouseholdRepository,type Context} from './repository.js';
-import {digest,tokenHash} from './database.js';
-import {ServiceError,unavailable,accessEnded} from './errors.js';
-import {householdCreateSchema,inviteCreateSchema,inviteRedeemSchema,viewCreateSchema,viewUpdateSchema,viewProjectionSchema,proposalSchema,revocationSchema} from './contracts.js';
+import {digest,tokenHash,type Transaction} from './database.js';
+import {ServiceError,unavailable,accessEnded,refresh} from './errors.js';
+import {householdCreateSchema,inviteCreateSchema,invitePreviewSchema,inviteRedeemSchema,viewCreateSchema,viewUpdateSchema,viewProjectionSchema,proposalSchema,revocationSchema} from './contracts.js';
 const consentUnavailable=()=>new ServiceError(503,'consent_unavailable','Child enrollment is unavailable until verified guardian consent is configured.');
 export class HouseholdLifecycle {
   constructor(readonly repo:HouseholdRepository){}
@@ -49,20 +49,44 @@ export class HouseholdLifecycle {
     await ctx.db.query('INSERT INTO ritc.invite(household_id,invite_id,token_hash,kind,created_by,grant_id,expires_at) VALUES($1,$2,$3,$4,$5,$6,$7)',[ctx.householdId,inviteId,tokenHash(secret),kind,ctx.member.member_id,grantId,expiresAt]);
     return{inviteId,token:ctx.householdId+'.'+secret,expiresAt:expiresAt.toISOString()};
   }
+  private async ordinaryInvite(db:Transaction,householdId:string,secret:string,identity:VerifiedIdentity,preview:boolean){
+    await db.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[identity.issuer+'|'+identity.subject]);
+    const now=(await db.query<{now:Date}>('SELECT clock_timestamp() AS now')).rows[0]!.now;
+    await this.repo.assertSession(db,identity,now);
+    const child=await db.query('SELECT ritc.identity_has_child_profile($1,$2) AS child',[identity.issuer,identity.subject]);
+    if(child.rows[0].child)throw preview?unavailable():consentUnavailable();
+    const invite=(await db.query(`SELECT h.label,i.kind,i.invite_id,i.grant_id,i.redeemed_at,i.redeemed_by
+      FROM ritc.invite i JOIN ritc.household h USING(household_id)
+      JOIN ritc.member m ON m.household_id=i.household_id AND m.member_id=i.created_by
+      LEFT JOIN ritc.view_grant g ON g.household_id=i.household_id AND g.grant_id=i.grant_id
+      WHERE i.household_id=$1 AND i.token_hash=$2 AND i.revoked_at IS NULL AND i.expires_at>$3
+        AND m.state='active' AND m.kind='adult'
+        AND ((i.redeemed_at IS NULL AND i.redeemed_by IS NULL)
+          OR (NOT $4::boolean AND i.redeemed_at IS NOT NULL AND i.redeemed_by IS NOT NULL))
+        AND ((i.kind='adult_contributor' AND i.grant_id IS NULL)
+          OR (i.kind IN ('helper_read','helper_edit') AND i.kind='helper_'||g.mode
+            AND g.created_by=i.created_by AND g.revoked_at IS NULL AND g.expires_at>$3
+            AND g.recipient_id IS NOT DISTINCT FROM i.redeemed_by))`,[householdId,tokenHash(secret),now,preview])).rows[0];
+    if(!invite)throw unavailable();
+    return invite;
+  }
+  async previewInvite(identity:VerifiedIdentity,input:z.infer<typeof invitePreviewSchema>){
+    const [householdId,secret]=input.token.split('.');
+    return this.repo.transaction(householdId!,async db=>{
+      const invite=await this.ordinaryInvite(db,householdId!,secret!,identity,true);
+      return{householdLabel:invite.label as string,role:invite.kind};
+    },true);
+  }
   async redeem(identity:VerifiedIdentity,input:z.infer<typeof inviteRedeemSchema>,language:'en'|'es'='en'){
     const [householdId,secret]=input.token.split('.');
     return this.repo.transaction(householdId!,async(db,now)=>{
-      await this.repo.assertSession(db,identity,now);
-      await db.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[identity.issuer+'|'+identity.subject]);
-      if((await db.query('SELECT ritc.identity_has_child_profile($1,$2) AS child',[identity.issuer,identity.subject])).rows[0].child)throw consentUnavailable();
-      const invite=(await db.query(`SELECT i.* FROM ritc.invite i JOIN ritc.member m ON m.household_id=i.household_id AND m.member_id=i.created_by
-        WHERE i.household_id=$1 AND i.token_hash=$2 AND i.revoked_at IS NULL AND i.expires_at>$3 AND m.state='active' AND m.kind='adult'`,[householdId,tokenHash(secret!),now])).rows[0];
-      if(!invite)throw unavailable();
+      const invite=await this.ordinaryInvite(db,householdId!,secret!,identity,false);
       let member=(await db.query('SELECT * FROM ritc.member WHERE household_id=$1 AND issuer=$2 AND subject=$3',[householdId,identity.issuer,identity.subject])).rows[0];
       if(member?.kind==='child')throw consentUnavailable();
       if(invite.redeemed_at){
         if(!member||member.state!=='active'||invite.redeemed_by!==member.member_id)throw unavailable();
       }else{
+        if(input.reviewedOffer&&(input.reviewedOffer.householdLabel!==invite.label||input.reviewedOffer.role!==invite.kind))throw refresh();
         const memberId=member?.member_id??randomUUID(),contribute=invite.kind==='adult_contributor';
         if(member){
           await db.query("UPDATE ritc.member SET state='active',organizer=CASE WHEN state='active' THEN organizer ELSE false END,can_contribute=$3 OR (state='active' AND can_contribute),alias=COALESCE($4,alias) WHERE household_id=$1 AND member_id=$2",[householdId,memberId,contribute,input.alias??null]);

@@ -61,7 +61,7 @@ export class HouseholdRepository {
     await this.assertIdentityAllowed(db,identity.issuer,identity.subject);
     await this.options.sessionStatus.assertLive(db,identity,now);
   }
-  async transaction<T>(householdId:string,fn:(db:Transaction,now:Date)=>Promise<T>):Promise<T> {
+  async transaction<T>(householdId:string,fn:(db:Transaction,now:Date)=>Promise<T>,readOnly=false):Promise<T> {
     const db=await this.pool.connect();
     try {
       await db.query('BEGIN');
@@ -71,7 +71,8 @@ export class HouseholdRepository {
       if(!house.rowCount)throw unavailable();
       const now=(await db.query<{now:Date}>('SELECT clock_timestamp() AS now')).rows[0]!.now;
       const result=await fn(db,now);
-      await db.query('COMMIT');return result;
+      // The live provider check locks its row FOR SHARE. End preview reads by rollback.
+      await db.query(readOnly?'ROLLBACK':'COMMIT');return result;
     }catch(error) {await db.query('ROLLBACK');throw error;}finally{db.release();}
   }
   async member(db:Transaction,householdId:string,identity:VerifiedIdentity):Promise<Member> {
@@ -91,8 +92,8 @@ export class HouseholdRepository {
       AND c.notice_version=$3 AND g.kind='adult' AND g.state='active' LIMIT 1`,[householdId,member.member_id,this.options.noticeVersion]);
     if(!result.rowCount)throw accessEnded();
   }
-  async authorized<T>(householdId:string,auth:AuthContext,fn:(ctx:Context)=>Promise<T>):Promise<T> {
-    return this.transaction(householdId,(db,now)=>this.authorizedInTransaction(db,now,householdId,auth,fn));
+  async authorized<T>(householdId:string,auth:AuthContext,fn:(ctx:Context)=>Promise<T>,readOnly=false):Promise<T> {
+    return this.transaction(householdId,(db,now)=>this.authorizedInTransaction(db,now,householdId,auth,fn),readOnly);
   }
   private async authorizedInTransaction<T>(db:Transaction,now:Date,householdId:string,auth:AuthContext,fn:(ctx:Context)=>Promise<T>):Promise<T> {
     await this.assertSession(db,auth.identity,now);
@@ -821,22 +822,25 @@ export class HouseholdRepository {
       });
     });
   }
-  async webIdentity(cookie:string,freshIdentity?:VerifiedIdentity) {
+  async webIdentity(cookie:string,freshIdentity?:VerifiedIdentity,readOnly=false) {
     const parts=scopedCookieParts(cookie);
     if(!parts)throw accessEnded();
     const {householdId,token}=parts;
     return this.transaction(householdId,async(db,now)=>{
-      const s=(await db.query(`SELECT s.csrf,s.expires_at,s.device_id,s.grant_id,s.shop_id,s.browser_bound,s.own_requests_only,m.issuer,m.subject,d.session_id FROM ritc.web_session s
+      const s=(await db.query(`SELECT s.csrf,s.expires_at,s.device_id,s.grant_id,s.shop_id,s.browser_bound,s.own_requests_only,m.issuer,m.subject,m.kind,d.session_id FROM ritc.web_session s
         JOIN ritc.member m USING(household_id,member_id) JOIN ritc.device d USING(household_id,member_id,device_id)
-        WHERE s.household_id=$1 AND s.token_hash=$2 AND s.revoked_at IS NULL AND (s.expires_at>$3 OR $4::boolean) AND d.revoked_at IS NULL AND m.state='active'`,[householdId,tokenHash(token),now,Boolean(freshIdentity)])).rows[0];
+        WHERE s.household_id=$1 AND s.token_hash=$2 AND s.revoked_at IS NULL AND (s.expires_at>$3 OR $4::boolean) AND d.revoked_at IS NULL AND m.state='active'`,[householdId,tokenHash(token),now,Boolean(freshIdentity)&&!readOnly])).rows[0];
       if(!s)throw accessEnded();
       if(s.browser_bound&&!freshIdentity)throw new ServiceError(401,'session_needed','Sign in again to continue.');
       if(freshIdentity&&(freshIdentity.issuer!==s.issuer||freshIdentity.subject!==s.subject||freshIdentity.sessionId!==s.session_id))throw accessEnded();
       const identity:VerifiedIdentity=freshIdentity??{issuer:s.issuer,subject:s.subject,sessionId:s.session_id,expiresAt:s.expires_at};
       await this.assertSession(db,identity,now);
-      if(freshIdentity)await db.query('UPDATE ritc.web_session SET expires_at=$3 WHERE household_id=$1 AND token_hash=$2',[householdId,tokenHash(token),new Date(Math.min(freshIdentity.expiresAt.getTime(),now.getTime()+15*60_000))]);
-      return{householdId,csrf:s.csrf as string,auth:{identity,trustedDeviceId:s.device_id as string,...(s.own_requests_only?{ownRequestsOnly:true}:{}),...(s.grant_id?{viewGrantId:s.grant_id as string}:{}),...(s.shop_id?{selectedShopId:s.shop_id as string}:{})}};
-    });
+      if(freshIdentity&&!readOnly)await db.query('UPDATE ritc.web_session SET expires_at=$3 WHERE household_id=$1 AND token_hash=$2',[householdId,tokenHash(token),new Date(Math.min(freshIdentity.expiresAt.getTime(),now.getTime()+15*60_000))]);
+      const session={householdId,csrf:s.csrf as string,auth:{identity,trustedDeviceId:s.device_id as string,...(s.own_requests_only?{ownRequestsOnly:true}:{}),...(s.grant_id?{viewGrantId:s.grant_id as string}:{}),...(s.shop_id?{selectedShopId:s.shop_id as string}:{})}};
+      if(readOnly&&s.kind==='child')throw unavailable();
+      if(readOnly)await this.authorizedInTransaction(db,now,householdId,session.auth,async()=>undefined);
+      return session;
+    },readOnly);
   }
   async revokeWebCookie(cookie:string){
     const parts=scopedCookieParts(cookie);

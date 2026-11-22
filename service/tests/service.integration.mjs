@@ -460,6 +460,118 @@ test('self-serve adult household creation is atomic, idempotent and rejects chil
   const boot=await f.http({...f.actors.Mia,deviceToken:enrolled.data.deviceToken},'GET','/v1/households/'+h+'/bootstrap');assert.equal(boot.data.shopId,null);assert.deepEqual(boot.data.capabilities,['meal_preferences_read','meal_preferences_admin','household_pantry','household_tonight','my_feedback_withdrawal','household_pantry_grants','request_queue_permission','own_requests','household_admin']);
 });
 
+test('invitation preview returns the exact live offer without recording or granting access',async()=>{
+  const f=await fixture(),visitors=await fixture({createShop:false});
+  const read=(actor,token)=>f.http(actor,'POST','/v1/invites/preview',{token,adultAttestation:true});
+  const issue=async role=>{
+    const r=role==='adult_contributor'?await f.http('Mia','POST','/invites',{kind:role}):
+      await f.http('Mia','POST','/views',{shopId:f.shopId,mode:role==='helper_edit'?'edit':'read',shopLabel:'Private instructions',language:'en',items:[]});
+    assert.equal(r.status,200);return r.data;
+  };
+  const offers=[];
+  for(const role of ['adult_contributor','helper_read','helper_edit'])offers.push({role,...await issue(role)});
+  const alice=visitors.actors.Mia,bob=visitors.actors.Alex;
+  async function rows(){
+    const tables=['member','invite','view_grant','device','web_session','replay_window','guardian_child_claim','event','operation','operation_response'];
+    return Promise.all(tables.map(async table=>digest((await admin.query('SELECT to_jsonb(t) AS snapshot FROM ritc.'+table+' t WHERE household_id=$1 ORDER BY to_jsonb(t)::text',[f.h])).rows)));
+  }
+  const before=await rows();
+  for(const {role,token} of offers){
+    const pair=await Promise.all([read(alice,token),read(bob,token)]);
+    for(const r of pair){
+      assert.equal(r.status,200);assert.deepEqual(r.data,{householdLabel:'Fictional household',role});
+      assert.equal(r.headers.get('cache-control'),'no-store');assert.equal(r.headers.has('set-cookie'),false);
+    }
+  }
+  assert.deepEqual(await rows(),before);
+  assert.equal((await f.http(alice,'GET','/bootstrap')).status,404);
+  assert.equal((await f.http(alice,'GET','/v1/views/'+offers[1].grantId+'/current',undefined,{'X-Household-ID':f.h})).status,404);
+  const {token}=offers[0],reviewedOffer=(await read(alice,token)).data;
+  const join={token,adultAttestation:true,intent:'join',reviewedOffer};
+  await admin.query('UPDATE ritc.household SET label=$2 WHERE household_id=$1',[f.h,'Renamed household']);
+  const stale=await f.http(alice,'POST','/v1/invites/redeem',join);
+  assert.equal(stale.status,409);assert.equal(stale.data.error.code,'refresh_required');
+  assert.deepEqual(await rows(),before);
+  const freshJoin={...join,reviewedOffer:(await read(alice,token)).data};
+  const results=await Promise.all([alice,bob].map(a=>f.http(a,'POST','/v1/invites/redeem',freshJoin)));
+  assert.deepEqual(results.map(r=>r.status).sort(),[200,404]);
+  const index=results.findIndex(r=>r.status===200),winner=[alice,bob][index];
+  const alreadyJoined=await rows();
+  assert.equal((await read(winner,token)).status,404);
+  await admin.query('UPDATE ritc.household SET label=$2 WHERE household_id=$1',[f.h,'Second name']);
+  assert.deepEqual((await f.http(winner,'POST','/v1/invites/redeem',freshJoin)).data,results[index].data);
+  assert.deepEqual(await rows(),alreadyJoined);
+  for(const {token,role,grantId} of offers.slice(1)){
+    const reviewed=(await read(alice,token)).data;
+    const result=await f.http(alice,'POST','/v1/invites/redeem',{token,intent:'join',adultAttestation:true,reviewedOffer:reviewed});
+    assert.equal(result.status,200);assert.equal(result.data.grantId,grantId);
+    assert.equal(result.data.role,role==='helper_edit'?'editor':'helper');
+    assert.equal((await read(alice,token)).status,404);
+  }
+});
+
+test('invitation preview and Join describe the offer when the recipient already organizes the household',async()=>{
+  const f=await fixture(),owner=f.actors.Mia;
+  const contributor=await f.http(owner,'POST','/invites',{kind:'adult_contributor'});
+  const helper=await f.http(owner,'POST','/views',{shopId:f.shopId,mode:'edit',language:'en',shopLabel:'Cooking',items:[]});
+  for(const [offer,kind,resultRole,scope] of [
+    [contributor,'adult_contributor','contributor',{scope:'own_requests'}],
+    [helper,'helper_edit','editor',{grantId:helper.data.grantId}]
+  ]){
+    const body={token:offer.data.token,adultAttestation:true};
+    const preview=await f.http(owner,'POST','/v1/invites/preview',body);
+    assert.deepEqual(preview.data,{householdLabel:'Fictional household',role:kind});
+    const joined=await f.http(owner,'POST','/v1/invites/redeem',{...body,intent:'join',reviewedOffer:preview.data});
+    assert.equal(joined.status,200);assert.equal(joined.data.memberId,owner.id);assert.equal(joined.data.role,resultRole);
+    const opened=await f.http(owner,'POST','/v1/session',{householdId:f.h,...scope});
+    assert.equal(opened.status,200);assert.equal(opened.data.role,resultRole);
+    assert.equal(opened.data.capabilities.includes('household_admin'),false);
+  }
+  assert.equal((await f.http(owner,'GET','/bootstrap')).data.capabilities.includes('household_admin'),true);
+});
+
+test('invitation preview uses the same unavailable response for ended, child and unsupported offers',async()=>{
+  const f=await fixture(),guests=await fixture({createShop:false});
+  const actor=guests.actors.Mia, path='/v1/invites/preview';
+  const token=(await f.http('Mia','POST','/invites',{kind:'adult_contributor'})).data.token;
+  async function unavailable(data,viewer=actor){
+    const r=await f.http(viewer,'POST',path,data);
+    assert.equal(r.status,404);assert.equal(r.headers.get('cache-control'),'no-store');
+    assert.deepEqual(Object.keys(r.data),['error']);
+    const {correlationId,...error}=r.data.error;
+    assert.ok(correlationId);assert.deepEqual(error,{code:'unavailable',recovery:'Return to your current workspace.'});
+  }
+  const read=t=>({token:t,adultAttestation:true});
+  await unavailable(read('mistyped code'));await unavailable(read(f.h+'.'+randomBytes(32).toString('base64url')));
+  await unavailable(read(f.h+'.'+randomUUID()+'.'+randomBytes(32).toString('base64url')));
+  await unavailable({token});await unavailable(read(token),guests.actors.Sam);
+  const helper=async()=>{const r=await f.http('Mia','POST','/views',{shopId:f.shopId,mode:'edit',language:'en',shopLabel:'Cooking',items:[]});assert.equal(r.status,200);return r.data;};
+  const view=await helper(),request=read(view.token),offer=(await f.http(actor,'POST',path,request)).data;
+  await admin.query("UPDATE ritc.view_grant SET mode='read' WHERE household_id=$1 AND grant_id=$2",[f.h,view.grantId]);
+  await unavailable(request);
+  await admin.query("UPDATE ritc.invite SET kind='helper_read' WHERE household_id=$1 AND grant_id=$2",[f.h,view.grantId]);
+  const join=await f.http(actor,'POST','/v1/invites/redeem',{...request,reviewedOffer:offer,intent:'join'});
+  assert.equal(join.status,409);assert.equal(join.data.error.code,'refresh_required');
+  assert.equal((await f.http(actor,'POST',path,request)).data.role,'helper_read');
+  await admin.query("UPDATE ritc.view_grant SET revoked_at=now() WHERE household_id=$1 AND grant_id=$2",[f.h,view.grantId]);
+  await unavailable(request);
+  const assigned=await helper();
+  await admin.query("UPDATE ritc.view_grant SET recipient_id=$3 WHERE household_id=$1 AND grant_id=$2",[f.h,assigned.grantId,f.actors.Alex.id]);
+  await unavailable(read(assigned.token));
+  const expired=await helper();
+  await admin.query("UPDATE ritc.view_grant SET expires_at=now()-interval '1 second' WHERE household_id=$1 AND grant_id=$2",[f.h,expired.grantId]);
+  await unavailable(read(expired.token));
+  await admin.query("UPDATE ritc.invite SET expires_at=now()-interval '1 second' WHERE household_id=$1 AND kind='adult_contributor'",[f.h]);
+  await unavailable(read(token));
+  const again=(await f.http('Mia','POST','/invites',{kind:'adult_contributor'})).data;
+  await f.http('Mia','POST','/revocations',{kind:'invite',targetId:again.inviteId});await unavailable(read(again.token));
+  const current=(await f.http('Mia','POST','/invites',{kind:'adult_contributor'})).data;
+  await admin.query("UPDATE ritc.member SET state='revoked' WHERE household_id=$1 AND member_id=$2",[f.h,f.actors.Mia.id]);
+  await unavailable(read(current.token));
+  await admin.query('DELETE FROM auth.sessions WHERE id=$1',[actor.session]);
+  assert.equal((await f.http(actor,'POST',path,read(current.token))).status,401);
+});
+
 test('invitation display names use the new member’s language and preserve existing names on blank joins',async()=>{
   const f=await fixture(),guests=await fixture();
   async function join(actor,review={},language){
