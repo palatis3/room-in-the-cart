@@ -169,6 +169,9 @@ struct SavedDinnerHandoffView: View {
                             DinnerOccurrenceView(model: planner, occurrenceID: occurrenceID)
                         }.accessibilityIdentifier("dinner.handoff.openPlan")
                     }
+                    if let occurrenceID = review.occurrenceID {
+                        DinnerShoppingCheckLink(shopID: review.shopID, occurrenceID: occurrenceID)
+                    }
                     NavigationLink(ledgerText("Shopping list")) {
                         LedgerHomeView(model: ledger).navigationTitle(ledgerText("Shopping list")).navigationBarTitleDisplayMode(.inline)
                     }.accessibilityIdentifier("dinner.handoff.openList")

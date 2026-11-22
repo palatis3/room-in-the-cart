@@ -112,6 +112,7 @@ struct DinnerOccurrenceView: View {
                 if model.store === ledger, model.localIdeaWorkspaceID == ledger.sourceWorkspaceID, let shop = model.shop {
                     if model.phaseProvider(shop.id) == .draft {
                         Section {
+                            DinnerShoppingCheckLink(shopID: shop.id, occurrenceID: meal.id)
                             DinnerDecisionButton(model: model, title: dinnerText("Swap this dinner"), identifier: "dinner.swap") {
                                 DinnerSwapView(model: model, meal: meal)
                             }.disabled(!model.editable)

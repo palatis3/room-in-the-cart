@@ -1,6 +1,210 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "This dinner has no planned ingredients.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This dinner has no planned ingredients."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta cena no tiene ingredientes previstos."
+          }
+        }
+      }
+    },
+    "Check what to buy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check what to buy"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver qué comprar"
+          }
+        }
+      }
+    },
+    "Review the current shopping list for this dinner’s purchases and allocations.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the current shopping list for this dinner’s purchases and allocations."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consulta las compras y las cantidades asignadas a esta cena en la lista de compras actual."
+          }
+        }
+      }
+    },
+    "Preview for this dinner only. Your matches last until you leave. The shopping list and pantry stay as they are.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview for this dinner only. Your matches last until you leave. The shopping list and pantry stay as they are."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta vista previa solo incluye esta cena. Los productos que elijas se muestran hasta que salgas. La lista de compras y la despensa se conservan tal como están."
+          }
+        }
+      }
+    },
+    "Still to buy or check": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Still to buy or check"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Por comprar o comprobar"
+          }
+        }
+      }
+    },
+    "No additional amount needed for this dinner.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No additional amount needed for this dinner."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hace falta comprar más ingredientes para esta cena."
+          }
+        }
+      }
+    },
+    "Check amount": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check amount"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comprobar cantidad"
+          }
+        }
+      }
+    },
+    "Planned ingredients": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planned ingredients"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredientes previstos"
+          }
+        }
+      }
+    },
+    "Pantry availability could not be verified.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pantry availability could not be verified."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo comprobar cuánto hay disponible en la despensa."
+          }
+        }
+      }
+    },
+    "Check meal preferences and ingredient details before using these pantry matches.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check meal preferences and ingredient details before using these pantry matches."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa las preferencias de comida y los detalles de los ingredientes antes de usar estos productos de la despensa."
+          }
+        }
+      }
+    },
+    "Match food at home": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Match food at home"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir los productos que tengo en casa"
+          }
+        }
+      }
+    },
+    "Choose the pantry product for each ingredient you have. Only its unreserved amount counts. Unmatched ingredients show their full planned amount.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the pantry product for each ingredient you have. Only its unreserved amount counts. Unmatched ingredients show their full planned amount."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige el producto de la despensa que corresponde a cada ingrediente que tengas. Solo cuenta la cantidad sin reservar. Los ingredientes sin producto elegido muestran la cantidad prevista completa."
+          }
+        }
+      }
+    },
     "Choose a shopping list": {
       "extractionState": "manual",
       "localizations": {
