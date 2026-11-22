@@ -91,6 +91,8 @@ struct PantryHomeView: View {
                                id: "pantry.locationFilter") {
                 picker.pickerStyle(.inline)
             }
+            // Keep the menu itself as the tap target inside the list row.
+            .buttonStyle(.borderless)
         } else {
             picker.accessibilityIdentifier("pantry.locationFilter")
         }

@@ -240,11 +240,18 @@ import XCTest
         XCTAssertTrue(visible.localizedCaseInsensitiveContains("Filtrar por lugar"), visible)
         XCTAssertTrue(visible.localizedCaseInsensitiveContains("Todos los lugares"), visible)
 
-        tap(filter)
-        tap(app.buttons["Refrigerador"])
+        let refrigerator = app.buttons["Refrigerador"]
+        filter.tap()
+        XCTAssertTrue(refrigerator.waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertTrue(refrigerator.isHittable)
+        refrigerator.tap()
         XCTAssertEqual(filter.value as? String, "Refrigerador")
-        tap(filter)
-        tap(app.buttons["Todos los lugares"])
+
+        let allLocations = app.buttons["Todos los lugares"]
+        filter.tap()
+        XCTAssertTrue(allLocations.waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertTrue(allLocations.isHittable)
+        allLocations.tap()
         XCTAssertEqual(filter.value as? String, "Todos los lugares")
     }
 
