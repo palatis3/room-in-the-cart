@@ -599,9 +599,21 @@ struct ReceiptDateDisplay: DynamicProperty {
 
     static func storedPurchaseDay(_ day: String?, recordedAt date: Date, style: Date.FormatStyle.DateStyle = .long,
                                   locale: Locale, calendar: Calendar) -> String {
+        storedPrintedDay(day, recordedAt: date, style: style, locale: locale, calendar: calendar, field: .purchase)
+    }
+
+    func storedDeliveryDay(_ day: String?, recordedAt date: Date) -> String {
+        Self.storedPrintedDay(day, recordedAt: date, style: .long, locale: locale, calendar: calendar, field: .delivery)
+    }
+
+    enum PrintedField { case purchase, delivery }
+
+    static func storedPrintedDay(_ day: String?, recordedAt date: Date, style: Date.FormatStyle.DateStyle,
+                                 locale: Locale, calendar: Calendar, field: PrintedField) -> String {
         if let day { return civilDay(day, style: style, locale: locale, calendar: calendar, zone: .gmt) }
         let utc = date.formatted(format(date: style, time: .omitted, locale: locale, calendar: calendar, timeZone: .gmt))
-        return pantryFormat("Original purchase day unknown · recorded %@ (UTC)", utc)
+        return pantryFormat(field == .purchase ? "Original purchase day unknown · recorded %@ (UTC)" :
+                            "Original delivery day unknown · recorded %@ (UTC)", utc)
     }
 
     func purchaseDay(_ receipt: ReceiptAcquisition, style: Date.FormatStyle.DateStyle = .long) -> String {

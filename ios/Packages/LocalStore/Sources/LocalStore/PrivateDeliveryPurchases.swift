@@ -38,12 +38,15 @@ public struct PrivateDeliveryRevision: Codable, Equatable, Sendable {
     public let purchaseTimeZoneIdentifier: String?
     public let purchaseDay: String?
     public let deliveryDate: Date?
+    public let deliveryTimeZoneIdentifier: String?
+    public let deliveryDay: String?
     public let importedAt: Date
     public let finalCents: Int?
     public private(set) var lines: [Line]
 
     public init(digest: Data, layoutID: UUID, order: String, merchant: String, kind: Kind,
-                purchaseDate: Date?, deliveryDate: Date?, importedAt: Date, finalCents: Int?, lines: [Line], purchaseTimeZoneIdentifier: String? = nil) {
+                purchaseDate: Date?, deliveryDate: Date?, importedAt: Date, finalCents: Int?, lines: [Line],
+                purchaseTimeZoneIdentifier: String? = nil, deliveryTimeZoneIdentifier: String? = nil) {
         self.digest = digest
         self.layoutID = layoutID
         self.order = order
@@ -53,6 +56,8 @@ public struct PrivateDeliveryRevision: Codable, Equatable, Sendable {
         self.purchaseTimeZoneIdentifier = purchaseTimeZoneIdentifier
         self.purchaseDay = purchaseDate.flatMap { Self.civilDay($0, zone: purchaseTimeZoneIdentifier) }
         self.deliveryDate = deliveryDate
+        self.deliveryTimeZoneIdentifier = deliveryTimeZoneIdentifier
+        self.deliveryDay = deliveryDate.flatMap { Self.civilDay($0, zone: deliveryTimeZoneIdentifier) }
         self.importedAt = importedAt
         self.finalCents = finalCents
         self.lines = lines
@@ -86,6 +91,8 @@ public struct PrivateDeliveryRevision: Codable, Equatable, Sendable {
               [purchaseDate, deliveryDate, importedAt].compactMap({ $0 }).allSatisfy({ $0.timeIntervalSince1970.isFinite }),
               (purchaseTimeZoneIdentifier == nil) == (purchaseDay == nil),
               purchaseDay == purchaseDate.flatMap({ Self.civilDay($0, zone: purchaseTimeZoneIdentifier) }),
+              (deliveryTimeZoneIdentifier == nil) == (deliveryDay == nil),
+              deliveryDay == deliveryDate.flatMap({ Self.civilDay($0, zone: deliveryTimeZoneIdentifier) }),
               lines.count <= 200,
               lines.allSatisfy({ (1...20).contains($0.page) && (1...200).contains($0.line)
                   && !$0.wording.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && $0.wording.utf8.count <= 2048

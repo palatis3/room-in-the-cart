@@ -98,8 +98,9 @@ struct PrivateDeliveryReceiptsView: View {
             }
             TextField(pantryText("Final charge in USD"), text: value.total).keyboardType(.decimalPad)
             optionalDate(pantryText("Purchase date on receipt"), identifier: "deliveryReceipt.purchaseDate", value.purchaseDate)
-                .environment(\.timeZone, value.wrappedValue.purchaseTimeZone)
+                .environment(\.timeZone, value.wrappedValue.receiptTimeZone)
             optionalDate(pantryText("Delivery date on receipt"), identifier: "deliveryReceipt.deliveryDate", value.deliveryDate)
+                .environment(\.timeZone, value.wrappedValue.receiptTimeZone)
             if let previous {
                 Text(pantryText("This order already has a private purchase.") + " " + previous.latest.merchant + " · " + amount(previous.latest))
             }
@@ -177,7 +178,7 @@ struct PrivateDeliveryReceiptsView: View {
                     LabeledContent(pantryText("Purchase date on receipt"), value: dates.storedPurchaseDay(entry.latest.purchaseDay, recordedAt: date))
                 }
                 if let date = entry.latest.deliveryDate {
-                    LabeledContent(pantryText("Delivery date on receipt"), value: dates.purchaseDay(date))
+                    LabeledContent(pantryText("Delivery date on receipt"), value: dates.storedDeliveryDay(entry.latest.deliveryDay, recordedAt: date))
                 }
                 Text(amount(entry.latest))
                 if entry.latest.lines.isEmpty { Text(pantryText("Total only")) }
