@@ -1733,19 +1733,19 @@
         }
       }
     },
-    "Purchase pending. You can keep planning while Apple reviews it.": {
+    "The App Store reported this purchase as pending. You can keep planning.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Purchase pending. You can keep planning while Apple reviews it."
+            "value": "The App Store reported this purchase as pending. You can keep planning."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Compra pendiente. Puedes seguir planificando mientras Apple la revisa."
+            "value": "El App Store indicó que la compra estaba pendiente. Puedes seguir planificando."
           }
         }
       }

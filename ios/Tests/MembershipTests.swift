@@ -639,7 +639,7 @@ import StoreKit
     }
     private func assertNeutralProjection(_ model: MembershipModel, file: StaticString = #filePath, line: UInt = #line) {
         let rendered = model.statusMessages.map(membershipStatusMessageText).joined(separator: "\n")
-        XCTAssertTrue(rendered.contains(mtr("Purchase pending. You can keep planning while Apple reviews it.")), file: file, line: line)
+        XCTAssertTrue(rendered.contains(mtr("The App Store reported this purchase as pending. You can keep planning.")), file: file, line: line)
         XCTAssertFalse(rendered.contains(mtr("Purchase pending Apple approval. Paid access has not been added.")), file: file, line: line)
         XCTAssertFalse(rendered.contains(mtr("The purchase could not be verified. Paid access has not been added. Try Restore Purchases or contact support.")), file: file, line: line)
         for privateValue in ["test-only-jws", "approved-B", "verified-A", "older-A", "wrong-product", "wrong-account", context.purchaserID, context.householdID, context.appAccountToken!.uuidString] {
