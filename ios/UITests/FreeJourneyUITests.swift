@@ -1794,7 +1794,7 @@ import XCTest
         })
     }
 
-    private func reviewManualOatsAtMarket(checkAssistance: Bool = false, storage: String? = nil, paidPrintedTotal: Bool = false, usableAmount: String = "2") {
+    private func reviewManualOatsAtMarket(checkAssistance: Bool = false, storage: String? = nil, paidPrintedTotal: Bool = false, usableAmount: String = "2", correctedName: String? = nil) {
         receiptTap(app.buttons["receipt.scan"])
         let wording = app.textViews["scan.sourceEditor"]
         XCTAssertTrue(wording.waitForExistence(timeout: 8))
@@ -1830,6 +1830,7 @@ import XCTest
         checkReceiptSwitch("I checked the purchase date.")
         receiptTap(app.buttons["receipt.action.0"])
         receiptTap(app.buttons["Put this food away"])
+        if let correctedName { enterReceiptField(correctedName, id: "Food name", replacing: true) }
         let received = app.textFields["receipt.received.0"]
         receiptTap(app.buttons["receipt.printedQuantity.0"])
         XCTAssertEqual(received.value as? String, "3")
@@ -2031,6 +2032,59 @@ import XCTest
         reveal(app.staticTexts["Oats 3 count USD 4.20"])
         reveal(app.staticTexts["Usable 2 units"])
         capture("First confirmed receipt in history")
+    }
+
+    func testSpanishReviewedReceiptCopyPreviewsOnlyChosenDetailsAndCancels() {
+        launch(reset: true)
+        tap(app.tabBars.buttons["Records"])
+        receiptTap(app.buttons["records.privateReceipts"])
+        receiptTap(app.buttons["pantry.setup.apply"])
+        receiptTap(app.buttons["receipt.history.start"])
+        reviewManualOatsAtMarket(paidPrintedTotal: true, correctedName: "Rolled oats")
+        receiptTap(app.buttons["receipt.commit"])
+        XCTAssertTrue(app.staticTexts["receipt.status"].waitForExistence(timeout: 8))
+
+        app.terminate()
+        launch(reset: false, spanish: true)
+        tap(app.tabBars.buttons["Historial"])
+        receiptTap(app.buttons["records.recovery"])
+        receiptTap(app.buttons["records.reviewedReceiptCopy"])
+        receiptTap(app.buttons["receipt.putawayHistory"])
+        receiptTap(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Market")).firstMatch)
+        let choose = app.buttons["receipt.copy.choose"]
+        receiptTap(choose)
+        let preview = app.buttons["receipt.copy.preview"]
+        XCTAssertTrue(preview.waitForExistence(timeout: 8))
+        XCTAssertFalse(preview.isEnabled)
+        let name = app.switches.matching(NSPredicate(format: "identifier BEGINSWITH %@", "receipt.copy.name.")).firstMatch
+        XCTAssertTrue(name.waitForExistence(timeout: 5))
+        checkReceiptSwitch(name.identifier)
+        receiptTap(preview)
+        let copy = app.staticTexts["receipt.copy.text"]
+        XCTAssertTrue(copy.waitForExistence(timeout: 5))
+        XCTAssertEqual(copy.label, "Rolled oats")
+        receiptTap(app.buttons["receipt.copy.cancel"])
+        XCTAssertTrue(choose.waitForExistence(timeout: 5))
+        receiptTap(choose)
+        XCTAssertFalse(preview.isEnabled)
+
+        checkReceiptSwitch("receipt.copy.store")
+        checkReceiptSwitch(name.identifier)
+        let amount = app.switches.matching(NSPredicate(format: "identifier BEGINSWITH %@", "receipt.copy.amount.")).firstMatch
+        XCTAssertTrue(amount.waitForExistence(timeout: 5))
+        let paid = amount.label
+        checkReceiptSwitch(amount.identifier)
+        receiptTap(preview)
+        XCTAssertTrue(copy.waitForExistence(timeout: 5))
+        let selectedText = ["Market", "Rolled oats", paid].joined(separator: "\n")
+        XCTAssertEqual(copy.label, selectedText)
+        receiptTap(app.buttons["receipt.copy.share"])
+        guard let close = readySystemShareClose(in: app, requireStableFrame: true) else { return }
+        close.tap()
+        XCTAssertTrue(copy.wait(for: \.isHittable, toEqual: true, timeout: 10))
+        XCTAssertEqual(copy.label, selectedText)
+        receiptTap(app.buttons["receipt.copy.cancel"])
+        XCTAssertTrue(choose.waitForExistence(timeout: 5))
     }
 
     func testReceiptCameraRefusalKeepsPrivateReceiptAndTypedEntry() {

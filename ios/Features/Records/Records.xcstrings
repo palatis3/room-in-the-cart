@@ -1792,23 +1792,6 @@
         }
       }
     },
-    "No saved source records yet.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No saved source records yet."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aún no hay registros de origen guardados."
-          }
-        }
-      }
-    },
     "Open recovered dinners": {
       "extractionState": "manual",
       "localizations": {
@@ -6265,6 +6248,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Revisa el título, el enlace de origen y el texto. Elige una colección de Paprika o un archivo Recipe JSON-LD, o introduce la receta manualmente."
+          }
+        }
+      }
+    },
+    "Choose a reviewed receipt to share": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a reviewed receipt to share"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir un recibo revisado para compartir"
+          }
+        }
+      }
+    },
+    "There are no records in this export list.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There are no records in this export list."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay registros en esta lista de exportación."
           }
         }
       }

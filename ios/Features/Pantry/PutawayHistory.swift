@@ -220,12 +220,21 @@ private struct PutawayHistoryDetail: View {
     @State private var more = true
     @State private var busy = false
     @State private var failed = false
+    @State private var copyScope: ReceiptCopyScope?
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         List {
             if model.canEdit {
                 ReviewedReceiptHeading(header: header).listRowBackground(Theme.surface)
+                if model.permitsReceiptCopy(header), let state = model.snapshot?.state, !rows.isEmpty {
+                    Button {
+                        copyScope = ReceiptCopyScope(id: model.generation, inventory: state)
+                    } label: {
+                        Label(putawayText("Choose receipt details to share"), systemImage: "square.and.arrow.up")
+                    }
+                    .accessibilityIdentifier("receipt.copy.choose")
+                }
                 let token = model.generation
                 ReceiptCouponReviewLink(source: .purchase(model, header), pickupID: nil, authorize: {
                     model.permitsReceiptSource && model.generation == token
@@ -246,6 +255,12 @@ private struct PutawayHistoryDetail: View {
         }
         .workingSurface().privacySensitive()
         .navigationTitle(putawayText("Receipt decisions"))
+        .sheet(item: $copyScope) { scope in
+            NavigationStack {
+                ReviewedReceiptCopyView(model: model, scope: scope, header: header, rows: rows,
+                    more: more, loading: busy, failed: failed, loadMore: load)
+            }
+        }
         .task { await load() }
         .onChange(of: model.snapshot?.state.workspaceID) { _, _ in rows = []; dismiss() }
     }
@@ -260,5 +275,134 @@ private struct PutawayHistoryDetail: View {
             more = page.count == 50
             failed = false
         } catch { failed = true }
+    }
+}
+
+private struct ReceiptCopyScope: Identifiable {
+    let id: UUID
+    let inventory: InventoryState
+}
+
+struct ReviewedReceiptCopySelection {
+    var store = false
+    var date = false
+    var total = false
+    var names: Set<UUID> = []
+    var amounts: Set<UUID> = []
+
+    func text(header: ReviewedReceiptHeader, purchaseDay: String, rows: [ReviewedReceiptDecision]) -> String {
+        var lines: [String] = []
+        if store { lines.append(header.merchant) }
+        if date { lines.append(purchaseDay) }
+        if total, let cents = header.totalMinor {
+            lines.append(putawayText("Paid receipt total") + " · " + receiptMoney(Money(minorUnits: cents)))
+        }
+        for row in rows where names.contains(row.id) {
+            lines.append(row.name)
+            if amounts.contains(row.id), let paid = row.paidMinor {
+                lines.append(pantryFormat("Paid line total %@", receiptMoney(Money(minorUnits: paid))))
+            }
+        }
+        return lines.joined(separator: "\n")
+    }
+}
+
+private struct ReviewedReceiptCopyView: View {
+    @ObservedObject var model: PantryModel
+    let scope: ReceiptCopyScope
+    let header: ReviewedReceiptHeader
+    let rows: [ReviewedReceiptDecision]
+    let more: Bool
+    let loading: Bool
+    let failed: Bool
+    let loadMore: () async -> Void
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.scenePhase) private var scene
+    @State private var selection = ReviewedReceiptCopySelection()
+    @State private var preview: String?
+    @State private var sharing = false
+    private(set) var dates = ReceiptDateDisplay()
+
+    private var authorized: Bool {
+        scene == .active && UIApplication.shared.isProtectedDataAvailable &&
+            model.generation == scope.id && model.snapshot?.state == scope.inventory && model.permitsReceiptCopy(header)
+    }
+
+    var body: some View {
+        WorkingForm {
+            if authorized {
+                if let preview {
+                    Section {
+                        Text(verbatim: preview).accessibilityIdentifier("receipt.copy.text")
+                    }
+                    Button {
+                        if authorized { sharing = true }
+                    } label: {
+                        Label(recordsText("Share prepared text…"), systemImage: "square.and.arrow.up")
+                    }
+                    .accessibilityIdentifier("receipt.copy.share")
+                    Button(pantryText("Edit")) { self.preview = nil }
+                } else {
+                    let purchaseDay = dates.purchaseDay(header.date)
+                    let ordered = rows.sorted { $0.ordinal < $1.ordinal }
+                    Section(pantryText("Purchase details")) {
+                        Toggle(header.merchant, isOn: $selection.store)
+                            .accessibilityIdentifier("receipt.copy.store")
+                        Toggle(purchaseDay, isOn: $selection.date)
+                        if let cents = header.totalMinor {
+                            Toggle(putawayText("Paid receipt total") + " · " + receiptMoney(Money(minorUnits: cents)),
+                                   isOn: $selection.total)
+                        }
+                    }
+                    Section {
+                        ForEach(ordered) { row in
+                            Toggle(row.name, isOn: Binding(get: { selection.names.contains(row.id) }, set: { included in
+                                if included { selection.names.insert(row.id) }
+                                else {
+                                    selection.names.remove(row.id)
+                                    selection.amounts.remove(row.id)
+                                }
+                            }))
+                            .accessibilityIdentifier("receipt.copy.name." + row.id.uuidString)
+                            if selection.names.contains(row.id), let paid = row.paidMinor {
+                                Toggle(pantryFormat("Paid line total %@", receiptMoney(Money(minorUnits: paid))),
+                                       isOn: Binding(get: { selection.amounts.contains(row.id) }, set: { included in
+                                    if included { selection.amounts.insert(row.id) } else { selection.amounts.remove(row.id) }
+                                }))
+                                .accessibilityIdentifier("receipt.copy.amount." + row.id.uuidString)
+                            }
+                        }
+                        if failed { Text(putawayText("Could not load receipt decisions.")) }
+                        if more {
+                            Button(pantryText("Load receipt lines")) { Task { await loadMore() } }
+                                .disabled(loading)
+                        }
+                    } header: {
+                        Text(putawayText("Reviewed receipt lines"))
+                    } footer: {
+                        Text(putawayText("Item names are copied as shown, including any amounts in the name."))
+                    }
+                    let text = selection.text(header: header, purchaseDay: purchaseDay, rows: ordered)
+                    Button(putawayText("Preview receipt copy")) {
+                        if authorized { preview = text }
+                    }
+                    .disabled(text.isEmpty)
+                    .accessibilityIdentifier("receipt.copy.preview")
+                }
+            }
+        }
+        .privacySensitive()
+        .navigationTitle(putawayText(preview == nil ? "Choose receipt details" : "Receipt copy"))
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button(pantryText("Cancel")) { dismiss() }.accessibilityIdentifier("receipt.copy.cancel")
+            }
+        }
+        .sheet(isPresented: $sharing) {
+            if authorized, let preview {
+                PickupActivitySheet(text: preview) { _, _ in sharing = false }
+            }
+        }
+        .onChange(of: authorized) { _, allowed in if !allowed { dismiss() } }
     }
 }

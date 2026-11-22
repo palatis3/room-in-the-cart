@@ -6,6 +6,8 @@ import RecordArchive
 
 struct RecordsToolsView: View {
     @Environment(\.pickupLedger) private var liveLedger
+    @EnvironmentObject private var pickup: PickupModel
+    @EnvironmentObject private var ledger: LedgerModel
     @ObservedObject var model: RecordsToolsModel
     var recipeLibraryOnly = false
     var pantry: RecordsPantryToolsModel? = nil
@@ -204,7 +206,7 @@ struct RecordsToolsView: View {
     }
     private var currentSources: some View {
         Section(recordsText("Choose records to export")) {
-            if model.currentRecords.isEmpty { Text(recordsText(model.unavailableRecords.isEmpty ? "No saved source records yet." : "No readable source records are available for export.")) }
+            if model.currentRecords.isEmpty { Text(recordsText(model.unavailableRecords.isEmpty ? "There are no records in this export list." : "No readable source records are available for export.")) }
             else {
                 Button(recordsText("Select all readable records")) { model.selectAll() }
                 ForEach(model.currentRecords, id: \.selfSelectionID) { record in
@@ -228,6 +230,14 @@ struct RecordsToolsView: View {
                         }
                     }
                 }
+            }
+            if pickup.pantryIsActive, pickup.pantryRouteAvailable {
+                NavigationLink {
+                    PantrySetupView(pickup: pickup, ledger: ledger, destination: .receipts)
+                } label: {
+                    Label(recordsText("Choose a reviewed receipt to share"), systemImage: pantryReceiptSymbol)
+                }
+                .accessibilityIdentifier("records.reviewedReceiptCopy")
             }
             if model.canUndoSourceDeletion { Button(recordsText("Undo source deletion")) { Task { await model.undoCurrentDeletion() } } }
         }

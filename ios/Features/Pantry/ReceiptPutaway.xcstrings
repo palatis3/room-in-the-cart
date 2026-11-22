@@ -1041,6 +1041,108 @@
           }
         }
       }
+    },
+    "Choose receipt details to share": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose receipt details to share"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir qué datos del recibo compartir"
+          }
+        }
+      }
+    },
+    "Choose receipt details": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose receipt details"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir datos del recibo"
+          }
+        }
+      }
+    },
+    "Reviewed receipt lines": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed receipt lines"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Líneas revisadas del recibo"
+          }
+        }
+      }
+    },
+    "Preview receipt copy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview receipt copy"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver la copia del recibo"
+          }
+        }
+      }
+    },
+    "Receipt copy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt copy"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copia del recibo"
+          }
+        }
+      }
+    },
+    "Item names are copied as shown, including any amounts in the name.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item names are copied as shown, including any amounts in the name."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los nombres se copian tal como aparecen, incluidos los importes que formen parte del nombre."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -19,6 +19,61 @@ import XCTest
         return result
     }
 
+    func testReviewedReceiptCopyUsesOnlySelectedFieldsInTheLiveOwnerScope() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let cleanup = SQLiteFixtureDirectory(directory, test: self)
+        let store = try ComparisonStore(url: directory.appendingPathComponent("pantry.sqlite"), inventoryEnabled: true)
+        cleanup.track(store)
+        let token = try await store.inventorySourceToken()
+        try await store.commitInventory(.init(workspaceID: store.workspaceID, operationID: UUID(), expectedRevision: 0,
+            request: Data([1]), mode: .activate, sourceToken: token), at: now)
+        var allowed = true
+        let owner = UUID()
+        let repo = PantryRepository(store: store, aliasPersonaID: owner, authorize: { allowed })
+        cleanup.track(repo)
+        let model = PantryModel(repository: repo, clock: { self.now })
+        await model.load()
+        var draft = try receipt(store: store, lines: ["Soup 2.40", "Bread 1.10"])
+        draft.lines[0].treatment = .eaten
+        draft.lines[0].name = "Bean soup"
+        draft.lines[0].paid = "2.40"
+        draft.lines[1].treatment = .eaten
+        draft.lines[1].paid = "1.10"
+        draft.receiptTotal = "3.50"
+        let review = try await model.reviewReceipt(draft)
+        try await model.saveReceipt(review)
+        let headers = try await model.reviewedReceiptHeaders(after: nil)
+        let header = try XCTUnwrap(headers.first)
+        let rows = try await model.reviewedReceiptDecisions(header.id, after: nil)
+        let soup = try XCTUnwrap(rows.first { $0.name == "Bean soup" })
+        XCTAssertTrue(model.permitsReceiptCopy(header))
+        var selection = ReviewedReceiptCopySelection()
+        func text() -> String { selection.text(header: header, purchaseDay: "Reviewed day", rows: rows) }
+        XCTAssertEqual(text(), "")
+        selection.amounts = Set(rows.map(\.id))
+        XCTAssertEqual(text(), "")
+        selection.names.insert(soup.id)
+        let linePrice = pantryFormat("Paid line total %@", receiptMoney(Money(minorUnits: 240)))
+        XCTAssertEqual(text(), "Bean soup\n" + linePrice)
+        selection.store = true
+        selection.date = true
+        selection.total = true
+        selection.amounts.remove(soup.id)
+        let total = putawayText("Paid receipt total") + " · " + receiptMoney(Money(minorUnits: 350))
+        XCTAssertEqual(text(), [header.merchant, "Reviewed day", total, "Bean soup"].joined(separator: "\n"))
+
+        for persona: UUID? in [UUID(), nil] {
+            let scoped = PantryRepository(store: store, aliasPersonaID: persona, authorize: { true })
+            cleanup.track(scoped)
+            let other = PantryModel(repository: scoped)
+            await other.load()
+            XCTAssertFalse(other.permitsReceiptCopy(header))
+        }
+        allowed = false
+        XCTAssertFalse(model.permitsReceiptCopy(header))
+    }
+
     func testKeptPortionCorrectionIdentifiesOriginalLineAndAcceptsFractions() {
         var row = ReceiptImportDraft.Line(id: UUID(), ordinal: 37, original: "Wrap 1.0 ct", name: "Wrap", treatment: .keptSome, received: "1")
         let issue = row.amountCorrection
