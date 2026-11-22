@@ -43,6 +43,7 @@ struct PantryHomeView: View {
     var initialSheet: Binding<PantrySheet?>? = nil
     @State private var sheet: PantrySheet?
     @State private var selectedLocation: InventoryLocation?
+    @State private var choosingLocation = false
     @State private var selectedDigest: DigestSelection?
     private struct DigestSelection {
         let model: PantryModel
@@ -80,21 +81,38 @@ struct PantryHomeView: View {
 
     @ViewBuilder private var locationFilter: some View {
         let title = pantryText("Filter by location")
-        let picker = Picker(title, selection: $selectedLocation) {
-            Text(pantryText("All locations")).tag(nil as InventoryLocation?)
-            ForEach(InventoryLocation.allCases, id: \.self) { location in
-                Text(pantryLocationName(location)).tag(Optional(location))
-            }
-        }
+        let allLocations = pantryText("All locations")
         if typeSize.isAccessibilitySize {
-            journalStackedMenu(title, value: selectedLocation.map(pantryLocationName) ?? pantryText("All locations"),
-                               id: "pantry.locationFilter") {
-                picker.pickerStyle(.inline)
+            let value = selectedLocation.map(pantryLocationName) ?? allLocations
+            Button { choosingLocation = true } label: {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title).font(.subheadline).foregroundStyle(Theme.secondary)
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text(value)
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.up.chevron.down").imageScale(.small).accessibilityHidden(true)
+                    }
+                    .foregroundStyle(Theme.action)
+                }
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                .contentShape(Rectangle())
             }
-            // Keep the menu itself as the tap target inside the list row.
-            .buttonStyle(.borderless)
+            .accessibilityLabel(title).accessibilityValue(value).accessibilityIdentifier("pantry.locationFilter")
+            .confirmationDialog(title, isPresented: $choosingLocation, titleVisibility: .visible) {
+                Button(allLocations) { selectedLocation = nil }
+                ForEach(InventoryLocation.allCases, id: \.self) { location in
+                    Button(pantryLocationName(location)) { selectedLocation = location }
+                }
+            }
         } else {
-            picker.accessibilityIdentifier("pantry.locationFilter")
+            Picker(title, selection: $selectedLocation) {
+                Text(allLocations).tag(nil as InventoryLocation?)
+                ForEach(InventoryLocation.allCases, id: \.self) { location in
+                    Text(pantryLocationName(location)).tag(Optional(location))
+                }
+            }
+            .accessibilityIdentifier("pantry.locationFilter")
         }
     }
 
