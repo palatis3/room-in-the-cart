@@ -226,17 +226,26 @@ import XCTest
         XCTAssertEqual(filter.label, "Filtrar por lugar")
         XCTAssertEqual(filter.value as? String, "Todos los lugares")
 
-        let screenshot = filter.screenshot()
-        let attachment = XCTAttachment(screenshot: screenshot)
-        attachment.name = "Spanish storage filter at accessibility size"
-        attachment.lifetime = .keepAlways
-        add(attachment)
-        let request = VNRecognizeTextRequest()
-        request.recognitionLevel = .accurate
-        request.recognitionLanguages = ["es-ES"]
-        request.usesLanguageCorrection = false
-        try VNImageRequestHandler(cgImage: try XCTUnwrap(screenshot.image.cgImage)).perform([request])
-        let visible = (request.results ?? []).compactMap { $0.topCandidates(1).first?.string }.joined(separator: " ")
+        func visibleFilterText(_ name: String) throws -> String {
+            let screenshot = filter.screenshot()
+            let attachment = XCTAttachment(screenshot: screenshot)
+            attachment.name = name
+            attachment.lifetime = .keepAlways
+            add(attachment)
+            let request = VNRecognizeTextRequest()
+            request.recognitionLevel = .accurate
+            request.recognitionLanguages = ["es-ES"]
+            request.usesLanguageCorrection = false
+            try VNImageRequestHandler(cgImage: try XCTUnwrap(screenshot.image.cgImage)).perform([request])
+            return (request.results ?? []).compactMap { $0.topCandidates(1).first?.string }.joined(separator: " ")
+        }
+
+        func assertSelection(_ value: String, file: StaticString = #filePath, line: UInt = #line) {
+            let selected = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", value), object: filter)
+            XCTAssertEqual(XCTWaiter.wait(for: [selected], timeout: 5), .completed, file: file, line: line)
+        }
+
+        let visible = try visibleFilterText("Spanish storage filter at accessibility size")
         XCTAssertTrue(visible.localizedCaseInsensitiveContains("Filtrar por lugar"), visible)
         XCTAssertTrue(visible.localizedCaseInsensitiveContains("Todos los lugares"), visible)
 
@@ -245,20 +254,25 @@ import XCTest
         XCTAssertTrue(refrigerator.waitForExistence(timeout: 5), app.debugDescription)
         XCTAssertTrue(refrigerator.isHittable)
         refrigerator.tap()
-        XCTAssertEqual(filter.value as? String, "Refrigerador")
+        assertSelection("Refrigerador")
+        let selectedText = try visibleFilterText("Spanish storage filter with refrigerator selected")
+        // Join a word hyphenated at a line break by Dynamic Type.
+        let joined = selectedText.replacingOccurrences(of: #"[-\u2010\u2011\u00AD]\s+"#, with: "", options: .regularExpression)
+        XCTAssertTrue(joined.localizedCaseInsensitiveContains("Refrigerador"), selectedText)
 
         let cancel = app.buttons["Cancelar"]
         filter.tap()
         XCTAssertTrue(cancel.waitForExistence(timeout: 5), app.debugDescription)
         cancel.tap()
-        XCTAssertEqual(filter.value as? String, "Refrigerador")
+        XCTAssertTrue(cancel.waitForNonExistence(timeout: 5))
+        assertSelection("Refrigerador")
 
         let allLocations = app.buttons["Todos los lugares"]
         filter.tap()
         XCTAssertTrue(allLocations.waitForExistence(timeout: 5), app.debugDescription)
         XCTAssertTrue(allLocations.isHittable)
         allLocations.tap()
-        XCTAssertEqual(filter.value as? String, "Todos los lugares")
+        assertSelection("Todos los lugares")
     }
 
     func testSpanishLowStockKeepsItsWordingAndOffersRestockingSeparately() {
