@@ -189,6 +189,8 @@ const es: Record<string, string> = {
   'Propose a correction':'Proponer una corrección', 'Correction for the shopper to review':'Corrección para revisión de quien hace la compra',
   'Send proposal':'Enviar propuesta', 'Proposal received. The shopper must review it before anything changes.':'Propuesta recibida. Quien hace la compra debe revisarla antes de que cambie algo.',
   'This view is read-only.':'Esta vista es de solo lectura.', 'Request a new invitation if this link has expired.':'Pide una nueva invitación si este enlace venció.',
+  'This draft stays on this page. A new or reloaded page starts blank. Copy the item and amount to keep them.':'Este borrador solo se conserva en esta página. Si la recargas o abres otra, el formulario estará vacío. Copia el artículo y la cantidad para conservarlos.',
+  'Select the item and amount and copy them manually.':'Selecciona el artículo y la cantidad y cópialos manualmente.',
   'Copy your text':'Copiar tu texto', 'Copied':'Copiado', 'Not received yet':'Aún no recibida',
   'You are signed out.':'Cerraste la sesión.', 'Save changes':'Guardar cambios',
   'Confirm withdrawal':'Confirmar retirada', 'Withdraw this pending request?':'¿Retirar esta solicitud pendiente?',

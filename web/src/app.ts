@@ -801,6 +801,24 @@ export class WebApp {
   private pickupLabel(pickup: RequestPickup, index: number): string {
     return this.t('Pickup') + ' ' + (index + 1) + ' · ' + this.t('Created') + ' ' + this.date(pickup.createdAt);
   }
+  private appendDraftCopy(form: HTMLFormElement): void {
+    const draftCopy = this.el('div');
+    if (!this.retryCommand && !this.uncertainSend) {
+      draftCopy.append(this.el('p', this.t('This draft stays on this page. A new or reloaded page starts blank. Copy the item and amount to keep them.')));
+    }
+    draftCopy.append(this.button('Copy your text', () => void this.run(async () => {
+      try {
+        await this.root.ownerDocument.defaultView!.navigator.clipboard.writeText(`${this.draft.item}\n${this.draft.amount}`);
+        this.notice = 'Copied';
+      } catch {
+        this.notice = 'Select the item and amount and copy them manually.';
+      }
+    })));
+    const showDraftCopy = () => { draftCopy.hidden = !this.draft.item && !this.draft.amount; };
+    showDraftCopy();
+    form.addEventListener('input', showDraftCopy);
+    form.append(draftCopy);
+  }
   private renderContributor(main:HTMLElement):void {
     const protectedPickup=this.usesProtectedPickup(this.session!);
     const routeForReview=this.retryCommand?.kind==='request.send'?this.retryCommand.body.route:
@@ -840,11 +858,13 @@ export class WebApp {
       back.disabled = this.busy || this.uncertainSend;
       form.append(back);
       const submit=this.button(this.draft.editing?'Save changes':this.draft.followup?'Send follow-up':'Send request',()=>{},true);submit.type='submit';form.append(submit);
+      this.appendDraftCopy(form);
       form.addEventListener('submit',e=>{e.preventDefault();void this.run(()=>this.send());});
     } else {
       this.field(form,'Item','item',this.draft.item,v=>{this.draft.item=v;},true);
       form.append(this.el('p',this.t('Keep the food name and any restrictions as written.')));
       this.field(form,'Amount or pack count (optional)','amount',this.draft.amount,v=>{this.draft.amount=v;});
+      this.appendDraftCopy(form);
       const label=this.el('label',this.t('Intended trip'));label.htmlFor='route';const route=this.el('select');route.id='route';route.disabled=this.draft.editing!==null||protectedPickup;
       for(const [v,k] of [['current','This pickup'],['next','Next shop']]){const option=this.el('option',this.t(k!));option.value=v!;option.selected=v===routeForReview;route.append(option);}
       route.addEventListener('change',()=>{this.draft.route=route.value as 'current'|'next';this.retryCommand=null;});form.append(label,route);
@@ -873,7 +893,6 @@ export class WebApp {
     } else if(this.session!.enrolled&&this.session!.queueConsent) {
       const label=this.el('label');label.className='checkbox';const cb=this.el('input');cb.type='checkbox';cb.checked=this.consent;cb.addEventListener('change',()=>{this.consent=cb.checked;});label.append(cb,this.el('span',this.t('Save pending requests on this browser')));form.append(label,this.el('p',this.t('Only enable this on your own device. Check pending requests for a receipt.')));
     }
-    if(this.draft.item) form.append(this.button('Copy your text',()=>void this.run(async()=>{await navigator.clipboard.writeText(`${this.draft.item}\n${this.draft.amount}`);this.notice='Copied';})));
     if(this.pending.some(p=>p.needsReview) && this.hasRequestDraft() && !this.uncertainSend) {
       form.append(this.button('Discard current draft',()=>{this.draft=blank();this.review=false;this.retryCommand=null;this.render();}));
     }

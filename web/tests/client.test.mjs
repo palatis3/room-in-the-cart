@@ -332,6 +332,8 @@ test('explicitly consented disconnected request is durably queued, never labeled
  const consent=root.querySelector('input[type=checkbox]');consent.checked=true;consent.dispatchEvent(new dom.window.Event('change'));
  type(dom,'item','Rice');submit(root,dom);submit(root,dom);await waitForIdle(root);
  assert.match(root.textContent,/Saved on this browser. Receipt unconfirmed./);assert.doesNotMatch(root.textContent,/Received by the shopper/);
+ const copy = [...root.querySelectorAll('form button')].find(button => button.textContent === 'Copy your text');
+ assert.ok(copy.closest('[hidden]'));
  app.suspendForHistory();
  assert.doesNotMatch(root.textContent,/Saved on this browser. Receipt unconfirmed.|Rice|Family A/);
  app.resumeFromHistory();await waitForIdle(root);
@@ -478,6 +480,45 @@ test('authorized Refresh clears an old mutation access denial without discarding
   if(storageClearFails)assert.match(root.textContent,/Access has ended.*Clear site data/);
   else assert.doesNotMatch(root.textContent,/Access has ended/,'Successful authenticated refresh must remove the stale denial');
   assert.equal(commands,0);
+ }
+});
+
+test('an unsent request explains its lifetime and copies only explicitly in edit and review', async t => {
+ for (const [language, copy, hint] of [
+  ['en', 'Copy your text', 'A new or reloaded page starts blank.'],
+  ['es', 'Copiar tu texto', 'Si la recargas o abres otra, el formulario estará vacío.']
+ ]) {
+  const writes = [], sends = [];
+  const api = fakeAPI({command: async (_, command) => { sends.push(command); }});
+  const outbox = new Outbox(new IDBFactory());
+  const {root, dom} = await setup(api, language, outbox);
+  t.after(() => dom.window.close());
+  Object.defineProperty(dom.window.navigator, 'clipboard', {value: {writeText: async text => { writes.push(text); }}});
+  const copyOptions = () => [...root.querySelectorAll('form button')].find(button => button.textContent === copy).parentElement;
+  assert.ok(copyOptions().hidden);
+  type(dom, 'item', 'Rolled oats');
+  assert.equal(copyOptions().hidden, false);
+  assert.ok(copyOptions().textContent.includes(hint));
+  type(dom, 'amount', '400 g');
+  assert.deepEqual(writes, []);
+  click(root, copy); await waitForIdle(root);
+  assert.deepEqual(writes, ['Rolled oats\n400 g']);
+  type(dom, 'amount', '500 g');
+  submit(root, dom);
+  assert.equal(copyOptions().hidden, false);
+  assert.ok(copyOptions().textContent.includes(hint));
+  assert.equal(writes.length, 1);
+  click(root, copy); await waitForIdle(root);
+  assert.deepEqual(writes, ['Rolled oats\n400 g', 'Rolled oats\n500 g']);
+  dom.window.navigator.clipboard.writeText = async () => { throw new Error('Clipboard unavailable'); };
+  click(root, copy); await waitForIdle(root);
+  assert.match(root.querySelector('[role=status]').textContent, language === 'en' ? /copy them manually/ : /cópialos manualmente/);
+  assert.deepEqual(sends, []);
+  assert.deepEqual(await outbox.list(scopeFor(session())), []);
+  const fresh = await setup(api, language, outbox);
+  t.after(() => fresh.dom.window.close());
+  assert.equal(fresh.root.querySelector('#item').value, '');
+  assert.equal(fresh.root.querySelector('#amount').value, '');
  }
 });
 
@@ -855,6 +896,7 @@ test('uncertain memory retry cannot cross identities or silently make another op
  let current=session(),sent=[];
  const {root,dom}=await setup(fakeAPI({session:async()=>current,requests:async()=>[own()],command:async(s,c)=>{sent.push(c);throw new ApiError('network',0);}}));
  type(dom,'item','Private original');submit(root,dom);submit(root,dom);await waitForIdle(root);
+ assert.doesNotMatch(root.querySelector('form').textContent, /This draft stays on this page/);
  click(root,'Edit');assert.match(root.textContent,/Private original/);assert.equal(root.querySelector('#item'),null);
  current={...session(),memberId:'other-member'};submit(root,dom);await waitForIdle(root);
  assert.equal(sent.length,1);assert.doesNotMatch(root.textContent,/Private original|No-salt frijoles/);
