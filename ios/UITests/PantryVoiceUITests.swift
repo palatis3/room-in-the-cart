@@ -226,8 +226,8 @@ import XCTest
         XCTAssertEqual(filter.label, "Filtrar por lugar")
         XCTAssertEqual(filter.value as? String, "Todos los lugares")
 
-        func visibleFilterText(_ name: String) throws -> String {
-            let screenshot = filter.screenshot()
+        func visibleText(of element: XCUIElement, named name: String) throws -> String {
+            let screenshot = element.screenshot()
             let attachment = XCTAttachment(screenshot: screenshot)
             attachment.name = name
             attachment.lifetime = .keepAlways
@@ -245,7 +245,7 @@ import XCTest
             XCTAssertEqual(XCTWaiter.wait(for: [selected], timeout: 5), .completed, file: file, line: line)
         }
 
-        let visible = try visibleFilterText("Spanish storage filter at accessibility size")
+        let visible = try visibleText(of: filter, named: "Spanish storage filter at accessibility size")
         XCTAssertTrue(visible.localizedCaseInsensitiveContains("Filtrar por lugar"), visible)
         XCTAssertTrue(visible.localizedCaseInsensitiveContains("Todos los lugares"), visible)
 
@@ -255,7 +255,9 @@ import XCTest
         XCTAssertTrue(refrigerator.isHittable)
         refrigerator.tap()
         assertSelection("Refrigerador")
-        let selectedText = try visibleFilterText("Spanish storage filter with refrigerator selected")
+        let renderedValue = filter.staticTexts["Refrigerador"]
+        XCTAssertTrue(renderedValue.waitForExistence(timeout: 5), app.debugDescription)
+        let selectedText = try visibleText(of: renderedValue, named: "Spanish selected refrigerator value")
         // Join a word hyphenated at a line break by Dynamic Type.
         let joined = selectedText.replacingOccurrences(of: #"[-\u2010\u2011\u00AD]\s+"#, with: "", options: .regularExpression)
         XCTAssertTrue(joined.localizedCaseInsensitiveContains("Refrigerador"), selectedText)
