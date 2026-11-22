@@ -428,12 +428,16 @@ private struct DinnerPurchaseChoices: View {
                     }
                 }
             } else if pickup.journeys.first(where: { $0.id == shop.id })?.ledgerSourceRevisionID != shop.revisionID {
-                if let servingReview {
-                    Text(dinnerText("Only the servings changed. Keep these amounts set aside for this dinner in your saved checkout."))
+                let liveBasis = ledger.sourceWorkspaceID.flatMap { try? pickup.quickGroceryPantryContext(ledgerWorkspaceID: $0)?.dinnerBasis }
+                if let servingReview, servingReview.source.shop == shop, servingReview.basis == liveBasis {
+                    Text(dinnerText("Servings changed. Keep using these pantry amounts to leave these ingredients off your shopping list."))
                     ForEach(servingReview.choices) { choice in
-                        LabeledContent(choice.request.itemName, value: ledgerQuantity(choice.request.needed))
+                        VStack(alignment: .leading) {
+                            Text(verbatim: choice.request.itemName).font(.headline)
+                            Text(verbatim: ledgerQuantity(choice.request.needed))
+                        }.accessibilityElement(children: .combine)
                     }
-                    Button(dinnerText("Keep these pantry allocations")) {
+                    Button(dinnerText("Keep these amounts for dinner")) {
                         Task {
                             guard !busy else { return }
                             busy = true
@@ -448,7 +452,7 @@ private struct DinnerPurchaseChoices: View {
                 }
                 NavigationLink(dinnerText("Review shopping allocations")) {
                     LedgerCheckoutEntry(ledger: ledger, pickup: pickup)
-                }.task(id: shop.revisionID) {
+                }.id(shop.revisionID).task(id: liveBasis) {
                     guard authorize() else { return }
                     servingReview = try? DinnerServingAllocationReview(ledger: ledger, pickup: pickup, shop: shop,
                         occurrenceID: occurrenceID, identity: identity, linked: linked)
@@ -580,7 +584,7 @@ extension PantryPackStockReview.Context {
               let receipt = ledger.workspace.dinnerPlanning.applyReceipts.first(where: { $0.revisionID == shop.revisionID }),
               receipt.proposal.namespace == "local:\(id.uuidString)", receipt.proposal.shopID == shop.id,
               receipt.proposal.baseRevisionID == previous.shop.revisionID, receipt.proposal.authorID == identity.actorID.uuidString,
-              receipt.appliedBy == identity.actorID.uuidString, receipt.proposal.changes.count == 1,
+              receipt.appliedBy == identity.actorID.uuidString, receipt.proposal.tool == .manual, receipt.proposal.changes.count == 1,
               case .adjust(let edit) = receipt.proposal.changes[0], edit.occurrenceID == occurrenceID,
               let basket = journey.basket, basket.phase == .draft, basket.revisions.count == 1,
               journey.pickup == nil, journey.closedAt == nil, journey.quote == nil, journey.mealRecovery == nil,
