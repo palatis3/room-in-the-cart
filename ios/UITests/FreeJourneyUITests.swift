@@ -1767,7 +1767,7 @@ import XCTest
         })
     }
 
-    private func reviewManualOatsAtMarket(checkAssistance: Bool = false, storage: String? = nil, paidPrintedTotal: Bool = false) {
+    private func reviewManualOatsAtMarket(checkAssistance: Bool = false, storage: String? = nil, paidPrintedTotal: Bool = false, usableAmount: String = "2") {
         receiptTap(app.buttons["receipt.scan"])
         let wording = app.textViews["scan.sourceEditor"]
         XCTAssertTrue(wording.waitForExistence(timeout: 8))
@@ -1807,7 +1807,7 @@ import XCTest
         receiptTap(app.buttons["receipt.printedQuantity.0"])
         XCTAssertEqual(received.value as? String, "3")
         XCTAssertGreaterThanOrEqual(received.frame.height, 44)
-        enterReceiptField("2", id: "receipt.usable.0")
+        enterReceiptField(usableAmount, id: "receipt.usable.0")
         if let storage {
             receiptTap(app.buttons["receipt.storage.0"])
             receiptTap(app.buttons[storage])
@@ -1903,7 +1903,7 @@ import XCTest
         launch(reset: true)
         receiptTap(app.shopToolButton("shop.myPantry"))
         openReceiptAfterPantrySetup()
-        reviewManualOatsAtMarket()
+        reviewManualOatsAtMarket(usableAmount: "1")
         receiptTap(app.buttons["receipt.commit"])
         XCTAssertTrue(app.staticTexts["receipt.status"].waitForExistence(timeout: 8))
         receiptTap(app.buttons["Done"])
@@ -1911,12 +1911,15 @@ import XCTest
         launch(reset: false)
         receiptTap(app.shopToolButton("shop.myPantry"))
         receiptTap(app.buttons["pantry.receipt"])
-        reviewManualOatsAtMarket()
+        reviewManualOatsAtMarket(usableAmount: "1")
         let original = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "receipt.rescan.candidate.")).firstMatch
         XCTAssertTrue(original.waitForExistence(timeout: 8), app.debugDescription)
         XCTAssertFalse(app.buttons["receipt.commit"].exists)
         XCTAssertTrue(app.buttons["receipt.rescan.separate"].exists)
         receiptTap(original)
+        let usable = app.staticTexts["receipt.rescan.usable.0"]
+        reveal(usable)
+        XCTAssertEqual(usable.label, "Usable 1 unit")
         receiptTap(app.buttons["receipt.rescan.original"])
         XCTAssertTrue(app.buttons["receipt.commit"].waitForExistence(timeout: 8))
         XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "Previously saved on this receipt.")).firstMatch.exists)

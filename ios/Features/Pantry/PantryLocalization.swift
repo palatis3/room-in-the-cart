@@ -34,6 +34,7 @@ func pantryQuantity(_ quantity: Quantity?) -> String {
     return "\(quantity.amount.description) \(pantryUnit(quantity.unit, amount: quantity.amount))"
 }
 func pantryPrintedQuantity(_ literal: String, unit: UnitOfMeasure) -> String {
+    guard !literal.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return pantryText("Unknown") }
     let measured = try? ComparisonModel.quantity(literal, unit)
     return literal + " " + pantryUnit(unit, amount: measured?.amount)
 }
