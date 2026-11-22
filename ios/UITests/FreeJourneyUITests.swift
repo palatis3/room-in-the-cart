@@ -109,6 +109,7 @@ import XCTest
     }
 
     func testFinishPackageReviewsTwoMealsAndKeepsLunchAndHomeConsentAfterCancel() {
+        avoidIOS17SnapshotLoggingCrash()
         let lotName = "Corn tortillas"
         let firstTitle = "Tortilla bowls", secondTitle = "Tortilla soup"
         func row(_ title: String) -> XCUIElement {
@@ -258,7 +259,8 @@ import XCTest
         let prepare = app.buttons["Preview dinner choice"]
         XCTAssertTrue(prepare.isEnabled, app.debugDescription)
         tapVisibleFormRow(prepare, marker: "FINISH_PACKAGE_PREVIEW")
-        XCTAssertTrue(app.staticTexts["Review dinner choice"].waitForExistence(timeout: 10), app.debugDescription)
+        let reviewHeading = app.staticTexts.matching(NSPredicate(format: "label ==[c] %@", "Review dinner choice")).firstMatch
+        XCTAssertTrue(reviewHeading.waitForExistence(timeout: 10), app.debugDescription)
         // The matched-product review can put Cancel below the rows the list has loaded.
         let cancel = app.buttons["Cancel preview"]
         tapVisibleFormRow(cancel, marker: "FINISH_PACKAGE_CANCEL")
