@@ -206,6 +206,9 @@ struct VoicePantryRow {
                         if let message {
                             Label(message, systemImage: "exclamationmark.circle")
                                 .fixedSize(horizontal: false, vertical: true)
+                                .accessibilityElement(children: .ignore)
+                                .accessibilityLabel(Text(message))
+                                .accessibilityAddTraits(.isStaticText)
                                 .accessibilityFocused($entryFeedbackFocused)
                                 .accessibilityIdentifier("pantry.voiceStatus")
                                 .id("pantry.entryFeedback")

@@ -16,7 +16,9 @@
     "RoomInTheCartUITests/RoomInTheCartUITests/testFirstListResumesAfterRelaunchAndCreatesOneUndoablePickupOnConfirmation"
   ],
   "03 · Carry the missing recipe ingredient into a named pickup": [
-    "RoomInTheCartUITests/TonightUITests/testFirstSavedDinnerCarriesIntoNewPickupAndAddsOnlySelectedIngredient"
+    "RoomInTheCartUITests/TonightUITests/testFirstSavedDinnerCarriesIntoNewPickupAndAddsOnlySelectedIngredient",
+    "RoomInTheCartUITests/RoomInTheCartUITests/testOpenPantryDinnerChooserWithAnActivePickup",
+    "RoomInTheCartTests/DinnerPantrySupplyTests/testDinnerShoppingCheckUsesOnlyFreeStockAndKeepsTheListAndOtherShopsLunch"
   ],
   "Record actual dinner ingredients and refresh pantry counts": [
     "RoomInTheCartTests/CookCompletionEditorTests/testReturningFromASuggestedSubstituteToTheUniquePlannedFoodClearsTheSavedSubstitution",
@@ -31,7 +33,11 @@
     "RoomInTheCartTests/PantryProductCatalogTests/testReviewedLabelWordingStaysWithOnePhysicalPackageAndRequiresDateConfirmation",
     "RoomInTheCartTests/PantryLiveStockProjectionTests/testOnePhysicalPackageWithUnknownContentsReplaysWithoutMakingAPurchaseOrConfirmingDate",
     "RoomInTheCartUITests/FreeJourneyUITests/testColdPantryLotSeparatesOneOuterPackageFromUnknownUsableContents",
-    "RoomInTheCartTests/PantryLiveStockProjectionTests/testUnknownUsableAmountAloneDoesNotEstablishOneOuterPackage"
+    "RoomInTheCartTests/PantryLiveStockProjectionTests/testUnknownUsableAmountAloneDoesNotEstablishOneOuterPackage",
+    "RoomInTheCartUITests/RoomInTheCartUITests/testOpenProductScannerFromAddFoodAndEnterABarcode",
+    "RoomInTheCartUITests/FreeJourneyUITests/testPrivateLotPrintedWordingCanBeReviewedReopenedInSpanishAndRemoved",
+    "RoomInTheCartUITests/FreeJourneyUITests/testUnknownPantryBarcodeCanBeReviewedCountedAndFoundAgain",
+    "RoomInTheCartTests/PantryProductCatalogTests/testReviewUnknownBarcodeRequiresEditableScopeAndCheckedPack"
   ],
   "06 · Record an unmeasured use from the correct container": [
     "RoomInTheCartTests/PantryVoiceParserTests/testReadOnlyBalanceQuestionsAndLocationQualifiedUnmeasuredUses",
@@ -57,12 +63,14 @@
     "RoomInTheCartUITests/FreeJourneyUITests/testSpanishReceiptPrintedUnitHintWrapsAtExtraLarge",
     "RoomInTheCartTests/ReceiptDocumentTests/testReceiptAcceptsPrintedCountWordsInEnglishAndSpanishWithoutAssumingPackageContents",
     "RoomInTheCartUITests/FreeJourneyUITests/testCancelingManualReceiptProtectsUnsavedPrintedLines",
-    "RoomInTheCartTests/MixedReceiptPutawayTests/testTypedReceiptKeepsCorrectedFieldsSeparateFromConfirmedStockAndPayment"
+    "RoomInTheCartTests/MixedReceiptPutawayTests/testTypedReceiptKeepsCorrectedFieldsSeparateFromConfirmedStockAndPayment",
+    "RoomInTheCartUITests/FreeJourneyUITests/testRescanReviewRequiresChoosingTheOriginalBeforeSaving"
   ],
   "09 · Choose whole packs across weight units under an item limit": [
     "RoomInTheCartTests/AppModelTests/testCornmealPackDefaultsAndReadableConvertedTotals",
     "RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresRecordsDetailAndIndependentShoppingList",
-    "RoomInTheCartUITests/RoomInTheCartUITests/testKnownComparisonSavesAndReopensWithItemOnlyLimit"
+    "RoomInTheCartUITests/RoomInTheCartUITests/testKnownComparisonSavesAndReopensWithItemOnlyLimit",
+    "RoomInTheCartUITests/RoomInTheCartUITests/testMissingPackAmountCanBeCorrectedFromResultWithItsUnitAndItemLimit"
   ],
   "10 · Reopen private prices with their recorded source": [
     "RoomInTheCartUITests/FreeJourneyUITests/testPrivateRecordsReopenManualPaidAndShelfPricesWithoutCreatingFood",
@@ -74,7 +82,9 @@
   "11 · Preview a copy and return to the private list": [
     "RoomInTheCartUITests/RoomInTheCartUITests/testSharePreviewClosesToPrivateListWithoutSending",
     "RoomInTheCartTests/LedgerListLayoutTests/testEditedGroceryPackagesAppearInWorkingRowsDetailsAndHandoff",
-    "RoomInTheCartTests/LedgerListLayoutTests/testMixedGroceryPackageSourcesKeepTheirOwnUnits"
+    "RoomInTheCartTests/LedgerListLayoutTests/testMixedGroceryPackageSourcesKeepTheirOwnUnits",
+    "RoomInTheCartUITests/FreeJourneyUITests/testSpanishReviewedReceiptCopyPreviewsOnlyChosenDetailsAndCancels",
+    "RoomInTheCartTests/MixedReceiptPutawayTests/testReviewedReceiptCopyUsesOnlySelectedFieldsInTheLiveOwnerScope"
   ],
   "12 · Learn the guardian's role before enrolling a child": [
     "RoomInTheCartUITests/RoomInTheCartUITests/testFamilyPermissionGuideExplainsChildScopeAndGuardianStartOffline",
