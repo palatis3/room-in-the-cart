@@ -749,6 +749,38 @@ final class RoomInTheCartUITests: XCTestCase {
         screenshot("Spanish Help expanded household permissions")
     }
 
+    func testEmptyShopToolsRevealFamilySharingAndReturnToPrivateDraft() {
+        launch(language: "es", largeDark: true)
+        let name = element("quickGrocery.name")
+        tap(name)
+        name.typeText("peras")
+        tap(app.buttons["quickGrocery.dismissKeyboard"])
+
+        let family = app.shopToolButton("shop.familySharing")
+        XCTAssertTrue(family.wait(for: \.isHittable, toEqual: true, timeout: 8))
+        XCTAssertTrue(app.scrollViews["shopContentScroll"].frame.contains(family.frame),
+                      "Expanding More shopping tools should reveal the entire first action.")
+        XCTAssertEqual(family.label, "Compartir en familia")
+        family.tap()
+
+        let requests = app.buttons["Solicitudes del hogar"]
+        XCTAssertTrue(requests.waitForExistence(timeout: 8))
+        tap(app.buttons["guardian.familyGuide"])
+        let scope = app.staticTexts["guardian.familyGuide.scope"]
+        XCTAssertTrue(scope.waitForExistence(timeout: 8))
+        XCTAssertTrue(scope.label.contains("sus propias solicitudes"))
+        tap(app.buttons["guardian.familyGuide.settings"])
+        tap(requests)
+        let household = app.navigationBars["Hogar"]
+        XCTAssertTrue(household.waitForExistence(timeout: 8))
+        tap(household.buttons.element(boundBy: 0))
+        tap(app.buttons["settings.done"])
+
+        reveal(name)
+        XCTAssertEqual(name.value as? String, "peras")
+        XCTAssertTrue(app.buttons["shop.addFirstList"].exists)
+    }
+
     func testSpanishFamilyGuideReturnsToTheSameTwoUncheckedGroceries() {
         launch(language: "es")
         let list = openSpanishFamilyGroceries()

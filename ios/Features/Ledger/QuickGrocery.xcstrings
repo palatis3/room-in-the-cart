@@ -529,6 +529,22 @@
         }
       }
     },
+    "Family sharing": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Family sharing"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compartir en familia"
+          }
+        }
+      }
+    },
     "More shopping tools": {
       "localizations": {
         "en": {
