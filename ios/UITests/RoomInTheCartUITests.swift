@@ -779,7 +779,13 @@ final class RoomInTheCartUITests: XCTestCase {
         tap(household.buttons.element(boundBy: 0))
         tap(app.buttons["settings.done"])
 
-        revealFullyInShop(name)
+        // The draft is at the top of Shop. UIKit gives the offscreen text view an empty frame.
+        let shop = app.scrollViews["shopContentScroll"]
+        for _ in 0..<8 {
+            if name.isHittable { break }
+            shop.swipeDown()
+        }
+        XCTAssertTrue(name.isHittable)
         XCTAssertEqual(name.value as? String, "peras")
         XCTAssertTrue(app.buttons["shop.addFirstList"].exists)
     }
