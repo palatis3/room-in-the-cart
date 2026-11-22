@@ -11,7 +11,8 @@ import xml.etree.ElementTree as ET
 
 import generate_xcode_project as project
 from app_configuration import (PUBLIC_SETTINGS, build_settings, compiled_metadata,
-                               load_configuration, require_release_metadata, valid_page_url, valid_support_email, valid_operator_name)
+                               load_configuration, require_private_release_metadata, require_release_metadata,
+                               valid_page_url, valid_support_email, valid_operator_name)
 from check_built_app import SHARE_ACTIVATION_RULE, verify_built_app, verify_distribution_entitlements
 
 
@@ -415,6 +416,50 @@ class BuiltAppVerificationTests(unittest.TestCase):
         debug = self.make_app("Debug", "dev.roominthecart.app.debug", "roominthecart-debug", "iPhoneSimulator")
         (debug / "PlugIns/RoomInTheCartTests.xctest").mkdir()
         verify_built_app(debug, "Debug")
+
+    def test_private_release_verifies_native_help_pages_in_compiled_bundle(self):
+        release = {"regionalAgeCheckEnabled": True, "householdSubscriptionProductID": "com.grocery-app.annual",
+                   "supabaseURL": "https://identity.grocery-app.com", "publishableKey": "sb_publishable_review"}
+        site = "https://grocery-app.com"
+        for pages in ({"supportURL": site + "/contact", "privacyPolicyURL": site + "/policy"},
+                      {"publicWebsiteURL": site + "/"},
+                      {"publicWebsiteURL": site, "supportURL": "https://contact.grocery-app.com/help"}):
+            with self.subTest(pages=pages):
+                config = {**release, **pages}
+                plist = self.app / "Info.plist"
+                info = {**plistlib.loads(plist.read_bytes()), **compiled_metadata(config, "Release")}
+                plist.write_bytes(plistlib.dumps(info))
+                with patch("check_built_app.load_configuration", return_value=config):
+                    verify_built_app(self.app, "Release", require_private_metadata=True)
+
+    def test_private_release_rejects_unavailable_pages_and_connected_access(self):
+        site = "https://grocery-app.com"
+        base = compiled_metadata({"publicWebsiteURL": site}, "Release")
+        for change, error in (
+            ({"RITCBuildEnvironment": "Staging"}, "Release build"),
+            ({"PublicWebsiteURL": "", "SupportEmail": "hello@grocery-app.com"}, "PrivacyPolicyURL, SupportURL"),
+            ({"PublicWebsiteURL": "", "PrivacyPolicyURL": site + "/policy",
+              "HouseholdServiceURL": site}, "SupportURL"),
+            ({"PrivacyPolicyURL": "http://grocery-app.com/privacy"}, "PrivacyPolicyURL"),
+            ({"SupportURL": "https://localhost/support"}, "SupportURL"),
+            ({"PublicWebsiteURL": site + "/help"}, "PublicWebsiteURL"),
+            ({"PublicWebsiteURL": site + "/?lang=en"}, "PublicWebsiteURL"),
+            ({"RITCEmailOTPEnabled": "YES"}, "email sign-in"),
+            ({"HouseholdServiceURL": site, "SupabaseProjectURL": "https://identity.grocery-app.com",
+              "SupabasePublishableKey": "sb_publishable_review"}, "connected household"),
+        ):
+            with self.subTest(change=change), self.assertRaisesRegex(ValueError, error):
+                require_private_release_metadata({**base, **change})
+
+    def test_private_release_cli_is_release_only_and_exclusive(self):
+        command = [sys.executable, str(self.root / "scripts/check_built_app.py"), str(self.app),
+                   "--require-private-release-metadata", "--configuration"]
+        for args, message in ((["Staging"], "requires --configuration Release"),
+                              (["Release", "--require-release-metadata"], "not allowed with argument")):
+            with self.subTest(args=args):
+                result = subprocess.run(command + args, capture_output=True, text=True)
+                self.assertEqual(result.returncode, 2)
+                self.assertIn(message, result.stderr)
 
     def test_household_privacy_declarations_in_app_manifest(self):
         with (self.app / "PrivacyInfo.xcprivacy").open("rb") as handle:
