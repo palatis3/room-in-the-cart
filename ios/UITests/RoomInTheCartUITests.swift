@@ -768,7 +768,7 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(family.wait(for: \.isHittable, toEqual: true, timeout: 8))
         XCTAssertTrue(shopViewport.contains(family.frame),
                       "Expanding More shopping tools should reveal the entire first action.")
-        XCTAssertEqual(family.label, "Compartir en familia")
+        XCTAssertEqual(family.label, "Configuración del hogar")
         family.tap()
 
         let requests = app.buttons["Solicitudes del hogar"]

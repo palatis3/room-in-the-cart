@@ -71,6 +71,27 @@ final class HelpConfigurationTests: XCTestCase {
         XCTAssertNil(config.helpURL)
     }
 
+    func testSupportSiteUsesAppLanguageOnlyForItsPublishedPages() throws {
+        let site = "https://customer.grocery-app.com"
+        let values = ["SupportPagesOrigin": site, "PrivacyPolicyURL": site + "/privacy", "SupportURL": site + "/support"]
+        let bundle = try testBundle(values)
+        for (appLanguage, query) in [("es-MX", "es"), ("en-US", "en")] {
+            let config = HelpConfiguration.fromBundle(bundle, language: appLanguage)
+            XCTAssertEqual(config.privacyURL?.absoluteString, site + "/privacy?lang=" + query)
+            XCTAssertEqual(config.supportURL?.absoluteString, site + "/support?lang=" + query)
+            XCTAssertNil(config.helpURL)
+            XCTAssertNil(config.familyHelpURL)
+            XCTAssertNil(config.termsURL)
+        }
+        for custom in [site + "/support?ref=help", site + "/support#contact", site + "/other",
+                       "https://other.grocery-app.com/support", "https://customer.grocery-app.com:8443/support"] {
+            var overrides = values
+            overrides["SupportURL"] = custom
+            let config = HelpConfiguration.fromBundle(try testBundle(overrides), language: "es")
+            XCTAssertEqual(config.supportURL?.absoluteString, custom)
+        }
+    }
+
     func testFamilyGuideUsesOnlyTheConfiguredCompanionHelpAddress() throws {
         let base = ["HouseholdServiceURL": "https://grocery-app.com", "HelpURL": "https://grocery-app.com/help"]
         let bundle = try testBundle(base)

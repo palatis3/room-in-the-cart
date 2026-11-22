@@ -15,13 +15,15 @@ struct HelpConfiguration: Equatable, Sendable {
     static func fromBundle(_ bundle: Bundle = .main, language: String = Bundle.main.preferredLocalizations.first ?? "en") -> Self {
         let website = websiteOrigin(bundle.object(forInfoDictionaryKey: "PublicWebsiteURL") as? String)
         let companion = website ?? pageURL(bundle.object(forInfoDictionaryKey: "HouseholdServiceURL") as? String)
-        func usesCompanion(_ url: URL) -> Bool {
-            guard let companion else { return false }
-            return url.host?.lowercased() == companion.host?.lowercased() && (url.port ?? 443) == (companion.port ?? 443)
+        let supportSite = websiteOrigin(bundle.object(forInfoDictionaryKey: "SupportPagesOrigin") as? String)
+        func onSite(_ url: URL, _ site: URL?) -> Bool {
+            guard let site else { return false }
+            return url.host?.lowercased() == site.host?.lowercased() && (url.port ?? 443) == (site.port ?? 443)
         }
         func localizedPage(_ url: URL) -> URL {
-            guard usesCompanion(url), ["/help", "/support", "/privacy", "/terms"].contains(url.path),
-                  var components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+            let companionPage = onSite(url, companion) && ["/help", "/support", "/privacy", "/terms"].contains(url.path)
+            let supportPage = onSite(url, supportSite) && ["/privacy", "/support"].contains(url.path) && url.fragment == nil
+            guard companionPage || supportPage, var components = URLComponents(url: url, resolvingAgainstBaseURL: false),
                   components.percentEncodedQuery == nil else { return url }
             let spanish = Locale(identifier: language).language.languageCode?.identifier == "es"
             components.queryItems = [URLQueryItem(name: "lang", value: spanish ? "es" : "en")]
@@ -36,7 +38,7 @@ struct HelpConfiguration: Equatable, Sendable {
         let help = page("HelpURL", route: "help")
         let familyPage = website.map { localizedPage($0.appendingPathComponent("help")) } ?? help
         var familyHelp: URL?
-        if let familyPage, usesCompanion(familyPage), familyPage.path == "/help", familyPage.fragment == nil,
+        if let familyPage, onSite(familyPage, companion), familyPage.path == "/help", familyPage.fragment == nil,
            var components = URLComponents(url: familyPage, resolvingAgainstBaseURL: false),
            components.queryItems?.allSatisfy({ $0.name == "lang" && ["en", "es"].contains($0.value ?? "") }) == true {
             components.fragment = "child-permission"

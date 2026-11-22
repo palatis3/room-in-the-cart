@@ -529,18 +529,18 @@
         }
       }
     },
-    "Family sharing": {
+    "Household settings": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Family sharing"
+            "value": "Household settings"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Compartir en familia"
+            "value": "Configuración del hogar"
           }
         }
       }

@@ -17,8 +17,9 @@ PUBLIC_SETTINGS = (
     ("RITC_OPERATOR_NAME", "operatorName", "OperatorName"),
     ("RITC_HELP_URL", "helpURL", "HelpURL"),
     ("RITC_PUBLIC_WEBSITE_URL", "publicWebsiteURL", "PublicWebsiteURL"),
+    ("RITC_SUPPORT_PAGES_ORIGIN", "supportPagesOrigin", "SupportPagesOrigin"),
 )
-PAGE_KEYS = {"privacyPolicyURL", "termsOfUseURL", "supportURL", "helpURL", "publicWebsiteURL"}
+PAGE_KEYS = {"privacyPolicyURL", "termsOfUseURL", "supportURL", "helpURL", "publicWebsiteURL", "supportPagesOrigin"}
 BACKEND_URL_KEYS = ("supabaseURL", "serviceURL")
 HTTPS_AUTHORITY = re.compile(r"(?:\[[0-9a-fA-F:.]+\]|[^:\[\]]+)(?::[0-9]+)?")
 DNS_LABEL = re.compile(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?")
@@ -98,6 +99,10 @@ def valid_page_url(value):
     return valid_page_address(address)
 
 
+def is_origin_only(value):
+    return urlsplit(value).path in ("", "/") and "?" not in value and "#" not in value
+
+
 def normalized_origin(url):
     host = url.hostname.encode("idna").decode("ascii").lower().removesuffix(".")
     try:
@@ -144,6 +149,17 @@ def load_configuration(root, name):
     for key in ("supportEmail", "operatorName"):
         if key not in config and key in contact:
             config[key] = contact[key]
+    if name == "Release" and "releaseSupportPagesOrigin" in contact:
+        # This small site publishes only the policy and support pages. A separately
+        # configured full website keeps its own native page fallbacks.
+        origin = contact["releaseSupportPagesOrigin"]
+        if not valid_page_url(origin) or not is_origin_only(origin):
+            raise ValueError("releaseSupportPagesOrigin must be a public HTTPS origin")
+        config["supportPagesOrigin"] = origin
+        if not config.get("publicWebsiteURL"):
+            for key, route in (("privacyPolicyURL", "/privacy"), ("supportURL", "/support")):
+                if config.get(key, "") == "":
+                    config[key] = origin.rstrip("/") + route
     expected_environment = "production" if name == "Release" else "staging"
     if config.get("environment", expected_environment) != expected_environment:
         raise ValueError(f"{path.name} must identify the {expected_environment} environment")
@@ -159,8 +175,8 @@ def load_configuration(root, name):
             if not valid_page_url(value):
                 raise ValueError(f"{key} must be an operator-owned HTTPS page, without credentials or a test/example host")
             url = urlsplit(value)
-            if key == "publicWebsiteURL" and (url.path not in ("", "/") or "?" in value or "#" in value):
-                raise ValueError("publicWebsiteURL must be the public HTTPS origin, without a path, query or fragment")
+            if key in ("publicWebsiteURL", "supportPagesOrigin") and not is_origin_only(value):
+                raise ValueError(f"{key} must be the public HTTPS origin, without a path, query or fragment")
             origins[key] = normalized_origin(url)
         if value and key in BACKEND_URL_KEYS:
             try:
@@ -220,3 +236,27 @@ def require_release_metadata(info):
     for key in RELEASE_URLS:
         if not valid_page_url(info[key]):
             raise ValueError(f"Release metadata has an invalid {key}")
+
+
+def require_private_release_metadata(info):
+    if info.get("RITCBuildEnvironment") != "Release":
+        raise ValueError("Private App Store metadata requires a Release build")
+    if info.get("RITCEmailOTPEnabled") != "NO":
+        raise ValueError("Private App Store release requires email sign-in to be disabled")
+    # Adult sign-in, child invitations and the membership screen can use an
+    # existing account when all three settings are present, even with OTP off.
+    if all(info.get(key) for key in ("HouseholdServiceURL", "SupabaseProjectURL", "SupabasePublishableKey")):
+        raise ValueError("Private App Store release has connected household access enabled")
+
+    website = info.get("PublicWebsiteURL")
+    if website and (not valid_page_url(website) or not is_origin_only(website)):
+        raise ValueError("Private App Store release needs a public HTTPS origin for PublicWebsiteURL")
+    missing = []
+    for key, route in (("PrivacyPolicyURL", "/privacy"), ("SupportURL", "/support")):
+        # HelpConfiguration uses an explicit page first. Only PublicWebsiteURL
+        # supplies missing pages; an email or the household service cannot.
+        page = info.get(key) or (website.rstrip("/") + route if website else "")
+        if not valid_page_url(page):
+            missing.append(key)
+    if missing:
+        raise ValueError("Private App Store release needs public HTTPS destinations for " + ", ".join(missing))

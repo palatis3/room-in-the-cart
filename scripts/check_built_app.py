@@ -9,7 +9,8 @@ import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
-from app_configuration import compiled_metadata, load_configuration, require_release_metadata
+from app_configuration import (compiled_metadata, load_configuration, require_private_release_metadata,
+                               require_release_metadata)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -73,7 +74,7 @@ def verify_privacy_manifest(bundle, source_folder):
     require(privacy.get("NSPrivacyTracking") is False, f"Unexpected tracking declaration in {bundle.name}")
 
 
-def verify_built_app(app, configuration, *, require_production_metadata=False):
+def verify_built_app(app, configuration, *, require_production_metadata=False, require_private_metadata=False):
     suffix = ENVIRONMENT_SUFFIXES[configuration]
     bundle_id = "dev.roominthecart.app" + suffix
     scheme = "roominthecart" + suffix.replace(".", "-")
@@ -124,6 +125,8 @@ def verify_built_app(app, configuration, *, require_production_metadata=False):
 
     for key, expected in compiled_metadata(load_configuration(ROOT, configuration), configuration).items():
         require(info.get(key, "") == expected, f"Incorrect compiled configuration for {key}")
+    if require_private_metadata:
+        require_private_release_metadata(info)
     if require_production_metadata:
         require_release_metadata(info)
 
@@ -233,11 +236,16 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("product", type=Path, help="compiled .app or device .xcarchive")
     parser.add_argument("--configuration", choices=ENVIRONMENT_SUFFIXES, required=True)
-    parser.add_argument("--require-release-metadata", action="store_true",
-                        help="require production household service and identity settings, public support and policy URLs, and the Apple product ID")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--require-private-release-metadata", action="store_true",
+                      help="require public native Privacy and Support links with household access and email sign-in disabled")
+    mode.add_argument("--require-release-metadata", action="store_true",
+                      help="require production household service and identity settings, public support and policy URLs, and the Apple product ID")
     parser.add_argument("--require-distribution-signing", action="store_true",
                         help="verify the App Store signatures, embedded provisioning profiles, and signed entitlements")
     args = parser.parse_args()
+    if args.require_private_release_metadata and args.configuration != "Release":
+        parser.error("--require-private-release-metadata requires --configuration Release")
     if args.require_release_metadata and args.configuration != "Release":
         parser.error("--require-release-metadata requires --configuration Release")
     if args.require_distribution_signing and args.configuration != "Release":
@@ -245,13 +253,16 @@ def main():
     try:
         archive = args.product.suffix == ".xcarchive"
         app = args.product / "Products/Applications/RoomInTheCart.app" if archive else args.product
-        verify_built_app(app, args.configuration, require_production_metadata=args.require_release_metadata)
+        verify_built_app(app, args.configuration, require_production_metadata=args.require_release_metadata,
+                         require_private_metadata=args.require_private_release_metadata)
         if archive:
             verify_archive_symbols(args.product, app)
         if args.require_distribution_signing:
             verify_distribution_signing(app)
     except (OSError, ValueError, plistlib.InvalidFileException) as error:
         parser.exit(1, f"Built app verification failed: {error}\n")
+    if args.require_private_release_metadata:
+        print("Verified private Release configuration for Privacy, Support, email sign-in, and household access.")
     if archive:
         print("Archived iPhone app and extension binaries matched their crash symbols.")
     if args.require_distribution_signing:

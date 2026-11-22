@@ -670,7 +670,7 @@ struct ShopView: View {
     private var secondaryShopTools: some View {
         VStack(alignment: .leading, spacing: 0) {
             Button { showingSettings = true } label: {
-                ShopToolLabel(quickGroceryText("Family sharing"), "person.2", chevron: true)
+                ShopToolLabel(quickGroceryText("Household settings"), "person.2", chevron: true)
             }
             .accessibilityIdentifier("shop.familySharing")
             if ledger.shop == nil {
