@@ -471,6 +471,10 @@ struct ComparisonView: View {
             if let packs = result.packsToBuy, packs > 0, let price = offer.price {
                 WholePackCalculation(count: packs, price: price)
             }
+            if let unit, let leftover = result.leftover {
+                Text(message("Left over: %@ %@", comparisonAmountText(leftover, locale: locale), unit.comparisonLabel(for: leftover)))
+                    .font(.subheadline).monospacedDigit()
+            }
             if let unitPrice, let unit {
                 Text(verbatim: comparisonUnitPriceText(unitPrice, in: unit, locale: locale))
                     .font(.subheadline).monospacedDigit()

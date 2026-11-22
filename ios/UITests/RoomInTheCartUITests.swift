@@ -1013,6 +1013,8 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(cap.label.contains("$5.50"))
         XCTAssertTrue(element("aCostSummary").label.contains("$3.45"))
         XCTAssertTrue(element("bCostSummary").label.contains("$5.76"))
+        XCTAssertTrue(element("aCostSummary").label.contains("Left over: 0 grams"))
+        XCTAssertTrue(element("bCostSummary").label.contains("Left over: 300 grams"))
         assertContains("Usable amount in one pack: 0.6 kilograms")
         assertContains("Over the item limit: $0.26")
     }
