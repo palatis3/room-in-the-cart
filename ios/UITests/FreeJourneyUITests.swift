@@ -1388,7 +1388,7 @@ import XCTest
         XCTAssertFalse(app.buttons["receipt.commit"].exists)
 
         receiptTap(app.buttons["receipt.putAway.0"], initiallyUpward: false)
-        let foodName = element("receipt.name.0")
+        let foodName = editableElement("receipt.name.0")
         reveal(foodName)
         let shortHeight = foodName.frame.height
         let longName = "Rolled oats with toasted almonds, sunflower seeds, pumpkin seeds, dried apricots, raisins and cinnamon"
@@ -1886,7 +1886,7 @@ import XCTest
     }
 
     private func enterReceiptField(_ text: String, id: String, replacing: Bool = false) {
-        let field = element(id)
+        let field = editableElement(id)
         // iOS 17 exposes the field and its caption as one row. The editable value sits below the caption.
         let input = CGVector(dx: 0.5, dy: 0.7)
         reveal(field, requiredHit: input)
