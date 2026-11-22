@@ -747,8 +747,11 @@ import XCTest
         XCTAssertEqual(editableElement("packageDate.wording").value as? String, wording)
         reveal(fullDate)
         XCTAssertEqual(fullDate.value as? String, "1")
-        tap(app.buttons["packageDate.remove"])
+        let pantryTab = app.tabBars.buttons["Despensa"]
+        XCTAssertTrue(pantryTab.isSelected)
+        tapVisibleFormRow(app.buttons["packageDate.remove"], marker: "REMOVE_PRINTED_LABEL")
         XCTAssertTrue(detail.waitForExistence(timeout: 8))
+        XCTAssertTrue(pantryTab.isSelected)
         reveal(app.buttons["pantry.packageDate"])
         XCTAssertFalse(spanishWording.exists)
         XCTAssertFalse(spanishDate.exists)
@@ -761,7 +764,7 @@ import XCTest
         reveal(printedSuggestion)
         XCTAssertTrue(printedSuggestion.label.contains("2028"))
         XCTAssertEqual(fullDate.value as? String, "0", "Transcribing the wording alone must not accept a date")
-        tap(printedSuggestion)
+        tapVisibleFormRow(printedSuggestion, marker: "CHOOSE_TRANSCRIBED_DATE")
         XCTAssertEqual(fullDate.value as? String, "1")
         tap(app.buttons["packageDate.save"])
         let december = try XCTUnwrap(DateComponents(calendar: Calendar(identifier: .gregorian), timeZone: .gmt,
