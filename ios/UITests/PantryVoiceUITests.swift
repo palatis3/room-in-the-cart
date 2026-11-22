@@ -147,6 +147,46 @@ import XCTest
         checkLowStock(spanish: false)
     }
 
+    func testSpanishLargestTextExactAmountOpensVisibleAndReadyForTyping() {
+        openPantry(reset: true, spanish: true)
+        let eggs = addLot("Huevos", amount: "8")
+        app.terminate()
+        openPantry(reset: false, spanish: true, accessibilityText: true, locale: "es_MX")
+        let batch = app.buttons[eggs]
+        reveal(batch)
+        tap(batch)
+        let use = app.buttons["pantry.voiceUsedSome"]
+        reveal(use)
+        tap(use)
+        let exact = app.buttons["pantry.voiceUseAmount.0"]
+        reveal(exact)
+        let keyboard = app.keyboards.firstMatch
+        XCTAssertFalse(keyboard.exists)
+        tap(exact)
+
+        let field = element("pantry.voiceAmount.0")
+        let done = app.buttons["pantry.voiceKeyboardDone"]
+        XCTAssertTrue(keyboard.waitForExistence(timeout: 8))
+        let visibleAmount = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard field.exists, field.isHittable, done.exists, keyboard.exists else { return false }
+            let top = self.app.navigationBars.firstMatch.frame.maxY
+            let bottom = min(keyboard.frame.minY, done.frame.minY)
+            return field.frame.maxY <= bottom + 2 && field.frame.maxY - max(field.frame.minY, top) >= 44
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [visibleAmount], timeout: 8), .completed, app.debugDescription)
+        app.typeText("2")
+        XCTAssertEqual(field.value as? String, "2")
+        capture("Cantidad utilizada visible al escribir con texto de accesibilidad")
+        tap(done)
+        XCTAssertTrue(keyboard.waitForNonExistence(timeout: 8))
+        let preview = app.buttons["pantry.voicePreview"]
+        reveal(preview)
+        tap(preview)
+        let summary = element("pantry.voiceSummary.0")
+        XCTAssertTrue(summary.waitForExistence(timeout: 8))
+        XCTAssertTrue(summary.label.contains("6 unidades"), summary.label)
+    }
+
     func testSpanishLargeTextKeepsPantryInputAndClarificationVisible() throws {
         openPantry(reset: true, spanish: true, accessibilityText: true, locale: "es_MX")
         tapPantryEntry(app.buttons["pantry.voiceEntry"])
