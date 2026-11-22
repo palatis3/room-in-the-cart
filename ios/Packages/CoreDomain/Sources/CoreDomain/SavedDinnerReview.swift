@@ -23,6 +23,7 @@ public struct SavedDinnerReview: Identifiable, Sendable {
     public let plannedDay: MealDay?
     public let plannedServings: Rational?
     public let pantryProducts: DinnerPantryProducts?
+    private let reservedFoods: Set<UUID>
     private let preparationDay: MealDay?
     public var occurrenceID: UUID? {
         guard let proposal, case let .choose(meal) = proposal.changes.first else { return nil }
@@ -30,13 +31,14 @@ public struct SavedDinnerReview: Identifiable, Sendable {
     }
 
     public init(recipe: MealTemplate, action: Action, workspace: LedgerWorkspace,
-                access: DinnerAccessContext, phase: BasketPhase, at now: Date, pantryReview: (match: PantryMealMatcher.Review, originID: UUID)? = nil) throws {
+                access: DinnerAccessContext, phase: BasketPhase, at now: Date, pantryReview: (match: PantryMealMatcher.Review, originID: UUID)? = nil, reservedFoods: Set<UUID> = []) throws {
         guard case .local = access.scope, let shop = workspace.shops.first(where: { $0.id == workspace.selectedShopID })
         else { throw DinnerPlanningError.forbidden }
         try access.validate(shopID: shop.id, at: now, applying: true)
         guard phase == .draft else { throw DinnerPlanningError.lockedBasket }
         let accepted = try Self.source(recipe, workspace: workspace, access: access)
         self.recipe = recipe
+        self.reservedFoods = reservedFoods
         shopID = shop.id
         destinationTitle = shop.title
         scope = access.scope
@@ -46,7 +48,8 @@ public struct SavedDinnerReview: Identifiable, Sendable {
         id = UUID()
         if let pantryReview {
             guard case .local = access.scope, pantryReview.match.recipe == recipe else { throw DinnerPlanningError.forbidden }
-            pantryProducts = try DinnerPantryProducts(review: pantryReview.match, workspace: workspace, originID: pantryReview.originID)
+            pantryProducts = try DinnerPantryProducts(review: pantryReview.match, workspace: workspace, originID: pantryReview.originID,
+                destinationShopID: shop.id, reservedFoods: reservedFoods)
         } else { pantryProducts = nil }
         switch action {
         case .planTonight, .plan:
@@ -103,7 +106,7 @@ public struct SavedDinnerReview: Identifiable, Sendable {
         guard let shop = workspace.shops.first(where: { $0.id == shopID }), workspace.selectedShopID == shopID,
               shop.revisionID == originalRevision, shop.title == destinationTitle,
               workspace.dinnerPlanning.revisionID == planningRevision else { throw DinnerPlanningError.stalePreview }
-        try pantryProducts?.verifyNewLines(in: workspace)
+        try pantryProducts?.verifyNewLines(in: workspace, destinationShopID: shopID, reservedFoods: reservedFoods)
         _ = try Self.source(recipe, workspace: workspace, access: access)
         if let preparationDay, preparationDay != (try MealDay(date: now, timeZoneIdentifier: shop.basis.timeZoneIdentifier)) { throw DinnerPlanningError.stalePreview }
     }

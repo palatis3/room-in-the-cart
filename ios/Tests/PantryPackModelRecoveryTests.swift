@@ -380,6 +380,25 @@ extension PantryPackModelRecoveryTests {
         let access = DinnerAccessContext(scope: .local(workspaceID: workspaceID), actorID: actor.actorID.uuidString, shopID: market.id,
             assignedShopperID: actor.actorID.uuidString, canPlan: true, canReadBudget: false, hasPaidTools: false, roleRevision: 0,
             verifiedAt: now, validUntil: now.addingTimeInterval(30))
+        let earlier = ShoppingLedger(title: "Previous dinner")
+        let earlierAccess = DinnerAccessContext(scope: .local(workspaceID: workspaceID), actorID: actor.actorID.uuidString,
+            shopID: earlier.id, assignedShopperID: actor.actorID.uuidString, canPlan: true, canReadBudget: false,
+            hasPaidTools: false, roleRevision: 0, verifiedAt: now, validUntil: now.addingTimeInterval(30))
+        let canceled = await f.ledger.change(key: "cancel-earlier-dinner", reviewedPantryBasis: context.dinnerBasis,
+            authorize: { f.state.allowed }) { workspace in
+            let index = workspace.shops.count
+            workspace.shops.append(earlier)
+            workspace.selectedShopID = earlier.id
+            let old = try SavedDinnerReview(recipe: recipe, action: .planTonight, workspace: workspace, access: earlierAccess,
+                phase: .draft, at: self.now, pantryReview: (match, origin), reservedFoods: context.reservedFoods)
+            try old.apply(to: &workspace, access: earlierAccess, phase: .draft, at: self.now)
+            try workspace.shops[index].removeMeal(occurrenceID: XCTUnwrap(old.occurrenceID), at: self.now)
+            workspace.selectedShopID = market.id
+        }
+        XCTAssertTrue(canceled)
+        let priorList = try XCTUnwrap(f.ledger.workspace.shops.first { $0.id == earlier.id })
+        XCTAssertTrue(priorList.contributions(forLineID: rice).isEmpty)
+        XCTAssertFalse(f.pickup.journeys.contains { $0.id == earlier.id })
         let choice = try SavedDinnerReview(recipe: recipe, action: .plan(day: MealDay(date: now, timeZoneIdentifier: market.basis.timeZoneIdentifier),
             servings: Rational(3)), workspace: f.ledger.workspace, access: access, phase: .draft, at: now, pantryReview: (match, origin))
         let stock = try await pantry.load(at: now)
@@ -415,6 +434,9 @@ extension PantryPackModelRecoveryTests {
             freshDinnerBasis: freshAllocation.basis, authorize: { true })
         XCTAssertTrue(allocated, f.pickup.error ?? "")
         let beforeChoices = try await pantry.load(at: now)
+        let reusedClaims = beforeChoices.reservations.filter { [rice, lentils].contains($0.foodID) && $0.state != .released }
+        XCTAssertEqual(reusedClaims.count, 2)
+        XCTAssertEqual(Set(reusedClaims.map(\.foodID)), [rice, lentils])
         XCTAssertEqual(beforeChoices.lots, physicalBefore.lots)
         func decision() throws -> DinnerPurchaseDecision {
             try DinnerPurchaseDecision(ledger: f.ledger, pickup: f.pickup, shop: shop, occurrenceID: occurrence,
@@ -465,6 +487,7 @@ extension PantryPackModelRecoveryTests {
         XCTAssertTrue(DinnerPantryPurchases.lines(ledger: reopened, pickup: f.pickup, shop: reopenedShop, identity: actor).isEmpty)
         XCTAssertEqual(reopened.shop?.mealOccurrences, shop.mealOccurrences)
         XCTAssertEqual(reopened.workspace.shops.first { $0.id == weekend.id }, weekend)
+        XCTAssertEqual(reopened.workspace.shops.first { $0.id == earlier.id }, priorList)
         let after = try await pantry.load(at: now)
         XCTAssertEqual(after.reservations, beforeChoices.reservations)
         XCTAssertEqual(after.lots.first { $0.id == riceLot }?.count, .exact(cups(3)))

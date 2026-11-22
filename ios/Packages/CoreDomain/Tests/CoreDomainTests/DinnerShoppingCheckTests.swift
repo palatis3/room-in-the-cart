@@ -239,11 +239,81 @@ extension DinnerShoppingCheckTests {
         XCTAssertEqual(saved.shops[0].mealOccurrences[0], meal)
         XCTAssertEqual(saved.shops[0].contributions, shop.contributions)
         XCTAssertEqual(lot.count, .exact(q(3)))
+        var archived = saved
+        try archived.shops[0].removeMeal(occurrenceID: meal.id)
+        let later = ShoppingLedger(title: "Later market")
+        archived.shops.append(later); archived.selectedShopID = later.id
+        let laterAccess = DinnerAccessContext(scope: .local(workspaceID: ledgerID), actorID: "adult", shopID: later.id,
+            assignedShopperID: "adult", canPlan: true, canReadBudget: false, hasPaidTools: false, roleRevision: 0, verifiedAt: now,
+            validUntil: now.addingTimeInterval(30))
+        let next = try SavedDinnerReview(recipe: recipe, action: .planTonight, workspace: archived, access: laterAccess,
+            phase: .draft, at: now, pantryReview: (review, origin))
+        try next.apply(to: &archived, access: laterAccess, phase: .draft, at: now)
+        XCTAssertEqual(archived.packSelections, [choice])
+        XCTAssertNil(try archived.currentPackSelection(shopID: later.id, lineID: food, workspaceID: ledgerID,
+            currentCanonicalEvidence: current), "A's saved zero-purchase decision must never apply on B.")
+        XCTAssertThrowsError(try LedgerPackSelection(workspaceID: ledgerID, shop: archived.shops[1], lineID: food,
+            request: choice.request, selectedOfferID: offerA.id, at: now, source: "Later review", canonicalStockEvidence: current))
+        XCTAssertTrue(archived.dinnerAuthorizedPacks(in: [choice], shop: archived.shops[0], workspaceID: ledgerID,
+            originID: origin, actorID: "adult").isEmpty)
         lot = InventoryLot(id: lotID, foodID: food, name: "Arroz", source: source, revision: 2, location: .cupboard,
             unit: .cup, count: .exact(q(2)), observationID: UUID(), confirmedAt: now, updatedAt: now)
         let recounted = try proof(2)
         XCTAssertEqual(try recounted.confirmedQuantity(for: requirement)?.amount, .zero)
         XCTAssertNil(try saved.currentPackSelection(shopID: shop.id, lineID: food, workspaceID: ledgerID, currentCanonicalEvidence: recounted))
         XCTAssertEqual(saved.listLayout.groups(shop: shop).flatMap(\.lines).map(\.name), ["Coffee","Rice","Tomatoes"])
+    }
+}
+
+extension DinnerShoppingCheckTests {
+    func testCanceledDinnerAllowsSamePantryProductOnAnotherListOnlyAfterRetirement() throws {
+        let now = Date(), origin = UUID(), ledgerID = UUID(), food = UUID()
+        let ingredient = MealIngredient(name: "Rice", quantity: q(250, .gram))
+        let meal = MealTemplate(title: "Rice dinner", ingredients: [ingredient])
+        let match = try PantryMealMatcher.review(recipe: meal, reviewedFoods: [ingredient.id: food], globallyFreeLots: [
+            .init(id: UUID(), foodID: food, name: "Rice", usable: q(950, .gram), confirmedAt: now)
+        ], unresolvedFoods: [], profile: nil)
+        let a = ShoppingLedger(title: "Earlier list"), b = ShoppingLedger(title: "Later list")
+        var original = LedgerWorkspace(shops: [a, b], mealTemplates: [meal], selectedShopID: a.id)
+        func access(_ shop: ShoppingLedger) -> DinnerAccessContext {
+            .init(scope: .local(workspaceID: ledgerID), actorID: "adult", shopID: shop.id, assignedShopperID: "adult",
+                  canPlan: true, canReadBudget: false, hasPaidTools: false, roleRevision: 0,
+                  verifiedAt: now, validUntil: now.addingTimeInterval(30))
+        }
+        func plan(_ workspace: LedgerWorkspace, in shop: ShoppingLedger, reserved: Set<UUID> = []) throws -> SavedDinnerReview {
+            try SavedDinnerReview(recipe: meal, action: .planTonight, workspace: workspace, access: access(shop),
+                phase: .draft, at: now, pantryReview: (match, origin), reservedFoods: reserved)
+        }
+        let first = try plan(original, in: a)
+        try first.apply(to: &original, access: access(a), phase: .draft, at: now)
+        original.selectedShopID = b.id
+        let firstNeed = try XCTUnwrap(original.shops[0].contributions(forLineID: food).first?.id)
+        XCTAssertThrowsError(try plan(original, in: b))
+        var trashed = original
+        try trashed.shops[0].trash(lineID: food)
+        XCTAssertThrowsError(try plan(trashed, in: b), "The earlier meal still has this need.")
+        var handled = original
+        try handled.shops[0].handle(lineID: food, by: "Adult")
+        XCTAssertThrowsError(try plan(handled, in: b), "Handled also keeps the earlier meal's demand.")
+        try original.shops[0].removeMeal(occurrenceID: XCTUnwrap(first.occurrenceID))
+        var reopened = try JSONDecoder().decode(LedgerWorkspace.self, from: JSONEncoder().encode(original))
+        XCTAssertTrue(reopened.shops[0].contributions(forLineID: food).isEmpty)
+        XCTAssertThrowsError(try plan(reopened, in: b, reserved: [food]))
+        reopened.selectedShopID = a.id
+        XCTAssertThrowsError(try plan(reopened, in: a), "Historical grocery IDs must remain unique within their own list.")
+        reopened.selectedShopID = b.id
+        let second = try plan(reopened, in: b)
+        let earlier = reopened.shops[0]
+        try second.apply(to: &reopened, access: access(b), phase: .draft, at: now)
+        try second.apply(to: &reopened, access: access(b), phase: .draft, at: now)
+        try reopened.validate()
+        XCTAssertEqual(reopened.shops[0], earlier)
+        XCTAssertEqual(reopened.shops[1].lines.map(\.id), [food])
+        XCTAssertNotEqual(reopened.shops[1].contributions(forLineID: food).first?.id, firstNeed)
+        XCTAssertEqual(reopened.dinnerPantryLines(shop: reopened.shops[1], workspaceID: ledgerID, originID: origin, actorID: "adult"), [food])
+        XCTAssertTrue(reopened.dinnerPantryLines(shop: earlier, workspaceID: ledgerID, originID: origin, actorID: "adult").isEmpty)
+        XCTAssertTrue(reopened.packSelections.isEmpty, "The repeated product needs a new allocation and purchase review.")
+        reopened.shops[0] = handled.shops[0] // An older snapshot restores the named demand while the row remains handled.
+        XCTAssertTrue(reopened.dinnerPantryLines(shop: reopened.shops[1], workspaceID: ledgerID, originID: origin, actorID: "adult").isEmpty)
     }
 }

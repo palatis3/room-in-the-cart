@@ -162,6 +162,7 @@
       "CoreDomainTests.DinnerPlanningTests/testUnknownFeeTripOrAvailabilityDoesNotCrownWinnerAndBreakEvenIsCashOnly",
       "CoreDomainTests.DinnerPlanningTests/testWorkspaceRoundtripOldDocumentDefaultsEmptyAndBadReferenceRejected",
       "CoreDomainTests.DinnerShoppingCheckTests/testBowlDinnerForThreeShowsOnlyTomatoesAndKeepsAllOriginalNeeds",
+      "CoreDomainTests.DinnerShoppingCheckTests/testCanceledDinnerAllowsSamePantryProductOnAnotherListOnlyAfterRetirement",
       "CoreDomainTests.DinnerShoppingCheckTests/testLinkedProductsSurviveReopenInEnglishAndSpanishWithFullMealNeeds",
       "CoreDomainTests.DinnerShoppingCheckTests/testProductLinkRefusesPartialRepeatedUnknownAndAnExistingLineOnAnotherList",
       "CoreDomainTests.DinnerShoppingCheckTests/testRealReservationProofKeepsDinnerDemandAndExcludesOtherProtectedStockAfterRelaunch",

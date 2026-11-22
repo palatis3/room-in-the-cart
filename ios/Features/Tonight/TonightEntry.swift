@@ -656,8 +656,9 @@ struct TonightEntry: View {
     private func canLinkProducts(for recipe: MealTemplate) -> Bool {
         guard let scope, scope.adult.subject == nil, scope.adult.householdID == nil,
               pickup.currentDinnerActorID == scope.adult.actorID, !pickup.journeys.contains(where: { $0.id == destination }),
-              let match = model.reviews.first(where: { $0.recipe == recipe }) else { return false }
-        return (try? DinnerPantryProducts(review: match, workspace: ledger.workspace, originID: scope.inventory)) != nil
+              let input = model.input, let match = model.reviews.first(where: { $0.recipe == recipe }) else { return false }
+        return (try? DinnerPantryProducts(review: match, workspace: ledger.workspace, originID: scope.inventory,
+            destinationShopID: destination, reservedFoods: input.reservedFoods)) != nil
     }
 
     private func beginChoice(_ recipe: MealTemplate) {

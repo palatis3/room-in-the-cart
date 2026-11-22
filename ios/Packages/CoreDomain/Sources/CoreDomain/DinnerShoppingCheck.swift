@@ -73,8 +73,8 @@ public struct DinnerShoppingCheck {
 
 /// Allocate a fresh shopping identity only for an explicitly matched, fully
 /// covered ingredient. The canonical checkout allocator identifies food by
-/// shopping line ID. Reusing any existing line here could claim someone else's
-/// purchase, import history or meal, so an ambiguous match rejects the review.
+/// shopping line ID. A second shop can use the same pantry product after its
+/// earlier shopping row and named commitments have been retired.
 public struct DinnerPantryProducts: Codable, Equatable, Sendable {
     /// The existing pack format retains offer IDs on export and undo. This
     /// allows an orphaned choice to fail closed if its dinner receipt is absent.
@@ -84,6 +84,11 @@ public struct DinnerPantryProducts: Codable, Equatable, Sendable {
     public let matches: [UUID: UUID]
 
     public init(review: PantryMealMatcher.Review, workspace: LedgerWorkspace, originID: UUID) throws {
+        try self.init(review: review, workspace: workspace, originID: originID, destinationShopID: workspace.selectedShopID)
+    }
+
+    public init(review: PantryMealMatcher.Review, workspace: LedgerWorkspace, originID: UUID,
+                destinationShopID: UUID?, reservedFoods: Set<UUID> = []) throws {
         guard review.eligibility.eligible,
               review.preferenceRevision == workspace.dinnerPlanning.privateMealPreferences?.revision
         else { throw DinnerPlanningError.stalePreview }
@@ -97,7 +102,7 @@ public struct DinnerPantryProducts: Codable, Equatable, Sendable {
         else { throw DinnerPlanningError.reviewRequired("pantryProduct") }
         self.originID = originID
         self.matches = matches
-        try verifyNewLines(in: workspace)
+        try verifyNewLines(in: workspace, destinationShopID: destinationShopID, reservedFoods: reservedFoods)
     }
 
     private struct Binding: Codable {
@@ -123,14 +128,40 @@ public struct DinnerPantryProducts: Codable, Equatable, Sendable {
     }
 
     public func verifyNewLines(in workspace: LedgerWorkspace) throws {
-        let ids = Set(matches.values)
-        guard workspace.shops.allSatisfy({ shop in
-            shop.lines.allSatisfy { !ids.contains($0.id) }
-        }) else { throw DinnerPlanningError.reviewRequired("pantryProduct") }
+        try verifyNewLines(in: workspace, destinationShopID: workspace.selectedShopID)
+    }
+
+    /// A nil destination represents a new list. A row's UUID can appear only
+    /// once within its list, including rows in that list's history.
+    public func verifyNewLines(in workspace: LedgerWorkspace, destinationShopID: UUID?,
+                               reservedFoods: Set<UUID> = []) throws {
+        let products = Set(matches.values)
+        for shop in workspace.shops {
+            for line in shop.lines where products.contains(line.id) {
+                guard shop.id != destinationShopID, !reservedFoods.contains(line.id),
+                      !shop.hasOutstandingPantryNeed(for: line) else { throw DinnerPlanningError.reviewRequired("pantryProduct") }
+            }
+        }
     }
 
     func lineIDs(for recipe: MealTemplate) -> [UUID] {
         recipe.ingredients.map { matches[$0.id] ?? UUID() }
+    }
+}
+
+private extension ShoppingLedger {
+    func hasOutstandingPantryNeed(for line: ShoppingLine) -> Bool {
+        if !line.isHandled && !line.isTrashed { return true }
+        // Trash and Handled preserve named needs for cooking and restoration.
+        return contributions.contains { $0.lineID == line.id && $0.removedAt == nil &&
+            ($0.source.isMeal || $0.source.isProtected) }
+    }
+}
+
+extension LedgerWorkspace {
+    public func previouslyListedPantryProducts(in shopID: UUID, among products: Set<UUID>) -> Set<UUID> {
+        guard !products.isEmpty else { return [] }
+        return Set(shops.lazy.filter { $0.id != shopID }.flatMap { $0.lines.map(\.id) }).intersection(products)
     }
 }
 
@@ -149,7 +180,10 @@ extension LedgerWorkspace {
             return planned
         }
         guard !plans.isEmpty else { return [] }
-        let otherLines = Set(shops.filter { $0.id != shop.id }.flatMap { $0.lines.filter { !$0.isHandled && !$0.isTrashed }.map(\.id) })
+        let products = Set(plans.compactMap(\.pantryProducts).flatMap { $0.matches.values })
+        let otherLines = Set(shops.filter { $0.id != shop.id }.flatMap { other in
+            other.lines.filter { products.contains($0.id) && other.hasOutstandingPantryNeed(for: $0) }.map(\.id)
+        })
         let lines = Dictionary(uniqueKeysWithValues: shop.lines.map { ($0.id, $0) })
         let sources = Dictionary(grouping: shop.contributions.filter { $0.removedAt == nil }, by: \.lineID)
         let meals = Dictionary(uniqueKeysWithValues: shop.mealOccurrences.map { ($0.id, $0) })

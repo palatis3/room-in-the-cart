@@ -227,6 +227,7 @@ struct ShoppingDinnerPantry: DynamicProperty {
 }
 
 struct SavedDinnerProductChoice {
+    let reservedFoods: Set<UUID>
     let match: PantryMealMatcher.Review
     let basis: LedgerCanonicalPackStockEvidence.Basis
     let generation: UUID
@@ -261,10 +262,11 @@ struct SavedDinnerProductPicker: View {
                         let match = try PantryMealMatcher.review(recipe: recipe, reviewedFoods: matches,
                             globallyFreeLots: input.freeLots, unresolvedFoods: input.unresolvedFoods,
                             profile: input.workspace.dinnerPlanning.privateMealPreferences)
-                        _ = try DinnerPantryProducts(review: match, workspace: ledger.workspace, originID: input.basis.originID)
+                        _ = try DinnerPantryProducts(review: match, workspace: ledger.workspace, originID: input.basis.originID,
+                            destinationShopID: ledger.shop?.id, reservedFoods: input.reservedFoods)
                         guard authorize(), ledger.revision == input.ledgerRevision,
                               pickup.sourceWorkspaceID == input.basis.originID else { throw DinnerPlanningError.stalePreview }
-                        choose(.init(match: match, basis: input.basis, generation: pickup.privatePantryGeneration))
+                        choose(.init(reservedFoods: input.reservedFoods, match: match, basis: input.basis, generation: pickup.privatePantryGeneration))
                         dismiss()
                     } catch { failed = true }
                 }.disabled(matches.isEmpty)
@@ -391,6 +393,8 @@ private struct DinnerPurchaseChoices: View {
 }
 
 extension PantryPackStockReview.Context {
+    var reservedFoods: Set<UUID> { Set(snapshot.reservations.lazy.filter { $0.state != .released }.map(\.foodID)) }
+
     var dinnerBasis: LedgerCanonicalPackStockEvidence.Basis {
         .init(originID: snapshot.state.workspaceID, inventoryRevision: snapshot.state.revision,
             sourceHeads: mapping.sourceHeads.map { .init(journeyID: $0.id, revision: $0.revision) }
@@ -423,6 +427,8 @@ extension PantryPackStockReview.Context {
         checkout = try LedgerCheckoutAdapter.review(shop: shop, workspaceRevision: ledger.revision, previous: nil)
         let foods = Set(checkout.needs.map(\.orderLineID))
         let peers = context.snapshot.reservations.filter { foods.contains($0.foodID) && $0.state != .released }
+        let reused = ledger.workspace.previouslyListedPantryProducts(in: shop.id, among: linked)
+        guard reused.isDisjoint(with: peers.map(\.foodID)) else { throw DinnerPlanningError.reviewRequired("pantryProduct") }
         let coverage = Dictionary(uniqueKeysWithValues: context.snapshot.availability.reservations.map { ($0.id,$0) })
         // A new checkout may project every list line. Admit only older fully
         // backed, lot-specific protected claims, which allocate before our needs.
@@ -462,12 +468,18 @@ extension PantryPackStockReview.Context {
         let offers = (PackOffer(id: DinnerPantryProducts.atHomeOfferID, label: ledgerText("Confirmed food at home"), usableQuantity: nil, price: nil),
                       PackOffer(id: DinnerPantryProducts.alternateOfferID, label: ledgerText("Confirmed food at home"), usableQuantity: nil, price: nil))
         let current = DinnerPantryPurchases.lines(ledger: ledger, pickup: pickup, shop: shop, identity: identity, occurrenceID: occurrenceID)
+        let reused = workspace.previouslyListedPantryProducts(in: shop.id, among: linked)
         let remaining = linked.subtracting(current)
         guard !remaining.isEmpty else { throw DinnerPlanningError.stalePreview }
         selections = try shop.lines.filter { remaining.contains($0.id) }.map { line in
             let requirement = try LedgerPackRequirement.review(shop: shop, lineID: line.id, bindings: bindings)
             let evidence = try PantryPackStockReview.evidence(shop: shop, lineID: line.id, requirement: requirement,
                 bindings: bindings, context: context)
+            if reused.contains(line.id) {
+                let owned = Set(evidence.partition.compactMap { $0.binding.reservationID })
+                let physical = Set(claims.lazy.filter { $0.foodID == line.id }.map(\.id))
+                guard !owned.isEmpty, physical == owned else { throw DinnerPlanningError.reviewRequired("pantryProduct") }
+            }
             let request = ComparisonRequest(itemName: requirement.name, needed: requirement.quantity,
                 confirmedAtHome: try evidence.confirmedQuantity(for: requirement), protectedAmount: requirement.protectedQuantity,
                 offerA: offers.0, offerB: offers.1, itemCap: nil)

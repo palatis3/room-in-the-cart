@@ -47,7 +47,8 @@ import CoreDomain
         let now = Date()
         let context = access(identity, ledgerID: ledgerID, shopID: destination.id, now: now)
         let selection = try TonightDinnerSelection.prepare(match: match, destination: destination, createsPickup: destinationShopID == nil,
-            workspace: ledger.workspace, access: context, phase: phase(pickup, shopID: destination.id), now: now, plannedDate: plannedDate, pantryProductOrigin: linkPantryProducts ? basis.originID : nil)
+            workspace: ledger.workspace, access: context, phase: phase(pickup, shopID: destination.id), now: now, plannedDate: plannedDate, pantryProductOrigin: linkPantryProducts ? basis.originID : nil,
+            reservedFoods: linkPantryProducts ? current.reservedFoods : [])
         let estimate = try? TonightPurchaseEstimate.estimate(match, workspace: ledger.workspace,
             workspaceID: ledgerID, shopID: destinationShopID, at: now)
         return Review(selection: selection, identity: identity, ledgerID: ledgerID,
@@ -403,7 +404,7 @@ struct SavedDinnerHandoffView: View {
             }
             review = try SavedDinnerReview(recipe: recipe, action: requested, workspace: ledger.workspace, access: access,
                 phase: TonightPlanChoice.phase(pickup, shopID: access.shopID), at: now,
-                pantryReview: productChoice.map { ($0.match, $0.basis.originID) })
+                pantryReview: productChoice.map { ($0.match, $0.basis.originID) }, reservedFoods: productChoice?.reservedFoods ?? [])
             error = nil
         } catch { review = nil; self.error = message(error) }
     }
