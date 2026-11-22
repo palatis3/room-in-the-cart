@@ -14,6 +14,7 @@ struct ReceiptPrintedEvidence: Equatable {
     var storage: InventoryLocation?
     var uncertain = false
     private(set) var acceptsFieldNotes = false
+    private(set) var hasConflictingCurrency = false
 
     // A final amount must be distinct from an explicit unit price. Preserve currency ambiguity for review.
     private static let price = #/(?i)(?:US\$|USD\s*\$?|\$)\s*([0-9]{1,7}[.,][0-9]{2})(?:\s*USD)?\s*$/#
@@ -60,13 +61,19 @@ struct ReceiptPrintedEvidence: Equatable {
     private static func hasForeignCurrency(_ text: String) -> Bool {
         guard text.contains(where: \.isNumber) else { return false }
         // Measurement units such as g and L can also be local currency abbreviations.
-        let wording = text.replacing(measure, with: " ")
+        let wording = text.replacing(measure, with: "|").replacing(#/[():\[\]]/#, with: " ")
         if wording.unicodeScalars.contains(where: { $0.properties.generalCategory == .currencySymbol && $0 != "$" }) { return true }
         for match in wording.matches(of: currencyBeforePrice) {
             let token = match.1.uppercased()
+            if token.count == 1 {
+                // C$ and S/ are currency markers. The D in “Vitamin D $3.20” is a product letter.
+                let next = wording[match.1.endIndex...].first
+                if next == "$" || next == "/" && foreignCurrencyMarkers.contains(token) { return true }
+                continue
+            }
             if foreignCurrencyMarkers.contains(token) || (match.2 == "$" && dollarRegions.contains(token)) { return true }
         }
-        return wording.matches(of: currencyAfterPrice).contains { foreignCurrencyMarkers.contains($0.1.uppercased()) }
+        return wording.matches(of: currencyAfterPrice).contains { $0.1.count > 1 && foreignCurrencyMarkers.contains($0.1.uppercased()) }
     }
 
     static func isStandaloneAmount(_ text: String) -> Bool {
@@ -91,8 +98,8 @@ struct ReceiptPrintedEvidence: Equatable {
         guard !text.isEmpty, text.count <= 512, text.contains(where: \.isLetter),
               !text.contains("?"), !text.contains("�"), row.uncertainOCR != true else { kind = .unclear; uncertain = true; return }
         kind = .item
-        guard !text.contains(Self.mixed), !text.contains(Self.signedValue), !Self.hasForeignCurrency(text),
-              text == row.originalText || !Self.hasForeignCurrency(row.originalText) else { uncertain = true; return }
+        hasConflictingCurrency = Self.hasForeignCurrency(text) || (text != row.originalText && Self.hasForeignCurrency(row.originalText))
+        guard !text.contains(Self.mixed), !text.contains(Self.signedValue) else { uncertain = true; return }
         var candidate = text
         Self.removeUnitPrice(from: &candidate)
         if let total = candidate.firstMatch(of: Self.price) {
@@ -115,7 +122,7 @@ struct ReceiptPrintedEvidence: Equatable {
             // Check all the original wording before the total. Rate stripping above can
             // hide a second numeric basis that this simple merchandise form cannot resolve.
             let beforeTotal = text.dropLast(priceWording?.count ?? 0)
-            guard beforeTotal.trimmingCharacters(in: .whitespaces) == candidate,
+            guard !hasConflictingCurrency, beforeTotal.trimmingCharacters(in: .whitespaces) == candidate,
                   priceWording == nil || beforeTotal.last?.isWhitespace == true,
                   let item = candidate.wholeMatch(of: Self.itemWithUnresolvedNumbers),
                   item.2 == nil || priceWording == nil,
@@ -148,7 +155,10 @@ struct ReceiptPrintedEvidence: Equatable {
                 quantity = measured.0; unit = measured.1
             }
         }
-        if !row.priceNote.isEmpty {
+        if hasConflictingCurrency {
+            amount = nil
+            priceWording = nil
+        } else if !row.priceNote.isEmpty {
             let note = row.priceNote.trimmingCharacters(in: .whitespaces)
             if let total = note.wholeMatch(of: Self.price) {
                 amount = Self.normalizedAmount(total.1)

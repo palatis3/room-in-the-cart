@@ -424,11 +424,15 @@ import CoreDomain
                                 .receiptInputChrome()
                                 .focused($focusedField, equals: .receiptPrice(snapshot.id))
                         }
-                        if let proposal, proposal.acceptsFieldNotes, !edited.priceNote.isEmpty, proposal.amount == nil {
-                            receiptFormatHint(captureText("Enter the printed line total in USD, such as USD 4.82. Leave blank if the currency is unclear."),
+                        if let proposal, !edited.priceNote.isEmpty, proposal.amount == nil,
+                           proposal.acceptsFieldNotes || proposal.hasConflictingCurrency {
+                            receiptFormatHint(captureText(proposal.hasConflictingCurrency
+                                ? "The receipt shows another currency. Leave the USD line total blank."
+                                : "Enter the printed line total in USD, such as USD 4.82. Leave blank if the currency is unclear."),
                                               identifier: "scan.receipt.printedAmountHint")
                         }
-                        if let proposal, !proposal.acceptsFieldNotes {
+                        if let proposal, !proposal.acceptsFieldNotes,
+                           edited.priceNote.isEmpty || !proposal.hasConflictingCurrency {
                             receiptFormatHint(captureText("Check the reviewed line wording. You can enter quantities and payments separately in receipt details."),
                                               identifier: "scan.receipt.printedLineHint")
                         }

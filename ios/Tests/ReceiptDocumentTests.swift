@@ -283,7 +283,8 @@ import XCTest
             XCTAssertFalse(proposal(wording, quantity: note, price: "USD 3.20").uncertain)
         }
         for wording in ["2x Beans NZD $3.20", "2x Beans HKD $3.20", "2x Lentejas CLP $3,20",
-                        "2x Beans chf 3.20", "2x Beans 3.20 NZD", "2x Arroz HK $3,20",
+                        "2x Beans chf 3.20", "2x Beans 3.20 NZD", "2x Beans (NZD) $3.20",
+                        "2x Beans NZD: $3.20", "2x Beans ( NZD ) : $3.20", "2x Beans $3.20 (NZD)", "2x Arroz HK $3,20",
                         "2x Frijoles R$3,20", "2x Beans kr 3.20", "2x Arroz S/ 3,20", "2x Arroz CLP $320",
                         "2x Beans ¥3.20", "2x Arroz ₱3,20", "2x Frijoles pesos $3,20"] {
             for correction in ["", "3.20", "USD 3.20"] {
@@ -300,6 +301,22 @@ import XCTest
                                  ("EGGS GRADE A $3.20", "$3.20")] {
             XCTAssertEqual(proposal(wording).priceWording, price, wording)
         }
+        for letter in ["D", "C", "B", "E"] {
+            let name = "Vitamin " + letter
+            XCTAssertEqual(proposal(name + " $3.20").name, name)
+            XCTAssertEqual(proposal(name + " $3.20").priceWording, "$3.20")
+            XCTAssertEqual(proposal("2x " + name + " $3.20").priceWording, "$3.20")
+        }
+        let measured = proposal("Medicine Vitamin D 2 units USD 3.20")
+        XCTAssertEqual(measured.name, "Medicine Vitamin D")
+        XCTAssertEqual(measured.quantity, "2")
+        XCTAssertEqual(measured.priceWording, "USD 3.20")
+        let renamedForeign = ScanReceiptLine(originalText: "2x Beans (NZD) $3.20", reviewedText: "Plain beans",
+                                             quantityNote: "2 units", priceNote: "USD 3.20")
+        let correctedFields = ReceiptPrintedEvidence(renamedForeign, knownStorage: [:])
+        XCTAssertEqual(correctedFields.name, "Plain beans")
+        XCTAssertEqual(correctedFields.quantity, "2")
+        XCTAssertNil(correctedFields.amount)
         let marked = proposal("2x Canned lentils $3.20", quantity: "2 units", price: "3,20")
         XCTAssertEqual(marked.priceWording, "$3.20")
         XCTAssertEqual(marked.quantity, "2")

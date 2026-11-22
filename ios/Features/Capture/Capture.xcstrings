@@ -1,6 +1,23 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "The receipt shows another currency. Leave the USD line total blank.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The receipt shows another currency. Leave the USD line total blank."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El recibo indica otra moneda. Deja en blanco el total de la línea en USD."
+          }
+        }
+      }
+    },
     "Enter individual items as “2 units” or a measure such as “500 g”. Leave blank if you only know the number of packages.": {
       "extractionState": "manual",
       "localizations": {
