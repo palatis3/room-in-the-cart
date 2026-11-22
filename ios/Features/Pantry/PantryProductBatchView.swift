@@ -20,6 +20,7 @@ struct PantryProductBatchView: View {
     @State private var editingCount = false
     @State private var repeatedProductID: UUID?
     @State private var editingProduct: PantryProductBatch.Candidate?
+    @State private var reviewingLookup = false
     @State private var review: PantryReceiptReview?
     @State private var result: String?
     @State private var inputMessage: String?
@@ -50,7 +51,7 @@ struct PantryProductBatchView: View {
         didFinishWithLot = { _ in }
         _batch = State(initialValue: lookupBatch)
         _initialAccess = State(initialValue: access)
-        _editingProduct = State(initialValue: lookupBatch.candidates.first)
+        _reviewingLookup = State(initialValue: true)
     }
 
     private var confirmationText: String {
@@ -75,6 +76,17 @@ struct PantryProductBatchView: View {
     }
 
     var body: some View {
+        if reviewingLookup, authorized, let row = batch.candidates.first {
+            candidateEditor(row, finishEditing: { reviewingLookup = false }, current: { authorized })
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) { Button(pantryText("Cancel")) { dismiss() } }
+                }
+        } else {
+            batchForm
+        }
+    }
+
+    private var batchForm: some View {
         WorkingForm {
             if !canPresent {
                 if working, model.busy, model.phase == .ready, scene == .active, let initialAccess,
@@ -291,11 +303,9 @@ struct PantryProductBatchView: View {
         .sheet(item: $editingProduct) { selection in
             NavigationStack {
                 if authorized, let row = batch.candidates.first(where: { $0.id == selection.id }) {
-                    PantryProductCandidateEditor(row: captureDraftBinding(row, in: $batch.candidates),
-                        model: model, access: access, atHome: atHome, deliveries: atHome ? [] : model.productDeliveries, scope: catalogScope.id, focusCount: editingCount,
-                        finishEditing: { editingProduct = nil }, correctBarcode: correctBarcode, authorized: {
-                            authorized && editingProduct?.id == selection.id && batch.candidates.contains { $0.id == selection.id }
-                        })
+                    candidateEditor(row, focusCount: editingCount, finishEditing: { editingProduct = nil }, current: {
+                        authorized && editingProduct?.id == selection.id && batch.candidates.contains { $0.id == selection.id }
+                    })
                 }
             }
         }
@@ -334,8 +344,7 @@ struct PantryProductBatchView: View {
         }
         if #available(iOS 18, *) {
             NavigationLink {
-                PantryProductCandidateEditor(row: captureDraftBinding(row, in: $batch.candidates),
-                    model: model, access: access, atHome: atHome, deliveries: atHome ? [] : model.productDeliveries, scope: catalogScope.id, correctBarcode: correctBarcode, authorized: { authorized })
+                candidateEditor(row, current: { authorized })
             } label: { label }
         } else {
             // A link attached to this mutable form row can stall the iOS 17 navigation stack.
@@ -347,6 +356,14 @@ struct PantryProductBatchView: View {
                 label.frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
             }.buttonStyle(.plain)
         }
+    }
+
+    private func candidateEditor(_ row: PantryProductBatch.Candidate, focusCount: Bool = false,
+                                 finishEditing: (() -> Void)? = nil, current: @escaping () -> Bool) -> some View {
+        PantryProductCandidateEditor(row: captureDraftBinding(row, in: $batch.candidates),
+            model: model, access: access, atHome: atHome, deliveries: atHome ? [] : model.productDeliveries,
+            scope: catalogScope.id, focusCount: focusCount, finishEditing: finishEditing,
+            correctBarcode: correctBarcode, authorized: current)
     }
 
     private func scanned(_ code: CapturedBarcode) {
@@ -422,10 +439,7 @@ struct PantryProductBatchView: View {
         guard let access, access.scope.origin == batch.workspaceID, access.authorized(), !working else { return }
         if initialAccess == nil { initialAccess = access }
         guard initialAccess?.scope == access.scope else { return }
-        do {
-            recovery = try memory.pending(access.scope)
-            if recovery != nil { editingProduct = nil }
-        }
+        do { recovery = try memory.pending(access.scope) }
         catch { recoveryReadFailed = true }
     }
 

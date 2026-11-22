@@ -338,7 +338,6 @@ import XCTest
         XCTAssertTrue([evidence.label, evidence.value as? String ?? ""].joined().contains("012345678905"), evidence.debugDescription)
         XCTAssertFalse(remember.isEnabled)
         fill("Unsaved cereal", into: "productBatch.productName", requireDone: true)
-        tap(app.buttons["productBatch.finishEditing"])
         tap(app.buttons["Cancel"])
         tap(resolve)
         XCTAssertTrue(review.exists)
