@@ -291,6 +291,7 @@ import XCTest
         for wording in ["Service fee 0.45", "2x TOTAL 3.20", "Fecha: 2024-11-18", "2x Lentejas EUR 3,20",
                         "2x Beans 2 kg 3.20", "2x Beans 4 x 2 3.20", "Beans 3.20 4.20", "2x Beans @ 1.60",
                         "Beans 1.60 USD 3.20", "2x Beans 1.60 USD 3.20", "2x Beans NZ$3.20",
+                        "2x Beans at $1.60 USD 3.20", "2x Beans 3.20 at $1.60",
                         "2x Beans -3.20", "2x Beans ? 3.20", "2x Beans per pack 3.20"] {
             let result = proposal(wording, quantity: "2 units", price: "USD 3.20")
             XCTAssertNil(result.quantity, wording)

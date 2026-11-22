@@ -80,9 +80,13 @@ struct ReceiptPrintedEvidence: Equatable {
         }
         Self.removeUnitPrice(from: &candidate)
         if candidate.contains(Self.otherNumbers) && candidate.matches(of: Self.measure).isEmpty {
-            guard let item = candidate.wholeMatch(of: Self.itemWithUnresolvedNumbers),
+            // Check all the original wording before the total. Rate stripping above can
+            // hide a second numeric basis that this simple merchandise form cannot resolve.
+            let beforeTotal = text.dropLast(priceWording?.count ?? 0)
+            guard beforeTotal.trimmingCharacters(in: .whitespaces) == candidate,
+                  priceWording == nil || beforeTotal.last?.isWhitespace == true,
+                  let item = candidate.wholeMatch(of: Self.itemWithUnresolvedNumbers),
                   item.2 == nil || priceWording == nil,
-                  priceWording.map({ text.dropLast($0.count).last?.isWhitespace == true }) ?? true,
                   !text.contains(Self.nonItem), !text.contains(Self.rateByUnit),
                   !text.contains(Self.unitPrice), !text.contains(Self.packageBasis) else {
                 amount = nil; priceWording = nil; uncertain = true; return
