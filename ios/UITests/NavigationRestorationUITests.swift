@@ -213,7 +213,12 @@ import XCTest
         let one = app.keyboards.keys["1"]
         XCTAssertTrue(one.waitForExistence(timeout: 5), "The first keyboard should offer numbers for the picked amount.")
         one.tap()
-        tap(app.buttons["tripPartKeyboardDone"])
+        let dismissKeyboard = app.buttons["tripPartKeyboardDone"]
+        XCTAssertTrue(dismissKeyboard.waitForExistence(timeout: 5))
+        XCTAssertEqual(dismissKeyboard.label, "Dismiss keyboard")
+        tap(dismissKeyboard)
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+        XCTAssertTrue(picked.exists)
         tap(app.buttons["tripSavePart"])
         let store = app.navigationBars["Shop in store"]
         tap(store.buttons["Done"])
