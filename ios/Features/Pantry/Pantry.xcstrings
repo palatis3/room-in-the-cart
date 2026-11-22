@@ -1,6 +1,22 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Hide keyboard": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide keyboard"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ocultar teclado"
+          }
+        }
+      }
+    },
     "I have about half a bottle of ketchup left": {
       "localizations": {
         "en": {
@@ -11823,18 +11839,18 @@
         }
       }
     },
-    "Edit your words and try again. Include the food and what you used, what remains, or the date you want to check.": {
+    "Nothing changed. Try one instruction, like “I used two eggs.”": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Edit your words and try again. Include the food and what you used, what remains, or the date you want to check."
+            "value": "Nothing changed. Try one instruction, like “I used two eggs.”"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Modifica el texto y vuelve a intentarlo. Indica el alimento y cuánto usaste, cuánto queda o qué fecha quieres consultar."
+            "value": "La despensa sigue igual. Prueba con una instrucción, por ejemplo: «Usé dos huevos»."
           }
         }
       }

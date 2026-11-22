@@ -1,3 +1,4 @@
+import UIKit
 import XCTest
 
 /// Uses ordinary private pantry records, the shipping review controls and the system keyboard.
@@ -143,6 +144,34 @@ import XCTest
 
     func testEnglishLowStockKeepsItsWordingAndOffersRestockingSeparately() {
         checkLowStock(spanish: false)
+    }
+
+    func testSpanishLargeTextKeepsPantryInputAndClarificationVisible() {
+        openPantry(reset: true, spanish: true, accessibilityText: true)
+        tapPantryEntry(app.buttons["pantry.voiceEntry"])
+        let words = "Usé dos huevos y algo de harina. Me queda menos de media botella de kétchup. Se acabó el pan blanco."
+        fill(words, into: "pantry.voiceText")
+        let field = element("pantry.voiceText")
+        let review = app.buttons["pantry.voiceReview"]
+        let keyboard = app.keyboards.firstMatch
+        let editingVisible = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard keyboard.exists, review.exists, review.isHittable else { return false }
+            let top = max(field.frame.minY, self.app.navigationBars.firstMatch.frame.maxY)
+            let bottom = min(field.frame.maxY, review.frame.minY)
+            return bottom - top >= 40 && review.frame.height < self.app.frame.height / 4
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [editingVisible], timeout: 8), .completed)
+        review.tap()
+        let message = element("pantry.voiceStatus")
+        let messageVisible = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard message.exists, message.isHittable, !keyboard.exists else { return false }
+            return message.frame.minY >= self.app.navigationBars.firstMatch.frame.maxY - 2 &&
+                message.frame.minY < self.app.frame.midY
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [messageVisible], timeout: 8), .completed)
+        XCTAssertTrue(message.label.contains("La despensa sigue igual"))
+        XCTAssertEqual(field.value as? String, words)
+        XCTAssertFalse(app.buttons["pantry.voiceConfirm"].exists)
     }
 
     func testSpanishLowStockKeepsItsWordingAndOffersRestockingSeparately() {
@@ -487,12 +516,15 @@ import XCTest
         XCTAssertFalse(system.alerts.firstMatch.exists)
     }
 
-    private func openPantry(reset: Bool, spanish: Bool = false, expectEmptyShop: Bool = false) {
+    private func openPantry(reset: Bool, spanish: Bool = false, expectEmptyShop: Bool = false, accessibilityText: Bool = false) {
         app.launchArguments = [
             "--ui-testing", "-AppleLanguages", spanish ? "(es)" : "(en)",
             "-AppleLocale", spanish ? "es_US" : "en_US"
         ]
         if reset { app.launchArguments.append("--reset-test-workspace") }
+        if accessibilityText {
+            app.launchArguments += ["-UIPreferredContentSizeCategoryName", UIContentSizeCategory.accessibilityExtraExtraExtraLarge.rawValue]
+        }
         app.launch()
         if expectEmptyShop {
             tap(app.tabBars.buttons[spanish ? "Compras" : "Shop"])
