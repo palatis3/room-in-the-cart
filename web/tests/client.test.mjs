@@ -1767,3 +1767,55 @@ test('posting suspension keeps cook instructions and reopens an editable suggest
  assert.equal(root.querySelector('#correction').value,'Keep one portion');
  assert.doesNotMatch(root.textContent,/Receipt unconfirmed|Access has ended/);
 });
+
+for (const [language, edit, retry, refresh, unavailable] of [
+ ['en','Edit','Retry','Refresh','This edit is unavailable. Select Refresh to check Your requests before retrying.'],
+ ['es','Editar','Reintentar','Actualizar','No se puede editar esta solicitud ahora. Selecciona Actualizar para revisar Tus solicitudes antes de volver a intentarlo.']
+]) {
+ for (const mode of ['immediate', 'immediate with storage', 'queued retry']) {
+  test(`an unavailable request edit preserves the original retry in ${language} (${mode})`,async t=>{
+   const active={...session(),queueConsent:mode!=='immediate',canSetRequestQueue:true};
+   const outbox=new Outbox(new IDBFactory()), commands=[];
+   let row=own(), connected=true, accepted=false, reads=0;
+   const api=fakeAPI({
+    session:async()=>{if(!connected)throw new ApiError('network',0);return active;},
+    requests:async()=>{reads++;return [row];},
+    command:async(_,c)=>{
+     commands.push(structuredClone(c));
+     if(!accepted)throw new ApiError('unavailable',404);
+     row={...row,revision:2,originalItem:c.body.originalItem,ownQuantity:c.body.ownQuantity};
+     return row;
+    }
+   });
+   const {root,dom}=await setup(api,language,outbox);t.after(()=>dom.window.close());
+   click(root,edit);type(dom,'item','Rolled oats at Harbor Market');type(dom,'amount','400 g');
+   connected=mode!=='queued retry';submit(root,dom);submit(root,dom);await waitForIdle(root);
+   if(mode==='queued retry'){
+    assert.deepEqual(commands,[]);
+    connected=true;click(root,retry);await waitForIdle(root);
+   }
+   assert.equal(root.querySelector('[role=status]').textContent,unavailable);
+   assert.equal(root.querySelector('[data-request-id] h3').textContent,own().originalItem);
+   assert.equal(commands.length,1);assert.equal(commands[0].kind,'request.edit');
+   const original=commands[0], before=reads;
+   click(root,refresh);await waitForIdle(root);
+   assert.ok(reads>before);assert.deepEqual(commands,[original]);
+   assert.equal(root.querySelector('[role=status]').textContent,'');
+   accepted=true;
+   if(mode==='immediate'){
+    assert.match(root.querySelector('form').textContent,/Rolled oats at Harbor Market/);
+    assert.match(root.querySelector('form').textContent,/400 g/);
+    submit(root,dom);
+   }else{
+    const [saved]=await outbox.list(scopeFor(active));assert.deepEqual(saved.command,original);
+    const reopened=await setup(api,language,outbox);t.after(()=>reopened.dom.window.close());
+    click(reopened.root,retry);await waitForIdle(reopened.root);
+    assert.equal(reopened.root.querySelector('[data-request-id] h3').textContent,'Rolled oats at Harbor Market');
+    assert.deepEqual(await outbox.list(scopeFor(active)),[]);
+   }
+   await waitForIdle(root);
+   assert.deepEqual(commands,[original,original]);
+   assert.equal(row.requestId,own().requestId);assert.equal(row.ownQuantity,'400 g');
+  });
+ }
+}

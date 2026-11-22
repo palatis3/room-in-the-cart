@@ -136,6 +136,7 @@ const es: Record<string, string> = {
   'Finish or discard your current draft first.':'Primero termina o descarta el borrador actual.',
   'Replace your current draft with this request?':'¿Quieres reemplazar tu borrador actual con esta solicitud?',
   'Discard current draft':'Descartar el borrador actual',
+  'This edit is unavailable. Select Refresh to check Your requests before retrying.':'No se puede editar esta solicitud ahora. Selecciona Actualizar para revisar Tus solicitudes antes de volver a intentarlo.',
   'This request is no longer available for correction.':'Esta solicitud ya no se puede corregir.',
   'Send follow-up':'Enviar aclaración',
   'This request changed. Review its current status.':'La solicitud cambió. Revisa su estado actual.',

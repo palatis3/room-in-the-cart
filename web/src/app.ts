@@ -26,6 +26,7 @@ interface SafetyReview {
 type Draft = {item:string; amount:string; route:'current'|'next'; editing:OwnRequest|null; followup:string|null};
 const blank = ():Draft => ({item:'',amount:'',route:'current',editing:null,followup:null});
 const unavailableInvitationNotice = 'This invitation is unavailable. Ask your household for a new invitation.';
+const unavailableEditNotice = 'This edit is unavailable. Select Refresh to check Your requests before retrying.';
 const statuses:Record<string,string> = {pending:'Received',clarified:'Needs clarification',added:'Added to the pickup',deferred:'Saved for next shop',handled:'Handled',dismissed:'Dismissed',withdrawn:'Withdrawn'};
 const proposalNotices:Record<OwnProposal['status'],string> = {
   pending:'Proposal received. The shopper must review it before anything changes.',
@@ -38,6 +39,9 @@ function reviewScope(session: Session): string {
 }
 function isPostingSuspended(error:unknown):boolean {
   return error instanceof ApiError&&error.status===403&&error.code==='shared_posting_unavailable';
+}
+function isUnavailableRequestEdit(command:Command,error:unknown):boolean {
+  return command.kind==='request.edit' && error instanceof ApiError && error.status===404 && error.code==='unavailable';
 }
 function isRequestRevisionConflict(error:unknown):boolean {
   return error instanceof ApiError && error.status===409 && (error.code==='followup_required'||error.code==='stale_base');
@@ -330,8 +334,8 @@ export class WebApp {
       }
     } else {this.pending=[];await this.outbox.clear().catch(()=>{});}
     if(!this.pending.length&&this.notice==='Saved on this browser. Receipt unconfirmed.')this.notice='';
-    // Fresh authorized content supersedes a prior access denial, not receipt or storage warnings.
-    if(this.session===fresh&&this.notice==='Access has ended. Ask your household for a new invitation.') {
+    // The fresh read resolves an earlier prompt to check access or review the current request.
+    if(this.session===fresh&&(this.notice===unavailableEditNotice||this.notice==='Access has ended. Ask your household for a new invitation.')) {
       this.notice='';this.failurePurpose=null;
     }
   }
@@ -897,6 +901,11 @@ export class WebApp {
         this.review=false;this.retryCommand=null;
         await this.fail(error,'mutation',persisted?p:undefined);return;
       }
+      if(isUnavailableRequestEdit(command,error)) {
+        if(persisted)this.showQueued(p);
+        this.notice=unavailableEditNotice;
+        return;
+      }
       if(command.kind==='request.edit' && isRequestRevisionConflict(error)) {
         if(persisted)await this.outbox.remove(p.id,p.scope);
         this.retryCommand=null;this.review=false;
@@ -998,6 +1007,10 @@ export class WebApp {
           const marked=await this.outbox.reviewPending(p.id,p.scope,'wording');
           if(marked)this.pending=this.pending.map(entry=>entry.id===p.id?marked:entry);
           this.notice='Edit the wording before sharing it with the household.';return;
+        }
+        if(isUnavailableRequestEdit(p.command,error)) {
+          this.notice=unavailableEditNotice;
+          return;
         }
         if(p.command.kind!=='request.edit' || !isRequestRevisionConflict(error))throw error;
         await this.outbox.reviewPending(p.id,p.scope,'mark');
