@@ -10,6 +10,10 @@ export interface Session {
 }
 export interface RequestPickup {shopId:string;createdAt:string;nextShopOnly:boolean}
 export interface BrowserAuthState { available:boolean; authenticated:boolean; csrf:string|null }
+export interface InviteOffer {
+  householdLabel: string;
+  role: 'adult_contributor' | 'helper_read' | 'helper_edit';
+}
 export interface InviteRedemption {
   householdId: string; memberId: string; role: 'contributor' | 'helper' | 'editor'; grantId?: string;
 }
@@ -209,9 +213,15 @@ export class API {
     const result=record(await this.call('/v1/auth/session','DELETE',undefined,csrf));if(result.signedOut!==true)return invalid();return{providerRevoked:boolean(result.providerRevoked)};
   }
   async session(): Promise<Session | null> { return parseSession(await this.call('/v1/session')); }
-  async redeem(token: string, csrf: string | undefined, review: {adultAttestation: boolean; alias?: string; defaultAliasLanguage?: Language}): Promise<InviteRedemption> {
+  async previewInvite(token: string, csrf: string, adultAttestation: boolean): Promise<InviteOffer> {
+    if (!token.trim() || token.length > 4096 || !csrf || !adultAttestation) throw new ApiError('invalid_entry', 422);
+    const offer = record(await this.call('/v1/invites/preview', 'POST', {token, adultAttestation:true}, csrf));
+    if (offer.role !== 'adult_contributor' && offer.role !== 'helper_read' && offer.role !== 'helper_edit') return invalid();
+    return {householdLabel:text(offer.householdLabel, 80), role:offer.role};
+  }
+  async redeem(token: string, csrf: string | undefined, review: {adultAttestation: boolean; alias?: string; defaultAliasLanguage?: Language; reviewedOffer: InviteOffer}): Promise<InviteRedemption> {
     if (!token.trim() || token.length > 4096 || !review.adultAttestation) throw new ApiError('invalid_entry', 422);
-    const d = record(await this.call('/v1/invites/redeem', 'POST', {token, intent:'join', adultAttestation:true,
+    const d = record(await this.call('/v1/invites/redeem', 'POST', {token, intent:'join', adultAttestation:true, reviewedOffer:review.reviewedOffer,
       ...(review.alias?.trim() ? {alias:text(review.alias.trim(), 80)} : {})}, csrf, undefined,
       review.defaultAliasLanguage ? {'Accept-Language':review.defaultAliasLanguage} : {}));
     if (d.role !== 'contributor' && d.role !== 'helper' && d.role !== 'editor') return invalid();

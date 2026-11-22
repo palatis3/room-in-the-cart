@@ -1,5 +1,5 @@
 import { brandName } from './brand.js';
-import { API, ApiError, isContributorSession, type BrowserAuthState,type RequestPickup,type Session, type OwnRequest, type ReadRequest, type Command, type CookView, type InviteRedemption, prepareProposal, type ProposalIntent, type ProposalReceipt, type OwnProposal, type ReportField, type ReportReason, type SafetyAction } from './api.js';
+import { API, ApiError, isContributorSession, type BrowserAuthState,type RequestPickup,type Session, type OwnRequest, type ReadRequest, type Command, type CookView, type InviteRedemption, type InviteOffer, prepareProposal, type ProposalIntent, type ProposalReceipt, type OwnProposal, type ReportField, type ReportReason, type SafetyAction } from './api.js';
 import { Outbox, scopeFor, type Pending } from './outbox.js';
 import { languageFor, translate, type Language } from './i18n.js';
 import {browserSignOutPending,resumeBrowserSignOut,setBrowserSignOutPending} from './browser-sign-out.js';
@@ -25,6 +25,8 @@ interface SafetyReview {
 }
 type Draft = {item:string; amount:string; route:'current'|'next'; editing:OwnRequest|null; followup:string|null};
 const blank = ():Draft => ({item:'',amount:'',route:'current',editing:null,followup:null});
+const invitationOfflineNotice = 'Couldn’t check this invitation. Reconnect and try again.';
+const inviteReviewWindowMs = 2 * 60_000;
 const unavailableInvitationNotice = 'This invitation is unavailable. Ask your household for a new invitation.';
 const unavailableEditNotice = 'This edit is unavailable. Select Refresh to check Your requests before retrying.';
 const statuses:Record<string,string> = {pending:'Received',clarified:'Needs clarification',added:'Added to the pickup',deferred:'Saved for next shop',handled:'Handled',dismissed:'Dismissed',withdrawn:'Withdrawn'};
@@ -77,6 +79,11 @@ export class WebApp {
   private consent = false;
   private adultAttestation = false;
   private inviteAlias = '';
+  private invitationCodeDraft = '';
+  private invitationOffer:InviteOffer|null = null;
+  private offerCheckedUntil = 0;
+  private uncertainJoin:{offer:InviteOffer;language:Language}|null = null;
+  private previewGeneration = 0;
   private redemption:InviteRedemption|null = null;
   private pendingInvitation:string|null = null;
   // A live draft keeps its online receipt identity across changes to offline storage permission.
@@ -116,17 +123,30 @@ export class WebApp {
       this.failurePurpose=null;
       this.historySuspended=true;
     }
+    if (purpose==='load') this.invitationOffer=null;
+    const previousOffer=this.invitationOffer;
     this.joinedSession=null;
     this.busy=true; this.render();
     const historyGeneration=this.historyGeneration;
-    try { await action(); if(purpose==='load'&&!this.historyAway&&historyGeneration===this.historyGeneration)this.historySuspended=false; if(purpose==='load'&&this.failurePurpose==='load'){this.notice='';this.failurePurpose=null;} } catch(error) { await this.fail(error,purpose); }
+    try {
+      await action();
+      if(purpose==='load' && !this.historyAway && historyGeneration===this.historyGeneration){
+        this.historySuspended=false;
+        if(this.failurePurpose==='load'){this.notice='';this.failurePurpose=null;}
+        if(openingInvitation===null)await this.checkInvitation();
+      }
+    } catch(error) {
+      await this.fail(error,purpose);
+    }
     finally {
       // Bind the latest link only after the existing session or sign-in recovery was checked.
       if (openingInvitation!==null && this.pendingInvitation===openingInvitation && !this.historySuspended) {
         this.invitation=openingInvitation;
         this.pendingInvitation=null;
       }
-      this.busy=false;this.render();this.root.querySelector<HTMLElement>('[role="status"]')?.focus();
+      this.busy=false;this.render();
+      const focus=this.invitationOffer && this.invitationOffer!==previousOffer ? '#invitation-household' : '[role="status"]';
+      this.root.querySelector<HTMLElement>(focus)?.focus();
       if(this.refreshPending){this.refreshPending=false;void this.start();}
     }
   }
@@ -139,7 +159,7 @@ export class WebApp {
   suspendForHistory():void {
     // Remove private DOM before the browser can retain a history snapshot. Keep
     // unsent work in memory until a fresh session confirms the same scope.
-    this.historyAway=true;this.historySuspended=true;this.historyGeneration++;this.render();
+    this.invitationOffer=null;this.historyAway=true;this.historySuspended=true;this.historyGeneration++;this.render();
   }
   resumeFromHistory():void {
     this.historyAway=false;
@@ -157,7 +177,7 @@ export class WebApp {
     if (this.signOutPending) return;
     // Reopening a single-use link must preserve its in-flight or accepted redemption.
     if (this.pendingInvitation===null && token===this.invitation && (this.busy || this.redemption)) return;
-    this.pendingInvitation=token;
+    this.invitationOffer=null;this.pendingInvitation=token;
     if (this.busy) {
       this.refreshPending=true;
       this.render();
@@ -185,6 +205,9 @@ export class WebApp {
     this.redemption=null;
     this.adultAttestation=false;
     this.inviteAlias='';
+    this.invitationOffer=null;
+    this.uncertainJoin=null;
+    this.invitationCodeDraft='';
   }
   private adoptBrowserAuth(fresh:BrowserAuthState|null):void {
     const previous=this.browserAuth;
@@ -195,7 +218,19 @@ export class WebApp {
     }
     this.browserAuth=fresh;
   }
+  concealOfflineInvitation():void {
+    if(!this.invitation || !this.adultAttestation || this.redemption || this.uncertainJoin)return;
+    this.previewGeneration++;
+    this.invitationOffer=null;
+    this.notice=invitationOfflineNotice;
+    this.render();
+  }
   checkExpiry():void {
+    if(this.invitationOffer && Date.now()>=this.offerCheckedUntil){
+      this.invitationOffer=null;
+      this.notice='Check the invitation again to see its current details.';
+      this.render();
+    }
     if (this.session?.requestQueueUntil && Date.parse(this.session.requestQueueUntil) <= Date.now()) {
       const expiredScope=scopeFor(this.session);
       const {requestQueueGrant, requestQueueUntil, ...current} = this.session;
@@ -243,6 +278,10 @@ export class WebApp {
       await this.outbox.retainScope(scopeFor(fresh)).catch(()=>{});
     }
     const previous=this.session;
+    if(previous && fresh && previous.csrf!==fresh.csrf && this.invitation!==null && !this.redemption){
+      this.clearInvitationDraft();
+      this.notice='Your sign-in changed. Reopen the invitation you want to use.';
+    }
     if(!previous&&fresh&&this.browserAuth&&(this.invitation!==null||this.pendingInvitation!==null)){
       // A different tab can activate a household while this invitation is open.
       try {
@@ -572,89 +611,159 @@ export class WebApp {
     }
     main.append(form);
   }
+  private async checkInvitation():Promise<void> {
+    const token=this.invitation?.trim(), csrf=this.session?.csrf??this.browserAuth?.csrf;
+    if (!token || !csrf || !this.adultAttestation || this.redemption || this.uncertainJoin || this.pendingInvitation!==null || this.signOutPending) return;
+    const generation=this.historyGeneration;
+    if(this.root.ownerDocument.defaultView?.navigator.onLine===false){this.notice=invitationOfflineNotice;return;}
+    const previewGeneration=++this.previewGeneration;
+    const current=()=>previewGeneration===this.previewGeneration && generation===this.historyGeneration && !this.historyAway && !this.signOutPending &&
+      this.pendingInvitation===null && this.invitation===token && this.adultAttestation &&
+      (this.session?.csrf??this.browserAuth?.csrf)===csrf;
+    this.invitationOffer=null;
+    try {
+      const offer=await this.api.previewInvite(token,csrf,this.adultAttestation);
+      if(current()){
+        this.invitationOffer=offer;
+        this.offerCheckedUntil=Date.now()+inviteReviewWindowMs;
+        if(this.notice===invitationOfflineNotice || this.notice==='Check the invitation again to see its current details.')this.notice='';
+      }
+    } catch(error) {
+      if(!current())return;
+      if(error instanceof ApiError && error.status===404){
+        this.clearInvitationDraft();this.invitation='';this.notice=unavailableInvitationNotice;
+      } else if(error instanceof ApiError && [401,403].includes(error.status)){
+        this.clearInvitationDraft();
+        throw error;
+      } else {
+        this.notice=invitationOfflineNotice;
+      }
+    }
+  }
   private renderInvite(main:HTMLElement,status:HTMLElement):void {
     if(!this.session&&!this.browserAuth?.authenticated){this.renderLogin(main);return;}
-
-    const hasCode = Boolean(this.invitation?.trim());
-    main.append(this.el('h1', this.t(hasCode ? 'Continue with your invitation' : 'Enter an invitation code')));
-    if (!this.redemption) {
-      if(!hasCode)main.append(this.el('p',this.t('Open the link from your household, or enter its invitation code below.')));
-      main.append(this.el('p',this.t('You’ll see the household name after you join. Before joining, ask the person who invited you which household this is and what you’ll be able to do.')));
-    }
+    const hasCode=Boolean(this.invitation?.trim());
+    const offer=this.invitationOffer;
+    main.append(this.el('h1',this.t(hasCode?'Review your invitation':'Enter an invitation code')));
     const form=this.el('form');
-    if(hasCode){
-      form.append(this.el('p',this.t('Invitation code received.')));
-      if(!this.redemption)form.append(this.button('Enter a different invitation code',()=>{
-        this.invitation='';
-        this.adultAttestation=false;
-        this.render();
-        this.root.querySelector<HTMLInputElement>('#invitation')?.focus();
-      }));
-    }else{
-      const label=this.el('label',this.t('Invitation code'));
-      label.htmlFor='invitation';
-      const input=this.el('input');
-      input.id='invitation';
-      input.type='password';
-      input.autocomplete='off';
-      input.required=true;
-      input.maxLength=4096;
-      input.addEventListener('input',()=>{
-        const code=input.value.trim();
-        if (this.notice===unavailableInvitationNotice && code && code!==this.invitation?.trim()) {
-          this.notice='';
-          status.textContent='';
-        }
-        this.invitation=input.value;
-      });
-      form.append(label,input);
+    if(!this.redemption){
+      if(hasCode){
+        form.append(this.el('p',this.t('Invitation code received.')));
+        form.append(this.button('Enter a different invitation code',()=>{
+          this.clearInvitationDraft();this.invitation='';this.notice='';this.render();
+          this.root.querySelector<HTMLInputElement>('#invitation')?.focus();
+        }));
+      } else {
+        form.append(this.el('p',this.t('Open the link from your household, or enter its invitation code below.')));
+        const label=this.el('label',this.t('Invitation code'));
+        label.htmlFor='invitation';
+        const input=this.el('input');
+        input.id='invitation';input.type='password';input.autocomplete='off';input.required=true;
+        input.maxLength=4096;input.value=this.invitationCodeDraft;
+        input.addEventListener('input',()=>{
+          this.invitationCodeDraft=input.value;
+          if(this.notice===unavailableInvitationNotice && input.value.trim()){this.notice='';status.textContent='';}
+        });
+        form.append(label,input);
+      }
     }
-    this.field(form,'Your display name (optional)','invite-alias',this.inviteAlias,value=>{this.inviteAlias=value;});
-    const alias=form.querySelector<HTMLInputElement>('#invite-alias');if(alias){alias.maxLength=80;alias.disabled=this.redemption!==null;}
-    const aliasHint=this.el('p',this.t('Leave your display name blank to keep your existing name in this household. If you are joining for the first time, we request “Household member” as your name.'));aliasHint.id='invite-alias-hint';form.append(aliasHint);alias?.setAttribute('aria-describedby',aliasHint.id);
-    const adultLabel=this.el('label');adultLabel.className='checkbox';const adult=this.el('input');adult.type='checkbox';adult.id='adult-attestation';adult.checked=this.adultAttestation;adult.required=true;adult.disabled=this.redemption!==null;
-    adult.addEventListener('change',()=>{this.adultAttestation=adult.checked;});adultLabel.append(adult,this.el('span',this.t('I am 18 or older.')));form.append(adultLabel);
-    form.append(this.el('p',this.t('An adult signs in before joining. Child access requires verified guardian setup.')));
-    const submit=this.button('Join this household',()=>{},true);submit.type='submit';form.append(submit);
-    form.addEventListener('submit',e=>{
-      e.preventDefault();
-      const manualCode=form.querySelector<HTMLInputElement>('#invitation');
-      const token=(manualCode?.value??this.invitation)?.trim();
-      if(!token||!this.adultAttestation)return;
-      this.invitation=token;
-      void this.run(async()=>{
-        try {
-          this.redemption??=await this.api.redeem(token,this.session?.csrf??this.browserAuth?.csrf??undefined,{adultAttestation:this.adultAttestation,alias:this.inviteAlias,defaultAliasLanguage:this.language});
-        } catch (error) {
-          if (!(error instanceof ApiError && error.status === 404 && error.code === 'unavailable')) throw error;
-          this.clearInvitationDraft();
-          this.invitation=''; // Keep manual entry open even when another household is active.
-          this.notice=unavailableInvitationNotice;
-          return;
-        }
-        await this.api.activateSession(this.redemption.householdId,this.session?.csrf??this.browserAuth?.csrf??undefined,this.redemption.grantId);
-        const accepted = this.redemption;
-        const opened = await this.api.session();
-        if (!opened) throw new ApiError('session_needed', 401);
-        this.notice = '';
-        await this.load(opened);
-        if (this.session?.household.id !== accepted.householdId || this.session.memberId !== accepted.memberId) {
-          throw new ApiError('session_needed', 401);
-        }
-        if (this.session.role!==accepted.role || this.session.grantId!==accepted.grantId) {
-          throw new ApiError('grant_context_changed',409);
-        }
-        this.joinedSession=this.session;
-        this.invitation=null;this.redemption=null;this.adultAttestation=false;this.inviteAlias='';
-      });
+    const adultLabel=this.el('label');adultLabel.className='checkbox';
+    const adult=this.el('input');adult.type='checkbox';adult.id='adult-attestation';adult.checked=this.adultAttestation;adult.required=true;adult.disabled=this.busy||Boolean(this.redemption||this.uncertainJoin);
+    const checkCode=()=>{
+      const token=(this.invitation||this.invitationCodeDraft).trim();
+      if(!this.adultAttestation||!token||this.busy)return;
+      this.invitation=token;this.invitationCodeDraft='';this.notice='';
+      void this.run(()=>this.checkInvitation());
+    };
+    adult.addEventListener('change',()=>{
+      this.adultAttestation=adult.checked;
+      if(adult.checked)checkCode();
+      else {this.invitationOffer=null;this.render();this.root.querySelector<HTMLElement>('#adult-attestation')?.focus();}
     });
-    if (!this.redemption && !this.busy) {
+    adultLabel.append(adult,this.el('span',this.t('I am 18 or older.')));form.append(adultLabel);
+    if(!offer && !this.redemption && !this.uncertainJoin){
+      const hint=this.el('p',this.t('Confirm your age to see which household invited you and what you can do there.'));
+      hint.id='invite-review-hint';adult.setAttribute('aria-describedby',hint.id);form.append(hint);
+      if(!hasCode || this.adultAttestation){
+        const check=this.button('Check invitation',()=>{},true);check.type='submit';form.append(check);
+      }
+      form.addEventListener('submit',event=>{event.preventDefault();checkCode();});
+    } else {
+      if(offer){
+        const household=this.el('h2',offer.householdLabel);household.id='invitation-household';household.tabIndex=-1;
+        const review=this.el('section');review.setAttribute('aria-labelledby',household.id);
+        const access=offer.role==='adult_contributor'?'This invitation lets you send and track your own grocery requests.'
+          :offer.role==='helper_edit'?'This invitation lets you read the shared pickup instructions and suggest changes for the shopper to review.'
+          :'This invitation lets you read the shared pickup instructions.';
+        review.append(this.el('p',this.t('Household inviting you')),household,this.el('p',this.t(access)));
+        form.append(review);
+      }
+      this.renderJoinControls(form,offer??this.uncertainJoin?.offer??null);
+    }
+    if (!this.redemption && !this.uncertainJoin && !this.busy) {
       const leave = this.publicLink('help', 'Leave without joining');
       leave.addEventListener('click', () => this.clearInvitationDraft());
       form.append(leave);
     }
     main.append(form,this.el('p',this.t('An internet connection is needed to open an invitation.')),this.button('Refresh',()=>void this.run(()=>this.load(),'load')));
     if(!this.session&&this.browserAuth?.authenticated)main.append(this.button('Sign out',()=>void this.run(()=>this.signOut(undefined,this.browserAuth?.csrf??undefined))));
+  }
+  private renderJoinControls(form:HTMLFormElement,offer:InviteOffer|null):void {
+    this.field(form,'Your display name (optional)','invite-alias',this.inviteAlias,value=>{this.inviteAlias=value;});
+    const alias=form.querySelector<HTMLInputElement>('#invite-alias');if(alias){alias.maxLength=80;alias.disabled=Boolean(this.redemption||this.uncertainJoin);}
+    const aliasHint=this.el('p',this.t('Leave your display name blank to keep your existing name in this household. If you are joining for the first time, we request “Household member” as your name.'));aliasHint.id='invite-alias-hint';form.append(aliasHint);alias?.setAttribute('aria-describedby',aliasHint.id);
+    const submit=this.button(this.redemption?'Open joined household':this.uncertainJoin?'Retry joining':'Join this household',()=>{},true);submit.type='submit';form.append(submit);
+    form.addEventListener('submit',event=>{
+      event.preventDefault();
+      const token=this.invitation?.trim();
+      if(!token || !this.adultAttestation || (!this.redemption && offer!==(this.invitationOffer??this.uncertainJoin?.offer)))return;
+      if(!this.redemption && !this.uncertainJoin && Date.now()>=this.offerCheckedUntil){this.checkExpiry();return;}
+      void this.run(()=>this.joinInvitation(token,offer));
+    });
+  }
+  private async joinInvitation(token:string,offer:InviteOffer|null):Promise<void> {
+    const language=this.uncertainJoin?.language??this.language;
+    try {
+      if(!this.redemption && offer){
+        this.redemption=await this.api.redeem(token,this.session?.csrf??this.browserAuth?.csrf??undefined,{
+          adultAttestation:this.adultAttestation, alias:this.inviteAlias, defaultAliasLanguage:language, reviewedOffer:offer
+        });
+      }
+      this.uncertainJoin=null;
+      this.invitationOffer=null;
+    } catch (error) {
+      if(error instanceof ApiError && error.status===409 && error.code==='refresh_required'){
+        this.uncertainJoin=null;this.invitationOffer=null;this.notice='This invitation changed. Review the updated details before joining.';
+        await this.checkInvitation();return;
+      }
+      if(offer && error instanceof ApiError && (error.status===0 || error.status>=500) && error.code!=='consent_unavailable'){
+        this.uncertainJoin={offer,language};
+        this.invitationOffer=null;
+        this.notice='Your join could not be confirmed. Reconnect and retry joining.';
+        return;
+      }
+      if(error instanceof ApiError && [401,403].includes(error.status))this.clearInvitationDraft();
+      if (!(error instanceof ApiError && error.status === 404 && error.code === 'unavailable')) throw error;
+      this.clearInvitationDraft();
+      this.invitation=''; // Keep manual entry open even when another household is active.
+      this.notice=unavailableInvitationNotice;
+      return;
+    }
+    if(!this.redemption)return;
+    await this.api.activateSession(this.redemption.householdId,this.session?.csrf??this.browserAuth?.csrf??undefined,this.redemption.grantId);
+    const accepted = this.redemption;
+    const opened = await this.api.session();
+    if (!opened) throw new ApiError('session_needed', 401);
+    this.notice = '';
+    await this.load(opened);
+    if (this.session?.household.id !== accepted.householdId || this.session.memberId !== accepted.memberId) {
+      throw new ApiError('session_needed', 401);
+    }
+    if (this.session.role!==accepted.role || this.session.grantId!==accepted.grantId) {
+      throw new ApiError('grant_context_changed',409);
+    }
+    this.joinedSession=this.session;
+    this.invitation=null;this.redemption=null;this.adultAttestation=false;this.inviteAlias='';
   }
   private field(form:HTMLElement,key:string,id:string,value:string,update:(value:string)=>void,multiline=false):void {
     const label=this.el('label',this.t(key));label.htmlFor=id;const input=multiline?this.el('textarea'):this.el('input');input.id=id;input.value=value;input.maxLength=id==='item'?240:id==='amount'?80:1000;

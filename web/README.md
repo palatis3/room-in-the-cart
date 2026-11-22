@@ -11,7 +11,7 @@ Use Node 22.23.5 and `npm ci`, then `npm run dev` in `web/`. The development ser
 ## Public routes and service contract
 
 - `/` and `/requests`: authenticated contributor's own requests, editable pending entries, received outcomes and follow-ups.
-- `/invite#token=…`: invitation token is immediately removed with `history.replaceState`; it exists only in memory during explicit redemption. Authentication and consent are enforced by the server. No local alias can enroll someone.
+- `/invite#token=…`: invitation token is immediately removed with `history.replaceState`; it stays in memory while the recipient reviews the invitation. A signed-in recipient confirms they are 18 or older to check the inviting household name and offered access. Join sends those reviewed details for verification before redemption.
 - iPhone browser shares give the recipient a public entry address and a separate code. Adult and cook addresses use `enterCode=1` to open manual entry even when the browser already has a household session. Opening the address never redeems the code. Child shares use `/child-invite`.
 - `/view#token=…`: same secret exchange; a helper session opens its single granted shop and dated instructions. Editor grants may submit a correction for shopper review; they cannot apply a basket change.
 
