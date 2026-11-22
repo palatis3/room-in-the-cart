@@ -506,8 +506,13 @@ extension PantryPackModelRecoveryTests {
         if thenCook {
             let currentMeal = try XCTUnwrap(reopenedShop.mealOccurrences.first { $0.id == occurrence })
             XCTAssertEqual(currentMeal.servings, try Rational(2))
+            let displayedAmounts = try currentMeal.ingredientContributionIDs.map { id in
+                let ingredient = try XCTUnwrap(reopenedShop.contributions.first { $0.id == id })
+                let editor = DinnerIngredientDraft(MealIngredient(id: id, name: ingredient.productName, quantity: ingredient.quantity))
+                return DinnerQuantityEdit(contributionID: id, quantity: try editor.reviewedQuantity())
+            }
             let adjustment = DinnerAdjustment(occurrenceID: occurrence, servings: try Rational(3),
-                groups: currentMeal.servingGroups, quantities: [], scheduledDay: currentMeal.scheduledDay)
+                groups: currentMeal.servingGroups, quantities: displayedAmounts, scheduledDay: currentMeal.scheduledDay)
             let edited = await reopened.change(key: "change-servings-only") { workspace in
                 let index = try XCTUnwrap(workspace.shops.firstIndex { $0.id == shop.id })
                 let preview = try DinnerPlanningEngine.preview(changes: [.adjust(adjustment)], tool: .manual,
