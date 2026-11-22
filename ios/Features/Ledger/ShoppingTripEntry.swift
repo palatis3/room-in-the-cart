@@ -137,7 +137,7 @@ struct TripItemDetail: View {
                 LedgerSaveStatus(model: model, showsLastSave: false, onRetried: finish)
             }
         }.navigationTitle(tripText("Item details")).navigationBarTitleDisplayMode(.inline)
-        .keyboardDoneAction(visible: editing, title: ledgerText("Done"), identifier: "tripPartKeyboardDone") { editing = false }
+        .keyboardDoneAction(visible: editing, title: quickGroceryText("Dismiss keyboard"), identifier: "tripPartKeyboardDone") { editing = false }
     }
 
     private func partialPickSection<Value>(unit: String, keyboard: UIKeyboardType, value: Value?, revision: UUID,
