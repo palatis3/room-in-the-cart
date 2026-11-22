@@ -119,8 +119,8 @@ enum LedgerPackStockReview {
 
 extension PickupJourney {
     var isAtHomeOnlyPlan: Bool {
-        let covered = Set(ledgerPackSelections.filter(\.isNoPurchase).map(\.lineID))
-        return basket?.current.lines.isEmpty == true && !plannedNeeds.isEmpty &&
-            plannedNeeds.allSatisfy { covered.contains($0.orderLineID) }
+        guard basket?.current.lines.isEmpty == true, !plannedNeeds.isEmpty else { return false }
+        let covered = Set(ledgerPackSelections.filter(\.isNoPurchase).map(\.lineID)).union(cookPurchaseOmissions)
+        return plannedNeeds.allSatisfy { covered.contains($0.orderLineID) }
     }
 }

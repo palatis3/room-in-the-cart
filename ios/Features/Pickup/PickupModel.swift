@@ -754,6 +754,7 @@ struct PickupPersistenceLocation {
             return PantryPackStockReview.basketBasisIsCurrent(value, shop: shop, workspaceID: workspaceID,
                 bindings: ledger.workspace.dinnerPlanning.portionBindings, context: context)
         }
+        if value.basket?.phase != .reportedPlaced && !value.cookPurchaseOmissions.isEmpty { return false }
         return LedgerPackStockReview.basketBasisIsCurrent(value, pickupWorkspaceID: sourceWorkspaceID)
     }
     func confirmedPackStock(shop: ShoppingLedger, lineID: UUID, bindings: [DinnerPortionBinding]) throws -> Quantity? {
@@ -1685,9 +1686,17 @@ struct PickupPersistenceLocation {
             guard [detail.leadTimeMinutes, detail.recoveryPreparation?.requiredLeadMinutes]
                 .compactMap({ $0 }).allSatisfy({ (0...525_600).contains($0) }) else { throw PickupModelError.invalid }
         }
+        // An undone cook can still describe why an earlier basket omitted a
+        // purchase. Current checkout authorization independently rejects it.
+        var historicCookNeeds = [UUID: AllocationNeed]()
+        if let source = value.mealSource {
+            for record in value.cookedMeals ?? [] {
+                historicCookNeeds.merge(record.fulfilledPurchaseNeeds(in: source)) { original, _ in original }
+            }
+        }
         let plannedLineIDs = Set(value.basket?.current.lines.map(\.id) ?? []).union(noPurchaseLineIDs)
         guard Set(value.plannedNeeds.map(\.id)).count == value.plannedNeeds.count,
-              value.plannedNeeds.allSatisfy({ plannedLineIDs.contains($0.orderLineID) }) else { throw PickupModelError.invalid }
+              value.plannedNeeds.allSatisfy({ plannedLineIDs.contains($0.orderLineID) || historicCookNeeds[$0.id] == $0 }) else { throw PickupModelError.invalid }
         _ = try ConfirmedStockAllocator.allocate(lots: [], needs: value.plannedNeeds.map { StockNeed(id: $0.id, foodID: $0.orderLineID, name: $0.name, amount: $0.amount, priority: $0.priority) })
         if let pickup = value.pickup {
             guard let basket = value.basket, let placement = basket.placements.first,
@@ -1695,7 +1704,7 @@ struct PickupPersistenceLocation {
                   Dictionary(uniqueKeysWithValues: pickup.orderLines.map { ($0.id, $0) }) ==
                     Dictionary(uniqueKeysWithValues: basket.physicalOrderLines(branch: branch).map { ($0.id, $0) }) else { throw PickupModelError.invalid }
             let actualLineIDs = Set(pickup.orderLines.map(\.id))
-            guard value.needs.allSatisfy({ actualLineIDs.contains($0.orderLineID) || noPurchaseLineIDs.contains($0.orderLineID) }) else { throw PickupModelError.invalid }
+            guard value.needs.allSatisfy({ actualLineIDs.contains($0.orderLineID) || noPurchaseLineIDs.contains($0.orderLineID) || historicCookNeeds[$0.id] == $0 }) else { throw PickupModelError.invalid }
             _ = try pickup.allocate(value.needs.filter { actualLineIDs.contains($0.orderLineID) })
         } else {
             guard value.needs.isEmpty, value.settlement.entries.isEmpty, value.basket?.placements.isEmpty != false else { throw PickupModelError.invalid }

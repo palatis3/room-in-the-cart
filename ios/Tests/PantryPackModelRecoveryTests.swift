@@ -578,6 +578,20 @@ extension PantryPackModelRecoveryTests {
             XCTAssertTrue(savedAfterCooking, cold.error ?? "")
             cold.selectedID = shop.id
             XCTAssertTrue(cold.hasCurrentBasketStockBasis)
+            let savedCopy = try XCTUnwrap(cold.journey)
+            let savedCook = try XCTUnwrap(savedCopy.cookedMeals?.first)
+            let source = try XCTUnwrap(savedCopy.mealSource)
+            XCTAssertEqual(Set(savedCook.fulfilledPurchaseNeeds(in: source).keys), [rows[0], rows[2]])
+            XCTAssertEqual(savedCopy.cookPurchaseOmissions, [lentils, rice])
+            var unproven = savedCopy
+            let dropped = try XCTUnwrap(savedCook.fulfilledNeeds.first)
+            let wrongFood = StockNeed(id: dropped.id, foodID: UUID(), name: dropped.name, amount: dropped.amount, priority: dropped.priority)
+            let missingProof = PantryCookRecord(draft: savedCook.draft, priorCounts: savedCook.priorCounts,
+                priorClaims: savedCook.priorClaims, fulfilledNeeds: [wrongFood] + savedCook.fulfilledNeeds.dropFirst(),
+                resultingObservations: savedCook.resultingObservations)
+            unproven.cookedMeals = [missingProof]
+            XCTAssertNil(missingProof.fulfilledPurchaseNeeds(in: source)[dropped.id])
+            XCTAssertThrowsError(try PickupModel.validate(unproven))
             let reversed = try await cook.reviewUndo(shopID: shop.id, mealID: occurrence)
             try await cook.applyUndo(reversed)
             let refreshed = await cold.refreshPantryStock()

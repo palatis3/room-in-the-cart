@@ -249,20 +249,21 @@ extension PickupJourney {
     /// choice. Recheck those omissions before reusing that basket, including after cook undo.
     var cookPurchaseOmissions: Set<UUID> {
         guard let cookedMeals, let source = mealSource, let basket else { return [] }
-        let cookedRows = Set(cookedMeals.flatMap { $0.draft.ingredientRowIDs })
-        let lines = source.shop.contributions.filter { cookedRows.contains($0.id) }.map(\.lineID)
+        let lines = cookedMeals.flatMap { $0.fulfilledPurchaseNeeds(in: source).values.map(\.orderLineID) }
         return Set(lines).subtracting(basket.current.lines.map(\.id)).subtracting(ledgerPackSelections.map(\.lineID))
     }
 
     func usedDinnerPantryLines(in shop: ShoppingLedger, workspace: LedgerWorkspace, workspaceID: UUID,
                              actorID: UUID, context: PantryPackStockReview.Context) -> Set<UUID> {
         guard id == shop.id, closedAt == nil, pickup == nil, let basket, basket.phase != .reportedPlaced, mealRecovery == nil,
-              let cooks = cookedMeals, cooks.contains(where: \.isActive) else { return [] }
+              let source = mealSource, let cooks = cookedMeals, cooks.contains(where: \.isActive) else { return [] }
         let origin = context.snapshot.state.workspaceID
         let lots = Dictionary(uniqueKeysWithValues: context.snapshot.lots.map { ($0.id, $0.foodID) })
         return cooks.filter(\.isActive).reduce(into: Set<UUID>()) { result, record in
-            result.formUnion(workspace.usedDinnerPantryLines(shop: shop, workspaceID: workspaceID,
-                originID: origin, actorID: actorID.uuidString, cook: record.draft, lotProducts: lots))
+            let fulfilled = Set(record.fulfilledPurchaseNeeds(in: source).values.map(\.orderLineID))
+            let measured = workspace.usedDinnerPantryLines(shop: shop, workspaceID: workspaceID,
+                originID: origin, actorID: actorID.uuidString, cook: record.draft, lotProducts: lots)
+            result.formUnion(measured.intersection(fulfilled))
         }
     }
 }
