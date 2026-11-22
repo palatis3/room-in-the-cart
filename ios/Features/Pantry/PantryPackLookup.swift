@@ -1,13 +1,15 @@
 import CoreDomain
 import SwiftUI
 
-/// Read-only scan and name lookup. The caller owns the action on the selected pack or batch.
+/// The caller decides whether a local miss can open an intake review. Lookup itself only reads.
 private struct PackLookupInput: View {
     let workspaceID: UUID?
     let access: PantryDigestAccess?
     let authorized: () -> Bool
     @Binding var query: String
     @Binding var selected: ConfirmedPantryPack?
+    @Binding var unmatched: CapturedBarcode? = .constant(nil)
+    var reviewUnmatched: ((CapturedBarcode, String, Bool, PantryDigestAccess) throws -> Void)? = nil
     @ObservedObject private var memory = PantryDigestStore.shared.packMemory
     @State private var code = ""
     @State private var kind = "manual"
@@ -18,20 +20,21 @@ private struct PackLookupInput: View {
 
     var body: some View {
         Section(pantryText("Find a pack")) {
-            TextField(pantryText("Product name"), text: $query).onChange(of: query) { _, _ in selected = nil; status = nil }
+            TextField(pantryText("Product name"), text: $query).onChange(of: query) { _, _ in clearResult() }
             TextField(pantryText("Barcode"), text: $code)
                 .accessibilityIdentifier("pack.find.code").autocorrectionDisabled().textInputAutocapitalization(.never)
-                .onChange(of: code) { _, _ in selected = nil; lastScan = nil; status = nil }
+                .onChange(of: code) { _, _ in lastScan = nil; clearResult() }
             if code.count == 8 && code.allSatisfy(\.isNumber) {
                 Picker(pantryText("Barcode format"), selection: $kind) {
                     Text(pantryText("Unknown")).tag("manual")
                     Text(verbatim: "UPC-E").tag("UPC-E")
                     Text(verbatim: "EAN-8").tag("EAN-8")
-                }
+                }.onChange(of: kind) { _, _ in lastScan = nil; clearResult() }
             }
             if let candidate = lastScan ?? typed, candidate.catalogGTIN == nil {
                 TextField(pantryText("Retailer for this code"), text: $retailer)
-                    .onChange(of: retailer) { _, _ in selected = nil }
+                    .accessibilityIdentifier("pack.find.retailer")
+                    .onChange(of: retailer) { _, _ in clearResult() }
             }
             if let candidate = lastScan ?? typed {
                 Button(pantryText("Find barcode")) { resolve(candidate) }.accessibilityIdentifier("pack.find.resolve")
@@ -39,18 +42,28 @@ private struct PackLookupInput: View {
             LivePackageButton(workspaceID: workspaceID, authorized: authorized) { code in lastScan = code; resolve(code) }
             PantryProductPhotoInput(workspaceID: workspaceID, consent: $consent, authorized: authorized, add: { source in
                 guard source.barcodes.count == 1, let code = source.barcodes.first else {
+                    lastScan = nil; clearResult()
                     status = pantryText("Choose a photo of one barcode or type the code."); return
                 }
                 lastScan = code; resolve(code)
-            }, revoke: { lastScan = nil; selected = nil; status = nil })
-            if let status { Text(status) }
+            }, revoke: { lastScan = nil; clearResult() })
+            if let status, selected == nil { Text(status) }
+            if reviewUnmatched != nil, let unmatched, let access, authorized(), access.authorized(),
+               unmatched.associationKey(retailer: retailer) != nil {
+                Button(pantryText("Review this package")) {
+                    openReview(unmatched, access: access)
+                }.accessibilityIdentifier("pack.find.review")
+            }
+        }
+        .onChange(of: memory.generation) { _, _ in
+            if let unmatched { resolve(unmatched) }
         }
         if let access, authorized(), access.authorized(), let recent = try? memory.recent(access.scope) {
             let matches = recent.filter { query.isEmpty || $0.name.localizedCaseInsensitiveContains(query) }
             if !matches.isEmpty {
                 Section(pantryText("Recent confirmed packs")) {
                     ForEach(matches.prefix(30), id: \.key) { pack in
-                        Button(pack.label) { if authorized() && access.authorized() { selected = pack; status = nil } }
+                        Button(pack.label) { if authorized() && access.authorized() { clearResult(); selected = pack } }
                     }
                 }
             }
@@ -60,24 +73,63 @@ private struct PackLookupInput: View {
         let raw = code.trimmingCharacters(in: .whitespacesAndNewlines)
         return raw.isEmpty ? nil : .init(symbology: raw.count == 8 ? kind : "manual", value: raw)
     }
+    private func openReview(_ barcode: CapturedBarcode, access: PantryDigestAccess) {
+        guard let reviewUnmatched, authorized(), workspaceID == access.scope.origin else { return }
+        do {
+            try reviewUnmatched(barcode, retailer, lastScan == nil, access)
+        } catch ProductBatchError.pendingPackSave {
+            status = pantryText("Open Scan products to finish your pending pack save first.")
+        } catch PantryDigestFailure.changed {
+            resolve(barcode)
+        } catch {
+            status = pantryText("The pending pack save could not be opened.")
+        }
+    }
+    private func clearResult() {
+        selected = nil; unmatched = nil; status = nil
+    }
     private func resolve(_ code: CapturedBarcode) {
         guard authorized() else { return }
-        if let access, access.authorized() { selected = try? memory.match(code, retailer: retailer, scope: access.scope) }
-        else { selected = nil }
-        status = selected == nil ? pantryText("No confirmed match. Search by product name or check the retailer.") : nil
+        clearResult()
+        if let access, access.authorized() {
+            do {
+                selected = try memory.match(code, retailer: retailer, scope: access.scope)
+                if selected == nil { unmatched = code }
+            } catch {
+                status = pantryText("The match changed. Reopen this pack to review it.")
+                return
+            }
+        }
+        guard selected == nil else { return }
+        if reviewUnmatched != nil, code.value.utf8.allSatisfy({ (48...57).contains($0) }),
+           [8, 12, 13, 14].contains(code.value.count), code.canonicalGTIN == nil {
+            status = pantryText("Check the barcode digits and format on the package, then try again.")
+        } else {
+            status = pantryText("No confirmed match. Search by product name or check the retailer.")
+        }
     }
 }
 
 struct PantryPackFind: View {
     @ObservedObject var model: PantryModel
     let origin: UUID
+    let allowsPackageReview: Bool
+    private struct PackageReview: Identifiable {
+        let batch: PantryProductBatch
+        let access: PantryDigestAccess
+        var id: UUID { batch.id }
+    }
     @Environment(\.pantryDigestAccess) private var access
     @Environment(\.scenePhase) private var scene
     @State private var query = ""
     @State private var selected: ConfirmedPantryPack?
+    @State private var unmatched: CapturedBarcode?
+    @State private var review: PackageReview?
+    private var canReview: Bool { allowsPackageReview && model.canEdit && scene == .active && scoped != nil }
     private var authorized: Bool { model.phase == .ready && model.snapshot?.state.workspaceID == origin }
     private var scoped: PantryDigestAccess? { access?.scope.origin == origin && access?.authorized() == true ? access : nil }
     private var presentationScope: PantryDigestScope? {
+        if scene == .active, model.busy, let review, review.access.awaitingSnapshot() { return review.access.scope }
         guard let access, access.scope.origin == origin, access.canPresent() else { return nil }
         return access.scope
     }
@@ -85,20 +137,13 @@ struct PantryPackFind: View {
         WorkingForm {
             if authorized {
                 PackLookupInput(workspaceID: origin, access: scoped, authorized: { authorized && scene == .active },
-                    query: $query, selected: $selected)
-                let confirmed = selected.flatMap { item -> ConfirmedPantryPack? in
-                    guard let scoped,
-                          (try? PantryDigestStore.shared.packMemory.match(item.barcode, retailer: item.retailer, scope: scoped.scope)) == item else { return nil }
-                    return item
-                }
-                let lots = (model.snapshot?.lots ?? []).filter { lot in
-                    if let confirmed { return lot.foodID == confirmed.id }
-                    return !query.isEmpty && lot.name.localizedCaseInsensitiveContains(query)
-                }
-                if confirmed != nil || !query.isEmpty {
-                    Section(confirmed?.label ?? query) {
-                        if lots.isEmpty { Text(pantryText("No recorded batches.")) }
-                        ForEach(lots) { lot in
+                    query: $query, selected: $selected, unmatched: $unmatched,
+                    reviewUnmatched: canReview ? startReview : nil)
+                    .id(presentationScope?.owner)
+                if let result = batchResults {
+                    Section(result.title) {
+                        if result.lots.isEmpty { Text(pantryText("No recorded batches.")) }
+                        ForEach(result.lots) { lot in
                             NavigationLink {
                                 PantryLotEntryView(model: model, lotID: lot.id, accessAllowed: authorized)
                             } label: { PackLotLabel(lot: lot, access: scoped) }.accessibilityIdentifier("pack.find.lot." + lot.id.uuidString)
@@ -107,7 +152,35 @@ struct PantryPackFind: View {
                 }
             }
         }.privacySensitive().navigationTitle(pantryText("Find a package in Pantry"))
-        .onChange(of: presentationScope) { _, _ in selected = nil; query = "" }
+        .sheet(item: $review) { review in
+            NavigationStack { PantryProductBatchView(model: model, lookupBatch: review.batch, access: review.access) }
+        }
+        .onChange(of: presentationScope) { _, newScope in
+            selected = nil; unmatched = nil; query = ""
+            if review?.access.scope != newScope { review = nil }
+        }
+    }
+
+    private var batchResults: (title: String, lots: [InventoryLot])? {
+        let lots = model.snapshot?.lots ?? []
+        if let selected, let scoped,
+           (try? PantryDigestStore.shared.packMemory.match(selected.barcode, retailer: selected.retailer, scope: scoped.scope)) == selected {
+            return (selected.label, lots.filter { $0.foodID == selected.id })
+        }
+        // A counted package may have an unknown pack size. Local stickers additionally require a saved retailer match.
+        if allowsPackageReview, scoped != nil, let unmatched, unmatched.catalogGTIN != nil, let gtin = unmatched.canonicalGTIN {
+            let recorded = lots.filter { $0.packageCode?.canonicalGTIN == gtin }
+            if !recorded.isEmpty { return (pantryText("Batches with this barcode"), recorded) }
+        }
+        guard !query.isEmpty else { return nil }
+        return (query, lots.filter { $0.name.localizedCaseInsensitiveContains(query) })
+    }
+
+    private func startReview(_ barcode: CapturedBarcode, retailer: String, typed: Bool, access: PantryDigestAccess) throws {
+        guard authorized, scoped?.scope == access.scope else { throw PantryDigestFailure.changed }
+        let batch = try PantryDigestStore.shared.packMemory.reviewUnmatched(barcode, retailer: retailer, productName: query,
+            typed: typed, access: access, canEdit: canReview)
+        review = PackageReview(batch: batch, access: access)
     }
 }
 

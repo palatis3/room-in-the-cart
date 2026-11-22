@@ -318,6 +318,61 @@ extension PantryProductCatalogTests {
         XCTAssertTrue(PrintedPackageDate.monthDayChoices(in: "03/04/2027").isEmpty)
     }
 
+    @MainActor func testReviewUnknownBarcodeRequiresEditableScopeAndCheckedPack() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let memory = PantryPackMemory(folder: folder)
+        let owner = CapturePrivateIdentity(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil)
+        let scope = PantryDigestScope(origin: UUID(), identity: owner)
+        var allowed = true
+        let access = PantryDigestAccess(scope: scope) { allowed }
+        let sticker = CapturedBarcode(symbology: "UPC-A", value: "020123400006")
+
+        func open(_ code: CapturedBarcode, store: String, edit: Bool = true) throws -> PantryProductBatch {
+            try memory.reviewUnmatched(code, retailer: store, productName: "Cereal", typed: false, access: access, canEdit: edit)
+        }
+        XCTAssertThrowsError(try open(sticker, store: "Market", edit: false))
+        allowed = false
+        XCTAssertThrowsError(try open(sticker, store: "Market"))
+        allowed = true
+        XCTAssertThrowsError(try open(sticker, store: ""))
+        XCTAssertThrowsError(try open(.init(symbology: "manual", value: "020123400007"), store: "Market"))
+        XCTAssertThrowsError(try open(.init(symbology: "manual", value: "01234558"), store: "Market"))
+        XCTAssertThrowsError(try open(.init(symbology: "QR", value: "https://example.org/pack"), store: "Market"))
+
+        let batch = try open(sticker, store: "Market")
+        XCTAssertEqual(batch.workspaceID, scope.origin)
+        var row = try XCTUnwrap(batch.candidates.first)
+        XCTAssertEqual(row.barcode, sticker)
+        XCTAssertEqual(row.name, "Cereal")
+        XCTAssertEqual(row.retailer, "Market")
+        XCTAssertFalse(row.enteredByHand)
+        XCTAssertNil(row.total)
+        XCTAssertNil(row.dateWordingDraft)
+        XCTAssertNil(row.remembered)
+        XCTAssertThrowsError(try row.homeCount())
+        row.onePackageUnknown = true
+        XCTAssertEqual(try row.homeCount(), .unknown)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: folder.path), "Opening and dropping a review must write nothing.")
+
+        let size = Quantity(amount: try Rational(375), unit: .gram, originalLiteral: "375")
+        let checked = ConfirmedPantryPack(id: UUID(), barcode: sticker, retailer: row.retailer,
+            name: row.name, size: size, attribution: nil, confirmedAt: Date())
+        try memory.replace(nil, with: checked, scope: scope, authorized: access.authorized)
+        let reopened = PantryPackMemory(folder: folder)
+        XCTAssertEqual(try reopened.match(sticker, retailer: "market", scope: scope), checked)
+        XCTAssertNil(try reopened.match(sticker, retailer: "Other market", scope: scope))
+        XCTAssertNil(try reopened.match(sticker, retailer: "Market", scope: .init(origin: UUID(), identity: owner)))
+        XCTAssertThrowsError(try open(sticker, store: "Market"), "A stale no-match screen must not create a new intake.")
+        let upc = CapturedBarcode(symbology: "manual", value: "012345678905")
+        let cereal = try memory.reviewUnmatched(upc, retailer: "Other market", productName: "", typed: true, access: access, canEdit: true)
+        let typed = try XCTUnwrap(cereal.candidates.first)
+        XCTAssertTrue(typed.enteredByHand)
+        XCTAssertEqual(typed.barcode, upc)
+        XCTAssertEqual(typed.retailer, "")
+        XCTAssertTrue(typed.name.isEmpty)
+    }
+
     @MainActor func testRememberedPackReopensPerOwnerAndCorrectsAndForgetsOnlyThatSize() throws {
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: folder) }

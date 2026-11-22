@@ -24,6 +24,7 @@ struct PantryProductBatchView: View {
     @State private var result: String?
     @State private var inputMessage: String?
     private let didFinishWithLot: (UUID) -> Void
+    private let lookupAccess: PantryDigestAccess?
     @State private var savedLotID: UUID?
     @State private var initialAccess: PantryDigestAccess?
     @Environment(\.scenePhase) private var scene
@@ -38,10 +39,20 @@ struct PantryProductBatchView: View {
     @Environment(\.dismiss) private var dismiss
 
     init(model: PantryModel, workspaceID: UUID, didFinishWithLot: @escaping (UUID) -> Void = { _ in }) {
+        lookupAccess = nil
         self.didFinishWithLot = didFinishWithLot
         self.model = model
         _batch = State(initialValue: PantryProductBatch(workspaceID: workspaceID))
     }
+    init(model: PantryModel, lookupBatch: PantryProductBatch, access: PantryDigestAccess) {
+        self.model = model
+        lookupAccess = access
+        didFinishWithLot = { _ in }
+        _batch = State(initialValue: lookupBatch)
+        _initialAccess = State(initialValue: access)
+        _editingProduct = State(initialValue: lookupBatch.candidates.first)
+    }
+
     private var confirmationText: String {
         guard atHome else { return pantryText("I received these packages and checked the date and usable quantities.") }
         if batch.candidates.contains(where: { $0.included && $0.onePackageUnknown }) {
@@ -52,6 +63,7 @@ struct PantryProductBatchView: View {
 
     private var authorized: Bool {
         scene == .active && model.phase == .ready && model.snapshot?.state.workspaceID == batch.workspaceID &&
+            (lookupAccess?.authorized() ?? true) &&
             (initialAccess == nil || (access?.scope == initialAccess?.scope && access?.authorized() == true))
     }
     private var canPresent: Bool {
@@ -410,7 +422,10 @@ struct PantryProductBatchView: View {
         guard let access, access.scope.origin == batch.workspaceID, access.authorized(), !working else { return }
         if initialAccess == nil { initialAccess = access }
         guard initialAccess?.scope == access.scope else { return }
-        do { recovery = try memory.pending(access.scope) }
+        do {
+            recovery = try memory.pending(access.scope)
+            if recovery != nil { editingProduct = nil }
+        }
         catch { recoveryReadFailed = true }
     }
 
@@ -561,6 +576,9 @@ private struct PantryProductCandidateEditor: View {
                         .disabled(row.existingReceipt != nil).accessibilityIdentifier("productBatch.include")
                     if let code = row.barcode {
                         LabeledContent(pantryText("Barcode"), value: code.displayValue)
+                            .accessibilityElement(children: .ignore)
+                            .accessibilityLabel(pantryText("Barcode")).accessibilityValue(code.displayValue)
+                            .accessibilityIdentifier("productBatch.barcodeEvidence")
                         if row.enteredByHand && row.existingReceipt == nil {
                             Button(pantryText("Edit barcode")) {
                                 field = nil

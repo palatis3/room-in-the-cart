@@ -333,7 +333,9 @@ import XCTest
         barcode.typeText("012345678905")
         tap(resolve)
         tap(review)
-        XCTAssertTrue(app.staticTexts["012345678905"].waitForExistence(timeout: 8))
+        let evidence = element("productBatch.barcodeEvidence")
+        XCTAssertTrue(evidence.waitForExistence(timeout: 8))
+        XCTAssertTrue([evidence.label, evidence.value as? String ?? ""].joined().contains("012345678905"), evidence.debugDescription)
         XCTAssertFalse(remember.isEnabled)
         fill("Unsaved cereal", into: "productBatch.productName", requireDone: true)
         tap(app.buttons["productBatch.finishEditing"])
@@ -368,6 +370,17 @@ import XCTest
         XCTAssertEqual(lots.count, 1)
         XCTAssertTrue(lots.firstMatch.label.contains("Cereal box"))
         XCTAssertFalse(review.exists)
+
+        tap(app.tabBars.buttons["Shop"])
+        tap(app.buttons["openPickupList"])
+        tap(app.buttons["ledgerInStore"])
+        tap(app.buttons["inStoreTripOptions"])
+        tap(app.buttons["Buy this pack again"])
+        tap(barcode)
+        barcode.typeText("3017620422003")
+        tap(resolve)
+        XCTAssertTrue(app.staticTexts["No confirmed match. Search by product name or check the retailer."].exists)
+        XCTAssertFalse(review.exists, "Shopping lookup cannot start a pantry intake.")
     }
 
     func testConfirmedPackAtHomeFindsOnlyItsTwoPhysicalBatchesAfterRelaunch() {

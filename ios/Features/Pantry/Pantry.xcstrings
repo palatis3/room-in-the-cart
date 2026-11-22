@@ -1477,6 +1477,86 @@
         }
       }
     },
+    "Check the barcode digits and format on the package, then try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the barcode digits and format on the package, then try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa los dígitos y el formato del código de barras en el paquete y vuelve a intentarlo."
+          }
+        }
+      }
+    },
+    "Batches with this barcode": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Batches with this barcode"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lotes con este código de barras"
+          }
+        }
+      }
+    },
+    "Open Scan products to finish your pending pack save first.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Scan products to finish your pending pack save first."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre Escanear productos para terminar de guardar los paquetes pendientes."
+          }
+        }
+      }
+    },
+    "Remembering saves the barcode, name and pack size. Review the pantry count separately to add food.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remembering saves the barcode, name and pack size. Review the pantry count separately to add food."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al recordar el paquete se guardan el código de barras, el nombre y el tamaño. Para añadir alimentos, revisa el recuento de la despensa por separado."
+          }
+        }
+      }
+    },
+    "Review this package": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review this package"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar este paquete"
+          }
+        }
+      }
+    },
     "Remember this exact pack": {
       "localizations": {
         "en": {

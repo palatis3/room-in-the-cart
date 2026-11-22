@@ -454,6 +454,13 @@ extension PantryLiveStockProjectionTests {
         let staged = try XCTUnwrap(ReviewedPackSave(review: review, intake: intake, scope: scope, atHome: true))
         XCTAssertEqual(staged.rows.first?.reviewedDateWording, "BEST BEFORE DEC 2026")
         try journal.stage(staged, scope: scope) { true }
+        let lookup = CapturedBarcode(symbology: "manual", value: "012345678905")
+        let access = PantryDigestAccess(scope: scope) { true }
+        XCTAssertThrowsError(try journal.reviewUnmatched(lookup, retailer: "", productName: "Cereal", typed: true,
+            access: access, canEdit: true)) { error in
+            guard case ProductBatchError.pendingPackSave = error else { return XCTFail("Expected the pending pack save") }
+        }
+        XCTAssertEqual(try journal.pending(scope), staged)
         try await editor.saveReceipt(review)
         XCTAssertTrue(try XCTUnwrap(editor.snapshot).singlePackageIntakes.contains(row.id))
         let retry = try XCTUnwrap(PantryPackMemory(folder: folder).pending(scope))

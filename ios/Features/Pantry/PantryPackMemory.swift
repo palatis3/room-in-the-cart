@@ -70,6 +70,15 @@ struct RecordedPackReceiptLink: Codable, Equatable, Identifiable {
         guard let key = code.associationKey(retailer: retailer) else { return nil }
         return try recent(scope).first { $0.key == key }
     }
+    /// Opening Find's review only reads the current match and recovery record. The intake stays in memory.
+    func reviewUnmatched(_ code: CapturedBarcode, retailer: String, productName: String, typed: Bool,
+                         access: PantryDigestAccess, canEdit: Bool) throws -> PantryProductBatch {
+        guard canEdit, access.authorized(), try match(code, retailer: retailer, scope: access.scope) == nil,
+              let draft = PantryProductBatch(workspaceID: access.scope.origin, lookupCode: code,
+                  retailer: retailer, productName: productName, typed: typed) else { throw PantryDigestFailure.changed }
+        guard try pending(access.scope) == nil else { throw ProductBatchError.pendingPackSave }
+        return draft
+    }
     func replace(_ previous: ConfirmedPantryPack?, with next: ConfirmedPantryPack?, scope: PantryDigestScope, authorized: () -> Bool) throws {
         guard authorized(), let key = (previous ?? next)?.key, next == nil || next?.key == key else { throw ProductBatchError.invalid }
         var data = try document(scope)

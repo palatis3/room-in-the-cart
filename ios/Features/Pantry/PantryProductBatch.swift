@@ -3,7 +3,7 @@ import CryptoKit
 import Foundation
 import LocalStore
 
-enum ProductBatchError: Error { case full, invalid, lookupUnavailable, rateLimited, chooseStockAction, changedDelivery, duplicateBarcode }
+enum ProductBatchError: Error { case full, invalid, lookupUnavailable, rateLimited, chooseStockAction, changedDelivery, duplicateBarcode, pendingPackSave }
 
 struct PantryProductBatch {
     static func homeOperationID(for candidate: UUID) -> UUID {
@@ -157,6 +157,15 @@ struct PantryProductBatch {
     var candidates: [Candidate] = []
 
     init(workspaceID: UUID) { self.workspaceID = workspaceID }
+
+    /// A Find result starts a fresh intake. Only the shopper's entered name and barcode evidence carry over.
+    init?(workspaceID: UUID, lookupCode: CapturedBarcode, retailer: String, productName: String, typed: Bool) {
+        self.init(workspaceID: workspaceID)
+        guard lookupCode.associationKey(retailer: retailer) != nil, (try? addScan(lookupCode)) == true else { return nil }
+        candidates[0].name = productName.trimmingCharacters(in: .whitespacesAndNewlines)
+        candidates[0].retailer = lookupCode.catalogGTIN == nil ? retailer : ""
+        candidates[0].enteredByHand = typed
+    }
 
     private enum CodeKey: Equatable {
         case tradeItem(String)

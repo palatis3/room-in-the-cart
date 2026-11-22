@@ -35,6 +35,7 @@ struct PantryHomeView: View {
     let accessAllowed: Bool
     var offersTonight = false
     var offersStaplePrompts = false
+    var allowsPackageReview = false
     var household: HouseholdModel?
     var holdsLoadedReview: () -> Bool = { false }
     var recoveredHistoryAccess: (@MainActor () -> Bool)? = nil
@@ -115,7 +116,8 @@ struct PantryHomeView: View {
                                 .accessibilityIdentifier("pantry.voiceEntry")
                             }
                             NavigationLink {
-                                PantryPackFind(model: model, origin: snapshot.state.workspaceID)
+                                PantryPackFind(model: model, origin: snapshot.state.workspaceID,
+                                               allowsPackageReview: accessAllowed && allowsPackageReview)
                             } label: {
                                 Label(pantryText("Find a package in Pantry"), systemImage: "barcode.viewfinder")
                             }.accessibilityIdentifier("pantry.findPack")

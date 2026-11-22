@@ -64,7 +64,7 @@ struct PantrySetupView: View {
                 case .prices: PantryPriceHistoryView(model: model, startEntry: $startPriceEntry)
                 case .receipts: PantryReceiptHistory(model: model, showsDone: false)
                 case .home:
-                    PantryHomeView(model: model, accessAllowed: true, offersTonight: true, offersStaplePrompts: true,
+                    PantryHomeView(model: model, accessAllowed: true, offersTonight: true, offersStaplePrompts: true, allowsPackageReview: true,
                                    household: household, holdsLoadedReview: {
                         pantryVoicePrompt?.holdsPresentation() == true && scope == original
                     }, initialSheet: $initialSheet)
