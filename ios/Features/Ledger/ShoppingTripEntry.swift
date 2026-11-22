@@ -66,7 +66,7 @@ extension ShoppingLedger {
     }
 
     func tripAmountLabel(_ line: ShoppingLine, measure: TripMeasure?) -> String? {
-        guard let measure else { return shoppingRowQuantity(for: line) }
+        guard let measure else { return packagePickSummary(line) ?? shoppingRowQuantity(for: line) }
         guard let actual = line.tripPick?.amount, !line.isChecked,
               let picked = try? actual.converted(to: measure.need.unit),
               let remaining = try? outstandingQuantity(forLineID: line.id) else { return measure.display(measure.need.amount) }
@@ -102,25 +102,18 @@ struct TripItemDetail: View {
                 }
                 if !line.isChecked && shop.outcomeAtCurrentStop(line) == nil {
                     if let measure {
-                        Section {
-                            if editingPart {
-                                workingTextField(tripFormat("Amount picked (%@)", measure.unit), text: $amount)
-                                    .keyboardType(.numbersAndPunctuation)
-                                    .focused($editing).accessibilityIdentifier("tripPartialAmount")
-                                let value = measure.physicalAmount(amount)
-                                let remaining = try? shop.outstandingQuantity(forLineID: lineID)
-                                Button(tripText("Save picked amount")) {
-                                    guard let value, let reviewedRevision else { return }
-                                    save(shop) { try $0.pickPart(lineID: lineID, amount: value, expectedRevision: reviewedRevision) }
-                                }.buttonStyle(PrimaryAction()).accessibilityIdentifier("tripSavePart")
-                                .disabled(value.map { $0 <= (remaining?.amount ?? .zero) } != true || reviewedRevision != shop.revisionID)
-                            } else {
-                                Button(tripText("Pick part")) {
-                                    reviewedRevision = shop.revisionID
-                                    editingPart = true
-                                    editing = true
-                                }.frame(minHeight: 44).accessibilityIdentifier("tripPickPart")
-                            }
+                        let remaining = try? shop.outstandingQuantity(forLineID: lineID)
+                        let value = measure.physicalAmount(amount).flatMap { $0 <= (remaining?.amount ?? .zero) ? $0 : nil }
+                        partialPickSection(unit: measure.unit, keyboard: .numbersAndPunctuation, value: value, revision: shop.revisionID) { value, revision in
+                            save(shop) { try $0.pickPart(lineID: lineID, amount: value, expectedRevision: revision) }
+                        }
+                    } else if let need = GroceryPackageCount(reviewedSources: shop.contributions(forLineID: lineID)),
+                              let remaining = need.remaining(after: line.packagePick) {
+                        let value = Int64(amount.trimmingCharacters(in: .whitespacesAndNewlines)).flatMap {
+                            $0 > 0 && $0 <= remaining.count ? GroceryPackageCount(count: $0, kind: need.kind) : nil
+                        }
+                        partialPickSection(unit: need.kind.label(), keyboard: .numberPad, value: value, revision: shop.revisionID) { value, revision in
+                            save(shop) { try $0.pickPackages(lineID: lineID, packages: value, expectedRevision: revision) }
                         }
                     }
                     Button(tripText("Couldn’t find it")) {
@@ -145,6 +138,27 @@ struct TripItemDetail: View {
             }
         }.navigationTitle(tripText("Item details")).navigationBarTitleDisplayMode(.inline)
         .keyboardDoneAction(visible: editing, title: ledgerText("Done"), identifier: "tripPartKeyboardDone") { editing = false }
+    }
+
+    private func partialPickSection<Value>(unit: String, keyboard: UIKeyboardType, value: Value?, revision: UUID,
+                                           onSave: @escaping (Value, UUID) -> Void) -> some View {
+        Section {
+            if editingPart {
+                workingTextField(tripFormat("Amount picked (%@)", unit), text: $amount)
+                    .keyboardType(keyboard).focused($editing).accessibilityIdentifier("tripPartialAmount")
+                Button(tripText("Save picked amount")) {
+                    guard let value, let reviewedRevision, revision == reviewedRevision else { return }
+                    onSave(value, reviewedRevision)
+                }.buttonStyle(PrimaryAction()).accessibilityIdentifier("tripSavePart")
+                .disabled(value == nil || reviewedRevision != revision)
+            } else {
+                Button(tripText("Pick part")) {
+                    reviewedRevision = revision
+                    editingPart = true
+                    editing = true
+                }.frame(minHeight: 44).accessibilityIdentifier("tripPickPart")
+            }
+        }
     }
 
     private func affectedDinners(in shop: ShoppingLedger) -> [MealOccurrence] {

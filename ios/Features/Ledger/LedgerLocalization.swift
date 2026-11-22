@@ -62,7 +62,19 @@ extension ShoppingLedger {
         do {
             if let quantity = try quantity(forLineID: line.id) { return ledgerQuantity(quantity) }
         } catch { return ledgerQuantity(nil) }
-        return Self.shoppingLabelWithoutTotal(for: line, sources: contributions(forLineID: line.id))
+        let sources = contributions(forLineID: line.id)
+        if !line.isChecked, let pick = line.packagePick, let remaining = GroceryPackageCount(reviewedSources: sources)?.remaining(after: pick) {
+            return tripFormat("%@ still needed", remaining.shoppingLabel)
+        }
+        return Self.shoppingLabelWithoutTotal(for: line, sources: sources)
+    }
+
+    func packagePickSummary(_ line: ShoppingLine) -> String? {
+        guard let pick = line.packagePick else { return nil }
+        if line.isChecked { return shelfFormat("Picked · %@", pick.packages.shoppingLabel) }
+        guard let need = GroceryPackageCount(reviewedSources: contributions(forLineID: line.id)),
+              let remaining = need.remaining(after: pick) else { return nil }
+        return tripFormat("%@ of %@ picked · %@ still needed", pick.packages.shoppingLabel, need.shoppingLabel, remaining.shoppingLabel)
     }
 
     static func shoppingLabelWithoutTotal(for line: ShoppingLine, sources: [LedgerContribution]) -> String? {

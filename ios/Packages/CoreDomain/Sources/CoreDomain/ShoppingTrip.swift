@@ -16,6 +16,19 @@ public struct ShoppingStopObservation: Codable, Equatable, Sendable {
     public let outcome: ShoppingStopOutcome
 }
 
+/// A shopper counted outer packages. Their contents and usable food amount remain unknown.
+public struct GroceryPackagePick: Codable, Equatable, Sendable {
+    public let packages: GroceryPackageCount
+    public let at: Date
+
+    func validate(members: [LedgerContribution], physical: PhysicalGroceryPick?, checkedAt: Date?) throws {
+        try ledgerDate(at)
+        guard physical == nil, packages.count > 0,
+              let requested = GroceryPackageCount(reviewedSources: members), requested.kind == packages.kind,
+              checkedAt == (packages.count >= requested.count ? at : nil) else { throw LedgerError.invalid("tripPackagePick") }
+    }
+}
+
 public struct PhysicalGroceryPick: Codable, Equatable, Sendable {
     public let amount: Quantity
     public let at: Date
@@ -63,6 +76,7 @@ public struct GroceryTripUndo: Codable, Equatable, Sendable {
     public let action: GroceryTripAction
     public let at: Date
     let pick: PhysicalGroceryPick?
+    let packagePick: GroceryPackagePick?
     let checkedAt: Date?
     let observed: ShoppingStopObservation?
     let price: PickedLinePrice?
@@ -71,6 +85,7 @@ public struct GroceryTripUndo: Codable, Equatable, Sendable {
         self.action = action
         self.at = at
         pick = line.tripPick
+        packagePick = line.packagePick
         checkedAt = line.checkedAt
         observed = line.stopObservation
         price = line.pickedPrice
@@ -78,7 +93,7 @@ public struct GroceryTripUndo: Codable, Equatable, Sendable {
 }
 
 extension ShoppingLine {
-    public var inStorePickedAt: Date? { tripPick?.at ?? checkedAt }
+    public var inStorePickedAt: Date? { tripPick?.at ?? packagePick?.at ?? checkedAt }
     public var canUndoInStore: Bool { !isHandled && !isTrashed && (tripUndo != nil || isChecked) }
 
     public func eligibleForStop(named store: String) -> Bool {
@@ -223,11 +238,26 @@ extension ShoppingLedger {
         let actual = try need.amount.subtracting(remaining.amount).adding(amount)
         guard let source = lines.first(where: { $0.id == lineID }) else { throw LedgerError.notFound(lineID) }
         let pick = try cumulativePick(for: source, total: Quantity(amount: actual, unit: need.unit, originalLiteral: ""), requested: need, at: at)
+        try savePartialPick(lineID: lineID, completed: amount == remaining.amount, at: at) { $0.tripPick = pick }
+    }
+
+    public mutating func pickPackages(lineID: UUID, packages: GroceryPackageCount, expectedRevision: UUID, at: Date = Date()) throws {
+        guard revisionID == expectedRevision, let line = lines.first(where: { $0.id == lineID }),
+              outcomeAtCurrentStop(line) == nil, let need = GroceryPackageCount(reviewedSources: contributions(forLineID: lineID)),
+              need.kind == packages.kind, packages.count > 0 else { throw LedgerError.stalePreview }
+        guard let remaining = need.remaining(after: line.packagePick), packages.count <= remaining.count else { throw LedgerError.stalePreview }
+        let picked = GroceryPackageCount(count: need.count - remaining.count + packages.count, kind: need.kind)
+        try savePartialPick(lineID: lineID, completed: packages.count == remaining.count, at: at) {
+            $0.packagePick = GroceryPackagePick(packages: picked, at: at)
+        }
+    }
+
+    private mutating func savePartialPick(lineID: UUID, completed: Bool, at: Date, apply: (inout ShoppingLine) -> Void) throws {
         try editTripLine(lineID: lineID, operation: "pickPart", at: at) { line in
             guard !line.isChecked else { throw LedgerError.stalePreview }
             line.tripUndo = GroceryTripUndo(line, action: .pick, at: at)
-            line.tripPick = pick
-            line.checkedAt = amount == remaining.amount ? at : nil
+            apply(&line)
+            line.checkedAt = completed ? at : nil
             line.stopObservation = nil
             line.pickedPrice = nil
         }
@@ -250,6 +280,7 @@ extension ShoppingLedger {
         try editTripLine(lineID: lineID, operation: "deferTripPick", at: at) { line in
             line.tripUndo = GroceryTripUndo(line, action: .deferPick, at: at)
             line.tripPick = nil
+            line.packagePick = nil
             line.checkedAt = nil
             line.pickedPrice = nil
             line.stopObservation = .init(stopID: stop.id, outcome: .deferred)
@@ -269,6 +300,7 @@ extension ShoppingLedger {
             guard let undo = line.tripUndo else { throw LedgerError.stalePreview }
             line.checkedAt = undo.checkedAt
             line.tripPick = undo.pick
+            line.packagePick = undo.packagePick
             line.stopObservation = undo.observed
             if undo.action != .unavailable { line.pickedPrice = undo.price }
             line.tripUndo = nil

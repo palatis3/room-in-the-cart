@@ -27,6 +27,10 @@ struct TripHandoffRow: Identifiable, Equatable {
                 }
                 guard remaining > .zero else { return nil }
                 amount = measure.display(remaining)
+            } else if let pick = line.packagePick {
+                let need = GroceryPackageCount(reviewedSources: contributions[line.id] ?? [])
+                guard let remaining = need?.remaining(after: pick) else { return nil }
+                amount = remaining.shoppingLabel
             } else {
                 amount = ShoppingLedger.shoppingLabelWithoutTotal(for: line, sources: contributions[line.id] ?? [])
             }

@@ -100,6 +100,7 @@ import CoreDomain
             for line in entries {
                 let total = try shop.quantity(forLineID: line.id)
                 lines.append(joined(["• " + line.name, total.map { pQuantity($0) } ?? ledgerText("Quantity unresolved"), line.aisle]))
+                if let summary = shop.packagePickSummary(line) { lines.append(summary) }
                 if let date = line.checkedAt { lines.append(joined([ledgerText("Checked at"), stamp(date)])) }
                 if let date = line.handledAt {
                     lines.append(joined([line.handledBy.map { ledgerFormat("Handled by %@", $0) } ?? ledgerText("Handled"), stamp(date)]))

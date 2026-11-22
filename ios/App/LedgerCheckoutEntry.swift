@@ -383,6 +383,9 @@ struct LedgerCheckoutEntry: View {
                                         if let pick = line.tripPick {
                                             Text(shelfFormat("Picked · %@", pQuantity(pick.amount)))
                                         }
+                                    } else if let summary = shop.packagePickSummary(line) {
+                                        Text(summary)
+                                        Text(pTr("Quantity unresolved"))
                                     } else if let requested, let pick = line.tripPick,
                                               (try? pick.amount.converted(to: requested.unit)) != requested.amount {
                                         Text(shelfFormat("Requested · %@", pQuantity(requested)))

@@ -134,6 +134,38 @@ import XCTest
         tap(editor.buttons["Cancel"])
         XCTAssertTrue(fullCheck.waitForExistence(timeout: 8))
         XCTAssertEqual(fullAmount.value as? String, "Milk, 2 cartons")
+
+        tap(app.buttons["ledgerInStore"])
+        let tripRow = app.buttons["tripDetails-" + id]
+        tap(tripRow)
+        tap(app.buttons["tripPickPart"])
+        let picked = app.textFields["tripPartialAmount"]
+        XCTAssertTrue(picked.waitForExistence(timeout: 8))
+        XCTAssertTrue([picked.label, picked.placeholderValue ?? ""].contains("Amount picked (cartons)"))
+        tap(picked)
+        let one = app.keyboards.keys["1"]
+        XCTAssertTrue(one.waitForExistence(timeout: 5))
+        one.tap()
+        tap(app.buttons["tripPartKeyboardDone"])
+        tap(app.buttons["tripSavePart"])
+        let store = app.navigationBars["Shop in store"]
+        tap(store.buttons["Done"])
+        tap(app.navigationBars["Shopping list"].buttons.firstMatch)
+        let summary = "1 carton of 2 cartons picked · 1 carton still needed"
+        XCTAssertTrue(quickAmount.waitForExistence(timeout: 8))
+        XCTAssertEqual(quickAmount.value as? String, "Milk, " + summary)
+
+        app.terminate()
+        launch(reset: false)
+        XCTAssertTrue(quickAmount.waitForExistence(timeout: 8))
+        XCTAssertEqual(quickAmount.value as? String, "Milk, " + summary)
+        tap(app.buttons["openPickupList"])
+        tap(app.buttons["ledgerInStore"])
+        tap(tripRow)
+        tap(app.buttons["Undo for Milk"])
+        XCTAssertTrue(tripRow.waitForExistence(timeout: 8))
+        XCTAssertTrue(tripRow.label.contains("2 cartons"))
+        XCTAssertFalse(tripRow.label.contains("still needed"))
     }
 
     func testShopShowsRemainingQuantityAfterAPartialPick() {

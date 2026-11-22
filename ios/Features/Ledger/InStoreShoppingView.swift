@@ -368,7 +368,9 @@ struct InStoreShoppingView: View {
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(line.name).font(.headline).foregroundStyle(Theme.ink)
-                        if let picked = try? shop.pickedQuantity(forLineID: line.id) {
+                        if let pick = line.packagePick {
+                            Text(pick.packages.shoppingLabel).foregroundStyle(Theme.secondary)
+                        } else if let picked = try? shop.pickedQuantity(forLineID: line.id) {
                             let measure = TripMeasure(shop, line: line, packages: packages)
                             let label = measure.flatMap { measure in
                                 (try? picked.converted(to: measure.need.unit)).map { measure.display($0) }
