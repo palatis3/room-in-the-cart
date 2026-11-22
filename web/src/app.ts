@@ -25,6 +25,7 @@ interface SafetyReview {
 }
 type Draft = {item:string; amount:string; route:'current'|'next'; editing:OwnRequest|null; followup:string|null};
 const blank = ():Draft => ({item:'',amount:'',route:'current',editing:null,followup:null});
+const unavailableInvitationNotice = 'This invitation is unavailable. Ask your household for a new invitation.';
 const statuses:Record<string,string> = {pending:'Received',clarified:'Needs clarification',added:'Added to the pickup',deferred:'Saved for next shop',handled:'Handled',dismissed:'Dismissed',withdrawn:'Withdrawn'};
 const proposalNotices:Record<OwnProposal['status'],string> = {
   pending:'Proposal received. The shopper must review it before anything changes.',
@@ -44,6 +45,7 @@ function isRequestRevisionConflict(error:unknown):boolean {
 
 export class WebApp {
   private session:Session|null = null;
+  private joinedSession: Session | null = null;
   private browserAuth:BrowserAuthState|null=null;
   private loginEmail='';
   private loginCode='';
@@ -101,7 +103,9 @@ export class WebApp {
     const b=this.el('button',this.t(key)); b.type='button'; b.disabled=this.busy; if(primary)b.className='primary'; b.addEventListener('click',action); return b;
   }
   private async run(action:()=>Promise<void>,purpose:'load'|'mutation'='mutation',retryingSignOut=false):Promise<void> {
-    if(this.busy||(this.signOutPending&&!retryingSignOut))return; this.busy=true; this.render();
+    if(this.busy||(this.signOutPending&&!retryingSignOut))return;
+    this.joinedSession=null;
+    this.busy=true; this.render();
     const historyGeneration=this.historyGeneration;
     try { await action(); if(purpose==='load'&&!this.historyAway&&historyGeneration===this.historyGeneration)this.historySuspended=false; if(purpose==='load'&&this.failurePurpose==='load'){this.notice='';this.failurePurpose=null;} } catch(error) { await this.fail(error,purpose); }
     finally {this.busy=false;this.render();this.root.querySelector<HTMLElement>('[role="status"]')?.focus();
@@ -139,6 +143,7 @@ export class WebApp {
   }
   private clearPrivate():void {
     this.safety=null;this.clearInvitationDraft();this.browserAuth=null;
+    this.joinedSession=null;
     this.session=null;this.reviewedScope=null;this.pickups=[];this.chosenPickupId=null;this.requests=[];this.firstRequestPageAsOf=undefined;this.view=null;this.pending=[];this.queueState='ready';this.draft=blank();
     this.retryCommand=null;this.uncertainSend=false;this.consent=false;this.review=false;this.correction='';this.cookingReport=null;
     this.receivedSuggestions=[];this.suggestionsCursor=null;this.suggestionsState='unchecked';
@@ -482,8 +487,18 @@ export class WebApp {
     if(!this.supportedRoute()){main.append(this.el('h1',this.t('This page is not available.')));const link=this.el('a',this.t('Open your requests'));link.href='/requests';main.append(link);return;}
     if(this.signOutPending){main.append(this.el('h1',this.t('Finish signing out')),this.button('Retry sign-out',()=>void this.run(()=>this.signOut(),'mutation',true),true));return;}
     if(this.historySuspended){main.append(this.button('Refresh',()=>void this.start()));return;}
-    if(this.invitation!==null || !this.session) {this.renderInvite(main);return;}
-    const context=this.el('section');context.append(this.el('p',this.session.household.label));
+    if(this.invitation!==null || !this.session) {this.renderInvite(main,status);return;}
+    const context=this.el('section');
+    const session=this.session;
+    if (this.joinedSession===session && session.enrolled && !this.busy && !this.notice) {
+      const joined=this.t('You joined {household}.').replace('{household}',()=>session.household.label);
+      const access=isContributorSession(session) ? this.t('You can track your own grocery requests here.')
+        : this.view?.canPropose ? this.t('You can read the instructions shared with you for this pickup and suggest changes for the shopper to review.')
+        : this.t('You can read the instructions shared with you for this pickup.');
+      status.textContent=joined+' '+access;
+    } else {
+      context.append(this.el('p',session.household.label));
+    }
     const actions=this.el('div');actions.className='actions';actions.append(this.button('Refresh',()=>void this.run(()=>this.load(),'load')),this.button('Sign out',()=>void this.run(()=>this.signOut(this.session??undefined))));context.append(actions);main.append(context);
     if(this.safety&&this.session.canModerate&&this.session.enrolled){this.renderSafety(main,this.safety);return;}
     if(this.session.role==='helper'||this.session.role==='editor'){
@@ -528,17 +543,18 @@ export class WebApp {
     }
     main.append(form);
   }
-  private renderInvite(main:HTMLElement):void {
+  private renderInvite(main:HTMLElement,status:HTMLElement):void {
     if(!this.session&&!this.browserAuth?.authenticated){this.renderLogin(main);return;}
 
-    main.append(this.el('h1', this.t('Continue with your invitation')));
+    const hasCode = Boolean(this.invitation?.trim());
+    main.append(this.el('h1', this.t(hasCode ? 'Continue with your invitation' : 'Enter an invitation code')));
     if (!this.redemption) {
-      main.append(this.el('p', this.t(this.invitation?.trim()
+      main.append(this.el('p', this.t(hasCode
         ? 'Confirm the household and your role with the person who invited you. An invitation can let you send your own requests or view selected shopping instructions.'
-        : 'Open an invitation from your household to join.')));
+        : 'Open the link from your household, or enter its invitation code below.')));
     }
     const form=this.el('form');
-    if(this.invitation?.trim()){
+    if(hasCode){
       form.append(this.el('p',this.t('Invitation code received.')));
       if(!this.redemption)form.append(this.button('Enter a different invitation code',()=>{
         this.invitation='';
@@ -555,7 +571,14 @@ export class WebApp {
       input.autocomplete='off';
       input.required=true;
       input.maxLength=4096;
-      input.addEventListener('input',()=>{this.invitation=input.value;});
+      input.addEventListener('input',()=>{
+        const code=input.value.trim();
+        if (this.notice===unavailableInvitationNotice && code && code!==this.invitation?.trim()) {
+          this.notice='';
+          status.textContent='';
+        }
+        this.invitation=input.value;
+      });
       form.append(label,input);
     }
     this.field(form,'Your display name (optional)','invite-alias',this.inviteAlias,value=>{this.inviteAlias=value;});
@@ -572,7 +595,15 @@ export class WebApp {
       if(!token||!this.adultAttestation)return;
       this.invitation=token;
       void this.run(async()=>{
-        this.redemption??=await this.api.redeem(token,this.session?.csrf??this.browserAuth?.csrf??undefined,{adultAttestation:this.adultAttestation,alias:this.inviteAlias,defaultAliasLanguage:this.language});
+        try {
+          this.redemption??=await this.api.redeem(token,this.session?.csrf??this.browserAuth?.csrf??undefined,{adultAttestation:this.adultAttestation,alias:this.inviteAlias,defaultAliasLanguage:this.language});
+        } catch (error) {
+          if (!(error instanceof ApiError && error.status === 404 && error.code === 'unavailable')) throw error;
+          this.clearInvitationDraft();
+          this.invitation=''; // Keep manual entry open even when another household is active.
+          this.notice=unavailableInvitationNotice;
+          return;
+        }
         await this.api.activateSession(this.redemption.householdId,this.session?.csrf??this.browserAuth?.csrf??undefined,this.redemption.grantId);
         const accepted = this.redemption;
         const opened = await this.api.session();
@@ -582,6 +613,10 @@ export class WebApp {
         if (this.session?.household.id !== accepted.householdId || this.session.memberId !== accepted.memberId) {
           throw new ApiError('session_needed', 401);
         }
+        if (this.session.role!==accepted.role || this.session.grantId!==accepted.grantId) {
+          throw new ApiError('grant_context_changed',409);
+        }
+        this.joinedSession=this.session;
         this.invitation=null;this.redemption=null;this.adultAttestation=false;this.inviteAlias='';
       });
     });
