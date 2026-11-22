@@ -33,18 +33,18 @@
         }
       }
     },
-    "Your private lists, dinners, comparisons, capture reviews and pickup records stay on this iPhone. Joining a household keeps that work here.": {
+    "This iPhone stores your private lists, dinners, comparisons, capture reviews and pickup records. Joining a household keeps them private. If you use iCloud Backup for this app, your backup may include records such as saved lists and comparisons.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your private lists, dinners, comparisons, capture reviews and pickup records stay on this iPhone. Joining a household keeps that work here."
+            "value": "This iPhone stores your private lists, dinners, comparisons, capture reviews and pickup records. Joining a household keeps them private. If you use iCloud Backup for this app, your backup may include records such as saved lists and comparisons."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tus listas privadas, cenas, comparaciones, capturas revisadas y registros de recogida se guardan en este iPhone. Al unirte a un hogar, ese contenido permanece aquí."
+            "value": "Este iPhone guarda tus listas privadas, cenas, comparaciones, capturas revisadas y registros de recogida. Al unirte a un hogar, esos datos siguen siendo privados. Si usas el respaldo de iCloud para esta app, puede incluir registros como tus listas y comparaciones guardadas."
           }
         }
       }

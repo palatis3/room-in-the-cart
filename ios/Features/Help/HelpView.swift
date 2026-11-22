@@ -207,7 +207,7 @@ struct HelpPrivacyView: View {
     var body: some View {
         WorkingForm {
             Section {
-                Text(helpText("Your private lists, dinners, comparisons, capture reviews and pickup records stay on this iPhone. Joining a household keeps that work here."))
+                Text(helpText("This iPhone stores your private lists, dinners, comparisons, capture reviews and pickup records. Joining a household keeps them private. If you use iCloud Backup for this app, your backup may include records such as saved lists and comparisons."))
                 Text(helpText("An export can include private notes and the names of people you shared with. Preview it before choosing a recipient."))
             } header: {
                 Text(helpText("Your private workspace")).marketJournalTitle(.title2).textCase(nil)
