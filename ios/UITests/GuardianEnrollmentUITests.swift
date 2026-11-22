@@ -128,10 +128,11 @@ import XCTest
         let screenshot = XCTAttachment(screenshot:app.screenshot()); screenshot.name = name; screenshot.lifetime = .keepAlways; add(screenshot)
         let accessibility = XCTAttachment(string:app.debugDescription); accessibility.name = name + " accessibility"; accessibility.lifetime = .keepAlways; add(accessibility)
     }
-    private func signInFromPrivateSettings(hasHousehold: Bool, loseFirstWorkspaceList: Bool = false) {
+    private func signInFromPrivateSettings(hasHousehold: Bool, loseFirstWorkspaceList: Bool = false, adultInvite: Bool = false) {
         app.launchArguments = ["--ui-testing","--guardian-enrollment-fixture","--guardian-fixture-root",
             "--reset-guardian-root-fixture","--household-first-sign-in","-AppleLanguages","(en)","-AppleLocale","en_US"]
         if !hasHousehold { app.launchArguments.append("--no-existing-households") }
+        if adultInvite { app.launchArguments.append("--adult-invitation-preview") }
         if loseFirstWorkspaceList { app.launchArguments.append("--lose-first-workspace-list") }
         app.launch()
         let settings = app.buttons["settings"]
@@ -209,6 +210,29 @@ import XCTest
         toggle("Keep my lists and plans private when creating or joining a household", searchTowardStart:true)
         reveal(create)
         XCTAssertTrue(create.isEnabled)
+    }
+
+    func testAdultInvitationShowsHouseholdAndOfferedRoleBeforeExplicitJoin() {
+        signInFromPrivateSettings(hasHousehold: false, adultInvite: true)
+        toggle("I confirm I am an adult")
+        let token = "10000000-0000-4000-8000-000000000001." + String(repeating: "a", count: 43)
+        type("household.invite.code", token)
+        let household = element("household.invite.household"), role = element("household.invite.role")
+        reveal(household, hitTarget: false)
+        XCTAssertEqual(household.label, "Fixture family")
+        reveal(role, hitTarget: false)
+        XCTAssertEqual(role.label, "Adult contributor")
+        let join = app.buttons["household.invite.join"]
+        reveal(join, hitTarget: false)
+        XCTAssertFalse(join.isEnabled)
+        XCTAssertFalse(app.buttons["Refresh household"].exists)
+        capture("Signed-in invitation before choosing Join")
+        toggle("Keep my lists and plans private when creating or joining a household", searchTowardStart: true)
+        reveal(join)
+        XCTAssertTrue(join.isEnabled)
+        join.tap()
+        XCTAssertTrue(app.buttons["Refresh household"].waitForExistence(timeout: 10))
+        XCTAssertFalse(join.exists)
     }
 
     func testPrivateSettingsFirstSignInContinuesToHouseholdAndBackgroundReturnsToLock() {
