@@ -182,6 +182,8 @@ struct VoicePantryRow {
         }
     }
 
+    private var largeTextEntryFocused: Bool { editing && typeSize.isAccessibilitySize }
+
     private var voiceForm: some View {
         WorkingForm {
             if !boundScope {
@@ -201,8 +203,10 @@ struct VoicePantryRow {
             } else {
                 if startingLot == nil && stage == .entry {
                     Section {
-                        Text(pantryText("What changed in your pantry?"))
-                            .marketJournalTitle()
+                        if !largeTextEntryFocused {
+                            Text(pantryText("What changed in your pantry?"))
+                                .marketJournalTitle()
+                        }
                         if let message {
                             Label(message, systemImage: "exclamationmark.circle")
                                 .fixedSize(horizontal: false, vertical: true)
@@ -213,17 +217,20 @@ struct VoicePantryRow {
                                 .accessibilityIdentifier("pantry.voiceStatus")
                                 .id("pantry.entryFeedback")
                         }
-                        TextField(pantryText("What did you use, or what would you like to check?"),
-                                  text: Binding(get: { draft }, set: { text in
-                                      guard stage == .entry, draft != text else { return }
-                                      draft = text
-                                      resetReview()
-                                  }), axis: .vertical)
-                            .lineLimit(2...6)
+                        let prompt = pantryText("What did you use, or what would you like to check?")
+                        TextField(prompt, text: Binding(get: { draft }, set: { text in
+                            guard stage == .entry, draft != text else { return }
+                            draft = text
+                            resetReview()
+                        }), axis: .vertical)
+                            // Leave the entire native editor above the keyboard actions so
+                            // its internal scrolling can follow the actual insertion point.
+                            .lineLimit(2...(largeTextEntryFocused ? 2 : 6))
                             .padding(12)
                             .background(Theme.canvas, in: RoundedRectangle(cornerRadius: 10))
                             .overlay { RoundedRectangle(cornerRadius: 10).strokeBorder(Theme.controlEdge) }
                             .focused($editing)
+                            .accessibilityLabel(prompt)
                             .accessibilityIdentifier("pantry.voiceText")
                             .disabled(working || !model.canEdit)
                             .id("pantry.entryEditor")
