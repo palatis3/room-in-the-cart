@@ -375,17 +375,21 @@ public struct StagedImportLine: Codable, Equatable, Sendable, Identifiable {
     /// Opaque private product reference from an explicitly reviewed pantry suggestion.
     public var pantryProductLink: UUID?
     public let originalPack: ListQuantityParser.PackLabel?
+    /// Suggested or edited in private list review. Confirmation saves the count as containers only.
+    public var reviewedPackages: GroceryPackageCount?
 
     public init(id: UUID, proposedLineID: UUID, originalText: String, name: String, quantity: Quantity?,
                 unresolvedReason: String?, duplicateLineIDs: [UUID], exclusions: [String] = [],
-                capture: CaptureImportMetadata? = nil, originalPack: ListQuantityParser.PackLabel? = nil, pantryProductLink: UUID? = nil) {
+                capture: CaptureImportMetadata? = nil, originalPack: ListQuantityParser.PackLabel? = nil,
+                pantryProductLink: UUID? = nil, reviewedPackages: GroceryPackageCount? = nil) {
+        self.reviewedPackages = reviewedPackages
         self.pantryProductLink = pantryProductLink
         self.id = id; self.proposedLineID = proposedLineID; self.originalText = originalText; self.name = name
         self.quantity = quantity; self.unresolvedReason = unresolvedReason; self.duplicateLineIDs = duplicateLineIDs
         self.exclusions = exclusions; self.capture = capture; self.originalPack = originalPack
     }
     private enum CodingKeys: String, CodingKey {
-        case id, proposedLineID, originalText, name, quantity, unresolvedReason, duplicateLineIDs, exclusions, capture, originalPack, pantryProductLink
+        case id, proposedLineID, originalText, name, quantity, unresolvedReason, duplicateLineIDs, exclusions, capture, originalPack, pantryProductLink, reviewedPackages
     }
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -398,6 +402,7 @@ public struct StagedImportLine: Codable, Equatable, Sendable, Identifiable {
         capture = try c.decodeIfPresent(CaptureImportMetadata.self, forKey: .capture)
         pantryProductLink = try c.decodeIfPresent(UUID.self, forKey: .pantryProductLink)
         originalPack = try c.decodeIfPresent(ListQuantityParser.PackLabel.self, forKey: .originalPack)
+        reviewedPackages = try c.decodeIfPresent(GroceryPackageCount.self, forKey: .reviewedPackages)
     }
 }
 
@@ -407,7 +412,7 @@ private extension StagedImportLine {
             productName: name, quantity: quantity, originalText: originalText,
             notes: [capture?.purpose, capture?.destination, unresolvedReason]
                 .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: "\n"),
-            exclusions: exclusions, removedAt: nil, capture: capture, originalPack: originalPack)
+            exclusions: exclusions, removedAt: nil, capture: capture, originalPack: originalPack, reviewedPackages: reviewedPackages)
     }
 }
 
@@ -825,17 +830,19 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     /// Reuse its full bytes for retries; re-staging a new preview with this ID is
     /// deliberately not equivalent to replaying an already committed preview.
     public func stageImport(text: String, source: ImportSource = .typed, importID: UUID = UUID(),
-                            maximumLines: Int = StagedListImport.maximumLines) throws -> StagedListImport {
+                            maximumLines: Int = StagedListImport.maximumLines, reviewPackageCounts: Bool = false) throws -> StagedListImport {
         let originals = try StagedListImport.sourceLines(text, maximum: maximumLines)
         var staged: [StagedImportLine] = []
         var candidatesByName = importCandidatesByName()
+        let reviewContainers = reviewPackageCounts && (source == .typed || source == .paste)
         for slice in originals {
             let original = String(slice)
-            let parsed = Self.parseLine(original)
+            let request = reviewContainers ? QuickGrocery.packageRequest(original) : nil
+            let parsed = request.map { (name: $0.name, quantity: nil, reason: nil, pack: nil) } ?? Self.parseLine(original)
             let name = normalizedProduct(parsed.name), proposedLineID = UUID()
             staged.append(StagedImportLine(id: UUID(), proposedLineID: proposedLineID, originalText: original,
                 name: parsed.name, quantity: parsed.quantity, unresolvedReason: parsed.reason,
-                duplicateLineIDs: candidatesByName[name] ?? [], originalPack: parsed.pack))
+                duplicateLineIDs: candidatesByName[name] ?? [], originalPack: parsed.pack, reviewedPackages: request?.packages))
             candidatesByName[name, default: []].append(proposedLineID)
         }
         return StagedListImport(id: importID, shopID: id, baseRevision: revision, source: source, originalText: text, lines: staged)
@@ -1884,6 +1891,10 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
             try ledgerText(line.originalText, maximum: StagedListImport.maximumOriginalLineBytes); try ledgerText(line.name, nonempty: true, maximum: 512)
             try line.quantity?.validate()
             try line.originalPack?.validate()
+            if let packages = line.reviewedPackages {
+                guard packages.count > 0, line.quantity == nil, line.originalPack == nil, line.capture == nil,
+                      line.pantryProductLink == nil else { throw LedgerError.invalid("groceryPackageCount") }
+            }
             try validateExclusions(line.exclusions)
             if let capture = line.capture {
                 guard line.quantity == (try capture.resolvedQuantity()) else { throw CaptureImportError.conflictingQuantity }

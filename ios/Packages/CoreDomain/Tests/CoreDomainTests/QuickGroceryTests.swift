@@ -3,6 +3,81 @@ import XCTest
 @testable import CoreDomain
 
 final class QuickGroceryTests: XCTestCase {
+    func testPrivateListReviewKeepsContainerCountSeparateFromContentsAcrossReopenAndDuplicateReview() throws {
+        for (wording, name) in [("2 cartons of oat milk", "oat milk"), ("2 cartones de leche de avena", "leche de avena")] {
+            var shop = ShoppingLedger()
+            XCTAssertNil(try QuickGrocery.stage(wording, in: shop))
+            let staged = try shop.stageImport(text: wording, reviewPackageCounts: true)
+            let row = try XCTUnwrap(staged.lines.first)
+            XCTAssertEqual(row.name, name)
+            XCTAssertEqual(row.reviewedPackages, .init(count: 2, kind: .carton))
+            XCTAssertNil(row.quantity)
+            XCTAssertNil(row.originalPack)
+            XCTAssertNil(row.unresolvedReason)
+            XCTAssertTrue(shop.lines.isEmpty)
+
+            var edited = try JSONDecoder().decode(StagedListImport.self, from: JSONEncoder().encode(staged))
+            edited.lines[0].reviewedPackages = .init(count: 3, kind: .bottle)
+            try shop.commitImport(edited)
+            shop = try JSONDecoder().decode(ShoppingLedger.self, from: JSONEncoder().encode(shop))
+            try shop.validate()
+            try shop.commitImport(edited)
+            XCTAssertEqual(shop.lines.map(\.id), [row.proposedLineID])
+            let source = try XCTUnwrap(shop.contributions.first)
+            XCTAssertEqual(source.id, row.id)
+            XCTAssertEqual(source.productName, name)
+            XCTAssertEqual(source.originalText, wording)
+            XCTAssertEqual(source.reviewedPackages, .init(count: 3, kind: .bottle))
+            XCTAssertEqual(shop.importBatches.first?.originalText, wording)
+            XCTAssertNil(try shop.quantity(forLineID: row.proposedLineID))
+            XCTAssertNil(shop.itemPackages[row.proposedLineID])
+
+            let repeatReview = try shop.stageImport(text: wording, reviewPackageCounts: true)
+            let repeated = try XCTUnwrap(repeatReview.lines.first)
+            XCTAssertEqual(repeated.duplicateLineIDs, [row.proposedLineID])
+            let options = try XCTUnwrap(shop.importMatchOptions(for: repeatReview, decisions: [:])[repeated.id])
+            XCTAssertFalse(options.contains { $0.canMerge || $0.canAdd })
+            XCTAssertThrowsError(try shop.commitImport(repeatReview))
+            try shop.commitImport(repeatReview, decisions: [repeated.id: .skip])
+            XCTAssertEqual(shop.contributions, [source])
+        }
+    }
+
+    func testOnlyExplicitContainerAndPlainProductWordingChangesPrivateListReview() throws {
+        let shop = ShoppingLedger()
+        let cases: [(String, GroceryPackageCount.Kind)] = [
+            ("a bag of rice", .bag), ("dos bolsas de arroz", .bag), ("1 bottle of tea", .bottle),
+            ("2 botellas de té", .bottle), ("1 can of peas", .can), ("2 latas de frijoles", .can),
+            ("3 boxes of pasta", .box), ("1 caja de pasta", .box), ("1 pack of wraps", .pack),
+            ("2 paquetes de tortillas", .pack), ("un cartón de leche", .carton)
+        ]
+        for (wording, kind) in cases {
+            let row = try XCTUnwrap(shop.stageImport(text: wording, reviewPackageCounts: true).lines.first)
+            XCTAssertEqual(row.reviewedPackages?.kind, kind, wording)
+            XCTAssertNil(row.quantity, wording)
+        }
+        for wording in ["2 cartons", "2 carton labels", "2 cartons of", "2 cartons of of milk",
+                        "1/2 carton of milk", "0 cartons of milk", "1–2 cartons of milk", "2 cartons of 1 L milk",
+                        "2 cartons of milk per person", "2 cartones de leche y pan", "2 bags of rice for Friday",
+                        "2 jars of jam", "2 cases of water", "2 cans of beans, 15 oz each",
+                        "2 kg rice", "2 apples", "12 wraps", "1 pack of 6 wraps"] {
+            let plain = try XCTUnwrap(shop.stageImport(text: wording).lines.first)
+            let reviewed = try XCTUnwrap(shop.stageImport(text: wording, reviewPackageCounts: true).lines.first)
+            XCTAssertNil(reviewed.reviewedPackages, wording)
+            XCTAssertEqual(reviewed.quantity, plain.quantity, wording)
+            XCTAssertEqual(reviewed.originalPack, plain.originalPack, wording)
+            XCTAssertEqual(reviewed.name, plain.name, wording)
+            XCTAssertEqual(reviewed.unresolvedReason, plain.unresolvedReason, wording)
+        }
+        var invalid = try shop.stageImport(text: "1 carton of milk", reviewPackageCounts: true)
+        XCTAssertNil(try shop.stageImport(text: "1 carton of milk", source: .photoOCR, reviewPackageCounts: true).lines.first?.reviewedPackages)
+        XCTAssertNil(try shop.stageImport(text: "1 carton of milk", source: .selectedText).lines.first?.reviewedPackages)
+        invalid.lines[0].quantity = Quantity(amount: .one, unit: .liter, originalLiteral: "1")
+        var current = shop
+        XCTAssertThrowsError(try current.commitImport(invalid))
+        XCTAssertTrue(current.lines.isEmpty)
+    }
+
     func testPlainGroceryCanReplayThenUndoOnlyItsSource() throws {
         var shop = ShoppingLedger()
         _ = try shop.addManualLine(name: "Milk", quantity: nil)

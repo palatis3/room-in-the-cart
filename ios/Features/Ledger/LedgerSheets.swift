@@ -4,7 +4,10 @@ import DeviceSurfaces
 
 struct InvalidImportAmount: Codable, Equatable {
     let text: String
-    let unit: UnitOfMeasure
+    let unit: UnitOfMeasure?
+    var packageKind: GroceryPackageCount.Kind? = nil
+
+    var selection: GroceryEntryUnit { packageKind.map(GroceryEntryUnit.package) ?? .measure(unit ?? .count) }
 }
 
 private enum LedgerImportField: Hashable {
@@ -154,6 +157,9 @@ struct LedgerImportView: View {
                             LedgerImportRowView(number: index + 1, similarLine: review.similarEarlierLines[row.id].map {
                                 ledgerFormat("Similar to line %lld: %@", Int64($0 + 1), preview.lines[$0].originalText)
                             }, line: rowBinding(row, at: index, previewID: preview.id),
+                                                allowsPackages: row.reviewedPackages != nil || (!pantryFoodPrefill
+                                                    && (preview.source == .typed || preview.source == .paste)
+                                                    && row.pantryProductLink == nil && row.originalPack == nil && row.capture == nil),
                                                 inputFocus: $inputFocus, invalidAmount: Binding(get: { invalidAmounts[row.id] },
                                                     set: { invalidAmounts[row.id] = $0 }),
                                                 matches: review.matches[row.id] ?? [],
@@ -406,7 +412,7 @@ struct LedgerImportView: View {
             do {
                 let staged = try pantryFoodPrefill
                     ? PantryRestockReview.stage(food: prefill, text: original, source: source, id: importID, shop: shop, suggestedAmount: pantrySuggestedAmount, productLink: pantryProductLink)
-                    : shop.stageImport(text: original, source: source, importID: importID)
+                    : shop.stageImport(text: original, source: source, importID: importID, reviewPackageCounts: true)
                 invalidAmounts = [:]
                 preview = staged
                 choices = LedgerImportReview.initialChoices(staged)
@@ -769,6 +775,7 @@ private struct LedgerImportRowView: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     let number: Int
     let similarLine: String?
+    let allowsPackages: Bool
     @Binding var line: StagedImportLine
     let inputFocus: FocusState<LedgerImportField?>.Binding
     @Binding var invalidAmount: InvalidImportAmount?
@@ -780,13 +787,14 @@ private struct LedgerImportRowView: View {
     @State private var previousWasExplicit = false
     let onEdited: () -> Void
     @State private var amount: String
-    @State private var unit: UnitOfMeasure
-    init(number: Int, similarLine: String?, line: Binding<StagedImportLine>, inputFocus: FocusState<LedgerImportField?>.Binding,
+    @State private var unit: GroceryEntryUnit
+    init(number: Int, similarLine: String?, line: Binding<StagedImportLine>, allowsPackages: Bool, inputFocus: FocusState<LedgerImportField?>.Binding,
          invalidAmount: Binding<InvalidImportAmount?>, matches: [LedgerImportReview.Match],
          explicitlySeparate: Bool, restoreChoice: @escaping (ImportResolution?, Bool) -> Void,
          choice: Binding<ImportResolution?>, onEdited: @escaping () -> Void) {
         self.number = number
         self.similarLine = similarLine
+        self.allowsPackages = allowsPackages
         _line = line
         self.inputFocus = inputFocus
         _invalidAmount = invalidAmount
@@ -795,8 +803,11 @@ private struct LedgerImportRowView: View {
         self.restoreChoice = restoreChoice
         _choice = choice
         self.onEdited = onEdited
-        _amount = State(initialValue: invalidAmount.wrappedValue?.text ?? line.wrappedValue.quantity.map { ledgerAmountInput($0.amount) } ?? "")
-        _unit = State(initialValue: invalidAmount.wrappedValue?.unit ?? line.wrappedValue.quantity?.unit ?? .count)
+        let row = line.wrappedValue
+        let amount = row.reviewedPackages.map { String($0.count) } ?? row.quantity.map { ledgerAmountInput($0.amount) } ?? ""
+        let unit = row.reviewedPackages.map { GroceryEntryUnit.package($0.kind) } ?? .measure(row.quantity?.unit ?? .count)
+        _amount = State(initialValue: invalidAmount.wrappedValue?.text ?? amount)
+        _unit = State(initialValue: invalidAmount.wrappedValue?.selection ?? unit)
     }
     var body: some View {
         let heading = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2)) : AnyLayout(HStackLayout())
@@ -882,18 +893,17 @@ private struct LedgerImportRowView: View {
                     .accessibilityIdentifier("ledgerImportAmount-\(number)")
                     .id(LedgerImportField.amount(line.id))
             }
-            Picker(ledgerText("Unit"), selection: $unit) {
-                ForEach(UnitOfMeasure.allCases, id: \.self) { Text($0.displayName).tag($0) }
-            }
+            GroceryUnitPicker(unit: $unit, allowsPackages: allowsPackages)
+                .accessibilityIdentifier("ledgerImportUnit-\(number)")
         }
         if invalidAmount != nil && choice != .skip {
-            Text(ledgerText("Enter a nonnegative amount with up to six decimal places, or leave it unknown."))
+            Text(unit.invalidAmountMessage)
                 .foregroundStyle(Theme.warning)
                 .accessibilityIdentifier("ledgerImportAmountError-\(number)")
-        } else if line.quantity == nil, line.originalPack == nil, line.capture == nil,
+        } else if line.reviewedPackages == nil, line.quantity == nil, line.originalPack == nil, line.capture == nil,
                   QuickGrocery.plainName(line.originalText) != nil, QuickGrocery.plainName(line.name) != nil {
             Text(ledgerText("Quantity optional")).font(.footnote).foregroundStyle(Theme.secondary)
-        } else if line.quantity == nil && line.originalPack?.count == nil {
+        } else if line.reviewedPackages == nil && line.quantity == nil && line.originalPack?.count == nil {
             Label(ledgerText("Quantity unresolved"), systemImage: "questionmark.circle").foregroundStyle(Theme.warning)
             if let reason = line.unresolvedReason { Text(ledgerContributionNote(reason)).font(.footnote) }
         }
@@ -908,12 +918,18 @@ private struct LedgerImportRowView: View {
 
     private func updateQuantity() {
         do {
-            line.quantity = try LedgerEntry.quantity(amount, unit)
-            line.unresolvedReason = line.quantity == nil ? "quantityUnknown" : nil
+            let parsed = try unit.parse(amount)
+            line.quantity = parsed.quantity
+            line.reviewedPackages = parsed.packages
+            line.unresolvedReason = parsed.quantity == nil && parsed.packages == nil ? "quantityUnknown" : nil
             invalidAmount = nil
         } catch {
-            invalidAmount = InvalidImportAmount(text: amount, unit: unit)
+            switch unit {
+            case .measure(let measure): invalidAmount = InvalidImportAmount(text: amount, unit: measure)
+            case .package(let kind): invalidAmount = InvalidImportAmount(text: amount, unit: nil, packageKind: kind)
+            }
             line.quantity = nil
+            line.reviewedPackages = nil
             line.unresolvedReason = nil
         }
         onEdited()

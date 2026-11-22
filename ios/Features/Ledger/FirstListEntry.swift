@@ -19,11 +19,11 @@ struct FirstListContents: Equatable, Codable {
         guard shop.id == shopID else { throw LedgerError.stalePreview }
         let combinedWording = [original, wording].filter { !$0.isEmpty }.joined(separator: "\n")
         try StagedListImport.validateSourceText(combinedWording, maximumLines: StagedListImport.maximumLines)
-        let before = try preview ?? shop.stageImport(text: original, source: source, importID: importID)
+        let before = try preview ?? shop.stageImport(text: original, source: source, importID: importID, reviewPackageCounts: true)
         guard before.id == importID, before.originalText == original else { throw LedgerError.stalePreview }
         let addition = try pantryFood
             ? PantryRestockReview.stage(food: wording, text: wording, source: .typed, id: UUID(), shop: shop, suggestedAmount: pantrySuggestedAmount, productLink: pantryProductLink)
-            : shop.stageImport(text: wording)
+            : shop.stageImport(text: wording, reviewPackageCounts: true)
         let combined = try shop.appendingImport(addition, to: before)
         var next = self
         next.original = combined.originalText

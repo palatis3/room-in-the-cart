@@ -5,6 +5,7 @@
     "RoomInTheCartUITests/NavigationRestorationUITests/testShopPreviewOpensQuantityWithoutCheckingAndRestoresOnlyTheCheckedGrocery",
     "RoomInTheCartUITests/NavigationRestorationUITests/testShopShowsRemainingQuantityAfterAPartialPick",
     "RoomInTheCartUITests/NavigationRestorationUITests/testNumberOpensQuantityEditorInShopAndFullListAndCartonsSurviveRelaunch",
+    "RoomInTheCartUITests/RoomInTheCartUITests/testTypedContainerOfGroceriesCanBeReviewedCorrectedAndReopenedInBothLanguages",
     "RoomInTheCartTests/LedgerListLayoutTests/testPartialCartonPickKeepsWorkingReceiptAndCheckoutQuantitiesDistinct",
     "RoomInTheCartUITests/RoomInTheCartUITests/testQuickGroceryDraftSurvivesColdRelaunchUntilExplicitAdd",
     "RoomInTheCartTests/FirstListTests/testQuickGroceryTypingAndExplicitAddUseOnlyTheCurrentDraft"
@@ -54,7 +55,8 @@
     "RoomInTheCartTests/ReceiptDocumentTests/testPricePrintedBelowTheItemRequiresExplicitLinkingAndStaysUnpaid",
     "RoomInTheCartTests/ReceiptDocumentTests/testPrintedPaidTotalRemainsUnknownUntilTheShopperAdoptsIt",
     "RoomInTheCartTests/ReceiptDocumentTests/testPrintedPaidTotalRejectsSubtotalConflictsAndUncertainAmounts",
-    "RoomInTheCartTests/ReceiptDocumentTests/testAmbiguousItemAcceptsOnlyExplicitPrintedFieldCorrections"
+    "RoomInTheCartTests/ReceiptDocumentTests/testAmbiguousItemAcceptsOnlyExplicitPrintedFieldCorrections",
+    "RoomInTheCartTests/DeliveryPDFReviewTests/testPrintedDeliveryDayRendersInEnglishAndSpanishWithOrWithoutAPurchaseDate"
   ],
   "08 · Type a receipt after denying camera access and review the portion kept": [
     "RoomInTheCartUITests/FreeJourneyUITests/testReceiptCameraRefusalKeepsPrivateReceiptAndTypedEntry",

@@ -452,7 +452,7 @@ private struct QuickGroceryField: View {
             guard let preview = try? QuickGrocery.stage(original, in: shop) else {
                 editing = false
                 review = Review(shopID: selectedID, text: original,
-                    preview: selectedID == nil ? nil : try? shop.stageImport(text: original), draft: draft, version: version)
+                    preview: selectedID == nil ? nil : try? shop.stageImport(text: original, reviewPackageCounts: true), draft: draft, version: version)
                 return
             }
             if selectedID == nil {

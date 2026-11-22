@@ -202,6 +202,60 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertEqual(field.value as? String, "Milk")
     }
 
+    func testTypedContainerOfGroceriesCanBeReviewedCorrectedAndReopenedInBothLanguages() {
+        for language in ["en", "es"] {
+            let spanish = language == "es"
+            let wording = spanish ? "2 cartones de leche de avena" : "2 cartons of oat milk"
+            let product = spanish ? "leche de avena" : "oat milk"
+            let cartons = spanish ? "cartones" : "cartons"
+            let bottles = spanish ? "botellas" : "bottles"
+            launch(language: language)
+            let field = element("quickGrocery.name")
+            tap(field)
+            if !spanish {
+                field.typeText("Apples\n")
+                XCTAssertTrue(app.buttons["quickGrocery.undo"].waitForExistence(timeout: 8))
+            }
+            field.typeText(wording + "\n")
+            let form = app.collectionViews["ledgerImportForm"]
+            XCTAssertTrue(form.waitForExistence(timeout: 8))
+            if spanish { tap(app.buttons["ledgerReviewImport"]) }
+            reveal(app.staticTexts["ledgerImportOriginal-1"])
+            XCTAssertTrue(app.staticTexts["ledgerImportOriginal-1"].label.contains(wording))
+            let name = element("ledgerImportName-1")
+            reveal(name)
+            XCTAssertEqual(name.value as? String, product)
+            let amount = app.textFields["ledgerImportAmount-1"]
+            reveal(amount)
+            XCTAssertEqual(amount.value as? String, "2")
+            let unit = app.buttons["ledgerImportUnit-1"]
+            reveal(unit)
+            XCTAssertEqual(unit.value as? String, cartons)
+            tap(unit)
+            tap(app.buttons[bottles])
+            XCTAssertEqual(unit.value as? String, bottles)
+            if !spanish {
+                tap(unit)
+                tap(app.buttons[cartons])
+            }
+            let savedUnit = spanish ? bottles : cartons
+            tap(app.buttons["ledgerCommitImport"])
+            XCTAssertTrue(form.waitForNonExistence(timeout: 8))
+            app.terminate()
+            launch(language: language, reset: false)
+            let row = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND value == %@",
+                "shop.editAmount-", product + ", 2 " + savedUnit)).firstMatch
+            reveal(row)
+            let id = String(row.identifier.dropFirst("shop.editAmount-".count))
+            tap(app.buttons["openPickupList"])
+            tap(app.buttons["ledgerEditAmount-" + id])
+            XCTAssertEqual(app.staticTexts["ledgerContributionName"].label, product)
+            XCTAssertEqual(app.buttons["ledgerContributionUnit"].value as? String, savedUnit)
+            XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", wording)).firstMatch.exists)
+            app.terminate()
+        }
+    }
+
     func testQuickGroceryReturnUndoAndDuplicateReviewInSpanish() {
         launch(language: "es")
         let field = element("quickGrocery.name")
