@@ -12,6 +12,7 @@
   ],
   "02 · Review a bulk list and keep one duplicate amount": [
     "RoomInTheCartUITests/ContextualNavigationUITests/testLargeTextKeepsLongNativePasteEditableAndReviewReachable",
+    "RoomInTheCartUITests/FreeJourneyUITests/testCancelledImportAndIngredientReturnPreserveLongFilteredListContext",
     "RoomInTheCartUITests/FreeJourneyUITests/testStagedListCanReturnToOriginalAndMergeADuplicateAfterRestart",
     "RoomInTheCartUITests/RoomInTheCartUITests/testSpanishLongListSkipKeepsTheMangoVisibleAndOriginalYogurtWordingSeparate",
     "RoomInTheCartUITests/RoomInTheCartUITests/testFirstListResumesAfterRelaunchAndCreatesOneUndoablePickupOnConfirmation"

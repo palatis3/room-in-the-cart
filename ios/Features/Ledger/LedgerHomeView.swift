@@ -20,6 +20,8 @@ struct LedgerHomeView: View {
     @State private var showingListOptions = false
     @State private var stapleRecallShopID: UUID?
     private enum Focus: Hashable { case result, error, undo, line(UUID) }
+    private enum SearchAnchor { case empty }
+    @State private var submittedSearch = false
     @State private var returnToLine: UUID?
     @State private var checkCue: GroceryCheckCue?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -31,6 +33,10 @@ struct LedgerHomeView: View {
             if model.ready, let shop = model.shop {
                 if !dynamicTypeSize.isAccessibilitySize { controls(shop) }
                 ScrollViewReader { reader in
+                    let dinner = dinnerPantry.status(in: shop, ledger: model)
+                    let covered = dinner.covered
+                    let reviewIDs = Set(dinner.pending.flatMap { $0.lines.map(\.id) })
+                    let groups = model.workspace.listLayout.groups(shop: shop, search: model.search, excluding: covered.union(reviewIDs))
                     JournalList {
                         if dynamicTypeSize.isAccessibilitySize {
                             Section {
@@ -66,17 +72,14 @@ struct LedgerHomeView: View {
                         let packages = shop.itemPackages
                         let typedBatches = shop.typedItemBatchIDs
                         let departmentChoices = model.workspace.listLayout.departmentChoices(in: shop)
-                        let dinner = dinnerPantry.status(in: shop, ledger: model)
-                        let covered = dinner.covered
-                        let reviewIDs = Set(dinner.pending.flatMap { $0.lines.map(\.id) })
                         DinnerPantryReviewSection(shopID: shop.id, reviews: dinner.pending,
                             matching: model.search.isEmpty || dinner.pending.isEmpty ? nil : Set(shop.search(model.search).map(\.id)))
-                        let groups = model.workspace.listLayout.groups(shop: shop, search: model.search, excluding: covered.union(reviewIDs))
                         if groups.allSatisfy({ $0.lines.isEmpty }) {
                             Section(ledgerText("Shopping list")) {
                                 Text(model.search.isEmpty && (!checked.isEmpty || !covered.isEmpty || !reviewIDs.isEmpty) ? quickGroceryText("No active items.") :
                                     ledgerText(model.search.isEmpty ? "Add the groceries you need for this pickup." : "No active items match your search."))
                                     .foregroundStyle(Theme.secondary)
+                                    .id(SearchAnchor.empty)
                                 if checked.isEmpty { recentHistory(count: 0) }
                             }
                         } else {
@@ -93,14 +96,14 @@ struct LedgerHomeView: View {
                         if !dinner.atHome.isEmpty {
                             Section(dinnerText("Using food at home")) {
                                 ForEach(shop.search(model.search).filter { dinner.atHome.contains($0.id) }) { line in
-                                    Label(line.name, systemImage: "house")
+                                    Label(line.name, systemImage: "house").id(line.id)
                                 }
                             }
                         }
                         if !dinner.used.isEmpty {
                             Section(dinnerText("Used for dinner")) {
                                 ForEach(shop.search(model.search).filter { dinner.used.contains($0.id) }) { line in
-                                    Label(line.name, systemImage: "fork.knife")
+                                    Label(line.name, systemImage: "fork.knife").id(line.id)
                                 }
                             }
                         }
@@ -132,6 +135,16 @@ struct LedgerHomeView: View {
                             Section { LedgerSaveStatus(model: model).accessibilityFocused($focus, equals: .result) }
                         }
                     }.listStyle(.plain)
+                    .onChange(of: submittedSearch) { _, _ in
+                        guard !model.search.isEmpty else { return }
+                        if let first = groups.first(where: { !$0.lines.isEmpty })?.lines.first {
+                            reader.scrollTo(first.id, anchor: .top)
+                        } else if let first = shop.search(model.search).first(where: { covered.contains($0.id) || reviewIDs.contains($0.id) }) {
+                            reader.scrollTo(first.id, anchor: .top)
+                        } else {
+                            reader.scrollTo(SearchAnchor.empty, anchor: .top)
+                        }
+                    }
                     .onChange(of: returnToLine) { _, line in
                         guard let line else { return }
                         reader.scrollTo(line, anchor: .center)
@@ -300,6 +313,8 @@ struct LedgerHomeView: View {
         let prompt = dynamicTypeSize.isAccessibilitySize ? Text(verbatim: "") : Text(title).foregroundStyle(Theme.secondary)
         return HStack {
             TextField(title, text: $model.search, prompt: prompt)
+                .submitLabel(.search)
+                .onSubmit { submittedSearch.toggle() }
                 .textFieldStyle(.roundedBorder).accessibilityLabel(title).accessibilityIdentifier("ledgerSearch")
             if !model.search.isEmpty {
                 Button { model.search = "" } label: {

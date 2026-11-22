@@ -4020,6 +4020,16 @@ import XCTest
         XCTAssertTrue(commit.waitForNonExistence(timeout: 10))
 
         let search = app.textFields["ledgerSearch"]
+        reveal(app.buttons["ledgerHistory"])
+        let first = app.fullListGrocery(labeled: "Inspect Wrap a")
+        XCTAssertFalse(first.exists && first.isHittable)
+        tap(search)
+        search.typeText("Wrap a\n")
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+        XCTAssertTrue(first.wait(for: \.isHittable, toEqual: true, timeout: 8))
+        XCTAssertTrue(app.collectionViews.firstMatch.frame.contains(first.frame),
+                      "Submitting from Pickup details must put the matching grocery inside the list viewport.")
+        tap(app.buttons["ledgerClearSearch"])
         tap(search); search.typeText("Wrap\n")
         XCTAssertEqual(search.value as? String, "Wrap")
         XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
@@ -4062,7 +4072,9 @@ import XCTest
         XCTAssertTrue(selectAll.waitForExistence(timeout: 5))
         selectAll.tap(); search.typeText("cancelled\n")
         XCTAssertEqual(search.value as? String, "cancelled")
-        XCTAssertTrue(app.staticTexts["No active items match your search."].waitForExistence(timeout: 8))
+        let empty = app.staticTexts["No active items match your search."]
+        XCTAssertTrue(empty.wait(for: \.isHittable, toEqual: true, timeout: 8))
+        XCTAssertTrue(app.collectionViews.firstMatch.frame.contains(empty.frame))
     }
 
     func testManualListOrderSurvivesRestartAndOpensLargePrint() throws {

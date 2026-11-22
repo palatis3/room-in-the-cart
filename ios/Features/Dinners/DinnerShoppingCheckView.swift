@@ -315,7 +315,9 @@ struct DinnerPantryReviewSection: View {
                 Text(dinnerText(review.servingsChanged
                     ? "Servings changed. Check the pantry allocation before buying these ingredients."
                     : "Check the earlier pantry allocation before buying these ingredients."))
-                ForEach(review.lines.filter { matching?.contains($0.id) ?? true }) { line in Text(verbatim: line.name) }
+                ForEach(review.lines.filter { matching?.contains($0.id) ?? true }) { line in
+                    Text(verbatim: line.name).id(line.id)
+                }
                 DinnerShoppingCheckLink(shopID: shopID, occurrenceID: review.id, linkedProducts: true)
             }
         }
