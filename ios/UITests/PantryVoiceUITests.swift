@@ -302,9 +302,12 @@ import XCTest
         let joined = selectedText.replacingOccurrences(of: #"[-\u2010\u2011\u00AD]\s+"#, with: "", options: .regularExpression)
         XCTAssertTrue(joined.localizedCaseInsensitiveContains("Refrigerador"), selectedText)
 
-        let cancel = app.buttons["Cancelar"]
+        let cancel = app.buttons["pantry.cancelLocationFilter"]
         filter.tap()
         XCTAssertTrue(cancel.waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertEqual(cancel.label, "Cancelar")
+        XCTAssertTrue(cancel.isHittable)
+        XCTAssertTrue(refrigerator.isSelected)
         cancel.tap()
         XCTAssertTrue(cancel.waitForNonExistence(timeout: 5))
         assertSelection("Refrigerador")

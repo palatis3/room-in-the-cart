@@ -283,7 +283,7 @@ private struct FirstListDiscardButton: View {
         Button(ledgerText("Discard draft"), role: .destructive) { confirming = true }
             .disabled(blocked)
             .accessibilityIdentifier("firstList.discard")
-            .confirmationDialog(ledgerText("Discard this shopping list draft?"), isPresented: $confirming, titleVisibility: .visible) {
+            .alert(ledgerText("Discard this shopping list draft?"), isPresented: $confirming) {
                 Button(ledgerText("Discard draft"), role: .destructive) {
                     Task { if !blocked, await editor.discard() { dismiss() } }
                 }

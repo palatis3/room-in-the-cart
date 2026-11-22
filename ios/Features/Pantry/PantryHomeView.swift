@@ -119,12 +119,24 @@ struct PantryHomeView: View {
                 .contentShape(Rectangle())
             }
             .accessibilityLabel(title).accessibilityValue(value).accessibilityIdentifier("pantry.locationFilter")
-            .confirmationDialog(title, isPresented: $choosingLocation, titleVisibility: .visible) {
-                Button(allLocations) { selectedLocation = nil }
-                ForEach(InventoryLocation.allCases, id: \.self) { location in
-                    Button(pantryLocationName(location)) { selectedLocation = location }
+            .sheet(isPresented: $choosingLocation) {
+                NavigationStack {
+                    JournalList {
+                        locationChoice(nil)
+                        ForEach(InventoryLocation.allCases, id: \.self) { location in
+                            locationChoice(location)
+                        }
+                    }
+                    .navigationTitle(title)
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button(pantryText("Cancel")) { choosingLocation = false }
+                                .accessibilityLabel(pantryText("Cancel"))
+                                .accessibilityIdentifier("pantry.cancelLocationFilter")
+                        }
+                    }
                 }
-                Button(pantryText("Cancel"), role: .cancel) {}
             }
         } else {
             Picker(title, selection: $selectedLocation) {
@@ -135,6 +147,26 @@ struct PantryHomeView: View {
             }
             .accessibilityIdentifier("pantry.locationFilter")
         }
+    }
+
+    private func locationChoice(_ location: InventoryLocation?) -> some View {
+        let name = location.map(pantryLocationName) ?? pantryText("All locations")
+        let selected = selectedLocation == location
+        return Button {
+            selectedLocation = location
+            choosingLocation = false
+        } label: {
+            HStack {
+                Text(name)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 8)
+                if selected { Image(systemName: "checkmark").accessibilityHidden(true) }
+            }
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+        }
+        .accessibilityLabel(name)
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
     private var pantryList: some View {

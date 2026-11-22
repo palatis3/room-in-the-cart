@@ -528,9 +528,12 @@ final class RoomInTheCartUITests: XCTestCase {
             expectation(for: NSPredicate(format: "label == %@", label), evaluatedWith: saved)
             waitForExpectations(timeout: 10)
             tap(app.buttons["firstList.discard"])
-            let keepEditing = app.buttons[language == "en" ? "Keep editing" : "Seguir editando"]
+            let confirmation = app.alerts.firstMatch
+            let keepEditing = confirmation.buttons[language == "en" ? "Keep editing" : "Seguir editando"]
             XCTAssertTrue(keepEditing.waitForExistence(timeout: 5))
+            XCTAssertTrue(confirmation.buttons[language == "en" ? "Discard draft" : "Descartar el borrador"].exists)
             keepEditing.tap()
+            XCTAssertTrue(confirmation.waitForNonExistence(timeout: 5))
             XCTAssertTrue(form.exists)
             app.terminate()
             launch(language: language, reset: false, largeDark: language == "es")
