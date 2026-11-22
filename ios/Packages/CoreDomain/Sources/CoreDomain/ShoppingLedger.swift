@@ -245,6 +245,21 @@ public enum ContributionSource: Codable, Equatable, Sendable {
     public var canSupplyExistingQuantity: Bool { !isProtected && !isMeal }
 }
 
+/// A shopper-entered number of containers with unknown contents.
+public struct GroceryPackageCount: Codable, Equatable, Sendable {
+    public enum Kind: String, CaseIterable, Codable, Sendable {
+        case carton, bag, bottle, can, box, pack
+    }
+
+    public let count: Int64
+    public let kind: Kind
+
+    public init(count: Int64, kind: Kind) {
+        self.count = count
+        self.kind = kind
+    }
+}
+
 public struct LedgerContribution: Codable, Equatable, Sendable, Identifiable {
     public let id: UUID
     public var lineID: UUID
@@ -258,6 +273,11 @@ public struct LedgerContribution: Codable, Equatable, Sendable, Identifiable {
     public var capture: CaptureImportMetadata? = nil
     public var originalPack: ListQuantityParser.PackLabel? = nil
     public var checkedWithoutAmount: Bool? = nil
+    public var reviewedPackages: GroceryPackageCount? = nil
+
+    public var canEditPackageCount: Bool {
+        source.canSupplyExistingQuantity && capture == nil && originalPack == nil
+    }
 
     public var isHandCheckedUnmeasuredIngredient: Bool {
         source.isMeal && checkedWithoutAmount == true && quantity == nil
@@ -989,10 +1009,19 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     }
 
     public mutating func updateContribution(contributionID: UUID, quantity: Quantity?, notes: String, at: Date = Date()) throws {
+        let source = contributions[try contributionIndex(contributionID)]
+        try updateContribution(contributionID: contributionID, quantity: quantity, notes: notes,
+                               reviewedPackages: quantity == nil ? source.reviewedPackages : nil, at: at)
+    }
+
+    public mutating func updateContribution(contributionID: UUID, quantity: Quantity?, notes: String,
+                                            reviewedPackages: GroceryPackageCount?, at: Date = Date()) throws {
         try mutate("updateContribution", at: at) { next in
             let index = try next.contributionIndex(contributionID)
             guard next.contributions[index].removedAt == nil else { throw LedgerError.invalid("removedContribution") }
-            next.contributions[index].quantity = quantity; next.contributions[index].notes = notes
+            next.contributions[index].quantity = quantity
+            next.contributions[index].notes = notes
+            next.contributions[index].reviewedPackages = reviewedPackages
         }
     }
 
@@ -1300,6 +1329,11 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
             guard lineIDs.contains(source.lineID) else { throw LedgerError.notFound(source.lineID) }
             try ledgerText(source.productName, nonempty: true, maximum: 512); try ledgerText(source.originalText)
             try ledgerText(source.notes); try source.quantity?.validate(); try validateExclusions(source.exclusions)
+            if let packages = source.reviewedPackages {
+                guard source.canEditPackageCount, packages.count > 0, source.quantity == nil else {
+                    throw LedgerError.invalid("groceryPackageCount")
+                }
+            }
             try source.originalPack?.validate()
             _ = try source.capture?.resolvedQuantity()
             try permittedProduct(source.productName, exclusions: source.exclusions); try ledgerDate(source.removedAt)

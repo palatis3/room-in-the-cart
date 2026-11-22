@@ -25,6 +25,23 @@ func ledgerQuantity(_ quantity: Quantity?) -> String {
     return "\(amountText(quantity.amount)) \(quantity.unit.comparisonLabel(for: quantity.amount))"
 }
 
+extension GroceryPackageCount.Kind {
+    func label(singular: Bool = false) -> String {
+        switch self {
+        case .carton: quickGroceryText(singular ? "carton" : "cartons")
+        case .bag: quickGroceryText(singular ? "bag" : "bags")
+        case .bottle: quickGroceryText(singular ? "bottle" : "bottles")
+        case .can: quickGroceryText(singular ? "can" : "cans")
+        case .box: quickGroceryText(singular ? "box" : "boxes")
+        case .pack: quickGroceryText(singular ? "pack" : "packs")
+        }
+    }
+}
+
+extension GroceryPackageCount {
+    var shoppingLabel: String { quickGroceryFormat("%lld %@", count, kind.label(singular: count == 1)) }
+}
+
 /// The outer count is a shopping instruction, never a measured ingredient total.
 func shoppingPackageCount(_ count: Int, original: String) -> String {
     var tokens = ListQuantityParser.itemTokens(original)
@@ -52,8 +69,20 @@ extension ShoppingLedger {
         if !sources.isEmpty, sources.allSatisfy(\.isHandCheckedUnmeasuredIngredient) {
             return tonightText("Checked by hand · unmeasured")
         }
+        if sources.count > 1, sources.allSatisfy({ $0.reviewedPackages != nil }) {
+            var counts: [GroceryPackageCount.Kind: Int64] = [:]
+            for packages in sources.compactMap(\.reviewedPackages) {
+                let (count, overflow) = counts[packages.kind, default: 0].addingReportingOverflow(packages.count)
+                guard !overflow else { return ledgerQuantity(nil) }
+                counts[packages.kind] = count
+            }
+            return GroceryPackageCount.Kind.allCases.compactMap { kind in
+                counts[kind].map { GroceryPackageCount(count: $0, kind: kind).shoppingLabel }
+            }.joined(separator: " + ")
+        }
         guard sources.count == 1, let source = sources.first, source.source.canSupplyExistingQuantity,
               source.quantity == nil else { return ledgerQuantity(nil) }
+        if let packages = source.reviewedPackages { return packages.shoppingLabel }
         if let count = source.originalPack?.count {
             return shoppingPackageCount(count, original: source.originalText)
         }
@@ -99,6 +128,7 @@ extension LedgerContribution {
     }
 
     var sourceQuantityLabel: String {
+        if let packages = reviewedPackages { return packages.shoppingLabel }
         if hasOptionalShoppingAmount { return ledgerText("Quantity optional") }
         if isHandCheckedUnmeasuredIngredient { return tonightText("Checked by hand · unmeasured") }
         if quantity == nil, let count = originalPack?.count { return shoppingPackageCount(count, original: originalText) }

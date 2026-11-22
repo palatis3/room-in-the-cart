@@ -107,7 +107,8 @@ import CoreDomain
                 if let date = line.trashedAt { lines.append(joined([ledgerText("Trash"), stamp(date)])) }
                 if !line.notes.isEmpty { lines.append(line.notes) }
                 for entry in contributions[line.id] ?? [] {
-                    var details = [ledgerSourceLabel(entry, shop: shop, typedItemBatches: typedItemBatches), entry.productName, quantity(entry.quantity)]
+                    let amount = entry.reviewedPackages?.shoppingLabel ?? quantity(entry.quantity)
+                    var details = [ledgerSourceLabel(entry, shop: shop, typedItemBatches: typedItemBatches), entry.productName, amount]
                     if let removed = entry.removedAt { details.append(joined([ledgerText("Removed"), stamp(removed)])) }
                     lines.append("  " + joined(details))
                     if !entry.originalText.isEmpty && entry.originalText != entry.quantity?.originalLiteral && entry.originalText != entry.productName {

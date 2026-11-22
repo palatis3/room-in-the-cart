@@ -248,7 +248,7 @@ struct LargePrintList: View {
                     ForEach(group.lines) { line in
                         VStack(alignment: .leading) {
                             Text(line.name).font(.title2.bold())
-                            Text(ledgerQuantity(try? shop.quantity(forLineID: line.id))).font(.title3)
+                            if let amount = shop.shoppingRowQuantity(for: line) { Text(amount).font(.title3) }
                             ForEach(itemDetails[line.id] ?? [], id: \.self) { label in
                                 Text(verbatim: label).font(.title3)
                             }
@@ -294,8 +294,8 @@ struct LargePrintList: View {
         for group in layout.groups(shop: shop) {
             if let heading = heading(group) { html += "<h2>\(escaped(heading))</h2>" }
             for line in group.lines {
-                let amount = ledgerQuantity(try? shop.quantity(forLineID: line.id))
-                html += "<div class='item'><strong>\(escaped(line.name))</strong><br>\(escaped(amount))"
+                html += "<div class='item'><strong>\(escaped(line.name))</strong>"
+                if let amount = shop.shoppingRowQuantity(for: line) { html += "<br>" + escaped(amount) }
                 for label in itemDetails[line.id] ?? [] { html += "<br>" + escaped(label) }
                 html += "</div>"
             }

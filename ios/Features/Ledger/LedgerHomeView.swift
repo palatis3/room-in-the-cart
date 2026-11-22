@@ -396,36 +396,36 @@ struct LedgerHomeView: View {
             .accessibilityHint(ledgerText("Moves this item to Recently checked."))
             .accessibilityFocused($focus, equals: .line(line.id))
             .accessibilityIdentifier("ledgerCheck-\(line.id)")
-            VStack(alignment: .leading, spacing: 0) {
-                NavigationLink {
-                    LedgerIngredientView(model: model, shopID: shop.id, lineID: line.id)
-                } label: {
-                    VStack(alignment: .leading, spacing: 5) {
-                        GroceryNameAndAmount(name: line.name, amount: quantity)
-                        if let exclusions { Text(verbatim: exclusions) }
-                        if !line.notes.isEmpty { Text(line.notes) }
-                    }.padding(.vertical, 6).fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                        .contentShape(Rectangle())
-                }.accessibilityLabel(ledgerFormat("Inspect %@", line.name))
-                    .buttonStyle(.plain)
-                    .accessibilityValue(Text(verbatim: details))
-                    .accessibilityIdentifier("ledgerInspect-\(line.id)")
-                    .accessibilityAction(named: Text(ledgerText("Edit item")), editItem)
-                LedgerDepartmentPicker(model: model, shop: shop, line: line, labels: departmentChoices)
-            }
-            if let source, let workspace = model.sourceWorkspaceID {
-                Button {
-                    sheet = .editAmount(workspace: workspace, shop: shop.id, line: line.id, source: source.id)
-                } label: {
-                    Image(systemName: "pencil").foregroundStyle(Theme.action)
-                        .frame(width: 44, height: 44).contentShape(Rectangle())
+            let layout = dynamicTypeSize.isAccessibilitySize
+                ? AnyLayout(VStackLayout(alignment: .leading, spacing: 0))
+                : AnyLayout(HStackLayout(alignment: .top, spacing: 6))
+            layout {
+                VStack(alignment: .leading, spacing: 0) {
+                    NavigationLink {
+                        LedgerIngredientView(model: model, shopID: shop.id, lineID: line.id)
+                    } label: {
+                        VStack(alignment: .leading, spacing: 5) {
+                            GroceryNameAndAmount(name: line.name, amount: source == nil || model.sourceWorkspaceID == nil ? quantity : nil)
+                            if let exclusions { Text(verbatim: exclusions) }
+                            if !line.notes.isEmpty { Text(line.notes) }
+                        }.padding(.vertical, 6).fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                            .contentShape(Rectangle())
+                    }.accessibilityLabel(ledgerFormat("Inspect %@", line.name))
+                        .buttonStyle(.plain)
+                        .accessibilityValue(Text(verbatim: details))
+                        .accessibilityIdentifier("ledgerInspect-\(line.id)")
+                        .accessibilityAction(named: Text(ledgerText("Edit item")), editItem)
+                    LedgerDepartmentPicker(model: model, shop: shop, line: line, labels: departmentChoices)
                 }
-                .buttonStyle(.borderless)
-                .accessibilityLabel(quickGroceryText("Edit quantity and notes"))
-                .accessibilityValue(Text(verbatim: line.name))
-                .accessibilityIdentifier("ledgerEditAmount-\(line.id)")
-                .disabled(model.saving || model.hasPendingSave)
+
+                if let source, let workspace = model.sourceWorkspaceID {
+                    GroceryAmountEditButton(amount: quantity, name: line.name, spokenAmount: spokenAmount) {
+                        sheet = .editAmount(workspace: workspace, shop: shop.id, line: line.id, source: source.id)
+                    }
+                    .accessibilityIdentifier("ledgerEditAmount-\(line.id)")
+                    .disabled(model.saving || model.hasPendingSave)
+                }
             }
         }
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
@@ -454,6 +454,31 @@ extension LedgerModel {
                 try current.setChecked(lineID: line.id, checked: checked)
             }
         }
+    }
+}
+
+private struct GroceryAmountEditButton: View {
+    let amount: String?
+    let name: String
+    let spokenAmount: String?
+    let edit: () -> Void
+
+    var body: some View {
+        Button(action: edit) {
+            HStack(spacing: 6) {
+                if let amount {
+                    Text(verbatim: amount).monospacedDigit().foregroundStyle(Theme.ink)
+                }
+                Image(systemName: "pencil").font(.footnote).foregroundStyle(Theme.action)
+            }
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal, 6)
+            .frame(minWidth: 48, minHeight: 48)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.borderless)
+        .accessibilityLabel(quickGroceryText("Edit quantity and notes"))
+        .accessibilityValue([name, spokenAmount].compactMap { $0 }.joined(separator: ", "))
     }
 }
 
@@ -552,7 +577,7 @@ struct ShopGroceryPreview: View {
                         .accessibilityAddTraits(line.isChecked ? .isSelected : [])
                         .accessibilityIdentifier("shop.check-\(line.id)")
                     let amount = shop.groceryRowAmount(line, measure: measure)
-                    let source = measure == nil ? nil : shop.ordinaryQuantitySource(for: line,
+                    let source = shop.ordinaryQuantitySource(for: line,
                         contributions: shop.contributions(forLineID: line.id), typedItemBatches: typedItemBatches)
                     let layout = typeSize.isAccessibilitySize
                         ? AnyLayout(VStackLayout(alignment: .leading, spacing: 0))
@@ -566,16 +591,9 @@ struct ShopGroceryPreview: View {
                         .accessibilityValue(shop.tripAmountLabel(line, measure: measure) ?? "")
                         .accessibilityIdentifier("shop.inspect-\(line.id)")
                         if let source, let amount {
-                            Button { destination = .amount(line: line.id, source: source.id) } label: {
-                                HStack(spacing: 6) {
-                                    Text(verbatim: amount).monospacedDigit().foregroundStyle(Theme.ink)
-                                    Image(systemName: "pencil").font(.footnote).foregroundStyle(Theme.action)
-                                }
-                                .fixedSize(horizontal: false, vertical: true)
-                                .frame(minWidth: 44, minHeight: 48).contentShape(Rectangle())
+                            GroceryAmountEditButton(amount: amount, name: line.name, spokenAmount: shop.tripAmountLabel(line, measure: measure)) {
+                                destination = .amount(line: line.id, source: source.id)
                             }
-                            .accessibilityLabel(quickGroceryText("Edit quantity and notes"))
-                            .accessibilityValue([line.name, shop.tripAmountLabel(line, measure: measure)].compactMap { $0 }.joined(separator: ", "))
                             .accessibilityIdentifier("shop.editAmount-\(line.id)")
                         }
                     }

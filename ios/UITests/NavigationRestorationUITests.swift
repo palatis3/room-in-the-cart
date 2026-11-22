@@ -92,6 +92,50 @@ import XCTest
         XCTAssertTrue(otherCheck.exists)
     }
 
+    func testNumberOpensQuantityEditorInShopAndFullListAndCartonsSurviveRelaunch() {
+        launch(reset: true)
+        let entry = element("quickGrocery.name")
+        tap(entry)
+        entry.typeText("2 Milk\n")
+        XCTAssertTrue(app.buttons["quickGrocery.undo"].waitForExistence(timeout: 8))
+        tap(app.buttons["quickGrocery.dismissKeyboard"])
+        let inspect = app.buttons["Inspect Milk"]
+        let editor = app.navigationBars["Quantity and notes"]
+        XCTAssertTrue(inspect.waitForExistence(timeout: 8))
+        let id = inspect.identifier.replacingOccurrences(of: "shop.inspect-", with: "")
+        func tapNumber(_ button: XCUIElement, beside inspect: XCUIElement, checkbox: XCUIElement) {
+            reveal(button)
+            XCTAssertGreaterThanOrEqual(button.frame.width, 44)
+            XCTAssertGreaterThanOrEqual(button.frame.height, 44)
+            XCTAssertFalse(button.frame.intersects(inspect.frame))
+            XCTAssertFalse(button.frame.intersects(checkbox.frame))
+            button.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: 0.5)).tap()
+            XCTAssertTrue(editor.waitForExistence(timeout: 8))
+        }
+        let quickAmount = app.buttons["shop.editAmount-" + id]
+        tapNumber(quickAmount, beside: inspect, checkbox: app.buttons["shop.check-" + id])
+        XCTAssertEqual(app.staticTexts["ledgerContributionName"].label, "Milk")
+        XCTAssertTrue(app.staticTexts["Original wording: 2 Milk"].exists)
+        tap(element("ledgerContributionUnit"))
+        tap(app.buttons["cartons"])
+        tap(app.buttons["ledgerSaveContributionChanges"])
+        XCTAssertTrue(editor.waitForNonExistence(timeout: 8))
+
+        app.terminate()
+        launch(reset: false)
+        XCTAssertTrue(quickAmount.waitForExistence(timeout: 8))
+        XCTAssertEqual(quickAmount.value as? String, "Milk, 2 cartons")
+        tap(app.buttons["openPickupList"])
+        let fullAmount = app.buttons["ledgerEditAmount-" + id]
+        let fullCheck = app.buttons["ledgerCheck-" + id]
+        tapNumber(fullAmount, beside: app.fullListGrocery(labeled: "Inspect Milk"), checkbox: fullCheck)
+        XCTAssertEqual(app.textFields["Quantity (optional)"].value as? String, "2")
+        XCTAssertEqual(element("ledgerContributionUnit").value as? String, "cartons")
+        tap(editor.buttons["Cancel"])
+        XCTAssertTrue(fullCheck.waitForExistence(timeout: 8))
+        XCTAssertEqual(fullAmount.value as? String, "Milk, 2 cartons")
+    }
+
     func testShopShowsRemainingQuantityAfterAPartialPick() {
         launch(reset: true)
         let entry = element("quickGrocery.name")

@@ -180,10 +180,13 @@ final class RoomInTheCartUITests: XCTestCase {
         edit.tap()
         let editor = app.navigationBars["Cantidad y notas"]
         XCTAssertTrue(editor.waitForExistence(timeout: 5))
-        let done = editor.buttons["ledgerContributionDone"]
+        let currentItem = app.staticTexts["ledgerContributionName"]
+        XCTAssertTrue(currentItem.waitForExistence(timeout: 5))
+        XCTAssertEqual(currentItem.label, name)
+        let done = app.buttons["ledgerContributionDone"]
         func finishInput() {
             XCTAssertTrue(done.waitForExistence(timeout: 5) && done.isHittable)
-            XCTAssertEqual(done.label, "Listo")
+            XCTAssertEqual(done.label, "Ocultar teclado")
             XCTAssertTrue(app.waitForDoneAboveKeyboard(identifier: "ledgerContributionDone"))
             done.tap()
             XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "ledgerContributionDone"))

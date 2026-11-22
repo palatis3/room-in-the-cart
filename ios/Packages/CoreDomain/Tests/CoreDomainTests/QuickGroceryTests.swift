@@ -24,6 +24,71 @@ final class QuickGroceryTests: XCTestCase {
         XCTAssertNotNil(try QuickGrocery.stage("huevos", in: reopened))
     }
 
+    func testReviewedPackageCountSurvivesReopenWithoutSupplyingIngredientUnits() throws {
+        var shop = ShoppingLedger()
+        let milk = try XCTUnwrap(QuickGrocery.stage("Milk", in: shop))
+        try shop.commitImport(milk)
+        let source = try XCTUnwrap(shop.contributions.first)
+        let lineID = source.lineID
+        let packages = GroceryPackageCount(count: 2, kind: .carton)
+        let oldData = try JSONEncoder().encode(shop)
+        XCTAssertFalse(String(decoding: oldData, as: UTF8.self).contains("reviewedPackages"))
+        shop = try JSONDecoder().decode(ShoppingLedger.self, from: oldData)
+        try shop.updateContribution(contributionID: source.id, quantity: nil, notes: "Organic", reviewedPackages: packages)
+
+        let reopened = try JSONDecoder().decode(ShoppingLedger.self, from: JSONEncoder().encode(shop))
+        try reopened.validate()
+        let saved = try XCTUnwrap(reopened.contributions.first)
+        XCTAssertEqual(saved.reviewedPackages, packages)
+        XCTAssertEqual(saved.originalText, "Milk")
+        XCTAssertNil(saved.originalPack)
+        XCTAssertEqual(saved.notes, "Organic")
+        XCTAssertEqual(reopened.importBatches.first?.preview, milk)
+        XCTAssertNil(try reopened.quantity(forLineID: lineID))
+        XCTAssertNil(reopened.itemPackages[lineID])
+
+        let liters = Quantity(amount: .one, unit: .liter, originalLiteral: "1")
+        XCTAssertTrue(reopened.matchingLines(name: "Milk", quantity: liters).isEmpty)
+        XCTAssertThrowsError(try shop.updateContribution(contributionID: source.id, quantity: liters, notes: "", reviewedPackages: packages))
+        XCTAssertThrowsError(try shop.updateContribution(contributionID: source.id, quantity: nil, notes: "", reviewedPackages: .init(count: 0, kind: .bag)))
+        XCTAssertEqual(shop, reopened)
+        try shop.updateContribution(contributionID: source.id, quantity: nil, notes: "Cold")
+        XCTAssertEqual(shop.contributions.first?.reviewedPackages, packages)
+        let beforePick = shop
+        XCTAssertThrowsError(try shop.pickPart(lineID: lineID, amount: .one, expectedRevision: shop.revisionID))
+        XCTAssertEqual(shop, beforePick)
+        try shop.setChecked(lineID: lineID, checked: true)
+        XCTAssertTrue(shop.lines[0].isChecked)
+        XCTAssertNil(try shop.pickedQuantity(forLineID: lineID))
+        XCTAssertNil(shop.lines[0].tripPick)
+        try shop.setChecked(lineID: lineID, checked: false)
+        XCTAssertEqual(shop.contributions.first?.reviewedPackages, packages)
+        try shop.updateContribution(contributionID: source.id, quantity: liters, notes: "Organic")
+        XCTAssertNil(shop.contributions.first?.reviewedPackages)
+        XCTAssertEqual(try shop.quantity(forLineID: lineID)?.unit, .liter)
+    }
+
+    func testReviewedContainersAndIngredientAmountsOnOneLineHaveNoMeasuredTotal() throws {
+        var shop = ShoppingLedger()
+        let first = try shop.stageImport(text: "1 milk")
+        try shop.commitImport(first)
+        let lineID = first.lines[0].proposedLineID
+        let second = try shop.stageImport(text: "2 milk")
+        try shop.commitImport(second, decisions: [second.lines[0].id: .addToLine(lineID)])
+        XCTAssertEqual(try shop.quantity(forLineID: lineID)?.amount, try Rational(3))
+        try shop.updateContribution(contributionID: first.lines[0].id, quantity: nil, notes: "", reviewedPackages: .init(count: 1, kind: .carton))
+        XCTAssertNil(try shop.quantity(forLineID: lineID))
+        XCTAssertEqual(shop.contributions(forLineID: lineID).last?.quantity?.amount, try Rational(2))
+
+        let cans = try shop.stageImport(text: "2 cans of beans")
+        try shop.commitImport(cans)
+        let before = shop
+        XCTAssertThrowsError(try shop.updateContribution(contributionID: cans.lines[0].id, quantity: nil, notes: "",
+                                                         reviewedPackages: .init(count: 1, kind: .box)))
+        XCTAssertEqual(shop, before)
+        XCTAssertEqual(shop.contributions.last?.originalPack, cans.lines[0].originalPack)
+    }
+
     func testQuantitiesRequestsAndListsGoToReviewWithOriginalWording() throws {
         let shop = ShoppingLedger()
         for text in ["2 kg rice", "3½ cups flour", "six bananas", "seis plátanos", "puñado de nueces",
