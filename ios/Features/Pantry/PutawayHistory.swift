@@ -297,8 +297,8 @@ struct ReviewedReceiptCopySelection {
         if total, let cents = header.totalMinor {
             lines.append(putawayText("Paid receipt total") + " · " + receiptMoney(Money(minorUnits: cents)))
         }
-        for row in rows where names.contains(row.id) {
-            lines.append(row.name)
+        for row in rows {
+            if names.contains(row.id) { lines.append(row.name) }
             if amounts.contains(row.id), let paid = row.paidMinor {
                 lines.append(pantryFormat("Paid line total %@", receiptMoney(Money(minorUnits: paid))))
             }
@@ -326,6 +326,12 @@ private struct ReviewedReceiptCopyView: View {
     private var authorized: Bool {
         scene == .active && UIApplication.shared.isProtectedDataAvailable &&
             model.generation == scope.id && model.snapshot?.state == scope.inventory && model.permitsReceiptCopy(header)
+    }
+
+    private func includes(_ id: UUID, in values: Binding<Set<UUID>>) -> Binding<Bool> {
+        Binding(get: { values.wrappedValue.contains(id) }, set: { included in
+            if included { values.wrappedValue.insert(id) } else { values.wrappedValue.remove(id) }
+        })
     }
 
     var body: some View {
@@ -356,19 +362,11 @@ private struct ReviewedReceiptCopyView: View {
                     }
                     Section {
                         ForEach(ordered) { row in
-                            Toggle(row.name, isOn: Binding(get: { selection.names.contains(row.id) }, set: { included in
-                                if included { selection.names.insert(row.id) }
-                                else {
-                                    selection.names.remove(row.id)
-                                    selection.amounts.remove(row.id)
-                                }
-                            }))
-                            .accessibilityIdentifier("receipt.copy.name." + row.id.uuidString)
-                            if selection.names.contains(row.id), let paid = row.paidMinor {
+                            Toggle(row.name, isOn: includes(row.id, in: $selection.names))
+                                .accessibilityIdentifier("receipt.copy.name." + row.id.uuidString)
+                            if let paid = row.paidMinor {
                                 Toggle(pantryFormat("Paid line total %@", receiptMoney(Money(minorUnits: paid))),
-                                       isOn: Binding(get: { selection.amounts.contains(row.id) }, set: { included in
-                                    if included { selection.amounts.insert(row.id) } else { selection.amounts.remove(row.id) }
-                                }))
+                                       isOn: includes(row.id, in: $selection.amounts))
                                 .accessibilityIdentifier("receipt.copy.amount." + row.id.uuidString)
                             }
                         }

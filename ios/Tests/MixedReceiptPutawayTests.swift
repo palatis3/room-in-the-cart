@@ -51,10 +51,10 @@ import XCTest
         var selection = ReviewedReceiptCopySelection()
         func text() -> String { selection.text(header: header, purchaseDay: "Reviewed day", rows: rows) }
         XCTAssertEqual(text(), "")
-        selection.amounts = Set(rows.map(\.id))
-        XCTAssertEqual(text(), "")
-        selection.names.insert(soup.id)
         let linePrice = pantryFormat("Paid line total %@", receiptMoney(Money(minorUnits: 240)))
+        selection.amounts.insert(soup.id)
+        XCTAssertEqual(text(), linePrice)
+        selection.names.insert(soup.id)
         XCTAssertEqual(text(), "Bean soup\n" + linePrice)
         selection.store = true
         selection.date = true
