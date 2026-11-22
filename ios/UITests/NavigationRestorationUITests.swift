@@ -116,8 +116,10 @@ import XCTest
         tapNumber(quickAmount, beside: inspect, checkbox: app.buttons["shop.check-" + id])
         XCTAssertEqual(app.staticTexts["ledgerContributionName"].label, "Milk")
         XCTAssertTrue(app.staticTexts["Original wording: 2 Milk"].exists)
-        tap(element("ledgerContributionUnit"))
+        let unit = app.buttons["ledgerContributionUnit"]
+        tap(unit)
         tap(app.buttons["cartons"])
+        XCTAssertEqual(unit.value as? String, "cartons")
         tap(app.buttons["ledgerSaveContributionChanges"])
         XCTAssertTrue(editor.waitForNonExistence(timeout: 8))
 
@@ -130,7 +132,7 @@ import XCTest
         let fullCheck = app.buttons["ledgerCheck-" + id]
         tapNumber(fullAmount, beside: app.fullListGrocery(labeled: "Inspect Milk"), checkbox: fullCheck)
         XCTAssertEqual(app.textFields["Quantity (optional)"].value as? String, "2")
-        XCTAssertEqual(element("ledgerContributionUnit").value as? String, "cartons")
+        XCTAssertEqual(unit.value as? String, "cartons")
         tap(editor.buttons["Cancel"])
         XCTAssertTrue(fullCheck.waitForExistence(timeout: 8))
         XCTAssertEqual(fullAmount.value as? String, "Milk, 2 cartons")

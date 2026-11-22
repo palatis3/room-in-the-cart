@@ -308,6 +308,13 @@ private enum ContributionUnit: Hashable {
         if let packages = contribution.reviewedPackages { self = .package(packages.kind) }
         else { self = .measure(contribution.quantity?.unit ?? .count) }
     }
+
+    var displayName: String {
+        switch self {
+        case .measure(let measure): measure.displayName
+        case .package(let kind): kind.label()
+        }
+    }
 }
 
 private extension LedgerContribution {
@@ -363,6 +370,7 @@ struct LedgerContributionEditor: View {
                         Text(unit.displayName).tag(ContributionUnit.measure(unit))
                     }
                 }
+                .accessibilityValue(Text(verbatim: unit.displayName))
                 .accessibilityIdentifier("ledgerContributionUnit")
                 WorkingField(ledgerText("Contribution notes")) {
                     TextField(ledgerText("Contribution notes"), text: $notes, prompt: Text(verbatim: ""), axis: .vertical)

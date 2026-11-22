@@ -161,7 +161,12 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertFalse(element("quickGrocery.added").exists)
 
         tap(field)
-        field.typeText("rots\n")
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+        // Place the caret after the restored word now that the wrapping field has focus.
+        field.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        field.typeText("rots")
+        XCTAssertEqual(field.value as? String, "Carrots")
+        field.typeText("\n")
         let carrots = app.buttons.matching(NSPredicate(format: "identifier == %@ AND label CONTAINS %@",
                                                        "quickGrocery.undo", "Carrots")).firstMatch
         XCTAssertTrue(carrots.waitForExistence(timeout: 10))
@@ -170,6 +175,7 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(rows.firstMatch.waitForExistence(timeout: 10))
         XCTAssertFalse(element("quickGrocery.add").isEnabled)
         XCTAssertEqual(rows.count, 3)
+        XCTAssertTrue(rows.matching(NSPredicate(format: "label == %@", "Inspect Carrots")).firstMatch.exists)
     }
 
     func testReviewedQuickGroceryClearsOnlyAfterSavingToExistingPickup() {
@@ -524,6 +530,9 @@ final class RoomInTheCartUITests: XCTestCase {
                 XCTAssertTrue(doneButton.wait(for: \.isHittable, toEqual: true, timeout: 5))
                 doneButton.tap()
                 XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: done))
+                // Dismissing the keyboard resizes the Form. Large text can move
+                // this second row outside the collection's mounted cells.
+                revealReviewAction(amount, above: confirm)
                 XCTAssertEqual(amount.value as? String, "2")
                 XCTAssertTrue(confirm.isEnabled && confirm.isHittable)
                 screenshot("Spanish largest text compact review and reachable confirmation")
