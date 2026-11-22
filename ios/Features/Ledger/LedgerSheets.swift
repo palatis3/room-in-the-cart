@@ -50,15 +50,17 @@ struct LedgerImportView: View {
     let onSaved: ((UUID) -> Void)?
     let authorizeEntry: @MainActor () -> Bool
     private let prefill: String
+    private let opensListAfterSave: Bool
     private let pantryFoodPrefill: Bool
     private let pantrySuggestedAmount: Quantity?
     private let pantryProductLink: UUID?
     @State private var incomingWording: String?
     @State private var appendError: String?
-    init(model: LedgerModel, shopID: UUID, firstDraft: FirstListEditor? = nil, prefill: String = "", initialPreview: StagedListImport? = nil, pantryFoodPrefill: Bool = false, pantrySuggestedAmount: Quantity? = nil, pantryProductLink: UUID? = nil, authorizeEntry: @escaping @MainActor () -> Bool = { true }, onSaved: ((UUID) -> Void)? = nil) {
+    init(model: LedgerModel, shopID: UUID, firstDraft: FirstListEditor? = nil, prefill: String = "", opensListAfterSave: Bool = false, initialPreview: StagedListImport? = nil, pantryFoodPrefill: Bool = false, pantrySuggestedAmount: Quantity? = nil, pantryProductLink: UUID? = nil, authorizeEntry: @escaping @MainActor () -> Bool = { true }, onSaved: ((UUID) -> Void)? = nil) {
         self.model = model; self.shopID = shopID; self.firstDraft = firstDraft; self.onSaved = onSaved
         self.authorizeEntry = authorizeEntry
         self.prefill = prefill
+        self.opensListAfterSave = opensListAfterSave
         self.pantryFoodPrefill = pantryFoodPrefill
         self.pantrySuggestedAmount = pantrySuggestedAmount
         self.pantryProductLink = pantryProductLink
@@ -400,7 +402,7 @@ struct LedgerImportView: View {
                 }
                 Button(ledgerText("Done"), role: .cancel) {}
             } message: { Text(verbatim: totals.summary) }
-            importConfirmation(preview, review: review, title: ledgerFormat("Add %lld", Int64(totals.included)))
+            importConfirmation(preview, review: review, title: ledgerFormat(opensListAfterSave ? "Add %lld and open list" : "Add %lld", Int64(totals.included)))
                 .accessibilityValue(Text(verbatim: totals.summary))
         }
     }
@@ -438,7 +440,8 @@ struct LedgerImportView: View {
         let authorizeSave: @MainActor () -> Bool = {
             authorizeEntry() && (reminderBinding == nil || reminderCopyBinding == reminderBinding)
         }
-        return Button(title ?? ledgerText("Add reviewed list")) {
+        let actionLabel = ledgerText(opensListAfterSave ? "Add and open list" : "Add reviewed list")
+        return Button(title ?? actionLabel) {
             guard inputFocus == nil else { return }
             Task {
                 guard authorizeSave(), self.preview == preview, captureBinding == reviewedBinding,
@@ -463,7 +466,7 @@ struct LedgerImportView: View {
                 } else { focus = .status }
             }
         }.buttonStyle(PrimaryAction()).disabled(model.saving || model.hasPendingSave || !matchesAreCurrent || !review.isComplete || needsAmountCorrection || (firstDraft != nil && !review.choices.values.contains(where: { $0 != .skip })))
-            .accessibilityLabel(ledgerText("Add reviewed list"))
+            .accessibilityLabel(actionLabel)
             .accessibilityIdentifier("ledgerCommitImport")
     }
 

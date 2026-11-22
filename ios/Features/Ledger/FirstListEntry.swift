@@ -158,6 +158,7 @@ struct FirstListResumeButton: View {
 struct FirstListEntry: View {
     @ObservedObject var model: LedgerModel
     var prefill: String = ""
+    var opensListAfterSave = false
     var pantryFoodPrefill = false
     var pantrySuggestedAmount: Quantity? = nil
     var pantryProductLink: UUID? = nil
@@ -184,7 +185,7 @@ struct FirstListEntry: View {
     var body: some View {
         Group {
             if let editor, editor.authorize() {
-                FirstListForm(model: model, editor: editor, prefill: prefill, pantryFoodPrefill: pantryFoodPrefill, pantrySuggestedAmount: pantrySuggestedAmount, pantryProductLink: pantryProductLink, onSaved: onSaved)
+                FirstListForm(model: model, editor: editor, prefill: prefill, opensListAfterSave: opensListAfterSave, pantryFoodPrefill: pantryFoodPrefill, pantrySuggestedAmount: pantrySuggestedAmount, pantryProductLink: pantryProductLink, onSaved: onSaved)
             } else if committedHere {
                 // Committing our own batch advanced the revision before its sheet finished closing.
                 ProgressView()
@@ -224,6 +225,7 @@ private struct FirstListForm: View {
     @ObservedObject var model: LedgerModel
     @ObservedObject var editor: FirstListEditor
     let prefill: String
+    let opensListAfterSave: Bool
     let pantryFoodPrefill: Bool
     let pantrySuggestedAmount: Quantity?
     let pantryProductLink: UUID?
@@ -238,7 +240,7 @@ private struct FirstListForm: View {
                 FirstListDiscardButton(editor: editor, blocked: false)
             }.toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Close")) { dismiss() } } }
         } else {
-            LedgerImportView(model: model, shopID: editor.content.shopID, firstDraft: editor, prefill: prefill, pantryFoodPrefill: pantryFoodPrefill, pantrySuggestedAmount: pantrySuggestedAmount, pantryProductLink: pantryProductLink, authorizeEntry: editor.authorize, onSaved: onSaved)
+            LedgerImportView(model: model, shopID: editor.content.shopID, firstDraft: editor, prefill: prefill, opensListAfterSave: opensListAfterSave, pantryFoodPrefill: pantryFoodPrefill, pantrySuggestedAmount: pantrySuggestedAmount, pantryProductLink: pantryProductLink, authorizeEntry: editor.authorize, onSaved: onSaved)
         }
     }
 }

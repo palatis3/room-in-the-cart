@@ -547,6 +547,7 @@ final class RoomInTheCartUITests: XCTestCase {
             let both = language == "en" ? "Pickup · Selected: 2 · Skipped: 0" : "Recogida · Incluidos: 2 · Omitidos: 0"
             let onlyOne = language == "en" ? "Pickup · Selected: 1 · Skipped: 1" : "Recogida · Incluidos: 1 · Omitidos: 1"
             XCTAssertTrue(summary.waitForExistence(timeout: 10))
+            XCTAssertEqual(confirm.label, language == "en" ? "Add and open list" : "Añadir y abrir lista")
             assertSummary(both)
             let jump = app.buttons["ledgerReviewRepeat"]
             tap(jump)

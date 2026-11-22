@@ -487,7 +487,7 @@ struct ShopView: View {
             }
             .sheet(isPresented: $showingFirstList) {
                 NavigationStack {
-                    FirstListEntry(model: ledger) { id in
+                    FirstListEntry(model: ledger, opensListAfterSave: true) { id in
                         guard access.unlocked, ledger.shop?.id == id, let workspace = ledger.sourceWorkspaceID else { return }
                         showingFirstList = false
                         navigation.setPath([.shoppingList(actorID: access.localActorID, workspaceID: workspace, shopID: id)], for: .shop)
