@@ -30,6 +30,7 @@ enum PantrySheet: Identifiable {
 
 /// Composition owns authorization and migration. This surface never activates a database.
 struct PantryHomeView: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.pantryDigestAccess) private var digestAccess
     @ObservedObject var model: PantryModel
     let accessAllowed: Bool
@@ -75,6 +76,24 @@ struct PantryHomeView: View {
             if let selectedDigest { PantryDigestList(model: selectedDigest.model, access: selectedDigest.access) }
         }
         .privacySensitive()
+    }
+
+    @ViewBuilder private var locationFilter: some View {
+        let title = pantryText("Storage location")
+        let picker = Picker(title, selection: $selectedLocation) {
+            Text(pantryText("All locations")).tag(nil as InventoryLocation?)
+            ForEach(InventoryLocation.allCases, id: \.self) { location in
+                Text(pantryLocationName(location)).tag(Optional(location))
+            }
+        }
+        if typeSize.isAccessibilitySize {
+            journalStackedMenu(title, value: selectedLocation.map(pantryLocationName) ?? pantryText("All locations"),
+                               id: "pantry.locationFilter") {
+                picker.pickerStyle(.inline)
+            }
+        } else {
+            picker.accessibilityIdentifier("pantry.locationFilter")
+        }
     }
 
     private var pantryList: some View {
@@ -140,13 +159,7 @@ struct PantryHomeView: View {
                                 }
                                 .accessibilityIdentifier("pantry.digest")
                             }
-                            Picker(pantryText("Storage location"), selection: $selectedLocation) {
-                                Text(pantryText("All locations")).tag(nil as InventoryLocation?)
-                                ForEach(InventoryLocation.allCases, id: \.self) { location in
-                                    Text(pantryLocationName(location)).tag(Optional(location))
-                                }
-                            }
-                            .accessibilityIdentifier("pantry.locationFilter")
+                            locationFilter
                             if snapshot.lots.isEmpty {
                                 Text(pantryText("No food recorded here.")).foregroundStyle(Theme.secondary)
                             }

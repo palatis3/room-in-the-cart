@@ -563,17 +563,26 @@ struct VoicePantryRow {
                 TextField(pantryText("Amount used"), text: Binding(get: { row.amount }, set: { text in change(index) { $0.amount = text } }))
                     .focused($editing).accessibilityIdentifier("pantry.voiceAmount.\(index)")
             }
+            let unitTitle = pantryText("Unit")
+            let unitValue = row.unit.map { pantryUnit($0) } ?? pantryText("Choose a unit")
             if startingLot != nil, lot?.unit == .count, row.unit == .count {
-                LabeledContent(pantryText("Unit"), value: pantryUnit(.count))
-            } else {
-                Menu {
-                    ForEach(UnitOfMeasure.allCases.filter { $0.dimension == lot?.unit.dimension }, id: \.self) { unit in
-                        Button(pantryUnit(unit)) { change(index) { $0.unit = unit } }
-                    }
-                } label: {
-                    LabeledContent(pantryText("Unit"), value: row.unit.map { pantryUnit($0) } ?? pantryText("Choose a unit"))
+                if typeSize.isAccessibilitySize {
+                    reviewAmount(unitTitle, value: unitValue)
+                        .accessibilityElement(children: .combine)
+                } else {
+                    LabeledContent(unitTitle, value: unitValue)
                 }
-                .disabled(lot == nil).accessibilityIdentifier("pantry.voiceUnit.\(index)")
+            } else {
+                let options = ForEach(UnitOfMeasure.allCases.filter { $0.dimension == lot?.unit.dimension }, id: \.self) { unit in
+                    Button(pantryUnit(unit)) { change(index) { $0.unit = unit } }
+                }
+                if typeSize.isAccessibilitySize {
+                    journalStackedMenu(unitTitle, value: unitValue, id: "pantry.voiceUnit.\(index)") { options }
+                        .disabled(lot == nil)
+                } else {
+                    Menu { options } label: { LabeledContent(unitTitle, value: unitValue) }
+                        .disabled(lot == nil).accessibilityIdentifier("pantry.voiceUnit.\(index)")
+                }
             }
         } else if row.mode == .remaining && row.estimate.isEmpty {
             Text(pantryText("How much is left?")).font(.title3.weight(.semibold)).accessibilityAddTraits(.isHeader)

@@ -219,6 +219,35 @@ import XCTest
         XCTAssertFalse(app.buttons["pantry.voiceConfirm"].exists)
     }
 
+    func testSpanishAccessibilityStorageFilterDisplaysAndChangesTheFullSelection() throws {
+        openPantry(reset: true, spanish: true, accessibilityText: true, locale: "es_MX")
+        let filter = app.buttons["pantry.locationFilter"]
+        reveal(filter)
+        XCTAssertEqual(filter.label, "Lugar de almacenamiento")
+        XCTAssertEqual(filter.value as? String, "Todos los lugares")
+
+        let screenshot = filter.screenshot()
+        let attachment = XCTAttachment(screenshot: screenshot)
+        attachment.name = "Spanish storage filter at accessibility size"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        let request = VNRecognizeTextRequest()
+        request.recognitionLevel = .accurate
+        request.recognitionLanguages = ["es-ES"]
+        request.usesLanguageCorrection = false
+        try VNImageRequestHandler(cgImage: try XCTUnwrap(screenshot.image.cgImage)).perform([request])
+        let visible = (request.results ?? []).compactMap { $0.topCandidates(1).first?.string }.joined(separator: " ")
+        XCTAssertTrue(visible.localizedCaseInsensitiveContains("almacenamiento"), visible)
+        XCTAssertTrue(visible.localizedCaseInsensitiveContains("Todos los lugares"), visible)
+
+        tap(filter)
+        tap(app.buttons["Refrigerador"])
+        XCTAssertEqual(filter.value as? String, "Refrigerador")
+        tap(filter)
+        tap(app.buttons["Todos los lugares"])
+        XCTAssertEqual(filter.value as? String, "Todos los lugares")
+    }
+
     func testSpanishLowStockKeepsItsWordingAndOffersRestockingSeparately() {
         checkLowStock(spanish: true)
     }

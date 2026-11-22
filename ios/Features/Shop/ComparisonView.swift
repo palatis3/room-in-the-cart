@@ -272,31 +272,12 @@ struct ComparisonView: View {
             ForEach(UnitOfMeasure.allCases, id: \.self) { unit in Text(unit.displayName).tag(unit) }
         }
         if typeSize.isAccessibilitySize {
-            stackedMenu(title, value: selection.wrappedValue.displayName, id: id) {
+            journalStackedMenu(title, value: selection.wrappedValue.displayName, id: id) {
                 picker.pickerStyle(.inline)
             }
         } else {
             picker.frame(minHeight: 44).accessibilityIdentifier(id)
         }
-    }
-
-    private func stackedMenu<Content: View>(_ title: String, value: String, id: String,
-                                            @ViewBuilder content: () -> Content) -> some View {
-        Menu(content: content) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title).font(.subheadline).foregroundStyle(Theme.secondary)
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text(value).foregroundStyle(Theme.action)
-                    Spacer(minLength: 0)
-                    Image(systemName: "chevron.up.chevron.down").imageScale(.small)
-                        .foregroundStyle(Theme.action).accessibilityHidden(true)
-                }
-            }
-            .fixedSize(horizontal: false, vertical: true)
-            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-            .contentShape(Rectangle())
-        }
-        .accessibilityLabel(title).accessibilityValue(value).accessibilityIdentifier(id)
     }
 
     private func offerSection(_ title: String, label: Binding<String>, quantity: Binding<String>, unit: Binding<UnitOfMeasure>, price: Binding<String>, conversion: Binding<ComparisonConversion?>, prefix: String) -> some View {
@@ -475,7 +456,7 @@ struct ComparisonView: View {
             case .b: packB
             case nil: keep
             }
-            stackedMenu(title, value: value, id: "comparison.setAsidePack") {
+            journalStackedMenu(title, value: value, id: "comparison.setAsidePack") {
                 picker.pickerStyle(.inline)
             }
         } else {
