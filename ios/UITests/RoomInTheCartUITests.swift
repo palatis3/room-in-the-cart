@@ -1552,7 +1552,14 @@ final class RoomInTheCartUITests: XCTestCase {
                        "The restored text size should preserve the distance between the field and tools disclosure.")
         // Retain the initial audit; add full-category coverage after the
         // complete repair shortcut is visible above bottom navigation.
-        revealFullyInShop(app.shopToolButton("urgentRepairShortcut"))
+        let repair = app.shopToolButton("urgentRepairShortcut")
+        let shortcuts = app.buttons["deviceShortcuts"]
+        XCTAssertTrue(shortcuts.waitForExistence(timeout: 5))
+        if disclosure.frame.union(shortcuts.frame).height <= shopViewport.height {
+            XCTAssertTrue(shopViewport.contains(shortcuts.frame) && shortcuts.isHittable,
+                          "The last expanded tool should be fully visible when the tools fit in Shop.")
+        }
+        revealFullyInShop(repair)
         captureShopFrames("Complete-repair-shortcut-before-audit")
         screenshot("Complete-repair-shortcut-before-audit")
         XCTAssertNoThrow(try auditAccessibility("Complete repair shortcut"))

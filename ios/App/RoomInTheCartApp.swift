@@ -451,7 +451,7 @@ struct ShopView: View {
     private struct InStoreSelection: Identifiable { let id: UUID }
     @State private var inStoreShop: InStoreSelection?
     @State private var shopWithListLink: UUID?
-    private static let familySharingID = "shop.familySharing"
+    private static let moreToolsID = "shop.moreTools"
     @State private var showingSettings = false
     @State private var showingMoreTools = false
     @State private var showingStandingList = false
@@ -464,7 +464,7 @@ struct ShopView: View {
             ScrollViewReader { reader in
                 shopContent
                     .onChange(of: showingMoreTools) { _, expanded in
-                        if expanded { reader.scrollTo(Self.familySharingID) }
+                        if expanded { reader.scrollTo(Self.moreToolsID, anchor: .top) }
                     }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -657,7 +657,8 @@ struct ShopView: View {
                 DisclosureGroup(isExpanded: $showingMoreTools) { secondaryShopTools } label: {
                     Text(quickGroceryText("More shopping tools")).font(.headline)
                 }
-                .disclosureGroupStyle(LabeledFormDisclosureStyle(label: quickGroceryText("More shopping tools"), identifier: "shop.moreTools"))
+                .disclosureGroupStyle(LabeledFormDisclosureStyle(label: quickGroceryText("More shopping tools"), identifier: Self.moreToolsID))
+                .id(Self.moreToolsID)
             } else {
                 Text(quickGroceryText("Shopping tools")).font(.title2.weight(.semibold)).accessibilityAddTraits(.isHeader)
                 secondaryShopTools
@@ -671,8 +672,7 @@ struct ShopView: View {
             Button { showingSettings = true } label: {
                 ShopToolLabel(quickGroceryText("Family sharing"), "person.2", chevron: true)
             }
-            .accessibilityIdentifier(Self.familySharingID)
-            .id(Self.familySharingID)
+            .accessibilityIdentifier("shop.familySharing")
             if ledger.shop == nil {
                 Button { showingStandingList = true } label: { ShopToolLabel(shoppingText("Standing list"), "list.star") }
                     .disabled(!ledger.ready).accessibilityIdentifier("shop.standingList")
