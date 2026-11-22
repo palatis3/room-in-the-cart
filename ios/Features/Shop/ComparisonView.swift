@@ -462,24 +462,9 @@ struct ComparisonView: View {
         let keep = tr("Keep both options")
         let packA = inputs.offerA.label.isEmpty ? tr("Pack A") : tr("Pack A") + " · " + inputs.offerA.label
         let packB = inputs.offerB.label.isEmpty ? tr("Pack B") : tr("Pack B") + " · " + inputs.offerB.label
-        let value = switch model.draft.setAsidePack {
-        case .a: packA
-        case .b: packB
-        case nil: keep
-        }
-        return journalStackedMenu(title, value: value, id: "comparison.setAsidePack") {
-            setAsideChoice(keep, pack: nil)
-            setAsideChoice(packA, pack: .a)
-            setAsideChoice(packB, pack: .b)
-        }
-        .font(.body)
-    }
-
-    private func setAsideChoice(_ title: String, pack: ComparisonPack?) -> some View {
-        Toggle(title, isOn: Binding(
-            get: { model.draft.setAsidePack == pack },
-            set: { _ in model.setAside(pack) }
-        ))
+        return ComparisonSetAsideMenu(title: title, keepBoth: keep, packA: packA, packB: packB,
+                                      selected: model.draft.setAsidePack, select: model.setAside)
+            .frame(minHeight: 44)
     }
 
     private func costLine(_ offer: PackOffer, result: OfferResult, fallback: String,
@@ -843,6 +828,76 @@ private struct ComparisonMetric: UIViewRepresentable {
         guard width > 0 else { return .zero }
         let measured = uiView.sizeThatFits(CGSize(width: width, height: .greatestFiniteMagnitude))
         return CGSize(width: width, height: ceil(measured.height))
+    }
+}
+
+/// The result above this menu can grow several screens tall when text size changes.
+private struct ComparisonSetAsideMenu: UIViewRepresentable {
+    let title: String
+    let keepBoth: String
+    let packA: String
+    let packB: String
+    let selected: ComparisonPack?
+    let select: (ComparisonPack?) -> Void
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    func makeUIView(context: Context) -> UIButton {
+        let button = UIButton(type: .system)
+        button.contentHorizontalAlignment = .fill
+        button.showsMenuAsPrimaryAction = true
+        button.accessibilityIdentifier = "comparison.setAsidePack"
+        return button
+    }
+
+    func updateUIView(_ button: UIButton, context: Context) {
+        let value = switch selected {
+        case .a: packA
+        case .b: packB
+        case nil: keepBoth
+        }
+        let traits = UITraitCollection(preferredContentSizeCategory: UIContentSizeCategory(typeSize))
+        var configuration = UIButton.Configuration.plain()
+        configuration.title = title
+        configuration.subtitle = value
+        configuration.titleLineBreakMode = .byWordWrapping
+        configuration.subtitleLineBreakMode = .byWordWrapping
+        configuration.titleAlignment = .leading
+        configuration.titlePadding = 4
+        configuration.contentInsets = .zero
+        configuration.image = UIImage(systemName: "chevron.up.chevron.down")
+        configuration.imagePlacement = .trailing
+        configuration.imagePadding = 8
+        configuration.preferredSymbolConfigurationForImage = .init(textStyle: .body, scale: .small)
+        configuration.baseForegroundColor = UIColor(Theme.action)
+        configuration.titleTextAttributesTransformer = attributes(for: .subheadline, color: Theme.secondary, traits: traits)
+        configuration.subtitleTextAttributesTransformer = attributes(for: .body, color: Theme.action, traits: traits)
+        button.configuration = configuration
+        button.titleLabel?.adjustsFontForContentSizeCategory = true
+        button.subtitleLabel?.adjustsFontForContentSizeCategory = true
+        button.accessibilityLabel = title
+        button.accessibilityValue = value
+        button.menu = UIMenu(children: [choice(keepBoth, pack: nil), choice(packA, pack: .a), choice(packB, pack: .b)])
+    }
+
+    private func attributes(for style: UIFont.TextStyle, color: Color,
+                            traits: UITraitCollection) -> UIConfigurationTextAttributesTransformer {
+        UIConfigurationTextAttributesTransformer { incoming in
+            var result = incoming
+            result.font = .preferredFont(forTextStyle: style, compatibleWith: traits)
+            result.foregroundColor = UIColor(color)
+            return result
+        }
+    }
+
+    private func choice(_ label: String, pack: ComparisonPack?) -> UIAction {
+        UIAction(title: label, state: selected == pack ? .on : .off) { _ in select(pack) }
+    }
+
+    func sizeThatFits(_ proposal: ProposedViewSize, uiView: UIButton, context: Context) -> CGSize? {
+        guard let width = proposal.width, width.isFinite else { return nil }
+        guard width > 0 else { return .zero }
+        let size = uiView.sizeThatFits(CGSize(width: width, height: .greatestFiniteMagnitude))
+        return CGSize(width: width, height: max(44, ceil(size.height)))
     }
 }
 

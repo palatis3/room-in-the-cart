@@ -1345,6 +1345,11 @@ final class RoomInTheCartUITests: XCTestCase {
         revealFullyInComparison(menu)
         XCTAssertEqual(menu.label, "Descartar una opción")
         XCTAssertEqual(menu.value as? String, "Conservar ambas opciones")
+        let largest = UITraitCollection(preferredContentSizeCategory: .accessibilityExtraExtraExtraLarge)
+        let titleLine = UIFont.preferredFont(forTextStyle: .subheadline, compatibleWith: largest).lineHeight
+        let valueLine = UIFont.preferredFont(forTextStyle: .body, compatibleWith: largest).lineHeight
+        XCTAssertGreaterThanOrEqual(menu.frame.height, floor(titleLine + valueLine))
+        screenshot("Largest-text-Spanish-set-aside-menu")
         menu.tap()
         XCTAssertTrue(keep.waitForExistence(timeout: 5))
         XCTAssertTrue(isChecked(keep))
