@@ -1832,3 +1832,50 @@ test('a mismatched invitation receipt cannot open a different role or a stray gr
  const api=new API(async()=>Response.json({householdId:'home',memberId:'member',role:'contributor',grantId:'unreviewed'}));
  await assert.rejects(api.redeem('invite','csrf',{adultAttestation:true,reviewedOffer:{...reviewedOffer,role:'adult_contributor'}}),e=>e.code==='invalid_response');
 });
+
+for(const language of ['en','es']){
+ test(`an ordinary invitation retries its original household when the join receipt names a different one (${language})`,async t=>{
+  const destination='a73adb10-b84d-402b-9619-06560281846b';
+  const otherHouse='b54acd22-b84d-402b-9619-06560281846b';
+  const offer={householdLabel:'Casa Rosa',role:'adult_contributor'};
+  const token=destination+'.'+'k'.repeat(43);
+  const dom=new JSDOM('<div id="app"></div>',{url:'https://food.example/invite?lang='+language+(language==='en'?'#token='+token:'&enterCode=1')});
+  t.after(()=>dom.window.close());
+  const root=dom.window.document.getElementById('app'),calls=[],attempts=[];
+  const joined={...session(),household:{id:destination,label:offer.householdLabel}};
+  let active=false;
+  const api=new API(async(path,options)=>{
+   calls.push([options.method,path]);
+   if(path==='/v1/invites/preview')return Response.json(offer);
+   if(path==='/v1/invites/redeem'){
+    attempts.push(JSON.parse(options.body));
+    return Response.json({householdId:attempts.length===1?otherHouse:destination.toUpperCase(),memberId:joined.memberId,role:'contributor'});
+   }
+   if(path==='/v1/session'){
+    if(options.method==='POST'){
+     assert.deepEqual(JSON.parse(options.body),{householdId:destination,scope:'own_requests'});
+     active=true;
+    }
+    return Response.json(active?joined:{authenticated:false});
+   }
+   if(path==='/v1/auth/session')return Response.json({authenticated:true,available:true,csrf:'identity'});
+   assert.equal(path,'/v1/households/'+destination+'/requests/mine');
+   return Response.json({requests:[],nextCursor:null});
+  });
+  const app=new WebApp(root,api,new Outbox(new IDBFactory()),consumeInvitation(dom.window.location,dom.window.history));
+  await app.start();
+  if(language==='es')type(dom,'invitation',token);
+  root.querySelector('#adult-attestation').click();await waitForIdle(root);
+  assert.equal(root.querySelector('#invitation-household').textContent,offer.householdLabel);
+  type(dom,'invite-alias','Mar');
+  const beforeJoin=calls.length;
+  submit(root,dom);await waitForIdle(root);
+  assert.deepEqual(calls.slice(beforeJoin),[['POST','/v1/invites/redeem']]);
+  assert.match(root.querySelector('[role=status]').textContent,language==='en'?/join could not be confirmed/:/No se pudo confirmar si te uniste/);
+  click(root,language==='en'?'Retry joining':'Volver a intentar unirme');await waitForIdle(root);
+  assert.deepEqual(attempts[0],{token,intent:'join',adultAttestation:true,reviewedOffer:offer,alias:'Mar'});
+  assert.deepEqual(attempts[1],attempts[0]);
+  assert.deepEqual(calls.slice(beforeJoin+1),[['POST','/v1/invites/redeem'],['POST','/v1/session'],['GET','/v1/session'],['GET','/v1/auth/session'],['GET','/v1/households/'+destination+'/requests/mine']]);
+  assert.match(root.querySelector('[role=status]').textContent,language==='en'?/You joined Casa Rosa/:/Te uniste a Casa Rosa/);
+ });
+}

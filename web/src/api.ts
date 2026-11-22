@@ -14,6 +14,7 @@ export interface InviteOffer {
   householdLabel: string;
   role: 'adult_contributor' | 'helper_read' | 'helper_edit';
 }
+const householdInviteToken = /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.[A-Za-z0-9_-]{43}$/i;
 const redemptionRoles = {adult_contributor:'contributor', helper_read:'helper', helper_edit:'editor'} as const;
 function parseInviteOffer(value:unknown):InviteOffer {
   const offer=record(value);
@@ -233,7 +234,10 @@ export class API {
     if(d.role!==role)return invalid();
     const grantId = d.grantId == null ? undefined : identity(d.grantId);
     if ((role!=='contributor')!==Boolean(grantId))return invalid();
-    return {householdId:identity(d.householdId), memberId:identity(d.memberId), role, ...(grantId ? {grantId} : {})};
+    const receivedHousehold=identity(d.householdId);
+    const destination=householdInviteToken.exec(token)?.[1]?.toLowerCase();
+    if(destination && receivedHousehold.toLowerCase()!==destination)return invalid();
+    return {householdId:destination??receivedHousehold, memberId:identity(d.memberId), role, ...(grantId ? {grantId} : {})};
   }
   async activateSession(householdId: string, csrf?: string, grantId?: string): Promise<void> {
     const active = parseSession(await this.call('/v1/session', 'POST', {householdId:identity(householdId), ...(grantId ? {grantId:identity(grantId)} : {scope:'own_requests'})}, csrf));
