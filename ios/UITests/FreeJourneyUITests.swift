@@ -338,7 +338,8 @@ import XCTest
         tap(app.tabBars.buttons["Pantry"])
         tap(app.buttons["pantry.setup.apply"])
         tap(app.buttons["pantry.add"])
-        tap(app.buttons["Scan products"])
+        let addFoodForm = app.collectionViews.containing(.textField, identifier: "pantry.foodName")
+        tap(addFoodForm.buttons["Scan products"])
         let digits = "020123400007"
         let name = "Store produce"
         fill(digits, into: "productBatch.code", requireDone: true)

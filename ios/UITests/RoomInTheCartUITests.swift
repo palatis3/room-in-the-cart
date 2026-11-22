@@ -46,7 +46,8 @@ final class RoomInTheCartUITests: XCTestCase {
         tap(tabButton("Pantry", symbol: "cabinet"))
         tap(app.buttons["pantry.setup.apply"])
         tap(app.buttons["pantry.add"])
-        tap(app.buttons["Scan products"])
+        let addFoodForm = app.collectionViews.containing(.textField, identifier: "pantry.foodName")
+        tap(addFoodForm.buttons["Scan products"])
         XCTAssertTrue(app.navigationBars["Scan products"].waitForExistence(timeout: 8))
         let code = app.textFields["productBatch.code"]
         tap(code)
