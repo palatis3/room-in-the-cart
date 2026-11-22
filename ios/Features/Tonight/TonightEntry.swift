@@ -620,7 +620,7 @@ struct TonightEntry: View {
         guard model.batch == nil || model.batch?.originID == original.inventory else { return }
         let authorized = { scope == original && !Task.isCancelled }
         await model.refresh(authorize: authorized) {
-            guard authorized(), await pickup.refreshPantryStock(), authorized(),
+            guard authorized(), await pickup.refreshPantryStock(waitForShelf: true), authorized(),
                   let context = try pickup.pantryReviewContext() else { throw TonightMealModel.Failure.unavailable }
             let workspace = ledger.workspace, revision = ledger.revision
             let sources = try await TonightRecipeLibrary.read(authorize: authorized)

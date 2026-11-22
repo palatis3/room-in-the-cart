@@ -912,13 +912,13 @@ struct PickupPersistenceLocation {
     }
     /// Unlike load(), refreshes an already-ready model. It never replaces a
     /// pending submission, acknowledges it, or copies its old authorization.
-    @discardableResult func refreshPantryStock() async -> Bool {
+    @discardableResult func refreshPantryStock(waitForShelf: Bool = false) async -> Bool {
         guard let configuration = pantryConfiguration, let store else { return false }
         pantryReadIsCurrent = false
         guard !saving, !opening else { return false }
         saving = true; defer { saving = false }
         do {
-            let current = try await pantryPort(configuration: configuration, store: store).loadCurrent()
+            let current = try await pantryPort(configuration: configuration, store: store).loadCurrent(waitForShelf: waitForShelf)
             let (mapping, decoded) = try PantryLegacyMigration.mapWithJourneys(originID: current.inventory.state.workspaceID,
                 heads: current.sources, ledger: .unavailable, at: clock())
             guard configuration.authorize() else { throw PickupModelError.missing }
