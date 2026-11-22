@@ -15,26 +15,36 @@ import CoreDomain
         var destinationTitle: String { selection.destinationTitle }
         var createsPickup: Bool { selection.createsPickup }
         var preview: DinnerPreview { selection.preview }
+        var purchaseReview: (matched: [MealIngredient], remaining: [MealIngredient])? {
+            guard case .choose(let meal) = preview.proposal.changes.first, let products = meal.pantryProducts else { return nil }
+            return (meal.template.ingredients.filter { products.matches[$0.id] != nil },
+                    meal.template.ingredients.filter { products.matches[$0.id] == nil })
+        }
+    }
+
+    static func canLinkProducts(match: PantryMealMatcher.Review, basis: LedgerCanonicalPackStockEvidence.Basis,
+                                destination: UUID?, workspace: LedgerWorkspace, pickup: PickupModel,
+                                identity: CapturePrivateIdentity, reservedFoods: Set<UUID>) -> Bool {
+        guard identity.subject == nil, identity.householdID == nil, pickup.currentDinnerActorID == identity.actorID,
+              pickup.sourceWorkspaceID == basis.originID, !basis.sourceHeads.contains(where: { $0.journeyID == destination }),
+              !pickup.journeys.contains(where: { $0.id == destination }) else { return false }
+        return (try? DinnerPantryProducts(review: match, workspace: workspace, originID: basis.originID,
+            destinationShopID: destination, reservedFoods: reservedFoods)) != nil
     }
 
     static func prepare(match: PantryMealMatcher.Review, pantryBasis: LedgerCanonicalPackStockEvidence.Basis,
                         destinationShopID: UUID?, newShopTitle: String, ledger: LedgerModel, pickup: PickupModel,
-                        plannedDate: Date? = nil, linkPantryProducts: Bool = false, currentIdentity: () -> CapturePrivateIdentity?) throws -> Review {
+                        plannedDate: Date? = nil, includeMatchedProducts: Bool = true, currentIdentity: () -> CapturePrivateIdentity?) throws -> Review {
         guard let identity = currentIdentity(), ledger.ready, !ledger.saving, !ledger.hasPendingSave,
               let ledgerID = ledger.sourceWorkspaceID, let current = try pickup.pantryReviewContext() else {
             throw DinnerPlanningError.forbidden
         }
-        let heads = current.mapping.sourceHeads.map {
-            LedgerCanonicalPackStockEvidence.SourceHead(journeyID: $0.id, revision: $0.revision)
-        }
-        let basis = LedgerCanonicalPackStockEvidence.Basis(originID: current.snapshot.state.workspaceID,
-            inventoryRevision: current.snapshot.state.revision, sourceHeads: heads.sorted { $0.journeyID.uuidString < $1.journeyID.uuidString })
+        let basis = current.dinnerBasis
         guard pantryBasis == basis else { throw DinnerPlanningError.stalePreview }
 
-        if linkPantryProducts {
-            guard identity.subject == nil, identity.householdID == nil, pickup.currentDinnerActorID == identity.actorID, current.mapping.sourceHeads.allSatisfy({ $0.id != destinationShopID })
-            else { throw DinnerPlanningError.stalePreview }
-        }
+        let linkPantryProducts = includeMatchedProducts && canLinkProducts(match: match, basis: basis,
+            destination: destinationShopID, workspace: ledger.workspace, pickup: pickup,
+            identity: identity, reservedFoods: current.reservedFoods)
         let destination: ShoppingLedger
         if let destinationShopID {
             guard let shop = ledger.workspace.shops.first(where: { $0.id == destinationShopID }) else { throw DinnerPlanningError.stalePreview }
@@ -60,7 +70,8 @@ import CoreDomain
         let proposal = review.preview.proposal
         let authorized = {
             currentIdentity() == review.identity && ledger.sourceWorkspaceID == review.ledgerID &&
-                pickup.privatePantryGeneration == review.pantryGeneration && pickup.sourceWorkspaceID == review.pantryBasis.originID
+                pickup.privatePantryGeneration == review.pantryGeneration && pickup.sourceWorkspaceID == review.pantryBasis.originID &&
+                (review.selection.pantryProducts == nil || pickup.currentDinnerActorID == review.identity.actorID)
         }
         guard authorized() else { return false }
         return await ledger.change(key: "tonight-\(proposal.id)", reviewedPantryBasis: review.pantryBasis, authorize: authorized) { workspace in

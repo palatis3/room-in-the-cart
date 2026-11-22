@@ -50,7 +50,7 @@ struct TonightEntry: View {
     @State private var query = ""
     @State private var pinnedOnly = false
     @State private var plannedDate = Date()
-    @State private var linkPantryProducts = false
+    @State private var includeMatchedProducts = true
     @State private var linkedReceipt: (shop: UUID, meal: UUID, owner: UUID)?
     @State private var preview: TonightPlanChoice.Review?
     @State private var message: String?
@@ -138,6 +138,7 @@ struct TonightEntry: View {
         .task(id: scope) {
             closeRecipe()
             localProductGeneration = nil
+            linkedReceipt = nil
             model.invalidate(); preview = nil; choosing = nil; sourceToReview = nil; manual = false; foodToReview = nil; recipeToReview = nil
             query = ""; pinnedOnly = false; message = nil; newTitle = ""; destination = nil; suggestedSecond = nil; requestedSection = nil
             if scope != nil && pickup.pantryIsActive { await refresh() }
@@ -263,8 +264,23 @@ struct TonightEntry: View {
                         Text(preview.destinationTitle)
                         Text(ledgerMealDay(preview.plannedDay))
                         Text(tonightText(preview.createsPickup ? "Apply creates a new pickup and one dinner. Cancel creates neither." : "Apply adds one dinner to this pickup."))
-                        ForEach(preview.recipe.ingredients) { ingredient in
-                            LabeledContent(ingredient.name, value: ingredient.reviewedAmountLabel)
+                        if let purchase = preview.purchaseReview {
+                            Text(tonightText("Matched at home for purchase review")).font(.headline)
+                            ForEach(purchase.matched) { ingredient in
+                                LabeledContent(ingredient.name, value: ingredient.reviewedAmountLabel)
+                            }
+                            Text(dinnerText("Still to buy or check")).font(.headline)
+                            if purchase.remaining.isEmpty {
+                                Text(dinnerText("No additional amount needed for this dinner."))
+                            }
+                            ForEach(purchase.remaining) { ingredient in
+                                LabeledContent(ingredient.name, value: ingredient.reviewedAmountLabel)
+                            }
+                            Text(tonightText("After planning, open Review pantry purchases to confirm which groceries to leave off your list."))
+                        } else {
+                            ForEach(preview.recipe.ingredients) { ingredient in
+                                LabeledContent(ingredient.name, value: ingredient.reviewedAmountLabel)
+                            }
                         }
                         TonightPricesView(estimate: preview.estimate, hasHandCheckedIngredients: preview.recipe.ingredients.contains { $0.checkedWithoutAmount == true })
                         Text(tonightText("Choosing records the full recipe need. It does not consume pantry food or reserve the matched batches."))
@@ -284,7 +300,8 @@ struct TonightEntry: View {
                         DatePicker(tonightText("Plan for a day"), selection: $plannedDate, displayedComponents: .date)
                             .environment(\.timeZone, destinationZone)
                         if canLinkProducts(for: choosing) {
-                            Toggle(dinnerText("Link matched pantry products for purchase review"), isOn: $linkPantryProducts)
+                            Toggle(dinnerText("Link matched pantry products for purchase review"), isOn: $includeMatchedProducts)
+                                .accessibilityIdentifier("tonight.includeMatchedProducts")
                         }
                         if destination == nil { TextField(tonightText("New pickup name"), text: $newTitle) }
                         Button(tonightText("Preview dinner choice")) { Task { await prepareChoice(choosing) } }
@@ -654,11 +671,11 @@ struct TonightEntry: View {
         }
     }
     private func canLinkProducts(for recipe: MealTemplate) -> Bool {
-        guard let scope, scope.adult.subject == nil, scope.adult.householdID == nil,
-              pickup.currentDinnerActorID == scope.adult.actorID, !pickup.journeys.contains(where: { $0.id == destination }),
-              let input = model.input, let match = model.reviews.first(where: { $0.recipe == recipe }) else { return false }
-        return (try? DinnerPantryProducts(review: match, workspace: ledger.workspace, originID: scope.inventory,
-            destinationShopID: destination, reservedFoods: input.reservedFoods)) != nil
+        guard let scope, let input = model.input, input.workspace == ledger.workspace,
+              let context = try? pickup.pantryReviewContext(), context.dinnerBasis == input.basis,
+              let match = model.reviews.first(where: { $0.recipe == recipe }) else { return false }
+        return TonightPlanChoice.canLinkProducts(match: match, basis: input.basis, destination: destination,
+            workspace: ledger.workspace, pickup: pickup, identity: scope.adult, reservedFoods: context.reservedFoods)
     }
 
     private func beginChoice(_ recipe: MealTemplate) {
@@ -666,7 +683,7 @@ struct TonightEntry: View {
         closeRecipe()
         plannedDate = Date()
         choosing = recipe
-        linkPantryProducts = false
+        includeMatchedProducts = true
         destination = ledger.workspace.selectedShopID
         preview = nil
         message = nil
@@ -676,15 +693,17 @@ struct TonightEntry: View {
     @MainActor private func prepareChoice(_ recipe: MealTemplate) async {
         guard let original = model.input, let originalScope = scope else { return }
         let matches = model.matches[recipe.id, default: [:]]
+        let selectedDestination = destination, selectedPreference = includeMatchedProducts
+        let includeProducts = selectedPreference && canLinkProducts(for: recipe)
         await refresh()
-        guard choosing == recipe else { return }
+        guard choosing == recipe, destination == selectedDestination, includeMatchedProducts == selectedPreference else { return }
         do {
             guard scope == originalScope else { throw TonightMealModel.Failure.unavailable }
             try model.assertCurrent(original, recipe: recipe, matches: matches)
             guard let review = model.reviews.first(where: { $0.recipe == recipe }), canChoose(review) else { throw TonightMealModel.Failure.stale }
             preview = try TonightPlanChoice.prepare(match: review, pantryBasis: original.basis,
                 destinationShopID: destination, newShopTitle: newTitle, ledger: ledger, pickup: pickup,
-                plannedDate: plannedDate, linkPantryProducts: linkPantryProducts, currentIdentity: currentIdentity)
+                plannedDate: plannedDate, includeMatchedProducts: includeProducts, currentIdentity: currentIdentity)
             requestedSection = .review
         } catch { preview = nil; message = tonightText("The recipe, preferences, pantry or destination changed. Review the current information again.") }
     }

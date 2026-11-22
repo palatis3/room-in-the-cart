@@ -1,6 +1,40 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Matched at home for purchase review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Matched at home for purchase review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimentos de la despensa para revisar antes de comprar"
+          }
+        }
+      }
+    },
+    "After planning, open Review pantry purchases to confirm which groceries to leave off your list.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After planning, open Review pantry purchases to confirm which groceries to leave off your list."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Después de planificar, abre «Revisar las compras de despensa» para confirmar qué alimentos dejar fuera de la lista."
+          }
+        }
+      }
+    },
     "Enter a recipe": {
       "extractionState": "manual",
       "localizations": {

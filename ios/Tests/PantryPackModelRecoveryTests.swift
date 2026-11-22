@@ -364,6 +364,94 @@ extension PantryPackModelRecoveryTests {
         try await reviewBowlDinner(thenCook: true, keepDraft: true, interruptAfterSourceSave: true)
     }
 
+    func testTonightFinderCarriesCheckedFoodsIntoPurchaseReviewUntilTheShopperConfirms() async throws {
+        let actorID = UUID(), f = try await fixture(privateDinnerActorID: actorID)
+        try await f.ledger.configurePantryPackRecovery(f.port)
+        let pantry = PantryRepository(store: f.inventory, mutationGate: f.gate, authorize: { f.state.allowed })
+        f.cleanup.track(pantry)
+        let origin = f.inventory.workspaceID
+        let lentils = try await addBowlStock("Lentils", cups: 2, pantry: pantry, origin: origin)
+        let rice = try await addBowlStock("Rice", cups: 3, pantry: pantry, origin: origin)
+        let cup = Quantity(amount: .one, unit: .cup, originalLiteral: "1")
+        let recipe = MealTemplate(title: "Lentil and tomato bowls", ingredients: [
+            .init(name: "Lentils", quantity: cup), .init(name: "Tomatoes", quantity: q(2)), .init(name: "Rice", quantity: cup)])
+        var market = ShoppingLedger(title: "After work market")
+        _ = try market.addManualLine(name: "Coffee", quantity: q(1))
+        let seeded = await f.ledger.change(key: "finder-destination") {
+            $0.shops.append(market); $0.selectedShopID = market.id; $0.mealTemplates.append(recipe)
+        }
+        XCTAssertTrue(seeded)
+        let refreshed = await f.pickup.refreshPantryStock()
+        XCTAssertTrue(refreshed)
+        let context = try XCTUnwrap(f.pickup.pantryReviewContext())
+        let input = try TonightMealModel.input(workspace: f.ledger.workspace, ledgerRevision: f.ledger.revision,
+            context: context, sources: [])
+        let finder = TonightMealModel()
+        await finder.refresh(authorize: { true }) { input }
+        try finder.match(recipeID: recipe.id, ingredientID: recipe.ingredients[0].id, foodID: lentils.food)
+        try finder.match(recipeID: recipe.id, ingredientID: recipe.ingredients[2].id, foodID: rice.food)
+        let match = try XCTUnwrap(finder.reviews.first { $0.recipe == recipe })
+        let actor = CapturePrivateIdentity(actorID: actorID, subject: nil, householdID: nil, memberID: nil, role: nil)
+        let before = try await pantry.load(at: now)
+        let choice = try TonightPlanChoice.prepare(match: match, pantryBasis: input.basis, destinationShopID: market.id,
+            newShopTitle: "", ledger: f.ledger, pickup: f.pickup, currentIdentity: { actor })
+        let review = try XCTUnwrap(choice.purchaseReview)
+        XCTAssertEqual(review.matched.map(\.id), [recipe.ingredients[0].id, recipe.ingredients[2].id])
+        XCTAssertEqual(review.remaining, [recipe.ingredients[1]])
+        let optOut = try TonightPlanChoice.prepare(match: match, pantryBasis: input.basis, destinationShopID: market.id,
+            newShopTitle: "", ledger: f.ledger, pickup: f.pickup, includeMatchedProducts: false, currentIdentity: { actor })
+        XCTAssertNil(optOut.purchaseReview)
+        let otherAdult = CapturePrivateIdentity(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil)
+        let unlinked = try TonightPlanChoice.prepare(match: match, pantryBasis: input.basis, destinationShopID: market.id,
+            newShopTitle: "", ledger: f.ledger, pickup: f.pickup, currentIdentity: { otherAdult })
+        XCTAssertNil(unlinked.purchaseReview)
+        XCTAssertFalse(TonightPlanChoice.canLinkProducts(match: match, basis: input.basis, destination: f.shop,
+            workspace: f.ledger.workspace, pickup: f.pickup, identity: actor, reservedFoods: []))
+        let denied = await TonightPlanChoice.apply(choice, ledger: f.ledger, pickup: f.pickup, currentIdentity: { otherAdult })
+        XCTAssertFalse(denied)
+        XCTAssertEqual(f.ledger.shop, market)
+        let applied = await TonightPlanChoice.apply(choice, ledger: f.ledger, pickup: f.pickup, currentIdentity: { actor })
+        XCTAssertTrue(applied, f.ledger.error ?? "")
+        let opened = await reopen(f)
+        let shop = try XCTUnwrap(opened.shop), meal = try XCTUnwrap(shop.mealOccurrences.first)
+        let linked = opened.workspace.dinnerPantryLines(shop: shop, workspaceID: f.ledgerStore.workspaceID,
+            originID: origin, actorID: actorID.uuidString, occurrenceID: meal.id)
+        XCTAssertEqual(linked, [lentils.food, rice.food])
+        XCTAssertEqual(Set(shop.lines.map(\.name)), ["Coffee", "Lentils", "Tomatoes", "Rice"])
+        XCTAssertTrue(opened.workspace.packSelections.isEmpty)
+        let after = try await pantry.load(at: now)
+        XCTAssertEqual(after.state, before.state)
+        XCTAssertEqual(after.lots, before.lots)
+        XCTAssertEqual(after.reservations, before.reservations)
+
+        let allocation = try DinnerAllocationChoice(ledger: opened, pickup: f.pickup, shop: shop,
+            occurrenceID: meal.id, identity: actor, linked: linked)
+        let allocated = try await LedgerCheckoutAdapter.apply(allocation.checkout, ledger: opened, pickup: f.pickup,
+            freshDinnerBasis: allocation.basis, authorize: { true })
+        XCTAssertTrue(allocated)
+        let decision = try DinnerPurchaseDecision(ledger: opened, pickup: f.pickup, shop: shop,
+            occurrenceID: meal.id, identity: actor, linked: linked)
+        let confirmed = await decision.save(ledger: opened, authorize: { true })
+        XCTAssertTrue(confirmed, opened.error ?? "")
+        let covered = DinnerPantryPurchases.lines(ledger: opened, pickup: f.pickup, shop: shop, identity: actor)
+        XCTAssertEqual(covered, linked)
+        XCTAssertEqual(opened.workspace.listLayout.groups(shop: shop, excluding: covered).flatMap(\.lines).map(\.name),
+                       ["Coffee", "Tomatoes"])
+        let confirmedStock = try await pantry.load(at: now)
+        XCTAssertEqual(confirmedStock.lots, before.lots)
+    }
+
+    private func addBowlStock(_ name: String, cups: Int64, pantry: PantryRepository, origin: UUID) async throws -> (food: UUID, lot: UUID) {
+        let food = UUID(), lot = UUID()
+        let quantity = Quantity(amount: try Rational(cups), unit: .cup, originalLiteral: String(cups))
+        let before = try await pantry.load(at: now)
+        _ = try await pantry.apply(.init(id: UUID(), originID: origin, lotID: lot, eventID: UUID(), expectedRevision: nil,
+            occurredAt: now, change: .create(.init(foodID: food, name: name, source: .manual(originID: origin, sourceID: UUID()),
+                location: .cupboard, unit: .cup, count: .exact(quantity)), observationID: UUID())),
+            reviewedInventoryRevision: before.state.revision, at: now)
+        return (food, lot)
+    }
+
     private func reviewBowlDinner(thenCook: Bool, keepDraft: Bool = false, recount: Bool = false,
                                  interruptAfterSourceSave: Bool = false) async throws {
         let actorID = UUID()
@@ -374,14 +462,8 @@ extension PantryPackModelRecoveryTests {
         let actor = CapturePrivateIdentity(actorID: actorID, subject: nil, householdID: nil, memberID: nil, role: nil)
         let origin = f.inventory.workspaceID, workspaceID = f.ledgerStore.workspaceID
         func cups(_ n: Int64) -> Quantity { .init(amount: try! Rational(n), unit: .cup, originalLiteral: String(n)) }
-        let rice = UUID(), lentils = UUID(), riceLot = UUID(), lentilLot = UUID()
-        for (product, lot, name, quantity) in [(rice, riceLot, "Rice", cups(3)), (lentils, lentilLot, "Lentils", cups(2))] {
-            let before = try await pantry.load(at: now)
-            _ = try await pantry.apply(.init(id: UUID(), originID: origin, lotID: lot, eventID: UUID(), expectedRevision: nil,
-                occurredAt: now, change: .create(.init(foodID: product, name: name, source: .manual(originID: origin, sourceID: UUID()),
-                    location: .cupboard, unit: .cup, count: .exact(quantity)), observationID: UUID())),
-                reviewedInventoryRevision: before.state.revision, at: now)
-        }
+        let (rice, riceLot) = try await addBowlStock("Rice", cups: 3, pantry: pantry, origin: origin)
+        let (lentils, lentilLot) = try await addBowlStock("Lentils", cups: 2, pantry: pantry, origin: origin)
         var market = ShoppingLedger(title: "After work market", basis: .init(branch: "Main", timeZoneIdentifier: "America/New_York"))
         _ = try market.addManualLine(name: "Coffee", quantity: q(2))
         let recipe = MealTemplate(title: "Lentil and tomato bowls", ingredients: [
