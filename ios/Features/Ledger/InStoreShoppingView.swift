@@ -128,6 +128,28 @@ struct InStoreShoppingView: View {
     }
 
     var body: some View {
+        currentShopContent
+            .navigationTitle(typeSize.isAccessibilitySize ? shoppingText("In store") : shoppingText("Shop in store"))
+            .navigationBarTitleDisplayMode(typeSize.isAccessibilitySize ? .inline : .automatic)
+            .toolbar {
+                if model.shop?.id == shopID && authorize() {
+                    ToolbarItemGroup(placement: .topBarLeading) {
+                        Button { destination = .options } label: {
+                            Label(ledgerText("List options"), systemImage: "ellipsis.circle")
+                        }
+                        .accessibilityIdentifier("inStoreTripOptions")
+                        Button { destination = .find } label: {
+                            Label(tripText("Add a find"), systemImage: "plus")
+                        }
+                        .accessibilityIdentifier("tripAddFind")
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) { Button(ledgerText("Done")) { dismiss() } }
+            }
+            .modifier(InStoreDisplayPreference(trip: shopID, owner: displayOwner, available: model.shop?.id == shopID && authorize()))
+    }
+
+    private var currentShopContent: some View {
         Group {
             if let shop = model.shop, shop.id == shopID {
                 let dinner = dinnerPantry.status(in: shop, ledger: model)
@@ -159,21 +181,7 @@ struct InStoreShoppingView: View {
                         if !outstanding.isEmpty {
                             Section(tripText("Still needed")) {
                                 ForEach(outstanding) { line in
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Button { destination = .details(line.id) } label: {
-                                            VStack(alignment: .leading) {
-                                                Text(line.name).font(.headline)
-                                                let measure = TripMeasure(shop, line: line, packages: packages[line.id] ?? [])
-                                                if let quantity = shop.tripAmountLabel(line, measure: measure) { Text(quantity) }
-                                                Text(tripText(shop.isLeftForNextTrip(line) ? "Left for next time" : "Couldn’t find it at this stop"))
-                                                    .foregroundStyle(Theme.secondary)
-                                            }.frame(minHeight: 44)
-                                        }.accessibilityFocused($focus, equals: .line(line.id))
-                                        if line.tripUndo != nil {
-                                            Button(tripFormat("Undo for %@", line.name)) { undo(line, in: shop) }.frame(minHeight: 44)
-                                        }
-                                    }.buttonStyle(.borderless).id(Focus.line(line.id))
-                                        .background(TripRowPosition(row: line.id))
+                                    stillNeededRow(line, in: shop, packages: packages[line.id] ?? [])
                                 }
                             }
                         }
@@ -266,24 +274,7 @@ struct InStoreShoppingView: View {
                     }
                 }
             }
-        }.navigationTitle(typeSize.isAccessibilitySize ? shoppingText("In store") : shoppingText("Shop in store"))
-        .navigationBarTitleDisplayMode(typeSize.isAccessibilitySize ? .inline : .automatic)
-        .toolbar {
-            if model.shop?.id == shopID && authorize() {
-                ToolbarItemGroup(placement: .topBarLeading) {
-                    Button { destination = .options } label: {
-                        Label(ledgerText("List options"), systemImage: "ellipsis.circle")
-                    }
-                    .accessibilityIdentifier("inStoreTripOptions")
-                    Button { destination = .find } label: {
-                        Label(tripText("Add a find"), systemImage: "plus")
-                    }
-                    .accessibilityIdentifier("tripAddFind")
-                }
-            }
-            ToolbarItem(placement: .confirmationAction) { Button(ledgerText("Done")) { dismiss() } }
         }
-        .modifier(InStoreDisplayPreference(trip: shopID, owner: displayOwner, available: model.shop?.id == shopID && authorize()))
     }
 
     @ViewBuilder private func listAndStop(_ shop: ShoppingLedger) -> some View {
@@ -333,6 +324,24 @@ struct InStoreShoppingView: View {
 
     private func available(_ line: ShoppingLine, shop: ShoppingLedger) -> Bool {
         shop.outcomeAtCurrentStop(line) == nil && line.eligibleForStop(named: shop.currentStop.name)
+    }
+
+    private func stillNeededRow(_ line: ShoppingLine, in shop: ShoppingLedger, packages: [BasketPackage]) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Button { destination = .details(line.id) } label: {
+                VStack(alignment: .leading) {
+                    Text(line.name).font(.headline)
+                    let measure = TripMeasure(shop, line: line, packages: packages)
+                    if let quantity = shop.tripAmountLabel(line, measure: measure) { Text(quantity) }
+                    Text(tripText(shop.isLeftForNextTrip(line) ? "Left for next time" : "Couldn’t find it at this stop"))
+                        .foregroundStyle(Theme.secondary)
+                }.frame(minHeight: 44)
+            }.accessibilityFocused($focus, equals: .line(line.id))
+            if line.tripUndo != nil {
+                Button(tripFormat("Undo for %@", line.name)) { undo(line, in: shop) }.frame(minHeight: 44)
+            }
+        }.buttonStyle(.borderless).id(Focus.line(line.id))
+            .background(TripRowPosition(row: line.id))
     }
 
     private func outstandingRow(_ line: ShoppingLine, shop: ShoppingLedger, visible: [ShoppingLine], exclusions: String?,

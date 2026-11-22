@@ -13,7 +13,7 @@ private enum LedgerHomeSheet: Hashable, Identifiable {
 struct LedgerHomeView: View {
     private var dinnerPantry = ShoppingDinnerPantry()
     @ObservedObject var model: LedgerModel
-    var onShopSelected: ((UUID) -> Void)? = nil
+    var onShopSelected: ((UUID) -> Void)?
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var sheet: LedgerHomeSheet?
     @State private var showingShopPicker = false
@@ -28,7 +28,49 @@ struct LedgerHomeView: View {
     @Environment(\.scenePhase) private var scene
     @AccessibilityFocusState private var focus: Focus?
 
+    init(model: LedgerModel, onShopSelected: ((UUID) -> Void)? = nil) {
+        self.model = model
+        self.onShopSelected = onShopSelected
+    }
+
     var body: some View {
+        ledgerContent
+            .background(Theme.canvas)
+            .task { await model.open() }
+            .navigationDestination(item: $stapleRecallShopID) { shopID in
+                StapleRecallView(ledger: model, targetID: shopID)
+            }
+            .sheet(item: $sheet) { destination in
+                switch destination {
+                case .shareItems(let id):
+                    PrivateShoppingSheet(model: model) {
+                        TripHandoffEntry(model: model, shopID: id)
+                            .toolbar {
+                                ToolbarItem(placement: .cancellationAction) {
+                                    Button(ledgerText("Close")) { sheet = nil }
+                                        .accessibilityIdentifier("tripShare.close")
+                                }
+                            }
+                    }
+                case .inStore(let id):
+                    PrivateShoppingSheet(model: model) {
+                        InStoreShoppingView(model: model, shopID: id) { selected in
+                            sheet = nil
+                            onShopSelected?(selected)
+                        }
+                    }
+                case .kits(let id):
+                    PrivateShoppingSheet(model: model) { ShoppingKitsView(model: model, shopID: id) }
+                case .standing:
+                    PrivateShoppingSheet(model: model) { StandingListView(model: model) }
+                default:
+                    NavigationStack { existingSheet(destination) }
+                }
+            }
+            .onChange(of: model.error) { _, error in if error != nil { focus = .error } }
+    }
+
+    private var ledgerContent: some View {
         VStack(spacing: 0) {
             if model.ready, let shop = model.shop {
                 if !dynamicTypeSize.isAccessibilitySize { controls(shop) }
@@ -68,45 +110,9 @@ struct LedgerHomeView: View {
                                 recentHistory(count: checked.count)
                             }
                         }
-                        let exclusions = shop.listExclusions
-                        let packages = shop.itemPackages
-                        let typedBatches = shop.typedItemBatchIDs
-                        let departmentChoices = model.workspace.listLayout.departmentChoices(in: shop)
-                        DinnerPantryReviewSection(shopID: shop.id, reviews: dinner.pending,
-                            matching: model.search.isEmpty || dinner.pending.isEmpty ? nil : Set(shop.search(model.search).map(\.id)))
-                        if groups.allSatisfy({ $0.lines.isEmpty }) {
-                            Section(ledgerText("Shopping list")) {
-                                Text(model.search.isEmpty && (!checked.isEmpty || !covered.isEmpty || !reviewIDs.isEmpty) ? quickGroceryText("No active items.") :
-                                    ledgerText(model.search.isEmpty ? "Add the groceries you need for this pickup." : "No active items match your search."))
-                                    .foregroundStyle(Theme.secondary)
-                                    .id(SearchAnchor.empty)
-                                if checked.isEmpty { recentHistory(count: 0) }
-                            }
-                        } else {
-                            ForEach(groups) { group in
-                                Section(group.aisle.isEmpty ? ledgerText(model.workspace.listLayout.layout(for: shop).mode == .aisle ? "No aisle assigned" : "Shopping list") : group.aisle) {
-                                    ForEach(group.lines) { line in
-                                        row(line, shop: shop, packages: packages[line.id] ?? [], typedBatches: typedBatches,
-                                            exclusions: exclusions[line.id], departmentChoices: departmentChoices)
-                                            .id(line.id)
-                                    }
-                                }
-                            }
-                        }
-                        if !dinner.atHome.isEmpty {
-                            Section(dinnerText("Using food at home")) {
-                                ForEach(shop.search(model.search).filter { dinner.atHome.contains($0.id) }) { line in
-                                    Label(line.name, systemImage: "house").id(line.id)
-                                }
-                            }
-                        }
-                        if !dinner.used.isEmpty {
-                            Section(dinnerText("Used for dinner")) {
-                                ForEach(shop.search(model.search).filter { dinner.used.contains($0.id) }) { line in
-                                    Label(line.name, systemImage: "fork.knife").id(line.id)
-                                }
-                            }
-                        }
+                        grocerySections(in: shop, groups: groups, dinner: dinner,
+                                        hasExcludedLines: !covered.isEmpty || !reviewIDs.isEmpty,
+                                        hasCheckedItems: !checked.isEmpty)
                         Section {
                             factsSummary(shop)
                         }
@@ -180,39 +186,50 @@ struct LedgerHomeView: View {
                 }.frame(maxWidth: .infinity)
             }
         }
-        .background(Theme.canvas)
-        .task { await model.open() }
-        .navigationDestination(item: $stapleRecallShopID) { shopID in
-            StapleRecallView(ledger: model, targetID: shopID)
-        }
-        .sheet(item: $sheet) { destination in
-            switch destination {
-            case .shareItems(let id):
-                PrivateShoppingSheet(model: model) {
-                    TripHandoffEntry(model: model, shopID: id)
-                        .toolbar {
-                            ToolbarItem(placement: .cancellationAction) {
-                                Button(ledgerText("Close")) { sheet = nil }
-                                    .accessibilityIdentifier("tripShare.close")
-                            }
-                        }
-                }
-            case .inStore(let id):
-                PrivateShoppingSheet(model: model) {
-                    InStoreShoppingView(model: model, shopID: id) { selected in
-                        sheet = nil
-                        onShopSelected?(selected)
+    }
+
+    @ViewBuilder private func grocerySections(in shop: ShoppingLedger, groups: [LedgerListLayout.Group],
+                                            dinner: ShoppingDinnerPantry.Status, hasExcludedLines: Bool,
+                                            hasCheckedItems: Bool) -> some View {
+        let exclusions = shop.listExclusions
+        let packages = shop.itemPackages
+        let typedBatches = shop.typedItemBatchIDs
+        let departmentChoices = model.workspace.listLayout.departmentChoices(in: shop)
+        DinnerPantryReviewSection(shopID: shop.id, reviews: dinner.pending,
+            matching: model.search.isEmpty || dinner.pending.isEmpty ? nil : Set(shop.search(model.search).map(\.id)))
+        if groups.allSatisfy({ $0.lines.isEmpty }) {
+            Section(ledgerText("Shopping list")) {
+                Text(model.search.isEmpty && (hasCheckedItems || hasExcludedLines) ? quickGroceryText("No active items.") :
+                    ledgerText(model.search.isEmpty ? "Add the groceries you need for this pickup." : "No active items match your search."))
+                    .foregroundStyle(Theme.secondary)
+                    .id(SearchAnchor.empty)
+                if !hasCheckedItems { recentHistory(count: 0) }
+            }
+        } else {
+            ForEach(groups) { group in
+                Section(group.aisle.isEmpty ? ledgerText(model.workspace.listLayout.layout(for: shop).mode == .aisle ? "No aisle assigned" : "Shopping list") : group.aisle) {
+                    ForEach(group.lines) { line in
+                        row(line, shop: shop, packages: packages[line.id] ?? [], typedBatches: typedBatches,
+                            exclusions: exclusions[line.id], departmentChoices: departmentChoices)
+                            .id(line.id)
                     }
                 }
-            case .kits(let id):
-                PrivateShoppingSheet(model: model) { ShoppingKitsView(model: model, shopID: id) }
-            case .standing:
-                PrivateShoppingSheet(model: model) { StandingListView(model: model) }
-            default:
-                NavigationStack { existingSheet(destination) }
             }
         }
-        .onChange(of: model.error) { _, error in if error != nil { focus = .error } }
+        if !dinner.atHome.isEmpty {
+            Section(dinnerText("Using food at home")) {
+                ForEach(shop.search(model.search).filter { dinner.atHome.contains($0.id) }) { line in
+                    Label(line.name, systemImage: "house").id(line.id)
+                }
+            }
+        }
+        if !dinner.used.isEmpty {
+            Section(dinnerText("Used for dinner")) {
+                ForEach(shop.search(model.search).filter { dinner.used.contains($0.id) }) { line in
+                    Label(line.name, systemImage: "fork.knife").id(line.id)
+                }
+            }
+        }
     }
 
     @ViewBuilder private func existingSheet(_ destination: LedgerHomeSheet) -> some View {
@@ -569,6 +586,13 @@ struct ShopGroceryPreview: View {
         static func reduce(value: inout [UUID: CGFloat], nextValue: () -> [UUID: CGFloat]) {
             value.merge(nextValue()) { _, latest in latest }
         }
+    }
+
+    init(model: LedgerModel, shop: ShoppingLedger, showsListLink: Bool, authorize: @escaping @MainActor () -> Bool) {
+        self.model = model
+        self.shop = shop
+        self.showsListLink = showsListLink
+        self.authorize = authorize
     }
 
     private func releaseRows() {
