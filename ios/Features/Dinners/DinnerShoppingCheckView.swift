@@ -338,7 +338,7 @@ private struct DinnerPurchaseChoices: View {
                 ForEach(shop.lines.filter { covered.contains($0.id) }) { line in
                     LabeledContent(line.name, value: dinnerText("Using food at home"))
                 }
-                NavigationLink(ledgerText("Review checkout")) { LedgerCheckoutEntry(ledger: ledger, pickup: pickup) }
+                NavigationLink(tr("Review checkout")) { LedgerCheckoutEntry(ledger: ledger, pickup: pickup) }
                 Button(dinnerText("Put these ingredients back on the shopping list")) {
                     Task { await undo(covered) }
                 }.disabled(busy)
