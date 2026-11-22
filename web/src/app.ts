@@ -82,6 +82,7 @@ export class WebApp {
   private invitationCodeDraft = '';
   private invitationOffer:InviteOffer|null = null;
   private offerCheckedUntil = 0;
+  private invitationChanged = false;
   private uncertainJoin:{offer:InviteOffer;language:Language}|null = null;
   private previewGeneration = 0;
   private redemption:InviteRedemption|null = null;
@@ -145,8 +146,11 @@ export class WebApp {
         this.pendingInvitation=null;
       }
       this.busy=false;this.render();
-      const focus=this.invitationOffer && this.invitationOffer!==previousOffer ? '#invitation-household' : '[role="status"]';
-      this.root.querySelector<HTMLElement>(focus)?.focus();
+      const receivedOffer=this.invitationOffer && this.invitationOffer!==previousOffer;
+      const focus=receivedOffer ? this.invitationChanged ? '#invitation-change' : '#invitation-household' : '[role="status"]';
+      const target=this.root.querySelector<HTMLElement>(focus);
+      target?.focus();
+      if(focus==='#invitation-change')target?.scrollIntoView?.({block:'start'});
       if(this.refreshPending){this.refreshPending=false;void this.start();}
     }
   }
@@ -208,6 +212,7 @@ export class WebApp {
     this.invitationOffer=null;
     this.uncertainJoin=null;
     this.invitationCodeDraft='';
+    this.invitationChanged=false;
   }
   private adoptBrowserAuth(fresh:BrowserAuthState|null):void {
     const previous=this.browserAuth;
@@ -695,7 +700,20 @@ export class WebApp {
         const access=offer.role==='adult_contributor'?'This invitation lets you send and track your own grocery requests.'
           :offer.role==='helper_edit'?'This invitation lets you read the shared pickup instructions and suggest changes for the shopper to review.'
           :'This invitation lets you read the shared pickup instructions.';
-        review.append(this.el('p',this.t('Household inviting you')),household,this.el('p',this.t(access)));
+        if(this.invitationChanged){
+          const summary=this.el('div');summary.id='invitation-change';summary.tabIndex=-1;
+          const title=this.el('h2',this.t('This invitation changed'));title.id='invitation-change-title';
+          const updatedAccess=offer.role==='helper_edit'?'You can suggest changes to the pickup instructions for the shopper to review.'
+            :offer.role==='helper_read'?'Read-only access to the shared pickup instructions.'
+            :'You can send and track your own grocery requests.';
+          const detail=this.el('p',this.t(updatedAccess));detail.id='invitation-change-access';
+          summary.setAttribute('role','group');summary.setAttribute('aria-labelledby',title.id);
+          summary.setAttribute('aria-describedby',detail.id);
+          summary.append(title,detail);
+          review.append(summary);
+        }
+        review.append(this.el('p',this.t('Household inviting you')),household);
+        if(!this.invitationChanged)review.append(this.el('p',this.t(access)));
         form.append(review);
       }
       this.renderJoinControls(form,offer??this.uncertainJoin?.offer??null);
@@ -733,7 +751,7 @@ export class WebApp {
       this.invitationOffer=null;
     } catch (error) {
       if(error instanceof ApiError && error.status===409 && error.code==='refresh_required'){
-        this.uncertainJoin=null;this.invitationOffer=null;this.notice='This invitation changed. Review the updated details before joining.';
+        this.uncertainJoin=null;this.invitationOffer=null;this.invitationChanged=true;this.notice='';
         await this.checkInvitation();return;
       }
       if(offer && error instanceof ApiError && (error.status===0 || error.status>=500) && error.code!=='consent_unavailable'){
@@ -763,7 +781,7 @@ export class WebApp {
       throw new ApiError('grant_context_changed',409);
     }
     this.joinedSession=this.session;
-    this.invitation=null;this.redemption=null;this.adultAttestation=false;this.inviteAlias='';
+    this.clearInvitationDraft();
   }
   private field(form:HTMLElement,key:string,id:string,value:string,update:(value:string)=>void,multiline=false):void {
     const label=this.el('label',this.t(key));label.htmlFor=id;const input=multiline?this.el('textarea'):this.el('input');input.id=id;input.value=value;input.maxLength=id==='item'?240:id==='amount'?80:1000;

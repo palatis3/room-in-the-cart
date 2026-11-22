@@ -275,12 +275,12 @@ test('a signed-in adult reviews the current offer before joining at large text s
   const origin=new URL(server.resolvedUrls.local[0]).origin;
   for(const language of ['en','es']){
     await t.test(language,async t=>{
-      const context=await browser.newContext({locale:language,viewport:{width:320,height:720}});
+      const context=await browser.newContext({locale:language,viewport:{width:320,height:568},colorScheme:language==='en'?'dark':'light',reducedMotion:'reduce'});
       t.after(()=>context.close());
       const page=await context.newPage();
       const offers=[
-        {householdLabel:'Patio de Marta',role:'helper_read'},
-        {householdLabel:'Cocina del domingo',role:'helper_edit'}
+        {householdLabel:'Familia de San Bartolomé Cuauhtenco',role:'helper_read'},
+        {householdLabel:'Familia de San Bartolomé Cuauhtenco',role:'helper_edit'}
       ];
       const token='private-manually-entered-code';
       const reads=[],joins=[],activations=[];
@@ -324,10 +324,19 @@ test('a signed-in adult reviews the current offer before joining at large text s
       await page.locator('#invite-alias').fill('Mar');
       current=1;
       await join.click();
-      await page.getByRole('heading',{name:offers[1].householdLabel}).waitFor();
-      assert.match(await page.getByRole('status').innerText(),language==='en'?/invitation changed/:/invitación cambió/);
-      assert.match(await offered.innerText(),language==='en'?/suggest changes/:/sugerir cambios/);
-      assert.equal(await page.getByText(offers[0].householdLabel,{exact:true}).count(),0);
+      const changed=page.getByRole('group',{name:language==='en'?'This invitation changed':'Esta invitación cambió'});
+      await changed.waitFor();
+      assert.match(await changed.innerText(),language==='en'?/suggest changes/:/sugerir cambios/);
+      assert.equal(await page.getByRole('status').innerText(),'');
+      const geometry=await changed.evaluate((summary,phrase)=>{
+        const access=summary.querySelector('p').firstChild;
+        const range=document.createRange();
+        range.setStart(access,0);range.setEnd(access,access.textContent.indexOf(phrase)+phrase.length);
+        const rects=[summary.querySelector('h2').getBoundingClientRect(),...range.getClientRects()];
+        return {focused:document.activeElement===summary,visible:rects.every(r=>r.top>=0 && r.bottom<=innerHeight && r.left>=0 && r.right<=innerWidth),
+          outlined:getComputedStyle(summary).outlineStyle!=='none',fits:document.documentElement.scrollWidth<=innerWidth};
+      },language==='en'?'suggest changes':'sugerir cambios');
+      assert.deepEqual(geometry,{focused:true,visible:true,outlined:true,fits:true});
       assert.deepEqual(joins.map(j=>j.reviewedOffer),[offers[0]]);
       assert.deepEqual(activations,[]);
 
