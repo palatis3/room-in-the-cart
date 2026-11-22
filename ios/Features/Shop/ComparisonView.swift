@@ -272,27 +272,31 @@ struct ComparisonView: View {
             ForEach(UnitOfMeasure.allCases, id: \.self) { unit in Text(unit.displayName).tag(unit) }
         }
         if typeSize.isAccessibilitySize {
-            let value = selection.wrappedValue.displayName
-            Menu {
+            stackedMenu(title, value: selection.wrappedValue.displayName, id: id) {
                 picker.pickerStyle(.inline)
-            } label: {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(title).font(.subheadline).foregroundStyle(Theme.secondary)
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text(value).foregroundStyle(Theme.action)
-                        Spacer(minLength: 0)
-                        Image(systemName: "chevron.up.chevron.down").imageScale(.small)
-                            .foregroundStyle(Theme.action).accessibilityHidden(true)
-                    }
-                }
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                .contentShape(Rectangle())
             }
-            .accessibilityLabel(title).accessibilityValue(value).accessibilityIdentifier(id)
         } else {
             picker.frame(minHeight: 44).accessibilityIdentifier(id)
         }
+    }
+
+    private func stackedMenu<Content: View>(_ title: String, value: String, id: String,
+                                            @ViewBuilder content: () -> Content) -> some View {
+        Menu(content: content) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title).font(.subheadline).foregroundStyle(Theme.secondary)
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(value).foregroundStyle(Theme.action)
+                    Spacer(minLength: 0)
+                    Image(systemName: "chevron.up.chevron.down").imageScale(.small)
+                        .foregroundStyle(Theme.action).accessibilityHidden(true)
+                }
+            }
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+            .contentShape(Rectangle())
+        }
+        .accessibilityLabel(title).accessibilityValue(value).accessibilityIdentifier(id)
     }
 
     private func offerSection(_ title: String, label: Binding<String>, quantity: Binding<String>, unit: Binding<UnitOfMeasure>, price: Binding<String>, conversion: Binding<ComparisonConversion?>, prefix: String) -> some View {
@@ -383,16 +387,7 @@ struct ComparisonView: View {
                 recoveryActions(for: .a, result: result.offerA)
                 recoveryActions(for: .b, result: result.offerB)
                 editRow
-                Picker(selection: Binding(get: { model.draft.setAsidePack }, set: { model.setAside($0) })) {
-                    Text(tr("Keep both options")).tag(nil as ComparisonPack?)
-                    Text(inputs.offerA.label.isEmpty ? tr("Pack A") : tr("Pack A") + " · " + inputs.offerA.label).tag(ComparisonPack.a as ComparisonPack?)
-                    Text(inputs.offerB.label.isEmpty ? tr("Pack B") : tr("Pack B") + " · " + inputs.offerB.label).tag(ComparisonPack.b as ComparisonPack?)
-                } label: {
-                    Label(tr("Set aside an option"), systemImage: "minus.circle")
-                }
-                .pickerStyle(.menu)
-                .frame(minHeight: 44)
-                .accessibilityIdentifier("comparison.setAsidePack")
+                setAsidePicker(inputs)
             }
             Section {
                 Text(tr("Other groceries, fees and taxes are not included. This does not establish whether the whole pickup fits your budget."))
@@ -460,6 +455,32 @@ struct ComparisonView: View {
                 .contentShape(Rectangle())
         }
         .foregroundStyle(Theme.action).accessibilityIdentifier(id)
+    }
+
+    @ViewBuilder private func setAsidePicker(_ inputs: ComparisonRequest) -> some View {
+        let title = tr("Set aside an option")
+        let keep = tr("Keep both options")
+        let packA = inputs.offerA.label.isEmpty ? tr("Pack A") : tr("Pack A") + " · " + inputs.offerA.label
+        let packB = inputs.offerB.label.isEmpty ? tr("Pack B") : tr("Pack B") + " · " + inputs.offerB.label
+        let picker = Picker(selection: Binding(get: { model.draft.setAsidePack }, set: { model.setAside($0) })) {
+            Text(keep).tag(nil as ComparisonPack?)
+            Text(packA).tag(ComparisonPack.a as ComparisonPack?)
+            Text(packB).tag(ComparisonPack.b as ComparisonPack?)
+        } label: {
+            Label(title, systemImage: "minus.circle")
+        }
+        if typeSize.isAccessibilitySize {
+            let value = switch model.draft.setAsidePack {
+            case .a: packA
+            case .b: packB
+            case nil: keep
+            }
+            stackedMenu(title, value: value, id: "comparison.setAsidePack") {
+                picker.pickerStyle(.inline)
+            }
+        } else {
+            picker.pickerStyle(.menu).frame(minHeight: 44).accessibilityIdentifier("comparison.setAsidePack")
+        }
     }
 
     private func costLine(_ offer: PackOffer, result: OfferResult, fallback: String,
