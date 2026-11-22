@@ -83,15 +83,70 @@ for (const [language, heading, joinedHeading] of [
       assert.equal(root.querySelector('#invite-alias').value,'');
       assert.equal(root.querySelector('#adult-attestation').checked,false);
       assert.match(root.querySelector('[role=status]').textContent,/new invitation|nueva invitación/);
-      input(dom,'invitation','replacement-code');
+      const invitation = root.querySelector('#invitation');
+      const notice = root.querySelector('[role=status]');
+      const rejected = notice.textContent;
+      invitation.focus();
+      input(dom,'invitation','   ');
+      assert.equal(notice.textContent,rejected);
+      invitation.value = 'replacement-code';
+      invitation.setSelectionRange(5,5);
+      invitation.dispatchEvent(new dom.window.Event('input',{bubbles:true}));
+      assert.equal(notice.textContent,status === 404 ? '' : rejected);
+      assert.equal(dom.window.document.activeElement,invitation);
+      assert.equal(invitation.selectionStart,5);
+      assert.equal(invitation.selectionEnd,5);
       root.querySelector('#adult-attestation').click();
       submit(dom);
       await waitForIdle(root);
       assert.deepEqual(submitted,[['retained-invitation-secret','Earlier alias'],['replacement-code','']]);
       assert.equal(root.querySelector('h1').textContent,joinedHeading);
+      const confirmation=root.querySelector('[role=status]');
+      assert.equal(dom.window.document.activeElement,confirmation);
+      assert.match(confirmation.textContent,/Replacement household/);
+      assert.match(confirmation.textContent,language==='en'?/your own grocery requests/:/tus propias solicitudes/);
+      assert.doesNotMatch(confirmation.textContent,/instructions|instrucciones/);
       dom.window.close();
     });
   }
+}
+
+for (const [role, canPropose] of [['helper',false], ['editor',false], ['editor',true]]) {
+  test(`confirmed ${role} invitation describes its actual view (suggestions=${canPropose})`,async t => {
+    let current=null;
+    let online=false;
+    const grantId='supper-grant';
+    const scope={authenticated:true,role,grantId,memberId:'cook',shopId:'pickup',
+      household:{id:'home',label:'A & B $& kitchen'},enrolled:true,csrf:'scope-csrf'};
+    const {app,dom,root}=await fixture({
+      authState:async()=>({available:true,authenticated:true,csrf:'identity-csrf'}),
+      session:async()=>current,
+      redeem:async()=>({householdId:'home',memberId:'cook',role,grantId}),
+      activateSession:async()=>{if(!online)throw new ApiError('network',0);current=scope;},
+      view:async()=>({grantId,shopId:'pickup',shopLabel:'Friday',revision:1,expiresAt:'2099-01-01T00:00:00Z',
+        asOf:'2026-11-01T12:00:00Z',instructions:[],canPropose}),
+      receivedProposals:async()=>({proposals:[],nextCursor:null})
+    });
+    t.after(()=>dom.window.close());
+    root.querySelector('#adult-attestation').click();
+    submit(dom);await waitForIdle(root);
+    const status=()=>root.querySelector('[role=status]').textContent;
+    assert.doesNotMatch(status(),/You joined|A & B/);
+    online=true;submit(dom);await waitForIdle(root);
+    assert.match(status(),/You joined A & B \$& kitchen\./);
+    assert.match(status(),/instructions shared with you/);
+    assert.equal(status().includes('suggest changes'),canPropose);
+    assert.doesNotMatch(status(),/own grocery requests/);
+    const picker=root.querySelector('#language');
+    picker.value='es';picker.dispatchEvent(new dom.window.Event('change'));
+    assert.match(status(),/Te uniste a A & B \$& kitchen\./);
+    assert.match(status(),/instrucciones que compartieron contigo/);
+    assert.equal(status().includes('sugerir cambios'),canPropose);
+    app.suspendForHistory();
+    assert.doesNotMatch(root.textContent,/A & B|Te uniste/);
+    current=null;app.resumeWithFreshAuthority();await waitForIdle(root);
+    assert.doesNotMatch(root.textContent,/A & B|Te uniste/);
+  });
 }
 
 test('unconfigured email service is honest and cannot display a sent-code success',async()=>{
