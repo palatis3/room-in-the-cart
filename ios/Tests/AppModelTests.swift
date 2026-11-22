@@ -18,6 +18,10 @@ final class AppModelTests: XCTestCase {
         let reference = try XCTUnwrap(model.result)
         model.setAside(.a)
         XCTAssertEqual(model.result, reference)
+        let unchangedUnit = model.draft.aUnit
+        model.draft.setPackUnit(unchangedUnit, for: .a)
+        XCTAssertEqual(model.draft.setAsidePack, .a)
+        XCTAssertEqual(model.result, reference)
         await model.save(in: store)
         XCTAssertNotNil(model.savedAt)
         try await store.close()

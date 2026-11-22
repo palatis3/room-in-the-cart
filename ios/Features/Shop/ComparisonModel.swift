@@ -88,6 +88,16 @@ struct ComparisonDraft: Codable, Equatable {
 
     init(id: UUID = UUID()) { self.id = id }
 
+    fileprivate func hasSameTerms(as previous: Self) -> Bool {
+        // Explicitly choosing an existing default affects how a future edit behaves,
+        // while today's pack sizes, prices and personal choice remain the same.
+        var comparable = self
+        comparable.aUnitChosen = previous.aUnitChosen
+        comparable.bUnitChosen = previous.bUnitChosen
+        comparable.setAsidePack = previous.setAsidePack
+        return comparable == previous
+    }
+
     mutating func setPackUnit(_ unit: UnitOfMeasure, for pack: ComparisonPack) {
         switch pack {
         case .a: aUnitChosen = true; aUnit = unit
@@ -234,11 +244,10 @@ enum EntryError: Error { case invalidNumber, precision, unsupportedVersion }
     @Published var draft: ComparisonDraft {
         didSet {
             guard draft != oldValue else { return }
-            comparison = nil
             savedAt = nil
-            // Revisit the choice if either offer or the shopping need changes.
-            if draft.setAsidePack != nil, draft.setAsidePack == oldValue.setAsidePack {
-                draft.setAsidePack = nil
+            if !draft.hasSameTerms(as: oldValue) {
+                comparison = nil
+                if draft.setAsidePack != nil { draft.setAsidePack = nil }
             }
         }
     }
@@ -325,7 +334,7 @@ enum EntryError: Error { case invalidNumber, precision, unsupportedVersion }
     func setAside(_ pack: ComparisonPack?) {
         guard pack != draft.setAsidePack else { return }
         draft.setAsidePack = pack
-        compare()
+        if result == nil { compare() }
     }
 
     func save(in store: ComparisonStore?) async {
