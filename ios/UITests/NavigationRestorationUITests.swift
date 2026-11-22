@@ -184,8 +184,10 @@ import XCTest
         let quantity = app.textFields["Quantity (optional)"]
         quantity.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.7)).tap()
         app.typeText("4")
-        tap(app.buttons["ledgerContributionDone"])
-        tap(app.buttons["ledgerSaveContributionChanges"])
+        let saveQuantity = app.buttons["ledgerSaveContributionChanges"]
+        XCTAssertTrue(app.waitForDoneAboveKeyboard(identifier: "ledgerSaveContributionChanges"))
+        XCTAssertTrue(saveQuantity.isEnabled && saveQuantity.isHittable)
+        saveQuantity.tap()
         XCTAssertTrue(details.waitForExistence(timeout: 8))
         tap(details.buttons["Close"])
         XCTAssertTrue(inspect.waitForExistence(timeout: 8))

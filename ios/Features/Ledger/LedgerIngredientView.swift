@@ -406,9 +406,6 @@ struct LedgerContributionEditor: View {
                         .accessibilityIdentifier("ledgerContributionNotes")
                 }
             }.disabled(model.saving || model.hasPendingSave)
-            Button(ledgerText("Save changes"), action: save)
-                .buttonStyle(PrimaryAction()).disabled(!hasEdits || model.saving || model.hasPendingSave)
-                .accessibilityIdentifier("ledgerSaveContributionChanges")
             Button(ledgerText("Remove only this contribution"), role: .destructive) { confirmingRemoval = true }
                 .foregroundStyle(Theme.error)
                 .disabled(model.saving || model.hasPendingSave)
@@ -418,8 +415,25 @@ struct LedgerContributionEditor: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() }.disabled(model.saving) }
             }
-            .keyboardDoneAction(visible: focusedField != nil, title: quickGroceryText("Dismiss keyboard"),
-                                identifier: "ledgerContributionDone") { focusedField = nil }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                HStack(spacing: 12) {
+                    if focusedField != nil {
+                        Button { focusedField = nil } label: {
+                            Image(systemName: "keyboard.chevron.compact.down")
+                                .frame(minWidth: 44, minHeight: 44)
+                        }
+                        .accessibilityLabel(quickGroceryText("Dismiss keyboard"))
+                        .accessibilityIdentifier("ledgerContributionDone")
+                    }
+                    Button(ledgerText("Save changes"), action: save)
+                        .buttonStyle(PrimaryAction())
+                        .disabled(!hasEdits || model.saving || model.hasPendingSave)
+                        .accessibilityIdentifier("ledgerSaveContributionChanges")
+                }
+                .padding(.horizontal)
+                .padding(.vertical, 4)
+                .background(.bar)
+            }
             .interactiveDismissDisabled(model.saving)
             .confirmationDialog(ledgerText("Remove only this contribution?"), isPresented: $confirmingRemoval, titleVisibility: .visible) {
                 Button(ledgerText("Remove contribution"), role: .destructive) {
