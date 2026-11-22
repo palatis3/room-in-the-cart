@@ -42,7 +42,7 @@ struct HouseholdSetupSections: View {
                         .onChange(of: model.invitationPreviewKey, initial: true) { _, key in
                             guard let key else { return }
                             Task {
-                                guard model.invitationPreviewKey == key else { return }
+                                guard model.invitationPreviewKey == key, model.invitationPreview == .idle else { return }
                                 await model.previewInvitation()
                             }
                         }
@@ -66,7 +66,7 @@ struct HouseholdSetupSections: View {
                     .accessibilityIdentifier("household.invite.household")
                 Text(ht("Role offered by this invitation")).font(.subheadline).foregroundStyle(.secondary)
                 Text(roleLabel(offer.role)).privacySensitive().accessibilityIdentifier("household.invite.role")
-            }
+            }.accessibilityElement(children: .contain)
         case .unavailable:
             Text(ht("This invitation is unavailable. Ask the person who invited you for a current code."))
                 .accessibilityIdentifier("household.invite.status")

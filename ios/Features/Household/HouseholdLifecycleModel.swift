@@ -172,15 +172,15 @@ import HouseholdClient
             try await store.save(saved)
             guard start == generation else { return }
             invalidateInvitationPreview(); pendingMembership = intent; attempts = 0; retryAfter = .distantPast
-            await sendMembership(intent, start: start)
+            await sendMembership(intent, start: start, isFirstSubmission: true)
         } catch { if start == generation { notice = ht("The action was not saved on this phone. Nothing was sent.") } }
     }
     func retryMembership() async {
         guard !busy, scope == nil, let pendingMembership else { return }
         guard Date() >= retryAfter, attempts < 5 else { notice = ht("Wait before retrying, or review this action after several failed attempts."); return }
-        busy = true; defer { busy = false }; await sendMembership(pendingMembership, start: generation)
+        busy = true; defer { busy = false }; await sendMembership(pendingMembership, start: generation, isFirstSubmission: false)
     }
-    private func sendMembership(_ intent: MembershipIntent, start: UUID) async {
+    private func sendMembership(_ intent: MembershipIntent, start: UUID, isFirstSubmission: Bool) async {
         attempts += 1
         do {
             let receipt = try await service.executeMembership(intent)
@@ -194,15 +194,21 @@ import HouseholdClient
         } catch {
             guard start == generation else { return }
             if activation != nil { notice = ht("Membership was confirmed, but its local recovery record could not be saved. Connect again to continue."); return }
-            if case .service(409, "refresh_required", _, _) = error as? ClientError, let draft = intent.invitationDraft {
+            if case let .service(status, code, _, _) = error as? ClientError, let draft = intent.invitationDraft,
+               (status == 409 && code == "refresh_required") || (status == 404 && isFirstSubmission) {
                 do {
-                    try await store.discardChangedInvitation(intent)
+                    try await store.discardRejectedInvitation(intent)
                     guard start == generation else { return }
                     invalidateInvitationPreview()
                     invitationCode = draft.token
                     alias = draft.alias ?? ""
                     pendingMembership = nil
-                    notice = ht("The invitation changed. Review the updated household and role before joining.")
+                    if status == 404 {
+                        invitationPreview = .unavailable
+                        notice = nil
+                    } else {
+                        notice = ht("The invitation changed. Review the updated household and role before joining.")
+                    }
                 } catch {
                     if start == generation { notice = ht("The local retry could not be cleared.") }
                 }

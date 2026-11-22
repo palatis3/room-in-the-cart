@@ -181,7 +181,7 @@ public actor LifecycleIntentStore {
         merged.reviewActions = try read().reviewActions
         try write(merged)
     }
-    public func discardChangedInvitation(_ intent: MembershipIntent) throws {
+    public func discardRejectedInvitation(_ intent: MembershipIntent) throws {
         var state = try read()
         guard state.membership == intent, intent.kind == .redeem else { throw ClientError.cancelled }
         state.membership = nil
