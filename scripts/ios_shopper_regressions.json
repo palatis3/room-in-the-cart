@@ -51,6 +51,7 @@
     "RoomInTheCartTests/PantryVoiceBatchMatcherTests/testStorageQualifiersNarrowExactLotsWithoutChoosingBetweenPhysicalBatches",
     "RoomInTheCartTests/PantryVoiceParserTests/testReadOnlyBalanceWithTrailingPlaceKeepsFoodAndStorageWithoutAUseIntent",
     "RoomInTheCartUITests/PantryVoiceUITests/testSpanishBalanceHistoryClosesAndReopensWithoutRecordingAUse",
+    "RoomInTheCartUITests/PantryVoiceUITests/testReturningFromConfirmedFlourUseShowsTheSameReceiptOnce",
     "RoomInTheCartTests/PantryPendingRecoveryTests/testSpanishPartitiveUseConfirmsOnlyTheFridgeBatchAndSurvivesReopen",
     "RoomInTheCartTests/PantryVoiceParserTests/testSpanishSingularPartitivesKeepUseQualitativeAndRespectReadOnlyOrNegativePhrases",
     "RoomInTheCartUITests/PantryVoiceUITests/testSpanishLargeTextKeepsPantryInputAndClarificationVisible",

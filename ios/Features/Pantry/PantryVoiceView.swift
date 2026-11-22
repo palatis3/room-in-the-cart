@@ -847,7 +847,7 @@ struct VoicePantryRow {
         Section {
             Label {
                 if saved.count == 1, let lot = saved.first, recordedUseIDs.contains(lot.id) {
-                    Text(pantryFormat("Recorded one use of %@.", lot.name))
+                    Text(pantryNotice(.recordedUse(lot.name)))
                 } else { Text(pantryText("Food saved on this device.")) }
             } icon: { Image(systemName: "checkmark.circle") }
             .accessibilityIdentifier("pantry.voiceSaved")

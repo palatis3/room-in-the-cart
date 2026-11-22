@@ -65,6 +65,10 @@ struct PantryHomeView: View {
                     }
                 }))
         }
+        .onDisappear { model.dismissUseReceipt() }
+        .onChange(of: sheet?.id) { _, destination in
+            if destination != nil { model.dismissUseReceipt() }
+        }
         .navigationTitle(pantryText("My Pantry"))
         .navigationBarTitleDisplayMode(.inline)
         .onChange(of: model.canEdit, initial: true) { _, ready in
@@ -123,8 +127,8 @@ struct PantryHomeView: View {
                 JournalList {
                     if let notice = model.notice {
                         Section {
-                            Label(pantryNotice(notice), systemImage: notice == .saved ? "checkmark.circle" : "exclamationmark.circle")
-                                .foregroundStyle(notice == .saved ? Theme.ink : Theme.warning)
+                            Label(pantryNotice(notice), systemImage: notice.isSaved ? "checkmark.circle" : "exclamationmark.circle")
+                                .foregroundStyle(notice.isSaved ? Theme.ink : Theme.warning)
                                 .accessibilityIdentifier("pantry.status")
                         }
                     }
@@ -656,7 +660,7 @@ private struct PantryLotView: View {
             reservationAmountFocused = false
         }
         .navigationTitle(lot?.name ?? pantryText("Pantry food"))
-        .onChange(of: model.notice) { _, notice in if notice == .saved { resultFocused = true } }
+        .onChange(of: model.notice) { _, notice in if notice?.isSaved == true { resultFocused = true } }
         .privacySensitive()
     }
     private func action(_ title: String, _ action: PantryModel.Action) -> some View {
@@ -861,8 +865,8 @@ private struct PantryReviewView: View {
                         Text(model.pendingWasCommitted ? pantryText("Your change is saved. Retry to finish recovery.") : pantryNotice(notice))
                     }
                 }
-            } else if accessAllowed && model.notice == .saved {
-                Text(pantryText("Food saved on this device."))
+            } else if accessAllowed, let notice = model.notice, notice.isSaved {
+                Text(pantryNotice(notice))
             } else { Text(pantryText("This review is unavailable. Return to My Pantry.")) }
             if accessAllowed && !saving {
                 if model.pending != nil {

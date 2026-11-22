@@ -439,6 +439,31 @@ import XCTest
         XCTAssertEqual(app.switches["packageDate.hasDay"].value as? String, "0")
     }
 
+    func testReturningFromConfirmedFlourUseShowsTheSameReceiptOnce() {
+        openPantry(reset: true)
+        let flour = addLot("Flour", amount: "2")
+        enterCommand("I used some flour.")
+        tap(app.buttons["pantry.voicePreview"])
+        tap(app.buttons["pantry.voiceConfirm"])
+        let receipt = "Recorded one use of Flour."
+        let saved = element("pantry.voiceSaved")
+        XCTAssertTrue(saved.waitForExistence(timeout: 8))
+        XCTAssertEqual(saved.label, receipt)
+        tap(app.buttons["Done"])
+        let status = element("pantry.status")
+        XCTAssertTrue(status.waitForExistence(timeout: 8))
+        XCTAssertEqual(status.label, receipt)
+
+        enterCommand("I used some flour.")
+        tap(app.buttons["pantry.voiceCancel"])
+        XCTAssertTrue(app.navigationBars["My Pantry"].waitForExistence(timeout: 8))
+        XCTAssertFalse(status.exists && status.label == receipt)
+        tap(app.buttons[flour])
+        tap(app.buttons["pantry.usageHistory"])
+        XCTAssertTrue(element("pantry.usageEvent.0").waitForExistence(timeout: 8))
+        XCTAssertFalse(element("pantry.usageEvent.1").exists)
+    }
+
     func testUsedSomeFromBatchAndTypedUseProduceTwoPrivateHistoryEntries() {
         openPantry(reset: true)
         let id = addLot("Ketchup", amount: "3")

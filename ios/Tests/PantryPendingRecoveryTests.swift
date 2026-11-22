@@ -142,6 +142,9 @@ import LocalStore
         let prior = try await model.usageHistory(lotID: fridge.id, basis: start.state)
         XCTAssertTrue(prior.isEmpty)
         try await model.saveConsumption(review)
+        XCTAssertEqual(model.notice, .recordedUse(fridge.name))
+        await model.loadOnAppearance(accessAllowed: true)
+        XCTAssertEqual(model.notice, .recordedUse(fridge.name))
 
         let fresh = try ComparisonStore(url: f.directory.appendingPathComponent("pickup.sqlite"), inventoryEnabled: true)
         f.cleanup.track(fresh)
@@ -157,6 +160,7 @@ import LocalStore
 
         await model.prepareNewFood(name: "Ajonjolí", location: .fridge, amount: "2", unit: .count)
         await model.confirmReview(acknowledgingReservations: false)
+        XCTAssertEqual(model.notice, .saved)
         let twoFridgeBatches = try XCTUnwrap(model.snapshot?.lots)
         XCTAssertEqual(PantryVoiceBatchMatcher.suggestions(for: row.food, in: twoFridgeBatches).count, 2)
         XCTAssertNil(PantryVoiceBatchMatcher.uniqueExact(for: row.food, in: twoFridgeBatches))

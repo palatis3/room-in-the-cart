@@ -22,7 +22,16 @@ struct PantryReviewedFood: Equatable {
 @MainActor
 final class PantryModel: ObservableObject, PantryErasureObserver {
     enum Phase: Equatable { case idle, ready, migrationRequired, accessDenied, unavailable }
-    enum Notice: Equatable { case saved, saveFailed, stale, loadFailed, invalidEntry, reservationReviewRequired, insufficientFree, partialReleaseInvalid, changeTooLarge }
+    enum Notice: Equatable {
+        case saved, recordedUse(String), saveFailed, stale, loadFailed, invalidEntry, reservationReviewRequired, insufficientFree, partialReleaseInvalid, changeTooLarge
+
+        var isSaved: Bool {
+            switch self {
+            case .saved, .recordedUse: true
+            default: false
+            }
+        }
+    }
     enum Action { case haveEnough, someLeft, opened, move(InventoryLocation), usedUp, recount(String, UnitOfMeasure) }
     typealias Pending = PantryPendingStore.Entry
 
@@ -143,9 +152,19 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
         }
         pendingWasCommitted = false
         await retryPending()
+        try requireConsumptionAccess()
         guard generation == token, phase == .ready else { throw PantryConsumptionFailure.unavailable }
         guard notice != .stale else { throw PantryConsumptionFailure.stale }
         guard notice == .saved, pending == nil else { throw PantryConsumptionFailure.unavailable }
+        if let selections = entry.consumption?.selections, selections.count == 1,
+           let selection = selections.first, selection.use.usageKind != nil,
+           let lot = snapshot?.lots.first(where: { $0.id == selection.lotID }) {
+            notice = .recordedUse(lot.name)
+        }
+    }
+
+    func dismissUseReceipt() {
+        if case .recordedUse = notice { notice = nil }
     }
 
     private func requireConsumptionAccess() throws {
@@ -190,6 +209,7 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
     func saveReceipt(_ review: PantryReceiptReview) async throws {
         guard canEdit else { throw PantryReceiptError.stale }
         let token = generation
+        dismissUseReceipt()
         busy = true
         defer { if token == generation { busy = false } }
         willMutateOrRecover?()
@@ -411,6 +431,7 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
     private func changeReceipt(_ reviewedState: InventoryState, change: () async throws -> Void) async throws {
         guard canEdit, snapshot?.state == reviewedState else { throw PantryReceiptError.stale }
         let token = generation
+        dismissUseReceipt()
         busy = true
         defer { if token == generation { busy = false } }
         try await change()
@@ -444,8 +465,15 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
             // generation below still rejects a revoked presentation after a wait.
             let current = try await repository.loadForEditing(at: clock(), waitForShelfRead: true)
             guard token == generation else { return }
+            if pending == nil {
+                // Returning to the shelf rereads the pantry. Only the same inventory can retain its use receipt.
+                switch notice {
+                case .recordedUse where snapshot?.state == current.state: break
+                default: notice = nil
+                }
+                requiresFreshReview = false
+            }
             snapshot = current; phase = .ready
-            if pending == nil { notice = nil; requiresFreshReview = false }
         } catch {
             guard token == generation else { return }
             fail(error, saving: false)
