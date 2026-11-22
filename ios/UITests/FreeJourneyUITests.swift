@@ -258,9 +258,11 @@ import XCTest
         let prepare = app.buttons["Preview dinner choice"]
         XCTAssertTrue(prepare.isEnabled, app.debugDescription)
         tapVisibleFormRow(prepare, marker: "FINISH_PACKAGE_PREVIEW")
+        XCTAssertTrue(app.staticTexts["Review dinner choice"].waitForExistence(timeout: 10), app.debugDescription)
+        // The matched-product review can put Cancel below the rows the list has loaded.
         let cancel = app.buttons["Cancel preview"]
-        XCTAssertTrue(cancel.waitForExistence(timeout: 10), app.debugDescription)
         tapVisibleFormRow(cancel, marker: "FINISH_PACKAGE_CANCEL")
+        XCTAssertTrue(cancel.waitForNonExistence(timeout: 10), app.debugDescription)
         XCTAssertFalse(app.buttons["tonight.apply"].exists, app.debugDescription)
         restart()
         tap(app.shopToolButton("shop.myPantry"))
