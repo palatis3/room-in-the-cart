@@ -383,6 +383,16 @@ struct ComparisonView: View {
                 recoveryActions(for: .a, result: result.offerA)
                 recoveryActions(for: .b, result: result.offerB)
                 editRow
+                Picker(selection: Binding(get: { model.draft.setAsidePack }, set: { model.setAside($0) })) {
+                    Text(tr("Keep both options")).tag(nil as ComparisonPack?)
+                    Text(inputs.offerA.label.isEmpty ? tr("Pack A") : tr("Pack A") + " · " + inputs.offerA.label).tag(ComparisonPack.a as ComparisonPack?)
+                    Text(inputs.offerB.label.isEmpty ? tr("Pack B") : tr("Pack B") + " · " + inputs.offerB.label).tag(ComparisonPack.b as ComparisonPack?)
+                } label: {
+                    Label(tr("Set aside an option"), systemImage: "minus.circle")
+                }
+                .pickerStyle(.menu)
+                .frame(minHeight: 44)
+                .accessibilityIdentifier("comparison.setAsidePack")
             }
             Section {
                 Text(tr("Other groceries, fees and taxes are not included. This does not establish whether the whole pickup fits your budget."))
@@ -467,6 +477,10 @@ struct ComparisonView: View {
                     Text(verbatim: title)
                     Text(verbatim: cost).fontWeight(.semibold).monospacedDigit()
                 }
+            }
+            if model.draft.setAsidePack?.rawValue == offer.id {
+                Label(tr("Set aside for this trip"), systemImage: "minus.circle")
+                    .font(.subheadline)
             }
             if let packs = result.packsToBuy, packs > 0, let price = offer.price {
                 WholePackCalculation(count: packs, price: price)

@@ -47,7 +47,7 @@ struct ComparisonConversion: Codable, Equatable {
     }
 }
 
-enum ComparisonPack: String, Identifiable {
+enum ComparisonPack: String, Codable, Identifiable {
     case a, b
     var id: Self { self }
 }
@@ -55,7 +55,7 @@ enum ComparisonPack: String, Identifiable {
 /// Original editable literals are retained independently of normalized calculations.
 struct ComparisonDraft: Codable, Equatable {
     var id: UUID
-    var item = "" { didSet { if item != oldValue { aConversion = nil; bConversion = nil } } }
+    var item = "" { didSet { if item != oldValue { aConversion = nil; bConversion = nil; setAsidePack = nil } } }
     var needed = ""
     var unit: UnitOfMeasure = .count {
         didSet {
@@ -83,6 +83,9 @@ struct ComparisonDraft: Codable, Equatable {
     // Missing in early v1 drafts; each basis belongs only to its current offer.
     var aConversion: ComparisonConversion?
     var bConversion: ComparisonConversion?
+    /// A personal choice for this comparison. Both offers remain available for correction.
+    var setAsidePack: ComparisonPack?
+
     init(id: UUID = UUID()) { self.id = id }
 
     mutating func setPackUnit(_ unit: UnitOfMeasure, for pack: ComparisonPack) {
@@ -229,7 +232,15 @@ enum EntryError: Error { case invalidNumber, precision, unsupportedVersion }
 
 @MainActor final class ComparisonModel: ObservableObject {
     @Published var draft: ComparisonDraft {
-        didSet { if draft != oldValue { comparison = nil; savedAt = nil } }
+        didSet {
+            guard draft != oldValue else { return }
+            comparison = nil
+            savedAt = nil
+            // Revisit the choice if either offer or the shopping need changes.
+            if draft.setAsidePack != nil, draft.setAsidePack == oldValue.setAsidePack {
+                draft.setAsidePack = nil
+            }
+        }
     }
     @Published private(set) var comparison: (inputs: ComparisonRequest, result: CoreDomain.ComparisonResult)?
     var result: CoreDomain.ComparisonResult? { comparison?.result }
@@ -309,6 +320,12 @@ enum EntryError: Error { case invalidNumber, precision, unsupportedVersion }
         } catch DomainError.invalidInput("offerBNameTooLong") {
             error = tr("Shorten the name for Pack B, then compare again.")
         } catch { self.error = tr("Enter quantities as nonnegative decimals or fractions, such as 1/3. Use up to six decimal places for quantities and two for prices. Protected portions cannot exceed the total need.") }
+    }
+
+    func setAside(_ pack: ComparisonPack?) {
+        guard pack != draft.setAsidePack else { return }
+        draft.setAsidePack = pack
+        compare()
     }
 
     func save(in store: ComparisonStore?) async {

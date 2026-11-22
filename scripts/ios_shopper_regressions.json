@@ -39,6 +39,7 @@
     "RoomInTheCartUITests/RoomInTheCartUITests/testOpenProductScannerFromAddFoodAndEnterABarcode",
     "RoomInTheCartUITests/FreeJourneyUITests/testPrivateLotPrintedWordingCanBeReviewedReopenedInSpanishAndRemoved",
     "RoomInTheCartUITests/FreeJourneyUITests/testUnknownPantryBarcodeCanBeReviewedCountedAndFoundAgain",
+    "RoomInTheCartUITests/FreeJourneyUITests/testInvalidStickerDigitsKeepManualFoodFindableByNameAfterColdReturn",
     "RoomInTheCartTests/PantryProductCatalogTests/testReviewUnknownBarcodeRequiresEditableScopeAndCheckedPack"
   ],
   "06 · Record an unmeasured use from the correct container": [
@@ -71,6 +72,7 @@
   ],
   "09 · Choose whole packs across weight units under an item limit": [
     "RoomInTheCartTests/AppModelTests/testCornmealPackDefaultsAndReadableConvertedTotals",
+    "RoomInTheCartTests/AppModelTests/testSettingAsideOneOfferRemainsPrivateReversibleAndPreservesBothPricesAfterReopen",
     "RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresRecordsDetailAndIndependentShoppingList",
     "RoomInTheCartUITests/RoomInTheCartUITests/testKnownComparisonSavesAndReopensWithItemOnlyLimit",
     "RoomInTheCartUITests/RoomInTheCartUITests/testMissingPackAmountCanBeCorrectedFromResultWithItsUnitAndItemLimit"
