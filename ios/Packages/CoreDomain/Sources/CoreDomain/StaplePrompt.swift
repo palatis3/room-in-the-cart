@@ -31,7 +31,12 @@ public struct StaplePrompt: Equatable, Sendable, Identifiable {
         var prompts: [Self] = []
         for (foodID, facts) in groups where !plenty.contains(foodID) && !openFoodIDs.contains(foodID) {
             if facts.contains(where: { listed.contains(normalizedProduct($0.name)) }) { continue }
-            let byDay = Dictionary(grouping: facts) { calendar.startOfDay(for: $0.purchaseDate) }
+            let byDay = Dictionary(grouping: facts) { fact in
+                // Compare local shopping days in the planning calendar; legacy facts
+                // retain the previous timestamp-based estimate.
+                let selected = fact.purchaseDay.flatMap { MealDay(iso8601: $0.iso8601, timeZoneIdentifier: calendar.timeZone.identifier)?.date }
+                return calendar.startOfDay(for: selected ?? fact.purchaseDate)
+            }
             let days = byDay.keys.sorted(by: >)
             guard days.count >= 3, let lastDay = days.first,
                   let latest = byDay[lastDay]?.min(by: { $0.id.uuidString < $1.id.uuidString }) else { continue }

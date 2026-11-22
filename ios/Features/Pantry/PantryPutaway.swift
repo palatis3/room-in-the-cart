@@ -100,11 +100,16 @@ extension PantryRepository {
         try requireAccess()
         let money = try ComparisonModel.money(draft.receiptTotal)
         let reference = draft.reference.trimmingCharacters(in: .whitespacesAndNewlines)
-        let header = ReviewedReceiptHeader(id: receiptID, owner: receiptOwner,
-            merchant: draft.merchant.trimmingCharacters(in: .whitespacesAndNewlines), date: draft.purchaseDate,
-            totalMinor: money?.minorUnits ?? prior?.totalMinor, reference: reference.isEmpty ? prior?.reference : reference)
+        let selectedDay = draft.purchaseDay?.iso8601
         if let prior {
-            guard prior.date == header.date, prior.merchant == header.merchant,
+            guard prior.purchaseDay.map({ $0 == selectedDay }) ?? (prior.date == draft.purchaseDate) else { throw PantryReceiptError.changedEvidence }
+        }
+        let header = ReviewedReceiptHeader(id: receiptID, owner: receiptOwner,
+            merchant: draft.merchant.trimmingCharacters(in: .whitespacesAndNewlines), date: prior?.date ?? draft.purchaseDate,
+            totalMinor: money?.minorUnits ?? prior?.totalMinor, reference: reference.isEmpty ? prior?.reference : reference,
+            purchaseDay: prior == nil ? selectedDay : prior?.purchaseDay)
+        if let prior {
+            guard prior.merchant == header.merchant,
                   prior.reference == nil || prior.reference == header.reference,
                   prior.totalMinor == nil || prior.totalMinor == header.totalMinor else { throw PantryReceiptError.changedEvidence }
         }

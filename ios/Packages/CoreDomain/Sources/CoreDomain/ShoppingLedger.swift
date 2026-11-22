@@ -102,6 +102,14 @@ public struct MealDay: Codable, Equatable, Hashable, Sendable {
                       timeZoneIdentifier: timeZoneIdentifier)
     }
 
+    public init?(iso8601: String, timeZoneIdentifier: String) {
+        let parts = iso8601.split(separator: "-", omittingEmptySubsequences: false)
+        guard parts.count == 3, let year = Int(parts[0]), let month = Int(parts[1]), let day = Int(parts[2]),
+              let saved = try? Self(year: year, month: month, day: day, timeZoneIdentifier: timeZoneIdentifier),
+              saved.iso8601 == iso8601 else { return nil }
+        self = saved
+    }
+
     public var date: Date? {
         guard let zone = TimeZone(identifier: timeZoneIdentifier) else { return nil }
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = zone

@@ -30,7 +30,7 @@ struct PantryReceiptRescanView: View {
 
     private func title(for candidate: ReceiptRescanPrompt.Candidate) -> String {
         let first = candidate.original.first
-        let date = first.map { dates.purchaseDay($0.purchaseDate, style: .abbreviated) }
+        let date = first.map { dates.purchaseDay($0, style: .abbreviated) }
         let reference = first?.transactionReference ?? String(candidate.id.uuidString.suffix(8))
         return [first?.merchant, date, reference].compactMap { $0 }.joined(separator: " · ")
     }

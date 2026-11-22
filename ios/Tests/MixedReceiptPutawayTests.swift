@@ -74,6 +74,72 @@ import XCTest
         XCTAssertFalse(model.permitsReceiptCopy(header))
     }
 
+    func testPurchaseDayReopensAndExportsInBothLanguagesAndRescansAcrossTimeZones() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let cleanup = SQLiteFixtureDirectory(directory, test: self)
+        let url = directory.appendingPathComponent("pantry.sqlite")
+        let store = try ComparisonStore(url: url, inventoryEnabled: true)
+        cleanup.track(store)
+        let token = try await store.inventorySourceToken()
+        _ = try await store.commitInventory(.init(workspaceID: store.workspaceID, operationID: UUID(),
+            expectedRevision: 0, request: Data([1]), mode: .activate, sourceToken: token, writes: []))
+        let owner = UUID()
+        let repository = PantryRepository(store: store, aliasPersonaID: owner, authorize: { true })
+        let source = SourceMediaRecord(id: UUID(), target: .init(workspaceID: store.workspaceID, containerID: UUID(), objectID: UUID(),
+            revision: 1, kind: .receiptEvidence), originalText: "Beans", reviewedLabel: "Market", imageJPEG: nil, barcode: nil,
+            receiptLines: [.init(originalText: "Beans")], capturedAt: now)
+        func draft(zone: String, day: Int, reference: String) throws -> ReceiptImportDraft {
+            var calendar = Calendar(identifier: .gregorian)
+            calendar.timeZone = try XCTUnwrap(TimeZone(identifier: zone))
+            var receipt = try ReceiptImportDraft(source: source, now: now, timeZone: calendar.timeZone)
+            receipt.selectedPurchaseDate = try XCTUnwrap(calendar.date(from: DateComponents(year: 2026, month: 11, day: day)))
+            receipt.dateConfirmed = true
+            receipt.tracksPutaway = true
+            receipt.reference = reference
+            receipt.lines[0].treatment = .add
+            receipt.lines[0].received = "1"
+            receipt.lines[0].usable = "1"
+            return receipt
+        }
+        let eastern = try draft(zone: "America/New_York", day: 20, reference: "TICKET-18")
+        let reviewed = try await repository.reviewReceipt(eastern, expected: store.inventoryState(), at: now)
+        try await repository.applyReceipt(reviewed, at: now)
+        try await store.close()
+        let reopened = try ComparisonStore(url: url, inventoryEnabled: true)
+        cleanup.track(reopened)
+        let reader = PantryRepository(store: reopened, aliasPersonaID: owner, authorize: { true })
+        let headers = try await reader.putawayHeaders(after: nil)
+        let header = try XCTUnwrap(headers.first)
+        let facts = try await reader.acquisitionHistory(receiptID: header.id)
+        XCTAssertEqual(header.purchaseDay, "2026-11-20")
+        XCTAssertEqual(facts.first?.purchaseDay?.iso8601, header.purchaseDay)
+        let western = try draft(zone: "America/Los_Angeles", day: 20, reference: "TICKET-18")
+        XCTAssertNotEqual(eastern.purchaseDate, western.purchaseDate)
+        let state = try await reopened.inventoryState()
+        let replay = try await reader.reviewReceipt(western, expected: state, at: now)
+        XCTAssertNil(replay.batch)
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try XCTUnwrap(western.purchaseTimeZone)
+        var copy = ReviewedReceiptCopySelection()
+        copy.date = true
+        for (locale, expected) in [("en_US", "November 20, 2026"), ("es_US", "20 de noviembre de 2026")] {
+            let wording = ReceiptDateDisplay.storedPurchaseDay(header.purchaseDay, recordedAt: header.date,
+                locale: Locale(identifier: locale), calendar: calendar)
+            XCTAssertEqual(copy.text(header: header, purchaseDay: wording, rows: []), expected)
+            let legacy = ReceiptDateDisplay.storedPurchaseDay(nil, recordedAt: header.date, locale: Locale(identifier: locale), calendar: calendar)
+            XCTAssertTrue(legacy.contains("UTC"))
+            XCTAssertNotEqual(legacy, wording)
+        }
+        let differentDay = try draft(zone: "America/Los_Angeles", day: 19, reference: "TICKET-18")
+        do {
+            _ = try await reader.reviewReceipt(differentDay, expected: state, at: now)
+            XCTFail("A conflicting day cannot extend the saved transaction.")
+        } catch PantryReceiptError.changedEvidence {}
+        let afterConflict = try await reopened.inventoryState()
+        XCTAssertEqual(afterConflict, state)
+    }
+
     func testKeptPortionCorrectionIdentifiesOriginalLineAndAcceptsFractions() {
         var row = ReceiptImportDraft.Line(id: UUID(), ordinal: 37, original: "Wrap 1.0 ct", name: "Wrap", treatment: .keptSome, received: "1")
         let issue = row.amountCorrection

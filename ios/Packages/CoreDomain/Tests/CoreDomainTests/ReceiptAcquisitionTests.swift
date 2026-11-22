@@ -15,6 +15,40 @@ final class ReceiptAcquisitionTests: XCTestCase {
         XCTAssertNotEqual(ReceiptAcquisition.lineID(receiptID: first, ordinal: 0), ReceiptAcquisition.lineID(receiptID: first, ordinal: 1))
     }
 
+    func testPurchaseDaySurvivesReopenAndCorrectionAcrossTimeZonesWithoutDatingLegacyReceipts() throws {
+        let day = try MealDay(year: 2026, month: 11, day: 20, timeZoneIdentifier: "America/New_York")
+        var eastern = Calendar(identifier: .gregorian)
+        eastern.timeZone = try XCTUnwrap(TimeZone(identifier: day.timeZoneIdentifier))
+        let midnight = eastern.startOfDay(for: try XCTUnwrap(day.date))
+        let quantity = Quantity(amount: .one, unit: .count, originalLiteral: "1")
+        let receipt = ReceiptAcquisition(receiptID: UUID(), ordinal: 0, lotID: UUID(), foodID: UUID(), merchant: "Market",
+            purchaseDate: midnight, transactionReference: nil, imageDigest: nil, originalLine: "Beans", name: "Beans",
+            received: quantity, usable: quantity, paidLineTotal: nil, stock: .added(location: .cupboard), purchaseDay: day)
+        let data = try JSONEncoder().encode(receipt)
+        let reopened = try JSONDecoder().decode(ReceiptAcquisition.self, from: data)
+        try reopened.validate()
+        XCTAssertEqual(try MealDay(date: midnight, timeZoneIdentifier: "America/Los_Angeles").iso8601, "2026-11-19")
+        let correction = try reopened.correctingPaidTotal(Money(decimal: "2.10"))
+        XCTAssertEqual(correction.purchaseDay?.iso8601, "2026-11-20")
+        guard case .paidReceipt(let evidence) = try PrivatePriceEvidence(receipt: correction).source else { return XCTFail() }
+        XCTAssertEqual(evidence.purchaseDay, day)
+
+        var oldJSON = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        oldJSON.removeValue(forKey: "purchaseDay")
+        let old = try JSONDecoder().decode(ReceiptAcquisition.self, from: JSONSerialization.data(withJSONObject: oldJSON))
+        try old.validate()
+        var western = Calendar(identifier: .gregorian)
+        western.timeZone = try XCTUnwrap(TimeZone(identifier: "America/Los_Angeles"))
+        let samePrintedDay = try XCTUnwrap(western.date(from: DateComponents(year: 2026, month: 11, day: 20)))
+        let westernDay = try MealDay(date: samePrintedDay, timeZoneIdentifier: western.timeZone.identifier)
+        XCTAssertTrue(reopened.matchesPurchaseDate(samePrintedDay, day: westernDay))
+        XCTAssertFalse(reopened.matchesPurchaseDate(midnight, day: try MealDay(date: midnight, timeZoneIdentifier: western.timeZone.identifier)))
+        XCTAssertEqual(old.purchaseDate, midnight)
+        XCTAssertTrue(old.matchesPurchaseDate(midnight, day: nil))
+        XCTAssertFalse(old.matchesPurchaseDate(samePrintedDay, day: westernDay))
+        XCTAssertNil(try old.correctingPaidTotal(Money(decimal: "2.10")).purchaseDay)
+    }
+
     func testAdditionalPrintedDocumentRetainsItsOwnOrdinalAcrossArchivalAndPriceCorrection() throws {
         let receipt = UUID(), firstDocument = UUID(), secondDocument = UUID()
         let quantity = Quantity(amount: try Rational(1), unit: .count, originalLiteral: "1")

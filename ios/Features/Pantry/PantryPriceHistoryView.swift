@@ -29,7 +29,7 @@ struct PantryPriceHistoryView: View {
                             Text(verbatim: row.name).font(.headline)
                             Text(verbatim: priceAmount(row)).font(.title3.weight(.semibold)).monospacedDigit()
                             Text(verbatim: priceSource(row)).font(.subheadline).foregroundStyle(Theme.secondary)
-                            Text(verbatim: row.store + " · " + dates.purchaseDay(row.date))
+                            Text(verbatim: row.store + " · " + dates.purchaseDay(row))
                                 .font(.footnote).foregroundStyle(Theme.secondary)
                         }.padding(.vertical, 3)
                     }
@@ -116,7 +116,7 @@ private struct PantryPriceDetail: View {
                     if let variant = row.variant { Text(verbatim: variant) }
                     Text(verbatim: [row.store, row.branch].compactMap { $0 }.joined(separator: " · "))
                     if let mode = row.mode { Text(mode.ledgerLabel) }
-                    Text(verbatim: dates.purchaseDay(row.date))
+                    Text(verbatim: dates.purchaseDay(row))
                     if let eligibility = row.eligibility { Text(verbatim: eligibility) }
                     if let tax = row.taxTreatment { Text(shelfTaxLabel(tax)) }
                     if case .paidReceipt(let source) = row.source {
@@ -195,7 +195,7 @@ private struct PantryPriceRevisionView: View {
                     Text(verbatim: priceSource(record) + " · " + priceAmount(record))
                     Text(verbatim: [record.store, record.branch].compactMap { $0 }.joined(separator: " · "))
                     if let mode = record.mode { Text(mode.ledgerLabel) }
-                    Text(verbatim: dates.purchaseDay(record.date))
+                    Text(verbatim: dates.purchaseDay(record))
                     if let pack = record.pack { Text(verbatim: packageLabel(pack)) }
                     if let terms = record.eligibility { Text(verbatim: terms) }
                     Text(verbatim: record.sourceText)
@@ -229,7 +229,7 @@ private struct PantryComparablePrice: View {
 
     var body: some View {
         VStack(alignment: .leading) {
-            Text(verbatim: price.store + " · " + dates.purchaseDay(price.date))
+            Text(verbatim: price.store + " · " + dates.purchaseDay(price))
             if let rate {
                 Text(verbatim: (Decimal(rate.numerator) / Decimal(rate.denominator) / 100).formatted(
                     .currency(code: price.currencyCode).precision(.fractionLength(2...4))) + " / " + pantryUnit(unit))
@@ -438,7 +438,7 @@ private struct PantryPriceEditor: View {
                 Text(verbatim: priceSource(review) + " · " + priceAmount(review))
                 Text(verbatim: [review.store, review.branch].compactMap { $0 }.joined(separator: " · "))
                 if let mode = review.mode { Text(mode.ledgerLabel) }
-                Text(verbatim: dates.purchaseDay(review.date))
+                Text(verbatim: dates.purchaseDay(review))
                 if let pack = review.pack { Text(verbatim: packageLabel(pack)) }
                 if let eligibility = review.eligibility { Text(verbatim: eligibility) }
                 if let tax = review.taxTreatment { Text(shelfTaxLabel(tax)) }

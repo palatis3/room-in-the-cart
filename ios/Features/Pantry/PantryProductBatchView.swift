@@ -14,6 +14,7 @@ struct PantryProductBatchView: View {
     @State private var repeatedScan: CapturedBarcode?
     @State private var savedRows: [UUID: UUID] = [:]
     @State private var merchant = ""
+    @State private var purchaseTimeZone = TimeZone.current
     @State private var date = Calendar.current.startOfDay(for: Date())
     @State private var confirmed = false
     @State private var photoConsent = false
@@ -283,6 +284,7 @@ struct PantryProductBatchView: View {
                         TextField(pantryText("Store or branch"), text: $merchant).focused($focus, equals: "merchant")
                             .accessibilityIdentifier("productBatch.merchant")
                         ReceiptDatePicker(title: pantryText("Purchase date"), identifier: "productBatch.purchaseDate", date: $date)
+                            .environment(\.timeZone, purchaseTimeZone)
                         }
                         Toggle(confirmationText, isOn: $confirmed)
                             .accessibilityIdentifier("productBatch.received")
@@ -419,7 +421,7 @@ struct PantryProductBatchView: View {
                 let rows = batch.candidates
                 let store = merchant, purchaseDate = date
                 try verifyMatches()
-                let proposal = try await atHome ? model.reviewHomePacks(batch) : model.reviewProducts(batch, merchant: store, purchaseDate: purchaseDate, confirmed: confirmed)
+                let proposal = try await atHome ? model.reviewHomePacks(batch) : model.reviewProducts(batch, merchant: store, purchaseDate: purchaseDate, confirmed: confirmed, timeZone: purchaseTimeZone)
                 guard authorized, confirmed, batch.candidates == rows, merchant == store, date == purchaseDate else { return }
                 review = proposal; result = nil
             } catch ProductBatchError.chooseStockAction {

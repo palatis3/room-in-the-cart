@@ -35,19 +35,23 @@ public struct PrivateDeliveryRevision: Codable, Equatable, Sendable {
     public let merchant: String
     public let kind: Kind
     public let purchaseDate: Date?
+    public let purchaseTimeZoneIdentifier: String?
+    public let purchaseDay: String?
     public let deliveryDate: Date?
     public let importedAt: Date
     public let finalCents: Int?
     public private(set) var lines: [Line]
 
     public init(digest: Data, layoutID: UUID, order: String, merchant: String, kind: Kind,
-                purchaseDate: Date?, deliveryDate: Date?, importedAt: Date, finalCents: Int?, lines: [Line]) {
+                purchaseDate: Date?, deliveryDate: Date?, importedAt: Date, finalCents: Int?, lines: [Line], purchaseTimeZoneIdentifier: String? = nil) {
         self.digest = digest
         self.layoutID = layoutID
         self.order = order
         self.merchant = merchant
         self.kind = kind
         self.purchaseDate = purchaseDate
+        self.purchaseTimeZoneIdentifier = purchaseTimeZoneIdentifier
+        self.purchaseDay = purchaseDate.flatMap { Self.civilDay($0, zone: purchaseTimeZoneIdentifier) }
         self.deliveryDate = deliveryDate
         self.importedAt = importedAt
         self.finalCents = finalCents
@@ -63,6 +67,15 @@ public struct PrivateDeliveryRevision: Codable, Equatable, Sendable {
 
     public var orderKey: String { order.lowercased(with: Locale(identifier: "en_US_POSIX")) }
 
+    private static func civilDay(_ date: Date, zone: String?) -> String? {
+        guard let zone, let timeZone = TimeZone(identifier: zone), date.timeIntervalSinceReferenceDate.isFinite else { return nil }
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = timeZone
+        let parts = calendar.dateComponents([.year, .month, .day], from: date)
+        guard let year = parts.year, let month = parts.month, let day = parts.day else { return nil }
+        return String(format: "%04d-%02d-%02d", year, month, day)
+    }
+
     func validate() throws {
         let validOrder = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_")
         guard digest.count == 32, !order.isEmpty, order.utf8.count <= 100,
@@ -71,6 +84,8 @@ public struct PrivateDeliveryRevision: Codable, Equatable, Sendable {
               !merchant.unicodeScalars.contains(where: CharacterSet.controlCharacters.contains),
               finalCents.map({ (0...99_999_999).contains($0) }) ?? (kind != .finalReceipt),
               [purchaseDate, deliveryDate, importedAt].compactMap({ $0 }).allSatisfy({ $0.timeIntervalSince1970.isFinite }),
+              (purchaseTimeZoneIdentifier == nil) == (purchaseDay == nil),
+              purchaseDay == purchaseDate.flatMap({ Self.civilDay($0, zone: purchaseTimeZoneIdentifier) }),
               lines.count <= 200,
               lines.allSatisfy({ (1...20).contains($0.page) && (1...200).contains($0.line)
                   && !$0.wording.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && $0.wording.utf8.count <= 2048

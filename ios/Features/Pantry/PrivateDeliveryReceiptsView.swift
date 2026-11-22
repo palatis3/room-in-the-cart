@@ -98,6 +98,7 @@ struct PrivateDeliveryReceiptsView: View {
             }
             TextField(pantryText("Final charge in USD"), text: value.total).keyboardType(.decimalPad)
             optionalDate(pantryText("Purchase date on receipt"), identifier: "deliveryReceipt.purchaseDate", value.purchaseDate)
+                .environment(\.timeZone, value.wrappedValue.purchaseTimeZone)
             optionalDate(pantryText("Delivery date on receipt"), identifier: "deliveryReceipt.deliveryDate", value.deliveryDate)
             if let previous {
                 Text(pantryText("This order already has a private purchase.") + " " + previous.latest.merchant + " · " + amount(previous.latest))
@@ -173,7 +174,7 @@ struct PrivateDeliveryReceiptsView: View {
                 let imported = dates.timestamp(entry.latest.importedAt)
                 Text(imported).accessibilityLabel(Text(pantryText("Imported on")) + Text(" ") + Text(imported))
                 if let date = entry.latest.purchaseDate {
-                    LabeledContent(pantryText("Purchase date on receipt"), value: dates.purchaseDay(date))
+                    LabeledContent(pantryText("Purchase date on receipt"), value: dates.storedPurchaseDay(entry.latest.purchaseDay, recordedAt: date))
                 }
                 if let date = entry.latest.deliveryDate {
                     LabeledContent(pantryText("Delivery date on receipt"), value: dates.purchaseDay(date))

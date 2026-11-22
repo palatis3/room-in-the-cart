@@ -108,7 +108,7 @@ struct PantryReceiptEntry: View {
                     } else if let first = review.facts.first {
                         VStack(alignment: .leading, spacing: 3) {
                             Text(first.merchant).font(.headline)
-                            Text(dates.purchaseDay(first.purchaseDate))
+                            Text(dates.purchaseDay(first))
                                 .font(.subheadline).foregroundStyle(Theme.secondary)
                             if let reference = first.transactionReference { Text(reference).font(.subheadline) }
                         }
@@ -522,7 +522,12 @@ struct PantryReceiptEntry: View {
         guard var current = draft, current.draftID == source.id else { return }
         current.tracksPutaway = false
         current.reference = original.order
-        if let date = original.purchaseDate { current.purchaseDate = date }
+        if let date = original.purchaseDate {
+            current.purchaseDate = date
+            // New delivery receipts retain the zone used to choose this day.
+            // Older imports still require the shopper to check the visible calendar.
+            if let zone = original.purchaseTimeZoneIdentifier.flatMap(TimeZone.init(identifier:)) { current.purchaseTimeZone = zone }
+        }
         let reviewed = Dictionary(uniqueKeysWithValues: original.lines.filter { selected.contains($0.id) }.map { ($0.id, $0) })
         for index in current.lines.indices {
             guard let item = reviewed[current.lines[index].ordinal] else { continue }
@@ -588,6 +593,28 @@ struct ReceiptDateDisplay: DynamicProperty {
         date.formatted(Self.format(date: style, time: .omitted, locale: locale, calendar: calendar, timeZone: timeZone))
     }
 
+    func storedPurchaseDay(_ day: String?, recordedAt date: Date, style: Date.FormatStyle.DateStyle = .long) -> String {
+        Self.storedPurchaseDay(day, recordedAt: date, style: style, locale: locale, calendar: calendar)
+    }
+
+    static func storedPurchaseDay(_ day: String?, recordedAt date: Date, style: Date.FormatStyle.DateStyle = .long,
+                                  locale: Locale, calendar: Calendar) -> String {
+        if let day { return civilDay(day, style: style, locale: locale, calendar: calendar, zone: .gmt) }
+        let utc = date.formatted(format(date: style, time: .omitted, locale: locale, calendar: calendar, timeZone: .gmt))
+        return pantryFormat("Original purchase day unknown · recorded %@ (UTC)", utc)
+    }
+
+    func purchaseDay(_ receipt: ReceiptAcquisition, style: Date.FormatStyle.DateStyle = .long) -> String {
+        storedPurchaseDay(receipt.purchaseDay?.iso8601, recordedAt: receipt.purchaseDate, style: style)
+    }
+
+    func purchaseDay(_ price: PrivatePriceEvidence) -> String {
+        if case .paidReceipt(let source) = price.source {
+            return storedPurchaseDay(source.purchaseDay?.iso8601, recordedAt: price.date)
+        }
+        return purchaseDay(price.date)
+    }
+
     func civilDay(_ day: String, zone: TimeZone = .gmt, style: Date.FormatStyle.DateStyle = .long) -> String {
         Self.civilDay(day, style: style, locale: locale, calendar: calendar, zone: zone)
     }
@@ -613,13 +640,7 @@ struct ReceiptDateDisplay: DynamicProperty {
 
     static func civilDay(_ day: String, style: Date.FormatStyle.DateStyle = .long, locale: Locale,
                          calendar: Calendar, zone: TimeZone) -> String {
-        let parts = day.split(separator: "-", omittingEmptySubsequences: false)
-        // Resolve a stored civil day in its source zone. A record without a source
-        // zone uses GMT as a calendar anchor, so the viewer's zone cannot move that day.
-        guard parts.count == 3,
-              let year = Int(parts[0]), let month = Int(parts[1]), let number = Int(parts[2]),
-              let saved = try? MealDay(year: year, month: month, day: number, timeZoneIdentifier: zone.identifier),
-              saved.iso8601 == day, let date = saved.date else { return day }
+        guard let date = MealDay(iso8601: day, timeZoneIdentifier: zone.identifier)?.date else { return day }
         return date.formatted(format(date: style, time: .omitted, locale: locale, calendar: calendar, timeZone: zone))
     }
 }
@@ -676,6 +697,7 @@ struct ReceiptPurchaseDateFields: View {
                           date: $draft.selectedPurchaseDate) {
             scroll.scrollTo(Self.confirmationID, anchor: .center)
         }
+        .environment(\.timeZone, draft.purchaseTimeZone ?? .current)
         Toggle(pantryText("I checked the purchase date."), isOn: $draft.dateConfirmed)
             .id(Self.confirmationID)
             .accessibilityIdentifier(Self.confirmationID)
@@ -1013,7 +1035,7 @@ struct PantryReceiptHistory: View {
             ForEach(facts) { row in
                 VStack(alignment: .leading, spacing: 5) {
                     Text(row.name).font(.headline)
-                    Text(row.merchant + " · " + dates.purchaseDay(row.purchaseDate))
+                    Text(row.merchant + " · " + dates.purchaseDay(row))
                         .font(.subheadline).foregroundStyle(Theme.secondary)
                     ReceiptPaperLine(wording: row.originalLine, provenance: row.documentLine.map(receiptProvenance))
                     Text(pantryFormat("Received %@", pantryQuantity(row.received))).monospacedDigit()
@@ -1157,7 +1179,7 @@ private struct ReceiptPriceCorrection: View {
             if let correctionMessage { Text(correctionMessage) }
             VStack(alignment: .leading, spacing: 4) {
                 Text(verbatim: original.name).font(.title3.weight(.semibold))
-                Text(original.merchant + " · " + dates.purchaseDay(original.purchaseDate, style: .abbreviated))
+                Text(original.merchant + " · " + dates.purchaseDay(original, style: .abbreviated))
                     .font(.subheadline).foregroundStyle(Theme.secondary)
             }
             ReceiptPaperLine(wording: original.originalLine, provenance: original.documentLine.map(receiptProvenance))

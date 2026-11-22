@@ -20,7 +20,7 @@ final class ReviewedPutawayReceiptTests: XCTestCase {
         try execute("DROP TRIGGER retire_putaway_receipts; DROP TABLE putaway_receipt_coordinates; DROP TABLE putaway_receipt_lines; DROP TABLE putaway_receipts;", at: url)
         let store = try ComparisonStore(url: url, inventoryEnabled: true)
         let lot = InventoryRecordKey(.lot, UUID())
-        let header = ReviewedReceiptHeader(id: UUID(), owner: owner, merchant: "Store", date: Date(timeIntervalSince1970: 150), totalMinor: 1200)
+        let header = ReviewedReceiptHeader(id: UUID(), owner: owner, merchant: "Store", date: Date(timeIntervalSince1970: 150), totalMinor: 1200, purchaseDay: "1969-12-31")
         let physical = ReviewedReceiptDecision(id: UUID(), ordinal: 0, original: "2 pears", name: "Pears", kind: .stored, lotID: lot.id, paidMinor: nil)
         let eaten = ReviewedReceiptDecision(id: UUID(), ordinal: 1, original: "Lunch", name: "Lunch", kind: .eaten, lotID: nil, paidMinor: nil)
         let identity = UUID(), layout = UUID()
@@ -59,6 +59,15 @@ final class ReviewedPutawayReceiptTests: XCTestCase {
         XCTAssertTrue(otherOwner.isEmpty)
         do { _ = try await reopened.commitInventory(batch); XCTFail("An erased lot must stay erased on replay") } catch ComparisonStoreError.erased {}
         try await reopened.close()
+    }
+
+    func testLegacyReceiptsDecodeWithoutInventingAPurchaseDay() throws {
+        let header = ReviewedReceiptHeader(id: UUID(), owner: UUID(), merchant: "Market", date: Date(), totalMinor: nil)
+        let bytes = try JSONEncoder().encode(header)
+        XCTAssertFalse(String(decoding: bytes, as: UTF8.self).contains("purchaseDay"))
+        XCTAssertNil(try JSONDecoder().decode(ReviewedReceiptHeader.self, from: bytes).purchaseDay)
+        XCTAssertTrue(ReviewedReceiptHeader.validDay("2024-02-29"))
+        XCTAssertFalse(ReviewedReceiptHeader.validDay("2026-02-29"))
     }
 
     private func execute(_ sql: String, at url: URL) throws {

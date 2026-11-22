@@ -107,7 +107,7 @@ struct ReviewedReceiptHeading: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(verbatim: header.merchant).marketJournalTitle(.title2)
-            Text(dates.purchaseDay(header.date)).font(.subheadline).foregroundStyle(Theme.secondary)
+            Text(dates.storedPurchaseDay(header.purchaseDay, recordedAt: header.date)).font(.subheadline).foregroundStyle(Theme.secondary)
             if let reference = header.reference { Text(verbatim: reference) }
             if let cents = header.totalMinor {
                 LabeledContent(putawayText("Paid receipt total")) {
@@ -349,7 +349,7 @@ private struct ReviewedReceiptCopyView: View {
                     .accessibilityIdentifier("receipt.copy.share")
                     Button(pantryText("Edit")) { self.preview = nil }
                 } else {
-                    let purchaseDay = dates.purchaseDay(header.date)
+                    let purchaseDay = dates.storedPurchaseDay(header.purchaseDay, recordedAt: header.date)
                     let ordered = rows.sorted { $0.ordinal < $1.ordinal }
                     Section(pantryText("Purchase details")) {
                         Toggle(header.merchant, isOn: $selection.store)

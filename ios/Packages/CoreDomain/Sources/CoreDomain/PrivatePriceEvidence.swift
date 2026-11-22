@@ -5,6 +5,7 @@ public struct PrivatePriceEvidence: Codable, Equatable, Identifiable, Sendable {
     public struct ReceiptSource: Codable, Equatable, Sendable {
         public let receiptID: UUID
         public let acquisitionID: UUID
+        public let purchaseDay: MealDay?
         public let lotID: UUID
         public let originalLine: String
         public let documentLine: ReceiptAcquisition.DocumentLine?
@@ -92,7 +93,7 @@ public struct PrivatePriceEvidence: Codable, Equatable, Identifiable, Sendable {
 
     public init(receipt: ReceiptAcquisition) throws {
         try receipt.validate()
-        let source = ReceiptSource(receiptID: receipt.receiptID, acquisitionID: receipt.id,
+        let source = ReceiptSource(receiptID: receipt.receiptID, acquisitionID: receipt.id, purchaseDay: receipt.purchaseDay,
                                    lotID: receipt.lotID, originalLine: receipt.originalLine,
                                    documentLine: receipt.documentLine, imageDigest: receipt.imageDigest)
         self.init(id: receipt.lineID, revision: receipt.revision, source: .paidReceipt(source),
@@ -134,6 +135,9 @@ public struct PrivatePriceEvidence: Codable, Equatable, Identifiable, Sendable {
         case .adjustment(let target, let targetRevision, _):
             guard target != id, targetRevision > 0, amountMinor != nil, pack == nil else { throw DomainError.invalidInput("priceAdjustment") }
         case .paidReceipt(let value):
+            if let day = value.purchaseDay, day != (try MealDay(date: date, timeZoneIdentifier: day.timeZoneIdentifier)) {
+                throw DomainError.invalidInput("receiptPriceDay")
+            }
             guard foodID != nil, linkedLotID == value.lotID, value.originalLine == sourceText else { throw DomainError.invalidInput("receiptPriceSource") }
         case .paidManual:
             guard amountMinor != nil else { throw DomainError.invalidInput("manualPaidPrice") }

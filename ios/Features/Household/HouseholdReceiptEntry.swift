@@ -5,11 +5,8 @@ import SwiftUI
 
 extension ReceiptImportDraft {
     func householdReceipt(for page: HouseholdPantryPage, deliveries: [HouseholdPantryPage.Lot],
-                          at now: Date = Date(), zone: TimeZone = .current) throws -> HouseholdReceiptAcquisition {
-        guard workspaceID == page.householdId, dateConfirmed, purchaseDate <= now else { throw PantryReceiptError.stale }
-        let format = DateFormatter()
-        format.locale = Locale(identifier: "en_US_POSIX"); format.calendar = Calendar(identifier: .gregorian)
-        format.timeZone = zone; format.dateFormat = "yyyy-MM-dd"
+                          at now: Date = Date()) throws -> HouseholdReceiptAcquisition {
+        guard workspaceID == page.householdId, dateConfirmed, purchaseDate <= now, let purchaseDay else { throw PantryReceiptError.stale }
         func quantity(_ text: String, unit: UnitOfMeasure) throws -> SharedMealQuantity {
             guard let q = try ComparisonModel.quantity(text, unit) else { throw PantryReceiptError.invalid }
             return .init(amount: .init(numerator: Int(q.amount.numerator), denominator: Int(q.amount.denominator)),
@@ -52,8 +49,8 @@ extension ReceiptImportDraft {
         } else {
             layout = ReceiptAcquisition.identity(scope + ["reviewed"] + lines.map(\.original))
         }
-        let receipt = HouseholdReceiptAcquisition(receiptId: receiptID, imageId: imageID, merchant: merchant.trimmingCharacters(in: .whitespacesAndNewlines), purchaseDay: format.string(from: purchaseDate),
-        zone: zone.identifier, reference: ref.isEmpty ? nil : ref, lines: rows, layoutId: layout, segmentedPhotos: segmented ? true : nil)
+        let receipt = HouseholdReceiptAcquisition(receiptId: receiptID, imageId: imageID, merchant: merchant.trimmingCharacters(in: .whitespacesAndNewlines), purchaseDay: purchaseDay.iso8601,
+        zone: purchaseDay.timeZoneIdentifier, reference: ref.isEmpty ? nil : ref, lines: rows, layoutId: layout, segmentedPhotos: segmented ? true : nil)
         try receipt.validate()
         return receipt
     }

@@ -292,7 +292,7 @@ struct PantryProductBatch {
 
     mutating func revokePhotos() { candidates.removeAll { $0.photoID != nil } }
 
-    func draft(merchant: String, purchaseDate: Date, confirmed: Bool, deliveries: [PantryReceiptDelivery] = []) throws -> ReceiptImportDraft {
+    func draft(merchant: String, purchaseDate: Date, confirmed: Bool, timeZone: TimeZone = .current, deliveries: [PantryReceiptDelivery] = []) throws -> ReceiptImportDraft {
         let rows = try candidates.filter(\.included).map { candidate -> ReceiptImportDraft.Line in
             guard candidate.existingReceipt == nil, let total = candidate.total, !candidate.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
                 throw ProductBatchError.invalid
@@ -303,12 +303,12 @@ struct PantryProductBatch {
                          treatment: treatment, received: total.description, usable: usable, unit: candidate.unit, location: candidate.location)
         }
         guard confirmed, !rows.isEmpty else { throw ProductBatchError.invalid }
-        return ReceiptImportDraft(batchID: id, workspaceID: workspaceID, merchant: merchant, purchaseDate: purchaseDate, lines: rows)
+        return ReceiptImportDraft(batchID: id, workspaceID: workspaceID, merchant: merchant, purchaseDate: purchaseDate, lines: rows, timeZone: timeZone)
     }
 }
 
 extension ReceiptImportDraft {
-    init(batchID: UUID, workspaceID: UUID, merchant: String, purchaseDate: Date, lines: [Line]) {
+    init(batchID: UUID, workspaceID: UUID, merchant: String, purchaseDate: Date, lines: [Line], timeZone: TimeZone = .current) {
         supportsRescan = false
         draftID = batchID
         self.workspaceID = workspaceID
@@ -316,6 +316,7 @@ extension ReceiptImportDraft {
         imageDigest = nil
         documentLayoutID = nil
         self.merchant = merchant
+        purchaseTimeZone = timeZone
         self.purchaseDate = purchaseDate
         dateConfirmed = true
         self.lines = lines
@@ -340,8 +341,8 @@ extension PantryModel {
         }
     }
 
-    func reviewProducts(_ batch: PantryProductBatch, merchant: String, purchaseDate: Date, confirmed: Bool) async throws -> PantryReceiptReview {
-        let draft = try batch.draft(merchant: merchant, purchaseDate: purchaseDate, confirmed: confirmed, deliveries: productDeliveries)
+    func reviewProducts(_ batch: PantryProductBatch, merchant: String, purchaseDate: Date, confirmed: Bool, timeZone: TimeZone = .current) async throws -> PantryReceiptReview {
+        let draft = try batch.draft(merchant: merchant, purchaseDate: purchaseDate, confirmed: confirmed, timeZone: timeZone, deliveries: productDeliveries)
         let review = try await reviewReceipt(draft)
         try verifyProductActions(batch)
         return review

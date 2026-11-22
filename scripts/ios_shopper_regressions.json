@@ -84,7 +84,8 @@
     "RoomInTheCartTests/LedgerListLayoutTests/testEditedGroceryPackagesAppearInWorkingRowsDetailsAndHandoff",
     "RoomInTheCartTests/LedgerListLayoutTests/testMixedGroceryPackageSourcesKeepTheirOwnUnits",
     "RoomInTheCartUITests/FreeJourneyUITests/testSpanishReviewedReceiptCopyPreviewsOnlyChosenDetailsAndCancels",
-    "RoomInTheCartTests/MixedReceiptPutawayTests/testReviewedReceiptCopyUsesOnlySelectedFieldsInTheLiveOwnerScope"
+    "RoomInTheCartTests/MixedReceiptPutawayTests/testReviewedReceiptCopyUsesOnlySelectedFieldsInTheLiveOwnerScope",
+    "RoomInTheCartTests/MixedReceiptPutawayTests/testPurchaseDayReopensAndExportsInBothLanguagesAndRescansAcrossTimeZones"
   ],
   "12 · Learn the guardian's role before enrolling a child": [
     "RoomInTheCartUITests/RoomInTheCartUITests/testFamilyPermissionGuideExplainsChildScopeAndGuardianStartOffline",

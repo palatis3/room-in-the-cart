@@ -32,14 +32,11 @@ struct ReceiptRecognition {
     let basis: UUID
 
     init?(draft: ReceiptImportDraft, persona: UUID?, revision: Int64) {
-        guard let persona, draft.supportsRescan, draft.dateConfirmed, !draft.selectedLines.isEmpty else { return nil }
+        guard let persona, let date = draft.purchaseDay, draft.supportsRescan, draft.dateConfirmed, !draft.selectedLines.isEmpty else { return nil }
         owner = ReceiptAcquisition.identity(["receipt-owner", draft.workspaceID.uuidString, persona.uuidString])
         let merchant = Self.normalize(draft.merchant)
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = .current
-        let date = calendar.dateComponents([.year,.month,.day], from: draft.purchaseDate)
         merchantDay = ReceiptAcquisition.identity(["merchant-day", owner.uuidString, merchant,
-            String(date.year ?? 0), String(date.month ?? 0), String(date.day ?? 0)])
+            String(date.year), String(date.month), String(date.day)])
         let source = draft.imageDigest?.base64EncodedString() ?? draft.receiptID.uuidString
         fileDigest = draft.imageDigest?.map { String(format: "%02x", $0) }.joined()
         document = ReceiptAcquisition.identity(["receipt-document", owner.uuidString, source])

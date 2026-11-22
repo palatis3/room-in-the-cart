@@ -30,7 +30,7 @@ struct PantryPackMatchEditor: View {
                 }
                 if let source {
                     Text(verbatim: source.originalLine)
-                    Text(source.merchant + " · " + dates.purchaseDay(source.purchaseDate, style: .abbreviated))
+                    Text(source.merchant + " · " + dates.purchaseDay(source, style: .abbreviated))
                     if row.receiptLinkSaved {
                         Text(pantryText("Linked to the saved receipt line. Stock stays the same."))
                     } else {
@@ -153,7 +153,7 @@ private struct PackReceiptPicker: View {
                         VStack(alignment: .leading) {
                             Text(line.name).font(.headline)
                             Text(verbatim: line.originalLine)
-                            Text(line.merchant + " · " + dates.purchaseDay(line.purchaseDate, style: .abbreviated))
+                            Text(line.merchant + " · " + dates.purchaseDay(line, style: .abbreviated))
                             Text(pantryQuantity(line.received))
                         }
                     }

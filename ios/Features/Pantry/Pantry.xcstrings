@@ -316,6 +316,23 @@
         }
       }
     },
+    "Original purchase day unknown · recorded %@ (UTC)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original purchase day unknown · recorded %@ (UTC)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se desconoce el día original de compra · fecha registrada: %@ (UTC)"
+          }
+        }
+      }
+    },
     "Original printed wording": {
       "extractionState": "manual",
       "localizations": {

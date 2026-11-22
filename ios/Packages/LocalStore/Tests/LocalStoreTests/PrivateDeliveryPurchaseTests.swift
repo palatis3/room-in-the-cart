@@ -16,11 +16,15 @@ final class PrivateDeliveryPurchaseTests: XCTestCase {
         _ = try await store.beginInventoryMigration(plan)
         _ = try await store.finishInventoryMigration(id: plan.migrationID)
         let person = UUID(), other = UUID()
+        var eastern = Calendar(identifier: .gregorian)
+        eastern.timeZone = try XCTUnwrap(TimeZone(identifier: "America/New_York"))
+        let purchased = try XCTUnwrap(eastern.date(from: DateComponents(year: 2026, month: 11, day: 20)))
         let before = try await store.inventoryState()
         func record(_ byte: UInt8, _ kind: PrivateDeliveryRevision.Kind, total: Int?, order: String = "AB-090") -> PrivateDeliveryRevision {
             .init(digest: Data(repeating: byte, count: 32), layoutID: UUID(), order: order, merchant: "Market",
-                  kind: kind, purchaseDate: nil, deliveryDate: nil, importedAt: Date(), finalCents: total, lines: kind == .refund
-                  ? [.init(page: 1, line: 1, scanned: false, uncertain: false, wording: "Partial refund -$2.00", disposition: .refund, cents: -200)] : [])
+                  kind: kind, purchaseDate: kind == .finalReceipt ? purchased : nil, deliveryDate: nil, importedAt: Date(), finalCents: total, lines: kind == .refund
+                  ? [.init(page: 1, line: 1, scanned: false, uncertain: false, wording: "Partial refund -$2.00", disposition: .refund, cents: -200)] : [],
+                  purchaseTimeZoneIdentifier: kind == .finalReceipt ? eastern.timeZone.identifier : nil)
         }
         let original = record(1, .finalReceipt, total: 2400)
         let first = try await store.savePrivateDelivery(original, persona: person, expectedRevision: 0)
@@ -44,6 +48,9 @@ final class PrivateDeliveryPurchaseTests: XCTestCase {
         let heads = try await reopened.privateDeliveryPurchases(persona: person)
         let state = try await reopened.inventoryState()
         XCTAssertEqual(revisions.map(\.revision), [2, 1])
+        XCTAssertEqual(revisions.last?.latest.purchaseDay, "2026-11-20")
+        XCTAssertEqual(revisions.last?.latest.purchaseTimeZoneIdentifier, eastern.timeZone.identifier)
+        XCTAssertNil(revisions.first?.latest.purchaseDay)
         XCTAssertTrue(otherHistory.isEmpty)
         XCTAssertEqual(heads.map(\.revision), [2])
         XCTAssertEqual(before, state)
