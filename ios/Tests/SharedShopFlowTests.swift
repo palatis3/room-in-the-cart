@@ -1069,7 +1069,8 @@ private final class SharedFlowService {
             joined.insert(actor)
             usedInvitationTokens.insert(try XCTUnwrap(json["token"] as? String))
             if loseInvitationResponse { loseInvitationResponse = false; throw URLError(.networkConnectionLost) }
-            return try ok(["householdId": household, "memberId": organizer ? miaID : samID, "role": organizer ? "organizer" : "contributor"])
+            // The receipt describes this invitation. Bootstrap supplies the member's current permissions.
+            return try ok(["householdId": household, "memberId": organizer ? miaID : samID, "role": "contributor"])
         }
         if path.hasSuffix("/devices") { return try ok(["deviceId":actor+"-device","deviceToken":actor+"-device-token"],201) }
         XCTAssertEqual(request.value(forHTTPHeaderField: "X-Device-Token"), actor+"-device-token")
