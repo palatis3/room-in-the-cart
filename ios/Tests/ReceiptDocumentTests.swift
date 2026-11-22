@@ -285,7 +285,7 @@ import XCTest
         for wording in ["2x Beans NZD $3.20", "2x Beans HKD $3.20", "2x Lentejas CLP $3,20",
                         "2x Beans chf 3.20", "2x Beans 3.20 NZD", "2x Beans (NZD) $3.20",
                         "2x Beans NZD: $3.20", "2x Beans ( NZD ) : $3.20", "2x Beans $3.20 (NZD)", "2x Arroz HK $3,20",
-                        "2x Frijoles R$3,20", "2x Beans kr 3.20", "2x Arroz S/ 3,20", "2x Arroz CLP $320",
+                        "2x Beans NZ $3.20", "2x Frijoles R$3,20", "2x Beans kr 3.20", "2x Arroz S/ 3,20", "2x Arroz CLP $320",
                         "2x Beans ¥3.20", "2x Arroz ₱3,20", "2x Frijoles pesos $3,20"] {
             for correction in ["", "3.20", "USD 3.20"] {
                 let result = proposal(wording, price: correction)
@@ -317,6 +317,22 @@ import XCTest
         XCTAssertEqual(correctedFields.name, "Plain beans")
         XCTAssertEqual(correctedFields.quantity, "2")
         XCTAssertNil(correctedFields.amount)
+        for (wording, unit) in [("Beans 2 kg at $1.60/kg USD 3.20", UnitOfMeasure.kilogram),
+                                ("Beans 2 units at $1.60 USD 3.20", .count),
+                                ("Beans 2 kg @ $1.60/kg $3.20", .kilogram),
+                                ("Beans 2 units @ $1.60 $3.20", .count),
+                                ("Frijoles 2 kg a $1,60/kg USD 3,20", .kilogram),
+                                ("Frijoles 2 unidades a $1,60 USD 3,20", .count)] {
+            let printed = proposal(wording)
+            XCTAssertEqual(printed.name, wording.components(separatedBy: " ").first, wording)
+            XCTAssertEqual(printed.quantity, "2", wording)
+            XCTAssertEqual(printed.unit, unit, wording)
+            XCTAssertEqual(printed.amount, "3.20", wording)
+            XCTAssertEqual(proposal(wording, price: "USD 3.10").amount, "3.10", wording)
+        }
+        let rateOnly = "Frijoles 2 kg a $1,60/kg"
+        XCTAssertNil(proposal(rateOnly).amount)
+        XCTAssertEqual(proposal(rateOnly, price: "USD 3,20").amount, "3.20")
         let marked = proposal("2x Canned lentils $3.20", quantity: "2 units", price: "3,20")
         XCTAssertEqual(marked.priceWording, "$3.20")
         XCTAssertEqual(marked.quantity, "2")

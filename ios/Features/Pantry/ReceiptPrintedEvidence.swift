@@ -43,7 +43,17 @@ struct ReceiptPrintedEvidence: Equatable {
     // (for example, “NZD $3.20”). Only the letters next to a price are qualifiers.
     private static let currencyBeforePrice = #/(?i)([\p{L}]+)[./]?\s*(US\$|USD\s*\$?|\$)?\s*[0-9]+(?:[.,][0-9]+)?\b/#
     private static let currencyAfterPrice = #/(?i)\b[0-9]+(?:[.,][0-9]+)?\s*([\p{L}]+)\b/#
-    private static let dollarRegions = Set(Locale.Region.isoRegions.map(\.identifier)).subtracting(["US"])
+    // The currency symbol table supplies prefixes such as NZ in NZ$. Country
+    // codes by themselves are not price notation (“at $1.60” introduces a rate).
+    private static let dollarPrefixes: Set<String> = {
+        let locale = NSLocale(localeIdentifier: "en_US")
+        return Set(Locale.Currency.isoCurrencies.compactMap { currency in
+            guard currency.identifier != "USD",
+                  let symbol = locale.displayName(forKey: .currencySymbol, value: currency.identifier),
+                  symbol.count > 1, symbol.hasSuffix("$") else { return nil }
+            return String(symbol.dropLast()).uppercased()
+        })
+    }()
     private static let foreignCurrencyMarkers: Set<String> = {
         var markers = Set(Locale.Currency.isoCurrencies.map(\.identifier))
         for id in Locale.availableIdentifiers {
@@ -71,7 +81,7 @@ struct ReceiptPrintedEvidence: Equatable {
                 if next == "$" || next == "/" && foreignCurrencyMarkers.contains(token) { return true }
                 continue
             }
-            if foreignCurrencyMarkers.contains(token) || (match.2 == "$" && dollarRegions.contains(token)) { return true }
+            if foreignCurrencyMarkers.contains(token) || (match.2 == "$" && dollarPrefixes.contains(token)) { return true }
         }
         return wording.matches(of: currencyAfterPrice).contains { $0.1.count > 1 && foreignCurrencyMarkers.contains($0.1.uppercased()) }
     }
