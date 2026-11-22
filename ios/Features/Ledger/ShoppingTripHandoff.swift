@@ -54,6 +54,11 @@ struct TripHandoffEntry: View {
     @State private var sharing = false
     private struct Preview { let revision: UUID; let text: String }
 
+    init(model: LedgerModel, shopID: UUID) {
+        self.model = model
+        self.shopID = shopID
+    }
+
     var body: some View {
         WorkingForm {
             if authorize(), let shop = model.shop, shop.id == shopID {
@@ -114,6 +119,11 @@ struct TripNextStoreEntry: View {
     @FocusState private var editing: Bool
     @Environment(\.shoppingListAuthorization) private var authorize
     @Environment(\.dismiss) private var dismiss
+
+    init(model: LedgerModel, shopID: UUID) {
+        self.model = model
+        self.shopID = shopID
+    }
 
     var body: some View {
         WorkingForm {

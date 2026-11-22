@@ -152,128 +152,136 @@ struct InStoreShoppingView: View {
     private var currentShopContent: some View {
         Group {
             if let shop = model.shop, shop.id == shopID {
-                let dinner = dinnerPantry.status(in: shop, ledger: model)
-                let groups = model.workspace.listLayout.groups(shop: shop, excluding: dinner.covered)
-                let visible = groups.flatMap(\.lines).filter { available($0, shop: shop) }
-                let outstanding = groups.flatMap(\.lines).filter { shop.outcomeAtCurrentStop($0) != nil }
-                let picked = shop.inStorePickedLines
-                let exclusions = shop.listExclusions
-                let packages = shop.itemPackages
-                ScrollViewReader { reader in
-                    JournalList {
-                        DinnerPantryReviewSection(shopID: shop.id, reviews: dinner.pending)
-                        if model.error != nil || model.hasPendingSave { LedgerSaveStatus(model: model) }
-                        listAndStop(shop)
-                        ForEach(groups) { group in
-                            let rows = group.lines.filter { available($0, shop: shop) }
-                            if !rows.isEmpty {
-                                Section(group.aisle.isEmpty ? shoppingText("To pick") : group.aisle) {
-                                    ForEach(rows) { line in
-                                        outstandingRow(line, shop: shop, visible: visible, exclusions: exclusions[line.id],
-                                                       packages: packages[line.id] ?? [])
-                                    }
-                                }
-                            }
+                shoppingList(in: shop)
+                    .sheet(item: $editingPrice) { line in
+                        NavigationStack { InStorePriceEditor(model: model, shop: shop, line: line) }
+                    }
+                    .sheet(item: $destination, onDismiss: {
+                        if let completedDetailRow {
+                            returnToRow(completedDetailRow)
+                            self.completedDetailRow = nil
                         }
-                        if visible.isEmpty {
-                            Text(groups.allSatisfy { $0.lines.isEmpty } ? shoppingText("No items left to pick.") : tripText("Nothing else to pick at this stop."))
-                        }
-                        if !outstanding.isEmpty {
-                            Section(tripText("Still needed")) {
-                                ForEach(outstanding) { line in
-                                    stillNeededRow(line, in: shop, packages: packages[line.id] ?? [])
-                                }
-                            }
-                        }
-                        if !picked.isEmpty {
-                            Section(shoppingText("Picked items")) {
-                                ForEach(picked) { line in
-                                    pickedRow(line, in: shop, packages: packages[line.id] ?? [])
-                                }
-                            }
-                        }
-                        Section {
-                            Button { destination = .nextStore } label: { Label(tripText("Next store"), systemImage: "storefront") }
-                                .accessibilityIdentifier("tripNextStore")
-                        }.frame(minHeight: 44)
-                        if typeSize.isAccessibilitySize {
-                            Section { subtotalSummary(shop, last: picked.first).id(Focus.subtotal) }
+                    }) { value in
+                        NavigationStack {
+                            destinationContent(value, in: shop)
                         }
                     }
-                    .listStyle(.plain)
-                    .coordinateSpace(name: "shoppingAisles")
-                    .onAppear {
-                        if let id = restoredRow(), id != visible.first?.id,
-                           visible.contains(where: { $0.id == id }) || outstanding.contains(where: { $0.id == id }) {
-                            reader.scrollTo(Focus.line(id), anchor: .top)
-                        }
-                        Task { @MainActor in await Task.yield(); trackingAisle = true }
-                    }
-                    .onPreferenceChange(TripVisibleRows.self) { rows in
-                        guard trackingAisle, scene == .active, authorize(),
-                              let top = rows.filter({ $0.value.maxY > 0 }).min(by: { $0.value.minY < $1.value.minY })
-                        else { return }
-                        remember(top.key)
-                    }
-                    .disabled(model.saving)
-                    .safeAreaInset(edge: .bottom, spacing: 0) {
-                        if !typeSize.isAccessibilitySize {
-                            subtotalSummary(shop, last: picked.first)
-                                .padding(.horizontal).padding(.vertical, 6).background(Theme.surface)
-                                .overlay(alignment: .top) { Divider() }
-                        }
-                    }
-                    .onChange(of: pendingFocus) { _, target in
-                        guard let target else { return }
-                        if UIAccessibility.isVoiceOverRunning || scrollToReturn {
-                            switch target {
-                            case .line, .picked:
-                                // Keep an already visible grocery in place when a shopper undoes a pick.
-                                let anchor: UnitPoint? = UIAccessibility.isVoiceOverRunning ? .center : nil
-                                reader.scrollTo(target, anchor: anchor)
-                            case .subtotal:
-                                if typeSize.isAccessibilitySize { reader.scrollTo(Focus.subtotal, anchor: .top) }
+            }
+        }
+    }
+
+    private func shoppingList(in shop: ShoppingLedger) -> some View {
+        let dinner = dinnerPantry.status(in: shop, ledger: model)
+        let groups = model.workspace.listLayout.groups(shop: shop, excluding: dinner.covered)
+        let visible = groups.flatMap(\.lines).filter { available($0, shop: shop) }
+        let outstanding = groups.flatMap(\.lines).filter { shop.outcomeAtCurrentStop($0) != nil }
+        let picked = shop.inStorePickedLines
+        let exclusions = shop.listExclusions
+        let packages = shop.itemPackages
+        return ScrollViewReader { reader in
+            JournalList {
+                DinnerPantryReviewSection(shopID: shop.id, reviews: dinner.pending)
+                if model.error != nil || model.hasPendingSave { LedgerSaveStatus(model: model) }
+                listAndStop(shop)
+                ForEach(groups) { group in
+                    let rows = group.lines.filter { available($0, shop: shop) }
+                    if !rows.isEmpty {
+                        Section(group.aisle.isEmpty ? shoppingText("To pick") : group.aisle) {
+                            ForEach(rows) { line in
+                                outstandingRow(line, shop: shop, visible: visible, exclusions: exclusions[line.id],
+                                               packages: packages[line.id] ?? [])
                             }
-                        }
-                        Task { @MainActor in
-                            await Task.yield()
-                            focus = target
-                            scrollToReturn = false
-                            pendingFocus = nil
                         }
                     }
                 }
-                .sheet(item: $editingPrice) { line in
-                    NavigationStack { InStorePriceEditor(model: model, shop: shop, line: line) }
+                if visible.isEmpty {
+                    Text(groups.allSatisfy { $0.lines.isEmpty } ? shoppingText("No items left to pick.") : tripText("Nothing else to pick at this stop."))
                 }
-                .sheet(item: $destination, onDismiss: {
-                    if let completedDetailRow {
-                        returnToRow(completedDetailRow)
-                        self.completedDetailRow = nil
-                    }
-                }) { value in
-                    NavigationStack {
-                        switch value {
-                        case let .details(id):
-                            TripItemDetail(model: model, shopID: shopID, lineID: id, onSaved: { completedDetailRow = $0 })
-                                .toolbar { closeSheet }
-                        case .find:
-                            TripFindEntry(model: model, shop: shop, onSaved: { completedDetailRow = $0 }).toolbar { closeSheet }
-                        case .nextStore:
-                            TripNextStoreEntry(model: model, shopID: shopID).toolbar { closeSheet }
-                        case .options:
-                            List {
-                                NavigationLink(tripText("Preview list copy")) { TripHandoffEntry(model: model, shopID: shopID) }
-                                    .accessibilityIdentifier("tripShare.previewCopy")
-                                FamilyPermissionGuideLink(title: GuardianCopy.text("Child permissions")) { destination = nil }
-                                NavigationLink(pantryText("Buy this pack again")) { ShopPackLookupEntry(ledger: model, shopID: shopID) }
-                                PantryShelfPhotoLink()
-                                InStoreDisplayToggle(owner: displayOwner)
-                            }.workingSurface().navigationTitle(ledgerText("List options")).toolbar { closeSheet }
+                if !outstanding.isEmpty {
+                    Section(tripText("Still needed")) {
+                        ForEach(outstanding) { line in
+                            stillNeededRow(line, in: shop, packages: packages[line.id] ?? [])
                         }
                     }
+                }
+                if !picked.isEmpty {
+                    Section(shoppingText("Picked items")) {
+                        ForEach(picked) { line in
+                            pickedRow(line, in: shop, packages: packages[line.id] ?? [])
+                        }
+                    }
+                }
+                Section {
+                    Button { destination = .nextStore } label: { Label(tripText("Next store"), systemImage: "storefront") }
+                        .accessibilityIdentifier("tripNextStore")
+                }.frame(minHeight: 44)
+                if typeSize.isAccessibilitySize {
+                    Section { subtotalSummary(shop, last: picked.first).id(Focus.subtotal) }
                 }
             }
+            .listStyle(.plain)
+            .coordinateSpace(name: "shoppingAisles")
+            .onAppear {
+                if let id = restoredRow(), id != visible.first?.id,
+                   visible.contains(where: { $0.id == id }) || outstanding.contains(where: { $0.id == id }) {
+                    reader.scrollTo(Focus.line(id), anchor: .top)
+                }
+                Task { @MainActor in await Task.yield(); trackingAisle = true }
+            }
+            .onPreferenceChange(TripVisibleRows.self) { rows in
+                guard trackingAisle, scene == .active, authorize(),
+                      let top = rows.filter({ $0.value.maxY > 0 }).min(by: { $0.value.minY < $1.value.minY })
+                else { return }
+                remember(top.key)
+            }
+            .disabled(model.saving)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if !typeSize.isAccessibilitySize {
+                    subtotalSummary(shop, last: picked.first)
+                        .padding(.horizontal).padding(.vertical, 6).background(Theme.surface)
+                        .overlay(alignment: .top) { Divider() }
+                }
+            }
+            .onChange(of: pendingFocus) { _, target in
+                guard let target else { return }
+                if UIAccessibility.isVoiceOverRunning || scrollToReturn {
+                    switch target {
+                    case .line, .picked:
+                        // Keep an already visible grocery in place when a shopper undoes a pick.
+                        let anchor: UnitPoint? = UIAccessibility.isVoiceOverRunning ? .center : nil
+                        reader.scrollTo(target, anchor: anchor)
+                    case .subtotal:
+                        if typeSize.isAccessibilitySize { reader.scrollTo(Focus.subtotal, anchor: .top) }
+                    }
+                }
+                Task { @MainActor in
+                    await Task.yield()
+                    focus = target
+                    scrollToReturn = false
+                    pendingFocus = nil
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private func destinationContent(_ value: Destination, in shop: ShoppingLedger) -> some View {
+        switch value {
+        case let .details(id):
+            TripItemDetail(model: model, shopID: shopID, lineID: id, onSaved: { completedDetailRow = $0 })
+                .toolbar { closeSheet }
+        case .find:
+            TripFindEntry(model: model, shop: shop, onSaved: { completedDetailRow = $0 }).toolbar { closeSheet }
+        case .nextStore:
+            TripNextStoreEntry(model: model, shopID: shopID).toolbar { closeSheet }
+        case .options:
+            List {
+                NavigationLink(tripText("Preview list copy")) { TripHandoffEntry(model: model, shopID: shopID) }
+                    .accessibilityIdentifier("tripShare.previewCopy")
+                FamilyPermissionGuideLink(title: GuardianCopy.text("Child permissions")) { destination = nil }
+                NavigationLink(pantryText("Buy this pack again")) { ShopPackLookupEntry(ledger: model, shopID: shopID) }
+                PantryShelfPhotoLink()
+                InStoreDisplayToggle(owner: displayOwner)
+            }.workingSurface().navigationTitle(ledgerText("List options")).toolbar { closeSheet }
         }
     }
 
