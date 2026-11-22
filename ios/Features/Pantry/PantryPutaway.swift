@@ -55,16 +55,33 @@ extension ReceiptImportDraft.Line {
         original.contains(#/(?i)\b(?:packs?|pk|multipacks?|paquetes?)\b|\d\s*[x×]\s*\d/#)
     }
 
-    /// Only a shopper's explicit selection confirms that this printed quantity came home intact.
-    func permitsIntactSelection(deliveries: [InventoryLot]) -> Bool {
-        guard !needsPackReview, canComparePurchase, let printed, printed.kind == .item,
-              printed.quantity != nil, printed.unit != nil, printed.name != nil,
+    private func permitsPutawayShortcut(deliveries: [InventoryLot]) -> Bool {
+        guard !needsPackReview, canComparePurchase, printed?.kind == .item,
               !original.contains(#/(?i)\b(?:missing|damaged|broken|cracked|substitut\w*|replacement|unweighed|unknown|faltante|sin pesar|peso desconocido|dañad\w*|rot[oa]s?|quebrad\w*|sustitu\w*|reemplaz\w*|return\w*|devuelt\w*|refund\w*|eaten|consumid\w*)\b/#)
         else { return false }
         let key = InventoryReceiptAlias.key(name)
         return !deliveries.contains {
             PantryReceiptDelivery.fragment(of: $0) != nil && InventoryReceiptAlias.key($0.name) == key
         }
+    }
+
+    /// Only a shopper's explicit selection confirms that this printed quantity came home intact.
+    func permitsIntactSelection(deliveries: [InventoryLot]) -> Bool {
+        printed?.quantity != nil && printed?.unit != nil && printed?.name != nil
+            && permitsPutawayShortcut(deliveries: deliveries)
+    }
+
+    func permitsDocumentPutaway(deliveries: [InventoryLot]) -> Bool {
+        guard documentLine != nil, treatment == .skip, printed?.quantity == nil,
+              appliedAlias == nil, !CouponReceiptEvidence.isDiscountLine(original),
+              ReceiptPrintedEvidence.permitsPutawayWording(original)
+        else { return false }
+        return permitsPutawayShortcut(deliveries: deliveries)
+    }
+
+    mutating func startDocumentPutaway(deliveries: [InventoryLot]) {
+        guard permitsDocumentPutaway(deliveries: deliveries) else { return }
+        treatment = .add
     }
 
     mutating func selectIntact(deliveries: [InventoryLot]) {

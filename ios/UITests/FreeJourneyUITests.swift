@@ -1384,6 +1384,15 @@ import XCTest
         XCTAssertFalse(review.isEnabled)
         XCTAssertFalse(app.buttons["receipt.action.1"].exists)
         XCTAssertFalse(app.buttons["receipt.commit"].exists)
+
+        receiptTap(app.buttons["receipt.putAway.0"], initiallyUpward: false)
+        let received = app.textFields["receipt.received.0"]
+        reveal(received)
+        XCTAssertEqual(received.value as? String ?? "", "")
+        let usable = app.textFields["receipt.usable.0"]
+        reveal(usable)
+        XCTAssertEqual(usable.value as? String ?? "", "")
+        XCTAssertFalse(app.buttons["receipt.commit"].exists)
     }
 
     func testShelfPhotoSurvivesCanceledReplacementAndReopensFromTheShoppingList() throws {

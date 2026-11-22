@@ -802,6 +802,20 @@ struct PantryReceiptLineEditor: View {
         if permitsPutaway {
             if !grouped, line.permitsIntactSelection(deliveries: lots), line.treatment == .skip || line.selectedIntact {
                 ReceiptIntactToggle(line: $line, lots: lots)
+            } else if !grouped, line.permitsDocumentPutaway(deliveries: lots) {
+                Button {
+                    guard matchesCurrent() else { return }
+                    line.startDocumentPutaway(deliveries: lots)
+                } label: {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(verbatim: line.name).font(.headline).foregroundStyle(Theme.ink)
+                        Label(putawayText("Put this food away"), systemImage: "shippingbox")
+                            .font(.subheadline.weight(.semibold)).foregroundStyle(Theme.action)
+                    }
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                    .contentShape(Rectangle())
+                }
+                .accessibilityIdentifier("receipt.putAway.\(line.ordinal)")
             } else if !grouped { Text(verbatim: line.name).font(.headline) }
         }
         ReceiptPaperLine(wording: line.original, provenance: line.documentLine.map(receiptProvenance),

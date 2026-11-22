@@ -94,6 +94,11 @@ struct ReceiptPrintedEvidence: Equatable {
         text.trimmingCharacters(in: .whitespaces).wholeMatch(of: price).map { normalizedAmount($0.1) }
     }
 
+    static func permitsPutawayWording(_ wording: String) -> Bool {
+        !wording.contains(nonItem) && !wording.contains(mixed) && !wording.contains(signedValue)
+            && !wording.contains(#/(?i)\b(?:unusable|inservibles?|falt[oó]|no lleg[oó]|sin recibir|prepared|preparad[oa]s?|hot lunch|almuerzo caliente|a medio comer)\b/#)
+    }
+
     static func canSuggestAmount(for wording: String) -> Bool {
         guard !wording.contains(nonItem), !wording.contains(rateByUnit), !wording.contains(mixed),
               !wording.contains(signedValue), !wording.contains(otherNumbers) else { return false }

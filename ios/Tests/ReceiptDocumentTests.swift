@@ -9,6 +9,51 @@ import XCTest
 @testable import RoomInTheCart
 
 @MainActor final class ReceiptDocumentTests: XCTestCase {
+    func testSelectedDocumentFoodsStartPutawayWithoutAssumingAmountsOrChangingOtherDecisions() async throws {
+        let foods = ["2 LATAS LENTEJAS 3.20", "YOGUR NATURAL 2.40", "ARROZ 1.50"]
+        let otherLines = ["CARGO 0.45", "DESCUENTO -1.00", "Faltó leche", "Prepared lunch",
+                          "Partly eaten sandwich", "Broken eggs", "Delivery fee", "2 packs of peas", "$4.00", "Oats 2 units"]
+        let words = foods + otherLines
+        let document = try await ReceiptDocumentReader().extract(.init(data: Data(words.joined(separator: "\n").utf8), kind: .text))
+        let target = CaptureTarget(workspaceID: UUID(), containerID: UUID(), objectID: UUID(), revision: 1, kind: .receiptEvidence)
+        let source = try document.source(target: target, merchant: "Mercado", stage: .receipt,
+            selection: Set(words.indices.map { .init(page: 1, line: $0 + 1) }), at: Date())
+        var draft = try ReceiptImportDraft(source: source)
+        draft.tracksPutaway = true
+        XCTAssertTrue(draft.selectedLines.isEmpty)
+        let originals = draft.lines
+        for index in words.indices {
+            draft.lines[index].startDocumentPutaway(deliveries: [])
+            if foods.indices.contains(index) {
+                var expected = originals[index]
+                expected.treatment = .add
+                XCTAssertEqual(draft.lines[index], expected)
+                XCTAssertEqual(draft.lines[index].amountCorrection?.field, .received)
+                draft.lines[index].received = "1"
+                XCTAssertEqual(draft.lines[index].amountCorrection?.field, .usable)
+            } else {
+                XCTAssertEqual(draft.lines[index], originals[index], words[index])
+            }
+        }
+        XCTAssertFalse(draft.dateConfirmed)
+        XCTAssertTrue(draft.receiptTotal.isEmpty)
+        for treatment in [ReceiptImportDraft.Treatment.keptSome, .eaten, .missing, .chargeOrReturn, .link(UUID())] {
+            var reviewed = originals[0]
+            reviewed.treatment = treatment
+            reviewed.name = "Lentejas"
+            reviewed.usable = "1"
+            reviewed.paid = "3.20"
+            var retained = reviewed
+            retained.startDocumentPutaway(deliveries: [])
+            XCTAssertEqual(retained, reviewed)
+        }
+        var row = originals[0]
+        row.documentLine = .init(method: .textFile, stage: .order, page: 1, line: 1)
+        XCTAssertFalse(row.permitsDocumentPutaway(deliveries: []))
+        row.documentLine = nil
+        XCTAssertFalse(row.permitsDocumentPutaway(deliveries: []))
+    }
+
     func testOriginalSharedTextReopensAsReceiptWithItsExactFileDigestAndEncoding() async throws {
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
