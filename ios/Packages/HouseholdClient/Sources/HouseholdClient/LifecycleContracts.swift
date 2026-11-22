@@ -38,11 +38,31 @@ public struct MembershipIntent: Codable, Equatable, Identifiable, Sendable {
         return Self(id: UUID().uuidString.lowercased(), subject: subject, kind: .redeem, bytes: try encoded(input),
                     defaultAliasLanguage: alias == nil ? language : nil)
     }
-    public var invitationDraft: (token: String, alias: String?)? {
-        struct Draft: Decodable { let token: String; let alias: String? }
-        guard kind == .redeem, let draft = try? JSONDecoder().decode(Draft.self, from: bytes),
+    private struct Redemption: Decodable {
+        let token: String
+        let alias: String?
+        let reviewedOffer: InvitationOffer?
+    }
+    private var redemption: Redemption? {
+        guard kind == .redeem, let draft = try? JSONDecoder().decode(Redemption.self, from: bytes),
               InvitationOffer.isCompleteToken(draft.token) else { return nil }
-        return (draft.token, draft.alias)
+        return draft
+    }
+    public var invitationDraft: (token: String, alias: String?)? {
+        redemption.map { ($0.token, $0.alias) }
+    }
+    func validateRedemptionReceipt(_ receipt: MembershipReceipt) throws {
+        guard let draft = redemption,
+              let household = UUID(uuidString: receipt.householdId),
+              household == UUID(uuidString: String(draft.token.prefix(36))) else { throw ClientError.invalidResponse }
+        let offeredRole: InvitationOffer.Role
+        switch (receipt.role, receipt.grantId) {
+        case ("contributor", nil): offeredRole = .adultContributor
+        case let ("helper", grant?) where UUID(uuidString: grant) != nil: offeredRole = .helperRead
+        case let ("editor", grant?) where UUID(uuidString: grant) != nil: offeredRole = .helperEdit
+        default: throw ClientError.invalidResponse
+        }
+        if let reviewed = draft.reviewedOffer, reviewed.role != offeredRole { throw ClientError.invalidResponse }
     }
     private static func validAlias(_ value: String) -> Bool { !value.isEmpty && value.count <= 80 }
 }

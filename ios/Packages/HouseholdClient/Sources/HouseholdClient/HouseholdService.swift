@@ -837,6 +837,7 @@ public actor HouseholdService {
         }
         let value: MembershipReceipt = try await transport.json(membershipRequest)
         guard generation == start else { throw ClientError.cancelled }
+        if intent.kind == .redeem { try intent.validateRedemptionReceipt(value) }
         return value
     }
     private func authorizeAdmin() async throws {

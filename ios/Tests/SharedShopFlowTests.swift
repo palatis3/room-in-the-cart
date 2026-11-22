@@ -467,7 +467,7 @@ import LocalAuthentication
         let fixture = SharedFlowService()
         let household = try await model("sam", fixture: fixture)
         let join = try XCTUnwrap(household.lifecycle)
-        let token = UUID().uuidString.lowercased() + "." + String(repeating: "a", count: 43)
+        let token = fixture.household + "." + String(repeating: "a", count: 43)
         join.keepLocalPrivate = true
         join.invitationCode = token
         await join.previewInvitation()
@@ -483,7 +483,7 @@ import LocalAuthentication
         XCTAssertEqual(offer.householdLabel, "Our home")
         XCTAssertEqual(offer.role, .adultContributor)
         XCTAssertFalse(fixture.joined.contains("sam"))
-        join.invitationCode = UUID().uuidString.lowercased() + "." + String(repeating: "b", count: 43)
+        join.invitationCode = fixture.household + "." + String(repeating: "b", count: 43)
         XCTAssertEqual(join.invitationPreview, .idle)
         await join.redeemInvitation()
         XCTAssertTrue(fixture.invitationWrites.isEmpty)
@@ -517,7 +517,7 @@ import LocalAuthentication
             let fixture = SharedFlowService()
             let household = try await model("sam", fixture: fixture)
             let join = try XCTUnwrap(household.lifecycle)
-            let token = UUID().uuidString.lowercased() + "." + String(repeating: "a", count: 43)
+            let token = fixture.household + "." + String(repeating: "a", count: 43)
             join.adultAttestation = true
             join.invitationCode = token
             let arrived = expectation(description: "Invitation preview in flight")
@@ -552,13 +552,13 @@ import LocalAuthentication
         let join = try XCTUnwrap(household.lifecycle)
         join.adultAttestation = true
         join.keepLocalPrivate = true
-        join.invitationCode = UUID().uuidString.lowercased() + "." + String(repeating: "a", count: 43)
+        join.invitationCode = fixture.household + "." + String(repeating: "a", count: 43)
         await join.previewInvitation()
         fixture.invitationJoinUnavailable = true
         await join.redeemInvitation()
         XCTAssertNil(join.pendingMembership)
         XCTAssertEqual(join.invitationPreview, .unavailable)
-        join.invitationCode = UUID().uuidString.lowercased() + "." + String(repeating: "b", count: 43)
+        join.invitationCode = fixture.household + "." + String(repeating: "b", count: 43)
         XCTAssertEqual(join.invitationPreview, .idle)
         fixture.invitationJoinUnavailable = false
         await join.previewInvitation()
@@ -585,7 +585,7 @@ import LocalAuthentication
         let join = try XCTUnwrap(household.lifecycle)
         join.adultAttestation = true
         join.keepLocalPrivate = true
-        join.invitationCode = UUID().uuidString.lowercased() + "." + String(repeating: "a", count: 43)
+        join.invitationCode = fixture.household + "." + String(repeating: "a", count: 43)
         await join.previewInvitation()
         guard case let .ready(offer) = join.invitationPreview else { return XCTFail("Missing offer") }
         XCTAssertEqual(offer.role, .adultContributor)
@@ -601,7 +601,7 @@ import LocalAuthentication
         let queue = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathComponent("outbox.json")
         let household = try await model("sam", fixture: fixture, queue: queue)
         let join = try XCTUnwrap(household.lifecycle)
-        let token = UUID().uuidString.lowercased() + "." + String(repeating: "a", count: 43)
+        let token = fixture.household + "." + String(repeating: "a", count: 43)
         join.adultAttestation = true
         join.keepLocalPrivate = true
         join.invitationCode = token

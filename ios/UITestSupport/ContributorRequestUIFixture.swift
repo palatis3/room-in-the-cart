@@ -102,7 +102,7 @@ import HouseholdClient
             if server.helperReadback, let lifecycle = model.lifecycle {
                 lifecycle.keepLocalPrivate = true
                 lifecycle.adultAttestation = true
-                lifecycle.invitationCode = server.grant + "." + String(repeating: "a", count: 43)
+                lifecycle.invitationCode = server.household + "." + String(repeating: "a", count: 43)
                 await lifecycle.previewInvitation()
                 await lifecycle.redeemInvitation()
                 guard lifecycle.isHelper else { setupFailure = true; return }

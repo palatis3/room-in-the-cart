@@ -78,6 +78,38 @@ extension HouseholdClientTests {
             await assertFails(.invalidResponse, code: token)
         }
     }
+    func testRedeemedInvitationChecksDestinationAndAccessBeforeUsingReceipt() async throws {
+        let auth = try auth()
+        let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!),
+                                       auth: auth, deviceVault: MemoryVault(), transport: transport())
+        let offer = try JSONDecoder().decode(InvitationOffer.self,
+            from: Data(#"{"householdLabel":"Home","role":"helper_read"}"#.utf8))
+        let invitedHousehold = "abcdef01-0000-4000-8000-000000000001"
+        let intent = try MembershipIntent.redeem(subject: "account", token: invitedHousehold + "." + String(repeating: "a", count: 43),
+                                                  alias: nil, adultAttestation: true, reviewedOffer: offer)
+        let valid = ["householdId": invitedHousehold.uppercased(), "memberId": member, "role": "helper", "grantId": lifecycleGrant]
+        var replies = [
+            valid.merging(["householdId": UUID().uuidString]) { _, new in new },
+            valid.merging(["role": "editor"]) { _, new in new },
+            valid.filter { $0.key != "grantId" },
+            valid
+        ]
+        let stateLock = MockURLProtocol.installHandlerWithStateLock { request in
+            if let result = self.authResponse(request) { return result }
+            XCTAssertEqual(request.url?.path, "/v1/invites/redeem")
+            XCTAssertEqual(self.lifecycleBytes(request), intent.bytes)
+            return (200, try JSONSerialization.data(withJSONObject: replies.removeFirst()))
+        }
+        _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456")
+        for _ in 0..<3 {
+            do { _ = try await service.executeMembership(intent); XCTFail("Accepted a different invitation destination or access") }
+            catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
+        }
+        let receipt = try await service.executeMembership(intent)
+        XCTAssertEqual(UUID(uuidString: receipt.householdId), UUID(uuidString: invitedHousehold))
+        XCTAssertEqual(receipt.grantId, lifecycleGrant)
+        XCTAssertTrue(stateLock.withLock { replies.isEmpty })
+    }
     func testInvitationRedemptionSendsTokenOnlyInBodyAndRequiresAdultDeclaration() async throws {
         let token = household + "." + String(repeating: "a", count: 43)
         XCTAssertThrowsError(try MembershipIntent.redeem(subject: "account", token: token, alias: nil, adultAttestation: false))
