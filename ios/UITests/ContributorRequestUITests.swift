@@ -558,6 +558,36 @@ import XCTest
         XCTAssertEqual(app.staticTexts["fixture.requestPosts"].label, "Fixture request POSTs: 2")
     }
 
+    func testSpanishGuardianChildSendsRequestForFirstCurrentPickup() {
+        app.launchArguments = ["--ui-testing", "--guardian-request-pickups-fixture", "-AppleLanguages", "(es)", "-AppleLocale", "es_US"]
+        app.launch()
+        XCTAssertTrue(app.navigationBars["Mis solicitudes"].waitForExistence(timeout: 30))
+        tap(app.buttons["guardian.childRequestPickup"])
+        let firstPickup = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Esta recogida · ID ")).firstMatch
+        XCTAssertTrue(firstPickup.waitForExistence(timeout: 5) && firstPickup.isHittable, app.debugDescription)
+        let selectedPickup = firstPickup.label
+        firstPickup.tap()
+
+        fill("Arroz", into: "guardian.childRequestItem", dismissAfterEntry: false)
+        let review = app.buttons["guardian.childKeyboardAction"]
+        XCTAssertEqual(review.label, "Revisar solicitud")
+        tap(review)
+        XCTAssertTrue(app.navigationBars["Revisar tu solicitud"].waitForExistence(timeout: 10))
+        let pickup = element("guardian.childReviewedPickup")
+        XCTAssertTrue((pickup.label + (pickup.value as? String ?? "")).contains(selectedPickup))
+        let route = element("household.request.reviewDestination")
+        XCTAssertTrue((route.label + (route.value as? String ?? "")).contains("Solicitud para esta recogida"))
+        enableSwitch("Revisé el producto, la cantidad y la compra.")
+        tap(app.buttons["household.request.sendReviewed"])
+
+        reveal(app.staticTexts["Recibido por el hogar"].firstMatch)
+        tap(app.buttons["guardian.childRequestsRefresh"])
+        reveal(app.staticTexts["Arroz"].firstMatch)
+        reveal(app.staticTexts["Recibido, pendiente de revisión"].firstMatch)
+        XCTAssertEqual(app.staticTexts["fixture.requestRows"].label, "Fixture saved requests: 1")
+        XCTAssertEqual(app.staticTexts["fixture.requestPosts"].label, "Fixture request POSTs: 1")
+    }
+
     func testSpanishContributorReadsOnlyExplicitPurchaseStatusOnTheirOwnRequests() {
         app.launchArguments = ["--ui-testing", "--own-purchases-fixture", "-AppleLanguages", "(es)", "-AppleLocale", "es_US"]
         app.launch()

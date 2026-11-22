@@ -227,6 +227,7 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
     private var pantryRow: [String: Any]?
     private var pantryReceipts: [String: [String: Any]] = [:]
     let childPickups = ProcessInfo.processInfo.arguments.contains("--guardian-request-pickups-fixture")
+    private let rejectCurrentChildPickup = ProcessInfo.processInfo.arguments.contains("--reject-current-child-pickup-fixture")
     private let nextOnlyPickup = "22222222-2222-4222-8222-222222222222"
     private let childSession = UUID().uuidString.lowercased()
 
@@ -635,8 +636,11 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
             }
             guard json["kind"] as? String == "request.send", let key = json["clientKey"] as? String,
                   let targetShop = json["shopId"] as? String, let body = json["body"] as? [String: Any] else { throw URLError(.unsupportedURL) }
-            if childPickups, (targetShop != nextOnlyPickup || body["route"] as? String != "next") {
-                throw URLError(.badServerResponse)
+            if childPickups {
+                let route = body["route"] as? String
+                let currentPickupAllowed = !rejectCurrentChildPickup && targetShop == shop && (route == "current" || route == "next")
+                let nextPickupAllowed = targetShop == nextOnlyPickup && route == "next"
+                guard currentPickupAllowed || nextPickupAllowed else { throw URLError(.badServerResponse) }
             }
             posts += 1
             if let receipt = receipts[key] { changed?(posts, rows.count); return try response(receipt) }
