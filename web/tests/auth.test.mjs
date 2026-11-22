@@ -52,6 +52,48 @@ for(const replace of [false,true]){
   });
 }
 
+for (const [language, heading, joinedHeading] of [
+  ['en', 'Enter an invitation code', 'Ask the shopper'],
+  ['es', 'Ingresa un código de invitación', 'Pedir a quien hace la compra']
+]) {
+  for (const [status, code] of [[404, 'unavailable'], [403, 'access_ended']]) {
+    test(`a rejected invitation accepts a replacement code in ${language} (${status})`, async () => {
+      const submitted = [];
+      let active = false;
+      const scope = { authenticated:true, role:'contributor', household:{id:'home',label:'Replacement household'},
+        memberId:'member', shopId:'shop', csrf:'scope', enrolled:true, queueConsent:false,
+        replayWindow:{id:'window',expiresAt:'2099-01-01T00:00:00Z'} };
+      const { dom, root } = await fixture({
+        authState:async () => ({ available:true, authenticated:true, csrf:'identity' }),
+        session:async () => active ? scope : null,
+        redeem:async (token, _csrf, review) => {
+          submitted.push([token, review.alias]);
+          if (token === 'retained-invitation-secret') throw new ApiError(code,status);
+          return { householdId:'home', memberId:'member', role:'contributor' };
+        },
+        activateSession:async () => { active = true; },
+        requests:async () => []
+      }, language);
+      input(dom,'invite-alias','Earlier alias');
+      root.querySelector('#adult-attestation').click();
+      submit(dom);
+      await waitForIdle(root);
+      assert.equal(root.querySelector('h1').textContent,heading);
+      assert.equal(root.querySelector('#invitation').value,'');
+      assert.equal(root.querySelector('#invite-alias').value,'');
+      assert.equal(root.querySelector('#adult-attestation').checked,false);
+      assert.match(root.querySelector('[role=status]').textContent,/new invitation|nueva invitación/);
+      input(dom,'invitation','replacement-code');
+      root.querySelector('#adult-attestation').click();
+      submit(dom);
+      await waitForIdle(root);
+      assert.deepEqual(submitted,[['retained-invitation-secret','Earlier alias'],['replacement-code','']]);
+      assert.equal(root.querySelector('h1').textContent,joinedHeading);
+      dom.window.close();
+    });
+  }
+}
+
 test('unconfigured email service is honest and cannot display a sent-code success',async()=>{
   const {root}=await fixture({authState:async()=>({available:false,authenticated:false,csrf:null})});
   assert.match(root.textContent,/Email sign-in is not available yet/);assert.equal(root.querySelector('form'),null);assert.doesNotMatch(root.textContent,/Check your email|Signed in/);

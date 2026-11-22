@@ -531,14 +531,15 @@ export class WebApp {
   private renderInvite(main:HTMLElement):void {
     if(!this.session&&!this.browserAuth?.authenticated){this.renderLogin(main);return;}
 
-    main.append(this.el('h1', this.t('Continue with your invitation')));
+    const hasCode = Boolean(this.invitation?.trim());
+    main.append(this.el('h1', this.t(hasCode ? 'Continue with your invitation' : 'Enter an invitation code')));
     if (!this.redemption) {
-      main.append(this.el('p', this.t(this.invitation?.trim()
+      main.append(this.el('p', this.t(hasCode
         ? 'Confirm the household and your role with the person who invited you. An invitation can let you send your own requests or view selected shopping instructions.'
-        : 'Open an invitation from your household to join.')));
+        : 'Open the link from your household, or enter its invitation code below.')));
     }
     const form=this.el('form');
-    if(this.invitation?.trim()){
+    if(hasCode){
       form.append(this.el('p',this.t('Invitation code received.')));
       if(!this.redemption)form.append(this.button('Enter a different invitation code',()=>{
         this.invitation='';
@@ -572,7 +573,15 @@ export class WebApp {
       if(!token||!this.adultAttestation)return;
       this.invitation=token;
       void this.run(async()=>{
-        this.redemption??=await this.api.redeem(token,this.session?.csrf??this.browserAuth?.csrf??undefined,{adultAttestation:this.adultAttestation,alias:this.inviteAlias,defaultAliasLanguage:this.language});
+        try {
+          this.redemption??=await this.api.redeem(token,this.session?.csrf??this.browserAuth?.csrf??undefined,{adultAttestation:this.adultAttestation,alias:this.inviteAlias,defaultAliasLanguage:this.language});
+        } catch (error) {
+          if (!(error instanceof ApiError && error.status === 404 && error.code === 'unavailable')) throw error;
+          this.clearInvitationDraft();
+          this.invitation=''; // Keep manual entry open even when another household is active.
+          this.notice='This invitation is unavailable. Ask your household for a new invitation.';
+          return;
+        }
         await this.api.activateSession(this.redemption.householdId,this.session?.csrf??this.browserAuth?.csrf??undefined,this.redemption.grantId);
         const accepted = this.redemption;
         const opened = await this.api.session();
