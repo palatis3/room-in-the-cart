@@ -170,10 +170,44 @@ extension LedgerWorkspace {
     /// recorded by their reviewed dinner. Later merges and edits require review.
     public func dinnerPantryLines(shop: ShoppingLedger, workspaceID: UUID, originID: UUID, actorID: String,
                                  occurrenceID: UUID? = nil) -> Set<UUID> {
+        confirmedDinnerLines(shop: shop, workspaceID: workspaceID, originID: originID,
+            actorID: actorID, occurrenceID: occurrenceID, alreadyCooked: false)
+    }
+
+    /// A completed cook records the actual batch independently of the earlier
+    /// reservation. It can settle only the original, still-independent grocery.
+    public func usedDinnerPantryLines(shop: ShoppingLedger, workspaceID: UUID, originID: UUID, actorID: String,
+                                     cook: CookCompletionDraft, lotProducts: [UUID: UUID]) -> Set<UUID> {
+        guard cook.ledgerID == workspaceID, cook.inventoryID == originID, cook.shopID == shop.id,
+              cook.recoveredMeal == nil, cook.hasValidIngredientSnapshot,
+              let meal = shop.mealOccurrences.first(where: { $0.id == cook.meal.id }),
+              meal.servings == cook.meal.servings, meal.servingGroups == cook.meal.servingGroups,
+              meal.ingredientContributionIDs == cook.meal.ingredientContributionIDs else { return [] }
+        let eligible = confirmedDinnerLines(shop: shop, workspaceID: workspaceID, originID: originID,
+            actorID: actorID, occurrenceID: cook.meal.id, alreadyCooked: true)
+        let parts = Dictionary(grouping: cook.parts, by: \.contributionID)
+        return Set(shop.contributions.compactMap { source in
+            guard eligible.contains(source.lineID), source.removedAt == nil, source.source == .meal(occurrenceID: meal.id),
+                  let quantity = source.quantity, quantity.amount > .zero,
+                  let uses = parts[source.id] else { return nil }
+            var used = Rational.zero
+            for part in uses {
+                guard part.substitution == nil, case .lot(let lotID, _, let amount?) = part.use,
+                      lotProducts[lotID] == source.lineID, amount.amount > .zero,
+                      let converted = try? amount.converted(to: quantity.unit, using: amount.confirmedConversion ?? quantity.confirmedConversion),
+                      let total = try? used.adding(converted) else { return nil }
+                used = total
+            }
+            return used >= quantity.amount ? source.lineID : nil
+        })
+    }
+
+    private func confirmedDinnerLines(shop: ShoppingLedger, workspaceID: UUID, originID: UUID, actorID: String,
+                                      occurrenceID: UUID?, alreadyCooked: Bool) -> Set<UUID> {
         let plans = dinnerPlanning.applyReceipts.compactMap { receipt -> PlannedDinner? in
             let proposal = receipt.proposal
             guard proposal.shopID == shop.id, proposal.namespace == "local:\(workspaceID.uuidString)",
-                  proposal.authorID == actorID, proposal.preferenceRevision == dinnerPlanning.privateMealPreferences?.revision,
+                  proposal.authorID == actorID, alreadyCooked || proposal.preferenceRevision == dinnerPlanning.privateMealPreferences?.revision,
                   proposal.changes.count == 1, case .choose(let planned) = proposal.changes[0],
                   planned.pantryProducts?.originID == originID, occurrenceID == nil || planned.occurrenceID == occurrenceID
             else { return nil }
@@ -196,7 +230,7 @@ extension LedgerWorkspace {
                   meal.ingredientContributionIDs == planned.contributionIDs else { continue }
             for (index, ingredient) in planned.template.ingredients.enumerated() {
                 guard let product = products.matches[ingredient.id], planned.lineIDs[index] == product,
-                      !otherLines.contains(product), let line = lines[product], !line.isChecked, !line.isHandled, !line.isTrashed,
+                      (alreadyCooked || !otherLines.contains(product)), let line = lines[product], !line.isChecked, !line.isHandled, !line.isTrashed,
                       line.tripPick == nil, line.packagePick == nil, line.stopObservation == nil,
                       line.name == ingredient.name, line.notes == ingredient.notes,
                       let active = sources[product], active.count == 1, let source = active.first,

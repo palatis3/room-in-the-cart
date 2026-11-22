@@ -66,7 +66,8 @@ struct LedgerHomeView: View {
                         let packages = shop.itemPackages
                         let typedBatches = shop.typedItemBatchIDs
                         let departmentChoices = model.workspace.listLayout.departmentChoices(in: shop)
-                        let covered = dinnerPantry.covered(in: shop, ledger: model)
+                        let dinner = dinnerPantry.status(in: shop, ledger: model)
+                        let covered = dinner.covered
                         let groups = model.workspace.listLayout.groups(shop: shop, search: model.search, excluding: covered)
                         if groups.allSatisfy({ $0.lines.isEmpty }) {
                             Section(ledgerText("Shopping list")) {
@@ -86,10 +87,17 @@ struct LedgerHomeView: View {
                                 }
                             }
                         }
-                        if !covered.isEmpty {
+                        if !dinner.atHome.isEmpty {
                             Section(dinnerText("Using food at home")) {
-                                ForEach(shop.search(model.search).filter { covered.contains($0.id) }) { line in
+                                ForEach(shop.search(model.search).filter { dinner.atHome.contains($0.id) }) { line in
                                     Label(line.name, systemImage: "house")
+                                }
+                            }
+                        }
+                        if !dinner.used.isEmpty {
+                            Section(dinnerText("Used for dinner")) {
+                                ForEach(shop.search(model.search).filter { dinner.used.contains($0.id) }) { line in
+                                    Label(line.name, systemImage: "fork.knife")
                                 }
                             }
                         }

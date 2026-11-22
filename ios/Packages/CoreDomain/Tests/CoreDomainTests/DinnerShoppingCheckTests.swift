@@ -317,3 +317,65 @@ extension DinnerShoppingCheckTests {
         XCTAssertTrue(reopened.dinnerPantryLines(shop: reopened.shops[1], workspaceID: ledgerID, originID: origin, actorID: "adult").isEmpty)
     }
 }
+
+
+extension DinnerShoppingCheckTests {
+    func testCookedProductNeedsExactOccurrenceAndEnoughMeasuredUseInBothLanguages() throws {
+        for name in ["Rice", "Arroz"] {
+            let now = Date(), origin = UUID(), ledgerID = UUID(), product = UUID(), batch = UUID()
+            let ingredient = MealIngredient(name: name, quantity: q(1))
+            let recipe = MealTemplate(title: "Bowls", servings: try Rational(2), ingredients: [ingredient])
+            var shop = ShoppingLedger(title: "Market")
+            let coffee = try shop.addManualLine(name: "Coffee", quantity: q(2, .count))
+            var workspace = LedgerWorkspace(shops: [shop], mealTemplates: [recipe], selectedShopID: shop.id)
+            let access = DinnerAccessContext(scope: .local(workspaceID: ledgerID), actorID: "adult", shopID: shop.id,
+                assignedShopperID: "adult", canPlan: true, canReadBudget: false, hasPaidTools: false, roleRevision: 0,
+                verifiedAt: now, validUntil: now.addingTimeInterval(30))
+            let match = try PantryMealMatcher.review(recipe: recipe, reviewedFoods: [ingredient.id: product], globallyFreeLots: [
+                .init(id: batch, foodID: product, name: name, usable: q(3), confirmedAt: now)], unresolvedFoods: [], profile: nil)
+            let choice = try SavedDinnerReview(recipe: recipe, action: .planTonight, workspace: workspace, access: access,
+                phase: .draft, at: now, pantryReview: (match, origin))
+            try choice.apply(to: &workspace, access: access, phase: .draft, at: now)
+            shop = workspace.shops[0]
+            let occurrence = try XCTUnwrap(shop.mealOccurrences.first)
+            let id = try XCTUnwrap(occurrence.ingredientContributionIDs.first)
+            let half = Quantity(amount: try Rational(1, 2), unit: .cup, originalLiteral: "0.5")
+            let whole = Quantity(amount: try Rational(3, 2), unit: .cup, originalLiteral: "1.5")
+            func applied(_ parts: [CookCompletionDraft.Part], owner: String = "adult", meal: MealOccurrence? = nil) throws -> Set<UUID> {
+                let draft = CookCompletionDraft(inventoryID: origin, inventoryRevision: 1, ledgerID: ledgerID,
+                    shop: shop, meal: meal ?? occurrence, cookedAt: now, servingsMade: try Rational(3), parts: parts, leftovers: [])
+                let saved = try JSONDecoder().decode(CookCompletionDraft.self, from: JSONEncoder().encode(draft))
+                return workspace.usedDinnerPantryLines(shop: shop, workspaceID: ledgerID, originID: origin, actorID: owner,
+                    cook: saved, lotProducts: [batch: product])
+            }
+            let full = [CookCompletionDraft.Part(contributionID: id, use: .lot(id: batch, revision: 1, amount: whole))]
+            XCTAssertEqual(try applied(full), [product])
+            XCTAssertTrue(try applied(full, owner: "other").isEmpty)
+            XCTAssertTrue(try applied([.init(contributionID: id, use: .notUsed)]).isEmpty)
+            XCTAssertTrue(try applied([.init(contributionID: id, use: .untracked)]).isEmpty)
+            XCTAssertTrue(try applied([.init(contributionID: id, use: .lot(id: batch, revision: 1, amount: nil))]).isEmpty)
+            XCTAssertTrue(try applied([.init(contributionID: id, use: .lot(id: batch, revision: 1, amount: half))]).isEmpty)
+            XCTAssertTrue(try applied([.init(contributionID: id, use: .lot(id: UUID(), revision: 1, amount: whole))]).isEmpty)
+            XCTAssertTrue(try applied([.init(contributionID: UUID(), use: .lot(id: batch, revision: 1, amount: whole))]).isEmpty)
+            XCTAssertTrue(try applied([.init(contributionID: id, use: .lot(id: batch, revision: 1, amount: whole), substitution: name)]).isEmpty)
+            let otherID = try shop.chooseMeal(recipe)
+            let other = try XCTUnwrap(shop.mealOccurrences.first { $0.id == otherID })
+            let otherLine = try XCTUnwrap(shop.contributions.first { $0.source == .meal(occurrenceID: otherID) }?.lineID)
+            let originalOnly = try applied(full)
+            XCTAssertEqual(originalOnly, [product])
+            XCTAssertEqual(Set(workspace.listLayout.groups(shop: shop, excluding: originalOnly).flatMap(\.lines).map(\.id)), [coffee, otherLine])
+            XCTAssertTrue(try applied(full, meal: other).isEmpty)
+            let extra = try shop.addManualLine(name: name, quantity: q(2))
+            let supply = try XCTUnwrap(shop.contributions(forLineID: extra).first?.id)
+            let independent = shop
+            try shop.linkContribution(contributionID: id, within: supply, quantity: q(1))
+            XCTAssertTrue(try applied(full).isEmpty)
+            XCTAssertEqual(try shop.quantity(forLineID: extra)?.amount, try Rational(2))
+            shop = independent
+            try shop.updateContribution(contributionID: id, quantity: q(2), notes: "")
+            XCTAssertTrue(try applied(full).isEmpty)
+            try shop.removeMeal(occurrenceID: occurrence.id, at: now)
+            XCTAssertTrue(try applied(full).isEmpty)
+        }
+    }
+}

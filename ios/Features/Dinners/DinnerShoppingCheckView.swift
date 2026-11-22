@@ -51,7 +51,8 @@ private struct DinnerShoppingCheckView: View {
                     ledger.workspace.dinnerPantryLines(shop: shop, workspaceID: admitted.ledger, originID: $0,
                         actorID: admitted.identity.actorID.uuidString, occurrenceID: occurrenceID)
                 } ?? []
-                if !linked.isEmpty, admitted.identity.subject == nil, admitted.identity.householdID == nil,
+                if !linked.isEmpty, pickup.journeys.first(where: { $0.id == shop.id })?.cookedMeals?.contains(where: { $0.isActive && $0.draft.meal.id == occurrenceID }) != true,
+                   admitted.identity.subject == nil, admitted.identity.householdID == nil,
                    refreshed == admitted {
                     DinnerPurchaseChoices(ledger: ledger, pickup: pickup, shop: shop, occurrenceID: occurrenceID,
                         linked: linked, identity: admitted.identity, authorize: { origin == admitted })
@@ -211,6 +212,20 @@ extension DinnerShoppingCheck {
     }
 }
 
+extension PickupJourney {
+    func usedDinnerPantryLines(in shop: ShoppingLedger, workspace: LedgerWorkspace, workspaceID: UUID,
+                             actorID: UUID, context: PantryPackStockReview.Context) -> Set<UUID> {
+        guard id == shop.id, closedAt == nil, pickup == nil, basket?.phase == .draft, mealRecovery == nil,
+              let cooks = cookedMeals, cooks.contains(where: \.isActive) else { return [] }
+        let origin = context.snapshot.state.workspaceID
+        let lots = Dictionary(uniqueKeysWithValues: context.snapshot.lots.map { ($0.id, $0.foodID) })
+        return cooks.filter(\.isActive).reduce(into: Set<UUID>()) { result, record in
+            result.formUnion(workspace.usedDinnerPantryLines(shop: shop, workspaceID: workspaceID,
+                originID: origin, actorID: actorID.uuidString, cook: record.draft, lotProducts: lots))
+        }
+    }
+}
+
 struct ShoppingDinnerPantry: DynamicProperty {
     @EnvironmentObject private var pickup: PickupModel
     @EnvironmentObject private var access: WorkspaceAccess
@@ -218,12 +233,29 @@ struct ShoppingDinnerPantry: DynamicProperty {
     @Environment(\.scenePhase) private var scene
     @Environment(\.guardianChildCoordinator) private var child
 
-    @MainActor func covered(in shop: ShoppingLedger, ledger: LedgerModel) -> Set<UUID> {
-        guard scene == .active, UIApplication.shared.isProtectedDataAvailable, child?.presented != true,
-              !household.guardianChildOnly, household.projection?.grantId == nil else { return [] }
-        return DinnerPantryPurchases.lines(ledger: ledger, pickup: pickup, shop: shop,
-            identity: CapturePrivateIdentity.current(access: access, household: household))
+    struct Status {
+        var atHome = Set<UUID>()
+        var used = Set<UUID>()
+        var covered: Set<UUID> { atHome.union(used) }
     }
+
+    @MainActor func status(in shop: ShoppingLedger, ledger: LedgerModel) -> Status {
+        guard scene == .active, UIApplication.shared.isProtectedDataAvailable, child?.presented != true,
+              !household.guardianChildOnly, household.projection?.grantId == nil,
+              let identity = CapturePrivateIdentity.current(access: access, household: household),
+              identity.subject == nil, identity.householdID == nil, identity.actorID == pickup.currentDinnerActorID,
+              ledger.ready, !ledger.saving, !ledger.hasPendingSave, !ledger.hasPendingPantryProjection,
+              ledger.shop == shop, let id = ledger.sourceWorkspaceID else { return .init() }
+        let atHome = DinnerPantryPurchases.lines(ledger: ledger, pickup: pickup, shop: shop, identity: identity)
+        guard let journey = pickup.journeys.first(where: { $0.id == shop.id }), journey.cookedMeals != nil,
+              let context = try? pickup.quickGroceryPantryContext(ledgerWorkspaceID: id),
+              context.mapping.sourceHeads.contains(where: { $0.id == journey.id && $0.revision == journey.revision })
+        else { return .init(atHome: atHome) }
+        let used = journey.usedDinnerPantryLines(in: shop, workspace: ledger.workspace, workspaceID: id, actorID: identity.actorID, context: context)
+        return .init(atHome: atHome.subtracting(used), used: used)
+    }
+
+    @MainActor func covered(in shop: ShoppingLedger, ledger: LedgerModel) -> Set<UUID> { status(in: shop, ledger: ledger).covered }
 }
 
 struct SavedDinnerProductChoice {

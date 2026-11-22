@@ -23,6 +23,7 @@
     "RoomInTheCartTests/PantryPackModelRecoveryTests/testBowlDinnerLinksPantryProductsAndAtomicallyRemovesOnlyTheirPurchases"
   ],
   "Record actual dinner ingredients and refresh pantry counts": [
+    "RoomInTheCartTests/PantryPackModelRecoveryTests/testRecordedBowlCookingKeepsSpentFoodOffTheReopenedListAndCheckoutUntilCookUndo",
     "RoomInTheCartTests/CookCompletionEditorTests/testReturningFromASuggestedSubstituteToTheUniquePlannedFoodClearsTheSavedSubstitution",
     "RoomInTheCartTests/CookCompletionEditorTests/testChangingSuggestedBatchWithAmbiguousNamesRequiresReviewAndPreservesAnExplicitDescription",
     "RoomInTheCartTests/CookCompletionEditorTests/testMountedPantryShelfUpdatesAfterDinnerAndKeepsAnOpenRecountUntilDismissed"

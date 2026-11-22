@@ -301,6 +301,13 @@ struct DinnerManualAdjustmentView: View {
             Section {
                 DinnerServingField(count: $servings, identifier: "dinner.occurrence.servings")
                 if editsPlan {
+                    if servings != meal.servings.description, let shop = model.shop,
+                       model.workspace.packSelections.contains(where: { selection in
+                           selection.shopID == shop.id && selection.isNoPurchase && selection.request.offerA.id == DinnerPantryProducts.atHomeOfferID &&
+                           shop.contributions(forLineID: selection.lineID).contains { $0.source == .meal(occurrenceID: meal.id) }
+                       }) {
+                        Text(dinnerText("After changing servings, open Review pantry purchases in this dinner to confirm what you still need to buy."))
+                    }
                     reviewButton.buttonStyle(PrimaryAction())
                 } else {
                     Text(dinnerText("Enter each resulting amount explicitly. This Free editor does not scale ingredients automatically."))

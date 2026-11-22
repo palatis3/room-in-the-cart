@@ -1,6 +1,40 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Used for dinner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Used for dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usados para la cena"
+          }
+        }
+      }
+    },
+    "After changing servings, open Review pantry purchases in this dinner to confirm what you still need to buy.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After changing servings, open Review pantry purchases in this dinner to confirm what you still need to buy."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Después de cambiar las porciones, abre «Revisar las compras de despensa» en esta cena para confirmar qué te falta comprar."
+          }
+        }
+      }
+    },
     "Save a draft checkout for %@ with these needs. This sets aside available food without changing physical counts.": {
       "extractionState": "manual",
       "localizations": {
