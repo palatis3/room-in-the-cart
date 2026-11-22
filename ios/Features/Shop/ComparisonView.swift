@@ -74,7 +74,8 @@ struct ComparisonView: View {
         var id: Self { self }
     }
     @State private var missingInput: MissingInput?
-    @State private var toolbarSaveError: String?
+    @State private var toolbarError: String?
+    @State private var editingPreviousResult = false
     @State private var reviewing: Bool
     private enum ResultFocus: Hashable { case summary, saved, toolbarSaved, error }
     @AccessibilityFocusState private var resultFocused: ResultFocus?
@@ -96,14 +97,6 @@ struct ComparisonView: View {
                     .toolbar {
                         ToolbarItem(placement: .topBarTrailing) { toolbarSaveControl }
                     }
-                    .alert(tr("Save"), isPresented: Binding(
-                        get: { toolbarSaveError != nil },
-                        set: { if !$0 { toolbarSaveError = nil } }
-                    ), presenting: toolbarSaveError) { _ in
-                        Button(tr("Done"), role: .cancel) {}
-                    } message: { error in
-                        Text(error)
-                    }
                     .sheet(item: $missingInput) { input in missingInputEditor(input) }
             } else {
                 editor
@@ -117,9 +110,24 @@ struct ComparisonView: View {
                                 }
                                 .accessibilityIdentifier("comparison.done." + inputFocused)
                             }
+                        } else if editingPreviousResult {
+                            ToolbarItem(placement: .topBarTrailing) {
+                                Button(tr("Recalculate")) {
+                                    updateResult()
+                                    toolbarError = model.error
+                                }.accessibilityIdentifier("comparison.recalculate")
+                            }
                         }
                     }
             }
+        }
+        .alert(tr(reviewing ? "Save" : "Recalculate"), isPresented: Binding(
+            get: { toolbarError != nil },
+            set: { if !$0 { toolbarError = nil } }
+        ), presenting: toolbarError) { _ in
+            Button(tr("Done"), role: .cancel) {}
+        } message: { error in
+            Text(error)
         }
         .workingSurface()
         .navigationTitle(tr("Compare packs"))
@@ -158,7 +166,7 @@ struct ComparisonView: View {
             if model.savedAt != nil {
                 resultFocused = focusAfterSave
             } else if let error = model.error {
-                if focusAfterSave == .toolbarSaved { toolbarSaveError = error }
+                if focusAfterSave == .toolbarSaved { toolbarError = error }
                 else { resultFocused = .error }
             }
         }
@@ -183,6 +191,7 @@ struct ComparisonView: View {
     }
 
     private func updateResult() {
+        inputFocused = nil
         missingInput = nil
         model.compare()
         reviewing = model.result != nil
@@ -190,7 +199,7 @@ struct ComparisonView: View {
     }
 
     private var editRow: some View {
-        Button { reviewing = false } label: {
+        Button { editingPreviousResult = true; reviewing = false } label: {
             HStack(spacing: 12) {
                 Label(tr("Edit"), systemImage: "pencil")
                 Spacer(minLength: 8)
@@ -239,12 +248,7 @@ struct ComparisonView: View {
             }
             if let error = model.error { errorRow(error) }
             Section {
-                Button {
-                    inputFocused = nil
-                    model.compare()
-                    if model.result != nil, model.error == nil { reviewing = true; resultFocused = .summary }
-                    else { resultFocused = .error }
-                } label: { Text(tr("Compare enough food")) }
+                Button(tr("Compare enough food"), action: updateResult)
                 .buttonStyle(PrimaryAction()).accessibilityIdentifier("compare")
                 .listRowBackground(Color.clear).listRowInsets(EdgeInsets())
             }

@@ -1,6 +1,13 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Recalculate": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Recalculate" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Recalcular" } }
+      }
+    },
     "Set aside for this trip": {
       "extractionState": "manual",
       "localizations": {

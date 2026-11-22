@@ -1044,7 +1044,10 @@ final class RoomInTheCartUITests: XCTestCase {
         let savedYield = app.textFields["aQuantity"]
         reveal(savedYield)
         XCTAssertEqual(savedYield.value as? String, "7 1/2")
-        compare()
+        let recalculate = app.navigationBars.buttons["comparison.recalculate"]
+        XCTAssertTrue(recalculate.isHittable, "Review edited inputs without scrolling through both packs")
+        recalculate.tap()
+        XCTAssertTrue(element("comparisonResultsScroll").waitForExistence(timeout: 5))
         revealFullyInComparison(element("comparisonSourceNote"))
         XCTAssertFalse(app.buttons["saveComparison"].exists, "Reviewing the same values must keep the saved result")
         assertSavedStatus("Saved on this iPhone")
@@ -1154,7 +1157,7 @@ final class RoomInTheCartUITests: XCTestCase {
         tap(target); target.typeText("1")
         dismissComparisonKeyboard("conversion.done")
         tap(app.buttons["conversion.confirm"])
-        compare()
+        tap(app.navigationBars.buttons["comparison.recalculate"])
         assertMoney("aTotal", amount: "5.00")
         let packs = app.staticTexts["aPacks"]
         reveal(packs); XCTAssertTrue(packs.label.contains("2"))
