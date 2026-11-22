@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {JSDOM} from 'jsdom';
 import {IDBFactory} from 'fake-indexeddb';
-import {API,ApiError} from '../dist/api.js';
+import {API,ApiError,consumeInvitation} from '../dist/api.js';
 import {WebApp} from '../dist/app.js';
 import {Outbox} from '../dist/outbox.js';
 import {waitForIdle} from './fixtures/wait-for-idle.mjs';
@@ -448,3 +448,40 @@ test('an offline link replacement waits for a verified identity and keeps the ne
   submit(dom); await waitForIdle(root);
   assert.deepEqual(attempts, [['replacement', 'current-identity', '']]);
 });
+
+for (const [language, guidance, entryHint] of [
+  ['en','You’ll see the household name after you join. Before joining, ask the person who invited you which household this is and what you’ll be able to do.',
+    'Open the link from your household, or enter its invitation code below.'],
+  ['es','Verás el nombre del hogar después de unirte. Antes de unirte, pregúntale a la persona que te invitó de qué hogar se trata y qué podrás hacer.',
+    'Abre el enlace que te envió tu familia o ingresa el código de invitación aquí.']
+]) {
+  for (const manual of [false,true]) {
+    test(`household confirmation guidance precedes an explicit join in ${language} (manual=${manual})`,async t=>{
+      const secret='example-invite';
+      const url='https://fixture.test/invite?lang='+language+(manual?'&enterCode=1':'#token='+secret);
+      const dom=new JSDOM('<div id="app"></div>',{url});t.after(()=>dom.window.close());
+      const root=dom.window.document.getElementById('app'), writes=[];
+      const api={
+        session:async()=>({authenticated:true,role:'contributor',household:{id:'existing',label:'Existing household name'},
+          memberId:'member',shopId:'shop',enrolled:true,queueConsent:false}),
+        requests:async()=>[],
+        redeem:async token=>{writes.push(token);throw new ApiError('unavailable',404);},
+        activateSession:async()=>{writes.push('activation');}
+      };
+      const token=consumeInvitation(dom.window.location,dom.window.history);
+      const app=new WebApp(root,api,new Outbox(new IDBFactory()),token);await app.start();
+      assert.equal(dom.window.location.href,'https://fixture.test/invite?lang='+language);
+      assert.ok(root.textContent.includes(guidance));
+      assert.equal(root.textContent.includes(entryHint),manual);
+      assert.ok(!root.innerHTML.includes(secret));
+      assert.ok(!root.textContent.includes('Existing household name'));
+      if(manual)input(dom,'invitation',secret);
+      submit(dom);await waitForIdle(root);
+      assert.deepEqual(writes,[]);
+      root.querySelector('#adult-attestation').click();
+      assert.deepEqual(writes,[]);
+      submit(dom);await waitForIdle(root);
+      assert.deepEqual(writes,[secret]);
+    });
+  }
+}

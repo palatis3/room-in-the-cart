@@ -577,9 +577,8 @@ export class WebApp {
     const hasCode = Boolean(this.invitation?.trim());
     main.append(this.el('h1', this.t(hasCode ? 'Continue with your invitation' : 'Enter an invitation code')));
     if (!this.redemption) {
-      main.append(this.el('p', this.t(hasCode
-        ? 'Confirm the household and your role with the person who invited you. An invitation can let you send your own requests or view selected shopping instructions.'
-        : 'Open the link from your household, or enter its invitation code below.')));
+      if(!hasCode)main.append(this.el('p',this.t('Open the link from your household, or enter its invitation code below.')));
+      main.append(this.el('p',this.t('You’ll see the household name after you join. Before joining, ask the person who invited you which household this is and what you’ll be able to do.')));
     }
     const form=this.el('form');
     if(hasCode){

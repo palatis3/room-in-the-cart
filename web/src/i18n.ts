@@ -112,7 +112,7 @@ const es: Record<string, string> = {
   'Ask the shopper':'Pedir a quien hace la compra', 'Your requests':'Tus solicitudes',
   'Current instructions':'Instrucciones actuales', 'Language':'Idioma', 'English':'Inglés', 'Spanish':'Español',
   'Public help':'Ayuda pública', 'Support options':'Opciones de soporte', 'Leave without joining':'Salir sin unirme',
-  'Confirm the household and your role with the person who invited you. An invitation can let you send your own requests or view selected shopping instructions.':'Confirma el hogar y tu función con la persona que te invitó. Según la invitación, puedes enviar tus propias solicitudes o consultar instrucciones de compra seleccionadas.',
+  'You’ll see the household name after you join. Before joining, ask the person who invited you which household this is and what you’ll be able to do.':'Verás el nombre del hogar después de unirte. Antes de unirte, pregúntale a la persona que te invitó de qué hogar se trata y qué podrás hacer.',
   'Loading…':'Cargando…', 'Continue with your invitation':'Continuar con tu invitación',
   'You joined {household}.':'Te uniste a {household}.',
   'You can track your own grocery requests here.':'Aquí puedes consultar el estado de tus propias solicitudes de productos.',
