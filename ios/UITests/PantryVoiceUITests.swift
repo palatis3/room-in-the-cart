@@ -645,7 +645,17 @@ import XCTest
     private func enterCommand(_ wording: String) {
         tapPantryEntry(app.buttons["pantry.voiceEntry"])
         assertDictationIdle()
-        fill(wording, into: "pantry.voiceText")
+        let field = element("pantry.voiceText")
+        reveal(field)
+        let bounds = app.frame
+        let visible = field.frame.intersection(bounds)
+        XCTAssertFalse(visible.isEmpty)
+        // On iOS 17 the multiline editor's synthesized AX tap can miss its editable surface.
+        app.coordinate(withNormalizedOffset: .zero)
+            .withOffset(CGVector(dx: visible.midX - bounds.minX, dy: visible.midY - bounds.minY)).tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 8))
+        app.typeText(wording)
+        XCTAssertEqual(field.value as? String, wording)
         dismissVoiceKeyboard()
         tap(app.buttons["pantry.voiceReview"])
         XCTAssertFalse(element("pantry.voice.listening").exists)
