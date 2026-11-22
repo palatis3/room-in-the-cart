@@ -70,6 +70,7 @@ const es: Record<string, string> = {
   'The original suggestion was not accepted because its reviewed instructions changed. Review the current instructions before starting a new suggestion.':'No se aceptó la sugerencia original porque cambiaron las instrucciones consultadas. Revisa las instrucciones actuales antes de iniciar otra sugerencia.',
   'Review current instructions':'Revisar instrucciones actuales', 'Review the current instructions before sending again.':'Revisa las instrucciones actuales antes de volver a enviar.',
 
+  'Household details are hidden until access is verified. Keep this page open, reconnect, and select Refresh.':'Los datos del hogar están ocultos hasta que se verifique el acceso. Mantén esta página abierta, vuelve a conectarte y selecciona Actualizar.',
   'Could not load your account. Refresh to try again.':'No se pudo cargar tu cuenta. Actualiza para volver a intentarlo.',
   'Connect to load sign-in options.':'Conéctate para cargar las opciones de inicio de sesión.',
   'Email sign-in is not available yet.':'El inicio de sesión por correo aún no está disponible.',

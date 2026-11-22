@@ -8,8 +8,8 @@ import {WebApp} from '../dist/app.js';
 const session=(actor='a',role='contributor')=>({authenticated:true,role,household:{id:'household-'+actor,label:'Household '+actor},memberId:'member-'+actor,shopId:'shop-'+actor,replayWindow:{id:'window-'+actor,expiresAt:'2099-01-01T00:00:00Z'},csrf:'csrf',enrolled:true,queueConsent:false,...(['helper','editor'].includes(role)?{grantId:'grant-'+actor}:{})});
 const row=()=>({requestId:'request-a',shopId:'shop-a',revision:1,originalItem:'PRIVATE OWN REQUEST',ownQuantity:null,authoredAt:'2026-11-06T12:00:00Z',receivedAt:'2026-11-06T12:00:01Z',route:'current',status:'pending',ownActionAllowed:true,clarification:null,followupTo:null});
 const settle=async root=>{const end=Date.now()+1500;do{await new Promise(r=>setTimeout(r,5));assert.ok(Date.now()<end);}while(root.querySelector('main')?.getAttribute('aria-busy')==='true');};
-async function setup(t,overrides={}){
- const dom=new JSDOM('<div id="app"></div>',{url:'https://fixture.test/requests'});t.after(()=>dom.window.close());
+async function setup(t,overrides={},language='en'){
+ const dom=new JSDOM('<div id="app"></div>',{url:'https://fixture.test/requests?lang='+language});t.after(()=>dom.window.close());
  const root=dom.window.document.getElementById('app');
  const api={session:async()=>session(),requests:async()=>[row()],authState:async()=>({available:false,authenticated:false,csrf:null}),receivedProposals:async()=>({proposals:[],nextCursor:null}),...overrides};
  const app=new WebApp(root,api,new Outbox(new IDBFactory()));await app.start();return {app,api,root,dom};
@@ -22,11 +22,26 @@ test('history suspension hides own request and draft until delayed same-actor au
  app.resumeFromHistory();assert.equal(root.querySelector('#item'),null);release();await settle(root);
  assert.match(root.textContent,/PRIVATE OWN REQUEST/);assert.equal(root.querySelector('#item').value,'UNSENT PRIVATE DRAFT');
 });
-test('history network failure stays closed; explicit fresh authorization recovers the same-actor draft',async t=>{
- const {app,api,root,dom}=await setup(t);draft(dom);
- api.session=async()=>{throw new ApiError('network',0);};app.suspendForHistory();app.resumeFromHistory();await settle(root);
- assert.doesNotMatch(root.textContent,/PRIVATE OWN REQUEST|Household a/);assert.equal(root.querySelector('#item'),null);assert.match(root.textContent,/Could not load/);
- api.session=async()=>session();await app.start();assert.equal(root.querySelector('#item').value,'UNSENT PRIVATE DRAFT');
+for (const [language, expected, refresh] of [
+ ['en', 'Household details are hidden until access is verified. Keep this page open, reconnect, and select Refresh.', 'Refresh'],
+ ['es', 'Los datos del hogar están ocultos hasta que se verifique el acceso. Mantén esta página abierta, vuelve a conectarte y selecciona Actualizar.', 'Actualizar']
+]) test(`offline return explains how to recover the same private draft in ${language}`, async t => {
+ const {app,api,root,dom} = await setup(t, {}, language);
+ draft(dom);
+ api.session = async () => { throw new ApiError('network', 0); };
+ app.suspendForHistory();
+ app.resumeFromHistory();
+ await settle(root);
+ assert.equal(root.querySelector('[role="status"]').textContent, expected);
+ assert.doesNotMatch(root.textContent, /PRIVATE OWN REQUEST|Household a|UNSENT PRIVATE DRAFT/);
+ assert.equal(root.querySelector('#item'), null);
+ const retry = root.querySelector('main button');
+ assert.equal(retry.textContent, refresh);
+ api.session = async () => session();
+ retry.click();
+ await settle(root);
+ assert.equal(root.querySelector('#item').value, 'UNSENT PRIVATE DRAFT');
+ assert.match(root.textContent, /PRIVATE OWN REQUEST/);
 });
 test('changed actor on history return clears the previous draft and request',async t=>{
  const {app,api,root,dom}=await setup(t);draft(dom);app.suspendForHistory();api.session=async()=>session('b');api.requests=async()=>[];

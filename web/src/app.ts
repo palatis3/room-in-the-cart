@@ -481,6 +481,7 @@ export class WebApp {
     }
     else if(e.status===422) this.notice='Check your entry and try again.';
     else if(this.suggestionsState==='unavailable')this.notice='Received suggestions could not be checked. Retry recovery before sending another suggestion.';
+    else if(purpose==='load' && this.historySuspended && this.pendingInvitation===null && e.status===0)this.notice='Household details are hidden until access is verified. Keep this page open, reconnect, and select Refresh.';
     else if(purpose==='load')this.notice='Could not load your account. Refresh to try again.';
     else if(this.proposalReceipt)this.notice='Suggestion status could not be checked. Its earlier receipt is still confirmed. Try again.';
     else if(this.proposalIntent)this.notice='Suggestion receipt is unconfirmed. Retry the original suggestion. It is only kept on this page; closing or reloading loses this local copy.';

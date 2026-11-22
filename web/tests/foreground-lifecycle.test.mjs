@@ -28,7 +28,7 @@ test('changed foreground actor clears previous unsent draft and own requests',as
  visibility(dom,'visible');concealed(root);release();await idle(root);assert.equal(root.querySelector('#item').value,'');assert.doesNotMatch(root.textContent,/Household a|PRIVATE OWN REQUEST/);assert.match(root.textContent,/Household b/);
 });
 test('offline foreground stays concealed and explicit same-actor recovery restores draft',async t=>{
- const {dom,root,api,app,ApiError}=await setup(t);draft(dom);api.session=async()=>{throw new ApiError('network',0);};visibility(dom,'visible');await idle(root);concealed(root);assert.match(root.textContent,/Could not load/);api.session=async()=>current();await app.start();assert.equal(root.querySelector('#item').value,'UNSENT PRIVATE DRAFT');
+ const {dom,root,api,app,ApiError}=await setup(t);draft(dom);api.session=async()=>{throw new ApiError('network',0);};visibility(dom,'visible');await idle(root);concealed(root);assert.match(root.textContent,/Keep this page open, reconnect, and select Refresh/);api.session=async()=>current();await app.start();assert.equal(root.querySelector('#item').value,'UNSENT PRIVATE DRAFT');
 });
 for(const order of ['visibility-first','pageshow-first'])test(`${order} BFCache/visibility notifications share one held authority read`,async t=>{
  const {dom,root,api}=await setup(t);draft(dom);let release,reads=0;
