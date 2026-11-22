@@ -58,6 +58,7 @@ struct ComparisonView: View {
     @EnvironmentObject private var household: HouseholdModel
     @EnvironmentObject private var child: GuardianChildCoordinator
     private let allowsPersonalPrices: Bool
+    private let applyEdits: ((ComparisonDraft) -> Void)?
     private var priceIdentity: CapturePrivateIdentity? {
         guard allowsPersonalPrices, scene == .active, UIApplication.shared.isProtectedDataAvailable,
               !child.presented, household.projection?.grantId == nil else { return nil }
@@ -81,8 +82,10 @@ struct ComparisonView: View {
     @AccessibilityFocusState private var resultFocused: ResultFocus?
     @FocusState private var inputFocused: String?
 
-    init(draft: ComparisonDraft = ComparisonDraft(), saved: SavedComparison? = nil, allowsPersonalPrices: Bool = true) {
+    init(draft: ComparisonDraft = ComparisonDraft(), saved: SavedComparison? = nil, allowsPersonalPrices: Bool = true,
+         applyEdits: ((ComparisonDraft) -> Void)? = nil) {
         self.allowsPersonalPrices = allowsPersonalPrices
+        self.applyEdits = applyEdits
         let model = ComparisonModel(draft: draft, savedRevision: saved?.revision ?? 0)
         model.savedAt = saved?.savedAt
         _model = StateObject(wrappedValue: model)
@@ -98,6 +101,14 @@ struct ComparisonView: View {
                         ToolbarItem(placement: .topBarTrailing) { toolbarSaveControl }
                     }
                     .sheet(item: $missingInput) { input in missingInputEditor(input) }
+                    .navigationDestination(isPresented: $editingPreviousResult) {
+                        // Back discards this editor's private working copy, including invalid input.
+                        ComparisonView(draft: model.draft, allowsPersonalPrices: allowsPersonalPrices) { revised in
+                            model.draft = revised
+                            editingPreviousResult = false
+                            updateResult()
+                        }
+                    }
             } else {
                 editor
                     .toolbar {
@@ -110,7 +121,7 @@ struct ComparisonView: View {
                                 }
                                 .accessibilityIdentifier("comparison.done." + inputFocused)
                             }
-                        } else if editingPreviousResult {
+                        } else if applyEdits != nil {
                             ToolbarItem(placement: .topBarTrailing) {
                                 Button(tr("Recalculate")) {
                                     updateResult()
@@ -194,12 +205,16 @@ struct ComparisonView: View {
         inputFocused = nil
         missingInput = nil
         model.compare()
+        if let applyEdits, model.result != nil {
+            applyEdits(model.draft)
+            return
+        }
         reviewing = model.result != nil
         resultFocused = reviewing ? .summary : .error
     }
 
     private var editRow: some View {
-        Button { editingPreviousResult = true; reviewing = false } label: {
+        Button { editingPreviousResult = true } label: {
             HStack(spacing: 12) {
                 Label(tr("Edit"), systemImage: "pencil")
                 Spacer(minLength: 8)

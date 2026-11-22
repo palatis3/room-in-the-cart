@@ -983,6 +983,64 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertEqual(app.descendants(matching: .any).matching(identifier: "savedComparison").count, 0)
     }
 
+    func testBackingOutOfComparisonEditsRestoresTheOriginalResultAndSavedStatus() {
+        launch()
+        openEmptyComparison()
+        let recalculate = app.navigationBars.buttons["comparison.recalculate"]
+        XCTAssertFalse(recalculate.exists)
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        XCTAssertTrue(element("newComparison").waitForExistence(timeout: 5))
+
+        openEmptyComparison()
+        type([("itemName", "Avena"), ("needed", "600"), ("aQuantity", "400"), ("aPrice", "3.25"),
+              ("bQuantity", "750"), ("bPrice", "5.45")])
+        compare()
+        let menu = app.buttons["comparison.setAsidePack"]
+        revealFullyInComparison(menu)
+        menu.tap()
+        tap(app.buttons["Pack A"])
+        let unsaved = app.buttons["comparison.toolbarSave"]
+        let saved = element("comparison.toolbarSaved")
+
+        func backToResult() {
+            XCTAssertTrue(recalculate.waitForExistence(timeout: 5))
+            app.navigationBars.buttons.element(boundBy: 0).tap()
+            XCTAssertTrue(element("comparisonResultsScroll").waitForExistence(timeout: 5))
+            revealFullyInComparison(menu)
+            XCTAssertEqual(menu.value as? String, "Pack A")
+            XCTAssertTrue(element("aCostSummary").label.contains("$6.50"))
+            XCTAssertTrue(element("bCostSummary").label.contains("$5.45"))
+        }
+
+        editComparisonResult()
+        backToResult()
+        XCTAssertTrue(unsaved.exists)
+        tap(unsaved)
+        XCTAssertTrue(saved.waitForExistence(timeout: 10))
+        app.terminate()
+        launch(reset: false)
+        reopenSavedRecord(recordsLabel: "Records", item: "Avena")
+        editComparisonResult()
+        backToResult()
+        XCTAssertTrue(saved.exists)
+
+        editComparisonResult()
+        type([("aQuantity", "9")])
+        XCTAssertNotEqual(comparisonInput("aQuantity").value as? String, "400")
+        backToResult()
+        XCTAssertTrue(saved.exists)
+        XCTAssertFalse(unsaved.exists)
+        app.terminate()
+        launch(reset: false)
+        reopenSavedRecord(recordsLabel: "Records", item: "Avena")
+        editComparisonResult()
+        let amount = comparisonInput("aQuantity")
+        reveal(amount)
+        XCTAssertEqual(amount.value as? String, "400")
+        backToResult()
+        XCTAssertTrue(saved.exists)
+    }
+
     func testKnownComparisonSavesAndReopensWithItemOnlyLimit() throws {
         launch()
         XCTAssertEqual(app.buttons["newComparison"].label, "Compare packs")
@@ -1236,6 +1294,10 @@ final class RoomInTheCartUITests: XCTestCase {
         packB.tap()
 
         XCTAssertTrue(packB.waitForNonExistence(timeout: 5))
+        editComparisonResult()
+        XCTAssertTrue(app.navigationBars.buttons["comparison.recalculate"].waitForExistence(timeout: 5))
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        XCTAssertTrue(element("comparisonResultsScroll").waitForExistence(timeout: 5))
         revealFullyInComparison(menu)
         XCTAssertEqual(menu.value as? String, "Paquete B")
         menu.tap()
