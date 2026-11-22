@@ -15086,6 +15086,23 @@
         }
       }
     },
+    "Saved remaining estimate for %@: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved remaining estimate for %1$@: %2$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estimación guardada de lo que queda de %1$@: %2$@"
+          }
+        }
+      }
+    },
     "Recorded one use of %@.": {
       "extractionState": "manual",
       "localizations": {

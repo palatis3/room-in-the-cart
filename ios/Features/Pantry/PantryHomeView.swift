@@ -79,9 +79,9 @@ struct PantryHomeView: View {
                     }
                 }))
         }
-        .onDisappear { model.dismissUseReceipt() }
+        .onDisappear { model.dismissConsumptionReceipt() }
         .onChange(of: sheet?.id) { _, destination in
-            if destination != nil { model.dismissUseReceipt() }
+            if destination != nil { model.dismissConsumptionReceipt() }
         }
         .navigationTitle(pantryText("My Pantry"))
         .navigationBarTitleDisplayMode(.inline)

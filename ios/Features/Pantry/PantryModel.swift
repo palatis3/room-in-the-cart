@@ -23,11 +23,14 @@ struct PantryReviewedFood: Equatable {
 final class PantryModel: ObservableObject, PantryErasureObserver {
     enum Phase: Equatable { case idle, ready, migrationRequired, accessDenied, unavailable }
     enum Notice: Equatable {
-        case saved, recordedUse(String), saveFailed, stale, loadFailed, invalidEntry, reservationReviewRequired, insufficientFree, partialReleaseInvalid, changeTooLarge
+        case saved, recordedUse(String), savedEstimate(food: String, wording: String)
+        case saveFailed, stale, loadFailed, invalidEntry, reservationReviewRequired, insufficientFree, partialReleaseInvalid, changeTooLarge
 
-        var isSaved: Bool {
+        var isSaved: Bool { self == .saved || isConsumptionReceipt }
+
+        var isConsumptionReceipt: Bool {
             switch self {
-            case .saved, .recordedUse: true
+            case .recordedUse, .savedEstimate: true
             default: false
             }
         }
@@ -156,15 +159,19 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
         guard generation == token, phase == .ready else { throw PantryConsumptionFailure.unavailable }
         guard notice != .stale else { throw PantryConsumptionFailure.stale }
         guard notice == .saved, pending == nil else { throw PantryConsumptionFailure.unavailable }
-        if let selections = entry.consumption?.selections, selections.count == 1,
-           let selection = selections.first, selection.use.usageKind != nil,
-           let lot = snapshot?.lots.first(where: { $0.id == selection.lotID }) {
+        guard let current = snapshot, current.state.revision == basis.revision + 1,
+              let selections = entry.consumption?.selections, selections.count == 1,
+              let selection = selections.first,
+              let lot = current.lots.first(where: { $0.id == selection.lotID }) else { return }
+        if selection.use.usageKind != nil {
             notice = .recordedUse(lot.name)
+        } else if case .low(let wording) = selection.use, lot.countWording == wording {
+            notice = .savedEstimate(food: lot.name, wording: wording)
         }
     }
 
-    func dismissUseReceipt() {
-        if case .recordedUse = notice { notice = nil }
+    func dismissConsumptionReceipt() {
+        if notice?.isConsumptionReceipt == true { notice = nil }
     }
 
     private func requireConsumptionAccess() throws {
@@ -209,7 +216,7 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
     func saveReceipt(_ review: PantryReceiptReview) async throws {
         guard canEdit else { throw PantryReceiptError.stale }
         let token = generation
-        dismissUseReceipt()
+        dismissConsumptionReceipt()
         busy = true
         defer { if token == generation { busy = false } }
         willMutateOrRecover?()
@@ -431,7 +438,7 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
     private func changeReceipt(_ reviewedState: InventoryState, change: () async throws -> Void) async throws {
         guard canEdit, snapshot?.state == reviewedState else { throw PantryReceiptError.stale }
         let token = generation
-        dismissUseReceipt()
+        dismissConsumptionReceipt()
         busy = true
         defer { if token == generation { busy = false } }
         try await change()
@@ -466,11 +473,8 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
             let current = try await repository.loadForEditing(at: clock(), waitForShelfRead: true)
             guard token == generation else { return }
             if pending == nil {
-                // Returning to the shelf rereads the pantry. Only the same inventory can retain its use receipt.
-                switch notice {
-                case .recordedUse where snapshot?.state == current.state: break
-                default: notice = nil
-                }
+                // Only the same authorized inventory can retain a named receipt on return.
+                if notice?.isConsumptionReceipt != true || snapshot?.state != current.state { notice = nil }
                 requiresFreshReview = false
             }
             snapshot = current; phase = .ready

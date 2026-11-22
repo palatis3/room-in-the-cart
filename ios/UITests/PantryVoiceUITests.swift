@@ -455,6 +455,19 @@ import XCTest
         XCTAssertEqual(app.switches["packageDate.hasDay"].value as? String, "0")
     }
 
+    func testReturningFromConfirmedRemainingEstimateNamesTheFoodAndOriginalWording() {
+        openPantry(reset: true)
+        _ = addLot("Ketchup", amount: "1")
+        enterCommand("My ketchup bottle is almost empty.")
+        tap(app.buttons["pantry.voicePreview"])
+        tap(app.buttons["pantry.voiceConfirm"])
+        XCTAssertTrue(element("pantry.voiceSavedWording.0").waitForExistence(timeout: 10))
+        tap(app.buttons["Done"])
+        let notice = element("pantry.status")
+        XCTAssertTrue(notice.wait(for: \.label, toEqual: "Saved remaining estimate for Ketchup: almost empty", timeout: 8),
+                      app.debugDescription)
+    }
+
     func testReturningFromConfirmedFlourUseShowsTheSameReceiptOnce() {
         openPantry(reset: true)
         let flour = addLot("Flour", amount: "2")
