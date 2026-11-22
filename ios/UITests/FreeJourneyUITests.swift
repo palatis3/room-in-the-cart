@@ -292,6 +292,7 @@ import XCTest
         launch(reset: true)
         tap(app.tabBars.buttons["Pantry"])
         tap(app.buttons["pantry.setup.products"])
+        fill("012345678905", into: "productBatch.code", requireDone: true)
         fill("Butter beans", into: "productBatch.label", requireDone: true, control: app.textViews["productBatch.label"])
         tap(app.buttons["productBatch.add"])
         let product = app.buttons["productBatch.row.0"]
@@ -316,6 +317,19 @@ import XCTest
         XCTAssertTrue(summary.waitForExistence(timeout: 8))
         XCTAssertTrue(summary.label.contains("Added as 1 package"), summary.label)
         XCTAssertTrue(summary.label.contains("Usable amount unknown"), summary.label)
+
+        tap(app.navigationBars.buttons.firstMatch)
+        tap(app.buttons["pantry.findPack"])
+        let barcode = app.textFields["pack.find.code"]
+        tap(barcode)
+        barcode.typeText("012345678905")
+        tap(app.buttons["pack.find.resolve"])
+        let found = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "pack.find.lot."))
+        reveal(found.firstMatch)
+        XCTAssertEqual(found.count, 1)
+        XCTAssertTrue(found.firstMatch.label.contains("Butter beans"))
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "pack.find.recent.")).firstMatch.exists,
+                       "Recording a physical barcode must not invent an exact pack size.")
     }
 
     func testUnknownPantryBarcodeCanBeReviewedCountedAndFoundAgain() {

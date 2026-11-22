@@ -64,6 +64,7 @@ private struct PackLookupInput: View {
                 Section(pantryText("Recent confirmed packs")) {
                     ForEach(matches.prefix(30), id: \.key) { pack in
                         Button(pack.label) { if authorized() && access.authorized() { clearResult(); selected = pack } }
+                            .accessibilityIdentifier("pack.find.recent." + pack.id.uuidString)
                     }
                 }
             }
