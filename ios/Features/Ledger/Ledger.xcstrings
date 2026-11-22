@@ -1,6 +1,22 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Current list: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current list: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lista actual: %@"
+          }
+        }
+      }
+    },
     "This pickup changed. Review the current details alongside your edits before saving.": {
       "localizations": {
         "en": {

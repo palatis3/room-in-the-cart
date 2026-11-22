@@ -240,8 +240,8 @@ struct LedgerHomeView: View {
         }
         .disabled(model.saving || model.hasPendingSave)
         .accessibilityIdentifier("ledgerShopPicker")
-        .confirmationDialog(shop.title, isPresented: $showingShopPicker, titleVisibility: .visible) {
-            ForEach(model.workspace.shops, id: \.id) { item in
+        .confirmationDialog(ledgerFormat("Current list: %@", shop.title), isPresented: $showingShopPicker, titleVisibility: .visible) {
+            ForEach(model.workspace.shops.filter { $0.id != shop.id }, id: \.id) { item in
                 Button(item.title) { Task { await model.selectShop(item.id, onSelected: onShopSelected) } }
             }
             Button(ledgerText("Rename pickup")) { sheet = .renameShop(id: shop.id, title: shop.title) }

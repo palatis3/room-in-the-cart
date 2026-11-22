@@ -52,6 +52,7 @@ import XCTest
         XCTAssertTrue(handled.waitForExistence(timeout: 5))
         app.buttons["Done"].tap()
         shopPicker.tap()
+        XCTAssertTrue(app.staticTexts["Current list: This trip"].waitForExistence(timeout: 5))
         app.buttons["Previous market"].tap()
         let previousMarket = app.buttons.matching(identifier: "ledgerShopPicker")
             .matching(NSPredicate(format: "label == %@", "Previous market")).firstMatch
