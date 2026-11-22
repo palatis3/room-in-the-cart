@@ -845,12 +845,11 @@ struct VoicePantryRow {
 
     private func savedSection(_ saved: [InventoryLot]) -> some View {
         Section {
-            Label {
-                if saved.count == 1, let lot = saved.first, recordedUseIDs.contains(lot.id) {
-                    Text(pantryNotice(.recordedUse(lot.name)))
-                } else { Text(pantryText("Food saved on this device.")) }
-            } icon: { Image(systemName: "checkmark.circle").accessibilityHidden(true) }
-            .accessibilityIdentifier("pantry.voiceSaved")
+            if saved.count == 1, let lot = saved.first, recordedUseIDs.contains(lot.id) {
+                PantryNoticeLabel(notice: .recordedUse(lot.name), identifier: "pantry.voiceSaved")
+            } else {
+                PantryNoticeLabel(notice: .saved, identifier: "pantry.voiceSaved")
+            }
             ForEach(Array(saved.enumerated()), id: \.element.id) { index, lot in
                 Text(pantryLocationName(lot.location))
                 if let wording = lot.countWording {

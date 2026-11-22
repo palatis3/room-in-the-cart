@@ -21,6 +21,20 @@ struct PantryJournalHeading: View {
     }
 }
 
+/// Keep the status symbol and its wording in one text element, including in native list cells.
+struct PantryNoticeLabel: View {
+    let notice: PantryModel.Notice
+    let identifier: String
+
+    var body: some View {
+        let title = pantryNotice(notice)
+        let symbol = Image(systemName: notice.isSaved ? "checkmark.circle" : "exclamationmark.circle")
+        Text("\(symbol)  \(title)")
+            .accessibilityLabel(Text(verbatim: title))
+            .accessibilityIdentifier(identifier)
+    }
+}
+
 enum PantrySheet: Identifiable {
     case add, found(InventoryLocation), recount(UUID), purchase(PantryRecentPurchase), review, receipt, products, prices, aliases
     var id: String {
@@ -127,14 +141,8 @@ struct PantryHomeView: View {
                 JournalList {
                     if let notice = model.notice {
                         Section {
-                            Label {
-                                Text(pantryNotice(notice))
-                            } icon: {
-                                Image(systemName: notice.isSaved ? "checkmark.circle" : "exclamationmark.circle")
-                                    .accessibilityHidden(true)
-                            }
+                            PantryNoticeLabel(notice: notice, identifier: "pantry.status")
                                 .foregroundStyle(notice.isSaved ? Theme.ink : Theme.warning)
-                                .accessibilityIdentifier("pantry.status")
                         }
                     }
                     if model.pending != nil {
