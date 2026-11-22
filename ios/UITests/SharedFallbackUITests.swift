@@ -177,6 +177,31 @@ final class SharedFallbackUITests: XCTestCase {
         verifyRetainedAccessAfterExpiry()
     }
 
+    func testPackNameDoneDismissesKeyboardAndTheNextQuantityRemainsEditable() {
+        launch()
+        tap(app.buttons["fallback.target." + target])
+        toggle(app.switches["fallback.trip.include"])
+        let larger = candidateID(1)
+        toggle(app.switches["fallback.select." + larger])
+        let details = app.buttons["fallback.food." + larger]
+        tap(details)
+        toggle(app.switches["Enter a reviewed pack offer"])
+        enter("Two wraps", "Pack name", done: "fallback.food.done")
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 3))
+        let quantity = app.textFields["Usable food per pack"]
+        tap(quantity)
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 3))
+        quantity.typeText("2")
+        XCTAssertEqual(quantity.value as? String, "2")
+        back("Review ingredients, food and time")
+        tap(details)
+        let name = app.textFields["Pack name"]
+        reveal(name)
+        XCTAssertEqual(name.value as? String, "Two wraps")
+        reveal(quantity)
+        XCTAssertEqual(quantity.value as? String, "2")
+    }
+
     func testFiveUsableWrapsProtectLunchAndCompareUsualDinnerWithTwoPackTrip() throws {
         launch()
         tap(app.buttons["fallback.target." + target])
