@@ -1,6 +1,40 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Only the servings changed. Keep these amounts set aside for this dinner in your saved checkout.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the servings changed. Keep these amounts set aside for this dinner in your saved checkout."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo cambió el número de porciones. Conserva estas cantidades reservadas para esta cena en la copia guardada de tu compra."
+          }
+        }
+      }
+    },
+    "Keep these pantry allocations": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep these pantry allocations"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conservar estas cantidades reservadas"
+          }
+        }
+      }
+    },
     "Review before buying": {
       "extractionState": "manual",
       "localizations": {

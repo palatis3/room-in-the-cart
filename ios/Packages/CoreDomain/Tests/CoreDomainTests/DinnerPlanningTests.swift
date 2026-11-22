@@ -20,6 +20,26 @@ final class DinnerPlanningTests: XCTestCase {
     }
     private func roundTrip<T: Codable>(_ value: T) throws -> T { try JSONDecoder().decode(T.self, from: JSONEncoder().encode(value)) }
 
+    func testServingOnlyChildRequiresSameIngredientAmountsAndNoInterveningRevision() throws {
+        var previous = ShoppingLedger()
+        let id = try previous.chooseMeal(meal(), at: now)
+        let row = try XCTUnwrap(previous.mealOccurrences.first?.ingredientContributionIDs.first)
+        func edited(_ amounts: [DinnerQuantityEdit]) throws -> ShoppingLedger {
+            var result = previous
+            try result.applyDinnerChanges([.adjust(.init(occurrenceID: id, servings: try Rational(4),
+                groups: [], quantities: amounts))], expectedRevisionID: previous.revisionID,
+                revisionID: UUID(), operationID: UUID(), at: now)
+            return result
+        }
+        let exact = try edited([.init(contributionID: row, quantity: q(6))])
+        XCTAssertTrue(try roundTrip(exact).changesOnlyServings(of: id, from: roundTrip(previous)))
+        XCTAssertFalse(exact.changesOnlyServings(of: UUID(), from: previous))
+        XCTAssertFalse(try edited([.init(contributionID: row, quantity: q(7))]).changesOnlyServings(of: id, from: previous))
+        var later = exact
+        try later.addManualLine(name: "Coffee", quantity: q(1))
+        XCTAssertFalse(later.changesOnlyServings(of: id, from: previous))
+    }
+
     func testGuestChangeKeepsServingsOutsideNamedGroups() throws {
         var ledger = ShoppingLedger()
         var state = DinnerPlanningState()

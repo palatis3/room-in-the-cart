@@ -1320,6 +1320,21 @@ struct PickupPersistenceLocation {
         }
     }
 
+    /// Rebind the verified meal source of the same gross draft. Preserve the entire basket and its terms.
+    func saveDinnerServingSource(_ review: DinnerServingAllocationReview, ledger: LedgerModel,
+                                 authorize: @escaping @MainActor () -> Bool) async throws -> Bool {
+        guard authorize(), ledger.ready, !ledger.saving, !ledger.hasPendingSave, !ledger.hasPendingPantryProjection,
+              !ledger.hasPendingLedgerDeletion, ledger.sourceWorkspaceID == review.source.ledgerWorkspaceID,
+              ledger.shop == review.source.shop, ledger.revision == review.ledgerRevision,
+              var value = journeys.first(where: { $0.id == review.source.shop.id }),
+              value.revision == review.journeyRevision else { throw DinnerPlanningError.stalePreview }
+        value.mealSource = review.source
+        value.needDetails = review.source.details
+        value.ledgerSourceRevisionID = review.source.shop.revisionID
+        return await save(value, selecting: false, authorize: authorize, reviewedLedger: try CheckoutLedgerBasis(ledger: ledger),
+                          reviewedPantryBasis: review.basis)
+    }
+
     @discardableResult func change(reviewedLedger: CheckoutLedgerBasis? = nil, _ edit: (inout PickupJourney) throws -> Void) async -> Bool {
         guard var value = journey, !saving, pending == nil else { return false }
         do { try edit(&value); return await save(value, reviewedLedger: reviewedLedger) }

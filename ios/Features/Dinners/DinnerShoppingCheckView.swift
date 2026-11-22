@@ -391,6 +391,7 @@ private struct DinnerPurchaseChoices: View {
     let linked: Set<UUID>
     let identity: CapturePrivateIdentity
     let authorize: @MainActor () -> Bool
+    @State private var servingReview: DinnerServingAllocationReview?
     @State private var allocation: DinnerAllocationChoice?
     @State private var review: DinnerPurchaseDecision?
     @State private var failed = false
@@ -427,9 +428,30 @@ private struct DinnerPurchaseChoices: View {
                     }
                 }
             } else if pickup.journeys.first(where: { $0.id == shop.id })?.ledgerSourceRevisionID != shop.revisionID {
-                Text(dinnerText("Review this list’s checkout copy to allocate confirmed pantry food to its meal needs. Saving the copy keeps pantry counts intact."))
+                if let servingReview {
+                    Text(dinnerText("Only the servings changed. Keep these amounts set aside for this dinner in your saved checkout."))
+                    ForEach(servingReview.choices) { choice in
+                        LabeledContent(choice.request.itemName, value: ledgerQuantity(choice.request.needed))
+                    }
+                    Button(dinnerText("Keep these pantry allocations")) {
+                        Task {
+                            guard !busy else { return }
+                            busy = true
+                            let saved = try? await servingReview.save(ledger: ledger, pickup: pickup, authorize: authorize)
+                            self.servingReview = nil
+                            failed = saved != true
+                            busy = false
+                        }
+                    }.buttonStyle(PrimaryAction()).disabled(busy)
+                } else {
+                    Text(dinnerText("Review this list’s checkout copy to allocate confirmed pantry food to its meal needs. Saving the copy keeps pantry counts intact."))
+                }
                 NavigationLink(dinnerText("Review shopping allocations")) {
                     LedgerCheckoutEntry(ledger: ledger, pickup: pickup)
+                }.task(id: shop.revisionID) {
+                    guard authorize() else { return }
+                    servingReview = try? DinnerServingAllocationReview(ledger: ledger, pickup: pickup, shop: shop,
+                        occurrenceID: occurrenceID, identity: identity, linked: linked)
                 }
             } else if !covered.isEmpty && covered == linked {
                 Text(dinnerText("Putting these back restores the purchases. The meal keeps its allocation in the checkout copy."))
@@ -534,6 +556,81 @@ extension PantryPackStockReview.Context {
             hold.lotID != nil && hold.priority == .protected && coverage[hold.id]?.issues.isEmpty == true &&
                 coverage[hold.id]?.shortfall?.amount == .zero
         }) else { throw DinnerPlanningError.reviewRequired("pantryProduct") }
+    }
+}
+
+/// A serving-only edit can reuse the unmodified draft originally saved by this dinner.
+@MainActor struct DinnerServingAllocationReview {
+    let source: PickupCheckoutMealSource
+    let choices: [LedgerPackSelection]
+    let basis: LedgerCanonicalPackStockEvidence.Basis
+    let ledgerRevision: Int64
+    let journeyRevision: Int64
+    private let occurrenceID: UUID
+    private let identity: CapturePrivateIdentity
+
+    init(ledger: LedgerModel, pickup: PickupModel, shop: ShoppingLedger, occurrenceID: UUID,
+         identity: CapturePrivateIdentity, linked: Set<UUID>) throws {
+        guard identity.subject == nil, identity.householdID == nil, pickup.currentDinnerActorID == identity.actorID,
+              !linked.isEmpty, ledger.shop == shop, let id = ledger.sourceWorkspaceID,
+              let context = try pickup.quickGroceryPantryContext(ledgerWorkspaceID: id),
+              let journey = pickup.journeys.first(where: { $0.id == shop.id }), let previous = journey.mealSource,
+              previous.ledgerWorkspaceID == id, journey.ledgerSourceRevisionID == previous.shop.revisionID,
+              shop.changesOnlyServings(of: occurrenceID, from: previous.shop),
+              let receipt = ledger.workspace.dinnerPlanning.applyReceipts.first(where: { $0.revisionID == shop.revisionID }),
+              receipt.proposal.namespace == "local:\(id.uuidString)", receipt.proposal.shopID == shop.id,
+              receipt.proposal.baseRevisionID == previous.shop.revisionID, receipt.proposal.authorID == identity.actorID.uuidString,
+              receipt.appliedBy == identity.actorID.uuidString, receipt.proposal.changes.count == 1,
+              case .adjust(let edit) = receipt.proposal.changes[0], edit.occurrenceID == occurrenceID,
+              let basket = journey.basket, basket.phase == .draft, basket.revisions.count == 1,
+              journey.pickup == nil, journey.closedAt == nil, journey.quote == nil, journey.mealRecovery == nil,
+              journey.cookedMeals?.isEmpty != false, journey.ledgerPackSelections.isEmpty,
+              ledger.workspace.dinnerPantryLines(shop: shop, workspaceID: id, originID: context.snapshot.state.workspaceID,
+                  actorID: identity.actorID.uuidString, occurrenceID: occurrenceID) == linked
+        else { throw DinnerPlanningError.stalePreview }
+        let bindings = ledger.workspace.dinnerPlanning.portionBindings.filter { row in shop.mealOccurrences.contains { $0.id == row.occurrenceID } }
+        let priorGross = try LedgerCheckoutAdapter.review(shop: previous.shop, workspaceRevision: ledger.revision,
+            previous: nil, bindings: previous.bindings)
+        let gross = try LedgerCheckoutAdapter.review(shop: shop, workspaceRevision: ledger.revision,
+            previous: nil, bindings: bindings)
+        guard bindings == previous.bindings, journey.ledgerBasis == shop.basis, basket.current.lines == priorGross.lines,
+              journey.context == priorGross.context, journey.cap == priorGross.cap,
+              journey.plannedNeeds == priorGross.needs, previous.needs == priorGross.sourceNeeds,
+              journey.needDetails == priorGross.details, previous.details == priorGross.details,
+              gross.lines == priorGross.lines, gross.needs == priorGross.needs, gross.sourceNeeds == priorGross.sourceNeeds
+        else { throw DinnerPlanningError.stalePreview }
+        let savedChoices = ledger.workspace.packSelections.filter { $0.shopID == shop.id }
+        let old = try LedgerCheckoutAdapter.review(shop: previous.shop, workspaceRevision: ledger.revision,
+            previous: journey, packSelections: savedChoices, workspaceID: id, pickupWorkspaceID: context.snapshot.state.workspaceID,
+            bindings: bindings, pantryContext: context, pantryIsActive: true)
+        guard Set(savedChoices.map(\.lineID)) == linked, Set(old.packSelections.map(\.lineID)) == linked,
+              old.packSelections.allSatisfy({ $0.isNoPurchase && $0.request.offerA.id == DinnerPantryProducts.atHomeOfferID })
+        else { throw DinnerPlanningError.stalePreview }
+        self.occurrenceID = occurrenceID
+        self.identity = identity
+        choices = old.packSelections
+        basis = context.dinnerBasis
+        ledgerRevision = ledger.revision
+        journeyRevision = journey.revision
+        source = .init(ledgerWorkspaceID: id, shop: shop, needs: gross.sourceNeeds, details: gross.details, bindings: bindings)
+        try source.validate()
+    }
+
+    func save(ledger: LedgerModel, pickup: PickupModel,
+              authorize: @escaping @MainActor () -> Bool) async throws -> Bool {
+        guard authorize(), pickup.currentDinnerActorID == identity.actorID,
+              try await pickup.saveDinnerServingSource(self, ledger: ledger, authorize: authorize),
+              authorize(), await pickup.refreshPantryStock(), authorize() else { return false }
+        let fresh = try DinnerPurchaseDecision(ledger: ledger, pickup: pickup, shop: source.shop, occurrenceID: occurrenceID,
+            identity: identity, linked: Set(choices.map(\.lineID)))
+        let earlier = Dictionary(uniqueKeysWithValues: choices.map { ($0.lineID, $0) })
+        guard fresh.selections.count == choices.count, fresh.selections.allSatisfy({ selection in
+            guard let choice = earlier[selection.lineID], choice.request == selection.request,
+                  let old = choice.canonicalStockEvidence, let new = selection.canonicalStockEvidence else { return false }
+            return old.basis.originID == new.basis.originID && old.materialDigest == new.materialDigest &&
+                old.partition == new.partition && old.allocations == new.allocations && old.lots == new.lots
+        }) else { return false }
+        return await fresh.save(ledger: ledger, authorize: authorize)
     }
 }
 

@@ -352,7 +352,15 @@ extension PantryPackModelRecoveryTests {
         try await reviewBowlDinner(thenCook: true)
     }
 
-    private func reviewBowlDinner(thenCook: Bool) async throws {
+    func testGrossDinnerDraftKeepsExactAllocationsAfterServingEditAndReopen() async throws {
+        try await reviewBowlDinner(thenCook: true, keepDraft: true)
+    }
+
+    func testRecountAfterServingReviewPreservesOriginalCheckoutAndRequiresNewConfirmation() async throws {
+        try await reviewBowlDinner(thenCook: true, keepDraft: true, recount: true)
+    }
+
+    private func reviewBowlDinner(thenCook: Bool, keepDraft: Bool = false, recount: Bool = false) async throws {
         let actorID = UUID()
         let f = try await fixture(privateDinnerActorID: actorID)
         try await f.ledger.configurePantryPackRecovery(f.port)
@@ -481,10 +489,12 @@ extension PantryPackModelRecoveryTests {
             workspaceID: workspaceID, pickupWorkspaceID: origin, pantryContext: live, pantryIsActive: true)
         XCTAssertEqual(net.lines.map(\.name), ["Coffee", "Tomatoes"])
         XCTAssertEqual(net.needs, gross.needs)
-        let savedBasket = try await LedgerCheckoutAdapter.apply(net, ledger: reopened, pickup: f.pickup)
-        XCTAssertTrue(savedBasket, f.pickup.error ?? "")
+        if !keepDraft {
+            let savedBasket = try await LedgerCheckoutAdapter.apply(net, ledger: reopened, pickup: f.pickup)
+            XCTAssertTrue(savedBasket, f.pickup.error ?? "")
+        }
         let persisted = try XCTUnwrap(f.pickup.journeys.first { $0.id == market.id })
-        XCTAssertEqual(persisted.basket?.current.lines.map(\.name), ["Coffee", "Tomatoes"])
+        XCTAssertEqual(persisted.basket?.current.lines, keepDraft ? gross.lines : net.lines)
         XCTAssertEqual(persisted.plannedNeeds, gross.needs)
         let retained = DinnerPantryPurchases.lines(ledger: reopened, pickup: f.pickup, shop: reopenedShop, identity: actor)
         XCTAssertEqual(retained, covered)
@@ -512,6 +522,48 @@ extension PantryPackModelRecoveryTests {
             XCTAssertEqual(Set(pending.flatMap { $0.lines.map(\.id) }), [rice, lentils])
             XCTAssertTrue(DinnerPantryPurchases.pending(in: reopened.workspace, shop: revised, workspaceID: workspaceID,
                 originID: origin, actorID: UUID(), journey: persisted, covered: []).isEmpty)
+            if keepDraft {
+                let resumed = await reopen(f)
+                let review = try DinnerServingAllocationReview(ledger: resumed, pickup: f.pickup, shop: revised,
+                    occurrenceID: occurrence, identity: actor, linked: [rice, lentils])
+                let wrongActor = CapturePrivateIdentity(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil)
+                XCTAssertThrowsError(try DinnerServingAllocationReview(ledger: resumed, pickup: f.pickup, shop: revised,
+                    occurrenceID: occurrence, identity: wrongActor, linked: [rice, lentils]))
+                let refused = try await review.save(ledger: resumed, pickup: f.pickup, authorize: { false })
+                XCTAssertFalse(refused)
+                XCTAssertEqual(f.pickup.journeys.first { $0.id == shop.id }, persisted)
+                if recount {
+                    let current = try await pantry.load(at: now)
+                    let lot = try XCTUnwrap(current.lots.first { $0.id == riceLot })
+                    _ = try await pantry.apply(.init(id: UUID(), originID: origin, lotID: riceLot, eventID: UUID(),
+                        expectedRevision: lot.revision, occurredAt: now, change: .count(.exact(cups(3)), observationID: UUID())),
+                        reviewedInventoryRevision: current.state.revision, at: now)
+                    let accepted = try? await review.save(ledger: resumed, pickup: f.pickup, authorize: { true })
+                    XCTAssertNotEqual(accepted, true)
+                    XCTAssertEqual(f.pickup.journeys.first { $0.id == shop.id }, persisted)
+                    let refreshed = await f.pickup.refreshPantryStock()
+                    XCTAssertTrue(refreshed)
+                    XCTAssertThrowsError(try DinnerServingAllocationReview(ledger: resumed, pickup: f.pickup, shop: revised,
+                        occurrenceID: occurrence, identity: actor, linked: [rice, lentils]))
+                    return
+                }
+                let kept = try await review.save(ledger: resumed, pickup: f.pickup, authorize: { true })
+                XCTAssertTrue(kept, f.pickup.error ?? resumed.error ?? "")
+                let result = try XCTUnwrap(f.pickup.journeys.first { $0.id == shop.id })
+                XCTAssertEqual(result.basket, persisted.basket)
+                XCTAssertEqual(result.context, persisted.context)
+                XCTAssertEqual(result.plannedNeeds, persisted.plannedNeeds)
+                let snapshot = try await pantry.load(at: now)
+                XCTAssertEqual(snapshot.reservations, beforeChoices.reservations)
+                let coldLedger = await reopen(f)
+                XCTAssertEqual(DinnerPantryPurchases.lines(ledger: coldLedger, pickup: f.pickup, shop: revised,
+                    identity: actor), [rice, lentils])
+                let active = coldLedger.workspace.listLayout.groups(shop: revised, excluding: [rice, lentils])
+                XCTAssertEqual(active.flatMap(\.lines).map(\.name), ["Coffee", "Tomatoes"])
+                return
+            }
+            XCTAssertThrowsError(try DinnerServingAllocationReview(ledger: reopened, pickup: f.pickup, shop: revised,
+                occurrenceID: occurrence, identity: actor, linked: [rice, lentils]))
             let allocationContext = try XCTUnwrap(f.pickup.quickGroceryPantryContext(ledgerWorkspaceID: workspaceID))
             let freshCheckout = try LedgerCheckoutAdapter.review(shop: revised, workspaceRevision: reopened.revision, previous: persisted,
                 packSelections: f.pickup.dinnerAuthorizedPacks(reopened.workspace.packSelections, ledger: reopened, shop: revised),

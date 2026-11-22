@@ -602,6 +602,20 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         lines = []; contributions = []; allocations = []; mealOccurrences = []; importBatches = []
     }
 
+    /// Recognizes one direct child revision whose only material change is this meal's yield.
+    public func changesOnlyServings(of mealID: UUID, from previous: Self) -> Bool {
+        guard let head = revisions.last, head.parentID == previous.revisionID,
+              let index = previous.mealOccurrences.firstIndex(where: { $0.id == mealID }),
+              let meal = mealOccurrences.first(where: { $0.id == mealID }),
+              meal.servings != previous.mealOccurrences[index].servings else { return false }
+        var expected = previous
+        expected.mealOccurrences[index].servings = meal.servings
+        expected.revision = revision
+        expected.revisionID = head.id
+        expected.revisions.append(head)
+        return self == expected
+    }
+
     /// Shopping restrictions stay in source order and keep the shopper's wording.
     public var itemExclusions: [UUID: [String]] {
         var seen: [UUID: Set<String>] = [:]
