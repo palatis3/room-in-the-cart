@@ -7,7 +7,7 @@ struct SharedPantryMatches: View {
     let shopID: UUID
     let lotID: UUID
     var body: some View {
-        List {
+        JournalList {
             if let review = PantryLotReview(model: model, shopID: shopID, lotID: lotID), review.lot.selected {
                 ForEach(review.delivery.meals ?? []) { occurrence in
                     if let plan = occurrence.meal.planning, !plan.ingredients.isEmpty {

@@ -12,7 +12,7 @@ struct SharedDeliveryCoverageView: View {
 
     var body: some View {
         NavigationStack {
-            List {
+            JournalList {
                 if let result, result.shopId == page.shopId, result.placedRevision == page.placedRevision,
                    result.supplyRevision == page.supplyRevision, result.authorityEpoch == page.authorityEpoch, result.shopRevision == page.shopRevision {
                     Section {

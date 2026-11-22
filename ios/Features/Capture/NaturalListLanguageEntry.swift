@@ -81,7 +81,7 @@ extension CaptureLineDraft {
     @State private var selected = Set<UUID>()
     @State private var excerpts: [UUID: String] = [:]
     @State private var applying = Set<UUID>()
-    @State private var result: NaturalListReply?
+    @State private var result: (reply: NaturalListReply, sharedLines: [LanguageSourceLine])?
     @State private var task: Task<Void, Never>?
     @State private var operation = UUID()
     @State private var sending = false
@@ -104,11 +104,14 @@ extension CaptureLineDraft {
                 else if available == false { Text(captureText("Online help is unavailable. You can review every item on this device.")) }
                 else if let result {
                     Section(captureText("Review proposed wording")) {
-                        if result.suggestions.isEmpty { Text(captureText("No item wording was suggested.")) }
-                        ForEach(result.suggestions, id: \.sourceLineID) { suggestion in
-                            if let source = lines.first(where: { $0.id == suggestion.sourceLineID }) {
-                                VStack(alignment: .leading) {
-                                    Text(verbatim: source.originalText)
+                        if result.reply.suggestions.isEmpty { Text(captureText("No item wording was suggested.")) }
+                        ForEach(result.reply.suggestions, id: \.sourceLineID) { suggestion in
+                            if let source = lines.first(where: { $0.id == suggestion.sourceLineID }),
+                               let excerpt = result.sharedLines.first(where: { $0.id == source.id }) {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text(captureText("Wording shared with OpenAI"))
+                                        .font(.subheadline.weight(.semibold)).foregroundStyle(Theme.secondary)
+                                    Text(verbatim: excerpt.text).textSelection(.enabled)
                                     Toggle(suggestion.itemName, isOn: membership(suggestion.sourceLineID, in: $applying))
                                     if source.purpose.isEmpty, let purpose = suggestion.purpose { LabeledContent(captureText("Purpose"), value: purpose) }
                                     if source.exclusions.isEmpty, let exclusion = suggestion.exclusion { LabeledContent(captureText("Exclusions"), value: exclusion) }
@@ -117,8 +120,10 @@ extension CaptureLineDraft {
                         }
                         Button(captureText("Use selected wording in editable items")) {
                             guard isCurrent(), scene == .active else { return }
-                            use(result.suggestions.filter { applying.contains($0.sourceLineID) })
-                        }.disabled(applying.isEmpty).accessibilityIdentifier("capture.language.use")
+                            use(result.reply.suggestions.filter { applying.contains($0.sourceLineID) })
+                        }
+                        .buttonStyle(PrimaryAction())
+                        .disabled(applying.isEmpty).accessibilityIdentifier("capture.language.use")
                     }
                 } else {
                     Section(captureText("Choose wording to share with OpenAI")) {
@@ -127,14 +132,22 @@ extension CaptureLineDraft {
                             Toggle(line.originalText, isOn: membership(line.id, in: $selected))
                                 .disabled(sending || (!selected.contains(line.id) && selected.count >= 8))
                             if selected.contains(line.id) {
-                                TextField(captureText("Wording to share"), text: Binding(get: { excerpts[line.id] ?? line.originalText },
-                                    set: { excerpts[line.id] = $0 }), axis: .vertical).disabled(sending)
+                                let excerptLabel = captureText("Wording to share")
+                                WorkingField(excerptLabel) {
+                                    TextField(excerptLabel, text: Binding(get: { excerpts[line.id] ?? line.originalText },
+                                        set: { excerpts[line.id] = $0 }), prompt: Text(""), axis: .vertical)
+                                        .textFieldStyle(WorkingInputStyle())
+                                        .disabled(sending)
+                                }
                             }
                         }
                         Button(captureText("Send selected wording for suggestions")) { send() }
                             .disabled(request == nil || sending).accessibilityIdentifier("capture.language.send")
                         if sending { ProgressView() }
-                        if failed { Text(captureText("The suggestion could not be read. Keep editing your local items or try again.")) }
+                        if failed {
+                            Text(captureText("The suggestion could not be read. Keep editing your local items or try again."))
+                                .foregroundStyle(Theme.error)
+                        }
                     }
                 }
             }
@@ -161,7 +174,7 @@ extension CaptureLineDraft {
             do {
                 let reply = try await service.naturalListSuggestion(request, scope: scope)
                 guard token == operation, !Task.isCancelled, scene == .active, isCurrent() else { return }
-                result = reply
+                result = (reply, request.sourceLines)
             } catch { if token == operation && !Task.isCancelled && isCurrent() { failed = true } }
             if token == operation { sending = false }
         }

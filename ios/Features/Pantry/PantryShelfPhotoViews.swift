@@ -67,7 +67,7 @@ private struct PantryShelfLocations: View {
     @State private var loaded = false
 
     var body: some View {
-        List {
+        JournalList {
             Section {
                 ForEach(InventoryLocation.allCases, id: \.self) { location in
                     if unreadable.contains(location) {
@@ -97,7 +97,6 @@ private struct PantryShelfLocations: View {
                 Text(shelfPhotoText("Keep one private photo per location on this iPhone. Check its date when you shop."))
             }
         }
-        .workingSurface()
         .task(id: store.generation) {
             var next: [InventoryLocation: String] = [:]
             var failures: Set<InventoryLocation> = []
@@ -133,7 +132,7 @@ private struct PantryShelfLocationDetail: View {
     @State private var status: String?
 
     var body: some View {
-        List {
+        JournalList {
             if let photo, let image = UIImage(data: photo.jpeg) {
                 Section {
                     Text(shelfPhotoDateLabel(photo)).font(.headline)
@@ -163,7 +162,6 @@ private struct PantryShelfLocationDetail: View {
             }
             if let status { Text(status) }
         }
-        .workingSurface()
         .task(id: store.generation) { refresh() }
         .sheet(item: $editing) { edit in
             NavigationStack {

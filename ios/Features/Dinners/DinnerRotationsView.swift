@@ -5,7 +5,7 @@ struct DinnerRotationsView: View {
     @ObservedObject var model: DinnerFeatureModel
     let weekStart: Date
     var body: some View {
-        List {
+        JournalList {
             Section {
                 Text(dinnerText("A rotation stores accepted dinner versions and relative nights. Select the nights to preview before adding any groceries."))
                 if model.paid {

@@ -84,11 +84,13 @@ private struct DuplicateAssistanceControls: View {
             if let shown = preview {
                 if expanded {
                     Text(duplicateHelpText("Only these words and candidate labels will be shared with OpenAI."))
-                    Text(verbatim: shown.source.text)
+                    Text(verbatim: shown.source.text).font(.headline).textSelection(.enabled)
                     ForEach(shown.candidates) { candidate in Text(verbatim: candidate.text) }
                     if let suggested, let match = shown.candidates.first(where: { $0.id == suggested }) {
-                        Text(duplicateHelpText("Suggested match")).font(.headline)
-                        Text(verbatim: match.text)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(duplicateHelpText("Suggested match")).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.secondary)
+                            Text(verbatim: match.text).font(.headline)
+                        }
                         Button(duplicateHelpText("Use this candidate in my review")) {
                             guard preview == shown, authorized() else { reset(); return }
                             Task {

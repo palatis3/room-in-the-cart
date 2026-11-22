@@ -34,7 +34,7 @@ import UIKit
         }
         review(english)
         tap(element("ledgerCommitImport"))
-        let food = app.buttons["Inspect arroz"]
+        let food = app.fullListGrocery(labeled: "Inspect arroz")
         XCTAssertTrue(food.wait(for: \.isHittable, toEqual: true, timeout: 8), "The reviewed ingredient must be actionable when the import sheet closes.")
         let lineID = food.identifier
         XCTAssertTrue(lineID.hasPrefix("ledgerInspect-"))
@@ -151,7 +151,7 @@ import UIKit
         XCTAssertTrue(commit.waitForExistence(timeout: 5) && commit.isEnabled)
         commit.tap()
         XCTAssertTrue(keyboard.waitForNonExistence(timeout: 5))
-        let food = app.buttons["Inspect wraps"]
+        let food = app.fullListGrocery(labeled: "Inspect wraps")
         XCTAssertTrue(food.wait(for: \.isHittable, toEqual: true, timeout: 8))
         let id = food.identifier
         restart()
@@ -176,7 +176,7 @@ import UIKit
         XCTAssertEqual(amount.value as? String, "30")
         fill("28", into: "ledgerImportAmount-1", replacing: true)
         tap(element("ledgerCommitImport"))
-        let food = app.buttons["Inspect pinto beans"]
+        let food = app.fullListGrocery(labeled: "Inspect pinto beans")
         XCTAssertTrue(food.wait(for: \.isHittable, toEqual: true, timeout: 8), "The reviewed ingredient must be actionable when the import sheet closes.")
         let id = food.identifier
         restart()
@@ -198,7 +198,7 @@ import UIKit
         assertText("Amount per pack on the original label: 12 US fluid ounces")
         XCTAssertEqual(element("ledgerImportAmount-1").value as? String, "24")
         tap(element("ledgerCommitImport"))
-        let item = app.buttons["Inspect seltzer"]
+        let item = app.fullListGrocery(labeled: "Inspect seltzer")
         XCTAssertTrue(item.wait(for: \.isHittable, toEqual: true, timeout: 8), "The reviewed ingredient must be actionable when the import sheet closes.")
         let id = item.identifier
         restart()
@@ -301,8 +301,7 @@ import UIKit
                 let content = CGRect(x: viewport.minX, y: top, width: viewport.width, height: max(0, bottom - top))
                     .insetBy(dx: 4, dy: 4)
                 if editor.exists && editor.isHittable {
-                    // Native text can receive focus anywhere in the visible editor,
-                    // even when the pinned Review button covers its first lines.
+                    // Tap text within the visible form viewport, below the pinned action.
                     let visibleEditor = editor.frame.intersection(content)
                     if visibleEditor.width >= 12 && visibleEditor.height >= 12 {
                         let bounds = app.frame
@@ -325,6 +324,11 @@ import UIKit
         app.typeText("x")
         XCTAssertEqual((editor.value as? String)?.count, fixture.count + 1, "The pasted list must remain editable")
         app.typeText(XCUIKeyboardKey.delete.rawValue)
+        let review = app.buttons["ledgerReviewImport"]
+        XCTAssertTrue(review.isEnabled && review.isHittable, "Review must be available while editing the pasted list")
+        XCTAssertGreaterThanOrEqual(review.frame.minY, navigation.frame.maxY)
+        XCTAssertLessThanOrEqual(review.frame.maxY, keyboard.frame.minY)
+        capture("S02-review-visible-while-editing-native-paste")
         let done = app.buttons["Done"]
         XCTAssertTrue(done.waitForExistence(timeout: 5) && done.isHittable)
         done.tap()
@@ -332,7 +336,6 @@ import UIKit
         XCTAssertTrue(editor.value as? String == fixture, "Editing and Done must preserve the original paste after undoing the edit")
         capture("S02-500-line-native-paste-at-largest-text")
 
-        let review = app.buttons["ledgerReviewImport"]
         XCTAssertTrue(review.wait(for: \.isHittable, toEqual: true, timeout: 5))
         XCTAssertTrue(review.isEnabled)
         XCTAssertGreaterThanOrEqual(review.frame.minY, navigation.frame.maxY)
@@ -391,7 +394,7 @@ import UIKit
         let uniqueToken = String(try XCTUnwrap(editedName.split(separator: " ").last))
         fill(uniqueToken + "\n", into: "ledgerSearch")
         XCTAssertTrue(keyboard.waitForNonExistence(timeout: 5), "Return must dismiss the search keyboard before revealing the saved grocery")
-        let saved = app.buttons["Inspect " + editedName]
+        let saved = app.fullListGrocery(labeled: "Inspect " + editedName)
         revealContent(saved)
         XCTAssertEqual(saved.value as? String, originalAmount + originalAmount + " items")
         capture("S02-cold-reopened-edited-grocery")

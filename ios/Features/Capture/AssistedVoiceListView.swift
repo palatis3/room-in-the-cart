@@ -50,17 +50,24 @@ import SwiftUI
                                 operation = Task { await audio.start() }
                             }
                         }
-                        if let clip = audio.clip {
+                        if audio.failed || (failed && audio.clip == nil) { recordingError }
+                    }
+                    if let clip = audio.clip {
+                        Section {
                             LabeledContent(captureText("Recording length"), value: Duration.seconds(clip.duration).formatted(.time(pattern: .minuteSecond)))
+                                .monospacedDigit()
                             Button(captureText("Listen to this recording")) { audio.play() }.disabled(sending)
                             Button(captureText("Discard recording")) { clear() }.disabled(sending)
+                        }
+                        Section {
                             Text(captureText("OpenAI will receive this entire recording and the selected language through Room in the Cart."))
+                                .font(.headline)
                             LabeledContent(captureText("Transcription language"), value: language == "es" ? captureText("Spanish") : captureText("English"))
                             Button(captureText("Send this recording to OpenAI for transcription")) { send(clip) }
                                 .disabled(sending || attempts >= 2 || transcript != nil)
+                            if sending { ProgressView() }
+                            if failed { recordingError }
                         }
-                        if sending { ProgressView() }
-                        if audio.failed || failed { Text(captureText("This recording could not be used. You can record again, dictate on this iPhone or type.")) }
                     }
                     if let transcript {
                         Section(captureText("Review the online transcript")) {
@@ -69,6 +76,7 @@ import SwiftUI
                                 guard current else { return }
                                 stage(transcript); clear(); dismiss()
                             }
+                            .buttonStyle(PrimaryAction())
                         }
                     }
                 }
@@ -98,6 +106,11 @@ import SwiftUI
         }
         .onDisappear { clear() }
     }
+    private var recordingError: some View {
+        Text(captureText("This recording could not be used. You can record again, dictate on this iPhone or type."))
+            .foregroundStyle(Theme.error)
+    }
+
     private func clear() {
         generation = UUID(); operation?.cancel(); operation = nil; audio.clear()
         request = nil; attempts = 0; sending = false; failed = false; transcript = nil

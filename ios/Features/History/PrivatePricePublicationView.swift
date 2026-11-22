@@ -15,7 +15,9 @@ struct PrivatePricePublicationView: View {
             if let history, pantry.phase == .ready, pantry.snapshot?.state == state, !household.locked,
                let scope = household.projection, scope.enrolled, scope.grantId == nil, household.identity != nil {
                 PrivatePricePublicationForm(history: history, pantry: pantry, price: price, state: state)
-            } else { Text(HistoryCopy.text("Reopen the private price and the current shared shop.")) }
+            } else {
+                WorkingForm { Text(HistoryCopy.text("Reopen the private price and the current shared shop.")) }
+            }
         }
         .task { history = household.makeHistoryModel() }
         .onChange(of: household.projection) { _, _ in history?.enforceRuntime() }
@@ -42,22 +44,27 @@ private struct PrivatePricePublicationForm: View {
                 if let notice { Text(verbatim: notice) }
                 if let notice = history.notice { Text(verbatim: notice) }
                 if let saved = history.selectedObservation {
-                    Text(saved.itemName)
+                    Text(saved.itemName).font(.headline)
                     LabeledContent(HistoryCopy.text("Observation reference"), value: saved.id)
                 } else if history.hasUnresolvedWrite {
                     Text(HistoryCopy.text("Open household price history to reconcile the reviewed write."))
                 } else if case .observation(let review) = history.reviewed {
                     Section(HistoryCopy.text("Publish selected price evidence")) {
-                        Text(verbatim: review.itemName)
+                        Text(verbatim: review.itemName).font(.headline)
                         if let variant = review.variant { Text(verbatim: variant) }
-                        if case .exact(let minor) = review.price { Text(verbatim: HistoryCopy.money(minor)) }
+                        if case .exact(let minor) = review.price {
+                            LabeledContent(HistoryCopy.text("Entered price"), value: HistoryCopy.money(minor)).monospacedDigit()
+                        }
                         Text(verbatim: review.packLabel)
                         Text(verbatim: review.store + " · " + review.branch)
                         Text(HistoryCopy.mode(review.mode.rawValue))
                         Text(HistoryCopy.priceKind(review.evidenceKind))
                         Text(verbatim: review.eligibility)
                         Text(verbatim: HistoryCopy.date(review.observedAt))
-                        Text(verbatim: review.sourceText)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(HistoryCopy.text("Original source text")).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.secondary)
+                            Text(verbatim: review.sourceText).textSelection(.enabled)
+                        }
                         if let assigned = history.ownedShops.first(where: { $0.shopId == review.shopId }) { Text(HistoryCopy.shop(assigned)) }
                         Text(HistoryCopy.text("The household receives these selected fields as a separate price record."))
                         Button(HistoryCopy.text("Publish this price to the selected shop")) {
@@ -69,7 +76,9 @@ private struct PrivatePricePublicationForm: View {
                                     await history.applyReviewed()
                                 } catch { history.cancelReview(); notice = HistoryCopy.text("Reopen the private price and the current shared shop.") }
                             }
-                        }.disabled(history.busy)
+                        }
+                        .buttonStyle(PrimaryAction())
+                        .disabled(history.busy)
                         Button(pantryText("Cancel")) { history.cancelReview() }
                     }
                 } else {
@@ -80,7 +89,10 @@ private struct PrivatePricePublicationForm: View {
                     if history.ownedShopCursor != nil {
                         Button(HistoryCopy.text("Load more assigned shops")) { Task { await history.loadOwnedShops(more: true) } }
                     }
-                    TextField(HistoryCopy.text("Branch or location"), text: $branch)
+                    let branchLabel = HistoryCopy.text("Branch or location")
+                    WorkingField(branchLabel) {
+                        TextField(branchLabel, text: $branch, prompt: Text("")).textFieldStyle(WorkingInputStyle())
+                    }
                     Picker(HistoryCopy.text("Fulfillment mode"), selection: $mode) {
                         Text(HistoryCopy.text("Choose a fulfillment mode")).tag(nil as HistoryFulfillmentMode?)
                         ForEach(HistoryFulfillmentMode.allCases, id: \.self) { value in Text(HistoryCopy.mode(value.rawValue)).tag(Optional(value)) }

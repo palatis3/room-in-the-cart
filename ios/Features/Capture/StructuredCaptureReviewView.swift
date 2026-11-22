@@ -156,7 +156,9 @@ struct StructuredCaptureField: Hashable {
             }
         }
         Section {
-            if let validationMessage { Text(captureText(validationMessage)).accessibilityIdentifier("capture.structured.error") }
+            if let validationMessage {
+                Text(captureText(validationMessage)).foregroundStyle(Theme.error).accessibilityIdentifier("capture.structured.error")
+            }
             Button(captureText(copy.action)) {
                 guard authorize() else { validationMessage = copy.changed; return }
                 do {
@@ -182,8 +184,10 @@ struct StructuredCaptureField: Hashable {
                 } catch {
                     validationMessage = "Review each item. Use a positive amount or leave it explicitly unknown; pack counts must be whole numbers."
                 }
-            }.disabled(!authorize() || lines.isEmpty || !lines.contains(where: { !$0.skip }) || !reviewComplete)
-                .accessibilityIdentifier("capture.continue")
+            }
+            .buttonStyle(PrimaryAction())
+            .disabled(!authorize() || lines.isEmpty || !lines.contains(where: { !$0.skip }) || !reviewComplete)
+            .accessibilityIdentifier("capture.continue")
             Button(captureText("Back to captured words")) { fieldFocus.wrappedValue = nil; onBack() }
             Text(captureText(copy.next))
                 .font(.footnote)
@@ -253,11 +257,11 @@ struct StructuredCaptureField: Hashable {
                 if !line.exclusions.isEmpty { Text(captureText("Exclusions") + ": " + line.exclusions) }
                 if line.needsNaturalClarification && !line.confirmed {
                     Label(captureText("Check this wording"), systemImage: "questionmark.circle")
-                    Text(line.originalText).font(.footnote)
+                    Text(line.originalText).font(.footnote).foregroundStyle(Theme.secondary)
                 }
             }
         }
-        .foregroundStyle(.primary)
+        .foregroundStyle(Theme.ink)
     }
 
     private func naturalAmount(_ literal: String, unit: UnitOfMeasure) -> String {
@@ -288,7 +292,11 @@ struct StructuredCaptureField: Hashable {
     let rememberSpelling: (String, String) -> Void
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(line.originalText).font(.footnote).textSelection(.enabled)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(ledgerText("Original wording"))
+                    .font(.subheadline.weight(.semibold)).foregroundStyle(Theme.secondary)
+                Text(verbatim: line.originalText).textSelection(.enabled)
+            }
             Toggle(captureText("Skip this captured line"), isOn: $line.skip)
             if !line.skip {
                 labeledField(captureText("Item name")) {
@@ -381,7 +389,7 @@ struct StructuredCaptureField: Hashable {
     private func labeledField<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title).font(.caption).foregroundStyle(Theme.secondary).accessibilityHidden(true)
-            content()
+            content().textFieldStyle(WorkingInputStyle())
         }
     }
     private func field(_ path: WritableKeyPath<CaptureLineDraft, String>) -> Binding<String> {

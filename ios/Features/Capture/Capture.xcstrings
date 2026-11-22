@@ -6350,6 +6350,23 @@
         }
       }
     },
+    "Wording shared with OpenAI": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wording shared with OpenAI"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto compartido con OpenAI"
+          }
+        }
+      }
+    },
     "Wording to share": {
       "extractionState": "manual",
       "localizations": {

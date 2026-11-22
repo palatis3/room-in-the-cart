@@ -16,10 +16,10 @@ struct HistoryRecordsEntryView: View {
                 }
                 else { Text(HistoryCopy.text("Price records and period budgets are unavailable on this iPhone.")) }
             } else {
-                List {
+                JournalList {
                     Text(HistoryCopy.text("Connect your household to open saved price records and period plans."))
                     NavigationLink(HistoryCopy.text("Open household")) { HouseholdSettingsView(model: household, continuesAfterWorkspaceLock: true) }
-                }.workingSurface().navigationTitle(HistoryCopy.text("Prices and period budgets"))
+                }.navigationTitle(HistoryCopy.text("Prices and period budgets"))
             }
         }
         .sheet(isPresented: $choosingScope) {

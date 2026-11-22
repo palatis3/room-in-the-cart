@@ -30,6 +30,7 @@ struct RecipeStepReviewView: View {
     let ingredients: [String]
     var save: ((Int, RecipeStep) -> Void)? = nil
 
+    @Environment(\.colorSchemeContrast) private var contrast
     var body: some View {
         List(steps.indices, id: \.self) { index in
             NavigationLink {
@@ -42,7 +43,11 @@ struct RecipeStepReviewView: View {
                     Text(verbatim: steps[index].instruction)
                 }
             }.accessibilityIdentifier("records.cookingStep." + String(index))
-        }.navigationTitle(recordsText("Cooking steps"))
+                .listRowBackground(Theme.surface)
+                .listRowSeparatorTint(contrast == .increased ? Theme.controlEdge : Theme.divider)
+        }
+        .workingSurface()
+        .navigationTitle(recordsText("Cooking steps"))
     }
 }
 

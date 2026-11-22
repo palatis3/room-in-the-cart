@@ -22,7 +22,7 @@ struct ShopperInboxContent: View {
     @AccessibilityFocusState private var focusedOutcome: String?
     var body: some View {
         ScrollViewReader { scroll in
-            List {
+            JournalList {
                 if model.authorized {
                     if let scope = household?.projection, scope.household.id == model.householdID,
                        scope.memberId == model.memberID, scope.shopId == model.shopID {
@@ -109,7 +109,7 @@ private struct DeferredRequestsView: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        List {
+        JournalList {
             if model.canReviewDeferred, model.pending == nil {
                 if let row = reviewed, model.deferredRequests.contains(row) {
                     Section {
@@ -172,7 +172,8 @@ struct HouseholdRequestDecisionView: View {
                 ShopperDeliverySection(model: model)
                 if let selected = model.selected, selected.id == request.id {
                     Section(ht("Request")) {
-                        Text(selected.originalItem).font(.title2.weight(.semibold))
+                        Text(selected.originalItem)
+                            .marketJournalTitle(.title2).privacySensitive()
                         if let scope = sharedShop?.scope, scope.shopId == selected.shopId {
                             Text(verbatim: scope.household.label)
                         }
@@ -180,7 +181,7 @@ struct HouseholdRequestDecisionView: View {
                         RequestReadTimeLabel(asOf: model.requestReadTimes.rows[selected.id])
                         if let alias = selected.authorAlias { LabeledContent(ht("Requested by"), value: alias) }
                         if let quantity = selected.ownQuantity { Text(quantity) }
-                        Text(shopperRequestStatus(selected))
+                        Text(shopperRequestStatus(selected)).font(.body.weight(.semibold))
                         if let household { TripSubstitutionLink(household: household, request: selected) }
                         LabeledContent(ht("Received"), value: householdTime(selected.receivedAt))
                         if let clarification = selected.clarification { Text(clarification) }

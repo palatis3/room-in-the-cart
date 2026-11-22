@@ -235,89 +235,145 @@ final class ShareViewController: UIViewController {
 }
 private struct ShareComposerView: View {
     @ObservedObject var model: ShareComposerModel
+    @State private var showingOriginal = false
+    @FocusState private var editing: Bool
+
+    private var title: String {
+        if model.fileForReceiptReview != nil { return SurfaceCopy.text("Receipt file") }
+        if model.link != nil { return SurfaceCopy.text("Recipe link") }
+        return SurfaceCopy.text("Selected text")
+    }
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section {
-                    introduction
-                } header: {
-                    HStack(spacing: 8) {
-                        Image(decorative: "BrandCartRest").resizable().scaledToFit()
-                            .frame(width: 32, height: 32)
-                            .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
-                        Text(verbatim: "Room in the Cart").font(.headline).foregroundStyle(Color("ink"))
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    if model.loading {
+                        ProgressView().frame(maxWidth: .infinity)
+                    } else {
+                        Text(title)
+                            .font(.system(.largeTitle, design: .serif, weight: .semibold))
+                            .accessibilityAddTraits(.isHeader)
+                        Divider()
+                        introduction
+                        if !model.original.isEmpty { textReview }
+                        actions
                     }
-                    .textCase(nil)
-                    .padding(.bottom, 4)
                 }
-                .listRowBackground(Color("surface"))
-
-                if !model.original.isEmpty {
-                    Section(SurfaceCopy.text("Original text")) { Text(model.original).textSelection(.enabled) }
-                        .listRowBackground(Color("surface"))
-                    Section(SurfaceCopy.text("Review text")) {
-                        TextEditor(text: $model.edited)
-                            .scrollContentBackground(.hidden)
-                            .frame(minHeight: 140)
-                            .accessibilityLabel(SurfaceCopy.text("Review text"))
-                    }.listRowBackground(Color("surface"))
-                }
-                Section {
-                    if let bytes = model.fileForReceiptReview {
-                        saveButton("Save receipt file for review") { model.saveReceipt(bytes, kind: model.receiptKind) }
-                    } else if model.link != nil {
-                        saveButton("Save recipe link for review") { model.saveLink() }
-                    } else if !model.original.isEmpty {
-                        saveButton("Save for review") { model.save() }
-                            .disabled(!model.edited.unicodeScalars.contains { !CharacterSet.whitespacesAndNewlines.contains($0) })
-                        Button(SurfaceCopy.text("Save original text as a receipt")) {
-                            model.saveReceipt(model.receiptData ?? Data(model.original.utf8), kind: .text)
-                        }
-                    }
-                    if !model.loading, model.alternativeText != nil {
-                        Button(SurfaceCopy.text("Use the selected text as a shopping list")) { model.chooseAlternativeText() }
-                    }
-                }.listRowBackground(Color("surface"))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(20)
             }
+            .scrollDismissesKeyboard(.interactively)
+            .foregroundStyle(Color("ink"))
+            .background(Color("surface"))
             .disabled(model.saving)
-            .scrollContentBackground(.hidden)
-            .background(Color("canvas"))
             .alert(model.fileForReceiptReview != nil ? SurfaceCopy.text("Receipt file") : model.link == nil ? SurfaceCopy.text("Could not save selected text") : SurfaceCopy.text("Could not save recipe link"), isPresented: Binding(
                 get: { model.saveError != nil },
                 set: { if !$0 { model.saveError = nil } }
             ), presenting: model.saveError) { _ in
                 Button(SurfaceCopy.text("OK")) { model.saveError = nil }
             } message: { Text($0) }
-            .navigationTitle(model.fileForReceiptReview != nil ? SurfaceCopy.text("Receipt file") : model.link == nil ? SurfaceCopy.text("Selected text") : SurfaceCopy.text("Recipe link"))
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(SurfaceCopy.text("Cancel")) { model.cancel() }.disabled(model.saving) } }
+            .navigationTitle(Text(verbatim: "Room in the Cart"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(SurfaceCopy.text("Cancel")) { model.cancel() }.disabled(model.saving)
+                }
+                ToolbarItemGroup(placement: .keyboard) {
+                    if editing {
+                        Spacer()
+                        Button(SurfaceCopy.text("Done")) { editing = false }
+                    }
+                }
+            }
             .interactiveDismissDisabled(model.saving)
-        }.tint(Color("accent"))
+        }
+        .tint(Color("accent"))
     }
 
     @ViewBuilder private var introduction: some View {
-        if model.loading {
-            ProgressView()
-        } else if let error = model.error {
+        if let error = model.error {
             Label(error, systemImage: "exclamationmark.circle")
                 .foregroundStyle(Color("error")).accessibilityAddTraits(.updatesFrequently)
         } else if model.fileForReceiptReview != nil {
             Text(SurfaceCopy.text("Open Read a receipt file in My Pantry to review within seven days. Sharing keeps the file on this device until review, discard or expiry."))
         } else if let link = model.link {
-            Text(verbatim: link.value).textSelection(.enabled)
+            Text(verbatim: link.value)
+                .font(.body.monospaced())
+                .textSelection(.enabled)
+                .privacySensitive()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(12)
+                .background(Color("canvas"), in: RoundedRectangle(cornerRadius: 6))
             Text(SurfaceCopy.text("Open Import a recipe link in Room in the Cart to review this link within seven days."))
         } else {
             Text(SurfaceCopy.text("Save selected text for review in Room in the Cart. Nothing is added to a shop yet."))
         }
     }
 
+    private var textReview: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(SurfaceCopy.text("Review text")).font(.headline)
+                .accessibilityHidden(true)
+            TextEditor(text: $model.edited)
+                .focused($editing)
+                .scrollContentBackground(.hidden)
+                .padding(6)
+                .frame(minHeight: 120)
+                .background(Color("canvas"), in: RoundedRectangle(cornerRadius: 8))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 8)
+                        .strokeBorder(Color(editing ? "focus" : "control_edge"), lineWidth: editing ? 2 : 1)
+                        .allowsHitTesting(false)
+                }
+                .accessibilityLabel(SurfaceCopy.text("Review text"))
+            DisclosureGroup(isExpanded: $showingOriginal) {
+                Text(verbatim: model.original)
+                    .font(.body.monospaced())
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } label: {
+                Text(SurfaceCopy.text("Original text")).frame(minHeight: 44)
+            }
+        }
+        .privacySensitive()
+    }
+
+    @ViewBuilder private var actions: some View {
+        if let bytes = model.fileForReceiptReview {
+            saveButton("Save receipt file for review") { model.saveReceipt(bytes, kind: model.receiptKind) }
+        } else if model.link != nil {
+            saveButton("Save recipe link for review") { model.saveLink() }
+        } else if !model.original.isEmpty {
+            saveButton("Save for review") { model.save() }
+                .disabled(!model.edited.unicodeScalars.contains { !CharacterSet.whitespacesAndNewlines.contains($0) })
+            secondaryButton("Save original text as a receipt") {
+                model.saveReceipt(model.receiptData ?? Data(model.original.utf8), kind: .text)
+            }
+        }
+        if model.alternativeText != nil {
+            secondaryButton("Use the selected text as a shopping list") { model.chooseAlternativeText() }
+        }
+    }
+
+    private func secondaryButton(_ title: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(SurfaceCopy.text(title))
+                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                .contentShape(Rectangle())
+        }
+        .foregroundStyle(Color("accent"))
+    }
+
     private func saveButton(_ title: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(SurfaceCopy.text(title)).font(.headline)
+            Text(SurfaceCopy.text(title))
+                .font(.headline)
+                .fixedSize(horizontal: false, vertical: true)
                 .foregroundStyle(Color("on_accent"))
                 .frame(maxWidth: .infinity, minHeight: 44)
         }
         .buttonStyle(.borderedProminent)
-        .listRowInsets(EdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12))
+        .buttonBorderShape(.roundedRectangle(radius: 12))
     }
 }

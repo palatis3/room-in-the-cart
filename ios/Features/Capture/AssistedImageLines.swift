@@ -23,11 +23,16 @@ struct AssistedImageLines: View {
     }
 
     private var lineList: some View {
-        List {
+        JournalList {
             if authorized() {
                 ForEach(wording.indices, id: \.self) { index in
                     Button { selected = Row(id: index) } label: {
-                        Text(verbatim: wording[index].isEmpty ? pantryText("Choose a line from the source photo") : wording[index])
+                        if wording[index].isEmpty {
+                            Label(pantryText("Choose a line from the source photo"), systemImage: "photo")
+                        } else {
+                            Text(verbatim: wording[index])
+                                .font(.system(.body, design: .monospaced)).foregroundStyle(Theme.ink)
+                        }
                     }
                 }
             } else { Text(pantryText("The source changed. Open the line again.")) }

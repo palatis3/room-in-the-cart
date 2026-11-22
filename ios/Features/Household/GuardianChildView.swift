@@ -11,12 +11,15 @@ struct GuardianChildView: View {
     var body: some View {
         WorkingForm {
             Section {
-                Label(GuardianCopy.text("On the child’s device"), systemImage: "iphone").font(.headline)
-                Text(GuardianCopy.text("Your guardian will confirm this phone before you can send a request."))
+                GuardianDeviceHeading(device: GuardianCopy.text("On the child’s device"),
+                                     instruction: GuardianCopy.text("Your guardian will confirm this phone before you can send a request."))
             }
             if let code = model.pairingCode, model.status == .awaitingGuardian {
                 Section(GuardianCopy.text("Show this code to your guardian")) {
-                    Text(code).font(.title.monospaced()).textSelection(.enabled).privacySensitive()
+                    Text(code).font(.title.monospaced().weight(.semibold))
+                        .foregroundStyle(Theme.onSelection).padding(10)
+                        .background(Theme.selection, in: RoundedRectangle(cornerRadius: 8))
+                        .textSelection(.enabled).privacySensitive()
                         .accessibilityIdentifier("guardian.childPairingCode")
                         .accessibilityFocused($focusedStep, equals: .pairingCode)
                     Text(GuardianCopy.text("Your guardian enters this pairing code on their own phone."))

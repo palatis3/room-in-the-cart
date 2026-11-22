@@ -29,8 +29,7 @@ struct RecordsToolsView: View {
         WorkingForm {
             if !recipeLibraryOnly {
                 Section {
-                    Text(recordsText("Keep your records"))
-                        .font(.title2.bold())
+                    Text(recordsText("Keep your records")).marketJournalTitle(.title2)
                     Text(recordsText("Export, recover and delete your own data. These tools stay free, including after membership ends."))
                     Text(recordsText("Recovery saves a separate copy. A file never restores membership, consent, permissions or a retailer order."))
                         .font(.footnote).foregroundStyle(Theme.secondary)
@@ -55,7 +54,7 @@ struct RecordsToolsView: View {
                         if let error = model.error {
                             let message = errorMessage(error)
                             Label(message, systemImage: "exclamationmark.triangle")
-                                .foregroundStyle(.red)
+                                .foregroundStyle(Theme.error)
                                 .accessibilityElement(children: .ignore)
                                 .accessibilityLabel(Text(verbatim: message))
                                 .accessibilityIdentifier("records.error")
@@ -265,6 +264,7 @@ struct RecordsToolsView: View {
                 selectedMedia
                 Button(recordsText("Generate recovery key")) { model.generateRecoveryKey(); savedKey = false }.accessibilityIdentifier("records.generateKey")
                 TextField(recordsText("Recovery key"), text: $model.recoveryKey, axis: .vertical)
+                    .privacySensitive()
                     .font(.caption.monospaced()).textInputAutocapitalization(.never).autocorrectionDisabled()
                     .accessibilityIdentifier("records.recoveryKey")
                 Text(recordsText("Save this key somewhere safe, separately from the file. If the key is lost, this app cannot recover the encrypted file."))
@@ -283,10 +283,19 @@ struct RecordsToolsView: View {
         let readableText = document.kind == .text ? String(data: document.data, encoding: .utf8) : nil
         Label(model.preparedIsPrivate ? recordsText("Private owner file ready") : recordsText("Redacted copy ready"),
               systemImage: model.preparedIsPrivate ? "lock.doc" : "doc.text")
-        Text(ByteCountFormatter.string(fromByteCount: Int64(document.data.count), countStyle: .file)).font(.caption)
+            .font(.headline).accessibilityAddTraits(.isHeader)
+        if document.kind == .recovery {
+            Text(recordsText("Save the encrypted file for your own recovery. Keep its key separately."))
+        } else if model.preparedIsPrivate {
+            Text(recordsText("Anyone who receives this readable file can read the private records you selected."))
+        } else {
+            Text(recordsText("The recipient can read the food names, amounts and instructions included in this copy."))
+        }
+        Text(ByteCountFormatter.string(fromByteCount: Int64(document.data.count), countStyle: .file))
+            .font(.subheadline).foregroundStyle(Theme.secondary)
         if let readableText {
             DisclosureGroup(recordsText("Preview readable copy")) {
-                Text(readableText).textSelection(.enabled).accessibilityIdentifier("records.readableText")
+                Text(readableText).textSelection(.enabled).privacySensitive().accessibilityIdentifier("records.readableText")
             }
             .disclosureGroupStyle(LabeledFormDisclosureStyle(label: recordsText("Preview readable copy"), identifier: "records.readablePreview"))
             .id(model.preparedName)
@@ -420,6 +429,7 @@ struct RecordsToolsView: View {
             Button(recordsText("Cancel import"), role: .cancel) { model.cancelReview() }.accessibilityIdentifier("records.cancelImport")
         } header: {
             Text(recordsText("Review before importing"))
+                .marketJournalTitle(.title2).textCase(nil)
                 .id("records.importReview")
                 .accessibilityFocused($importReviewFocused)
         }

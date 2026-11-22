@@ -9,6 +9,14 @@ func quickGroceryFormat(_ key: String, _ values: CVarArg...) -> String {
     String(format: quickGroceryText(key), locale: .current, arguments: values)
 }
 
+/// The parent keeps a secondary route for workspaces without an active quick-entry field.
+struct ShopListLinkProvided: PreferenceKey {
+    static let defaultValue: UUID? = nil
+    static func reduce(value: inout UUID?, nextValue: () -> UUID?) {
+        if let shop = nextValue() { value = shop }
+    }
+}
+
 /// This entry exists only on the adult's local Shop and private ledger surfaces.
 /// Household requests continue through the household inbox and approval flow.
 struct LedgerQuickGroceryEntry: View {
@@ -36,7 +44,8 @@ struct LedgerQuickGroceryEntry: View {
                     .accessibilityHidden(!available)
                     .allowsHitTesting(available)
             }
-            if prominent, scene == .active, model.hasPendingSave || model.error != nil || (model.saving && model.shop == nil) {
+            if prominent, scene == .active, model.shop == nil || model.firstListStore == nil || model.sourceWorkspaceID == nil,
+               model.hasPendingSave || model.error != nil || model.saving {
                 LedgerSaveStatus(model: model)
             }
         }
@@ -74,6 +83,17 @@ private struct QuickGroceryField: View {
         let text: String
         let preview: StagedListImport?
     }
+    private var confirmedBatch: LedgerImportBatch? {
+        // Keep confirmed entry feedback stable above an open keyboard. A later revision
+        // invalidates the add-undo operation even if the original batch still exists.
+        guard let receipt, let shop = model.shop, editing || shop.revisionID == receipt.revisionID else { return nil }
+        return shop.importBatches.last { $0.id == receipt.batchID && $0.undoneAt == nil }
+    }
+    private var listTitle: String {
+        if householdMember { return quickGroceryText("Add to my private list") }
+        if let shop = model.shop, shop.title != ledgerText("Pickup") { return shop.title }
+        return ledgerText("Shopping list")
+    }
     private var busy: Bool { submitting || model.saving || model.hasPendingSave }
     private var suggestions: [String] {
         let query = text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
@@ -103,27 +123,53 @@ private struct QuickGroceryField: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(quickGroceryText(householdMember ? "Add to my private list" : "Add a grocery"))
-                .font(prominent ? .largeTitle.bold() : .headline)
-                .foregroundStyle(Theme.ink).accessibilityAddTraits(.isHeader)
-            Text(quickGroceryText("Grocery name")).font(.subheadline)
-                .foregroundStyle(Theme.secondary).fixedSize(horizontal: false, vertical: true)
+            if prominent {
+                HStack(alignment: .center, spacing: 8) {
+                    Text(listTitle)
+                        .marketJournalTitle(.largeTitle)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 0)
+                    if !typeSize.isAccessibilitySize {
+                        Image(decorative: "MarketGroceries")
+                            .resizable().scaledToFit().frame(width: 110, height: 68)
+                            .allowsHitTesting(false)
+                    }
+                }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(Text(verbatim: listTitle))
+                .accessibilityAddTraits(.isHeader)
+            } else if householdMember {
+                Text(quickGroceryText("Add to my private list"))
+                    .font(.headline).accessibilityAddTraits(.isHeader)
+            }
+            if typeSize.isAccessibilitySize {
+                Text(quickGroceryText("Grocery name"))
+                    .font(.subheadline).foregroundStyle(Theme.secondary)
+            }
             let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading)) : AnyLayout(HStackLayout(spacing: 8))
             layout {
                 TextField("", text: groceryInput, axis: .vertical)
                     .textFieldStyle(.plain).font(.body)
                     .fixedSize(horizontal: false, vertical: !text.isEmpty)
                     .frame(height: emptyLineHeight)
+                    .focused($editing)
+                    .submitLabel(.done).onSubmit { submit(keepKeyboard: true) }
+                    .accessibilityLabel(quickGroceryText("Grocery name"))
+                    .accessibilityIdentifier("quickGrocery.name")
+                    .overlay(alignment: .leading) {
+                        if text.isEmpty && !typeSize.isAccessibilitySize {
+                            Text(quickGroceryText("Add a grocery"))
+                                .font(.body).foregroundStyle(Theme.secondary)
+                                .accessibilityRepresentation { EmptyView() }
+                                .allowsHitTesting(false)
+                        }
+                    }
                     .padding(.horizontal, 12).padding(.vertical, 8)
                     .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
                     .background(Theme.surface, in: RoundedRectangle(cornerRadius: 12))
                     .overlay { RoundedRectangle(cornerRadius: 12).strokeBorder(editing ? Theme.action : Theme.controlEdge, lineWidth: editing ? 2 : 1) }
-                    .focused($editing)
                     .contentShape(Rectangle())
                     .simultaneousGesture(TapGesture().onEnded { editing = true })
-                    .accessibilityLabel(quickGroceryText("Grocery name"))
-                    .accessibilityIdentifier("quickGrocery.name")
-                    .submitLabel(.done).onSubmit { submit(keepKeyboard: true) }
                 Button(quickGroceryText("Add")) { submit() }
                     .buttonStyle(PrimaryAction()).fixedSize(horizontal: true, vertical: false)
                     .accessibilityLabel(quickGroceryText("Add grocery"))
@@ -131,45 +177,7 @@ private struct QuickGroceryField: View {
                     .accessibilityIdentifier("quickGrocery.add")
                     .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || busy)
             }
-            if let receipt, let shop = model.shop, shop.revisionID == receipt.revisionID,
-               let batch = shop.importBatches.last(where: { $0.id == receipt.batchID && $0.undoneAt == nil }) {
-                VStack(alignment: .leading, spacing: 0) {
-                    Label(quickGroceryFormat("Added %@ to %@ on this iPhone.", batch.originalText, shop.title), systemImage: "checkmark.circle.fill")
-                        .font(.subheadline.weight(.semibold)).foregroundStyle(Theme.onSelection)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .accessibilityIdentifier("quickGrocery.added")
-                    let actions = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 0)) : AnyLayout(HStackLayout(spacing: 16))
-                    actions {
-                        Button {
-                            Task {
-                                if await model.editShop(key: "undo-quick-\(batch.id)", shopID: shop.id,
-                                    authorize: { authorize() && model.shop?.id == shop.id && model.shop?.revisionID == receipt.revisionID }, { current in
-                                        guard current.revisionID == receipt.revisionID else { throw LedgerError.stalePreview }
-                                        try current.undoImport(batchID: batch.id)
-                                    }) { self.receipt = nil }
-                            }
-                        } label: {
-                            Text(quickGroceryText("Undo")).underline()
-                                .frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
-                        }
-                        .buttonStyle(.borderless)
-                        .foregroundStyle(Theme.onSelection)
-                        .accessibilityLabel(quickGroceryFormat("Undo adding %@", batch.originalText))
-                        .disabled(busy).accessibilityIdentifier("quickGrocery.undo")
-                        if prominent {
-                            RestorableShoppingListLink {
-                                Text(quickGroceryText("View shopping list")).underline()
-                                    .frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
-                            }
-                            .buttonStyle(.borderless)
-                            .foregroundStyle(Theme.onSelection)
-                            .accessibilityIdentifier("quickGrocery.viewList")
-                        }
-                    }
-                }
-                .padding(.horizontal, 12).padding(.vertical, 2)
-                .background(Theme.selection, in: RoundedRectangle(cornerRadius: 12))
-            }
+            if editing { addReceipt }
             if editing {
                 Button { editing = false } label: {
                     Label(quickGroceryText("Dismiss keyboard"), systemImage: "keyboard.chevron.compact.down")
@@ -191,6 +199,12 @@ private struct QuickGroceryField: View {
                 QuickGroceryAtHome(name: name, branch: model.shop?.basis.branch ?? "", ledgerWorkspaceID: workspaceID,
                                    authorize: authorize, addingDisabled: busy, keepOnList: { submit() })
             }
+            if prominent, let shop = model.shop {
+                ShopGroceryPreview(model: model, shop: shop, showsListLink: confirmedBatch == nil, authorize: authorize)
+                    .id(shop.id)
+                    .preference(key: ShopListLinkProvided.self, value: available ? shop.id : nil)
+            }
+            if !editing { addReceipt }
         }
         .onAppear { visible = true }
         .onDisappear { visible = false }
@@ -219,6 +233,46 @@ private struct QuickGroceryField: View {
                     }
                 }
             }
+        }
+    }
+
+    @ViewBuilder private var addReceipt: some View {
+        if let receipt, let shop = model.shop, let batch = confirmedBatch {
+            VStack(alignment: .leading, spacing: 0) {
+                Label(quickGroceryFormat("Added %@ to %@ on this iPhone.", batch.originalText, shop.title), systemImage: "checkmark.circle.fill")
+                    .font(.subheadline.weight(.semibold)).foregroundStyle(Theme.onSelection)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("quickGrocery.added")
+                let actions = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 0)) : AnyLayout(HStackLayout(spacing: 16))
+                actions {
+                    Button {
+                        Task {
+                            if await model.editShop(key: "undo-quick-\(batch.id)", shopID: shop.id,
+                                authorize: { authorize() && model.shop?.id == shop.id && model.shop?.revisionID == receipt.revisionID }, { current in
+                                    guard current.revisionID == receipt.revisionID else { throw LedgerError.stalePreview }
+                                    try current.undoImport(batchID: batch.id)
+                                }) { self.receipt = nil }
+                        }
+                    } label: {
+                        Text(quickGroceryText("Undo")).underline()
+                            .frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
+                    }
+                    .buttonStyle(.borderless)
+                    .foregroundStyle(Theme.onSelection)
+                    .accessibilityLabel(quickGroceryFormat("Undo adding %@", batch.originalText))
+                    .disabled(busy || shop.revisionID != receipt.revisionID).accessibilityIdentifier("quickGrocery.undo")
+                    if prominent {
+                        RestorableShoppingListLink {
+                            Text(quickGroceryText("View shopping list")).underline()
+                                .frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
+                        }
+                        .buttonStyle(.borderless)
+                        .foregroundStyle(Theme.onSelection)
+                    }
+                }
+            }
+            .padding(.horizontal, 12).padding(.vertical, 2)
+            .background(Theme.selection, in: RoundedRectangle(cornerRadius: 12))
         }
     }
 

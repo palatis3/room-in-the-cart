@@ -9,7 +9,7 @@ struct PlacementEntryView: View {
     var body: some View {
         WorkingForm {
             Section {
-                Text(PlacementCopy.text("Report what happened outside this app"))
+                Text(PlacementCopy.text("Report what happened outside this app")).marketJournalTitle(.title2)
                 Text(PlacementCopy.text("Saving a snapshot, sharing a list, or opening a retailer does not place an order. Only report placement after you have checked what happened with the retailer."))
                     .font(.footnote)
                 Text(PlacementCopy.text("This app records a person's report. It does not verify an order, charge, payment or cancellation with the retailer."))
@@ -78,8 +78,8 @@ struct PlacementEntryView: View {
             ForEach(model.saved, id: \.id) { record in
                 Button { model.selectSaved(id: record.id) } label: {
                     VStack(alignment: .leading, spacing: 5) {
-                        Text(PlacementCopy.text("Captured shop snapshot"))
-                        Text(PlacementCopy.date(record.capture.capturedAt))
+                        Text(PlacementCopy.text("Captured shop snapshot")).font(.headline)
+                        Text(PlacementCopy.date(record.capture.capturedAt)).foregroundStyle(Theme.secondary)
                         Text(record.capture.snapshot.shopId).font(.caption)
                         if let receipt = record.receipt { Text(PlacementCopy.outcome(receipt.disposition)) }
                         else if record.report != nil { Text(PlacementCopy.text("Report awaiting confirmation")) }

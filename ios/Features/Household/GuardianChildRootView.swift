@@ -93,8 +93,8 @@ struct GuardianNativeAuthenticationView: View {
     var body: some View {
         WorkingForm {
             Section {
-                Label(GuardianCopy.text("On the child’s device"), systemImage: "iphone").font(.headline)
-                Text(GuardianCopy.text("Enter the invitation from your guardian and the email they approved for you."))
+                GuardianDeviceHeading(device: GuardianCopy.text("On the child’s device"),
+                                     instruction: GuardianCopy.text("Enter the invitation from your guardian and the email they approved for you."))
             }
             if model.availability?.available != true {
                 Section {
@@ -171,7 +171,7 @@ struct GuardianChildRequestsView: View {
             } else if let scope = household.projection {
                 Section {
                     Text(verbatim: scope.household.label)
-                        .font(.title2.weight(.semibold)).accessibilityAddTraits(.isHeader)
+                        .marketJournalTitle(.title2).privacySensitive()
                         .accessibilityIdentifier("guardian.childHousehold")
                     Text(GuardianCopy.text("You can send a request to the shopper. Only your own requests appear here."))
                 }
@@ -216,7 +216,7 @@ struct GuardianChildRequestsView: View {
                         .accessibilityIdentifier("guardian.childRequestsRefresh")
                     ForEach(household.requests) { request in
                         VStack(alignment: .leading, spacing: 8) {
-                            Text(request.originalItem).font(.headline)
+                            Text(request.originalItem).font(.headline).privacySensitive()
                             if let quantity = request.ownQuantity { Text(quantity) }
                             RequestReadTimeLabel(asOf: household.requestReadTimes.rows[request.id])
                             if let proposed = household.pendingCorrection(for: request) {

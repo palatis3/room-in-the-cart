@@ -70,7 +70,7 @@ struct LedgerPackChoiceView: View {
             } else {
                 if let requirement {
                     Section(ledgerText("Current ingredient need")) {
-                        Text(requirement.name).font(.headline)
+                        Text(requirement.name).marketJournalTitle(.title2)
                         LabeledContent(ledgerText("Needed for this list"), value: ledgerQuantity(requirement.quantity))
                         LabeledContent(ledgerText("Protected inside that amount"), value: ledgerQuantity(requirement.protectedQuantity))
                         if let stock = liveStock {
@@ -152,6 +152,16 @@ struct LedgerPackChoiceView: View {
     }
     @ViewBuilder private func result(_ result: OfferResult, offer: PackOffer, review: LedgerPackReview) -> some View {
         Section(offer.label) {
+            if let cost = result.totalCost {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(ledgerText("Item cost")).font(.subheadline).foregroundStyle(Theme.secondary)
+                    Text(moneyText(cost)).font(.title.weight(.bold)).monospacedDigit()
+                    if let count = result.packsToBuy, count > 0, let price = offer.price {
+                        WholePackCalculation(count: count, price: price)
+                    }
+                }
+                .padding(.vertical, 4)
+            }
             if let basis = offer.confirmedConversion {
                 Text(ComparisonConversion.readableText(for: basis))
                     .accessibilityIdentifier("ledgerPackBasis-\(offer.id)")
@@ -163,8 +173,9 @@ struct LedgerPackChoiceView: View {
             if let purchased = result.purchasedAmount, let unit = review.result.unit {
                 LabeledContent(ledgerText("Purchased usable amount"), value: ledgerQuantity(Quantity(amount: purchased, unit: unit, originalLiteral: purchased.description)))
             }
-            if let leftover = result.leftover { LabeledContent(ledgerText("Left after this need"), value: amountText(leftover)) }
-            if let cost = result.totalCost { LabeledContent(ledgerText("Item cost"), value: moneyText(cost)) }
+            if let leftover = result.leftover, let unit = review.result.unit {
+                LabeledContent(ledgerText("Left after this need"), value: ledgerQuantity(Quantity(amount: leftover, unit: unit, originalLiteral: leftover.description)))
+            }
             if !result.isResolved { Text(ledgerText("This pack remains unresolved. Check its usable amount, unit and price.")) }
             if result.isResolved, result.packsToBuy.map({ $0 > 0 }) == true {
                 Button(ledgerFormat("Choose %@ for checkout review", offer.label)) { save(review, offerID: offer.id) }.buttonStyle(PrimaryAction()).accessibilityIdentifier("ledgerChoosePack-\(offer.id)")

@@ -14,6 +14,46 @@ func putawayActionTitle(_ count: Int) -> String {
     }
 }
 
+/// Printed wording stays selectable and scales with Dynamic Type, including on long receipts.
+struct ReceiptPaperLine: View {
+    let wording: String
+    var provenance: String? = nil
+    var title = pantryText("Printed line")
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title).font(.caption.weight(.semibold)).foregroundStyle(Theme.secondary)
+            Text(verbatim: wording)
+                .font(.system(.headline, design: .monospaced))
+                .foregroundStyle(Theme.ink)
+                .textSelection(.enabled)
+            if let provenance {
+                Text(verbatim: provenance).font(.caption).foregroundStyle(Theme.secondary)
+            }
+        }
+        .fixedSize(horizontal: false, vertical: true)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .padding(.bottom, 3)
+        .background(Theme.canvas, in: ReceiptPaperEdge())
+    }
+}
+
+private struct ReceiptPaperEdge: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: .zero)
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - 2))
+        for x in stride(from: rect.maxX, to: rect.minX, by: -10) {
+            path.addLine(to: CGPoint(x: max(rect.minX, x - 5), y: rect.maxY))
+            path.addLine(to: CGPoint(x: max(rect.minX, x - 10), y: rect.maxY - 2))
+        }
+        path.closeSubpath()
+        return path
+    }
+}
+
 struct ReceiptIntactToggle: View {
     @Binding var line: ReceiptImportDraft.Line
     let lots: [InventoryLot]
@@ -30,7 +70,7 @@ struct ReceiptIntactToggle: View {
             Label {
                 VStack(alignment: .leading) {
                     Text(verbatim: line.name).font(.headline)
-                    Text(amountAndDestination)
+                    Text(amountAndDestination).font(.subheadline).monospacedDigit().foregroundStyle(Theme.secondary)
                 }
             } icon: {
                 Image(systemName: line.selectedIntact ? "checkmark.circle.fill" : "circle")
@@ -43,9 +83,20 @@ struct ReceiptIntactToggle: View {
     }
 
     private var amountAndDestination: String {
-        let quantity = line.selectedIntact ? line.usable : line.printed?.quantity ?? ""
-        let unit = line.selectedIntact ? line.unit : line.printed?.unit ?? line.unit
-        return pantryPrintedQuantity(quantity, unit: unit) + " · " + pantryLocationName(line.location)
+        if line.selectedIntact {
+            return pantryPrintedQuantity(line.usable, unit: line.unit) + " · " + pantryLocationName(line.location)
+        }
+        switch line.treatment {
+        case .skip:
+            guard let quantity = line.printed?.quantity, let unit = line.printed?.unit else { return putawayText("Unselected") }
+            return pantryText("Printed quantity") + " · " + pantryPrintedQuantity(quantity, unit: unit)
+        case .add: return putawayText("Put this food away")
+        case .keptSome: return putawayText("Kept some")
+        case .eaten: return putawayText("Ate this")
+        case .missing: return putawayText("Missing or unusable")
+        case .chargeOrReturn: return putawayText("Fee, adjustment or return")
+        case .link: return putawayText("Linked to prior delivery")
+        }
     }
 }
 
@@ -55,8 +106,8 @@ struct ReviewedReceiptHeading: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(verbatim: header.merchant).font(.headline)
-            Text(dates.purchaseDay(header.date))
+            Text(verbatim: header.merchant).marketJournalTitle(.title2)
+            Text(dates.purchaseDay(header.date)).font(.subheadline).foregroundStyle(Theme.secondary)
             if let reference = header.reference { Text(verbatim: reference) }
             if let cents = header.totalMinor {
                 LabeledContent(putawayText("Paid receipt total")) {
@@ -91,10 +142,10 @@ struct PutawayDecisionLabel: View {
             if row.kind == .linked, let lotID = row.lotID {
                 Text(pantryFormat("Link delivery: %@ · %@", row.name, String(lotID.uuidString.suffix(8))))
             }
-            Text(verbatim: row.original).font(.system(.subheadline, design: .monospaced))
-            if let paid = row.paidMinor { Text(pantryFormat("Paid line total %@", receiptMoney(Money(minorUnits: paid)))) }
+            if let paid = row.paidMinor { Text(pantryFormat("Paid line total %@", receiptMoney(Money(minorUnits: paid)))).monospacedDigit() }
             else { Text(pantryText("Paid price unknown")) }
-        }.accessibilityElement(children: .combine)
+            ReceiptPaperLine(wording: row.original)
+        }.padding(.vertical, 4).accessibilityElement(children: .combine)
     }
 }
 
@@ -135,6 +186,7 @@ struct PutawayHistory: View {
                     NavigationLink { PutawayHistoryDetail(model: model, header: header) } label: {
                         ReviewedReceiptHeading(header: header)
                     }
+                    .listRowBackground(Theme.surface)
                 }
                 if failed { Text(putawayText("Could not load receipt decisions.")) }
                 if headers.isEmpty && !more { Text(putawayText("No reviewed purchases yet.")) }
@@ -173,12 +225,14 @@ private struct PutawayHistoryDetail: View {
     var body: some View {
         List {
             if model.canEdit {
-                ReviewedReceiptHeading(header: header)
+                ReviewedReceiptHeading(header: header).listRowBackground(Theme.surface)
                 let token = model.generation
                 ReceiptCouponReviewLink(source: .purchase(model, header), pickupID: nil, authorize: {
                     model.permitsReceiptSource && model.generation == token
                 })
-                ForEach(rows.sorted { $0.ordinal < $1.ordinal }) { row in PutawayDecisionLabel(row: row) }
+                ForEach(rows.sorted { $0.ordinal < $1.ordinal }) { row in
+                    PutawayDecisionLabel(row: row).listRowBackground(Theme.surface)
+                }
                 if rows.contains(where: { $0.lotID != nil }) {
                     NavigationLink(putawayText("Pantry quantities and price revisions")) {
                         PantryReceiptHistory(model: model, receiptID: header.id, showsDone: false)

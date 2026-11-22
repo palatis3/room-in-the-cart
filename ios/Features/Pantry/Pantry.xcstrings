@@ -1,6 +1,54 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "I have about half a bottle of ketchup left": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I have about half a bottle of ketchup left"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Me queda como media botella de kétchup"
+          }
+        }
+      }
+    },
+    "Try “%@”": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try “%@”"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Probar «%@»"
+          }
+        }
+      }
+    },
+    "Last reported estimate": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last reported estimate"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Última estimación registrada"
+          }
+        }
+      }
+    },
     "Keep edits": {
       "localizations": {
         "en": {

@@ -22,7 +22,7 @@ struct PantryShelfView: View {
     }
 
     var body: some View {
-        List {
+        JournalList {
             if let access, let doc = try? store.document(scope), let snapshot = model.snapshot {
                 if let session = doc.shelf {
                     let byID = Dictionary(uniqueKeysWithValues: snapshot.lots.map { ($0.id, $0) })
@@ -80,7 +80,6 @@ struct PantryShelfView: View {
                 if error { Text(pantryText("Food or reservations changed. Refresh and review again before saving.")) }
             } else { Text(pantryText("Unlock the authorized private workspace to view pantry food.")) }
         }
-        .workingSurface()
         .navigationTitle(pantryText("Count one shelf"))
         .privacySensitive()
         .onChange(of: location) { _, _ in selected.removeAll() }

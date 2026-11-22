@@ -54,6 +54,17 @@ struct TripMeasure {
 }
 
 extension ShoppingLedger {
+    /// Working rows show the remaining purchase. The detail retains the full pick history.
+    func groceryRowAmount(_ line: ShoppingLine, measure: TripMeasure?) -> String? {
+        guard let measure else { return shoppingRowQuantity(for: line) }
+        func display(_ amount: Rational) -> String {
+            measure.perPack == nil && measure.need.unit == .count ? amountText(amount) : measure.display(amount)
+        }
+        guard line.tripPick != nil && !line.isChecked else { return display(measure.need.amount) }
+        guard let remaining = try? outstandingQuantity(forLineID: line.id) else { return ledgerQuantity(nil) }
+        return tripFormat("%@ still needed", display(remaining.amount))
+    }
+
     func tripAmountLabel(_ line: ShoppingLine, measure: TripMeasure?) -> String? {
         guard let measure else { return shoppingRowQuantity(for: line) }
         guard let actual = line.tripPick?.amount, !line.isChecked,

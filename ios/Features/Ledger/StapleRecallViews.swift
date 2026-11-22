@@ -16,7 +16,7 @@ struct StapleApprovalView: View {
     var body: some View {
         WorkingForm {
             if let shop = ledger.shop, shop.id == shopID, let line = shop.lines.first(where: { $0.id == lineID }) {
-                Text(line.name).font(.headline)
+                Text(line.name).marketJournalTitle(.title2)
                 LabeledContent(ledgerText("Store"), value: shop.basis.branch)
                 TextField(ledgerText("Purpose for a future pickup"), text: $purpose)
                 if shop.basis.branch.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty {
@@ -70,7 +70,7 @@ struct StapleRecallView: View {
         return true
     }
     var body: some View {
-        List {
+        JournalList {
             if !access.unlocked || !household.canOpenMembership || child?.presented == true {
                 Text(mtr("This view is unavailable."))
             } else if !permitted {
@@ -104,7 +104,7 @@ struct StapleRecallView: View {
                     }
                 }
             }
-        }.navigationTitle(ledgerText("Review prior staples"))
+        }.listStyle(.plain).navigationTitle(ledgerText("Review prior staples"))
             .onAppear { store = ledger.shop?.basis.branch.trimmingCharacters(in:.whitespacesAndNewlines) ?? "" }
             .task { await pickup.load() }
             .sheet(isPresented: $showsMembership, onDismiss: { membershipFocused = true }) {
@@ -146,7 +146,7 @@ private struct StapleReviewSheet: View {
     }
     var body: some View {
         WorkingForm {
-            Text(item.line.name).font(.headline)
+            Text(item.line.name).marketJournalTitle(.title2)
             LabeledContent(ledgerText("Purpose"), value:item.approval.purpose)
             LabeledContent(ledgerText("Remembered store"), value:item.approval.branch)
             Text(ledgerText("Review the quantity for this pickup. Enter its price separately after adding the item."))

@@ -135,6 +135,7 @@ private struct ScheduledTimeZoneList: View {
         return search.isEmpty ? available : available.filter { $0.localizedCaseInsensitiveContains(search) }
     }
 
+    @Environment(\.colorSchemeContrast) private var contrast
     var body: some View {
         List(zones, id: \.self) { zone in
             Button {
@@ -144,7 +145,10 @@ private struct ScheduledTimeZoneList: View {
                 if selected == zone { Label(zone, systemImage: "checkmark") }
                 else { Text(verbatim: zone) }
             }
+            .listRowBackground(Theme.surface)
+            .listRowSeparatorTint(contrast == .increased ? Theme.controlEdge : Theme.divider)
         }
+        .workingSurface()
         .searchable(text: $search, placement: .navigationBarDrawer(displayMode: .always))
         .navigationTitle(sharedRecoveryText("Scheduled time zone"))
     }

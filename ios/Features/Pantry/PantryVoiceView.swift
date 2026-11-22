@@ -182,7 +182,7 @@ struct VoicePantryRow {
                 if startingLot == nil && stage == .entry {
                     Section {
                         Text(pantryText("What changed in your pantry?"))
-                            .font(.title2.weight(.semibold)).accessibilityAddTraits(.isHeader)
+                            .marketJournalTitle()
                         TextField(pantryText("What did you use, or what would you like to check?"),
                                   text: Binding(get: { draft }, set: { text in
                                       guard stage == .entry, draft != text else { return }
@@ -196,6 +196,19 @@ struct VoicePantryRow {
                             .focused($editing)
                             .accessibilityIdentifier("pantry.voiceText")
                             .disabled(working || !model.canEdit)
+                        if draft.isEmpty && !editing {
+                            let example = pantryText("I have about half a bottle of ketchup left")
+                            Button {
+                                draft = example
+                                editing = true
+                            } label: {
+                                Label(pantryFormat("Try “%@”", example), systemImage: "text.quote")
+                                    .multilineTextAlignment(.leading)
+                                    .frame(minHeight: 44)
+                            }
+                            .disabled(working || !model.canEdit)
+                            .accessibilityIdentifier("pantry.voiceExample")
+                        }
                     } footer: {
                         Label(pantryText("Private · On this iPhone"), systemImage: "lock")
                     }
@@ -520,8 +533,20 @@ struct VoicePantryRow {
             case .amount: ""
             }
             VStack(alignment: .leading, spacing: 7) {
-                BrandScopeLabel(currentChoice, systemImage: "checkmark", showsSelection: true)
-                    .accessibilityIdentifier("pantry.voiceEstimate.\(index)")
+                if row.mode == .remaining {
+                    Label(pantryText("Remaining estimate"), systemImage: "text.quote")
+                        .font(.subheadline.weight(.semibold)).foregroundStyle(Theme.secondary)
+                    Text(verbatim: currentChoice)
+                        .font(.body.weight(.semibold))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(12)
+                        .foregroundStyle(Theme.onSelection)
+                        .background(Theme.selection, in: RoundedRectangle(cornerRadius: 8))
+                        .accessibilityIdentifier("pantry.voiceEstimate.\(index)")
+                } else {
+                    BrandScopeLabel(currentChoice, systemImage: "checkmark", showsSelection: true)
+                        .accessibilityIdentifier("pantry.voiceEstimate.\(index)")
+                }
                 if row.mode == .usedSome {
                     Text(pantryText("Record one use. The amount remaining will be unknown."))
                         .font(.subheadline).foregroundStyle(Theme.secondary)
@@ -814,9 +839,9 @@ struct VoicePantryRow {
     var body: some View {
         TimelineView(.periodic(from: .now, by: 60)) { context in
             if evidence.isCurrent(lot: lot, model: model, access: access, now: context.date) {
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: 10) {
                     if let printed = evidence.printed {
-                        Text(printed.sourceLabel).font(.headline)
+                        Label(printed.sourceLabel, systemImage: "tag").font(.headline).foregroundStyle(Theme.action)
                         LabeledContent(printed.meaningLabel, value: printed.meaning.label)
                         if let original = printed.originalPrintedWording {
                             LabeledContent(pantryText("Original printed wording"), value: original)
@@ -829,8 +854,10 @@ struct VoicePantryRow {
                             }
                         }
                     } else { Text(pantryText("No verified printed package date available.")) }
+                    Divider().accessibilityHidden(true)
                     if let quality = evidence.quality {
-                        Text(pantryText("FoodKeeper quality range")).font(.headline)
+                        Label(pantryText("FoodKeeper quality range"), systemImage: "book")
+                            .font(.headline).foregroundStyle(Theme.action)
                         Text(verbatim: "USDA FSIS · FoodKeeper v" + String(quality.version) + " · #" + String(quality.productID))
                         Text(pantryFormat("%@ – %@", PantryVoiceDateEvidence.formatted(quality.earliest, locale: locale),
                                           PantryVoiceDateEvidence.formatted(quality.latest, locale: locale)))

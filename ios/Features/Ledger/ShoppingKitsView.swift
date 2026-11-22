@@ -8,7 +8,7 @@ struct ShoppingKitsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var toDelete: ShoppingKit?
     var body: some View {
-        List {
+        JournalList {
             if let shop = model.shop, shop.id == shopID {
                 NavigationLink(shoppingText("Save a kit from this list")) {
                     ShoppingKitEditor(model: model, shop: shop, original: nil)
@@ -33,7 +33,7 @@ struct ShoppingKitsView: View {
                 }
             }
             if model.error != nil || model.hasPendingSave { LedgerSaveStatus(model: model) }
-        }.navigationTitle(shoppingText("Shopping kits"))
+        }.listStyle(.plain).navigationTitle(shoppingText("Shopping kits"))
         .toolbar { ToolbarItem(placement: .confirmationAction) { Button(ledgerText("Done")) { dismiss() } } }
         .confirmationDialog(shoppingText("Delete kit?"), isPresented: Binding(get: { toDelete != nil }, set: { if !$0 { toDelete = nil } }), presenting: toDelete) { kit in
             Button(shoppingText("Delete kit"), role: .destructive) {
@@ -47,8 +47,7 @@ struct ShoppingIntentLabel: View {
     let row: ShoppingKitRow
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(row.name).font(.headline)
-            Text(ledgerQuantity(row.quantity)).font(.subheadline)
+            GroceryNameAndAmount(name: row.name, amount: ledgerQuantity(row.quantity))
             if !row.notes.isEmpty { Text(row.notes) }
             if !row.exclusions.isEmpty {
                 Text(ledgerFormat("Exclusions: %@", row.exclusions.joined(separator: ", ")))

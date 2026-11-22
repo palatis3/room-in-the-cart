@@ -10,7 +10,7 @@ struct DeviceSurfacesEntry: View {
     var body: some View {
         Group {
             if composition.privateAuthorized {
-                List {
+                WorkingForm {
                     Section {
                         Text(SurfaceCopy.text("Selected text waits for your review. Nothing has been added to a shop."))
                         if composition.shops.isEmpty, !composition.entries.isEmpty {
@@ -26,8 +26,7 @@ struct DeviceSurfacesEntry: View {
                     if !composition.inboxAvailable { Text(SurfaceCopy.text("Selected text is unavailable on this installation.")) }
                     ForEach(composition.entries) { entry in
                         Section {
-                            Text(entry.originalText).textSelection(.enabled)
-                            if let edited = entry.editedText { Text(edited) }
+                            SharedTextExcerpt(entry: entry)
                             LabeledContent(SurfaceCopy.text("Expires"), value: entry.receipt.expiresAt.formatted(date: .abbreviated, time: .shortened))
                             Button(SurfaceCopy.text("Review selected text")) { if let selectedShop { Task { await composition.review(entry, shopID: selectedShop) } } }.disabled(selectedShop == nil)
                             Button(SurfaceCopy.text("Discard selected text"), role: .destructive) { Task { await composition.discard(entry) } }
@@ -37,8 +36,8 @@ struct DeviceSurfacesEntry: View {
                         NavigationLink(SurfaceCopy.text("Local reminders")) { SurfaceReminderList(composition: composition) }
                     }
                     if let message = composition.message { Text(message) }
-                    Button(SurfaceCopy.text("Try again")) { Task { await composition.sourceDidChange() } }
-                }.workingSurface().disabled(composition.busy)
+                    Button(SurfaceCopy.text("Refresh shared text")) { Task { await composition.sourceDidChange() } }
+                }.disabled(composition.busy)
                 .confirmationDialog(SurfaceCopy.text("Start a new review for this pickup?"), isPresented: Binding(
                     get: { composition.destinationChange != nil },
                     set: { if !$0 { composition.destinationChange = nil } }
@@ -76,16 +75,22 @@ private struct SurfaceImportReview: View {
                     if let shop = composition.shop(draft.preview.shopID) {
                         LabeledContent(SurfaceCopy.text("Shopping list"), value: shop.title)
                     }
-                    Section(SurfaceCopy.text("Original wording")) { Text(draft.originalText).textSelection(.enabled) }
+                    Section {
+                        SourceTextDisclosure(title: SurfaceCopy.text("Original wording"), text: draft.originalText)
+                    }
                     ForEach(draft.preview.lines) { row in
                         Section {
+                            Text(verbatim: row.originalText)
+                                .font(.body.monospaced())
+                                .textSelection(.enabled)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.vertical, 6)
                             SurfaceImportedLineEditor(fields: fields(for: row), hasChanges: pendingEdits[row.id] != nil, locked: draft.phase == .committing) {
                                 guard let edits = pendingEdits[row.id] else { return }
                                 if composition.editDraftLine(row.id, name: edits.name, amount: edits.amount, unit: edits.unit) {
                                     pendingEdits.removeValue(forKey: row.id)
                                 }
                             }
-                            Text(row.originalText).font(.footnote)
                             if let pack = row.originalPack { LedgerPackLabelFacts(pack: pack) }
                             if row.quantity == nil { Text(SurfaceCopy.text("Quantity unresolved")) }
                             if draft.phase == .committing {
@@ -106,6 +111,7 @@ private struct SurfaceImportReview: View {
                         Button(SurfaceCopy.text(draft.phase == .committing ? "Retry reviewed import" : "Add reviewed list")) { Task { await composition.addReviewedList() } }
                             .disabled(draft.phase == .review ? !review.isComplete || !pendingEdits.isEmpty :
                                 draft.preview.lines.isEmpty || draft.decisions.count != draft.preview.lines.count)
+                            .buttonStyle(PrimaryAction())
                         Button(SurfaceCopy.text("Reopen saved list before retry")) { Task { await composition.recoverImport() } }
                             .disabled(!pendingEdits.isEmpty || composition.hasUnsavedReviewChanges)
                         Text(SurfaceCopy.text("An interrupted import reopens the same reviewed operation. It never adds the list again automatically."))
@@ -135,6 +141,42 @@ private struct SurfaceImportReview: View {
     }
 }
 
+/// A long shared list still leaves its review and discard actions close to the source.
+struct SharedTextExcerpt: View {
+    let entry: SelectedTextEntry
+
+    var body: some View {
+        SourceTextDisclosure(title: SurfaceCopy.text("Original text"), text: entry.originalText)
+        if let edited = entry.editedText {
+            SourceTextDisclosure(title: SurfaceCopy.text("Review text"), text: edited)
+        }
+    }
+}
+
+private struct SourceTextDisclosure: View {
+    let title: String
+    let text: String
+    @State private var expanded = false
+
+    var body: some View {
+        DisclosureGroup(isExpanded: $expanded) {
+            Text(verbatim: text)
+                .font(.body.monospaced())
+                .textSelection(.enabled)
+        } label: {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.secondary)
+                if !expanded {
+                    Text(verbatim: String(text.prefix(120)))
+                        .font(.body.monospaced()).lineLimit(2).foregroundStyle(Theme.ink)
+                }
+            }
+            .frame(minHeight: 44, alignment: .leading)
+        }
+        .privacySensitive()
+    }
+}
+
 private struct SurfaceReminderList: View {
     @ObservedObject var composition: DeviceSurfacesComposition
     var body: some View {
@@ -154,16 +196,28 @@ private struct SurfaceReminderList: View {
     }
 }
 struct SurfaceUnavailableView: View {
+    var showsClose = false
+    @Environment(\.dismiss) private var dismiss
+
     var body: some View {
         ContentUnavailableView {
-            Label(SurfaceCopy.text("Open the app to review this item"), systemImage: "lock")
-                .foregroundStyle(Theme.ink)
+            Label {
+                Text(SurfaceCopy.text("Shortcut unavailable")).marketJournalTitle(.title2)
+            } icon: {
+                Image(systemName: "lock").foregroundStyle(Theme.action)
+            }
         } description: {
             Text(SurfaceCopy.text("This shortcut is unavailable in the current workspace. Unlock or choose an authorized workspace in the app."))
                 .foregroundStyle(Theme.secondary)
+        } actions: {
+            if showsClose {
+                Button { dismiss() } label: {
+                    Text(ledgerText("Close")).frame(minWidth: 44, minHeight: 44)
+                }
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Theme.canvas)
+        .background(Theme.surface)
     }
 }
 
@@ -180,8 +234,8 @@ struct DeviceSurfacesDestination: View {
         Group {
             switch destination {
             case .ownRequest:
-                if household.projection?.role == "contributor", !household.locked { HouseholdSettingsView(model: household) } else { SurfaceUnavailableView() }
-            case .unavailable: SurfaceUnavailableView()
+                if household.projection?.role == "contributor", !household.locked { HouseholdSettingsView(model: household) } else { SurfaceUnavailableView(showsClose: true) }
+            case .unavailable: SurfaceUnavailableView(showsClose: true)
             case .adultSummary(_, let kind, let handle):
                 AdultHomeSummaryDestination(kind: kind, handle: handle, pickup: pickup, household: household)
             case .shopping(let review):
@@ -197,17 +251,17 @@ struct DeviceSurfacesDestination: View {
                                 onSaved: { _ in composition.destination = nil })
                         }
                     }
-                } else { SurfaceUnavailableView() }
+                } else { SurfaceUnavailableView(showsClose: true) }
             case .capture:
                 if composition.privateAuthorized, let shop = ledger.shop { LedgerImportView(model: ledger, shopID: shop.id) }
                 else if composition.privateAuthorized { LedgerHomeView(model: ledger) }
-                else { SurfaceUnavailableView() }
+                else { SurfaceUnavailableView(showsClose: true) }
             case .shop(let id):
                 if selected, let generation = composition.generation, ledger.shop?.id == id {
                     LedgerHomeView(model: ledger, onShopSelected: { [weak composition] newID in
                         composition?.followPickerSelection(newID, from: id, generation: generation)
                     })
-                } else { SurfaceUnavailableView() }
+                } else { SurfaceUnavailableView(showsClose: true) }
             case .offer(let journey, let offerID):
                 if composition.privateAuthorized, selected, pickup.journey?.id == journey, let offer = pickup.journey?.unfilledOffers(at: composition.reminderEvaluationDate).first(where: { $0.id == offerID }) {
                     WorkingForm {
@@ -218,11 +272,11 @@ struct DeviceSurfacesDestination: View {
                         Text("\(pickupOfferCutoffText(offer)) · \(offer.deadline.timeZoneID)")
                         NavigationLink(tr("Pickup, repairs and handoffs")) { PickupHomeView(model: pickup).environment(\.pickupLedger, ledger) }
                     }
-                } else { SurfaceUnavailableView() }
+                } else { SurfaceUnavailableView(showsClose: true) }
             case .deferral(let journey, let needID):
                 if composition.privateAuthorized, selected, pickup.journey?.id == journey, let need = pickup.journey?.deferred.first(where: { $0.id == needID && $0.status == "review" }) {
                     WorkingForm { Text(need.line.name); Button(SurfaceCopy.text("Review next shop")) { nextShopRequested = true }.accessibilityFocused($nextShopFocused).environment(\.pickupLedger, ledger) }
-                } else { SurfaceUnavailableView() }
+                } else { SurfaceUnavailableView(showsClose: true) }
             }
         }.modifier(PickupNextShopRoute(model: pickup, requested: $nextShopRequested) { nextShopFocused = true })
         .task(id: destination.id) {

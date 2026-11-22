@@ -475,7 +475,7 @@ export class WebApp {
       this.root.querySelector<HTMLSelectElement>('#language')?.focus();
     });
     header.append(lang);this.root.append(header);
-    const main=this.el('main');main.setAttribute('aria-busy',String(this.busy));this.root.append(main);
+    const main=this.el('main');main.className='household-companion';main.setAttribute('aria-busy',String(this.busy));this.root.append(main);
     // A mobile browser can retain this hidden page as its cold-start preview.
     if(this.historyAway)return;
     const status=this.el('p',this.busy?this.t('Loading…'):this.t(this.notice));status.className='notice';status.setAttribute('role','status');status.setAttribute('tabindex','-1');main.append(status);

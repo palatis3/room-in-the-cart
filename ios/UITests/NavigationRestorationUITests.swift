@@ -15,17 +15,133 @@ import XCTest
         tap(tabs["Pantry"])
         XCTAssertTrue(app.buttons["pantry.setup.apply"].waitForExistence(timeout: 10))
         XCTAssertEqual(app.buttons["pantry.setup.firstFood"].label, "Add my first food")
+        capture("Market Journal - Pantry first use")
         app.terminate()
         launch(reset: false)
         XCTAssertTrue(tabs["Pantry"].isSelected)
         XCTAssertTrue(app.buttons["pantry.setup.apply"].waitForExistence(timeout: 10))
         tap(tabs["Shop"])
         XCTAssertTrue(element("quickGrocery.name").waitForExistence(timeout: 10))
+        capture("Market Journal - Shop")
+        tap(tabs["Dinners"])
+        XCTAssertTrue(app.staticTexts["No dinner planned"].waitForExistence(timeout: 8))
+        capture("Market Journal - Dinners")
         tap(tabs["Records"])
         XCTAssertTrue(app.buttons["records.startComparison"].waitForExistence(timeout: 10))
         XCTAssertFalse(app.buttons["records.sharedPlacementReports"].exists)
         XCTAssertFalse(app.buttons["records.priceBudgetHistory"].exists)
         XCTAssertFalse(app.buttons["Family decision history"].exists)
+        capture("Market Journal - Records")
+    }
+
+    func testShopPreviewOpensQuantityWithoutCheckingAndRestoresOnlyTheCheckedGrocery() {
+        launch(reset: true)
+        let entry = element("quickGrocery.name")
+        XCTAssertTrue(entry.waitForExistence(timeout: 10))
+        capture("Market Journal - Shop first use")
+        tap(entry)
+        for name in ["Pears", "Eggs"] {
+            entry.typeText(name + "\n")
+            let receipt = app.buttons.matching(NSPredicate(format: "identifier == %@ AND label CONTAINS %@",
+                                                          "quickGrocery.undo", name)).firstMatch
+            XCTAssertTrue(receipt.waitForExistence(timeout: 8))
+        }
+        tap(app.buttons["quickGrocery.dismissKeyboard"])
+        let check = app.buttons["Check Pears"]
+        let otherCheck = app.buttons["Check Eggs"]
+        reveal(check)
+        let id = check.identifier.replacingOccurrences(of: "shop.check-", with: "")
+        let inspect = app.buttons["shop.inspect-" + id]
+        XCTAssertTrue(inspect.isHittable)
+        XCTAssertGreaterThanOrEqual(check.frame.width, 44)
+        XCTAssertGreaterThanOrEqual(inspect.frame.height, 44)
+        XCTAssertFalse(check.frame.intersects(inspect.frame))
+        capture("Market Journal - Shop with two groceries")
+        tap(inspect)
+        let details = app.navigationBars["Item details"]
+        XCTAssertTrue(details.waitForExistence(timeout: 8))
+        tap(app.buttons["ledgerEditQuantityAndNotes"])
+        let editor = app.navigationBars["Quantity and notes"]
+        XCTAssertTrue(editor.waitForExistence(timeout: 8))
+        capture("Market Journal - Grocery quantity and notes")
+        tap(editor.buttons["Cancel"])
+        tap(details.buttons["Close"])
+        XCTAssertTrue(check.waitForExistence(timeout: 8))
+        let before = otherCheck.frame.midY
+        tap(check)
+        let undo = app.buttons["shop.undoCheck"]
+        XCTAssertTrue(undo.waitForExistence(timeout: 8))
+        XCTAssertTrue(undo.label.contains("Pears"))
+        let checked = app.buttons["shop.check-" + id]
+        XCTAssertTrue(checked.isSelected)
+        XCTAssertTrue(checked.label.contains("Pears"))
+        XCTAssertTrue(otherCheck.isHittable)
+        let after = otherCheck.frame.midY
+        XCTAssertEqual(before, after, accuracy: 2, "Checking Pears must leave the center of the Eggs target in place.")
+        let geometry = XCTAttachment(string: "Eggs center before: \(before) pt. After: \(after) pt.")
+        geometry.name = "Shop neighbor tap center"; geometry.lifetime = .keepAlways; add(geometry)
+        capture("Market Journal - Checked pears beside eggs")
+        app.terminate()
+        launch(reset: false)
+        XCTAssertFalse(check.exists)
+        XCTAssertTrue(otherCheck.exists)
+        XCTAssertTrue(undo.waitForExistence(timeout: 8))
+        XCTAssertTrue(undo.label.contains("Pears"))
+        tap(undo)
+        XCTAssertTrue(check.waitForExistence(timeout: 8))
+        XCTAssertTrue(otherCheck.exists)
+    }
+
+    func testShopShowsRemainingQuantityAfterAPartialPick() {
+        launch(reset: true)
+        let entry = element("quickGrocery.name")
+        tap(entry)
+        entry.typeText("Pears\n")
+        XCTAssertTrue(app.buttons["quickGrocery.undo"].waitForExistence(timeout: 8))
+        tap(app.buttons["quickGrocery.dismissKeyboard"])
+        let inspect = app.buttons["Inspect Pears"]
+        tap(inspect)
+        let details = app.navigationBars["Item details"]
+        tap(app.buttons["ledgerEditQuantityAndNotes"])
+        let quantity = app.textFields["Quantity (optional)"]
+        quantity.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.7)).tap()
+        app.typeText("4")
+        tap(app.buttons["ledgerContributionDone"])
+        tap(app.buttons["ledgerSaveContributionChanges"])
+        XCTAssertTrue(details.waitForExistence(timeout: 8))
+        tap(details.buttons["Close"])
+        XCTAssertTrue(inspect.waitForExistence(timeout: 8))
+        XCTAssertTrue((inspect.value as? String)?.contains("4") == true)
+        let amountID = inspect.identifier.replacingOccurrences(of: "shop.inspect-", with: "shop.editAmount-")
+        let directAmount = app.buttons[amountID]
+        XCTAssertTrue(directAmount.isHittable)
+        XCTAssertFalse(directAmount.frame.intersects(inspect.frame))
+        capture("Market Journal - Four pears in Shop")
+        tap(directAmount)
+        XCTAssertTrue(app.navigationBars["Quantity and notes"].waitForExistence(timeout: 8))
+        XCTAssertEqual(quantity.value as? String, "4")
+        tap(app.buttons["Cancel"])
+        XCTAssertTrue(app.buttons["Check Pears"].waitForExistence(timeout: 8))
+        tap(app.buttons["openPickupList"])
+        tap(app.buttons["ledgerInStore"])
+        let tripRow = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
+                                                      "tripDetails-", "Pears")).firstMatch
+        tap(tripRow)
+        tap(app.buttons["tripPickPart"])
+        let picked = app.textFields["tripPartialAmount"]
+        tap(picked)
+        picked.typeText("1")
+        tap(app.buttons["tripPartKeyboardDone"])
+        tap(app.buttons["tripSavePart"])
+        let store = app.navigationBars["Shop in store"]
+        tap(store.buttons["Done"])
+        tap(app.navigationBars["Shopping list"].buttons.firstMatch)
+        XCTAssertTrue(inspect.waitForExistence(timeout: 8))
+        reveal(inspect)
+        let amount = inspect.value as? String ?? ""
+        XCTAssertTrue(amount.contains("1") && amount.contains("3"), amount)
+        XCTAssertTrue(app.buttons["Check Pears"].exists)
+        capture("Market Journal - Shop after picking one of four pears")
     }
 
     func testNamedCheckUndoSurvivesRelaunchAndRestoresOnlyTheCheckedRow() {
@@ -39,8 +155,9 @@ import XCTest
         XCTAssertTrue(eggsAdded.waitForExistence(timeout: 10))
         let keyboard = app.keyboards.firstMatch
         XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
-        let viewList = app.buttons["quickGrocery.viewList"]
+        let viewList = app.buttons["openPickupList"]
         XCTAssertTrue(viewList.isHittable)
+        XCTAssertEqual(app.buttons.matching(identifier: "openPickupList").count, 1)
         XCTAssertEqual(viewList.label, "View shopping list")
         XCTAssertLessThanOrEqual(viewList.frame.maxY, keyboard.frame.minY)
         capture("Quick entry with View shopping list and Undo")
@@ -49,7 +166,7 @@ import XCTest
         let eggs = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "ledgerCheck-", "eggs")).firstMatch
         XCTAssertTrue(milk.waitForExistence(timeout: 10))
         let milkID = milk.identifier, eggsID = eggs.identifier
-        let inspect = app.buttons["Inspect milk"]
+        let inspect = app.fullListGrocery(labeled: "Inspect milk")
         XCTAssertTrue(inspect.wait(for: \.isHittable, toEqual: true, timeout: 8))
         XCTAssertGreaterThanOrEqual(inspect.frame.height, 44)
         inspect.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
@@ -307,6 +424,18 @@ extension XCUIApplication {
         if dismissed.evaluate(with: nil) { return true }
         let ready = XCTNSPredicateExpectation(predicate: dismissed, object: nil)
         return XCTWaiter.wait(for: [ready], timeout: timeout) == .completed
+    }
+
+    func fullListGrocery(labeled label: String) -> XCUIElement {
+        collectionViews.buttons.matching(NSPredicate(
+            format: "identifier BEGINSWITH %@ AND label == %@", "ledgerInspect-", label
+        )).element
+    }
+
+    func fullListCheck(labeled label: String) -> XCUIElement {
+        collectionViews.buttons.matching(NSPredicate(
+            format: "identifier BEGINSWITH %@ AND label == %@", "ledgerCheck-", label
+        )).element
     }
 
     func assertSelectedShoppingList(named name: String, file: StaticString = #filePath, line: UInt = #line) {

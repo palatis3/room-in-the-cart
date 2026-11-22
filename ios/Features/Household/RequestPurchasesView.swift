@@ -20,7 +20,7 @@ struct RequestPurchasesView: View {
     }
 
     var body: some View {
-        List {
+        JournalList {
             if let placed {
                 ShopperDeliverySection(model: inbox)
                 Section {

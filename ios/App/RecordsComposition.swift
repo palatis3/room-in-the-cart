@@ -292,7 +292,12 @@ struct RecordsToolsEntryView: View {
                 } actions: {
                     Button(recordsText("Try again")) { Task { await composition.load() } }
                 }
-            } else { ProgressView(recordsText("Opening records…")) }
+                .workingSurface()
+            } else {
+                ProgressView(recordsText("Opening records…"))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .workingSurface()
+            }
         }
         .task {
             composition.bind(access: access, household: household, active: scenePhase == .active)
@@ -312,7 +317,7 @@ struct RecordsToolsEntryView: View {
                     case let .comparison(app, draft, record):
                         ComparisonView(draft: draft, saved: record, allowsPersonalPrices: false).environmentObject(app)
                     case let .ledger(model):
-                        List {
+                        JournalList {
                             Text(recordsText("This is a separate recovered workspace. Your current pickup is unchanged."))
                             NavigationLink(recordsText("Open recovered shopping list")) { LedgerHomeView(model: model) }
                             NavigationLink(recordsText("Open recovered dinners")) { RecordsRecoveredDinnersView(ledger: model) }
@@ -323,8 +328,17 @@ struct RecordsToolsEntryView: View {
                         RecordsRecipeAdoptionView(recipe: recipe, ledger: composition.ledger, dinnerModel: dinnerModel,
                             cooking: composition.cookingContext(copy: destination.id, recipe: recipe))
                     case let .sharedRecord(record, text):
-                        ScrollView { Text(text).textSelection(.enabled).accessibilityIdentifier("records.sharedRecoveredText").frame(maxWidth: .infinity, alignment: .leading).padding() }
-                            .navigationTitle(recordsTitle(record))
+                        ScrollView {
+                            Text(verbatim: text)
+                                .textSelection(.enabled)
+                                .accessibilityIdentifier("records.sharedRecoveredText")
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding()
+                                .background(Theme.surface, in: RoundedRectangle(cornerRadius: 12))
+                                .padding()
+                        }
+                        .workingSurface()
+                        .navigationTitle(recordsTitle(record))
                     case let .ledgerDeletion(review):
                         RecordsLedgerDeletionView(ledger: composition.ledger, review: review) {
                             try await composition.deleteWholeLedger(review)
@@ -345,7 +359,7 @@ private struct RecordsRecoveredDinnersView: View {
     var body: some View {
         Group {
             if ledger.shop == nil {
-                List {
+                JournalList {
                     Text(recordsText("Start a shopping list in this separate recovered workspace to review and choose from its dinner library."))
                     NavigationLink(recordsText("Open recovered shopping list")) { LedgerHomeView(model: ledger) }
                 }
@@ -377,6 +391,7 @@ private struct RecordsRecoveredPantryView: View {
                 })
             } else {
                 ContentUnavailableView(recordsText("Records could not open"), systemImage: "lock")
+                    .workingSurface()
             }
         }
     }
@@ -1152,7 +1167,7 @@ private struct RecordsLedgerDeletionView: View {
     var body: some View {
         WorkingForm {
             Section {
-                Text(recordsText("Delete the entire local ledger")).font(.title2.bold())
+                Text(recordsText("Delete the entire local ledger")).font(.title2.bold()).accessibilityAddTraits(.isHeader)
                 Text(recordsText("This permanently deletes every shopping list, dinner plan, reusable dinner and saved revision in this ledger."))
                 Text(String(format: recordsText("%lld shopping lists · %lld reusable dinners"), Int64(effectiveReview.shopCount), Int64(effectiveReview.reusableDinnerCount)))
                 if let tokens = effectiveReview.draftTokens {
@@ -1171,7 +1186,7 @@ private struct RecordsLedgerDeletionView: View {
             if completed {
                 Section { Text(recordsText("The reviewed ledger and its history were deleted. You can start a new ledger in Shop.")) }
             } else {
-                if let failure { Section { Text(failure).foregroundStyle(.red) } }
+                if let failure { Section { Text(failure).foregroundStyle(Theme.error) } }
                 if ledger.hasPendingLedgerDeletion {
                     Section { Text(recordsText("This deletion was already confirmed. Retry finishes the same operation; it does not delete a newer ledger.")) }
                 }
@@ -1215,7 +1230,13 @@ private struct RecordsRecipeAdoptionView: View {
     }
     var body: some View {
         WorkingForm {
-            Text(recipe.title).font(.title2.bold())
+            VStack(alignment: .leading, spacing: 6) {
+                Text(recipe.title).marketJournalTitle()
+                if !recipe.yieldText.isEmpty {
+                    Text(verbatim: recipe.yieldText).foregroundStyle(Theme.secondary)
+                }
+            }
+            .padding(.vertical, 4)
             if let cooking {
                 NavigationLink(recordsText("Cook this recipe")) {
                     CookingSessionView(title: recipe.title, steps: recipe.cookingSteps, ingredients: recipe.ingredients,
@@ -1225,18 +1246,26 @@ private struct RecordsRecipeAdoptionView: View {
                         }
                 }.accessibilityIdentifier("cooking.openRecipe")
             }
-            Text(recipe.yieldText)
-            ForEach(Array(recipe.ingredients.enumerated()), id: \.offset) { _, value in Text(value) }
+            if !recipe.ingredients.isEmpty {
+                Section(dinnerText("Ingredients")) {
+                    ForEach(Array(recipe.ingredients.enumerated()), id: \.offset) { _, value in Text(verbatim: value) }
+                }
+            }
             if !recipe.steps.isEmpty {
                 NavigationLink(recordsText("Cooking steps")) { RecipeStepReviewView(steps: recipe.cookingSteps, ingredients: recipe.ingredients) }
             }
             ForEach(Array(recipe.steps.enumerated()), id: \.offset) { _, value in Text(value) }
-            Text(recipe.notes)
-            if let source = recipe.sourceURL { Text(source).textSelection(.enabled) }
+            if !recipe.notes.isEmpty {
+                Section(dinnerText("Notes")) { Text(verbatim: recipe.notes) }
+            }
+            if let source = recipe.sourceURL {
+                Section(recordsText("Recipe source")) { Text(verbatim: source).textSelection(.enabled) }
+            }
             Text(recordsText("Original ingredient and yield text stays saved. Review servings and ingredient quantities before choosing this dinner."))
             if let shop = ledger.shop {
                 Text(shop.title)
                 Button(recordsText("Review for this pickup")) { editing = true }
+                    .buttonStyle(PrimaryAction())
                     .disabled(!ledger.ready || ledger.saving || ledger.hasPendingSave)
             } else {
                 Text(recordsText("Start a pickup in Shop to choose this saved recipe. The original recipe remains here."))

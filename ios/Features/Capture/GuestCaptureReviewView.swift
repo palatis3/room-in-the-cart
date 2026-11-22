@@ -36,7 +36,10 @@ import CoreDomain
     var body: some View {
         WorkingForm {
             Section(captureText("Guest wording to review")) {
-                TextEditor(text: $capture.text).frame(minHeight: 120).accessibilityLabel(captureText("Guest wording to review"))
+                TextEditor(text: $capture.text)
+                    .captureDraftEditor(focused: focusedField == .wording)
+                    .frame(minHeight: 120)
+                    .accessibilityLabel(captureText("Guest wording to review"))
                     .focused($focusedField, equals: .wording)
                     .disabled(capture.busy)
                 PasteButton(payloadType: String.self) { values in
@@ -50,11 +53,16 @@ import CoreDomain
                     Button(captureText("Dictate on this iPhone")) { capture.startSpeech() }.disabled(!authorize())
                 }
                 if let candidate = capture.candidate {
-                    Text(candidate.text).textSelection(.enabled)
+                    Text(captureText("Captured wording — check before using"))
+                        .font(.subheadline.weight(.semibold)).foregroundStyle(Theme.secondary)
+                    Text(verbatim: candidate.text).textSelection(.enabled)
                     Button(captureText("Use captured text")) { capture.acceptCandidate() }.disabled(capture.busy)
                     Button(captureText("Keep my typed draft")) { capture.discardCandidate() }.disabled(capture.busy)
                 }
-                if capture.failure != nil { Text(captureText("Speech is unavailable or uncertain. Type and review the guest wording instead.")) }
+                if capture.failure != nil {
+                    Text(captureText("Speech is unavailable or uncertain. Type and review the guest wording instead."))
+                        .foregroundStyle(Theme.warning)
+                }
                 Text(captureText("Capture alone changes no servings. Choose a meal and group, then review a new total."))
             }
             Section(captureText("Meal, group and new total")) {
@@ -66,20 +74,25 @@ import CoreDomain
                     Text(captureText("Choose explicitly")).tag(nil as UUID?)
                     ForEach(meal?.groups.filter { !$0.isProtected } ?? []) { Text($0.name).tag(Optional($0.id)) }
                 }
-                if let group { Text(captureText("Current servings") + ": " + group.currentServings.description) }
+                if let group { LabeledContent(captureText("Current servings"), value: group.currentServings.description).monospacedDigit() }
                 if let proposedTotal {
-                    Text(captureText("Possible new total to review") + ": " + proposedTotal.description)
+                    LabeledContent(captureText("Possible new total to review"), value: proposedTotal.description).monospacedDigit()
                     Button(captureText("Use this proposed total")) {
                         total = proposedTotal.description
                         usedSuggestion = true
                         confirmed = false
                     }
                 }
-                TextField(captureText("Reviewed new total servings"), text: Binding(
-                    get: { total },
-                    set: { value in total = value; usedSuggestion = false }
-                )).keyboardType(.numbersAndPunctuation)
+                let totalLabel = captureText("Reviewed new total servings")
+                WorkingField(totalLabel) {
+                    TextField(totalLabel, text: Binding(
+                        get: { total },
+                        set: { value in total = value; usedSuggestion = false }
+                    ), prompt: Text(""))
+                    .textFieldStyle(WorkingInputStyle())
+                    .keyboardType(.numbersAndPunctuation)
                     .focused($focusedField, equals: .total)
+                }
                 Text(captureText("Protected groups stay unchanged. Ambiguous wording needs a typed total. The dinner planner will show pack, lunch and checkout effects before any Apply."))
                 Toggle(captureText("I checked the original wording, chosen meal, group and new total."), isOn: $confirmed)
             }
@@ -92,8 +105,10 @@ import CoreDomain
                     onPreview(.init(id: words.id, originalText: words.originalText, occurrenceID: meal.id,
                         groupID: group.id, baselineServings: group.currentServings, total: total))
                     if dismissAfterPreview { dismiss() }
-                }.disabled(!authorize() || delivered || !confirmed || capture.busy || capture.candidate != nil || capture.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || group == nil || reviewedTotal == nil)
-                    .accessibilityIdentifier("capture.guests.preview")
+                }
+                .buttonStyle(PrimaryAction())
+                .disabled(!authorize() || delivered || !confirmed || capture.busy || capture.candidate != nil || capture.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || group == nil || reviewedTotal == nil)
+                .accessibilityIdentifier("capture.guests.preview")
             }
         }
         .keyboardDoneAction(visible: focusedField != nil, title: captureText("Done"), identifier: "capture.guests.keyboardDone") {

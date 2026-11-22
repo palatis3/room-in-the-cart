@@ -25,7 +25,7 @@ struct FamilyDecisionsEntry: View {
                 FamilyDecisionServiceView(access: access, service: service, household: household, initialDish: initialDish, localShopID: localShopID)
                     .id(access)
             } else {
-                List {
+                JournalList {
                     PickupDecisionsLink(shopID: localShopID)
                     Text(fd("Connect an adult household account to record a shared decision."))
                     NavigationLink(HistoryCopy.text("Open household")) { HouseholdSettingsView(model: household) }
@@ -52,11 +52,10 @@ private struct LocalDecisionList: View {
     let reviewForHousehold: ((FamilyDecisionInput) -> Void)?
     @Environment(\.dismiss) private var dismiss
     var body: some View {
-        List {
+        JournalList {
             Text(fd("Saved pickup decisions on this iPhone"))
-                .font(.title2.bold())
+                .marketJournalTitle(.title2)
                 .fixedSize(horizontal: false, vertical: true)
-                .accessibilityAddTraits(.isHeader)
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
             if evidence.isEmpty { Text(fd("Saved store preferences and reviewed meal repairs will appear here.")) }
@@ -115,7 +114,7 @@ private struct FamilyDecisionServiceView: View {
     }
 
     var body: some View {
-        List {
+        JournalList {
             PickupDecisionsLink(shopID: localShopID, reviewForHousehold: model.canWrite ? { input in
                 draft = input; editing = true
             } : nil)
@@ -176,7 +175,12 @@ private struct FamilyDecisionServiceView: View {
                 Button(fd("Search decisions")) { search() }
                 ForEach(model.results) { result in
                     Button { Task { await model.open(shopID: result.shopId, id: result.id) } } label: {
-                        VStack(alignment: .leading) { Text(result.decision); Text(result.dish ?? result.product ?? result.occasion ?? "").font(.caption) }
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(verbatim: result.decision).font(.headline).foregroundStyle(Theme.ink)
+                            if let context = result.dish ?? result.product ?? result.occasion {
+                                Text(verbatim: context).font(.subheadline).foregroundStyle(Theme.secondary)
+                            }
+                        }
                     }
                 }
                 if model.searched && model.results.isEmpty { Text(fd("No matching decisions.")) }
@@ -194,7 +198,7 @@ private struct FamilyDecisionServiceView: View {
         .task { await model.load() }
         .sheet(item: $confirming) { review in
             NavigationStack {
-                List {
+                JournalList {
                     LabeledContent(fd("Shared shop"), value: review.shopID.uuidString)
                     switch review.action {
                     case .create(let input):
@@ -202,7 +206,7 @@ private struct FamilyDecisionServiceView: View {
                         if let dish = input.dish { LabeledContent(fd("Dish"), value: dish) }
                         if let product = input.product { LabeledContent(fd("Product"), value: product) }
                         if let occasion = input.occasion { LabeledContent(fd("Occasion"), value: occasion) }
-                        Text(input.decision)
+                        Text(input.decision).font(.headline)
                         Text(input.outcome ?? fd("Outcome unconfirmed"))
                     case .observe(_,let text): Text(text)
                     case .promote:
@@ -212,7 +216,9 @@ private struct FamilyDecisionServiceView: View {
                     Button(fd("Confirm shared change")) {
                         confirming = nil
                         Task { await model.save(shopID: review.shopID, recordID: review.recordID, action: review.action) }
-                    }.disabled(!model.canWrite)
+                    }
+                    .buttonStyle(PrimaryAction())
+                    .disabled(!model.canWrite)
                 }.navigationTitle(fd("Review shared change"))
                     .toolbar { ToolbarItem(placement: .cancellationAction) { Button(tr("Cancel")) { confirming = nil } } }
             }

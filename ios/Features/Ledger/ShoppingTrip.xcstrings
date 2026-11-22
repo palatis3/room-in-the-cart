@@ -33,6 +33,54 @@
         }
       }
     },
+    "%@ still needed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ still needed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ por comprar"
+          }
+        }
+      }
+    },
+    "%lld pack × %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld pack × %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld paquete × %@"
+          }
+        }
+      }
+    },
+    "%lld packs × %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld packs × %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld paquetes × %@"
+          }
+        }
+      }
+    },
     "%@ pack": {
       "localizations": {
         "en": {

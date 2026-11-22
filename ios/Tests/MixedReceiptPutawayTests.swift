@@ -32,6 +32,8 @@ import XCTest
         XCTAssertNil(row.amountCorrection)
         XCTAssertEqual(pantryPrintedQuantity("1.0", unit: .count), "1.0 " + pantryUnit(.count, singular: true))
         XCTAssertEqual(pantryPrintedQuantity("2/2", unit: .count), "2/2 " + pantryUnit(.count, singular: true))
+        XCTAssertEqual(pantryPrintedQuantity("1/2", unit: .cup), "1/2 " + pantryUnit(.cup, singular: true))
+        XCTAssertEqual(pantryPrintedQuantity("3/2", unit: .cup), "3/2 " + pantryUnit(.cup))
         XCTAssertEqual(pantryPrintedQuantity("2", unit: .count), "2 " + pantryUnit(.count))
     }
 

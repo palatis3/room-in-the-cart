@@ -40,6 +40,7 @@ import SwiftUI
             if let pending {
                 Section {
                     Text(captureText("This reference still needs a save check. Retry, or remove this draft and any saved copy."))
+                        .foregroundStyle(Theme.warning)
                     Button(captureText("Retry saving reference")) { save(pending) }.disabled(!authorize() || saving)
                     Button(captureText("Discard reference draft"), role: .destructive) {
                         Task { @MainActor in
@@ -53,7 +54,7 @@ import SwiftUI
                 Section {
                     Text(entry.reviewedLabel).font(.headline)
                     Text(entry.capturedAt, style: .date)
-                    Text(captureText("Source revision") + ": " + String(entry.target.revision)).font(.footnote)
+                    Text(captureText("Source revision") + ": " + String(entry.target.revision)).font(.footnote).foregroundStyle(Theme.secondary)
                     if let data = entry.imageJPEG, let image = UIImage(data: data) {
                         Image(uiImage: image).resizable().scaledToFit().frame(maxHeight: 260)
                             .accessibilityLabel(captureText("Saved reduced-size source reference"))
@@ -69,18 +70,23 @@ import SwiftUI
                         Text(captureText("Manually matched code") + ": " + barcode.value).textSelection(.enabled)
                     }
                     ForEach(entry.receiptLines) { row in
-                        VStack(alignment: .leading) {
-                            Text(row.originalText).font(.footnote)
-                            Text(row.reviewedText)
-                            if !row.quantityNote.isEmpty { Text(row.quantityNote) }
-                            if !row.priceNote.isEmpty { Text(row.priceNote) }
+                        VStack(alignment: .leading, spacing: 8) {
+                            ReceiptPaperLine(wording: row.originalText)
+                            LabeledContent(captureText("Reviewed line wording"), value: row.reviewedText)
+                            if !row.quantityNote.isEmpty { Text(verbatim: row.quantityNote) }
+                            if !row.priceNote.isEmpty { Text(verbatim: row.priceNote) }
                         }
                     }
                     Button(captureText("Remove this source reference"), role: .destructive) { removing = entry }
                         .disabled(!authorize() || saving)
                 }
             }
-            if failed { Section { Text(captureText("The reference could not be saved or opened. Typed planning still works. Remove an older reference if this workspace already has twelve.")) } }
+            if failed {
+                Section {
+                    Text(captureText("The reference could not be saved or opened. Typed planning still works. Remove an older reference if this workspace already has twelve."))
+                        .foregroundStyle(Theme.error)
+                }
+            }
         }
         .navigationTitle(captureText("Source references"))
         .sheet(item: $receiptReview) { review in

@@ -1,6 +1,102 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Save the encrypted file for your own recovery. Keep its key separately.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save the encrypted file for your own recovery. Keep its key separately."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guarda el archivo cifrado para recuperar tus datos. Guarda la clave por separado."
+          }
+        }
+      }
+    },
+    "Anyone who receives this readable file can read the private records you selected.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anyone who receives this readable file can read the private records you selected."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quien reciba este archivo podrá leer los registros privados que seleccionaste."
+          }
+        }
+      }
+    },
+    "The recipient can read the food names, amounts and instructions included in this copy.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The recipient can read the food names, amounts and instructions included in this copy."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quien reciba esta copia podrá leer los nombres de los alimentos, las cantidades y las instrucciones que contiene."
+          }
+        }
+      }
+    },
+    "Latest saved comparison": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Latest saved comparison"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Última comparación guardada"
+          }
+        }
+      }
+    },
+    "Receipts you reviewed on this iPhone": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipts you reviewed on this iPhone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recibos que revisaste en este iPhone"
+          }
+        }
+      }
+    },
+    "Shelf prices, quotes and amounts you recorded": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shelf prices, quotes and amounts you recorded"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precios de estante, cotizaciones e importes que anotaste"
+          }
+        }
+      }
+    },
     "On this iPhone": {
       "localizations": {
         "en": {

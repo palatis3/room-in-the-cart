@@ -15,6 +15,8 @@ In **Records → Family decision history**, review the pickup evidence and recor
 
 Open **Shop**, type a grocery in the item field and press Return. Use the nearby Undo to remove the entry. Open **Pantry** to record food you actually have, **Dinners** to plan a meal, or **Records** to revisit saved work. Plum & Pear uses the [shared semantic colors](shared/contracts/theme.json) for the native and web interfaces.
 
+Market Journal is the Plum & Pear 2.0 design. Its editable iPhone screens cover each of the four tabs, receipt review, household roles, membership and recovery. Use the same grocery and receipt examples when comparing a build with the designs. [Shopping list](https://www.figma.com/design/xuM2S4N98R8urssxn3Cc2u/Room-in-the-Cart?node-id=66-33) · [Receipt review](https://www.figma.com/design/xuM2S4N98R8urssxn3Cc2u/Room-in-the-Cart?node-id=66-129) · [Component library](https://www.figma.com/design/xuM2S4N98R8urssxn3Cc2u/Room-in-the-Cart?node-id=63-111) · [Widgets and extensions](https://www.figma.com/design/xuM2S4N98R8urssxn3Cc2u/Room-in-the-Cart?node-id=63-113)
+
 ## Compare two packs
 
 1. Open **Shop → Compare packs** and enter 12 wraps.

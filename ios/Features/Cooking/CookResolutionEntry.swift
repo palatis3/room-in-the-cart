@@ -20,7 +20,7 @@ struct CookResolutionEntry: View {
             } else if let context = model.context {
                 resolutionForm(context)
             } else {
-                List {
+                JournalList {
                     CookResolutionNotice(model: model)
                     Button(cookCompletionText("Reload saved ingredient use")) { Task { await model.reload() } }.disabled(model.busy)
                 }
@@ -121,7 +121,7 @@ struct CookResolutionEntry: View {
     }
 
     private func resolutionReview(_ review: PantryCookResolution.Review) -> some View {
-        List {
+        JournalList {
             Section(cookCompletionText("Review ingredient-use correction")) {
                 Text(cookResolutionAction(review.decision.action)).font(.headline)
                 Text(cookResolutionExplanation(review.decision.action))

@@ -1,6 +1,22 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Back to Settings": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back to Settings"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a Configuración"
+          }
+        }
+      }
+    },
     "You can read this guide offline. This iPhone has no link to the public family guide.": {
       "localizations": {
         "en": {

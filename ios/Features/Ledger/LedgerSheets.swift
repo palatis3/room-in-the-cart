@@ -99,7 +99,7 @@ struct LedgerImportView: View {
     var body: some View {
         let review = preview.map { LedgerImportReview(shop: shop, preview: $0, choices: choices) }
         return ScrollViewReader { scroll in
-            WorkingForm {
+            let form = WorkingForm {
                 if let incomingWording {
                     Section(SurfaceCopy.text("Shortcut item")) {
                         Text(verbatim: incomingWording)
@@ -176,7 +176,7 @@ struct LedgerImportView: View {
                     }
                 } else {
                     Section {
-                        Text(ledgerText("Type or paste your list")).font(.headline)
+                        Text(ledgerText("Type or paste your list")).marketJournalTitle(.title2)
                         TextEditor(text: $original)
                             .frame(height: min(importEditorHeight, 240))
                             .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Theme.controlEdge).allowsHitTesting(false))
@@ -212,10 +212,21 @@ struct LedgerImportView: View {
                 if firstDraft == nil && !showingImportStatus {
                     Section { importSaveStatus }
                 }
-            }.accessibilityIdentifier("ledgerImportForm")
-                .scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(ledgerText("Bring the list"))
+            }
+            .accessibilityIdentifier("ledgerImportForm")
+            .scrollDismissesKeyboard(.interactively)
+
+            VStack(spacing: 0) {
+                if preview == nil {
+                    reviewListButton
+                        .padding(.horizontal, 16).padding(.vertical, 8)
+                }
+                form
+            }
+                .background(Theme.canvas)
+                .navigationTitle(ledgerText("Bring the list"))
                 .navigationBarTitleDisplayMode(preview == nil ? .inline : .automatic)
-                .safeAreaInset(edge: preview == nil ? .top : .bottom, spacing: 0) {
+                .safeAreaInset(edge: .bottom, spacing: 0) {
                     if let preview, let review, inputFocus == nil {
                         Group {
                             if preview.lines.count > 1, let shop {
@@ -237,9 +248,6 @@ struct LedgerImportView: View {
                         }
                         .padding(.horizontal, 16).padding(.vertical, 8)
                         .background(Theme.canvas)
-                    } else if preview == nil {
-                        reviewListButton
-                            .padding(.horizontal, 16).padding(.vertical, 8).background(Theme.canvas)
                     }
                 }
                 .keyboardDoneAction(visible: inputFocus == .original, title: ledgerText("Done")) { inputFocus = nil }
@@ -792,7 +800,9 @@ private struct LedgerImportRowView: View {
             heading {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(verbatim: ledgerFormat("Original wording: %@", line.originalText))
-                        .font(.subheadline).accessibilityIdentifier("ledgerImportOriginal-\(number)")
+                        .font(.system(.subheadline, design: .monospaced))
+                        .foregroundStyle(Theme.ink)
+                        .accessibilityIdentifier("ledgerImportOriginal-\(number)")
                     if choice == .skip {
                         Text(ledgerText("Skipped")).font(.caption).foregroundStyle(Theme.secondary)
                     }

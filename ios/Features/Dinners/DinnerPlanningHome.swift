@@ -141,9 +141,9 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                                     detail: dinnerText("You can save a recipe now and choose it for a pickup later.")) { EmptyView() }
                                 if let library = privateRecipeLibrary {
                                     recipeEditorButton(library).buttonStyle(PrimaryAction())
-                                    pasteRecipeButton
                                 }
                             }.padding(.vertical, 6)
+                            if privateRecipeLibrary != nil { pasteRecipeButton }
                         }
                     }
                     Section {
@@ -164,6 +164,7 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                 } else if let shop = model.shop {
                     Section {
                         DinnerTonightPlan(model: model, shop: shop)
+                        if privateRecipeLibrary != nil { pasteRecipeButton.disabled(!model.editable) }
                         if let recipe = privateRecipeLibrary?.workspace.mealTemplates.first {
                             Button { handoff = recipe } label: {
                                 VStack(alignment: .leading, spacing: 4) {
@@ -187,7 +188,6 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                         DinnerPrepAgenda(model: model)
                     }
                     Section(dinnerText("Plan")) {
-                        if privateRecipeLibrary != nil { pasteRecipeButton }
                         NavigationLink(dinnerText("All chosen dinners, including earlier dates")) { DinnerAllMealsView(model: model) }
                         NavigationLink(captureText("Review a recipe from text or photo")) { RecipeCaptureEntry(model: model) }
                             .accessibilityIdentifier("dinner.scanRecipe")
@@ -223,7 +223,7 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                 DinnerFeedback(model: model)
                 Section { saveStatus() }
             }.listRowBackground(Theme.surface)
-        }.workingSurface().navigationTitle(dinnerText("Dinners")).listStyle(.insetGrouped)
+        }.workingSurface().navigationTitle(dinnerText("Dinners")).navigationBarTitleDisplayMode(.inline).listStyle(.insetGrouped)
         .sheet(item: $editingRecipe) { editor in
             if let library = privateRecipeLibrary {
                 NavigationStack { DinnerPrivateRecipeEditor(ledger: library, recipe: editor.recipe, pasteEntry: editor.pasteEntry) }
@@ -234,7 +234,7 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
 
     private var pasteRecipeButton: some View {
         Button { editingRecipe = RecipeEditor(recipe: nil, pasteEntry: true) } label: {
-            Label(dinnerText("Paste a recipe"), systemImage: "doc.on.clipboard")
+            JournalActionLabel(dinnerText("Paste a recipe"), systemImage: "doc.on.clipboard")
         }.accessibilityIdentifier("dinner.pasteRecipe")
     }
 
@@ -257,9 +257,10 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
     }
 
     private var startPickupButton: some View {
-        Button(ledgerText("Start pickup"), action: startPickup)
-            .frame(minHeight: 44)
-            .accessibilityIdentifier("dinnerStartPickup")
+        Button(action: startPickup) {
+            JournalActionLabel(ledgerText("Start pickup"), systemImage: "cart.badge.plus")
+        }
+        .accessibilityIdentifier("dinnerStartPickup")
     }
 
     private var tonightLink: some View {
@@ -741,17 +742,20 @@ private struct DinnerTonightHeading<Meals: View>: View {
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text(verbatim: eyebrow).font(.headline).foregroundStyle(Theme.action)
-                    .accessibilityAddTraits(.isHeader)
-                if let title { Text(title).font(.title2.weight(.semibold)) }
-                meals()
-                Text(verbatim: detail).font(.body).foregroundStyle(Theme.secondary)
-            }.frame(maxWidth: .infinity, alignment: .leading)
-            if !typeSize.isAccessibilitySize {
-                DinnerTableSetting().frame(width: 70, height: 62).accessibilityHidden(true)
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .center, spacing: 12) {
+                Text(verbatim: eyebrow)
+                    .marketJournalTitle(.largeTitle)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                if !typeSize.isAccessibilitySize {
+                    DinnerTableSetting().frame(width: 82, height: 64).accessibilityHidden(true)
+                }
             }
+            Divider().accessibilityHidden(true)
+            if let title { Text(title).font(.title3.weight(.semibold)) }
+            meals()
+            Text(verbatim: detail).font(.body).foregroundStyle(Theme.secondary)
         }
     }
 }
@@ -773,6 +777,24 @@ private struct DinnerTableSetting: View {
             context.fill(plate, with: .color(Theme.surface))
             context.stroke(plate, with: .color(Theme.action), lineWidth: 1.5)
             context.stroke(Path(ellipseIn: CGRect(x: 22, y: 15, width: 36, height: 36)), with: .color(Theme.controlEdge), lineWidth: 0.8)
+            let sprig = Path { p in
+                p.move(to: CGPoint(x: 30, y: 41))
+                p.addQuadCurve(to: CGPoint(x: 49, y: 25), control: CGPoint(x: 39, y: 32))
+            }
+            context.stroke(sprig, with: .color(Theme.action), style: StrokeStyle(lineWidth: 1, lineCap: .round))
+            for point in [CGPoint(x: 36, y: 35), CGPoint(x: 42, y: 30)] {
+                let leaf = Path { p in
+                    p.move(to: point)
+                    p.addQuadCurve(to: CGPoint(x: point.x - 2, y: point.y - 8),
+                                   control: CGPoint(x: point.x - 5, y: point.y - 3))
+                    p.addQuadCurve(to: point, control: CGPoint(x: point.x + 2, y: point.y - 6))
+                    p.move(to: point)
+                    p.addQuadCurve(to: CGPoint(x: point.x + 8, y: point.y - 1),
+                                   control: CGPoint(x: point.x + 5, y: point.y + 2))
+                    p.addQuadCurve(to: point, control: CGPoint(x: point.x + 4, y: point.y - 4))
+                }
+                context.fill(leaf, with: .color(Theme.action))
+            }
             let fork = Path { p in
                 p.move(to: CGPoint(x: 4, y: 13))
                 p.addLine(to: CGPoint(x: 4, y: 23))

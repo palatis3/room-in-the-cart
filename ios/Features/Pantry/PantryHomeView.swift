@@ -1,6 +1,26 @@
 import CoreDomain
 import SwiftUI
 
+/// A chapter heading for the pantry index and its first visit.
+struct PantryJournalHeading: View {
+    let title: String
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 12) {
+            Text(verbatim: title)
+                .marketJournalTitle(.largeTitle)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            if !typeSize.isAccessibilitySize {
+                Image(decorative: "MarketGroceries").resizable().scaledToFit()
+                    .frame(width: 87, height: 60).accessibilityHidden(true)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
 enum PantrySheet: Identifiable {
     case add, found(InventoryLocation), recount(UUID), purchase(PantryRecentPurchase), review, receipt, products, prices, aliases
     var id: String {
@@ -43,6 +63,7 @@ struct PantryHomeView: View {
                 }))
         }
         .navigationTitle(pantryText("My Pantry"))
+        .navigationBarTitleDisplayMode(.inline)
         .onChange(of: model.canEdit, initial: true) { _, ready in
             if ready, accessAllowed, let initialSheet, let requested = initialSheet.wrappedValue {
                 initialSheet.wrappedValue = nil
@@ -58,7 +79,7 @@ struct PantryHomeView: View {
     private var pantryList: some View {
         Group {
             if accessAllowed {
-                List {
+                JournalList {
                     if let notice = model.notice {
                         Section {
                             Label(pantryNotice(notice), systemImage: notice == .saved ? "checkmark.circle" : "exclamationmark.circle")
@@ -74,7 +95,8 @@ struct PantryHomeView: View {
                     }
                     if model.phase == .ready, let snapshot = model.snapshot {
                         Section {
-                            VStack(alignment: .leading, spacing: 12) {
+                            VStack(alignment: .leading, spacing: 8) {
+                                PantryJournalHeading(title: pantryText("Food at home"))
                                 BrandScopeLabel(recoveredHistoryAccess == nil ? pantryText("Private · On this iPhone") : recordsText("Recovered workspace"), systemImage: recoveredHistoryAccess == nil ? "lock" : "archivebox")
                                 Button { sheet = .add } label: {
                                     Label(pantryText("Add food"), systemImage: "plus")
@@ -83,15 +105,6 @@ struct PantryHomeView: View {
                                 .accessibilityIdentifier("pantry.add")
                             }
                             .padding(.vertical, 4)
-                            NavigationLink {
-                                PantryPackFind(model: model, origin: snapshot.state.workspaceID)
-                            } label: {
-                                Label(pantryText("Find a package in Pantry"), systemImage: "barcode.viewfinder")
-                            }.accessibilityIdentifier("pantry.findPack")
-                            Button { sheet = .receipt } label: {
-                                Label(pantryText("Review a receipt"), systemImage: pantryReceiptSymbol)
-                            }
-                            .disabled(!model.canEdit).accessibilityIdentifier("pantry.receipt")
                             if let household {
                                 NavigationLink {
                                     PantryVoiceView(model: model, household: household, origin: snapshot.state.workspaceID)
@@ -101,6 +114,15 @@ struct PantryHomeView: View {
                                 .disabled(!model.canEdit)
                                 .accessibilityIdentifier("pantry.voiceEntry")
                             }
+                            NavigationLink {
+                                PantryPackFind(model: model, origin: snapshot.state.workspaceID)
+                            } label: {
+                                Label(pantryText("Find a package in Pantry"), systemImage: "barcode.viewfinder")
+                            }.accessibilityIdentifier("pantry.findPack")
+                            Button { sheet = .receipt } label: {
+                                JournalActionLabel(pantryText("Review a receipt"), systemImage: pantryReceiptSymbol)
+                            }
+                            .disabled(!model.canEdit).accessibilityIdentifier("pantry.receipt")
                         }
                         Section {
                             if let digestAccess, digestAccess.scope.origin == snapshot.state.workspaceID, digestAccess.authorized() {
@@ -126,8 +148,6 @@ struct PantryHomeView: View {
                             if snapshot.lots.isEmpty {
                                 Text(pantryText("No food recorded here.")).foregroundStyle(Theme.secondary)
                             }
-                        } header: {
-                            Text(pantryText("Food at home"))
                         }
                         ForEach(InventoryLocation.allCases, id: \.self) { location in
                             let lots = snapshot.lots.filter { $0.location == location }.sorted {
@@ -216,7 +236,7 @@ struct PantryHomeView: View {
                         }
                     }
                     if model.busy { ProgressView(pantryText("Working…")) }
-                }.workingSurface()
+                }
             } else { Text(pantryText("Unlock the authorized private workspace to view pantry food.")) }
         }
     }
@@ -374,8 +394,14 @@ private struct PantryShelfLotLabel: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
-            Text(lot.name).font(.headline).foregroundStyle(Theme.ink)
-            Text(pantryCount(lot.count, estimate: lot.countWording)).monospacedDigit().foregroundStyle(Theme.ink)
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .firstTextBaseline, spacing: 16) {
+                    name.fixedSize()
+                    Spacer(minLength: 0)
+                    count.fixedSize()
+                }
+                VStack(alignment: .leading, spacing: 4) { name; count }
+            }
             if let availability, availability.issues.isEmpty, let held = availability.held, held.amount > .zero {
                 Text(pantryFormat("%@ reserved · %@ available", pantryQuantity(held), pantryQuantity(availability.free)))
                     .font(.subheadline).foregroundStyle(Theme.secondary)
@@ -389,6 +415,20 @@ private struct PantryShelfLotLabel: View {
         }
         .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
+    }
+
+    private var name: some View {
+        Text(verbatim: lot.name).font(.headline).foregroundStyle(Theme.ink)
+    }
+
+    @ViewBuilder private var count: some View {
+        let value = pantryCount(lot.count, estimate: lot.countWording)
+        if lot.count == .someLeft || lot.count == .haveEnough {
+            Label(value, systemImage: "text.quote").foregroundStyle(Theme.secondary)
+        } else {
+            Text(value).monospacedDigit()
+                .foregroundStyle(lot.count.quantity == nil ? Theme.secondary : Theme.ink)
+        }
     }
 }
 
@@ -480,6 +520,13 @@ private struct PantryLotView: View {
                     PantryLotSummary(lot: lot, availability: model.snapshot?.availability.lots.first { $0.id == lotID },
                                      availabilityNeedsReview: availabilityNeedsReview,
                                      addedAsOnePackage: model.snapshot?.singlePackageIntakes.contains(lot.id) == true)
+                    if let wording = lot.countWording, lot.count == .someLeft {
+                        DisclosureGroup(pantryText("Last reported estimate")) {
+                            Text(verbatim: wording).font(.body.weight(.medium)).textSelection(.enabled)
+                            LabeledContent(pantryText("Last count update"), value: lot.confirmedAt.formatted(date: .abbreviated, time: .shortened))
+                        }
+                        .accessibilityIdentifier("pantry.estimateEvidence")
+                    }
                     LabeledContent(pantryText("Storage location"), value: pantryLocationName(lot.location))
                     if let opened = lot.openedAt {
                         LabeledContent(pantryText("Opened"), value: opened.formatted(date: .abbreviated, time: .shortened))

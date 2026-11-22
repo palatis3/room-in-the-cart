@@ -54,7 +54,7 @@ private struct HouseholdTonightView: View {
     var body: some View {
         Group {
             if live {
-                List {
+                JournalList {
                     Section {
                         Text(verbatim: household.projection?.household.label ?? "").font(.headline)
                         Text(tonightText("Only recipes reviewed for this household and food available after reservations are shown here."))

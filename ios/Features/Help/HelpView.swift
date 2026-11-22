@@ -19,9 +19,15 @@ struct PrivateListSharingGuide: View {
 struct HelpSettingsSection: View {
     var body: some View {
         Section(helpText("Help and privacy")) {
-            NavigationLink(helpText("Help")) { HelpCenterView() }.accessibilityIdentifier("settings.help")
-            NavigationLink(helpText("Privacy and data")) { HelpPrivacyView() }.accessibilityIdentifier("settings.privacy")
-            NavigationLink(helpText("Support")) { HelpSupportView() }.accessibilityIdentifier("settings.support")
+            NavigationLink { HelpCenterView() } label: {
+                Label(helpText("Help"), systemImage: "questionmark.circle")
+            }.accessibilityIdentifier("settings.help")
+            NavigationLink { HelpPrivacyView() } label: {
+                Label(helpText("Privacy and data"), systemImage: "lock")
+            }.accessibilityIdentifier("settings.privacy")
+            NavigationLink { HelpSupportView() } label: {
+                Label(helpText("Support"), systemImage: "lifepreserver")
+            }.accessibilityIdentifier("settings.support")
         }
     }
 }
@@ -32,8 +38,10 @@ struct HelpCenterView: View {
         WorkingForm {
             Section {
                 Text(helpText("In Shop, choose Add a grocery to start your private list. Pantry, Dinners and Records are also available without an account."))
+            } header: {
+                Text(helpText("Using Room in the Cart")).marketJournalTitle(.title2).textCase(nil)
             }
-            Section(helpText("Using Room in the Cart")) {
+            Section {
                 FamilyPermissionGuideLink()
                 ForEach(HelpTopic.allCases) { topic in
                     NavigationLink { HelpArticleView(topic: topic) } label: {
@@ -198,9 +206,11 @@ struct HelpPrivacyView: View {
     private let configuration = HelpConfiguration.fromBundle()
     var body: some View {
         WorkingForm {
-            Section(helpText("Your private workspace")) {
+            Section {
                 Text(helpText("Your private lists, dinners, comparisons, capture reviews and pickup records stay on this iPhone. Joining a household keeps that work here."))
                 Text(helpText("An export can include private notes and the names of people you shared with. Preview it before choosing a recipient."))
+            } header: {
+                Text(helpText("Your private workspace")).marketJournalTitle(.title2).textCase(nil)
             }
             Section(helpText("When you connect or share")) {
                 PrivateListSharingGuide()

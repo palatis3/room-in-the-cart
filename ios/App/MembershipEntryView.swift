@@ -33,8 +33,6 @@ struct MembershipEntryView: View {
                 MembershipPage {
                     if household.membershipSession == nil {
                         householdEntry
-                        FamilyPermissionGuideLink()
-                        PrivateListSharingGuide()
                     } else if membership.failure {
                         MembershipHeading(title: mtr("Membership needs verification"), symbol: "arrow.clockwise")
                         Text(tr("Membership could not be verified. Your Free work is still available."))
@@ -49,9 +47,10 @@ struct MembershipEntryView: View {
                     Divider()
                     MembershipFreeTools()
                     MembershipBenefits()
-                    if !household.configured {
-                        Text(helpText("Household is a paid subscription. The App Store price is unavailable on this iPhone."))
-                            .foregroundStyle(Theme.secondary)
+                    if household.membershipSession == nil {
+                        Divider()
+                        PrivateListSharingGuide()
+                        FamilyPermissionGuideLink()
                     }
                     MembershipLegalLinks(configuration: .fromBundle())
                 }
@@ -65,17 +64,19 @@ struct MembershipEntryView: View {
 
     @ViewBuilder private var householdEntry: some View {
         if household.configured && (household.identity != nil || household.emailOTPEnabled) {
-            Text(tr("Choose your household first")).font(.title2.bold()).accessibilityAddTraits(.isHeader)
+            MembershipHeading(title: tr("Choose your household first"), symbol: "house")
             householdSetup(mtr("Open adult household setup")).buttonStyle(PrimaryAction())
             freeButton.buttonStyle(MembershipReturnButtonStyle())
         } else {
-            Text(mtr("Free planning")).font(.title2.bold()).accessibilityAddTraits(.isHeader)
+            MembershipHeading(title: mtr("Free planning"), symbol: "list.bullet")
             freeButton.buttonStyle(PrimaryAction())
             if household.configured {
                 householdSetup(mtr("Saved adult account options")).buttonStyle(MembershipReturnButtonStyle())
                 Text(mtr("You can use an adult account already saved on this iPhone. Email sign-in is unavailable."))
             } else {
                 Text(mtr("Your private lists and dinners work without an account. Household sign-in is unavailable on this iPhone."))
+                Text(helpText("Household is a paid subscription. The App Store price is unavailable on this iPhone."))
+                    .foregroundStyle(Theme.secondary)
             }
         }
         if household.configured {

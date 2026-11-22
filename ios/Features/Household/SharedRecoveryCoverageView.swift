@@ -19,7 +19,7 @@ struct SharedRecoveryCoverageView: View {
     }
 
     var body: some View {
-        List {
+        JournalList {
             if allowed, let snapshot, showsReviewedRecovery(snapshot.record, model: model, household: household) {
                 if let when = serviceDate(snapshot.coverage.asOf) { LabeledContent(ht("Checked at"), value: when.formatted()) }
                 ForEach(snapshot.record.meals) { meal in

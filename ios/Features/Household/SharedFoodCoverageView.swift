@@ -24,7 +24,7 @@ struct SharedFoodCoverageView: View {
     }
 
     var body: some View {
-        List {
+        JournalList {
             if allowed, let result, result.pantry == model.pantryRecord {
                 report(result)
             } else if !allowed || failed || result != nil {

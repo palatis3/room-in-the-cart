@@ -70,23 +70,26 @@ struct PantrySetupView: View {
                     }, initialSheet: $initialSheet)
                 }
             } else {
-                List {
+                JournalList {
                     if busy { ProgressView(pantryText("Working…")) }
                     switch phase {
                     case .loading: EmptyView()
                     case .review(_, let review):
                         let startsEmpty = review.sourceCount == 0 && review.lotCount == 0 && review.reservationCount == 0 && review.issues.isEmpty
                         Section {
+                            if destination == .home {
+                                PantryJournalHeading(title: pantryText(startsEmpty ? "Food at home" : "Set up My Pantry"))
+                            }
                             if startsEmpty && destination == .home {
                                 Button(pantryText("Add my first food")) {
                                     Task { await perform(.apply, opening: .add) }
                                 }
                                 .buttonStyle(PrimaryAction()).accessibilityIdentifier("pantry.setup.firstFood")
-                                Button(pantryText("Review a receipt")) { Task { await perform(.apply, opening: .receipt) } }
+                                firstVisitAction("Review a receipt", systemImage: pantryReceiptSymbol, opening: .receipt)
                                     .accessibilityIdentifier("pantry.setup.receipt")
-                                Button(pantryText("Scan products")) { Task { await perform(.apply, opening: .products) } }
+                                firstVisitAction("Scan products", systemImage: "barcode.viewfinder", opening: .products)
                                     .accessibilityIdentifier("pantry.setup.products")
-                                Button(pantryText("Other pantry options")) { Task { await perform(.apply) } }
+                                firstVisitAction("Other pantry options", systemImage: "square.grid.2x2")
                                     .accessibilityIdentifier("pantry.setup.apply")
                             } else if startsEmpty && destination == .prices {
                                 Button(pantryText("Record a price")) {
@@ -95,7 +98,7 @@ struct PantrySetupView: View {
                                 }.buttonStyle(PrimaryAction()).accessibilityIdentifier("pantry.setup.firstPrice")
                             } else if startsEmpty { applySetup(startsEmpty: true) }
                             VStack(alignment: .leading, spacing: 12) {
-                                if !startsEmpty { Text(pantryText("Set up My Pantry")).font(.title2.bold()) }
+                                if !startsEmpty && destination != .home { Text(pantryText("Set up My Pantry")).font(.title2.bold()) }
                                 Text(pantryText(setupExplanation(startsEmpty: startsEmpty)))
                                     .foregroundStyle(Theme.secondary)
                                 BrandScopeLabel(pantryText("Private · On this iPhone"), systemImage: "lock")
@@ -122,11 +125,12 @@ struct PantrySetupView: View {
                     case .ready: EmptyView()
                     }
                     if destination == .home { HouseholdTonightLink(household: household) }
-                }.workingSurface().disabled(busy)
+                }.disabled(busy)
             }
         }
         .privacySensitive()
         .navigationTitle(title)
+        .navigationBarTitleDisplayMode(destination == .home ? .inline : .automatic)
         .task(id: scope) {
             if case .ready(let original, let model) = phase {
                 if original == scope && model.phase != .accessDenied { return }
@@ -134,6 +138,14 @@ struct PantrySetupView: View {
             }
             generation = UUID(); phase = .loading; busy = false; initialSheet = nil; startPriceEntry = false
             if scope != nil { await perform(.inspect) }
+        }
+    }
+
+    private func firstVisitAction(_ key: String, systemImage: String, opening sheet: PantrySheet? = nil) -> some View {
+        Button {
+            Task { await perform(.apply, opening: sheet) }
+        } label: {
+            JournalActionLabel(pantryText(key), systemImage: systemImage)
         }
     }
 

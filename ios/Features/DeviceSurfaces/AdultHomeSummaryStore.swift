@@ -274,7 +274,7 @@ struct AdultHomeSummaryDestination: View {
                 // Tonight refreshes stock on entry. Its own in-flight read must
                 // retain the view and task under the originally admitted session.
                 if openedTonight == tonightSession { TonightEntry() }
-                else { SurfaceUnavailableView() }
+                else { SurfaceUnavailableView(showsClose: true) }
             } else if let child, let current = PantryDigestAccess.current(pickup: pickup, access: access, household: household, child: child) {
                 if kind == .tonight, home.permitsTonight(handle, access: current,
                             basis: try? TonightHomeBasis.current(ledger: ledger, pickup: pickup)) {
@@ -288,8 +288,8 @@ struct AdultHomeSummaryDestination: View {
                           home.permitsUseSoon(handle, access: current, lots: snapshot.lots, digest: digest) {
                     if let model { PantryDigestList(model: model, access: current) }
                     else { ProgressView().task { model = pickup.makePantryModel() } }
-                } else { SurfaceUnavailableView() }
-            } else { SurfaceUnavailableView() }
+                } else { SurfaceUnavailableView(showsClose: true) }
+            } else { SurfaceUnavailableView(showsClose: true) }
         }.privacySensitive()
     }
 }

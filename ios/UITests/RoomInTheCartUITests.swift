@@ -42,7 +42,7 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(undo.waitForExistence(timeout: 10))
         XCTAssertTrue(undo.label.contains(name))
         XCTAssertEqual(field.frame.height, emptyHeight, accuracy: 1, "Submitting should restore the empty line.")
-        let viewList = app.buttons["quickGrocery.viewList"]
+        let viewList = app.buttons["openPickupList"]
         XCTAssertTrue(viewList.waitForExistence(timeout: 5))
         XCTAssertEqual(viewList.label, "Ver lista de compras")
         XCTAssertLessThanOrEqual(undo.frame.maxY, viewList.frame.minY, "Accessibility text sizes should stack the receipt actions.")
@@ -52,7 +52,13 @@ final class RoomInTheCartUITests: XCTestCase {
     func testPrivateQuickEntrySurvivesAnOrdinaryBackgroundInterruption() {
         launch()
         let field = element("quickGrocery.name")
-        tap(field)
+        reveal(field)
+        XCTAssertEqual(app.descendants(matching: .any).matching(identifier: "quickGrocery.name").count, 1)
+        XCTAssertTrue([.textField, .textView].contains(field.elementType))
+        XCTAssertFalse(app.staticTexts["Add a grocery"].exists)
+        // Touch the visible prompt on the leading side of the empty field.
+        field.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.5)).tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
         field.typeText("Oats")
         XCUIDevice.shared.press(.home)
         app.activate()
@@ -64,8 +70,8 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(added.label.contains("Oats"))
         XCTAssertTrue(app.staticTexts["Added Oats to Pickup on this iPhone."].exists)
         XCTAssertFalse(app.keyboards.firstMatch.exists)
-        tap(app.buttons["quickGrocery.viewList"])
-        let originalRow = app.buttons["Inspect Oats"]
+        tap(app.buttons["openPickupList"])
+        let originalRow = app.fullListGrocery(labeled: "Inspect Oats")
         XCTAssertTrue(originalRow.waitForExistence(timeout: 8))
         let editID = originalRow.identifier.replacingOccurrences(of: "ledgerInspect-", with: "ledgerEditRow-")
         originalRow.swipeLeft()
@@ -77,13 +83,13 @@ final class RoomInTheCartUITests: XCTestCase {
         itemName.typeText(" (rolled)\n")
         XCTAssertTrue(element("ledgerUnsavedItem").exists)
         tap(app.buttons["Save item"])
-        tap(app.buttons["Inspect Oats (rolled)"])
+        tap(app.fullListGrocery(labeled: "Inspect Oats (rolled)"))
         let edit = app.buttons["ledgerEditItemDetails"]
         XCTAssertTrue(edit.waitForExistence(timeout: 8))
         XCTAssertEqual(edit.label, "Edit name, notes and department")
         XCTAssertTrue(app.staticTexts["Oats"].exists)
         tap(app.navigationBars.buttons.firstMatch)
-        tap(app.buttons["Check Oats (rolled)"])
+        tap(app.fullListCheck(labeled: "Check Oats (rolled)"))
         tap(element("ledgerRecentlyChecked"))
         XCTAssertTrue(app.buttons["Reopen Oats (rolled)"].waitForExistence(timeout: 8))
     }
@@ -152,8 +158,8 @@ final class RoomInTheCartUITests: XCTestCase {
         openListAfterQuickEntry()
 
         let list = app.navigationBars["Lista de compras"]
-        let item = app.buttons["Ver detalles de " + name]
-        let check = app.buttons["Marcar " + name]
+        let item = app.fullListGrocery(labeled: "Ver detalles de " + name)
+        let check = app.fullListCheck(labeled: "Marcar " + name)
         XCTAssertTrue(list.waitForExistence(timeout: 8))
         // At accessibility sizes the list controls precede the lazy grocery rows.
         reveal(item)
@@ -315,13 +321,13 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done"))
         XCTAssertTrue(commit.waitForExistence(timeout: 5))
         tap(commit)
-        let corrected = app.buttons["Inspect scallions"]
+        let corrected = app.fullListGrocery(labeled: "Inspect scallions")
         XCTAssertTrue(corrected.waitForExistence(timeout: 8))
         app.terminate()
         launch(reset: false)
-        if !corrected.waitForExistence(timeout: 3) { tap(app.buttons["quickGrocery.viewList"]) }
+        if !app.navigationBars["Shopping list"].waitForExistence(timeout: 3) { tap(app.buttons["openPickupList"]) }
         XCTAssertTrue(corrected.waitForExistence(timeout: 8))
-        let tortillas = app.buttons["Inspect corn tortillas"]
+        let tortillas = app.fullListGrocery(labeled: "Inspect corn tortillas")
         reveal(tortillas)
         XCTAssertTrue(tortillas.exists)
         tap(corrected)
@@ -489,7 +495,8 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertEqual(amount.value as? String, "3")
         screenshot("Spanish source wording and corrected yogurt quantity")
         tap(commit)
-        let yogurt = app.buttons["Ver detalles de yogures naturales"]
+        XCTAssertTrue(app.navigationBars["Lista de compras"].waitForExistence(timeout: 8))
+        let yogurt = app.fullListGrocery(labeled: "Ver detalles de yogures naturales")
         reveal(yogurt)
         XCTAssertEqual(yogurt.value as? String, "3 unidades")
     }
@@ -501,7 +508,7 @@ final class RoomInTheCartUITests: XCTestCase {
         tap(field)
         field.typeText(name)
         tap(app.buttons["quickGrocery.add"])
-        tap(app.buttons["quickGrocery.viewList"])
+        tap(app.buttons["openPickupList"])
         tap(app.buttons["ledgerListOptions"])
         // UIKit can expose a single dialog action as two nested buttons.
         let share = app.scrollViews.buttons.matching(identifier: "tripShare.previewCopy").firstMatch
@@ -519,16 +526,40 @@ final class RoomInTheCartUITests: XCTestCase {
         tap(app.buttons["tripShare.close"])
         XCTAssertTrue(preview.waitForNonExistence(timeout: 8))
         XCTAssertTrue(app.navigationBars["Shopping list"].waitForExistence(timeout: 8))
-        XCTAssertTrue(app.buttons["Inspect " + name].waitForExistence(timeout: 8))
-        XCTAssertTrue(app.buttons["Check " + name].exists)
+        XCTAssertTrue(app.fullListGrocery(labeled: "Inspect " + name).waitForExistence(timeout: 8))
+        XCTAssertTrue(app.fullListCheck(labeled: "Check " + name).exists)
     }
 
     func testHouseholdHelpShowsPrivateSharingBeforeDetailedPermissions() {
         launch(language: "es")
         tap(app.buttons["settings"])
-        tap(app.buttons["settings.help"])
-        tap(app.buttons["help.topic.household"])
-        XCTAssertTrue(app.navigationBars["Compartir en el hogar"].waitForExistence(timeout: 8))
+        func openRow(_ identifier: String, from screen: String, to destination: String) {
+            let navigation = app.navigationBars[screen]
+            XCTAssertTrue(navigation.waitForExistence(timeout: 8))
+            let form = app.collectionViews.firstMatch
+            XCTAssertTrue(form.waitForExistence(timeout: 8))
+            let row = form.buttons[identifier]
+            for attempt in 0...8 {
+                let bounds = form.frame.intersection(app.frame)
+                let top = max(bounds.minY, navigation.frame.maxY)
+                let viewport = CGRect(x: bounds.minX, y: top, width: bounds.width,
+                                      height: max(0, bounds.maxY - top)).insetBy(dx: 0, dy: 12)
+                let frame = row.exists ? row.frame : .zero
+                // A native link can be hittable while its center is below the sheet.
+                if !frame.isEmpty && viewport.contains(frame) && row.isHittable {
+                    row.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+                    XCTAssertTrue(app.navigationBars[destination].waitForExistence(timeout: 8),
+                                  "Tapping the visible row must open \(destination).")
+                    return
+                }
+                if attempt == 8 { break }
+                if !frame.isEmpty && frame.midY < viewport.midY { form.swipeDown(velocity: .slow) }
+                else { form.swipeUp(velocity: .slow) }
+            }
+            XCTFail("Could not reveal the complete \(identifier) row in \(screen).")
+        }
+        openRow("settings.help", from: "Configuración", to: "Ayuda")
+        openRow("help.topic.household", from: "Ayuda", to: "Compartir en el hogar")
         let route = "En Lista de compras, abre Opciones de la lista y luego Vista previa de la lista."
         let share = app.staticTexts.containing(NSPredicate(format: "label BEGINSWITH %@", route)).firstMatch
         reveal(share)
@@ -672,7 +703,7 @@ final class RoomInTheCartUITests: XCTestCase {
 
     private func spanishFamilyUncheckedRows() -> Set<String> {
         Set(spanishFamilyGroceries.map { name in
-            let check = app.buttons["Marcar " + name]
+            let check = app.fullListCheck(labeled: "Marcar " + name)
             reveal(check)
             XCTAssertTrue(check.isHittable)
             XCTAssertTrue(check.identifier.hasPrefix("ledgerCheck-"))
@@ -1255,7 +1286,7 @@ final class RoomInTheCartUITests: XCTestCase {
             dismiss.tap()
             XCTAssertTrue(keyboard.waitForNonExistence(timeout: 5))
         }
-        let list = app.buttons["quickGrocery.viewList"]
+        let list = app.buttons["openPickupList"]
         revealFullyInShop(list)
         list.tap()
     }

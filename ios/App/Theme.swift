@@ -82,6 +82,8 @@ struct BrandCartMark: View {
 /// Keep row styling on the content, where Form consumes list-row preferences.
 struct WorkingForm<Content: View>: View {
     private let content: Content
+    @Environment(\.colorSchemeContrast) private var contrast
+    @ScaledMetric(relativeTo: .body) private var sectionSpacing: CGFloat = 18
 
     init(@ViewBuilder content: () -> Content) {
         self.content = content()
@@ -91,7 +93,53 @@ struct WorkingForm<Content: View>: View {
         Form {
             Group { content }
                 .listRowBackground(Theme.surface)
-        }.workingSurface()
+                .listRowSeparatorTint(contrast == .increased ? Theme.controlEdge : Theme.divider)
+        }
+        .listSectionSpacing(sectionSpacing)
+        .workingSurface()
+    }
+}
+
+/// Native list content keeps its own sections, row identities and editing actions.
+struct JournalList<Content: View>: View {
+    @Environment(\.colorSchemeContrast) private var contrast
+    private let content: Content
+
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+
+    var body: some View {
+        List {
+            Group { content }
+                .listRowBackground(Theme.surface)
+                .listRowSeparatorTint(contrast == .increased ? Theme.controlEdge : Theme.divider)
+        }
+        .workingSurface()
+    }
+}
+
+/// A secondary action within a journal list. Its enclosing button owns the operation.
+struct JournalActionLabel: View {
+    let title: String
+    let systemImage: String
+
+    init(_ title: String, systemImage: String) {
+        self.title = title
+        self.systemImage = systemImage
+    }
+
+    var body: some View {
+        Label {
+            Text(verbatim: title).fixedSize(horizontal: false, vertical: true)
+        } icon: {
+            Image(systemName: systemImage).accessibilityHidden(true)
+        }
+        .font(.body.weight(.medium))
+        .foregroundStyle(Theme.action)
+        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+        .contentShape(Rectangle())
+        .accessibilityLabel(title)
     }
 }
 
@@ -108,6 +156,7 @@ struct WorkingField<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
             Text(title).font(.subheadline.weight(.medium)).foregroundStyle(Theme.secondary)
+                .lineLimit(nil).fixedSize(horizontal: false, vertical: true)
                 .accessibilityHidden(true)
             content.accessibilityLabel(title)
         }
@@ -244,6 +293,13 @@ struct PrimaryAction: ButtonStyle {
 }
 
 extension View {
+    /// Use on editorial headings. Food quantities, prices and form controls use native body styles.
+    func marketJournalTitle(_ style: Font.TextStyle = .title) -> some View {
+        font(.system(style, design: .serif, weight: .semibold))
+            .foregroundStyle(Theme.ink)
+            .accessibilityAddTraits(.isHeader)
+    }
+
     func keyboardDoneAction(visible: Bool, title: String, identifier: String? = nil, dismiss: @escaping () -> Void) -> some View {
         safeAreaInset(edge: .bottom, spacing: 0) {
             if visible {

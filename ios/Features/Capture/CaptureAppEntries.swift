@@ -67,7 +67,7 @@ extension EnvironmentValues {
     var body: some View {
         Group {
             if identity != nil { CaptureReferenceShelf(target: target, initialLabel: initialLabel, authorize: { authorized() }, makePantry: makePantry) }
-            else { Text(captureText("Unlock your private workspace to review this source.")) }
+            else { WorkingForm { Text(captureText("Unlock your private workspace to review this source.")) } }
         }.task(id: target) { identity = CapturePrivateIdentity.current(access: access, household: household) }
     }
     private func authorized() -> Bool {
@@ -112,7 +112,7 @@ extension EnvironmentValues {
                     NavigationLink(dinnerText("Dinner library")) { DinnerLibraryView(model: model) }
                 } else if let review {
                     let reviewed = review.template
-                    Text(reviewed.title).font(.headline)
+                    Text(reviewed.title).marketJournalTitle(.title2)
                     Text(dinnerFormat("Servings: %@", reviewed.servings.description))
                     ForEach(reviewed.ingredients) { ingredient in
                         Text(ingredient.name + " · " + dinnerQuantity(ingredient.quantity))
@@ -120,6 +120,7 @@ extension EnvironmentValues {
                     if let evidence = reviewed.sourceEvidence { RecipeSourceDisclosure(evidence: evidence) }
                     Text(captureText("The original source stays with this recipe. Saved photos stay on this device unless you choose them for an encrypted recovery file in Records."))
                     Button(captureText("Accept reviewed recipe")) { Task { await accept() } }
+                        .buttonStyle(PrimaryAction())
                         .disabled(!authorized(review.session) || !model.editable || saving)
                         .accessibilityIdentifier("dinner.acceptScannedRecipe")
                 } else {
@@ -128,6 +129,7 @@ extension EnvironmentValues {
                 }
                 if failed {
                     Text(captureText("The recipe save did not finish. Resolve any pending grocery save, then retry this same reviewed recipe. Nothing is chosen automatically."))
+                        .foregroundStyle(Theme.error)
                 }
             }
             LedgerSaveStatus(model: ledger)

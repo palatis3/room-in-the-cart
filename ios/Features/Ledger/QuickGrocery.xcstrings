@@ -1,6 +1,38 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Show next groceries": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show next groceries"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver los siguientes productos"
+          }
+        }
+      }
+    },
+    "View all %lld groceries": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View all %lld groceries"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver los %lld productos"
+          }
+        }
+      }
+    },
     "Add a grocery": {
       "localizations": {
         "en": {
@@ -657,12 +689,12 @@
         }
       }
     },
-    "Your first grocery starts “%@”. Works offline without an account.": {
+    "Add a grocery to start your “%@” list. Works offline without an account.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your first grocery starts “%@”. Works offline without an account."
+            "value": "Add a grocery to start your “%@” list. Works offline without an account."
           }
         },
         "es": {

@@ -43,7 +43,7 @@ struct SharedRecoveryDeskView: View {
     }
 
     var body: some View {
-        List {
+        JournalList {
             if allowed, let page = model.recoveryRecord, page.shopId == shopID, showsReviewedRecovery(page, model: model, household: household) {
                 if model.pendingMealRecovery {
                     Section(sharedRecoveryText("Pending meal replacement")) {

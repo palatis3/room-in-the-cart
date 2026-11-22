@@ -1,7 +1,9 @@
 {
   "01 · Correct a grocery and undo a premature check": [
     "RoomInTheCartUITests/RoomInTheCartUITests/testEditingReviewedGroceryKeepsCommitAwayFromKeyboardAndPreservesBothRows",
-    "RoomInTheCartUITests/NavigationRestorationUITests/testNamedCheckUndoSurvivesRelaunchAndRestoresOnlyTheCheckedRow"
+    "RoomInTheCartUITests/NavigationRestorationUITests/testNamedCheckUndoSurvivesRelaunchAndRestoresOnlyTheCheckedRow",
+    "RoomInTheCartUITests/NavigationRestorationUITests/testShopPreviewOpensQuantityWithoutCheckingAndRestoresOnlyTheCheckedGrocery",
+    "RoomInTheCartUITests/NavigationRestorationUITests/testShopShowsRemainingQuantityAfterAPartialPick"
   ],
   "02 · Review a bulk list and keep one duplicate amount": [
     "RoomInTheCartUITests/ContextualNavigationUITests/testLargeTextKeepsLongNativePasteEditableAndReviewReachable",

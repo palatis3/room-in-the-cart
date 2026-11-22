@@ -1,6 +1,108 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Discard this receipt draft?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard this receipt draft?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Descartar este borrador del recibo?"
+          }
+        }
+      }
+    },
+    "Include printed line": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Include printed line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incluir línea impresa"
+          }
+        }
+      }
+    },
+    "Page %@, line %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Page %@, line %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Página %@, línea %@"
+          }
+        }
+      }
+    },
+    "Line %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Line %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Línea %@"
+          }
+        }
+      }
+    },
+    "Change receipt photo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change receipt photo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar foto del recibo"
+          }
+        }
+      }
+    },
+    "Retake receipt photo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retake receipt photo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a fotografiar el recibo"
+          }
+        }
+      }
+    },
     "I paid the printed total %@ in USD": {
       "extractionState": "manual",
       "localizations": {
@@ -619,18 +721,18 @@
         }
       }
     },
-    "Choose where you put the remainder.": {
+    "Choose where you stored the portion you kept.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Choose where you put the remainder."
+            "value": "Choose where you stored the portion you kept."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Elige dónde guardaste la porción que quedó."
+            "value": "Elige dónde guardaste la porción que decidiste conservar."
           }
         }
       }

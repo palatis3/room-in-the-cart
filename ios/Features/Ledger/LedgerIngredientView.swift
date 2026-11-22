@@ -33,11 +33,11 @@ struct LedgerIngredientView: View {
     private enum Focus: Hashable { case status }
     @AccessibilityFocusState private var focus: Focus?
     var body: some View {
-        List {
+        JournalList {
             if let shop, let line {
                 let contributions = shop.contributions(forLineID: lineID)
                 let typedItemBatches = shop.typedItemBatchIDs
-                let primaryQuantitySource = ordinaryQuantitySource(for: line, in: shop, contributions: contributions,
+                let primaryQuantitySource = shop.ordinaryQuantitySource(for: line, contributions: contributions,
                                                                    typedItemBatches: typedItemBatches)
                 Section {
                     Text(line.name).font(.title2.bold())
@@ -147,7 +147,7 @@ struct LedgerIngredientView: View {
                 }
             }
             LedgerSaveStatus(model: model).accessibilityFocused($focus, equals: .status)
-        }.scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(detailTitle)
+        }.scrollDismissesKeyboard(.interactively).navigationTitle(detailTitle)
             .navigationBarTitleDisplayMode(.inline)
             .sheet(item: $sheet) { destination in
                 NavigationStack {
@@ -182,19 +182,6 @@ struct LedgerIngredientView: View {
             .contentShape(Rectangle())
     }
 
-    private func ordinaryQuantitySource(for line: ShoppingLine, in shop: ShoppingLedger,
-                                        contributions: [LedgerContribution], typedItemBatches: Set<UUID>) -> LedgerContribution? {
-        guard !line.isTrashed, !line.isHandled, !line.isChecked, contributions.count == 1,
-              let source = contributions.first,
-              !shop.allocations.contains(where: { $0.supplyContributionID == source.id || $0.demandContributionID == source.id })
-        else { return nil }
-        switch source.source {
-        case .manual: return source
-        case .imported(let batchID) where typedItemBatches.contains(batchID): return source
-        default: return nil
-        }
-    }
-
     private func currentSelection(shop: ShoppingLedger, workspaceID: UUID) -> LedgerPackSelection? {
         model.workspace.packSelections.reversed().first { selection in
             selection.shopID == shopID && selection.lineID == lineID &&
@@ -203,6 +190,21 @@ struct LedgerIngredientView: View {
         }
     }
 
+}
+
+extension ShoppingLedger {
+    func ordinaryQuantitySource(for line: ShoppingLine,
+                                contributions: [LedgerContribution], typedItemBatches: Set<UUID>) -> LedgerContribution? {
+        guard !line.isTrashed, !line.isHandled, !line.isChecked, contributions.count == 1,
+              let source = contributions.first,
+              !allocations.contains(where: { $0.supplyContributionID == source.id || $0.demandContributionID == source.id })
+        else { return nil }
+        switch source.source {
+        case .manual: return source
+        case .imported(let batchID) where typedItemBatches.contains(batchID): return source
+        default: return nil
+        }
+    }
 }
 
 struct LedgerLineEditor: View {
@@ -289,15 +291,16 @@ private struct GroceryEditStatus: View {
     let onRetried: () -> Void
 
     var body: some View {
-        if hasEdits, !model.saving, !model.hasPendingSave, model.error == nil {
+        if model.saving || model.hasPendingSave || model.error != nil {
+            LedgerSaveStatus(model: model, showsLastSave: false, onRetried: onRetried)
+        } else if hasEdits {
             Text(quickGroceryText("Unsaved edits")).foregroundStyle(Theme.secondary)
                 .accessibilityIdentifier("ledgerUnsavedItem")
         }
-        LedgerSaveStatus(model: model, showsLastSave: !hasEdits, onRetried: onRetried)
     }
 }
 
-private struct LedgerContributionEditor: View {
+struct LedgerContributionEditor: View {
     @ObservedObject var model: LedgerModel
     let shopID: UUID
     let contribution: LedgerContribution
@@ -342,6 +345,7 @@ private struct LedgerContributionEditor: View {
             }.buttonStyle(PrimaryAction()).disabled(!hasEdits || model.saving || model.hasPendingSave)
                 .accessibilityIdentifier("ledgerSaveContributionChanges")
             Button(ledgerText("Remove only this contribution"), role: .destructive) { confirmingRemoval = true }
+                .foregroundStyle(Theme.error)
                 .disabled(model.saving || model.hasPendingSave)
             if let validation { Text(validation).foregroundStyle(Theme.warning) }
             GroceryEditStatus(model: model, hasEdits: hasEdits, onRetried: { dismiss() })

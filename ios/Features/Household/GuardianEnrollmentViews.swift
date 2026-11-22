@@ -48,10 +48,9 @@ struct GuardianEnrollmentView<Withdrawal: View>: View {
     var body: some View {
         WorkingForm {
             Section {
-                if let householdName { Text(verbatim: householdName).font(.title2.weight(.semibold)).accessibilityAddTraits(.isHeader) }
-                Label(GuardianCopy.text("On the guardian’s device"), systemImage: "iphone")
-                    .font(.headline)
-                Text(GuardianCopy.text("Verify your adulthood, give permission for this child’s own requests, then confirm the child’s device."))
+                GuardianDeviceHeading(device: GuardianCopy.text("On the guardian’s device"),
+                                     instruction: GuardianCopy.text("Verify your adulthood, give permission for this child’s own requests, then confirm the child’s device."))
+                if let householdName { LabeledContent(ht("Household"), value: householdName).privacySensitive() }
             }
             Section(GuardianCopy.text("Current guardian notice")) {
                 Picker(GuardianCopy.text("Notice language"), selection: $model.language) {
@@ -201,6 +200,21 @@ struct GuardianEnrollmentView<Withdrawal: View>: View {
     }
 }
 
+struct GuardianDeviceHeading: View {
+    let device: String
+    let instruction: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(device)
+                .marketJournalTitle(.title2)
+            Text(instruction)
+        }
+        .fixedSize(horizontal: false, vertical: true)
+        .padding(.vertical, 4)
+    }
+}
+
 struct FamilyPermissionGuideLink: View {
     var title = GuardianCopy.text("Children and guardian permission")
     var done: (() -> Void)?
@@ -217,13 +231,33 @@ struct FamilyPermissionGuideLink: View {
 }
 
 struct FamilyPermissionGuide: View {
-    var done: (() -> Void)?
+    let backToSettings: (() -> Void)?
+    let done: (() -> Void)?
+
+    init(done: (() -> Void)? = nil) {
+        self.done = done
+        self.backToSettings = nil
+    }
+
+    init(backToSettings: @escaping () -> Void, done: @escaping () -> Void) {
+        self.done = done
+        self.backToSettings = backToSettings
+    }
 
     var body: some View {
         WorkingForm { FamilyPermissionSections(done: done) }
             .navigationTitle(GuardianCopy.text("Child permissions"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                if let backToSettings {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button(action: backToSettings) {
+                            Label(GuardianCopy.text("Back to Settings"), systemImage: "chevron.backward")
+                                .labelStyle(.iconOnly)
+                        }
+                        .accessibilityIdentifier("guardian.familyGuide.settings")
+                    }
+                }
                 if let done {
                     ToolbarItem(placement: .confirmationAction) {
                         Button(ledgerText("Done"), action: done)
@@ -240,9 +274,12 @@ private struct FamilyPermissionSections: View {
     @State private var showingOnlineGuide = false
 
     var body: some View {
-        Section(GuardianCopy.text("What a child can do")) {
+        Section {
             Text(GuardianCopy.text("With guardian permission, a child can send grocery requests and see the status of their own requests. The assigned shopper decides what goes in the basket. The household budget stays private."))
                 .accessibilityIdentifier("guardian.familyGuide.scope")
+        } header: {
+            Text(GuardianCopy.text("What a child can do"))
+                .marketJournalTitle(.title2).textCase(nil)
         }
         Section(GuardianCopy.text("On the guardian’s iPhone")) {
             Text(GuardianCopy.text("When child setup is available, open Household requests in Settings, sign in to your adult account, choose your child’s household, then open Guardian controls."))

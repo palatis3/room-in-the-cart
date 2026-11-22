@@ -10,7 +10,7 @@ struct HouseholdStaplesView: View {
     @State private var removing: (group: UUID, lot: UUID)?
 
     var body: some View {
-        List {
+        JournalList {
             if let state = model.staples {
                 if state.enabled {
                     ForEach(state.groups) { group in groupSection(group, state) }

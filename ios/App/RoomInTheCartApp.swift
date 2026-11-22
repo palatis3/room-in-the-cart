@@ -447,9 +447,9 @@ struct ShopView: View {
     @EnvironmentObject private var ledger: LedgerModel
     @EnvironmentObject private var access: WorkspaceAccess
     @EnvironmentObject private var navigation: NavigationRestorationModel
-    @State private var beganWithEmptyList = false
     private struct InStoreSelection: Identifiable { let id: UUID }
     @State private var inStoreShop: InStoreSelection?
+    @State private var shopWithListLink: UUID?
     @State private var showingMoreTools = false
     @State private var showingStandingList = false
     @State private var showingFirstList = false
@@ -468,10 +468,6 @@ struct ShopView: View {
                 .accessibilityHidden(true)
         }.workingSurface().navigationTitle(tr("Shop")).navigationBarTitleDisplayMode(.inline).settingsButton()
             .task { await model.refresh() }
-            .onAppear { beganWithEmptyList = ledger.shop == nil }
-            .onChange(of: ledger.ready) { _, ready in
-                if ready { beganWithEmptyList = ledger.shop == nil }
-            }
             .sheet(item: $inStoreShop) { shop in
                 PrivateShoppingSheet(model: ledger) { InStoreShoppingView(model: ledger, shopID: shop.id) }
             }
@@ -516,17 +512,23 @@ struct ShopView: View {
     private var shopContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                if !beganWithEmptyList { tripSummary }
                 VStack(alignment: .leading, spacing: 12) {
                     LedgerQuickGroceryEntry(model: ledger, prominent: true)
-                    BrandScopeLabel(quickGroceryText("Private on this iPhone"), systemImage: "lock")
+                        .onPreferenceChange(ShopListLinkProvided.self) { shopWithListLink = $0 }
+                    if let shop = ledger.shop, shopWithListLink != shop.id {
+                        RestorableShoppingListLink {
+                            Label(quickGroceryText("View shopping list"), systemImage: "list.bullet").frame(minHeight: 44)
+                        }
+                    }
+                    Label(quickGroceryText("Private on this iPhone"), systemImage: "lock")
+                        .font(.footnote).foregroundStyle(Theme.secondary)
                     if ledger.shop == nil {
-                        Text(quickGroceryFormat("Your first grocery starts “%@”. Works offline without an account.", ledgerText("Pickup")))
+                        Text(quickGroceryFormat("Add a grocery to start your “%@” list. Works offline without an account.", ledgerText("Pickup")))
                             .accessibilityIdentifier("quickGrocery.firstDestination")
                             .font(.footnote).foregroundStyle(Theme.secondary)
                     }
                 }
-                if beganWithEmptyList { tripSummary }
+                tripSummary
                 shopTools
                 if let saved = [ledger.savedAt, pickup.journeys.first?.savedAt, model.records.first?.savedAt].compactMap({ $0 }).max() {
                     Text(tr("Last local save") + " · " + saved.formatted(date: .abbreviated, time: .shortened))
@@ -555,28 +557,21 @@ struct ShopView: View {
 
     @ViewBuilder private var tripSummary: some View {
         if let shop = ledger.shop {
-            VStack(alignment: .leading, spacing: 8) {
-                Label(quickGroceryText("Current pickup"), systemImage: "cart")
-                    .font(.subheadline.weight(.semibold)).foregroundStyle(Theme.secondary)
-                Text(shop.title).font(.title.bold()).accessibilityAddTraits(.isHeader)
-                if !shop.basis.branch.isEmpty { Text(shop.basis.branch) }
-                if let slot = shop.basis.slot, let zone = TimeZone(identifier: shop.basis.timeZoneIdentifier) {
-                    Text(slot.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened, timeZone: zone)) + " · " + zone.identifier)
-                        .font(.subheadline).foregroundStyle(Theme.secondary)
-                }
-                if let closed = pickup.journeys.first(where: { $0.id == shop.id })?.closedAt {
-                    Text(pTr("Closed") + " · " + closed.formatted(date: .abbreviated, time: .shortened))
-                    shoppingListLink
-                } else if let journey = pickup.resumableJourney(for: shop.id) {
-                    if shop.basis.slot == nil, let slot = journey.context?.slot, !slot.isEmpty {
-                        Text(pTr("Pickup or delivery slot") + " · " + slot).font(.subheadline)
-                    }
-                    tripAction(journey, shop: shop)
-                } else { resumeList(shop) }
+            if !shop.basis.branch.isEmpty {
+                Label(shop.basis.branch, systemImage: "storefront").font(.headline)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(16).background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
-            .overlay { RoundedRectangle(cornerRadius: 16).strokeBorder(Theme.divider).accessibilityHidden(true) }
+            if let slot = shop.basis.slot, let zone = TimeZone(identifier: shop.basis.timeZoneIdentifier) {
+                Text(slot.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened, timeZone: zone)) + " · " + zone.identifier)
+                    .font(.subheadline).foregroundStyle(Theme.secondary)
+            }
+            if let closed = pickup.journeys.first(where: { $0.id == shop.id })?.closedAt {
+                Text(pTr("Closed") + " · " + closed.formatted(date: .abbreviated, time: .shortened))
+            } else if let journey = pickup.resumableJourney(for: shop.id) {
+                if shop.basis.slot == nil, let slot = journey.context?.slot, !slot.isEmpty {
+                    Text(pTr("Pickup or delivery slot") + " · " + slot).font(.subheadline)
+                }
+                tripAction(journey, shop: shop)
+            } else { resumeList(shop) }
         } else if let journey = pickup.resumableJourney(for: nil), !journey.offers.isEmpty {
             tripAction(journey, shop: nil)
         }
@@ -600,25 +595,21 @@ struct ShopView: View {
                             else { PickupOfferView(model: pickup) }
                         }
                     }.buttonStyle(PrimaryAction()).accessibilityIdentifier("shop.resumeOffer")
-                    if shop != nil { shoppingListLink }
                 }
             } else if journey.basket?.phase == .frozen {
                 VStack(alignment: .leading, spacing: 4) {
                     NavigationLink(pTr("Prepare retailer handoff")) {
                         pickupDestination(journey.id) { PickupHandoffView(model: pickup, shopID: journey.id) }
                     }.buttonStyle(PrimaryAction())
-                    if shop != nil { shoppingListLink }
                 }
             } else if journey.shouldResumeArrival(at: context.date) {
                 VStack(alignment: .leading, spacing: 4) {
                     NavigationLink(pTr("Record what came home")) {
                         pickupDestination(journey.id) { PickupArrivalView(model: pickup) }
                     }.buttonStyle(PrimaryAction())
-                    if shop != nil { shoppingListLink }
                 }
-            } else if let shop {
-                if journey.basket?.phase == .reportedPlaced { shoppingListLink }
-                else { resumeList(shop) }
+            } else if let shop, journey.basket?.phase != .reportedPlaced {
+                resumeList(shop)
             }
         }
     }
@@ -628,17 +619,7 @@ struct ShopView: View {
            shop.lines.contains(where: { !$0.isChecked && !$0.isHandled && !$0.isTrashed }) {
             Button(quickGroceryText("Resume picking")) { inStoreShop = InStoreSelection(id: shop.id) }
                 .buttonStyle(PrimaryAction()).accessibilityIdentifier("shop.resumePicking")
-            shoppingListLink
-        } else {
-            shoppingListLink.buttonStyle(PrimaryAction())
         }
-    }
-
-    private var shoppingListLink: some View {
-        RestorableShoppingListLink {
-            Label(ledgerText("Shopping list"), systemImage: "list.bullet")
-                .frame(minHeight: 44)
-        }.accessibilityIdentifier("openPickupList")
     }
 
     private var shopTools: some View {
@@ -653,11 +634,10 @@ struct ShopView: View {
                         .accessibilityIdentifier("newComparison")
                     Divider()
                     RestorableShoppingListLink { ShopToolLabel(ledgerText("Start pickup"), "cart", chevron: true) }
-                        .accessibilityIdentifier("openPickupList")
                 }
-                .buttonStyle(.plain).padding(.horizontal, 16).padding(.vertical, 4)
-                .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
-                .overlay { RoundedRectangle(cornerRadius: 16).strokeBorder(Theme.divider).accessibilityHidden(true) }
+                .buttonStyle(.plain)
+                .overlay(alignment: .top) { Divider() }
+                .overlay(alignment: .bottom) { Divider() }
                 DisclosureGroup(isExpanded: $showingMoreTools) { secondaryShopTools } label: {
                     Text(quickGroceryText("More shopping tools")).font(.headline)
                 }
@@ -788,25 +768,32 @@ struct RecordsView: View {
     }
 
     var body: some View {
-        List {
+        JournalList {
+            if model.hasLoadedRecords, model.error == nil, let recent = model.records.first {
+                Section(recordsText("Latest saved comparison")) {
+                    SavedRow(record: recent)
+                        .privacySensitive()
+                }
+            }
             Section {
-                BrandScopeLabel(recordsText("On this iPhone"), systemImage: "lock")
-                    .listRowBackground(Color.clear)
-                    .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
-                CheckedGroceriesHistoryLink(model: ledger)
-                PickupPlacedOrdersLink(model: pickup)
                 if pickup.pantryRouteAvailable {
                     NavigationLink {
                         PantrySetupView(pickup: pickup, ledger: ledger, destination: .receipts)
                     } label: {
-                        Label(pantryText("Receipt history"), systemImage: pantryReceiptSymbol)
+                        historyLabel(pantryText("Receipt history"),
+                                     source: recordsText("Receipts you reviewed on this iPhone"),
+                                     symbol: pantryReceiptSymbol)
                     }.accessibilityIdentifier("records.privateReceipts")
                     NavigationLink {
                         PantrySetupView(pickup: pickup, ledger: ledger, destination: .prices)
                     } label: {
-                        Label(pantryText("Private price history"), systemImage: "tag")
+                        historyLabel(pantryText("Private price history"),
+                                     source: recordsText("Shelf prices, quotes and amounts you recorded"),
+                                     symbol: "tag")
                     }.accessibilityIdentifier("records.privatePrices")
                 }
+                CheckedGroceriesHistoryLink(model: ledger)
+                PickupPlacedOrdersLink(model: pickup)
                 if pickup.journeys.contains(where: PickupDecisionEvidence.hasRecords) {
                     PickupDecisionsLink(shopID: nil)
                 }
@@ -821,25 +808,15 @@ struct RecordsView: View {
                         PickupHomeView(model: pickup).environment(\.pickupLedger, ledger)
                     } label: { Label(tr("Pickup, repairs and handoffs"), systemImage: "shippingbox") }
                 }
+            } header: {
+                Label(recordsText("On this iPhone"), systemImage: "lock")
+                    .marketJournalTitle(.title2).textCase(nil)
             }
             Section(recordsText("Files and recovery")) {
                 RecordsRecoveryLink()
             }
-            Section(recordsText("Saved comparisons")) {
-                if !model.hasLoadedRecords, model.error == nil {
-                    ProgressView(recordsText("Loading saved comparisons…"))
-                } else if model.hasLoadedRecords, model.error == nil, model.records.isEmpty && model.unavailableRecords.isEmpty {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Label(tr("Your comparisons live here"), systemImage: "scalemass").font(.headline)
-                        Text(tr("Save a pack comparison to return to the same amounts and prices, even offline."))
-                            .font(.subheadline).foregroundStyle(Theme.secondary)
-                    }.padding(.vertical, 4)
-                    NavigationLink {
-                        NewComparisonDestination()
-                    } label: { Label(tr("Compare packs"), systemImage: "plus") }
-                    .accessibilityIdentifier("records.startComparison")
-                }
-                ForEach(model.records, id: \.id) { SavedRow(record: $0) }
+            if model.records.count != 1 || !model.hasLoadedRecords || model.error != nil {
+                comparisonHistory
             }
             if !model.unavailableRecords.isEmpty {
                 Section(tr("Comparisons that need attention")) {
@@ -890,7 +867,38 @@ struct RecordsView: View {
                     }
                 }
             }
-        }.workingSurface().navigationTitle(tr("Records")).settingsButton().task { await model.refresh() }
+        }.navigationTitle(tr("Records")).settingsButton().task { await model.refresh() }
+    }
+
+    private func historyLabel(_ title: String, source: String, symbol: String) -> some View {
+        Label {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title).font(.headline)
+                Text(source).font(.subheadline).foregroundStyle(Theme.secondary)
+            }.fixedSize(horizontal: false, vertical: true)
+        } icon: { Image(systemName: symbol).accessibilityHidden(true) }
+        .padding(.vertical, 3)
+    }
+
+    private var comparisonHistory: some View {
+        Section(recordsText("Saved comparisons")) {
+            if !model.hasLoadedRecords, model.error == nil {
+                ProgressView(recordsText("Loading saved comparisons…"))
+            } else if model.hasLoadedRecords, model.error == nil, model.records.isEmpty && model.unavailableRecords.isEmpty {
+                VStack(alignment: .leading, spacing: 6) {
+                    Label(tr("Your comparisons live here"), systemImage: "scalemass").font(.headline)
+                    Text(tr("Save a pack comparison to return to the same amounts and prices, even offline."))
+                        .font(.subheadline).foregroundStyle(Theme.secondary)
+                }.padding(.vertical, 4)
+                NavigationLink {
+                    NewComparisonDestination()
+                } label: { Label(tr("Compare packs"), systemImage: "plus") }
+                .accessibilityIdentifier("records.startComparison")
+            }
+            ForEach(model.records.dropFirst(model.hasLoadedRecords && model.error == nil ? 1 : 0), id: \.id) {
+                SavedRow(record: $0).privacySensitive()
+            }
+        }
     }
 }
 
@@ -923,6 +931,26 @@ struct SettingsView: View {
     var body: some View {
         WorkingForm {
             Section {
+                NavigationLink {
+                    HouseholdSettingsView(model: household, continuesAfterWorkspaceLock: true)
+                } label: {
+                    Label(tr("Household requests"), systemImage: "list.bullet")
+                }
+                Button { showingFamilyGuide = true } label: {
+                    Label(GuardianCopy.text("Child permissions"), systemImage: "hand.raised")
+                        .fixedSize(horizontal: false, vertical: true)
+                }.accessibilityIdentifier("guardian.familyGuide")
+                if household.canOpenMembership {
+                    NavigationLink { MembershipEntryView(household: household) } label: {
+                        Label(tr("Household membership"), systemImage: "person.2")
+                    }
+                }
+                HouseholdPantryLink(household: household)
+            } header: {
+                Text(tr("Household"))
+                    .marketJournalTitle(.title2).textCase(nil)
+            }
+            Section {
                 Picker(tr("Appearance"), selection: $appearance) {
                     Text(tr("System")).tag("system")
                     Text(tr("Light")).tag("light")
@@ -934,17 +962,6 @@ struct SettingsView: View {
                 Button(tr("Open iPhone settings")) {
                     if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
                 }.frame(minHeight: 44)
-            }
-            Section(tr("Household")) {
-                NavigationLink(tr("Household requests")) { HouseholdSettingsView(model: household, continuesAfterWorkspaceLock: true) }
-                Button { showingFamilyGuide = true } label: {
-                    Label(GuardianCopy.text("Children and guardian permission"), systemImage: "person.2")
-                        .fixedSize(horizontal: false, vertical: true)
-                }.accessibilityIdentifier("guardian.familyGuide")
-                HouseholdPantryLink(household: household)
-                if household.canOpenMembership {
-                    NavigationLink(tr("Household membership")) { MembershipEntryView(household: household) }
-                }
             }
             if surfaces.privateAuthorized {
                 Section(SurfaceCopy.text("Device shortcuts")) {
@@ -982,7 +999,7 @@ struct SettingsView: View {
                 }
             }) {
                 NavigationStack {
-                    FamilyPermissionGuide {
+                    FamilyPermissionGuide(backToSettings: { showingFamilyGuide = false }) {
                         dismissSettingsAfterGuide = true
                         showingFamilyGuide = false
                     }
