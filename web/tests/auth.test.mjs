@@ -10,7 +10,7 @@ function input(dom,id,value){const field=dom.window.document.getElementById(id);
 function submit(dom){dom.window.document.querySelector('form').dispatchEvent(new dom.window.Event('submit',{bubbles:true,cancelable:true}));}
 async function fixture(overrides={},language='en'){
   let authenticated=false;const calls=[];
-  const api={session:async()=>null,authState:async()=>({available:true,authenticated,csrf:authenticated?'auth-csrf':'challenge-csrf'}),sendEmailCode:async(email,csrf)=>calls.push({email,csrf}),verifyEmailCode:async(code,csrf)=>{calls.push({code,csrf});authenticated=true;return{available:true,authenticated:true,csrf:'auth-csrf'};},redeem:async()=>{calls.push('redeem');throw new ApiError('unavailable',404);},...overrides};
+  const api={previewInvite:async()=>({householdLabel:'Inviting household',role:'adult_contributor'}),session:async()=>null,authState:async()=>({available:true,authenticated,csrf:authenticated?'auth-csrf':'challenge-csrf'}),sendEmailCode:async(email,csrf)=>calls.push({email,csrf}),verifyEmailCode:async(code,csrf)=>{calls.push({code,csrf});authenticated=true;return{available:true,authenticated:true,csrf:'auth-csrf'};},redeem:async()=>{calls.push('redeem');throw new ApiError('unavailable',404);},...overrides};
   const dom=new JSDOM('<div id="app"></div>',{url:'https://food.example/invite'});Object.defineProperty(dom.window.navigator,'language',{value:language});
   const root=dom.window.document.getElementById('app'),app=new WebApp(root,api,new Outbox(new IDBFactory()),'retained-invitation-secret');await app.start();return{dom,root,app,calls};
 }
@@ -35,7 +35,7 @@ for(const replace of [false,true]){
       adult.checked=true;
       adult.dispatchEvent(new dom.window.Event('change'));
     };
-    confirmAge();
+    confirmAge();await waitForIdle(root);
     if(replace){
       [...root.querySelectorAll('button')].find(b=>b.textContent==='Enter a different invitation code').click();
       const field=root.querySelector('#invitation');
@@ -44,7 +44,7 @@ for(const replace of [false,true]){
       assert.equal(field.value,'');
       assert.equal(root.querySelector('#adult-attestation').checked,false);
       input(dom,'invitation','replacement-code');
-      confirmAge();
+      confirmAge();await waitForIdle(root);
     }
     assert.deepEqual(tokens,[]);
     submit(dom);await waitForIdle(root);
@@ -74,13 +74,13 @@ for (const [language, heading, joinedHeading] of [
         activateSession:async () => { active = true; },
         requests:async () => []
       }, language);
+      root.querySelector('#adult-attestation').click();await waitForIdle(root);
       input(dom,'invite-alias','Earlier alias');
-      root.querySelector('#adult-attestation').click();
       submit(dom);
       await waitForIdle(root);
       assert.equal(root.querySelector('h1').textContent,heading);
       assert.equal(root.querySelector('#invitation').value,'');
-      assert.equal(root.querySelector('#invite-alias').value,'');
+      assert.equal(root.querySelector('#invite-alias'),null);
       assert.equal(root.querySelector('#adult-attestation').checked,false);
       assert.match(root.querySelector('[role=status]').textContent,/new invitation|nueva invitación/);
       const invitation = root.querySelector('#invitation');
@@ -96,7 +96,7 @@ for (const [language, heading, joinedHeading] of [
       assert.equal(dom.window.document.activeElement,invitation);
       assert.equal(invitation.selectionStart,5);
       assert.equal(invitation.selectionEnd,5);
-      root.querySelector('#adult-attestation').click();
+      root.querySelector('#adult-attestation').click();await waitForIdle(root);
       submit(dom);
       await waitForIdle(root);
       assert.deepEqual(submitted,[['retained-invitation-secret','Earlier alias'],['replacement-code','']]);
@@ -128,7 +128,7 @@ for (const [role, canPropose] of [['helper',false], ['editor',false], ['editor',
       receivedProposals:async()=>({proposals:[],nextCursor:null})
     });
     t.after(()=>dom.window.close());
-    root.querySelector('#adult-attestation').click();
+    root.querySelector('#adult-attestation').click();await waitForIdle(root);
     submit(dom);await waitForIdle(root);
     const status=()=>root.querySelector('[role=status]').textContent;
     assert.doesNotMatch(status(),/You joined|A & B/);
@@ -223,14 +223,14 @@ test('a new browser identity must provide its own invitation, alias and age conf
   const { app, dom, root, calls } = await fixture({
     authState: async () => ({ available: true, authenticated: true, csrf })
   });
+  root.querySelector('#adult-attestation').click();await waitForIdle(root);
   input(dom, 'invite-alias', 'First person');
-  root.querySelector('#adult-attestation').click();
   app.suspendForHistory();
   csrf = 'adult-b';
   app.resumeWithFreshAuthority();
   await waitForIdle(root);
   assert.equal(root.querySelector('#invitation')?.value, '');
-  assert.equal(root.querySelector('#invite-alias')?.value, '');
+  assert.equal(root.querySelector('#invite-alias'),null);
   assert.equal(root.querySelector('#adult-attestation')?.checked, false);
   assert.deepEqual(calls, []);
 });
@@ -248,8 +248,8 @@ test('an invitation cannot be submitted with a newly active household when its i
     },
     requests: async () => []
   });
+  root.querySelector('#adult-attestation').click();await waitForIdle(root);
   input(dom, 'invite-alias', 'Previous adult');
-  root.querySelector('#adult-attestation').click();
   activated = true;
   await app.start();
   assert.equal(root.querySelector('#invitation, #adult-attestation'), null);
@@ -274,8 +274,8 @@ for (const ending of ['grant expires', 'session returns 401']) {
         canPropose:false, instructions:[] }),
       receivedProposals:async () => ({ proposals:[], nextCursor:null })
     });
+    root.querySelector('#adult-attestation').click();await waitForIdle(root);
     input(dom, 'invite-alias', 'First helper');
-    root.querySelector('#adult-attestation').click();
     if (ending === 'grant expires') {
       t.mock.method(Date,'now',()=>now+60_001);
       app.checkExpiry();
@@ -283,7 +283,7 @@ for (const ending of ['grant expires', 'session returns 401']) {
     ended = true;
     await app.start();
     assert.equal(root.querySelector('#invitation')?.value, '');
-    assert.equal(root.querySelector('#invite-alias')?.value, '');
+    assert.equal(root.querySelector('#invite-alias'),null);
     assert.equal(root.querySelector('#adult-attestation')?.checked, false);
   });
 }
@@ -296,8 +296,8 @@ test('a revoked household cookie lets a signed-in adult sign out using current i
     authState:async () => ({ available:true, authenticated:!signedOut, csrf:signedOut?'new-challenge':'current-identity' }),
     logoutIdentity:async csrf => { assert.equal(csrf,'current-identity');signedOut=true;return {providerRevoked:true}; }
   });
+  root.querySelector('#adult-attestation').click();await waitForIdle(root);
   input(dom,'invite-alias','Previous name');
-  root.querySelector('#adult-attestation').click();
   ended = true;
   app.suspendForHistory();
   app.resumeWithFreshAuthority();
@@ -342,20 +342,18 @@ test('leaving an invitation clears only its draft and the public destination car
     const {root, dom, app, calls} = await fixture({
       authState: async () => ({available: true, authenticated: true, csrf: 'fixture-csrf'})
     }, language);
+    root.querySelector('#adult-attestation').click();await waitForIdle(root);
+    input(dom, 'invite-alias', 'Picnic helper');
     const leave = [...root.querySelectorAll('a')].find(link =>
       link.textContent === (language === 'es' ? 'Salir sin unirme' : 'Leave without joining'));
     assert.ok(leave);
     assert.equal(leave.getAttribute('href'), '/help?lang=' + language);
     assert.equal(leave.referrerPolicy, 'no-referrer');
-    input(dom, 'invite-alias', 'Picnic helper');
-    const age = root.querySelector('#adult-attestation');
-    age.checked = true;
-    age.dispatchEvent(new dom.window.Event('change'));
     leave.addEventListener('click', event => event.preventDefault());
     leave.click();
     app.render();
     assert.equal(root.querySelector('#invitation')?.value, '');
-    assert.equal(root.querySelector('#invite-alias')?.value, '');
+    assert.equal(root.querySelector('#invite-alias'),null);
     assert.equal(root.querySelector('#adult-attestation')?.checked, false);
     assert.deepEqual(calls, []);
   }
@@ -395,8 +393,8 @@ test('a replacement waits for the current join and clears its activation retry b
     }
   });
   t.after(() => dom.window.close());
+  root.querySelector('#adult-attestation').click();await waitForIdle(root);
   input(dom, 'invite-alias', 'Previous alias');
-  root.querySelector('#adult-attestation').click();
   submit(dom); await waitForIdle(root);
   app.openInvitation(oldToken);
   submit(dom); await activationStarted.promise;
@@ -407,10 +405,10 @@ test('a replacement waits for the current join and clears its activation retry b
   pendingActivation.resolve();
   await waitForIdle(root);
   assert.equal(root.querySelector('#adult-attestation').checked, false);
-  assert.equal(root.querySelector('#invite-alias').value, '');
+  assert.equal(root.querySelector('#invite-alias'),null);
   assert.equal(root.querySelector('[role=status]').textContent, '');
   assert.deepEqual(activated, ['old-household', 'old-household']);
-  root.querySelector('#adult-attestation').click();
+  root.querySelector('#adult-attestation').click();await waitForIdle(root);
   submit(dom); await waitForIdle(root);
   assert.deepEqual(redeemed, [[oldToken, 'Previous alias'], ['newest-code', '']]);
   assert.equal(activated.length, 2);
@@ -431,7 +429,7 @@ test('an offline link replacement waits for a verified identity and keeps the ne
     }
   });
   t.after(() => dom.window.close());
-  root.querySelector('#adult-attestation').click();
+  root.querySelector('#adult-attestation').click();await waitForIdle(root);
   input(dom, 'invite-alias', 'Previous alias');
   online = false;
   app.openInvitation('replacement');
@@ -442,17 +440,17 @@ test('an offline link replacement waits for a verified identity and keeps the ne
   identity = 'current-identity';
   await app.start();
   assert.equal(root.querySelector('#adult-attestation').checked, false);
-  assert.equal(root.querySelector('#invite-alias').value, '');
+  assert.equal(root.querySelector('#invite-alias'),null);
   assert.deepEqual(attempts, []);
-  root.querySelector('#adult-attestation').click();
+  root.querySelector('#adult-attestation').click();await waitForIdle(root);
   submit(dom); await waitForIdle(root);
   assert.deepEqual(attempts, [['replacement', 'current-identity', '']]);
 });
 
 for (const [language, guidance, entryHint] of [
-  ['en','You’ll see the household name after you join. Before joining, ask the person who invited you which household this is and what you’ll be able to do.',
+  ['en','Confirm your age to see which household invited you and what you can do there.',
     'Open the link from your household, or enter its invitation code below.'],
-  ['es','Verás el nombre del hogar después de unirte. Antes de unirte, pregúntale a la persona que te invitó de qué hogar se trata y qué podrás hacer.',
+  ['es','Confirma tu edad para ver qué hogar te invitó y qué podrás hacer allí.',
     'Abre el enlace que te envió tu familia o ingresa el código de invitación aquí.']
 ]) {
   for (const manual of [false,true]) {
@@ -463,7 +461,8 @@ for (const [language, guidance, entryHint] of [
       const root=dom.window.document.getElementById('app'), writes=[];
       const api={
         session:async()=>({authenticated:true,role:'contributor',household:{id:'existing',label:'Existing household name'},
-          memberId:'member',shopId:'shop',enrolled:true,queueConsent:false}),
+          memberId:'member',shopId:'shop',enrolled:true,queueConsent:false,csrf:'verified'}),
+        previewInvite:async(received,csrf,adult)=>{assert.equal(received,secret);assert.equal(csrf,'verified');assert.equal(adult,true);return {householdLabel:'Picnic house',role:'helper_read'};},
         requests:async()=>[],
         redeem:async token=>{writes.push(token);throw new ApiError('unavailable',404);},
         activateSession:async()=>{writes.push('activation');}
@@ -478,10 +477,128 @@ for (const [language, guidance, entryHint] of [
       if(manual)input(dom,'invitation',secret);
       submit(dom);await waitForIdle(root);
       assert.deepEqual(writes,[]);
-      root.querySelector('#adult-attestation').click();
+      root.querySelector('#adult-attestation').click();await waitForIdle(root);
       assert.deepEqual(writes,[]);
+      assert.equal(root.querySelector('#invitation-household').textContent,'Picnic house');
       submit(dom);await waitForIdle(root);
       assert.deepEqual(writes,[secret]);
     });
   }
+}
+
+test('a late preview cannot populate a replacement invitation, and a rejected replacement never reveals an offer',async t=>{
+  const started=Promise.withResolvers(),old=Promise.withResolvers();
+  const tokens=[];
+  const {app,dom,root}=await fixture({
+    authState:async()=>({available:true,authenticated:true,csrf:'adult'}),
+    previewInvite:async token=>{
+      tokens.push(token);
+      if(tokens.length===1){started.resolve();await old.promise;return {householdLabel:'Original household',role:'helper_edit'};}
+      throw new ApiError('unavailable',404);
+    },
+    redeem:async()=>assert.fail('No explicit Join'),
+    activateSession:async()=>assert.fail('No enrollment')
+  });
+  t.after(()=>dom.window.close());
+  root.querySelector('#adult-attestation').click();await started.promise;
+  app.openInvitation('replacement');
+  assert.equal(root.querySelector('form'),null);
+  old.resolve();await waitForIdle(root);
+  assert.doesNotMatch(root.textContent,/Original household/);
+  assert.equal(root.querySelector('#adult-attestation').checked,false);
+  root.querySelector('#adult-attestation').click();await waitForIdle(root);
+  assert.deepEqual(tokens,['retained-invitation-secret','replacement']);
+  assert.equal(root.querySelector('#invitation').value,'');
+  assert.equal(root.querySelector('#invite-alias'),null);
+  assert.match(root.querySelector('[role=status]').textContent,/new invitation/);
+});
+
+test('a continuously open preview expires and needs an explicit fresh check',async t=>{
+  const now=Date.now();let checks=0;
+  const {app,dom,root}=await fixture({
+    authState:async()=>({available:true,authenticated:true,csrf:'adult'}),
+    previewInvite:async()=>{
+      if(++checks===1)return {householdLabel:'Picnic kitchen',role:'helper_read'};
+      throw new ApiError('unavailable',404);
+    }
+  });
+  t.after(()=>dom.window.close());
+  root.querySelector('#adult-attestation').click();await waitForIdle(root);
+  assert.equal(root.querySelector('#invitation-household')?.textContent,'Picnic kitchen');
+  t.mock.method(Date,'now',()=>now+121_000);
+  app.checkExpiry();
+  assert.doesNotMatch(root.textContent,/Picnic kitchen|Join this household/);
+  assert.equal(checks,1);
+  submit(dom);await waitForIdle(root);
+  assert.equal(checks,2);assert.match(root.textContent,/new invitation/);
+});
+
+test('a lost join response keeps the original confirmed offer available for an explicit retry only',async t=>{
+  const offer={householdLabel:'Weekend kitchen',role:'adult_contributor'};
+  const attempts=[];let previews=0;
+  const {app,dom,root}=await fixture({
+    authState:async()=>({available:true,authenticated:true,csrf:'adult'}),
+    previewInvite:async()=>{previews++;return offer;},
+    redeem:async(token,csrf,review)=>{attempts.push({token,csrf,review});throw new ApiError('network',0);}
+  });
+  t.after(()=>dom.window.close());
+  root.querySelector('#adult-attestation').click();await waitForIdle(root);
+  input(dom,'invite-alias','Weekend cook');
+  submit(dom);await waitForIdle(root);
+  assert.doesNotMatch(root.textContent,/Weekend kitchen/);assert.match(root.textContent,/Retry joining/);
+  await app.start();assert.equal(previews,1);assert.equal(attempts.length,1);
+  submit(dom);await waitForIdle(root);
+  assert.equal(attempts.length,2);assert.deepEqual(attempts[0],attempts[1]);
+  assert.deepEqual(attempts[1].review.reviewedOffer,offer);
+});
+
+test('preview uses authenticated body-only exchange and rejects unrecognized roles and empty names',async()=>{
+  const sent=[];let role='helper_edit',householdLabel='Saturday kitchen';
+  const api=new API(async(path,options)=>{sent.push({path,options});return Response.json({householdLabel,role,member:'not disclosed'});});
+  await assert.rejects(api.previewInvite('token','csrf',false),error=>error.status===422);
+  assert.equal(sent.length,0);
+  assert.deepEqual(await api.previewInvite('token','csrf',true),{householdLabel,role});
+  const {path,options}=sent[0];assert.equal(path,'/v1/invites/preview');
+  assert.deepEqual(JSON.parse(options.body),{token:'token',adultAttestation:true});
+  assert.equal(options.headers['X-CSRF-Token'],'csrf');assert.equal(options.cache,'no-store');
+  assert.equal(options.referrerPolicy,'no-referrer');assert.equal(options.credentials,'same-origin');
+  role='organizer';await assert.rejects(api.previewInvite('token','csrf',true),error=>error.code==='invalid_response');
+  role='helper_edit';householdLabel=' ';await assert.rejects(api.previewInvite('token','csrf',true),error=>error.code==='invalid_response');
+});
+
+for(const [offeredRole,scopedRole] of [['adult_contributor','contributor'],['helper_read','helper']]){
+  test(`an existing organizer opens only the narrow ${scopedRole} session they accepted`,async t=>{
+    let current={authenticated:true,role:'organizer',household:{id:'home',label:'Weekend kitchen'},
+      memberId:'organizer',shopId:'shop',csrf:'initial',enrolled:true,queueConsent:false};
+    const grantId=scopedRole==='helper'?'accepted-grant':undefined;
+    const offer={householdLabel:current.household.label,role:offeredRole};
+    const reads=[],accepted=[];
+    const {dom,root}=await fixture({
+      session:async()=>current,
+      previewInvite:async()=>offer,
+      redeem:async(_token,_csrf,review)=>{
+        assert.deepEqual(review.reviewedOffer,offer);
+        return {householdId:'home',memberId:'organizer',role:scopedRole,grantId};
+      },
+      activateSession:async(h,csrf,grant)=>{
+        accepted.push([h,csrf,grant]);
+        current={...current,role:scopedRole,csrf:'scoped',grantId:grant,canContribute:!grant};
+      },
+      requests:async session=>{reads.push([session.role,session.grantId]);return [];},
+      view:async session=>{
+        reads.push([session.role,session.grantId]);
+        return {grantId,shopId:'shop',shopLabel:'Shared instructions',revision:1,asOf:'2026-11-22T00:00:00Z',expiresAt:'2099-01-01T00:00:00Z',canPropose:false,instructions:[]};
+      },
+      receivedProposals:async()=>({proposals:[],nextCursor:null})
+    });
+    t.after(()=>dom.window.close());
+    root.querySelector('#adult-attestation').click();await waitForIdle(root);
+    assert.match(root.querySelector('#invitation-household').parentElement.textContent,/This invitation lets you/);
+    assert.deepEqual(accepted,[]);
+    reads.length=0;
+    submit(dom);await waitForIdle(root);
+    assert.deepEqual(accepted,[['home','initial',grantId]]);
+    assert.deepEqual(reads,[[scopedRole,grantId]]);
+    assert.match(root.querySelector('[role=status]').textContent,/You joined Weekend kitchen/);
+  });
 }

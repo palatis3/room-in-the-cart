@@ -19,7 +19,7 @@ const setup = async (api,language='en',outbox=new Outbox(new IDBFactory())) => {
 const click=(root,label)=>{const b=[...root.querySelectorAll('button')].find(b=>b.textContent===label);assert.ok(b,`button ${label}`);b.click();};
 const type=(dom,id,value)=>{const input=dom.window.document.getElementById(id);assert.ok(input,id);input.value=value;input.dispatchEvent(new dom.window.Event('input',{bubbles:true}));};
 const submit=(root,dom)=>root.querySelector('form').dispatchEvent(new dom.window.Event('submit',{cancelable:true,bubbles:true}));
-const fakeAPI=(overrides={})=>({authState:async()=>({available:true,authenticated:true,csrf:'csrf-test'}),session:async()=>session(),requests:async()=>[],receivedProposals:async()=>({proposals:[],nextCursor:null}),command:async()=>{},logout:async()=>{},...overrides});
+const fakeAPI=(overrides={})=>({previewInvite:async()=>({householdLabel:'Inviting household',role:'adult_contributor'}),authState:async()=>({available:true,authenticated:true,csrf:'csrf-test'}),session:async()=>session(),requests:async()=>[],receivedProposals:async()=>({proposals:[],nextCursor:null}),command:async()=>{},logout:async()=>{},...overrides});
 
 test('only a generation and its live expiry authorize storage in a decoded session',async()=>{
  const base={...session(),queueConsent:false,capabilities:['own_requests','request_queue_permission']};
@@ -749,7 +749,7 @@ test('denying access to indexedDB itself still lets an invite open and a contrib
  const token=consumeInvitation(dom.window.location,dom.window.history);
  const app=new WebApp(root,api,undefined,token);
  await app.start();assert.equal(dom.window.location.hash,'');
- root.querySelector('#adult-attestation').click();submit(root,dom);await waitForIdle(root);
+ root.querySelector('#adult-attestation').click();await waitForIdle(root);submit(root,dom);await waitForIdle(root);
  assert.match(root.textContent,/Ask the shopper/);assert.match(root.textContent,/pending requests could not be opened/);
  root.querySelector('input[type=checkbox]').click();
  type(dom,'item','Rolled oats');submit(root,dom);submit(root,dom);await waitForIdle(root);
@@ -1137,15 +1137,16 @@ test('unknown and adult routes do not fetch or display household data',async()=>
 });
 
 test('invitation requires explicit adult review and validates the redemption receipt',async()=>{
+ const reviewedOffer={householdLabel:'Inviting household',role:'adult_contributor'};
  const calls=[];const api=new API(async(path,options)=>{calls.push({path,options});return new Response(JSON.stringify({householdId:'household-b',memberId:'member-b',role:'contributor'}),{status:200});});
  await assert.rejects(api.redeem('invite-secret','csrf-test',{adultAttestation:false}),e=>e.status===422);assert.equal(calls.length,0);
- assert.deepEqual(await api.redeem('invite-secret','csrf-test',{adultAttestation:true,alias:'Mia',defaultAliasLanguage:'es'}),{householdId:'household-b',memberId:'member-b',role:'contributor'});
- assert.deepEqual(JSON.parse(calls[0].options.body),{token:'invite-secret',intent:'join',adultAttestation:true,alias:'Mia'});
- await api.redeem('invite-secret','csrf-test',{adultAttestation:true,alias:'  ',defaultAliasLanguage:'es'});
- assert.deepEqual(JSON.parse(calls[1].options.body),{token:'invite-secret',intent:'join',adultAttestation:true});
+ assert.deepEqual(await api.redeem('invite-secret','csrf-test',{reviewedOffer,adultAttestation:true,alias:'Mia',defaultAliasLanguage:'es'}),{householdId:'household-b',memberId:'member-b',role:'contributor'});
+ assert.deepEqual(JSON.parse(calls[0].options.body),{reviewedOffer,token:'invite-secret',intent:'join',adultAttestation:true,alias:'Mia'});
+ await api.redeem('invite-secret','csrf-test',{reviewedOffer,adultAttestation:true,alias:'  ',defaultAliasLanguage:'es'});
+ assert.deepEqual(JSON.parse(calls[1].options.body),{reviewedOffer,token:'invite-secret',intent:'join',adultAttestation:true});
  assert.equal(calls[1].options.headers['Accept-Language'],'es');
  const invalid=new API(async()=>new Response(JSON.stringify({ok:true}),{status:200}));
- await assert.rejects(invalid.redeem('invite-secret',undefined,{adultAttestation:true}),e=>e.code==='invalid_response');
+ await assert.rejects(invalid.redeem('invite-secret',undefined,{reviewedOffer,adultAttestation:true}),e=>e.code==='invalid_response');
 });
 
 test('session activation requires an authenticated response for the redeemed household',async()=>{
@@ -1160,14 +1161,14 @@ test('joined invitation retries session activation without redeeming a single-us
  let current=null,redeems=0,activations=0;
  const {root,dom}=await setup(fakeAPI({session:async()=>current,redeem:async()=>{redeems++;return {householdId:'household-a',memberId:'member-a',role:'contributor'};},activateSession:async()=>{activations++;if(activations===1)throw new ApiError('network',0);current=session();}}));
  type(dom,'invitation','single-use-secret');submit(root,dom);await waitForIdle(root);assert.equal(redeems,0);
- const adult=root.querySelector('#adult-attestation');adult.checked=true;adult.dispatchEvent(new dom.window.Event('change'));
+ const adult=root.querySelector('#adult-attestation');adult.checked=true;adult.dispatchEvent(new dom.window.Event('change'));await waitForIdle(root);
  submit(root,dom);await waitForIdle(root);assert.equal(redeems,1);assert.equal(activations,1);assert.doesNotMatch(root.textContent,/Ask the shopper/);
  submit(root,dom);await waitForIdle(root);assert.equal(redeems,1);assert.equal(activations,2);assert.match(root.textContent,/Ask the shopper/);
 });
 
 test('child enrollment unavailable is an explicit failure in Spanish',async()=>{
  const {root,dom}=await setup(fakeAPI({session:async()=>null,redeem:async()=>{throw new ApiError('consent_unavailable',503);}}),'es-US');
- type(dom,'invitation','invite-code');const adult=root.querySelector('#adult-attestation');adult.checked=true;adult.dispatchEvent(new dom.window.Event('change'));
+ type(dom,'invitation','invite-code');const adult=root.querySelector('#adult-attestation');adult.checked=true;adult.dispatchEvent(new dom.window.Event('change'));await waitForIdle(root);
  submit(root,dom);await waitForIdle(root);assert.match(root.textContent,/registro de menores aún no está disponible/);assert.doesNotMatch(root.textContent,/Pedir a quien hace la compra/);
 });
 
@@ -1191,7 +1192,7 @@ test('redeeming a helper link never opens a different most-recent grant',async()
  let current=null;
  const dom=new JSDOM('<div id="app"></div>',{url:'https://food.example/view'}),root=dom.window.document.getElementById('app');
  const app=new WebApp(root,fakeAPI({session:async()=>current,redeem:async()=>({householdId:'household-a',memberId:'member-a',role:'helper',grantId:'requested-grant'}),activateSession:async()=>{current={...session(),role:'helper',grantId:'wrong-grant'};},view:async()=>({grantId:'wrong-grant',shopId:'shop-a',shopLabel:'Different shop',revision:1,asOf:'2026-01-01T12:00:00Z',expiresAt:'2099-01-01T00:00:00Z',canPropose:false,instructions:[{item:'Different private ingredient',amount:'one',action:'Do not display'}]})}),new Outbox(new IDBFactory()),'secret');
- await app.start();const adult=root.querySelector('#adult-attestation');adult.checked=true;adult.dispatchEvent(new dom.window.Event('change'));
+ await app.start();const adult=root.querySelector('#adult-attestation');adult.checked=true;adult.dispatchEvent(new dom.window.Event('change'));await waitForIdle(root);
  submit(root,dom);await waitForIdle(root);assert.doesNotMatch(root.textContent,/Different shop|Different private ingredient/);assert.match(root.textContent,/information changed/);
 });
 
@@ -1208,7 +1209,7 @@ test('an enrolled adult accepting a cook invitation never reads another grant af
  });
  const token=consumeInvitation(dom.window.location,dom.window.history);
  await new WebApp(root,api,new Outbox(new IDBFactory()),token).start();
- type(dom,'invitation','fictional');root.querySelector('#adult-attestation').click();
+ type(dom,'invitation','fictional');root.querySelector('#adult-attestation').click();await waitForIdle(root);
  submit(root,dom);await waitForIdle(root);
  assert.equal(reads,0);assert.ok(root.querySelector('#adult-attestation'));assert.match(root.textContent,/information changed/);
  click(root,'Refresh');await waitForIdle(root);assert.equal(reads,0);assert.ok(root.querySelector('#adult-attestation'));
@@ -1819,3 +1820,15 @@ for (const [language, edit, retry, refresh, unavailable] of [
   });
  }
 }
+
+test('a mismatched invitation receipt cannot open a different role or a stray grant',async()=>{
+ const reviewedOffer={householdLabel:'Picnic house',role:'helper_read'};
+ for(const receipt of [
+   {role:'contributor'}, {role:'editor',grantId:'grant'}, {role:'helper'}
+ ]){
+   const api=new API(async()=>Response.json({householdId:'home',memberId:'member',...receipt}));
+   await assert.rejects(api.redeem('invite','csrf',{adultAttestation:true,reviewedOffer}),e=>e.code==='invalid_response');
+ }
+ const api=new API(async()=>Response.json({householdId:'home',memberId:'member',role:'contributor',grantId:'unreviewed'}));
+ await assert.rejects(api.redeem('invite','csrf',{adultAttestation:true,reviewedOffer:{...reviewedOffer,role:'adult_contributor'}}),e=>e.code==='invalid_response');
+});
