@@ -18,12 +18,17 @@ private struct PackLookupInput: View {
     @State private var consent = false
     @State private var status: String?
     @State private var lastScan: CapturedBarcode?
+    private enum Field { case product, barcode, retailer }
+    @FocusState private var field: Field?
 
     var body: some View {
         Section(pantryText("Find a pack")) {
-            TextField(pantryText("Product name"), text: $query).onChange(of: query) { _, _ in clearResult() }
+            TextField(pantryText("Product name"), text: $query).focused($field, equals: .product)
+                .onChange(of: query) { _, _ in clearResult() }
             TextField(pantryText("Barcode"), text: $code)
+                .focused($field, equals: .barcode)
                 .accessibilityIdentifier("pack.find.code").autocorrectionDisabled().textInputAutocapitalization(.never)
+                .submitLabel(.search).onSubmit(submitBarcode)
                 .onChange(of: code) { _, _ in lastScan = nil; clearResult() }
             if code.count == 8 && code.allSatisfy(\.isNumber) {
                 Picker(pantryText("Barcode format"), selection: $kind) {
@@ -34,11 +39,13 @@ private struct PackLookupInput: View {
             }
             if let candidate = lastScan ?? typed, candidate.lookupScope == .retailer {
                 TextField(pantryText("Retailer for this code"), text: $retailer)
+                    .focused($field, equals: .retailer)
                     .accessibilityIdentifier("pack.find.retailer")
+                    .submitLabel(.search).onSubmit(submitBarcode)
                     .onChange(of: retailer) { _, _ in clearResult() }
             }
-            if let candidate = lastScan ?? typed {
-                Button(pantryText("Find barcode")) { resolve(candidate) }.accessibilityIdentifier("pack.find.resolve")
+            if (lastScan ?? typed) != nil {
+                Button(pantryText("Find barcode"), action: submitBarcode).accessibilityIdentifier("pack.find.resolve")
             }
             LivePackageButton(workspaceID: workspaceID, authorized: authorized) { code in lastScan = code; resolve(code) }
             PantryProductPhotoInput(workspaceID: workspaceID, consent: $consent, authorized: authorized, add: { source in
@@ -90,6 +97,12 @@ private struct PackLookupInput: View {
     private func clearResult() {
         selected = nil; unmatched = nil; status = nil
     }
+    private func submitBarcode() {
+        guard authorized(), let candidate = lastScan ?? typed else { return }
+        if candidate.associationKey(retailer: retailer) != nil { field = nil }
+        resolve(candidate)
+    }
+
     private func resolve(_ code: CapturedBarcode) {
         guard authorized() else { return }
         clearResult()
