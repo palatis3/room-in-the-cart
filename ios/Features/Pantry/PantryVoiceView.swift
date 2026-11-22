@@ -849,7 +849,7 @@ struct VoicePantryRow {
                 if saved.count == 1, let lot = saved.first, recordedUseIDs.contains(lot.id) {
                     Text(pantryNotice(.recordedUse(lot.name)))
                 } else { Text(pantryText("Food saved on this device.")) }
-            } icon: { Image(systemName: "checkmark.circle") }
+            } icon: { Image(systemName: "checkmark.circle").accessibilityHidden(true) }
             .accessibilityIdentifier("pantry.voiceSaved")
             ForEach(Array(saved.enumerated()), id: \.element.id) { index, lot in
                 Text(pantryLocationName(lot.location))

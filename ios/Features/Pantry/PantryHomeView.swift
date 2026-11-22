@@ -127,7 +127,12 @@ struct PantryHomeView: View {
                 JournalList {
                     if let notice = model.notice {
                         Section {
-                            Label(pantryNotice(notice), systemImage: notice.isSaved ? "checkmark.circle" : "exclamationmark.circle")
+                            Label {
+                                Text(pantryNotice(notice))
+                            } icon: {
+                                Image(systemName: notice.isSaved ? "checkmark.circle" : "exclamationmark.circle")
+                                    .accessibilityHidden(true)
+                            }
                                 .foregroundStyle(notice.isSaved ? Theme.ink : Theme.warning)
                                 .accessibilityIdentifier("pantry.status")
                         }

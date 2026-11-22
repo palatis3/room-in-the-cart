@@ -462,14 +462,16 @@ import XCTest
         tap(app.buttons["pantry.voicePreview"])
         tap(app.buttons["pantry.voiceConfirm"])
         let receipt = app.staticTexts.matching(NSPredicate(format: "label == %@", "Recorded one use of Flour.")).firstMatch
-        XCTAssertTrue(element("pantry.voiceSaved").waitForExistence(timeout: 8))
         XCTAssertTrue(receipt.wait(for: \.isHittable, toEqual: true, timeout: 8), app.debugDescription)
+        XCTAssertEqual(receipt.identifier, "pantry.voiceSaved")
+        XCTAssertFalse(app.images["pantry.voiceSaved"].exists)
         capture("Confirmed flour use")
         tap(app.buttons["Done"])
         let shelf = app.navigationBars["My Pantry"]
         XCTAssertTrue(shelf.waitForExistence(timeout: 8))
-        XCTAssertTrue(element("pantry.status").waitForExistence(timeout: 8))
         XCTAssertTrue(receipt.wait(for: \.isHittable, toEqual: true, timeout: 8), app.debugDescription)
+        XCTAssertEqual(receipt.identifier, "pantry.status")
+        XCTAssertFalse(app.images["pantry.status"].exists)
         capture("Flour use receipt on returning to My Pantry")
 
         enterCommand("I used some flour.")
