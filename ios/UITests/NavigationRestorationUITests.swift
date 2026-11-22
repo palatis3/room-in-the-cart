@@ -526,6 +526,9 @@ extension XCUIApplication {
             format: "identifier == %@ AND label == %@", "ledgerShopPicker", name
         )).firstMatch
         XCTAssertTrue(selectedPickup.waitForExistence(timeout: 8), "Expected the selected pickup to be \(name)", file: file, line: line)
+        let titleBar = navigationBars["Shopping list"]
+        XCTAssertLessThanOrEqual(titleBar.frame.maxY, selectedPickup.frame.minY + 1,
+                                 "The restored title must leave the list selector visible.", file: file, line: line)
     }
 
     func renameSelectedPickup(_ title: String, file: StaticString = #filePath, line: UInt = #line) {
