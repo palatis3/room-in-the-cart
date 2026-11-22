@@ -380,8 +380,20 @@ import XCTest
         launch(reset: true)
         tap(app.tabBars.buttons["Pantry"])
         tap(app.buttons["pantry.setup.apply"])
-        tap(app.buttons["pantry.findPack"])
         let barcode = app.textFields["pack.find.code"]
+        func openPantryLookup() {
+            let find = app.buttons["pantry.findPack"]
+            XCTAssertTrue(find.waitForExistence(timeout: 10))
+            let center = CGVector(dx: 0.5, dy: 0.5)
+            reveal(find, requiredHit: center)
+            let point = find.coordinate(withNormalizedOffset: center)
+            XCTAssertTrue(scrollableArea(usingTabBarFrame: true).contains(point.screenPoint),
+                          "The package lookup row must be visible below the navigation bar.")
+            point.tap()
+            XCTAssertTrue(barcode.waitForExistence(timeout: 10))
+        }
+
+        openPantryLookup()
         let resolve = app.buttons["pack.find.resolve"]
         let review = app.buttons["pack.find.review"]
         let remember = app.buttons["pack.remember"]
@@ -425,7 +437,7 @@ import XCTest
 
         restart()
         tap(app.tabBars.buttons["Pantry"])
-        tap(app.buttons["pantry.findPack"])
+        openPantryLookup()
         tap(barcode)
         barcode.typeText("012345678905")
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
