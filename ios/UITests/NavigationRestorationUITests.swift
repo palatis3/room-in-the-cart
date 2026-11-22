@@ -312,6 +312,74 @@ import XCTest
         app.assertSelectedShoppingList(named: firstName)
     }
 
+    func testInStoreListPickerOpensTheChosenListAndPreservesItsStopAndGroceries() {
+        launch(reset: true)
+        let entry = element("quickGrocery.name")
+        func addGrocery(_ text: String) {
+            tap(entry)
+            entry.typeText(text + "\n")
+            XCTAssertTrue(app.buttons["quickGrocery.undo"].waitForExistence(timeout: 8))
+            tap(app.buttons["quickGrocery.dismissKeyboard"])
+        }
+        addGrocery("Rice")
+        tap(app.buttons["openPickupList"])
+        let picker = app.buttons["ledgerShopPicker"]
+        XCTAssertTrue(picker.waitForExistence(timeout: 8))
+        let firstList = picker.label
+        let secondList = "Weekend groceries"
+        tap(picker)
+        tap(app.buttons["Start another pickup"])
+        let name = element("ledgerShopName")
+        tap(name)
+        name.typeText(secondList)
+        tap(app.buttons["ledgerCreateShop"])
+        app.assertSelectedShoppingList(named: secondList)
+        addGrocery("3 Pears")
+        let inStore = app.buttons["ledgerInStore"]
+        tap(inStore)
+
+        tap(app.buttons["tripNextStore"])
+        let stop = app.textFields["Store name"]
+        tap(stop)
+        stop.typeText("Corner market")
+        tap(app.buttons["tripStoreKeyboardDone"])
+        tap(app.buttons["Start this stop"])
+        let pear = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
+                                                     "tripDetails-", "Pears")).firstMatch
+        tap(pear)
+        tap(app.buttons["tripPickPart"])
+        let picked = app.textFields["tripPartialAmount"]
+        tap(picked)
+        tap(app.keyboards.keys["1"])
+        tap(app.buttons["tripPartKeyboardDone"])
+        tap(app.buttons["tripSavePart"])
+        XCTAssertTrue(pear.waitForExistence(timeout: 8))
+        let partial = pear.label
+        XCTAssertTrue(partial.contains("2 items still needed"), partial)
+
+        let choose = app.buttons["inStoreListPicker"]
+        func chooseList(_ title: String) {
+            tap(choose)
+            XCTAssertTrue(app.staticTexts["Open another shopping list"].waitForExistence(timeout: 5))
+            tap(app.buttons[title])
+            app.assertSelectedShoppingList(named: title)
+        }
+        XCTAssertEqual(choose.label, "Shopping list · " + secondList)
+        XCTAssertTrue(app.staticTexts["Corner market"].exists)
+        chooseList(firstList)
+        XCTAssertTrue(app.fullListGrocery(labeled: "Inspect Rice").exists)
+        XCTAssertFalse(app.fullListGrocery(labeled: "Inspect Pears").exists)
+        tap(inStore)
+        chooseList(secondList)
+        app.terminate()
+        launch(reset: false)
+        app.assertSelectedShoppingList(named: secondList)
+        tap(inStore)
+        XCTAssertTrue(pear.waitForExistence(timeout: 8))
+        XCTAssertEqual(pear.label, partial)
+        XCTAssertTrue(app.staticTexts["Corner market"].exists)
+    }
+
     func testKillRelaunchRestoresRecordsDetailAndIndependentShoppingList() {
         launch(reset: true)
         tap(element("openPickupList"))

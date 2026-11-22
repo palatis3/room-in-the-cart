@@ -721,6 +721,22 @@
         }
       }
     },
+    "Open another shopping list": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open another shopping list"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir otra lista de compras"
+          }
+        }
+      }
+    },
     "Preview list copy": {
       "localizations": {
         "en": {

@@ -478,7 +478,14 @@ struct ShopView: View {
             .settingsButton(presentation: $showingSettings)
             .task { await model.refresh() }
             .sheet(item: $inStoreShop) { shop in
-                PrivateShoppingSheet(model: ledger) { InStoreShoppingView(model: ledger, shopID: shop.id) }
+                PrivateShoppingSheet(model: ledger) {
+                    InStoreShoppingView(model: ledger, shopID: shop.id) { selected in
+                        guard inStoreShop?.id == shop.id, navigation.selection == .shop,
+                              navigation.shopPath.isEmpty, let workspace = ledger.sourceWorkspaceID else { return }
+                        inStoreShop = nil
+                        navigation.setPath([.shoppingList(actorID: access.localActorID, workspaceID: workspace, shopID: selected)], for: .shop)
+                    }
+                }
             }
             .sheet(isPresented: $showingPantry) {
                 NavigationStack {

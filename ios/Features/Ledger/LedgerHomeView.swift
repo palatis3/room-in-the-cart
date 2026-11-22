@@ -198,7 +198,12 @@ struct LedgerHomeView: View {
                         }
                 }
             case .inStore(let id):
-                PrivateShoppingSheet(model: model) { InStoreShoppingView(model: model, shopID: id) }
+                PrivateShoppingSheet(model: model) {
+                    InStoreShoppingView(model: model, shopID: id) { selected in
+                        sheet = nil
+                        onShopSelected?(selected)
+                    }
+                }
             case .kits(let id):
                 PrivateShoppingSheet(model: model) { ShoppingKitsView(model: model, shopID: id) }
             case .standing:

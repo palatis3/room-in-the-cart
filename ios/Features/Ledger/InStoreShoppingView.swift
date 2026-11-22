@@ -96,6 +96,7 @@ struct InStoreShoppingView: View {
     private var dinnerPantry = ShoppingDinnerPantry()
     @ObservedObject var model: LedgerModel
     let shopID: UUID
+    let openSelectedList: (UUID) -> Void
     @Environment(\.shoppingListAuthorization) private var authorize
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -110,12 +111,21 @@ struct InStoreShoppingView: View {
         var id: Self { self }
     }
     @State private var destination: Destination?
-    @SceneStorage("inStoreScrollRow") private var savedRow = ""
+    @State private var choosingList = false
+    @SceneStorage("inStoreScrollRow") private var previousSavedRow = ""
+    @SceneStorage private var savedRow: String
     @State private var trackingAisle = false
     @State private var completedDetailRow: UUID?
     @State private var scrollToReturn = false
     @AccessibilityFocusState private var focus: Focus?
     @State private var pendingFocus: Focus?
+
+    init(model: LedgerModel, shopID: UUID, openSelectedList: @escaping (UUID) -> Void) {
+        self.model = model
+        self.shopID = shopID
+        self.openSelectedList = openSelectedList
+        _savedRow = SceneStorage(wrappedValue: "", "inStoreScrollRow-\(shopID)")
+    }
 
     var body: some View {
         Group {
@@ -131,9 +141,7 @@ struct InStoreShoppingView: View {
                     JournalList {
                         DinnerPantryReviewSection(shopID: shop.id, reviews: dinner.pending)
                         if model.error != nil || model.hasPendingSave { LedgerSaveStatus(model: model) }
-                        if !shop.currentStop.name.isEmpty {
-                            Section { Label(shop.currentStop.name, systemImage: "storefront").font(.headline) }
-                        }
+                        listAndStop(shop)
                         ForEach(groups) { group in
                             let rows = group.lines.filter { available($0, shop: shop) }
                             if !rows.isEmpty {
@@ -187,7 +195,8 @@ struct InStoreShoppingView: View {
                     .listStyle(.plain)
                     .coordinateSpace(name: "shoppingAisles")
                     .onAppear {
-                        if let id = restoredRow(), visible.contains(where: { $0.id == id }) || outstanding.contains(where: { $0.id == id }) {
+                        if let id = restoredRow(), id != visible.first?.id,
+                           visible.contains(where: { $0.id == id }) || outstanding.contains(where: { $0.id == id }) {
                             reader.scrollTo(Focus.line(id), anchor: .top)
                         }
                         Task { @MainActor in await Task.yield(); trackingAisle = true }
@@ -277,6 +286,45 @@ struct InStoreShoppingView: View {
         .modifier(InStoreDisplayPreference(trip: shopID, owner: displayOwner, available: model.shop?.id == shopID && authorize()))
     }
 
+    @ViewBuilder private func listAndStop(_ shop: ShoppingLedger) -> some View {
+        let others = model.workspace.shops.filter { $0.id != shop.id }
+        if !others.isEmpty {
+            Section {
+                Button { choosingList = true } label: {
+                    HStack {
+                        Text(tripFormat("Shopping list · %@", shop.title)).font(.headline)
+                        Image(systemName: "chevron.down").imageScale(.small).accessibilityHidden(true)
+                    }
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                    .contentShape(Rectangle())
+                }
+                .accessibilityHint(tripText("Open another shopping list"))
+                .accessibilityIdentifier("inStoreListPicker")
+                .disabled(model.saving || model.hasPendingSave)
+                .confirmationDialog(tripText("Open another shopping list"), isPresented: $choosingList, titleVisibility: .visible) {
+                    ForEach(others, id: \.id) { item in
+                        Button(item.title) {
+                            Task {
+                                await model.selectShop(item.id, authorize: {
+                                    authorize() && model.shop?.id == shopID &&
+                                        model.workspace.shops.contains { $0.id == item.id }
+                                }, onSelected: { id in
+                                    if authorize() { openSelectedList(id) }
+                                })
+                            }
+                        }
+                    }
+                    Button(ledgerText("Cancel"), role: .cancel) {}
+                }
+                if !shop.currentStop.name.isEmpty, shop.currentStop.name != shop.title {
+                    Label(shop.currentStop.name, systemImage: "storefront").font(.headline)
+                }
+            }
+        } else if !shop.currentStop.name.isEmpty {
+            Section { Label(shop.currentStop.name, systemImage: "storefront").font(.headline) }
+        }
+    }
+
     private var closeSheet: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
             Button(ledgerText("Done")) { destination = nil }
@@ -335,7 +383,7 @@ struct InStoreShoppingView: View {
     }
 
     private func restoredRow() -> UUID? {
-        let parts = savedRow.split(separator: "/").map(String.init)
+        let parts = (savedRow.isEmpty ? previousSavedRow : savedRow).split(separator: "/").map(String.init)
         guard authorize(), parts.count == 3, parts[0] == model.sourceWorkspaceID?.uuidString,
               parts[1] == shopID.uuidString else { return nil }
         return UUID(uuidString: parts[2])
