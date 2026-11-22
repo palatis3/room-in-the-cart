@@ -476,22 +476,32 @@ import XCTest
 
     private func tapPantryEntry(_ entry: XCUIElement) {
         let list = app.collectionViews.firstMatch
-        // After a lot is saved, the form may scroll to its status or last focused row.
-        // Wait for an unobscured, settled row before using its center hit point.
-        let area = app.frame.insetBy(dx: 12, dy: 130)
-        for _ in 0..<5 {
-            if entry.exists, entry.isHittable, area.contains(CGPoint(x: entry.frame.midX, y: entry.frame.midY)) { break }
-            list.swipeDown()
+        let top = max(list.frame.minY, app.navigationBars.firstMatch.frame.maxY) + 4
+        let tabs = app.tabBars.firstMatch
+        let bottom = min(list.frame.maxY, tabs.exists ? tabs.frame.minY : app.frame.maxY) - 4
+        let area = CGRect(x: list.frame.minX + 8, y: top, width: list.frame.width - 16, height: bottom - top)
+        func visibleRow() -> CGRect? {
+            guard entry.exists, entry.isHittable else { return nil }
+            let visible = entry.frame.intersection(area)
+            return visible.height >= 44 && visible.width >= 44 ? visible : nil
+        }
+        for attempt in 0..<10 {
+            if visibleRow() != nil { break }
+            // The last save can leave the list near its bottom. Large text can instead move
+            // the entry below the initial viewport. Search above first only when virtualized.
+            let searchAbove = entry.exists ? entry.frame.midY < area.midY : attempt < 3
+            if searchAbove { list.swipeDown(velocity: .slow) } else { list.swipeUp(velocity: .slow) }
         }
         var prior: CGRect?
         let settled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            guard entry.exists, entry.isHittable else { return false }
-            let frame = entry.frame
-            defer { prior = frame }
-            return frame == prior && area.contains(CGPoint(x: frame.midX, y: frame.midY))
+            guard let visible = visibleRow() else { return false }
+            defer { prior = visible }
+            return visible == prior
         }, object: nil)
         XCTAssertEqual(XCTWaiter.wait(for: [settled], timeout: 8), .completed, app.debugDescription)
-        entry.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        guard let visible = visibleRow() else { return XCTFail("Pantry entry is outside the visible list") }
+        entry.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: visible.midX - entry.frame.minX,
+                                                                         dy: visible.midY - entry.frame.minY)).tap()
     }
 
     private func assertDictationIdle() {
