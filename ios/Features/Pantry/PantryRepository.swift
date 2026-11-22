@@ -298,13 +298,15 @@ final class PantryRepository {
     /// An editor may publish an editable snapshot only after checking the journal
     /// under the same lease as this complete read. Competing confirmations fail
     /// closed and are restored on the next load.
-    func loadForEditing(at now: Date) async throws -> Snapshot {
+    func loadForEditing(at now: @autoclosure () -> Date, waitForShelfRead: Bool = false) async throws -> Snapshot {
         try requireAccess()
-        guard let pendingStore else { return try await load(at: now) }
+        guard let pendingStore else { return try await load(at: now()) }
         guard let mutationGate, pendingStore.inventoryWorkspaceID == store.workspaceID else { throw Failure.pendingUnavailable }
-        let lease = try mutationGate.beginExclusiveWrite(); defer { mutationGate.endExclusiveWrite(lease) }
+        let lease = waitForShelfRead ? try await mutationGate.beginShelfRead() : try mutationGate.beginExclusiveWrite()
+        defer { mutationGate.endExclusiveWrite(lease) }
+        try requireAccess()
         guard try pendingStore.read() == nil else { throw PantryPendingStore.Failure.occupied }
-        let current = try await load(at: now)
+        let current = try await load(at: now())
         try requireAccess()
         guard try pendingStore.read() == nil else { throw PantryPendingStore.Failure.occupied }
         return current

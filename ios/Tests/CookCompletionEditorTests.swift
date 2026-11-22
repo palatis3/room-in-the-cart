@@ -11,6 +11,7 @@ import LocalStore
         let ledger: LedgerModel
         let pickup: PickupModel
         let store: ComparisonStore
+        let inventoryURL: URL
         let gate: PantryMutationGate
         let session: PantryCookSession
         let editor: CookCompletionEditorModel
@@ -40,7 +41,8 @@ import LocalStore
             $0.shops = [shop]; $0.selectedShopID = shop.id; $0.mealTemplates = [recipe]
         }
         XCTAssertTrue(saved)
-        let store = try ComparisonStore(url: directory.appendingPathComponent("pickup.sqlite"), inventoryEnabled: true)
+        let inventoryURL = directory.appendingPathComponent("pickup.sqlite")
+        let store = try ComparisonStore(url: inventoryURL, inventoryEnabled: true)
         cleanup.track(store)
         let names = ["Wraps", "Rice wraps"] + (duplicatePlannedName ? ["Wraps"] : [])
         let lots = names.map { _ in UUID() }
@@ -68,7 +70,7 @@ import LocalStore
         let editor = CookCompletionEditorModel()
         await editor.open(session: session, shopID: shop.id, mealID: meal, authorize: { access.allowed })
         XCTAssertNotNil(editor.context)
-        return Fixture(cleanup: cleanup, ledger: ledger, pickup: pickup, store: store, gate: gate,
+        return Fixture(cleanup: cleanup, ledger: ledger, pickup: pickup, store: store, inventoryURL: inventoryURL, gate: gate,
             session: session, editor: editor, access: access, shop: shop.id, meal: meal, lots: lots, now: now)
     }
     private func explicitNoUse(_ model: CookCompletionEditorModel) {
@@ -442,6 +444,73 @@ import LocalStore
         editor.selectBatch(f.lots[2], ingredientID: ingredient, partID: part)
         await editor.prepareReview()
         XCTAssertEqual(editor.review?.draft.parts.first?.substitution, "The gluten-free wraps from the freezer")
+    }
+
+    func testFirstPantryVisitAfterCookingWaitsForTheOtherReadAndReopensWithItsAllocations() async throws {
+        let f = try await fixture()
+        let cooking = try await cookWithLunchAndDinner(f)
+        XCTAssertEqual(f.editor.notice, .saved)
+        let shelf = try XCTUnwrap(f.pickup.makePantryModel())
+        let second = try XCTUnwrap(f.pickup.makePantryModel())
+        let lease = try f.gate.beginExclusiveWrite()
+        // Dinner detail and the retained Pantry tab use this same exclusive lease.
+        // Hold it across both appearances to make the scheduling independent of SQLite speed.
+        let firstVisit = Task { await shelf.loadOnAppearance(accessAllowed: true) }
+        let secondVisit = Task { await second.loadOnAppearance(accessAllowed: true) }
+        let deadline = ContinuousClock.now + .seconds(3)
+        while (!shelf.busy || !second.busy) && shelf.notice == nil && second.notice == nil && ContinuousClock.now < deadline {
+            await Task.yield()
+        }
+        // SwiftUI can cancel and restart an appearance while the same retained shelf is waiting.
+        XCTAssertTrue(shelf.busy)
+        XCTAssertTrue(second.busy)
+        firstVisit.cancel()
+        let reappeared = Task { await shelf.loadOnAppearance(accessAllowed: true) }
+        f.gate.endExclusiveWrite(lease)
+        await reappeared.value
+        await firstVisit.value
+        await secondVisit.value
+        let persisted = try await f.store.inventoryState()
+        for model in [shelf, second] {
+            let snapshot = try XCTUnwrap(model.snapshot)
+            XCTAssertEqual(model.phase, .ready)
+            XCTAssertNil(model.notice)
+            XCTAssertEqual(snapshot.state, persisted)
+            XCTAssertEqual(snapshot.lots.first { $0.id == f.lots[0] }?.count.quantity?.amount, try Rational(3))
+            XCTAssertEqual(Set(snapshot.reservations.map(\.id)), Set(cooking.outputReservations.map(\.id)))
+        }
+        try await f.store.close()
+        await shelf.load()
+        XCTAssertEqual(shelf.phase, .unavailable)
+        XCTAssertEqual(shelf.notice, .loadFailed)
+        XCTAssertNil(shelf.snapshot)
+        let reopened = try ComparisonStore(url: f.inventoryURL, inventoryEnabled: true)
+        f.cleanup.track(reopened)
+        let cold = try await PantryRepository(store: reopened, authorize: { true }).load(at: f.now)
+        XCTAssertEqual(cold.state, persisted)
+        XCTAssertEqual(cold.lots, second.snapshot?.lots)
+        XCTAssertEqual(cold.reservations, second.snapshot?.reservations)
+        try await reopened.close()
+    }
+
+    func testSupersededPantryAppearanceCannotPublishAfterAccessChangesWhileWaiting() async throws {
+        let f = try await fixture()
+        let shelf = try XCTUnwrap(f.pickup.makePantryModel())
+        let lease = try f.gate.beginExclusiveWrite()
+        let appearance = Task { await shelf.loadOnAppearance(accessAllowed: true) }
+        let deadline = ContinuousClock.now + .seconds(3)
+        while !shelf.busy && shelf.notice == nil && ContinuousClock.now < deadline { await Task.yield() }
+        appearance.cancel()
+        f.access.allowed = false
+        shelf.accessLost()
+        f.gate.endExclusiveWrite(lease)
+        await appearance.value
+        XCTAssertNil(shelf.snapshot)
+        XCTAssertNil(shelf.notice)
+        XCTAssertEqual(shelf.phase, .accessDenied)
+        f.access.allowed = true
+        await shelf.loadOnAppearance(accessAllowed: true)
+        XCTAssertTrue(shelf.canEdit)
     }
 
     func testMountedPantryShelfUpdatesAfterDinnerAndKeepsAnOpenRecountUntilDismissed() async throws {

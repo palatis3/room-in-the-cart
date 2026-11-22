@@ -440,7 +440,9 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
                     return
                 }
             }
-            let current = try await repository.loadForEditing(at: clock())
+            // A retained shelf owns this complete read across tab transitions. The
+            // generation below still rejects a revoked presentation after a wait.
+            let current = try await repository.loadForEditing(at: clock(), waitForShelfRead: true)
             guard token == generation else { return }
             snapshot = current; phase = .ready
             if pending == nil { notice = nil; requiresFreshReview = false }

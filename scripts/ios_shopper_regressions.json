@@ -26,7 +26,9 @@
     "RoomInTheCartTests/PantryPackModelRecoveryTests/testRecordedBowlCookingKeepsSpentFoodOffTheReopenedListAndCheckoutUntilCookUndo",
     "RoomInTheCartTests/CookCompletionEditorTests/testReturningFromASuggestedSubstituteToTheUniquePlannedFoodClearsTheSavedSubstitution",
     "RoomInTheCartTests/CookCompletionEditorTests/testChangingSuggestedBatchWithAmbiguousNamesRequiresReviewAndPreservesAnExplicitDescription",
-    "RoomInTheCartTests/CookCompletionEditorTests/testMountedPantryShelfUpdatesAfterDinnerAndKeepsAnOpenRecountUntilDismissed"
+    "RoomInTheCartTests/CookCompletionEditorTests/testMountedPantryShelfUpdatesAfterDinnerAndKeepsAnOpenRecountUntilDismissed",
+    "RoomInTheCartTests/CookCompletionEditorTests/testFirstPantryVisitAfterCookingWaitsForTheOtherReadAndReopensWithItsAllocations",
+    "RoomInTheCartTests/CookCompletionEditorTests/testSupersededPantryAppearanceCannotPublishAfterAccessChangesWhileWaiting"
   ],
   "04 · Move a planned family dinner and reopen it": [
     "RoomInTheCartUITests/TonightUITests/testPastedFamilyNotePlansTomorrowAndChangesOccurrenceBeforeColdReturn",
