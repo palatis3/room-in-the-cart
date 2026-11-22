@@ -414,8 +414,8 @@ import CoreDomain
                                 .receiptInputChrome()
                                 .focused($focusedField, equals: .receiptQuantity(snapshot.id))
                         }
-                        if let proposal, !edited.quantityNote.isEmpty, proposal.quantity == nil {
-                            receiptFormatHint(captureText("Include the printed unit, such as 2 units or 500 g."),
+                        if let proposal, proposal.acceptsFieldNotes, !edited.quantityNote.isEmpty, proposal.quantity == nil {
+                            receiptFormatHint(captureText("Enter individual items as “2 units” or a measure such as “500 g”. Leave blank if you only know the number of packages."),
                                               identifier: "scan.receipt.printedQuantityHint")
                         }
                         let priceLabel = captureText("Printed amount (optional)")
@@ -424,9 +424,13 @@ import CoreDomain
                                 .receiptInputChrome()
                                 .focused($focusedField, equals: .receiptPrice(snapshot.id))
                         }
-                        if let proposal, !edited.priceNote.isEmpty, proposal.amount == nil {
-                            receiptFormatHint(captureText("Include the printed currency, such as USD 4.82."),
+                        if let proposal, proposal.acceptsFieldNotes, !edited.priceNote.isEmpty, proposal.amount == nil {
+                            receiptFormatHint(captureText("Enter the printed line total in USD, such as USD 4.82. Leave blank if the currency is unclear."),
                                               identifier: "scan.receipt.printedAmountHint")
+                        }
+                        if let proposal, !proposal.acceptsFieldNotes {
+                            receiptFormatHint(captureText("Check the reviewed line wording. You can enter quantities and payments separately in receipt details."),
+                                              identifier: "scan.receipt.printedLineHint")
                         }
                     }
                 }

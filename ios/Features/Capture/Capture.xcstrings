@@ -1,36 +1,53 @@
 {
   "sourceLanguage": "en",
   "strings": {
-    "Include the printed currency, such as USD 4.82.": {
+    "Enter individual items as “2 units” or a measure such as “500 g”. Leave blank if you only know the number of packages.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Include the printed currency, such as USD 4.82."
+            "value": "Enter individual items as “2 units” or a measure such as “500 g”. Leave blank if you only know the number of packages."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Incluye la moneda impresa, como USD 4.82."
+            "value": "Escribe «2 unidades» para contar alimentos individuales o una medida como «500 g». Si solo sabes cuántos envases hay, deja el campo vacío."
           }
         }
       }
     },
-    "Include the printed unit, such as 2 units or 500 g.": {
+    "Enter the printed line total in USD, such as USD 4.82. Leave blank if the currency is unclear.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Include the printed unit, such as 2 units or 500 g."
+            "value": "Enter the printed line total in USD, such as USD 4.82. Leave blank if the currency is unclear."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Incluye la unidad impresa, como 2 unidades o 500 g."
+            "value": "Escribe el total impreso de la línea en USD, por ejemplo USD 4,82. Si no se distingue la moneda, deja el campo vacío."
+          }
+        }
+      }
+    },
+    "Check the reviewed line wording. You can enter quantities and payments separately in receipt details.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the reviewed line wording. You can enter quantities and payments separately in receipt details."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa el texto de la línea. Puedes indicar las cantidades y los pagos por separado en los detalles del recibo."
           }
         }
       }

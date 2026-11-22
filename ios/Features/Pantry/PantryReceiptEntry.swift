@@ -778,7 +778,12 @@ struct PantryReceiptLineEditor: View {
             case .date: Text(pantryText("Receipt date wording. This line starts skipped.")).font(.caption)
             case .unclear: Text(pantryText("Unclear printed line. Check the original wording before using it.")).font(.caption)
             case .item:
-                if printed.uncertain { Text(pantryText("Some printed fields are unclear. Review them or leave the price unknown.")).font(.caption) }
+                if printed.quantity == nil {
+                    Text(pantryText("Printed quantity unknown. If you put this food away, enter how much you received.")).font(.caption)
+                }
+                if printed.amount == nil {
+                    Text(pantryText("Printed line total unknown. Leave the paid total blank unless you know what you paid.")).font(.caption)
+                }
             }
         }
         if permitsPutaway, line.documentLine?.stage != .order, CouponReceiptEvidence.isDiscountLine(line.original) {

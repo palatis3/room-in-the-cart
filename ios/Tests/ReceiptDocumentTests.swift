@@ -261,6 +261,48 @@ import XCTest
         }
     }
 
+    func testAmbiguousItemAcceptsOnlyExplicitPrintedFieldCorrections() {
+        func proposal(_ text: String, quantity: String = "", price: String = "") -> ReceiptPrintedEvidence {
+            ReceiptPrintedEvidence(.init(originalText: text, quantityNote: quantity, priceNote: price), knownStorage: [:])
+        }
+        for (wording, note, product) in [("2x Canned lentils 3.20", "2 units", "Canned lentils"),
+                                          ("2 × Lentejas en lata 3,20", "2 unidades", "Lentejas en lata"),
+                                          ("Plain yogurt 2.40", "500 g", "Plain yogurt")] {
+            XCTAssertNil(proposal(wording).quantity)
+            XCTAssertNil(proposal(wording).amount)
+            let quantityOnly = proposal(wording, quantity: note)
+            XCTAssertEqual(quantityOnly.name, product)
+            XCTAssertEqual(quantityOnly.quantity, note.components(separatedBy: " ").first)
+            XCTAssertEqual(quantityOnly.unit, note == "500 g" ? .gram : .count)
+            XCTAssertNil(quantityOnly.amount)
+            XCTAssertNil(proposal(wording, quantity: note, price: "3.20").amount)
+            let priceOnly = proposal(wording, price: "USD 3,20")
+            XCTAssertEqual(priceOnly.amount, "3.20")
+            XCTAssertEqual(priceOnly.priceWording, "USD 3,20")
+            XCTAssertNil(priceOnly.quantity)
+            XCTAssertFalse(proposal(wording, quantity: note, price: "USD 3.20").uncertain)
+        }
+        let marked = proposal("2x Canned lentils $3.20", quantity: "2 units", price: "3,20")
+        XCTAssertEqual(marked.priceWording, "$3.20")
+        XCTAssertEqual(marked.quantity, "2")
+        for note in ["2 cans", "2 latas", "2", "0 units", "-2 units", "2 units per pack"] {
+            XCTAssertNil(proposal("2x Canned lentils 3.20", quantity: note).quantity, note)
+        }
+        for wording in ["Service fee 0.45", "2x TOTAL 3.20", "Fecha: 2024-11-18", "2x Lentejas EUR 3,20",
+                        "2x Beans 2 kg 3.20", "2x Beans 4 x 2 3.20", "Beans 3.20 4.20", "2x Beans @ 1.60",
+                        "Beans 1.60 USD 3.20", "2x Beans 1.60 USD 3.20", "2x Beans NZ$3.20",
+                        "2x Beans -3.20", "2x Beans ? 3.20", "2x Beans per pack 3.20"] {
+            let result = proposal(wording, quantity: "2 units", price: "USD 3.20")
+            XCTAssertNil(result.quantity, wording)
+            XCTAssertNil(result.amount, wording)
+        }
+        var blurry = ScanReceiptLine(originalText: "2x Canned lentils 3.20", quantityNote: "2 units", priceNote: "USD 3.20")
+        blurry.uncertainOCR = true
+        let blocked = ReceiptPrintedEvidence(blurry, knownStorage: [:])
+        XCTAssertNil(blocked.quantity)
+        XCTAssertNil(blocked.amount)
+    }
+
     func testBarePrintedAmountOnlyKeepsTheSameExplicitCurrencyEvidence() throws {
         let wording = "2 paquetes de maíz seco $4.82"
         func proposal(_ source: String, note: String) -> ReceiptPrintedEvidence {

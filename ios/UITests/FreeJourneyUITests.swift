@@ -546,7 +546,7 @@ import XCTest
 
         let hint = app.staticTexts["scan.receipt.printedQuantityHint"]
         reveal(hint, requiredHit: CGVector(dx: 0.5, dy: 0.5))
-        XCTAssertEqual(hint.label, "Incluye la unidad impresa, como 2 unidades o 500 g.")
+        XCTAssertEqual(hint.label, "Escribe «2 unidades» para contar alimentos individuales o una medida como «500 g». Si solo sabes cuántos envases hay, deja el campo vacío.")
         let frame = hint.frame
         let font = UIFont.preferredFont(forTextStyle: .subheadline,
                                        compatibleWith: UITraitCollection(preferredContentSizeCategory: .extraLarge))

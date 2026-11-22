@@ -13,6 +13,7 @@ struct ReceiptPrintedEvidence: Equatable {
     var priceWording: String?
     var storage: InventoryLocation?
     var uncertain = false
+    private(set) var acceptsFieldNotes = false
 
     // A final amount must be distinct from an explicit unit price. Preserve currency ambiguity for review.
     private static let price = #/(?i)(?:US\$|USD\s*\$?|\$)\s*([0-9]{1,7}[.,][0-9]{2})(?:\s*USD)?\s*$/#
@@ -26,6 +27,10 @@ struct ReceiptPrintedEvidence: Equatable {
     private static let mixed = #/(?i)(?:[€£]|\b(?:CAD|EUR|GBP|MXN|AUD|BOGO|gratis|was|ahorra|save|oferta|coupon|cup[oó]n)\b|\b(?:buy|compra)\s+\w+\s+(?:get|recibe)\b|\b[0-9]+\s*(?:for|por)\s*[$0-9]|\d+\s*%|[0-9]\s*[x×]\s*[0-9]|\b(?:pack|pk)\s*(?:of|de)?\s*[0-9]|\d\s*\/\s*\d)/#
     private static let signedValue = #/(?:^|\s)[−–-]\s*[$0-9]|\(\s*\$?\d+[.,]\d{2}\s*\)/#
     private static let otherNumbers = #/(?:[$€£@]|[0-9][.,][0-9]|[0-9]\s*[x×]|\s-\s*\d)/#
+    // A leading multiplier or a trailing bare number can surround a plain product name.
+    // Neither supplies a physical quantity or a currency.
+    private static let itemWithUnresolvedNumbers = #/(?i)(?:[1-9][0-9]{0,4}\s*[x×]\s+)?([\p{L}][\p{L}\p{M} '’-]*?)(?:\s+([0-9]{1,7}[.,][0-9]{2}))?/#
+    private static let packageBasis = #/(?i)\b(?:per|por|each|cada)\b/#
     private static let freezer = #/(?i)\b(?:keep frozen|frozen|mantener congelad[oa]s?|congelad[oa]s?)\b/#
     private static let fridge = #/(?i)\b(?:keep refrigerated|refrigerated|mantener refrigerad[oa]s?|refrigerad[oa]s?)\b/#
     private static let storageConflict = #/(?i)\b(?:never|not|do not|previously|thawed|after opening|no congelar|no refrigerar|descongelad[oa]s?|despu[eé]s de abrir)\b/#
@@ -75,7 +80,14 @@ struct ReceiptPrintedEvidence: Equatable {
         }
         Self.removeUnitPrice(from: &candidate)
         if candidate.contains(Self.otherNumbers) && candidate.matches(of: Self.measure).isEmpty {
-            amount = nil; priceWording = nil; uncertain = true; return
+            guard let item = candidate.wholeMatch(of: Self.itemWithUnresolvedNumbers),
+                  item.2 == nil || priceWording == nil,
+                  priceWording.map({ text.dropLast($0.count).last?.isWhitespace == true }) ?? true,
+                  !text.contains(Self.nonItem), !text.contains(Self.rateByUnit),
+                  !text.contains(Self.unitPrice), !text.contains(Self.packageBasis) else {
+                amount = nil; priceWording = nil; uncertain = true; return
+            }
+            candidate = String(item.1)
         }
         let measurements = candidate.matches(of: Self.measure)
         if measurements.count == 1, let match = measurements.first,
@@ -92,6 +104,7 @@ struct ReceiptPrintedEvidence: Equatable {
         let cleaned = candidate.split(whereSeparator: \.isWhitespace).joined(separator: " ").trimmingCharacters(in: CharacterSet(charactersIn: ":-·| "))
         if !cleaned.isEmpty, cleaned.contains(where: \.isLetter) { name = cleaned }
         if row.reviewedText != row.originalText { name = row.reviewedText }
+        acceptsFieldNotes = true
         if !row.quantityNote.isEmpty {
             quantity = nil; unit = nil
             if let note = row.quantityNote.trimmingCharacters(in: .whitespaces).wholeMatch(of: Self.measure),

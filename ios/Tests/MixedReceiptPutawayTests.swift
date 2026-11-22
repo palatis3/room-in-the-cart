@@ -166,6 +166,60 @@ import XCTest
         } catch ComparisonStoreError.operationConflict { }
     }
 
+    func testTypedReceiptKeepsCorrectedFieldsSeparateFromConfirmedStockAndPayment() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let cleanup = SQLiteFixtureDirectory(directory, test: self)
+        let store = try ComparisonStore(url: directory.appendingPathComponent("pantry.sqlite"), inventoryEnabled: true)
+        cleanup.track(store)
+        let token = try await store.inventorySourceToken()
+        try await store.commitInventory(.init(workspaceID: store.workspaceID, operationID: UUID(), expectedRevision: 0,
+            request: Data([1]), mode: .activate, sourceToken: token), at: now)
+        let repo = PantryRepository(store: store, authorize: { true })
+        cleanup.track(repo)
+        let text = "2x Canned lentils 3.20\nPlain yogurt 2.40\nHot lunch 5.00\nService fee 0.45"
+        let scan = ScanModel(text: text, capturedAt: now)
+        var rows = try ScanLimits.receiptLines(scan.text)
+        let original = rows[0].originalText
+        rows[0].quantityNote = "2 units"
+        rows[0].priceNote = "USD 3.20"
+        let target = CaptureTarget(workspaceID: store.workspaceID, containerID: UUID(), objectID: UUID(),
+                                   revision: 1, kind: .receiptEvidence)
+        XCTAssertThrowsError(try scan.reviewed(target: target, label: "Market", barcode: nil, receiptLines: rows))
+        scan.confirmed = true
+        let source = try scan.reviewed(target: target, label: "Market", barcode: nil, receiptLines: rows)
+        XCTAssertEqual(source.originalText, text)
+        var draft = try ReceiptImportDraft(source: source, now: now)
+        draft.purchaseDate = now
+        draft.tracksPutaway = true
+        draft.dateConfirmed = true
+        XCTAssertTrue(draft.selectedLines.isEmpty)
+        XCTAssertTrue(draft.lines[0].received.isEmpty)
+        XCTAssertTrue(draft.lines[0].usable.isEmpty)
+        XCTAssertTrue(draft.lines[0].paid.isEmpty)
+        XCTAssertEqual(draft.lines[0].printed?.quantity, "2")
+        XCTAssertEqual(draft.lines[0].printed?.priceWording, "USD 3.20")
+        draft.lines[0].treatment = .add
+        draft.lines[0].usePrintedQuantity()
+        XCTAssertTrue(draft.lines[0].usable.isEmpty)
+        draft.lines[0].usable = draft.lines[0].received
+        let before = try await store.inventoryState()
+        let unpaid = try await repo.reviewReceipt(draft, expected: before, at: now)
+        XCTAssertNil(unpaid.facts.first?.paidLineTotal)
+        draft.lines[0].paid = try XCTUnwrap(draft.lines[0].printed?.amount)
+        let preview = try await repo.reviewReceipt(draft, expected: before, at: now)
+        XCTAssertEqual(preview.putaway?.decisions.map(\.original), [original])
+        XCTAssertEqual(preview.facts.first?.paidLineTotal?.minorUnits, 320)
+        XCTAssertNil(preview.putaway?.header.totalMinor)
+        try await repo.applyReceipt(preview, at: now)
+        let after = try await repo.load(at: now)
+        XCTAssertEqual(after.lots.map(\.name), ["Canned lentils"])
+        XCTAssertEqual(after.lots.first?.count.quantity?.amount, try Rational(2))
+        let saved = try await repo.putawayDecisions(receiptID: draft.receiptID, after: nil)
+        XCTAssertEqual(saved.map(\.original), [original])
+        XCTAssertEqual(saved.first?.paidMinor, 320)
+    }
+
     func testNoStockReceiptKeepsUnknownTotalAndPackRequiresIndividualReview() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
