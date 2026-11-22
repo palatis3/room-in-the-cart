@@ -6645,6 +6645,22 @@
         }
       }
     },
+    "Discard this shopping list draft?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard this shopping list draft?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Descartar este borrador de la lista de compras?"
+          }
+        }
+      }
+    },
     "Discard draft": {
       "localizations": {
         "en": {

@@ -235,7 +235,7 @@ private struct FirstListForm: View {
                 Text(ledgerText("The shopping workspace changed. Review your draft wording again before creating a pickup."))
                 Text(verbatim: editor.content.original)
                 Button(ledgerText("Review as a new pickup")) { Task { await editor.reviewAgain() } }
-                Button(ledgerText("Discard draft"), role: .destructive) { Task { if await editor.discard() { dismiss() } } }
+                FirstListDiscardButton(editor: editor, blocked: false)
             }.toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Close")) { dismiss() } } }
         } else {
             LedgerImportView(model: model, shopID: editor.content.shopID, firstDraft: editor, prefill: prefill, pantryFoodPrefill: pantryFoodPrefill, pantrySuggestedAmount: pantrySuggestedAmount, pantryProductLink: pantryProductLink, authorizeEntry: editor.authorize, onSaved: onSaved)
@@ -265,10 +265,27 @@ struct FirstListDraftStatus: View {
                 Button(ledgerText("Close without saving these changes")) { dismiss() }
             }
             if editor.version != nil || !contents.original.isEmpty {
-                Button(ledgerText("Discard draft"), role: .destructive) {
-                    Task { if await editor.discard() { dismiss() } }
-                }.disabled(blocked).accessibilityIdentifier("firstList.discard")
+                FirstListDiscardButton(editor: editor, blocked: blocked)
             }
         }
+    }
+}
+
+private struct FirstListDiscardButton: View {
+    @ObservedObject var editor: FirstListEditor
+    let blocked: Bool
+    @Environment(\.dismiss) private var dismiss
+    @State private var confirming = false
+
+    var body: some View {
+        Button(ledgerText("Discard draft"), role: .destructive) { confirming = true }
+            .disabled(blocked)
+            .accessibilityIdentifier("firstList.discard")
+            .confirmationDialog(ledgerText("Discard this shopping list draft?"), isPresented: $confirming, titleVisibility: .visible) {
+                Button(ledgerText("Discard draft"), role: .destructive) {
+                    Task { if !blocked, await editor.discard() { dismiss() } }
+                }
+                Button(ledgerText("Keep editing"), role: .cancel) {}
+            }
     }
 }

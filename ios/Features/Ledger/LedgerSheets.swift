@@ -181,6 +181,7 @@ struct LedgerImportView: View {
                             .frame(height: min(importEditorHeight, 240))
                             .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Theme.controlEdge).allowsHitTesting(false))
                             .focused($inputFocus, equals: .original)
+                            .id(LedgerImportField.original)
                             .accessibilityLabel(ledgerText("List to review")).accessibilityIdentifier("ledgerImportText")
                         PasteButton(payloadType: String.self) { values in
                             original = values.joined(separator: "\n")
@@ -225,7 +226,9 @@ struct LedgerImportView: View {
             }
                 .background(Theme.canvas)
                 .navigationTitle(ledgerText("Bring the list"))
-                .navigationBarTitleDisplayMode(preview == nil ? .inline : .automatic)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbarBackground(Theme.canvas, for: .navigationBar)
+                .toolbarBackground(.visible, for: .navigationBar)
                 .safeAreaInset(edge: .bottom, spacing: 0) {
                     if let preview, let review, inputFocus == nil {
                         Group {
@@ -252,10 +255,10 @@ struct LedgerImportView: View {
                 }
                 .keyboardDoneAction(visible: inputFocus == .original, title: ledgerText("Done")) { inputFocus = nil }
                 .onChange(of: inputFocus) { _, field in
-                    if let field, field != .original { scroll.scrollTo(field, anchor: .center) }
+                    if let field { scroll.scrollTo(field, anchor: .center) }
                 }
                 .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidShowNotification)) { _ in
-                    if let field = inputFocus, field != .original { scroll.scrollTo(field, anchor: .center) }
+                    if let field = inputFocus { scroll.scrollTo(field, anchor: .center) }
                 }
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {

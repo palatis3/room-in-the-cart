@@ -297,6 +297,13 @@ final class RoomInTheCartUITests: XCTestCase {
         let misspelling = "scalllions"
         original.typeText(misspelling + "\ncorn tortillas")
         let done = app.buttons["Done"]
+        let visibleEditor = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard original.exists, done.exists, self.app.keyboards.firstMatch.exists else { return false }
+            let top = max(review.frame.maxY, original.frame.minY)
+            let bottom = min(done.frame.minY, original.frame.maxY)
+            return bottom - top >= 35
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [visibleEditor], timeout: 5), .completed)
         XCTAssertTrue(done.isHittable)
         XCTAssertTrue(review.isEnabled)
         XCTAssertEqual(review.frame.midY, reviewPosition, accuracy: 1)
@@ -374,6 +381,11 @@ final class RoomInTheCartUITests: XCTestCase {
                 "Borrador privado guardado en este dispositivo. Caduca 7 días después del último cambio."
             expectation(for: NSPredicate(format: "label == %@", label), evaluatedWith: saved)
             waitForExpectations(timeout: 10)
+            tap(app.buttons["firstList.discard"])
+            let keepEditing = app.buttons[language == "en" ? "Keep editing" : "Seguir editando"]
+            XCTAssertTrue(keepEditing.waitForExistence(timeout: 5))
+            keepEditing.tap()
+            XCTAssertTrue(form.exists)
             app.terminate()
             launch(language: language, reset: false, largeDark: language == "es")
             tap(app.buttons["shop.addFirstList"])
