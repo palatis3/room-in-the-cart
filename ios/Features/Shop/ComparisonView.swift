@@ -438,30 +438,29 @@ struct ComparisonView: View {
         .foregroundStyle(Theme.action).accessibilityIdentifier(id)
     }
 
-    @ViewBuilder private func setAsidePicker(_ inputs: ComparisonRequest) -> some View {
+    private func setAsidePicker(_ inputs: ComparisonRequest) -> some View {
         let title = tr("Set aside an option")
         let keep = tr("Keep both options")
         let packA = inputs.offerA.label.isEmpty ? tr("Pack A") : tr("Pack A") + " · " + inputs.offerA.label
         let packB = inputs.offerB.label.isEmpty ? tr("Pack B") : tr("Pack B") + " · " + inputs.offerB.label
-        let picker = Picker(selection: Binding(get: { model.draft.setAsidePack }, set: { model.setAside($0) })) {
-            Text(keep).tag(nil as ComparisonPack?)
-            Text(packA).tag(ComparisonPack.a as ComparisonPack?)
-            Text(packB).tag(ComparisonPack.b as ComparisonPack?)
-        } label: {
-            Label(title, systemImage: "minus.circle")
+        let value = switch model.draft.setAsidePack {
+        case .a: packA
+        case .b: packB
+        case nil: keep
         }
-        if typeSize.isAccessibilitySize {
-            let value = switch model.draft.setAsidePack {
-            case .a: packA
-            case .b: packB
-            case nil: keep
-            }
-            journalStackedMenu(title, value: value, id: "comparison.setAsidePack") {
-                picker.pickerStyle(.inline)
-            }
-        } else {
-            picker.pickerStyle(.menu).frame(minHeight: 44).accessibilityIdentifier("comparison.setAsidePack")
+        return journalStackedMenu(title, value: value, id: "comparison.setAsidePack") {
+            setAsideChoice(keep, pack: nil)
+            setAsideChoice(packA, pack: .a)
+            setAsideChoice(packB, pack: .b)
         }
+        .font(.body)
+    }
+
+    private func setAsideChoice(_ title: String, pack: ComparisonPack?) -> some View {
+        Toggle(title, isOn: Binding(
+            get: { model.draft.setAsidePack == pack },
+            set: { _ in model.setAside(pack) }
+        ))
     }
 
     private func costLine(_ offer: PackOffer, result: OfferResult, fallback: String,
