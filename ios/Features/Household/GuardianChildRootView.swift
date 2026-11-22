@@ -147,6 +147,8 @@ struct GuardianNativeAuthenticationView: View {
 struct GuardianChildRequestsView: View {
     @ObservedObject var household: HouseholdModel
     var recheckAccess: (() async -> Void)? = nil
+    private enum RequestField { case item, quantity }
+    @FocusState private var writing: RequestField?
     @AccessibilityFocusState private var resultFocused: Bool
     @State private var review: ReviewDestination?
     @State private var resultBeforeReview: String?
@@ -180,21 +182,16 @@ struct GuardianChildRequestsView: View {
                     if household.requiresRequestPickupChoice && household.editing == nil && household.followingUp == nil {
                         pickupPicker
                     }
-                    TextField(ht("Item"), text: $household.item).accessibilityIdentifier("guardian.childRequestItem")
-                    TextField(ht("Quantity, optional"), text: $household.quantity)
+                    TextField(ht("Item"), text: $household.item)
+                        .focused($writing, equals: .item).accessibilityIdentifier("guardian.childRequestItem")
+                    TextField(ht("Quantity, optional"), text: $household.quantity).focused($writing, equals: .quantity)
                     if household.requestRequiresNextShop {
                         Text(ht("Request for next shop"))
                     } else if household.editing == nil && (!household.requiresRequestPickupChoice || household.followingUp != nil || household.selectedRequestPickupID != nil) {
                         Toggle(ht("Ask for next shop"), isOn: $household.forNextShop)
                     }
-                    Button(ht("Review request before sending")) {
-                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-                        if let scope = household.contributorRequestScope {
-                            let pickup = household.requestPickups.first { $0.shopId == UUID(uuidString: scope.targetShopID) }
-                            resultBeforeReview = household.delivery.requestResultID
-                            review = .init(scope: scope, pickupLabel: pickup.map(pickupLabel) ?? String(scope.targetShopID.prefix(8)))
-                        }
-                    }.buttonStyle(PrimaryAction()).disabled(household.contributorRequestScope == nil || household.item.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    Button(ht("Review request before sending"), action: openReview)
+                        .buttonStyle(PrimaryAction()).disabled(!canReview)
                         .accessibilityIdentifier("guardian.childRequestReview")
                     switch household.draftDelivery {
                     case .waiting:
@@ -251,6 +248,11 @@ struct GuardianChildRequestsView: View {
             GuardianChildDeletionHelp()
         }.disabled(household.busy)
         .navigationTitle(GuardianCopy.text("My requests"))
+        .keyboardDoneAction(visible: writing != nil && !household.locked && !household.busy && household.projection != nil,
+                            title: canReview ? ht("Review request") : ledgerText("Done"),
+                            identifier: "guardian.childKeyboardAction") {
+            if canReview { openReview() } else { writing = nil }
+        }
         .sheet(item: $review, onDismiss: {
             resultFocused = household.draftDelivery.hasNewRequestResult(since: resultBeforeReview)
             resultBeforeReview = nil
@@ -259,6 +261,16 @@ struct GuardianChildRequestsView: View {
                 ContributorRequestCaptureView(household: household, scope: value.scope, capture: false, pickupLabel: value.pickupLabel)
             }
         }
+    }
+    private var canReview: Bool {
+        household.contributorRequestScope != nil && !household.item.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+    private func openReview() {
+        guard !household.locked, !household.busy, canReview, let scope = household.contributorRequestScope else { return }
+        writing = nil
+        let pickup = household.requestPickups.first { $0.shopId == UUID(uuidString: scope.targetShopID) }
+        resultBeforeReview = household.delivery.requestResultID
+        review = .init(scope: scope, pickupLabel: pickup.map(pickupLabel) ?? String(scope.targetShopID.prefix(8)))
     }
     @ViewBuilder private var pickupPicker: some View {
         Picker(GuardianCopy.text("Pickup for this request"), selection: Binding(
