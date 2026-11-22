@@ -1577,18 +1577,27 @@ import XCTest
             return nil
         }
         let picker = try systemPhotoPicker()
-        let grid: XCUIElement = picker.elementType == .navigationBar ? app : picker
+        // On iOS 17 the Photos bar identifies the picker, but only its window has
+        // both the thumbnail descendants and a screen-space frame.
+        let grid = picker.elementType == .navigationBar
+            ? app.windows.containing(.navigationBar, identifier: "Photos").firstMatch : picker
         for _ in 0..<2 {
             // The first-use privacy banner can move the grid after its images appear.
             // Sample the center in picker coordinates until it stays in place.
             var center: CGPoint?
             let settled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-                guard let view = try? grid.snapshot(), let photo = firstPhoto(in: view),
-                      view.frame.contains(photo) else {
+                guard let view = try? grid.snapshot(), let photo = firstPhoto(in: view) else {
                     center = nil
                     return false
                 }
-                let point = CGPoint(x: photo.midX - view.frame.minX, y: photo.midY - view.frame.minY)
+                // A thumbnail can straddle the grid edge by a fraction of a point.
+                // The actual center we tap must lie inside the visible picker.
+                let screenCenter = CGPoint(x: photo.midX, y: photo.midY)
+                guard view.frame.contains(screenCenter) else {
+                    center = nil
+                    return false
+                }
+                let point = CGPoint(x: screenCenter.x - view.frame.minX, y: screenCenter.y - view.frame.minY)
                 defer { center = point }
                 return center == point
             }, object: nil)
