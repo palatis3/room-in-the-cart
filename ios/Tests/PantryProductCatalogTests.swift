@@ -326,7 +326,8 @@ extension PantryProductCatalogTests {
         let scope = PantryDigestScope(origin: UUID(), identity: owner)
         var allowed = true
         let access = PantryDigestAccess(scope: scope) { allowed }
-        let sticker = CapturedBarcode(symbology: "UPC-A", value: "020123400006")
+        // UPC number system 2 becomes GS1 prefix 020 after the leading EAN zero is restored.
+        let sticker = CapturedBarcode(symbology: "UPC-A", value: "201234000006")
 
         func open(_ code: CapturedBarcode, store: String, edit: Bool = true) throws -> PantryProductBatch {
             try memory.reviewUnmatched(code, retailer: store, productName: "Cereal", typed: false, access: access, canEdit: edit)
@@ -361,6 +362,8 @@ extension PantryProductCatalogTests {
         try memory.replace(nil, with: checked, scope: scope, authorized: access.authorized)
         let reopened = PantryPackMemory(folder: folder)
         XCTAssertEqual(try reopened.match(sticker, retailer: "market", scope: scope), checked)
+        XCTAssertEqual(try reopened.match(.init(symbology: "EAN-13", value: "0201234000006"),
+                                          retailer: "Market", scope: scope), checked)
         XCTAssertNil(try reopened.match(sticker, retailer: "Other market", scope: scope))
         XCTAssertNil(try reopened.match(sticker, retailer: "Market", scope: .init(origin: UUID(), identity: owner)))
         XCTAssertThrowsError(try open(sticker, store: "Market"), "A stale no-match screen must not create a new intake.")
@@ -371,6 +374,8 @@ extension PantryProductCatalogTests {
         XCTAssertEqual(typed.barcode, upc)
         XCTAssertEqual(typed.retailer, "")
         XCTAssertTrue(typed.name.isEmpty)
+        let globalUPC = CapturedBarcode(symbology: "UPC-A", value: "020123400006")
+        XCTAssertEqual(try open(globalUPC, store: "").candidates.first?.retailer, "")
     }
 
     @MainActor func testRememberedPackReopensPerOwnerAndCorrectsAndForgetsOnlyThatSize() throws {
