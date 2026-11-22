@@ -3,6 +3,7 @@ import test from 'node:test';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { chromium } from 'playwright-core';
+import { preview } from 'vite';
 
 let browser;
 test.before(async () => {
@@ -179,4 +180,84 @@ test('history restoration conceals private content until fresh authority succeed
       });
     }
   }
+});
+
+test('a second invitation link resets same-document review and waits for fresh authority', async t => {
+  const server = await preview({ configFile: false, build: { outDir: 'public-build' }, preview: { host: '127.0.0.1', port: 0 } });
+  t.after(() => server.close());
+  const origin = new URL(server.resolvedUrls.local[0]).origin;
+  const context = await browser.newContext({ locale: 'en-US' });
+  t.after(() => context.close());
+  const page = await context.newPage();
+  page.setDefaultTimeout(5000);
+  const writes = [], reads = [];
+  let actor = 'A', signedIn = true, sessionGate;
+  await page.route('**/v1/**', async route => {
+    const request = route.request(), path = new URL(request.url()).pathname;
+    let json;
+    if (request.method() === 'GET') {
+      reads.push(path);
+      if (path === '/v1/session') {
+        if (sessionGate) await sessionGate.promise;
+        json = actor ? session(actor) : { authenticated: false };
+      } else if (path === '/v1/auth/session') json = { available: true, authenticated: signedIn, csrf: signedIn ? 'verified-identity' : 'challenge' };
+      else if (path === `/v1/households/${actor}/requests/mine`) json = { requests: [], nextCursor: null };
+    } else {
+      const body = request.postDataJSON();
+      writes.push({ path, body });
+      if (path === '/v1/auth/email/start') json = { status: 'check_email' };
+      if (path === '/v1/auth/email/verify') {
+        signedIn = true;
+        json = { available: true, authenticated: true, csrf: 'verified-identity' };
+      }
+      if (path === '/v1/invites/redeem' && body.token === 'new-invite') {
+        json = { householdId: 'B', memberId: 'member-B', role: 'contributor' };
+      }
+      if (path === '/v1/session' && body.householdId === 'B') { actor = 'B'; json = session(actor); }
+    }
+    await route.fulfill(json ? { json } : { status: 404, json: { error: { code: 'unavailable' } } });
+  });
+  // Let the browser deliver a real same-document navigation to the built entry point.
+  const followFragment = hash => page.evaluate(hash => new Promise(resolve => {
+    addEventListener('hashchange', () => resolve(), { once: true });
+    location.assign(hash);
+  }), hash);
+  const age = page.locator('#adult-attestation'), alias = page.locator('#invite-alias');
+  const join = page.getByRole('button', { name: 'Join this household', exact: true });
+  const idle = () => page.locator('main[aria-busy="false"]').waitFor();
+  await page.goto(origin + '/invite#token=old-invite');
+  await age.waitFor(); await idle();
+  const documentId = await page.evaluate(() => window.documentId = crypto.randomUUID());
+  await alias.fill('Old name'); await age.check();
+  const readCount = reads.length;
+  await followFragment('#details');
+  assert.equal(await alias.inputValue(), 'Old name');
+  assert.ok(await age.isChecked());
+  assert.equal(reads.length, readCount);
+
+  // The old household signed out elsewhere before the new link opened.
+  actor = null; signedIn = false; sessionGate = deferred();
+  try {
+    await followFragment('#token=new-invite');
+    assert.equal(await page.evaluate(() => location.hash), '');
+    assert.equal(await age.count(), 0, 'The old review must disappear while session authority is unknown');
+    assert.equal(await page.evaluate(() => window.documentId), documentId);
+    assert.deepEqual(writes, []);
+  } finally { sessionGate.resolve(); sessionGate = null; }
+  await page.locator('#login-email').fill('fixture@example.test');
+  await page.getByRole('button', { name: 'Send sign-in code', exact: true }).click();
+  await page.locator('#login-code').fill('123456');
+  await page.getByRole('button', { name: 'Verify code', exact: true }).click();
+  await page.getByText('Invitation code received.', { exact: true }).waitFor();
+  assert.equal(await alias.inputValue(), '');
+  assert.equal(await age.isChecked(), false);
+  await join.click();
+  assert.deepEqual(writes.map(w => w.path), ['/v1/auth/email/start', '/v1/auth/email/verify']);
+  await age.check(); await join.click();
+  await page.locator('#item').waitFor(); await idle();
+  assert.match(await page.getByRole('status').innerText(), /You joined Household B/);
+  assert.deepEqual(writes.slice(2), [
+    { path: '/v1/invites/redeem', body: { token: 'new-invite', intent: 'join', adultAttestation: true } },
+    { path: '/v1/session', body: { householdId: 'B', scope: 'own_requests' } }
+  ]);
 });

@@ -11,6 +11,10 @@ if(root && !mountPublicPage(root) && !mountChildInvitationPage(root)) {
   const token=consumeInvitation(window.location,window.history);
   const app=new WebApp(root,undefined,undefined,token);
   if(document.visibilityState==='hidden')app.suspendForHistory();else void app.start();
+  window.addEventListener('hashchange',()=>{
+    const replacement=consumeInvitation(window.location,window.history);
+    if(replacement!==null)app.openInvitation(replacement);
+  });
   window.setInterval(()=>app.checkExpiry(),1000);
   window.addEventListener('pagehide',()=>app.suspendForHistory());
   window.addEventListener('pageshow',event=>{if(event.persisted&&document.visibilityState==='visible')app.resumeWithFreshAuthority();});

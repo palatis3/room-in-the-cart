@@ -66,7 +66,7 @@ export class WebApp {
   private historySuspended = false;
   private historyAway = false;
   private historyGeneration = 0;
-  private historyResumePending = false;
+  private refreshPending = false;
   private notice = '';
   private failurePurpose:'load'|'mutation'|null=null;
   private language:Language;
@@ -74,6 +74,7 @@ export class WebApp {
   private adultAttestation = false;
   private inviteAlias = '';
   private redemption:InviteRedemption|null = null;
+  private pendingInvitation:string|null = null;
   // A live draft keeps its online receipt identity across changes to offline storage permission.
   private retryCommand:Command|null = null;
   private uncertainSend = false;
@@ -104,12 +105,25 @@ export class WebApp {
   }
   private async run(action:()=>Promise<void>,purpose:'load'|'mutation'='mutation',retryingSignOut=false):Promise<void> {
     if(this.busy||(this.signOutPending&&!retryingSignOut))return;
+    const openingInvitation=purpose==='load' ? this.pendingInvitation : null;
+    if (openingInvitation!==null) {
+      this.clearInvitationDraft();
+      this.notice='';
+      this.failurePurpose=null;
+      this.historySuspended=true;
+    }
     this.joinedSession=null;
     this.busy=true; this.render();
     const historyGeneration=this.historyGeneration;
     try { await action(); if(purpose==='load'&&!this.historyAway&&historyGeneration===this.historyGeneration)this.historySuspended=false; if(purpose==='load'&&this.failurePurpose==='load'){this.notice='';this.failurePurpose=null;} } catch(error) { await this.fail(error,purpose); }
-    finally {this.busy=false;this.render();this.root.querySelector<HTMLElement>('[role="status"]')?.focus();
-      if(this.historyResumePending){this.historyResumePending=false;void this.start();}
+    finally {
+      // Bind the latest link only after the existing session or sign-in recovery was checked.
+      if (openingInvitation!==null && this.pendingInvitation===openingInvitation && !this.historySuspended) {
+        this.invitation=openingInvitation;
+        this.pendingInvitation=null;
+      }
+      this.busy=false;this.render();this.root.querySelector<HTMLElement>('[role="status"]')?.focus();
+      if(this.refreshPending){this.refreshPending=false;void this.start();}
     }
   }
   private supportedRoute():boolean {
@@ -125,7 +139,7 @@ export class WebApp {
   }
   resumeFromHistory():void {
     this.historyAway=false;
-    if(this.busy){this.historyResumePending=true;return;}
+    if(this.busy){this.refreshPending=true;return;}
     void this.start();
   }
   resumeWithFreshAuthority():void {
@@ -135,10 +149,20 @@ export class WebApp {
     this.historySuspended=true;this.historyGeneration++;this.render();
     this.resumeFromHistory();
   }
+  openInvitation(token:string):void {
+    if (this.signOutPending) return;
+    // Reopening a single-use link must preserve its in-flight or accepted redemption.
+    if (this.pendingInvitation===null && token===this.invitation && (this.busy || this.redemption)) return;
+    this.pendingInvitation=token;
+    if (this.busy) {
+      this.refreshPending=true;
+      this.render();
+    } else void this.start();
+  }
   async start():Promise<void> {
     if(this.historyAway)return;
     if(!this.supportedRoute()){this.render();return;}
-    if(this.signOutPending){this.hideWhileSigningOut();this.render();return;}
+    if(this.signOutPending){this.pendingInvitation=null;this.hideWhileSigningOut();this.render();return;}
     await this.run(()=>this.load(),'load');
   }
   private clearPrivate():void {
@@ -215,7 +239,7 @@ export class WebApp {
       await this.outbox.retainScope(scopeFor(fresh)).catch(()=>{});
     }
     const previous=this.session;
-    if(!previous&&fresh&&this.browserAuth&&this.invitation!==null){
+    if(!previous&&fresh&&this.browserAuth&&(this.invitation!==null||this.pendingInvitation!==null)){
       // A different tab can activate a household while this invitation is open.
       try {
         this.adoptBrowserAuth(await this.api.authState());
@@ -486,7 +510,7 @@ export class WebApp {
     const status=this.el('p',this.busy?this.t('Loading…'):this.t(this.notice));status.className='notice';status.setAttribute('role','status');status.setAttribute('tabindex','-1');main.append(status);
     if(!this.supportedRoute()){main.append(this.el('h1',this.t('This page is not available.')));const link=this.el('a',this.t('Open your requests'));link.href='/requests';main.append(link);return;}
     if(this.signOutPending){main.append(this.el('h1',this.t('Finish signing out')),this.button('Retry sign-out',()=>void this.run(()=>this.signOut(),'mutation',true),true));return;}
-    if(this.historySuspended){main.append(this.button('Refresh',()=>void this.start()));return;}
+    if(this.historySuspended||this.pendingInvitation!==null){main.append(this.button('Refresh',()=>void this.start()));return;}
     if(this.invitation!==null || !this.session) {this.renderInvite(main,status);return;}
     const context=this.el('section');
     const session=this.session;

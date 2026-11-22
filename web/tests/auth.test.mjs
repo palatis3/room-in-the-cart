@@ -372,3 +372,79 @@ test('an unavailable invitation offers language-matched public help and support 
     assert.equal(root.querySelector('form'), null);
   }
 });
+
+test('a replacement waits for the current join and clears its activation retry before the next review', async t => {
+  const redeemed = [], activated = [];
+  const pendingActivation = Promise.withResolvers();
+  const activationStarted = Promise.withResolvers();
+  const oldToken = 'retained-invitation-secret';
+  const { app, root, dom } = await fixture({
+    authState:async () => ({ available:true, authenticated:true, csrf:'identity' }),
+    redeem:async (token, _csrf, review) => {
+      redeemed.push([token, review.alias]);
+      if (token !== oldToken) throw new ApiError('unavailable', 404);
+      return { householdId:'old-household', memberId:'member', role:'contributor' };
+    },
+    activateSession:async household => {
+      activated.push(household);
+      if (activated.length === 2) {
+        activationStarted.resolve();
+        await pendingActivation.promise;
+      }
+      throw new ApiError('network', 0);
+    }
+  });
+  t.after(() => dom.window.close());
+  input(dom, 'invite-alias', 'Previous alias');
+  root.querySelector('#adult-attestation').click();
+  submit(dom); await waitForIdle(root);
+  app.openInvitation(oldToken);
+  submit(dom); await activationStarted.promise;
+  assert.deepEqual(redeemed, [[oldToken, 'Previous alias']], 'Retry must reuse the receipt');
+  app.openInvitation('intermediate-code');
+  app.openInvitation('newest-code');
+  assert.equal(root.querySelector('form'), null);
+  pendingActivation.resolve();
+  await waitForIdle(root);
+  assert.equal(root.querySelector('#adult-attestation').checked, false);
+  assert.equal(root.querySelector('#invite-alias').value, '');
+  assert.equal(root.querySelector('[role=status]').textContent, '');
+  assert.deepEqual(activated, ['old-household', 'old-household']);
+  root.querySelector('#adult-attestation').click();
+  submit(dom); await waitForIdle(root);
+  assert.deepEqual(redeemed, [[oldToken, 'Previous alias'], ['newest-code', '']]);
+  assert.equal(activated.length, 2);
+});
+
+test('an offline link replacement waits for a verified identity and keeps the newest invitation for retry', async t => {
+  const attempts = [];
+  let online = true, identity = 'old-identity';
+  const { app, root, dom } = await fixture({
+    session:async () => {
+      if (!online) throw new ApiError('network', 0);
+      return null;
+    },
+    authState:async () => ({ available:true, authenticated:true, csrf:identity }),
+    redeem:async (token, csrf, review) => {
+      attempts.push([token, csrf, review.alias]);
+      throw new ApiError('unavailable', 404);
+    }
+  });
+  t.after(() => dom.window.close());
+  root.querySelector('#adult-attestation').click();
+  input(dom, 'invite-alias', 'Previous alias');
+  online = false;
+  app.openInvitation('replacement');
+  await waitForIdle(root);
+  assert.equal(root.querySelector('form'), null);
+  assert.match(root.textContent, /Could not load/);
+  online = true;
+  identity = 'current-identity';
+  await app.start();
+  assert.equal(root.querySelector('#adult-attestation').checked, false);
+  assert.equal(root.querySelector('#invite-alias').value, '');
+  assert.deepEqual(attempts, []);
+  root.querySelector('#adult-attestation').click();
+  submit(dom); await waitForIdle(root);
+  assert.deepEqual(attempts, [['replacement', 'current-identity', '']]);
+});
