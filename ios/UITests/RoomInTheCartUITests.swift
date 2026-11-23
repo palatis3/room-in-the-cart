@@ -1168,6 +1168,58 @@ final class RoomInTheCartUITests: XCTestCase {
         assertSavedStatus("Saved on this iPhone")
     }
 
+    func testPesoComparisonReopensInEnglishAfterSpanishUSSelection() {
+        launch(language: "es")
+        openEmptyComparison()
+        let picker = app.groceryCurrencyPicker("comparison.currency")
+        reveal(picker)
+        assertGroceryCurrency("USD", in: picker)
+        picker.tap()
+        app.selectGroceryCurrency(code: "MXN", label: "Pesos mexicanos (MXN)")
+
+        let item = "Tortillas de maíz"
+        enterComparison(item: item, firstQuantity: "8", cap: "15")
+        compare()
+        assertContains("Moneda: MXN")
+        saveAndAssertDurableStatus(savedLabel: "Guardado en este iPhone")
+
+        app.terminate()
+        launch(reset: false)
+        reopenSavedRecord(recordsLabel: "Records", item: item)
+        assertComparisonAmounts(code: "MXN", locale: "en_US")
+        editComparisonResult()
+        reveal(picker)
+        assertGroceryCurrency("MXN", in: picker)
+        XCTAssertFalse(picker.isEnabled, "Changing the currency would relabel the saved prices.")
+    }
+
+    func testDollarComparisonStaysUSDWhenReopenedInMexico() {
+        launch()
+        openEmptyComparison()
+        let item = "Corn tortillas"
+        enterComparison(item: item, firstQuantity: "8", cap: "15")
+        compare()
+        assertComparisonAmounts(code: "USD", locale: "en_US")
+        saveAndAssertDurableStatus()
+
+        app.terminate()
+        launch(region: "MX", reset: false)
+        reopenSavedRecord(recordsLabel: "Records", item: item)
+        assertComparisonAmounts(code: "USD", locale: "en_MX")
+    }
+
+    private func assertComparisonAmounts(code: String, locale: String) {
+        assertContains("Currency: " + code)
+        for (id, amount) in [("comparisonItemLimit", 15), ("aTotal", 6), ("bTotal", 4)] {
+            let row = app.staticTexts[id]
+            reveal(row)
+            let value = Decimal(amount).formatted(.number.locale(Locale(identifier: locale)).precision(.fractionLength(2)))
+            XCTAssertTrue(row.label.contains(value), row.label)
+            let denomination = code == "USD" && locale == "en_US" ? "$" : code
+            XCTAssertTrue(row.label.contains(denomination), row.label)
+        }
+    }
+
     func testUnknownPackAmountRemainsUnresolvedAfterSaveAndRestart() throws {
         launch()
         openEmptyComparison()
@@ -1771,8 +1823,8 @@ final class RoomInTheCartUITests: XCTestCase {
         }
     }
 
-    private func launch(language: String = "en", reset: Bool = true, largeDark: Bool = false, contentSize: UIContentSizeCategory? = nil) {
-        app.launchArguments = ["--ui-testing", "-AppleLanguages", "(\(language))", "-AppleLocale", "\(language)_US",
+    private func launch(language: String = "en", region: String = "US", reset: Bool = true, largeDark: Bool = false, contentSize: UIContentSizeCategory? = nil) {
+        app.launchArguments = ["--ui-testing", "-AppleLanguages", "(\(language))", "-AppleLocale", "\(language)_\(region)",
                                "-appearance", largeDark ? "dark" : "light"]
         if reset { app.launchArguments.append("--reset-test-workspace") }
         if largeDark || contentSize != nil {
@@ -2050,4 +2102,26 @@ final class RoomInTheCartUITests: XCTestCase {
         attachment.lifetime = .keepAlways
         add(attachment)
     }
+}
+
+@MainActor
+extension XCUIApplication {
+    func groceryCurrencyPicker(_ screenID: String) -> XCUIElement {
+        buttons.matching(NSPredicate(format: "identifier IN %@", [screenID, "grocery.currency"])).firstMatch
+    }
+
+    func selectGroceryCurrency(code: String, label: String) {
+        let choice = buttons.matching(NSPredicate(format: "identifier == %@ OR label == %@",
+                                                   "grocery.currency." + code, label)).firstMatch
+        XCTAssertTrue(choice.waitForExistence(timeout: 5), "Expected a currency option named " + label)
+        choice.tap()
+        XCTAssertTrue(choice.waitForNonExistence(timeout: 5))
+    }
+}
+
+@MainActor
+func assertGroceryCurrency(_ expected: String, in picker: XCUIElement, file: StaticString = #filePath,
+                           line: UInt = #line) {
+    let displayed = [picker.label, picker.value as? String ?? ""].joined(separator: " ")
+    XCTAssertTrue(displayed.contains(expected), "Expected " + expected + " in " + displayed, file: file, line: line)
 }

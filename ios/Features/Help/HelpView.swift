@@ -97,10 +97,12 @@ private struct HelpArticleView: View {
             switch topic {
             case .comparison:
                 paragraph(helpText("Open Compare packs in Shop. Enter the amount you need, the usable amount in each pack and the price. If the package uses a different kind of unit, enter two equivalent amounts from its label or your own measurement, such as 120 grams of this flour for 1 cup. Without that information, leave the conversion blank."))
+                paragraph(helpText("Choose US dollars (USD) or Mexican pesos (MXN) before entering prices. Use the same currency for both packs. A saved comparison keeps its original currency."))
                 paragraph(helpText("Review the whole packs needed, the usable food and the cost. An unknown usable amount or missing price stays unresolved. Save the comparison to reopen it in Records."))
                 paragraph(helpText("A pack comparison covers that item only. To judge the whole pickup, review the shopping list and its checkout costs."))
             case .pantry:
                 paragraph(helpText("Open Pantry to see the food you have and where you keep it. Add food by hand or review the lines from a receipt. Check each amount before saving."))
+                paragraph(helpText("When you review a receipt, check its currency before recording the amount you paid. If you cannot tell which currency the store used, you can still save the groceries and leave the price blank."))
                 paragraph(helpText("Choose a date to check food quality or look up a food in the offline storage guide. A reminder can ask you to open My Pantry."))
                 NavigationLink(helpText("Food storage guide")) { FoodKeeperLookupView() }
             case .list:

@@ -1735,18 +1735,18 @@
         }
       }
     },
-    "All checkout fees in USD, optional": {
+    "All checkout fees in %@, optional": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "All checkout fees in USD, optional"
+            "value": "All checkout fees in %@, optional"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Todos los cargos de compra en USD, opcional"
+            "value": "Todos los cargos de compra en %@, opcional"
           }
         }
       }
@@ -2938,18 +2938,18 @@
         }
       }
     },
-    "Complete unchanged line cost in USD, optional": {
+    "Complete unchanged line cost in %@, optional": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Complete unchanged line cost in USD, optional"
+            "value": "Complete unchanged line cost in %@, optional"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Costo completo de la línea sin cambios en USD, opcional"
+            "value": "Costo completo de la línea sin cambios en %@, opcional"
           }
         }
       }
@@ -3437,18 +3437,18 @@
         }
       }
     },
-    "Deposits in USD, optional": {
+    "Deposits in %@, optional": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deposits in USD, optional"
+            "value": "Deposits in %@, optional"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Depósitos en USD, opcional"
+            "value": "Depósitos en %@, opcional"
           }
         }
       }
@@ -3969,19 +3969,19 @@
         }
       }
     },
-    "Enter dollar amounts without thousands separators and with at most two decimal places, such as 1000.50.": {
+    "Enter amounts without thousands separators and with at most two decimal places, such as 1000.50.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Enter dollar amounts without thousands separators and with at most two decimal places, such as 1000.50."
+            "value": "Enter amounts without thousands separators and with at most two decimal places, such as 1000.50."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ingresa los montos en dólares sin separadores de miles y con un máximo de dos decimales, por ejemplo, 1000,50."
+            "value": "Ingresa los montos sin separadores de miles y con un máximo de dos decimales, por ejemplo, 1000.50."
           }
         }
       }
@@ -4067,19 +4067,19 @@
         }
       }
     },
-    "Essential cost in USD, optional": {
+    "Essential cost in %@, optional": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Essential cost in USD, optional"
+            "value": "Essential cost in %@, optional"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Costo del artículo esencial en USD, opcional"
+            "value": "Costo del artículo esencial en %@, opcional"
           }
         }
       }
@@ -5187,18 +5187,18 @@
         }
       }
     },
-    "Incremental trip cash in USD, optional": {
+    "Incremental trip cash in %@, optional": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Incremental trip cash in USD, optional"
+            "value": "Incremental trip cash in %@, optional"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Costo adicional del viaje en USD, opcional"
+            "value": "Costo adicional del viaje en %@, opcional"
           }
         }
       }
@@ -5414,18 +5414,18 @@
         }
       }
     },
-    "Items before fees and discounts in USD, optional": {
+    "Items before fees and discounts in %@, optional": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Items before fees and discounts in USD, optional"
+            "value": "Items before fees and discounts in %@, optional"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Artículos antes de cargos y descuentos en USD, opcional"
+            "value": "Artículos antes de cargos y descuentos en %@, opcional"
           }
         }
       }
@@ -5850,19 +5850,19 @@
         }
       }
     },
-    "Maximum available for a top-up, USD": {
+    "Maximum available for a top-up, %@": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Maximum available for a top-up, USD"
+            "value": "Maximum available for a top-up, %@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Máximo disponible para la compra adicional, USD"
+            "value": "Máximo disponible para la compra adicional, %@"
           }
         }
       }
@@ -7584,18 +7584,18 @@
         }
       }
     },
-    "Price of one pack in USD, optional": {
+    "Price of one pack in %@, optional": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Price of one pack in USD, optional"
+            "value": "Price of one pack in %@, optional"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Precio de un paquete en USD, opcional"
+            "value": "Precio de un paquete en %@, opcional"
           }
         }
       }
@@ -7617,18 +7617,18 @@
         }
       }
     },
-    "Price per pack in USD": {
+    "Price per pack in %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Price per pack in USD"
+            "value": "Price per pack in %@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Precio por paquete en USD"
+            "value": "Precio por paquete en %@"
           }
         }
       }
@@ -10796,18 +10796,18 @@
         }
       }
     },
-    "Tax in USD, optional": {
+    "Tax in %@, optional": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tax in USD, optional"
+            "value": "Tax in %@, optional"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impuestos en USD, opcional"
+            "value": "Impuestos en %@, opcional"
           }
         }
       }
@@ -11425,19 +11425,19 @@
         }
       }
     },
-    "Top-up fees and tax, including zero, USD": {
+    "Top-up fees and tax, including zero, %@": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Top-up fees and tax, including zero, USD"
+            "value": "Top-up fees and tax, including zero, %@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cargos e impuestos de la compra adicional, incluso si son cero, USD"
+            "value": "Cargos e impuestos de la compra adicional, incluso si son cero, %@"
           }
         }
       }
@@ -12234,18 +12234,18 @@
         }
       }
     },
-    "Whole checkout total in USD, optional": {
+    "Whole checkout total in %@, optional": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Whole checkout total in USD, optional"
+            "value": "Whole checkout total in %@, optional"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Total de toda la compra en USD, opcional"
+            "value": "Total de toda la compra en %@, opcional"
           }
         }
       }

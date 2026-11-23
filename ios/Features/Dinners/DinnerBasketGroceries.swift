@@ -36,7 +36,7 @@ struct DinnerBasketGroceryDraft: Identifiable {
                 let offer = quote.selectedOfferID == quote.request.offerA.id ? quote.request.offerA : quote.request.offerB
                 row.amount = offer.usableQuantity?.amount.description ?? ""
                 row.unit = offer.usableQuantity?.unit ?? .count
-                if let cents = offer.price?.minorUnits { row.price = String(format: "%lld.%02lld", cents / 100, cents % 100) }
+                if let price = offer.price, price.currency == shop.basis.currency { row.price = String(format: "%lld.%02lld", price.minorUnits / 100, price.minorUnits % 100) }
                 row.source = [shop.basis.branch, quote.source, offer.label].filter { !$0.isEmpty }.joined(separator: " · ")
                 row.observed = quote.reviewedAt
                 row.selectedOffer = offer
@@ -65,10 +65,10 @@ struct DinnerBasketGroceryDraft: Identifiable {
         return rows
     }
 
-    func resolved() throws -> [ThreeDinnerBasket.Food] {
+    func resolved(currency: Currency = .usd) throws -> [ThreeDinnerBasket.Food] {
         let split = !combine && members.count + (existingLine == nil ? 0 : 1) > 1
         let quantity = try DinnerEntry.quantity(amount, unit: unit)
-        let price = try DinnerEntry.money(price)
+        let price = try DinnerEntry.money(price, currency: currency)
         let hasOffer = quantity != nil || price != nil || !source.isEmpty
         if hasOffer {
             guard !source.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, observed <= Date(),

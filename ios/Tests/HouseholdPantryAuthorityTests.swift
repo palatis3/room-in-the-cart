@@ -299,7 +299,7 @@ private actor PantryTestService: HouseholdPantryServing {
         let target = CaptureTarget(workspaceID: page.householdId, containerID: UUID(), objectID: UUID(), revision: 0, kind: .receiptEvidence)
         let source = try doc.source(target: target, merchant: "Mercado", stage: .receipt,
             selection: Set((1...3).map { .init(page: 1, line: $0) }), at: Date())
-        var draft = try ReceiptImportDraft(source: source)
+        var draft = try ReceiptImportDraft(source: source, locale: Locale(identifier: "en_US"))
         XCTAssertThrowsError(try draft.householdReceipt(for: page, deliveries: []))
         draft.dateConfirmed = true
         for index in [0, 2] {
@@ -311,6 +311,14 @@ private actor PantryTestService: HouseholdPantryServing {
         XCTAssertThrowsError(try draft.householdReceipt(for: page, deliveries: []))
         draft.dateConfirmed = true
         let reviewed = try draft.householdReceipt(for: page, deliveries: [])
+        var pesoReceipt = draft
+        pesoReceipt.changeCurrency(.mxn)
+        pesoReceipt.lines[0].paid = "4.10"
+        XCTAssertThrowsError(try pesoReceipt.householdReceipt(for: page, deliveries: []))
+        pesoReceipt.lines[0].paid = ""
+        let quantitiesOnly = try pesoReceipt.householdReceipt(for: page, deliveries: [])
+        XCTAssertTrue(quantitiesOnly.lines.allSatisfy { $0.paidUSDMinor == nil })
+        XCTAssertEqual(quantitiesOnly.lines.map(\.received), reviewed.lines.map(\.received))
         var identified = draft
         identified.reference = "Transaction 123"
         let withReference = try identified.householdReceipt(for: page, deliveries: [])

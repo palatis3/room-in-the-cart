@@ -169,7 +169,11 @@ enum DinnerIdeaSupplyReview {
                     let yield = try usable.converted(to: uncovered.unit, using: observation?.pack.confirmedConversion), yield > .zero {
                 count = try uncovered.amount.divided(by: yield).roundedUp()
             } else { count = nil }
-            let cost = try count.flatMap { $0 == 0 ? Money.zero : try observation?.pack.price?.multiplied(by: $0) }
+            let cost = try count.flatMap { packs -> Money? in
+                if packs == 0 { return Money(minorUnits: 0, currency: shop.basis.currency) }
+                guard let price = observation?.pack.price, price.currency == shop.basis.currency else { return nil }
+                return try price.multiplied(by: packs)
+            }
             return IdeaSupplyRow(id: first.id, ingredients: ingredients, matchedName: matched?.name, preferenceResults: results, excludedMatch: excludedMatch || excludedPack, demand: demand, credited: free, uncovered: uncovered,
                                  reservations: reservations, pack: observation?.pack, source: observation?.source, observedAt: observation?.date,
                                  packs: count, cost: cost, conflictingPacks: !observations.isEmpty && observation == nil)

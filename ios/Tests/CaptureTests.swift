@@ -394,7 +394,7 @@ import UniformTypeIdentifiers
         let label = try XCTUnwrap(text.first(where: { $0.localizedCaseInsensitiveContains("members") }))
         let proposal = ReviewedShelfImage.propose(label)
         XCTAssertEqual(proposal.packages, 2)
-        XCTAssertEqual(proposal.amount?.minorUnits, 500)
+        XCTAssertEqual(proposal.amountMinor, 500)
         XCTAssertEqual(proposal.conditions, label)
         XCTAssertEqual(proposal.packageSize?.amount, try Rational(500))
         XCTAssertEqual(proposal.packageSize?.unit, .gram)

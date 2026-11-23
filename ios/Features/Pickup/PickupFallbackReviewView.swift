@@ -100,8 +100,8 @@ private struct PickupFallbackReviewView: View {
                 }
                 if let rule = journey.recoveryCurrentDetails.first(where: { $0.id == draft.target }), !rule.exclusions.isEmpty { Text(rule.exclusions.joined(separator: ", ")) }
                 TextField(dinnerText("Usual fallback minutes, optional"), text: $review.draft.usualMinutes)
-                TextField(dinnerText("Maximum available for a top-up, USD"), text: $review.draft.topUpBudget)
-                TextField(dinnerText("Top-up fees and tax, including zero, USD"), text: $review.draft.topUpCharges)
+                TextField(dinnerFormat("Maximum available for a top-up, %@", journey.currency.rawValue), text: $review.draft.topUpBudget)
+                TextField(dinnerFormat("Top-up fees and tax, including zero, %@", journey.currency.rawValue), text: $review.draft.topUpCharges)
                 TextField(dinnerText("Round-trip minutes for a top-up"), text: $review.draft.tripMinutes)
                 Toggle(dinnerText("Include repeated dinners in the review"), isOn: $review.draft.permitsRepeat)
             }
@@ -109,7 +109,7 @@ private struct PickupFallbackReviewView: View {
                 if library.isEmpty { Text(dinnerText("No household dinner is marked as an accepted fallback.")) }
                 ForEach(library) { dinner in
                     NavigationLink(dinner.template.title) {
-                        FallbackRecipeEditor(dinner: dinner, foods: foodNames, authorized: authorized, review: Binding(get: { review.draft.reviews[dinner.id] ?? .init() }, set: { review.draft.reviews[dinner.id] = $0 }))
+                        FallbackRecipeEditor(dinner: dinner, currency: journey.currency, foods: foodNames, authorized: authorized, review: Binding(get: { review.draft.reviews[dinner.id] ?? .init() }, set: { review.draft.reviews[dinner.id] = $0 }))
                     }
                 }
                 Button(dinnerText("Review feasible repairs")) { if authorized() { review.reviewDraft() } }
@@ -165,6 +165,7 @@ private struct PickupFallbackReviewView: View {
 
 private struct FallbackRecipeEditor: View {
     let dinner: AcceptedDinner
+    let currency: Currency
     let foods: [UUID:String]
     let authorized: () -> Bool
     @Environment(\.scenePhase) private var scenePhase
@@ -188,7 +189,7 @@ private struct FallbackRecipeEditor: View {
                     TextField(dinnerText("Pack description"), text: binding.packLabel)
                     TextField(dinnerText("Usable amount per pack"), text: binding.packYield)
                     DinnerUnitPicker(unit: binding.packUnit)
-                    TextField(dinnerText("Price per pack"), text: binding.packPrice)
+                    TextField(dinnerFormat("Price per pack in %@", currency.rawValue), text: binding.packPrice)
                     TextField(dinnerText("Confirmed packages available"), text: binding.availablePacks)
                 }
             }

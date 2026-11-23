@@ -186,7 +186,7 @@ struct ComparisonView: View {
     @ViewBuilder private func missingInputEditor(_ input: MissingInput) -> some View {
         switch input {
         case .price(let pack):
-            MissingPackPriceEditor(target: pack) { literal in
+            MissingPackPriceEditor(target: pack, currency: model.draft.currency) { literal in
                 switch pack {
                 case .a: model.draft.aPrice = literal
                 case .b: model.draft.bPrice = literal
@@ -239,20 +239,27 @@ struct ComparisonView: View {
                         .focused($inputFocused, equals: "itemName").accessibilityIdentifier("itemName")
                         .frame(minHeight: 44)
                 }
-                entry("Total amount needed", text: $model.draft.needed, id: "needed")
+                entry(tr("Total amount needed"), text: $model.draft.needed, id: "needed")
                 unitPicker("Needed unit", selection: $model.draft.unit, id: "neededUnit")
+                GroceryCurrencyPicker(selection: $model.draft.currency)
+                    .disabled(model.draft.hasMoneyEntries)
+                    .accessibilityIdentifier("comparison.currency")
             } footer: {
-                Text(tr("Compare the cost of enough usable food for one item. No account or connection needed."))
+                if model.draft.hasMoneyEntries {
+                    Text(changeText("Clear both pack prices and the item spending limit to change currency."))
+                } else {
+                    Text(tr("Compare the cost of enough usable food for one item. No account or connection needed."))
+                }
             }
             offerSection("Pack A", label: $model.draft.aLabel, quantity: $model.draft.aQuantity, unit: $model.draft.aUnit, price: $model.draft.aPrice, conversion: $model.draft.aConversion, prefix: "a")
             offerSection("Pack B", label: $model.draft.bLabel, quantity: $model.draft.bQuantity, unit: $model.draft.bUnit, price: $model.draft.bPrice, conversion: $model.draft.bConversion, prefix: "b")
             Section {
-                entry("Item spending limit (USD, optional)", text: $model.draft.cap, id: "itemCap", keyboard: .decimalPad)
+                entry(groceryCurrencyLabel("Item spending limit (%@, optional)", model.draft.currency), text: $model.draft.cap, id: "itemCap", keyboard: .decimalPad)
             } footer: { Text(tr("This limit covers this item only. Other groceries, fees and taxes are not included.")) }
             Section {
                 DisclosureGroup(isExpanded: $stockExpanded) {
-                    entry("Available at home", text: $model.draft.stock, id: "stock")
-                    entry("Set aside within the total", text: $model.draft.protected, id: "protected")
+                    entry(tr("Available at home"), text: $model.draft.stock, id: "stock")
+                    entry(tr("Set aside within the total"), text: $model.draft.protected, id: "protected")
                     Text(tr("Use the same unit as your shopping need. Count only food available for this item. Include any set-aside portions in the total you need."))
                         .font(.footnote).foregroundStyle(Theme.secondary)
                 } label: {
@@ -272,10 +279,10 @@ struct ComparisonView: View {
 
     private func entry(_ label: String, text: Binding<String>, id: String, keyboard: UIKeyboardType = .numbersAndPunctuation) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(tr(label)).font(.subheadline).foregroundStyle(Theme.secondary)
+            Text(label).font(.subheadline).foregroundStyle(Theme.secondary)
             workingTextField(tr("Unknown if blank"), text: text)
                 .keyboardType(keyboard).focused($inputFocused, equals: id)
-                .accessibilityLabel(tr(label)).accessibilityIdentifier(id)
+                .accessibilityLabel(label).accessibilityIdentifier(id)
                 .frame(minHeight: 44)
         }
         // iOS 17 exposes the entire Form row as the text field's activation
@@ -301,11 +308,11 @@ struct ComparisonView: View {
 
     private func offerSection(_ title: String, label: Binding<String>, quantity: Binding<String>, unit: Binding<UnitOfMeasure>, price: Binding<String>, conversion: Binding<ComparisonConversion?>, prefix: String) -> some View {
         Section {
-            entry("Usable amount in one pack", text: quantity, id: prefix + "Quantity")
+            entry(tr("Usable amount in one pack"), text: quantity, id: prefix + "Quantity")
             unitPicker("Pack unit", selection: Binding(get: { unit.wrappedValue }, set: {
                 model.draft.setPackUnit($0, for: prefix == "a" ? .a : .b)
             }), id: prefix + "Unit")
-            entry("Price for one pack (USD)", text: price, id: prefix + "Price", keyboard: .decimalPad)
+            entry(groceryCurrencyLabel("Price for one pack (%@)", model.draft.currency), text: price, id: prefix + "Price", keyboard: .decimalPad)
             WorkingField(tr("Pack name (optional)")) {
                 workingTextField(tr("Pack name (optional)"), text: label, axis: .vertical)
                     .focused($inputFocused, equals: prefix + "Label").accessibilityIdentifier(prefix + "Label")
@@ -316,9 +323,9 @@ struct ComparisonView: View {
                                   conversion: conversion, identifier: prefix + "Conversion")
             if let identity = priceIdentity {
                 let scope = PantryDigestScope(origin: priceAccess?.scope.origin ?? identity.actorID, identity: identity)
-                PackPaidPriceEditor(product: model.draft.item, packLabel: label.wrappedValue, quantity: quantity,
+                PackPaidPriceEditor(product: model.draft.item, currency: model.draft.currency, packLabel: label.wrappedValue, quantity: quantity,
                                     unit: unit, price: price, access: priceAccess, current: { priceIdentity == identity }, prefix: prefix)
-                    .id(scope.owner + scope.origin.uuidString + prefix)
+                    .id(scope.owner + scope.origin.uuidString + prefix + model.draft.currency.rawValue)
             }
         } header: { Text(tr(title)) } footer: {
             Text(tr("Enter the usable amount, not just the printed pack size. Leave an unknown weight, yield or price blank."))
@@ -372,6 +379,7 @@ struct ComparisonView: View {
                     }
                     Divider()
                     Text(tr("Cost in whole packs")).font(.subheadline.weight(.semibold))
+                    Text(comparisonCurrencyText(model.draft.currency)).font(.subheadline)
                     if let cap = inputs.itemCap {
                         Text(message("Item spending limit: %@", moneyText(cap, locale: locale)))
                             .font(.subheadline).monospacedDigit()
@@ -495,7 +503,7 @@ struct ComparisonView: View {
                     .font(.subheadline).monospacedDigit()
             }
             if let unitPrice, let unit {
-                Text(verbatim: comparisonUnitPriceText(unitPrice, in: unit, locale: locale))
+                Text(verbatim: comparisonUnitPriceText(unitPrice, in: unit, currency: model.draft.currency, locale: locale))
                     .font(.subheadline).monospacedDigit()
             }
         }
@@ -524,7 +532,7 @@ struct ComparisonView: View {
             let amount = offer.usableQuantity.map { "\($0.originalLiteral) \($0.unit.comparisonLabel(for: $0.amount))" }
             ComparisonMetric(tr("Usable amount in one pack") + ": " + (amount ?? recordsText("Not entered")),
                              id: result.offerID + "PackQuantity")
-            ComparisonMetric(tr("Price for one pack (USD)") + ": " + (offer.price.map(moneyText) ?? recordsText("Not entered")),
+            ComparisonMetric(groceryCurrencyLabel("Price for one pack (%@)", model.draft.currency) + ": " + (offer.price.map(moneyText) ?? recordsText("Not entered")),
                              id: result.offerID + "PackPrice")
             if let conversion {
                 ComparisonMetric(conversion.readableText(), id: result.offerID + "ConversionBasis")
@@ -619,6 +627,7 @@ private struct MissingPackAmountEditor: View {
 
 private struct MissingPackPriceEditor: View {
     let target: ComparisonPack
+    let currency: Currency
     let update: (String) -> Void
     @State private var literal = ""
     @State private var invalid = false
@@ -629,17 +638,17 @@ private struct MissingPackPriceEditor: View {
         NavigationStack {
             WorkingForm {
                 Section {
-                    WorkingField(tr("Price for one pack (USD)")) {
-                        workingTextField(tr("Price for one pack (USD)"), text: $literal)
+                    WorkingField(groceryCurrencyLabel("Price for one pack (%@)", currency)) {
+                        workingTextField(groceryCurrencyLabel("Price for one pack (%@)", currency), text: $literal)
                             .keyboardType(.decimalPad).focused($focused)
                             .accessibilityIdentifier(target.rawValue + "Price")
                     }
                     if invalid {
-                        Label(tr("Enter a price in USD with up to two decimal places."), systemImage: "exclamationmark.circle")
+                        Label(groceryCurrencyLabel("Enter a price in %@ with up to two decimal places.", currency), systemImage: "exclamationmark.circle")
                             .foregroundStyle(Theme.warning)
                     }
                     Button(tr("Update comparison")) {
-                        guard (try? ComparisonModel.money(literal)) != nil else { invalid = true; return }
+                        guard (try? ComparisonModel.money(literal, currency: currency)) != nil else { invalid = true; return }
                         update(literal)
                         dismiss()
                     }
@@ -946,6 +955,7 @@ private struct ComparisonSaveButton: UIViewRepresentable {
 
 private struct PackPaidPriceEditor: View {
     let product: String
+    let currency: Currency
     let packLabel: String
     @Binding var quantity: String
     @Binding var unit: UnitOfMeasure
@@ -972,17 +982,17 @@ private struct PackPaidPriceEditor: View {
                     .accessibilityIdentifier(prefix + ".shelfScan")
                 if let printed {
                     Text(verbatim: printed.line.effectiveWording)
-                    Text(pantryText("Check the USD price for one pack and its usable amount against this label."))
+                    Text(groceryCurrencyLabel("Check the price in %@ and the usable amount for one pack against this label.", currency))
                     let proposal = printed.proposal
-                    if scannedOffer != nil {
-                        Toggle(pantryFormat("Compare the printed offer in %@", proposal.currencyCode ?? "USD"),
+                    if let scannedOffer {
+                        Toggle(pantryFormat("Compare the printed offer in %@", scannedOffer.currency),
                                isOn: $comparePrinted)
                     }
-                    if (proposal.currencyCode == nil || proposal.currencyCode == "USD"),
+                    if proposal.currencyCode == currency.rawValue || proposal.currencyUnspecified,
                        proposal.priceBasis == .bundle, (proposal.packages ?? 1) == 1,
-                       let amount = proposal.amount, let size = proposal.packageSize {
-                        Button(pantryText("Use this USD price and printed amount for one usable pack")) {
-                            price = NSDecimalNumber(decimal: Decimal(amount.minorUnits) / 100).stringValue
+                       let cents = proposal.amountMinor, let size = proposal.packageSize {
+                        Button(groceryCurrencyLabel("Use this %@ price and printed amount for one usable pack", currency)) {
+                            price = NSDecimalNumber(decimal: Decimal(cents) / 100).stringValue
                             quantity = size.amount.description
                             unit = size.unit
                             conditions = proposal.conditions ?? ""
@@ -1015,7 +1025,7 @@ private struct PackPaidPriceEditor: View {
         .onChange(of: packLabel) { _, _ in resetMatch() }
         .sheet(isPresented: $scan) {
             NavigationStack {
-                PriceImageReview(purpose: .shelf, authorized: { current() }, acceptShelf: { line in
+                PriceImageReview(purpose: .shelf, currency: currency, authorized: { current() }, acceptShelf: { line in
                     guard current() else { return }
                     let proposal = ReviewedShelfImage.propose(line.effectiveWording)
                     printed = (line, proposal)
@@ -1030,17 +1040,20 @@ private struct PackPaidPriceEditor: View {
     private var offer: ShelfPriceOffer {
         let size = try? ComparisonModel.quantity(quantity, unit)
         return ShelfPriceOffer(product: product, variant: variant, pack: size.map { .init(perPackage: $0) },
-                               amountMinor: (try? ComparisonModel.money(price))?.minorUnits,
-                               currency: "USD", eligibility: conditions, tax: tax, basis: .usable)
+                               amountMinor: (try? ComparisonModel.money(price, currency: currency))?.minorUnits,
+                               currency: currency.rawValue, eligibility: conditions, tax: tax, basis: .usable)
     }
     private var scannedOffer: ShelfPriceOffer? {
         guard let printed else { return nil }
         let proposal = printed.proposal
-        guard let amount = proposal.amount, proposal.priceBasis != .unknown,
+        // A bare dollar sign can use the selected currency only when the shopper
+        // confirms the labeled offer or copies it into this comparison.
+        let code = proposal.currencyCode ?? (proposal.currencyUnspecified ? currency.rawValue : nil)
+        guard let cents = proposal.amountMinor, let code, proposal.priceBasis != .unknown,
               let size = proposal.rateQuantity ?? proposal.packageSize else { return nil }
         let bundle = PrivatePriceEvidence.Pack(count: proposal.priceBasis == .unit ? 1 : proposal.packages ?? 1, perPackage: size)
-        return ShelfPriceOffer(product: product, variant: variant, pack: bundle, amountMinor: amount.minorUnits,
-                               currency: proposal.currencyCode ?? "USD", eligibility: conditions, tax: tax)
+        return ShelfPriceOffer(product: product, variant: variant, pack: bundle, amountMinor: cents,
+                               currency: code, eligibility: conditions, tax: tax)
     }
     private func resetMatch() {
         printed = nil; comparePrinted = false; variant = ""; conditions = ""; tax = nil

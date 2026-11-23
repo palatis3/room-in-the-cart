@@ -44,7 +44,7 @@ struct PickupSettlementView: View {
     private func settlementForm(_ proxy: ScrollViewProxy) -> some View {
         WorkingForm {
             PickupSaveStatus(model: model)
-            if let summary = try? model.journey?.settlement.summary(asOf: model.stockReviewDate) {
+            if let journey = model.journey, let summary = try? journey.settlement.summary(asOf: model.stockReviewDate, currency: journey.currency) {
                 Section(pTr("Actual money · separate from food")) {
                     settlementFact(pTr("Paid so far"), value: pMoney(summary.paidSoFar))
                     settlementFact(pTr("Pending credits · not deducted"), value: pMoney(summary.pendingCredits))
@@ -82,7 +82,7 @@ struct PickupSettlementView: View {
                     }
                     if let selectedHold { settlementFact(pTr("Amount"), value: pMoney(selectedHold.amount)) }
                 } else {
-                    PickupEvidenceField(title: pTr("Amount"), amount: $amount, focus: $field, field: .amount)
+                    PickupEvidenceField(title: String(format: pTr("Amount (%@)"), model.journey?.currency.rawValue ?? ""), amount: $amount, focus: $field, field: .amount)
                 }
                 TextField(pTr("Unique receipt or transaction evidence ID"), text: $evidence)
                     .textInputAutocapitalization(.never).autocorrectionDisabled().focused($field, equals: .evidence)
@@ -173,7 +173,8 @@ struct PickupSettlementView: View {
     }
     private func save() {
         do {
-            let recordedAmount = kind == .holdRelease ? selectedHold?.amount : try ComparisonModel.money(amount)
+            guard let journey = model.journey else { return }
+            let recordedAmount = kind == .holdRelease ? selectedHold?.amount : try ComparisonModel.money(amount, currency: journey.currency)
             guard let money = recordedAmount, !evidence.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
                   !isCredit || (!creditID.isEmpty && !charge.isEmpty) else { throw CocoaError(.validationMissingMandatoryProperty) }
             let entry = SettlementEntry(id: entryID, evidenceKey: evidence, kind: kind, amount: money, occurredAt: date, creditID: isCredit ? creditID : nil, chargeEvidenceKey: isCredit ? charge : nil, holdEvidenceKey: kind == .holdRelease ? selectedHold?.evidenceKey : nil)

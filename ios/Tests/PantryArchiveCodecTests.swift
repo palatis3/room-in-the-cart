@@ -32,6 +32,39 @@ import RecordArchive
             sourceLinks: source.sourceLinks, history: history ?? source.history)
     }
 
+    func testIndependentPantryHistoryKeepsReceiptCurrencyAndRejectsMixedReceiptLines() throws {
+        let snapshot = try snapshot(count: 0), archivedOrigin = UUID(), receipt = UUID()
+        func acquisition(_ id: UUID, _ line: Int, _ currency: Currency, paid: Int64?) throws -> PantryArchiveCodec.History {
+            let quantity = try quantity(1)
+            let row = ReceiptAcquisition(receiptID: id, ordinal: line, lotID: UUID(), foodID: UUID(),
+                merchant: "Mercado", purchaseDate: now, transactionReference: nil, imageDigest: nil,
+                originalLine: "Frijol", name: "Frijol", received: quantity, usable: quantity,
+                paidLineTotal: paid.map { Money(minorUnits: $0, currency: currency) }, stock: .added(location: .freezer),
+                currency: currency)
+            return .acquisition(originID: archivedOrigin, row)
+        }
+        let paid = try acquisition(receipt, 0, .mxn, paid: 3201), unknown = try acquisition(receipt, 1, .mxn, paid: nil)
+        let dollars = try acquisition(UUID(), 0, .usd, paid: 0)
+        let valid = replacing(snapshot, history: [paid, unknown, dollars])
+        let package = try PantryArchiveCodec.encode(valid)
+        let decoded = try PantryArchiveCodec.decode(package)
+        let restored = try PantryArchiveRestore.prepare(decoded, newOriginID: UUID(), restorationID: UUID(), at: now)
+        for fact in valid.history { XCTAssertTrue(restored.history.contains(fact)) }
+
+        let foreignLine = try acquisition(receipt, 2, .usd, paid: 3201)
+        XCTAssertThrowsError(try PantryArchiveCodec.encode(replacing(valid, history: valid.history + [foreignLine])))
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let index = try PantryArchiveIndex(url: url)
+        for (ordinal, fact) in valid.history.enumerated() {
+            try index.append(.historical(fact), ordinal: ordinal, at: now)
+        }
+        XCTAssertThrowsError(try index.append(.historical(foreignLine), ordinal: valid.history.count, at: now))
+        try index.validate(descriptor: decoded.descriptor)
+        try index.close()
+        XCTAssertEqual(try PantryArchiveCodec.decode(package).history, valid.history)
+    }
+
     func testQualitativeUseRoundTripKeepsWordingAndHistoryAcrossIndependentRestore() throws {
         let original = try snapshot(), before = try XCTUnwrap(original.lots.first)
         let wording = "menos de media botella"

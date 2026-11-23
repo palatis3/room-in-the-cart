@@ -11,7 +11,7 @@ public struct StoreOrderMinimum: Codable, Equatable, Sendable {
         self.kind = kind; self.minimum = minimum; self.eligibleSubtotal = eligibleSubtotal
     }
     public func status() throws -> Status {
-        guard minimum.map({ $0 >= .zero }) ?? true, eligibleSubtotal.map({ $0 >= .zero }) ?? true else { throw DinnerPlanningError.invalid("orderMinimum") }
+        guard minimum.map({ $0.minorUnits >= 0 }) ?? true, eligibleSubtotal.map({ $0.minorUnits >= 0 }) ?? true else { throw DinnerPlanningError.invalid("orderMinimum") }
         switch kind {
         case .unknown, .noneRequired:
             guard minimum == nil, eligibleSubtotal == nil else { throw DinnerPlanningError.invalid("orderMinimum") }
@@ -19,6 +19,7 @@ public struct StoreOrderMinimum: Codable, Equatable, Sendable {
         case .required:
             guard let minimum else { throw DinnerPlanningError.invalid("orderMinimum") }
             guard let eligibleSubtotal else { return .unknown }
+            guard eligibleSubtotal.currency == minimum.currency else { throw DinnerPlanningError.invalid("orderMinimum") }
             return eligibleSubtotal < minimum ? .notMet : .met
         }
     }

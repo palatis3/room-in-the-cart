@@ -54,7 +54,7 @@ struct InStorePriceEditor: View {
 
     private func entry() throws -> (total: Money?, shelf: PickedShelfPrice?) {
         let separator = Locale.current.decimalSeparator ?? "."
-        let value = try ComparisonModel.money(amount.replacingOccurrences(of: separator, with: "."))
+        let value = try ComparisonModel.money(amount.replacingOccurrences(of: separator, with: "."), currency: shop.basis.currency)
         if let value, !(0...1_000_000_000).contains(value.minorUnits) { throw LedgerError.invalid("pickedPrice") }
         guard mode != .total else { return (value, nil) }
         guard let value else { throw LedgerError.invalid("shelfRate") }
@@ -137,9 +137,9 @@ struct InStorePriceEditor: View {
 
     private var amountLabel: String {
         switch mode {
-        case .total: shoppingText("Total for this picked amount ($)")
-        case .pack: shelfText("Price per pack ($)")
-        case .weight: shelfFormat("Price per %@ ($)", unit.comparisonLabel(for: .one))
+        case .total: shoppingFormat("Total for this picked amount (%@)", shop.basis.currency.rawValue)
+        case .pack: shelfFormat("Price per pack (%@)", shop.basis.currency.rawValue)
+        case .weight: shelfFormat("Price per %@ (%@)", unit.comparisonLabel(for: .one), shop.basis.currency.rawValue)
         }
     }
 }

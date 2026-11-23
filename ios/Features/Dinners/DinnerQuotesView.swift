@@ -52,8 +52,8 @@ struct DinnerQuotesView: View {
                 } else {
                     commitmentFields(dinnerText("Same commitments at both stores"), rows: $draft.commitments)
                 }
-                DinnerStoreFields(title: dinnerText("First store"), prefix: "quote.first.", draft: $draft.first, focus: $inputFocus, shopZone: model.shop?.basis.timeZoneIdentifier, commitmentRows: draft.commitments.map { ($0.id, $0.name) })
-                DinnerStoreFields(title: dinnerText("Second store"), prefix: "quote.second.", draft: $draft.second, focus: $inputFocus, shopZone: model.shop?.basis.timeZoneIdentifier, commitmentRows: (draft.hasSeparateCommitments ? draft.secondCommitments : draft.commitments).map { ($0.id, $0.name) })
+                DinnerStoreFields(title: dinnerText("First store"), prefix: "quote.first.", draft: $draft.first, focus: $inputFocus, shopZone: model.shop?.basis.timeZoneIdentifier, currency: model.shop?.basis.currency ?? .usd, commitmentRows: draft.commitments.map { ($0.id, $0.name) })
+                DinnerStoreFields(title: dinnerText("Second store"), prefix: "quote.second.", draft: $draft.second, focus: $inputFocus, shopZone: model.shop?.basis.timeZoneIdentifier, currency: model.shop?.basis.currency ?? .usd, commitmentRows: (draft.hasSeparateCommitments ? draft.secondCommitments : draft.commitments).map { ($0.id, $0.name) })
                 Section {
                     Button(dinnerText("Review two complete trips")) {
                         do {
@@ -66,6 +66,9 @@ struct DinnerQuotesView: View {
             } else { Text(dinnerText("Budget access is required to review store quotes.")) }
             DinnerFeedback(model: model)
         }.navigationTitle(dinnerText("Two store trips")).dinnerAccess(model, budget: true)
+            .onChange(of: model.shop?.basis.currency) { _, _ in
+                draft = DinnerQuoteEditDraft(); editQuotes(); showPreview = false
+            }
             .onChange(of: model.shop?.id) { _, _ in
                 draft = DinnerQuoteEditDraft(); editQuotes(); showPreview = false
             }
@@ -173,6 +176,7 @@ struct DinnerStoreFields: View {
     @Binding var draft: DinnerStoreDraft
     let focus: FocusState<String?>.Binding
     var shopZone: String? = nil
+    var currency: Currency = .usd
     var commitmentRows: [(id: UUID, title: String)] = []
     var showsEligibilityReview = true
     var body: some View {
@@ -198,7 +202,7 @@ struct DinnerStoreFields: View {
             if case .components = draft.retainedCheckout?.pricing {
                 Text(dinnerText("This comparison keeps the recorded line prices, fees, discounts, taxes and deposits."))
             } else {
-                EnteredQuoteValueField(title: dinnerText("Items before fees and discounts in USD, optional"), value: $draft.itemSubtotal, identifier: prefix + "itemSubtotal", focus: focus)
+                EnteredQuoteValueField(title: dinnerFormat("Items before fees and discounts in %@, optional", currency.rawValue), value: $draft.itemSubtotal, identifier: prefix + "itemSubtotal", focus: focus)
             }
             textField(dinnerText("Price conditions, such as a loyalty card"), value: $draft.eligibilityTerms, key: "eligibilityTerms")
             if let quote = draft.retainedCheckout {
@@ -211,7 +215,7 @@ struct DinnerStoreFields: View {
                 }
                 Text(dinnerText("Edit other observations here. Start a new comparison to enter a different checkout total."))
             } else {
-                EnteredQuoteValueField(title: dinnerText("Whole checkout total in USD, optional"), value: $draft.total, identifier: prefix + "total", focus: focus)
+                EnteredQuoteValueField(title: dinnerFormat("Whole checkout total in %@, optional", currency.rawValue), value: $draft.total, identifier: prefix + "total", focus: focus)
                 Toggle(dinnerText("Total includes every item, fee, discount, tax and deposit"), isOn: $draft.allChargesIncluded).accessibilityIdentifier(prefix + "allChargesIncluded")
             }
             Toggle(dinnerText("All required quantities match the commitments"), isOn: $draft.quantitiesMatched).accessibilityIdentifier(prefix + "quantitiesMatched")
@@ -252,7 +256,7 @@ struct DinnerStoreFields: View {
                 Text(dinnerFormat("Incremental trip cash range: %@ to %@", dinnerMoney(lower), dinnerMoney(upper)))
                 Text(reason)
             } else {
-                EnteredQuoteValueField(title: dinnerText("Incremental trip cash in USD, optional"), value: $draft.tripCash, identifier: prefix + "tripCash", focus: focus)
+                EnteredQuoteValueField(title: dinnerFormat("Incremental trip cash in %@, optional", currency.rawValue), value: $draft.tripCash, identifier: prefix + "tripCash", focus: focus)
             }
             EnteredQuoteValueField(title: dinnerText("Extra minutes, optional"), value: $draft.extraMinutes, identifier: prefix + "extraMinutes", focus: focus)
             Toggle(dinnerText("Trip already planned"), isOn: $draft.alreadyPlanned).accessibilityIdentifier(prefix + "alreadyPlanned")

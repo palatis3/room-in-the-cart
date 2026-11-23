@@ -2,6 +2,18 @@ import Foundation
 import CoreDomain
 import LocalStore
 
+func changeText(_ key: String) -> String {
+    String(localized: String.LocalizationValue(key), table: "OneChange")
+}
+
+func groceryCurrencyLabel(_ key: String, _ currency: Currency) -> String {
+    String(format: changeText(key), locale: .current, currency.rawValue)
+}
+
+func comparisonCurrencyText(_ currency: Currency) -> String {
+    groceryCurrencyLabel("Currency: %@", currency)
+}
+
 /// An ingredient-specific equality reviewed for one offer, before normalization.
 struct ComparisonConversion: Codable, Equatable {
     var sourceLiteral: String
@@ -86,7 +98,18 @@ struct ComparisonDraft: Codable, Equatable {
     /// A personal choice for this comparison. Both offers remain available for correction.
     var setAsidePack: ComparisonPack?
 
-    init(id: UUID = UUID()) { self.id = id }
+    // Drafts written before currency selection contained US dollar amounts.
+    private var priceCurrency: Currency?
+    var currency: Currency {
+        get { priceCurrency ?? .usd }
+        set { if !hasMoneyEntries { priceCurrency = newValue } }
+    }
+    var hasMoneyEntries: Bool { !aPrice.isEmpty || !bPrice.isEmpty || !cap.isEmpty }
+
+    init(id: UUID = UUID(), currency: Currency = .groceryDefault()) {
+        self.id = id
+        self.priceCurrency = currency
+    }
 
     fileprivate func hasSameTerms(as previous: Self) -> Bool {
         // Explicitly choosing an existing default affects how a future edit behaves,
@@ -125,7 +148,9 @@ struct SavedPayload: Codable {
     var answer: CoreDomain.ComparisonResult? = nil
     var roundingPolicy: String? = nil
     static let currentCalculationVersion = "pack-v1/" + UnitOfMeasure.conversionTableVersion
-    static let currentRoundingPolicy = "whole-packs-ceiling; USD-cents-exact; per-pack-ceiling-floor"
+    static func roundingPolicy(for currency: Currency) -> String {
+        "whole-packs-ceiling; " + currency.rawValue + "-cents-exact; per-pack-ceiling-floor"
+    }
 }
 
 extension SavedPayload {
@@ -138,12 +163,12 @@ extension SavedPayload {
             guard let quantity else { return missing }
             return pQuantity(quantity.originalLiteral, unit: quantity.unit, singular: quantity.amount == .one, language: language)
         }
-        var lines = [tr("Item-only comparison"),
+        var lines = [tr("Item-only comparison"), comparisonCurrencyText(draft.currency),
                      tr("Other groceries, fees and taxes are not included. This does not establish whether the whole pickup fits your budget."),
                      tr("Total amount needed") + ": " + original(inputs.needed),
                      tr("Confirmed usable amount at home") + ": " + original(inputs.confirmedAtHome),
                      tr("Protected portions within the total") + ": " + original(inputs.protectedAmount)]
-        if inputs.itemCap != nil { lines.append(tr("Item spending limit (USD, optional)") + ": " + draft.cap) }
+        if inputs.itemCap != nil { lines.append(groceryCurrencyLabel("Item spending limit (%@, optional)", draft.currency) + ": " + draft.cap) }
         let rates = normalizedRequest?.comparableUnitPrices
         for (heading, offer, price, conversion, result, rate) in [
             (tr("Pack A"), inputs.offerA, draft.aPrice, draft.aConversion, answer?.offerA, rates?.a),
@@ -151,12 +176,12 @@ extension SavedPayload {
         ] {
             lines += ["", offer.label.isEmpty ? heading : heading + " · " + offer.label,
                       tr("Usable amount in one pack") + ": " + original(offer.usableQuantity),
-                      tr("Price for one pack (USD)") + ": " + (offer.price == nil ? missing : price)]
+                      groceryCurrencyLabel("Price for one pack (%@)", draft.currency) + ": " + (offer.price == nil ? missing : price)]
             if offer.confirmedConversion != nil, let conversion { lines.append(conversion.readableText()) }
             guard let result else { continue }
             lines.append(result.totalCost.map { message("Item cost to buy enough: %@", moneyText($0)) } ?? tr("Cost unresolved"))
             if let rate, let unit = answer?.unit {
-                lines.append(comparisonUnitPriceText(rate, in: unit, locale: .current))
+                lines.append(comparisonUnitPriceText(rate, in: unit, currency: draft.currency, locale: .current))
             }
             lines += [result.wholePacksText, result.purchasedText(in: draft.unit), result.shortageText(in: draft.unit),
                       result.leftoverText(in: draft.unit), result.itemLimitText, result.unitCeilingText].compactMap { $0 }
@@ -184,8 +209,8 @@ extension CoreDomain.ComparisonResult {
 }
 
 /// One usable unit in the requested measure. Rates can be smaller than one cent.
-func comparisonUnitPriceText(_ cents: Rational, in unit: UnitOfMeasure, locale: Locale) -> String {
-    let style = Decimal.FormatStyle.Currency(code: "USD", locale: locale)
+func comparisonUnitPriceText(_ cents: Rational, in unit: UnitOfMeasure, currency: Currency, locale: Locale) -> String {
+    let style = groceryMoneyStyle(currency, locale: locale)
         .precision(.fractionLength(2...4)).rounded(rule: .toNearestOrAwayFromZero)
     let unitLabel = unit.comparisonLabel(for: .one)
     if cents > .zero, cents.numerator <= (cents.denominator - 1) / 100 {
@@ -232,7 +257,7 @@ extension OfferResult {
     var itemLimitText: String? {
         guard let headroom = itemHeadroom else { return nil }
         if headroom.minorUnits < 0 {
-            return message("Over the item limit: %@", moneyText(Money(minorUnits: -headroom.minorUnits)))
+            return message("Over the item limit: %@", moneyText(Money(minorUnits: -headroom.minorUnits, currency: headroom.currency)))
         }
         return message("Room within the item limit: %@", moneyText(headroom))
     }
@@ -288,13 +313,13 @@ enum EntryError: Error { case invalidNumber, precision, unsupportedVersion }
         return Quantity(amount: amount, unit: unit, originalLiteral: literal)
     }
 
-    nonisolated static func money(_ literal: String) throws -> Money? {
+    nonisolated static func money(_ literal: String, currency: Currency = .usd) throws -> Money? {
         let cleaned = literal.trimmingCharacters(in: .whitespacesAndNewlines)
         if let dot = cleaned.firstIndex(of: "."), cleaned.distance(from: cleaned.index(after: dot), to: cleaned.endIndex) > 2 { throw EntryError.precision }
         guard let value = try rational(literal) else { return nil }
         let (scaled, overflow) = value.numerator.multipliedReportingOverflow(by: 100)
         guard !overflow, scaled % value.denominator == 0 else { throw EntryError.precision }
-        return Money(minorUnits: scaled / value.denominator, currency: .usd)
+        return Money(minorUnits: scaled / value.denominator, currency: currency)
     }
 
     func request() throws -> ComparisonRequest {
@@ -309,11 +334,12 @@ enum EntryError: Error { case invalidNumber, precision, unsupportedVersion }
             needed: try Self.quantity(draft.needed, draft.unit),
             confirmedAtHome: try Self.quantity(draft.stock, draft.unit),
             protectedAmount: try Self.quantity(draft.protected, draft.unit),
-            offerA: PackOffer(id: "a", label: draft.aLabel, usableQuantity: try Self.quantity(draft.aQuantity, draft.aUnit), price: try Self.money(draft.aPrice),
+            offerA: PackOffer(id: "a", label: draft.aLabel, usableQuantity: try Self.quantity(draft.aQuantity, draft.aUnit), price: try Self.money(draft.aPrice, currency: draft.currency),
                               confirmedConversion: try confirmedBasis(draft.aConversion, sourceUnit: draft.aUnit)),
-            offerB: PackOffer(id: "b", label: draft.bLabel, usableQuantity: try Self.quantity(draft.bQuantity, draft.bUnit), price: try Self.money(draft.bPrice),
+            offerB: PackOffer(id: "b", label: draft.bLabel, usableQuantity: try Self.quantity(draft.bQuantity, draft.bUnit), price: try Self.money(draft.bPrice, currency: draft.currency),
                               confirmedConversion: try confirmedBasis(draft.bConversion, sourceUnit: draft.bUnit)),
-            itemCap: try Self.money(draft.cap))
+            itemCap: try Self.money(draft.cap, currency: draft.currency),
+            currency: draft.currency == .usd ? nil : draft.currency)
     }
 
     func compare() {
@@ -351,7 +377,7 @@ enum EntryError: Error { case invalidNumber, precision, unsupportedVersion }
             let payload = try encoder.encode(SavedPayload(draft: savedDraft,
                 calculationVersion: SavedPayload.currentCalculationVersion,
                 normalizedRequest: normalized, answer: answer,
-                roundingPolicy: SavedPayload.currentRoundingPolicy))
+                roundingPolicy: SavedPayload.roundingPolicy(for: savedDraft.currency)))
             let saved = try await store.save(id: savedDraft.id, title: savedDraft.item, payload: payload, savedAt: clock(),
                                              requiring: [savedDraft.id: savedRevision])
             savedRevision = saved.revision
@@ -403,5 +429,10 @@ func moneyText(_ value: Money) -> String {
 
 func moneyText(_ value: Money, locale: Locale) -> String {
     let amount = Decimal(value.minorUnits) / Decimal(100)
-    return amount.formatted(.currency(code: value.currency.rawValue).locale(locale))
+    return amount.formatted(groceryMoneyStyle(value.currency, locale: locale))
+}
+
+private func groceryMoneyStyle(_ currency: Currency, locale: Locale) -> Decimal.FormatStyle.Currency {
+    let style = Decimal.FormatStyle.Currency(code: currency.rawValue, locale: locale)
+    return currency == .mxn || locale.region?.identifier == "MX" ? style.presentation(.isoCode) : style
 }

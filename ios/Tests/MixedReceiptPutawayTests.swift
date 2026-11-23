@@ -20,6 +20,44 @@ import XCTest
         return result
     }
 
+    func testPesoPricesSaveWithReceiptAndPutawayQuantities() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let cleanup = SQLiteFixtureDirectory(directory, test: self)
+        let store = try ComparisonStore(url: directory.appendingPathComponent("pantry.sqlite"), inventoryEnabled: true)
+        cleanup.track(store)
+        let token = try await store.inventorySourceToken()
+        _ = try await store.commitInventory(.init(workspaceID: store.workspaceID, operationID: UUID(), expectedRevision: 0,
+            request: Data([1]), mode: .activate, sourceToken: token), at: now)
+        let repo = PantryRepository(store: store, aliasPersonaID: UUID(), authorize: { true })
+        cleanup.track(repo)
+        let model = PantryModel(repository: repo, clock: { self.now })
+        await model.load()
+        var draft = try receipt(store: store, lines: ["Frijoles 2 unidades MXN $40,50", "IVA $6.48", "Total pagado MXN 46.98"])
+        XCTAssertEqual(draft.currency, .mxn)
+        draft.lines[0].selectIntact(deliveries: [])
+        XCTAssertEqual(draft.lines[0].usable, "2")
+        draft.lines[0].paid = try XCTUnwrap(draft.lines[0].printed?.amount)
+        draft.lines[1].treatment = .chargeOrReturn
+        draft.lines[1].paid = "6.48"
+        draft.receiptTotal = "46.98"
+        draft.changeCurrency(.usd)
+        XCTAssertEqual(draft.currency, .mxn)
+        XCTAssertEqual(draft.receiptTotal, "46.98")
+        let review = try await model.reviewReceipt(draft)
+        try await model.saveReceipt(review)
+        XCTAssertEqual(review.facts.first?.paidLineTotal, Money(minorUnits: 4050, currency: .mxn))
+        let headers = try await model.reviewedReceiptHeaders(after: nil)
+        let saved = try XCTUnwrap(headers.first)
+        XCTAssertEqual(saved.currencyCode, "MXN")
+        XCTAssertEqual(saved.totalMinor, 4698)
+        let rows = try await model.reviewedReceiptDecisions(saved.id, after: nil)
+        var copy = ReviewedReceiptCopySelection()
+        copy.total = true
+        copy.amounts = Set(rows.map(\.id))
+        XCTAssertTrue(copy.text(header: saved, purchaseDay: "", rows: rows).contains("MXN"))
+    }
+
     func testExactImportedFileCanReopenOnlyItsOwnersSavedReceiptBeforeReview() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)

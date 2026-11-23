@@ -986,7 +986,7 @@ struct SettingsView: View {
                 }
             }
             Section(tr("Language")) {
-                Text(tr("English and Spanish follow your iPhone’s app language setting. Food names and USD stay as entered."))
+                Text(tr("Your iPhone’s app language controls English and Spanish. Saved prices keep their original currency."))
                 Button(tr("Open iPhone settings")) {
                     if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
                 }.frame(minHeight: 44)

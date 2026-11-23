@@ -57,6 +57,21 @@ public struct ShopBasis: Codable, Equatable, Sendable {
         self.fixedReserve = fixedReserve; self.knownFees = knownFees; self.retailerPreview = retailerPreview
     }
 
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        branch = try values.decode(String.self, forKey: .branch)
+        mode = try values.decode(FulfillmentMode.self, forKey: .mode)
+        slot = try values.decodeIfPresent(Date.self, forKey: .slot)
+        timeZoneIdentifier = try values.decode(String.self, forKey: .timeZoneIdentifier)
+        cap = try values.decodeIfPresent(Money.self, forKey: .cap)
+        capScope = try values.decode(BudgetScope.self, forKey: .capScope)
+        currency = try values.decodeIfPresent(Currency.self, forKey: .currency) ?? .usd
+        capFirmness = try values.decode(CapFirmness.self, forKey: .capFirmness)
+        fixedReserve = try values.decodeIfPresent(Money.self, forKey: .fixedReserve)
+        knownFees = try values.decodeIfPresent(Money.self, forKey: .knownFees)
+        retailerPreview = try values.decodeIfPresent(LedgerRetailerPreview.self, forKey: .retailerPreview)
+    }
+
     public struct RetailerTerms: Equatable, Sendable {
         let branch: String
         let mode: FulfillmentMode
@@ -75,6 +90,11 @@ public struct ShopBasis: Codable, Equatable, Sendable {
         try ledgerText(branch, maximum: 512)
         guard TimeZone(identifier: timeZoneIdentifier) != nil else { throw LedgerError.invalid("timeZone") }
         try ledgerDate(slot); try retailerPreview?.validate()
+        if let screenshot = retailerPreview?.screenshot {
+            guard screenshot.charges.compactMap(\.amount).allSatisfy({ $0.currency == currency }) else {
+                throw LedgerError.invalid("checkoutImageCurrency")
+            }
+        }
         for amount in [cap, fixedReserve, knownFees, retailerPreview?.total].compactMap({ $0 }) {
             guard amount.minorUnits >= 0, amount.currency == currency else { throw LedgerError.invalid("money") }
         }
@@ -595,7 +615,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     public private(set) var shoppingStop: ShoppingStop?
     public private(set) var importBatches: [LedgerImportBatch]
 
-    public init(id: UUID = UUID(), title: String = "Pickup", basis: ShopBasis = ShopBasis(), initialCheckoutChange: LedgerCheckoutChange? = nil) {
+    public init(id: UUID = UUID(), title: String = "Pickup", basis: ShopBasis = ShopBasis(currency: .groceryDefault()), initialCheckoutChange: LedgerCheckoutChange? = nil) {
         self.initialCheckoutChange = initialCheckoutChange
         self.id = id; self.title = title; self.basis = basis; basisRevision = 0; revision = 0
         revisionID = UUID(); revisions = []; quoteReference = nil
@@ -1167,7 +1187,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
             let price = PickedLinePrice(total: total, membership: membership, weighted: weighted,
                 conditionsConfirmed: conditionsConfirmed, checkedAt: picked, name: line.name,
                 quantity: try next.pickedQuantity(forLineID: lineID), basisRevision: next.basisRevision, shelf: shelf)
-            try price.validate()
+            try price.validate(currency: next.basis.currency)
             next.lines[index].pickedPrice = price
         }
     }
@@ -1338,7 +1358,10 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
 
     public func validate() throws {
         try basis.validate(); try ledgerText(title, nonempty: true, maximum: 512)
-        _ = try initialCheckoutChange?.comparison(for: id)
+        if let change = initialCheckoutChange {
+            guard change.basis.currency == basis.currency else { throw LedgerError.invalid("tripCurrency") }
+            _ = try change.comparison(for: id)
+        }
         guard revision >= 0, basisRevision >= 0, basisRevision <= revision,
               lines.count <= 10_000, contributions.count <= 20_000, allocations.count <= 20_000,
               mealOccurrences.count <= 2_000, importBatches.count <= 2_000, revisions.count <= 100_000 else {
@@ -1367,9 +1390,9 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
             }
         }
         for line in lines {
-            try line.validateTrip()
-            try line.pickedPrice?.validate()
-            try line.pinnedCoupon?.validate()
+            try line.validateTrip(currency: basis.currency)
+            try line.pickedPrice?.validate(currency: basis.currency)
+            try line.pinnedCoupon?.validate(currency: basis.currency)
             if let approval = line.stapleApproval {
                 try ledgerText(approval.purpose, nonempty: true, maximum: 512)
                 try ledgerText(approval.branch, nonempty: true, maximum: 512)
@@ -1616,6 +1639,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         try validate()
         var next = self
         let result = try action(&next)
+        guard next.basis.currency == basis.currency else { throw LedgerError.invalid("tripCurrency") }
         try next.reconcileTripNeeds(previous: self)
         if operation != "pickedPrice" && operation != "undoTripPick" { next.discardChangedPickPrices(previous: self) }
         next.revision = try increment(next.revision)

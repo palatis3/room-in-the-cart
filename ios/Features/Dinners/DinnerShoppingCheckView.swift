@@ -681,7 +681,7 @@ extension PantryPackStockReview.Context {
             }
             let request = ComparisonRequest(itemName: requirement.name, needed: requirement.quantity,
                 confirmedAtHome: try evidence.confirmedQuantity(for: requirement), protectedAmount: requirement.protectedQuantity,
-                offerA: offers.0, offerB: offers.1, itemCap: nil)
+                offerA: offers.0, offerB: offers.1, itemCap: nil, currency: shop.basis.currency)
             let selection = try LedgerPackSelection(workspaceID: id, shop: shop, lineID: line.id, request: request,
                 selectedOfferID: offers.0.id, at: context.asOf, source: ledgerText("Reviewed pantry or freezer allocation"),
                 bindings: bindings, canonicalStockEvidence: evidence)

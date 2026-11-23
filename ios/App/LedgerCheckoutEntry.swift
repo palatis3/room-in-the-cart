@@ -161,7 +161,7 @@ enum LedgerCheckoutAdapter {
         let context = CheckoutContext(storeID: shop.basis.branch, branchID: shop.basis.branch,
             mode: mode,
             slot: shop.basis.slot.map { "\($0.ISO8601Format()) · \(shop.basis.timeZoneIdentifier)" } ?? "",
-            commitmentsID: shop.id, observedAt: observedAt, source: preview?.source ?? pTr("Shopper-entered list"))
+            commitmentsID: shop.id, observedAt: observedAt, source: preview?.source ?? pTr("Shopper-entered list"), currency: shop.basis.currency)
         let scope: CheckoutScope
         switch shop.basis.capScope { case .wholeShop: scope = .wholeCheckout; case .dinnersOnly: scope = .dinner; case .selectedItems: scope = .item }
         let cap = shop.basis.cap.map { CheckoutCap(scope: scope, commitmentsID: shop.id, amount: $0) }
@@ -343,7 +343,7 @@ enum LedgerCheckoutAdapter {
         guard ledger.ready else { return false }
         return await ledger.change(key: "open-next-shop-\(journey.id.uuidString)") { workspace in
             if !workspace.shops.contains(where: { $0.id == journey.id }) {
-                var shop = ShoppingLedger(id: journey.id, title: pTr("Next shop"))
+                var shop = ShoppingLedger(id: journey.id, title: pTr("Next shop"), basis: ShopBasis(currency: journey.currency))
                 for line in basket.current.lines { try shop.addManualLine(name: line.name, quantity: line.quantity, exclusions: line.itemExclusions ?? []) }
                 workspace.shops.append(shop)
             }

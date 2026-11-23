@@ -1,7 +1,7 @@
 import CSQLite
 import Foundation
 
-/// Reviewed evidence from a single explicitly selected delivery PDF. Prices are US cents.
+/// Reviewed evidence from a single explicitly selected delivery PDF. Amounts use the reviewed receipt currency.
 public struct PrivateDeliveryRevision: Codable, Equatable, Sendable {
     public enum Kind: String, Codable, CaseIterable, Sendable { case finalReceipt, adjustment, refund }
     public enum Disposition: String, Codable, CaseIterable, Sendable {
@@ -41,12 +41,14 @@ public struct PrivateDeliveryRevision: Codable, Equatable, Sendable {
     public let deliveryTimeZoneIdentifier: String?
     public let deliveryDay: String?
     public let importedAt: Date
+    private let storedCurrency: String?
+    public var currencyCode: String { storedCurrency ?? "USD" }
     public let finalCents: Int?
     public private(set) var lines: [Line]
 
     public init(digest: Data, layoutID: UUID, order: String, merchant: String, kind: Kind,
                 purchaseDate: Date?, deliveryDate: Date?, importedAt: Date, finalCents: Int?, lines: [Line],
-                purchaseTimeZoneIdentifier: String? = nil, deliveryTimeZoneIdentifier: String? = nil) {
+                purchaseTimeZoneIdentifier: String? = nil, deliveryTimeZoneIdentifier: String? = nil, currencyCode: String = "USD") {
         self.digest = digest
         self.layoutID = layoutID
         self.order = order
@@ -59,6 +61,7 @@ public struct PrivateDeliveryRevision: Codable, Equatable, Sendable {
         self.deliveryTimeZoneIdentifier = deliveryTimeZoneIdentifier
         self.deliveryDay = deliveryDate.flatMap { Self.civilDay($0, zone: deliveryTimeZoneIdentifier) }
         self.importedAt = importedAt
+        self.storedCurrency = currencyCode == "USD" ? nil : currencyCode
         self.finalCents = finalCents
         self.lines = lines
     }
@@ -83,7 +86,7 @@ public struct PrivateDeliveryRevision: Codable, Equatable, Sendable {
 
     func validate() throws {
         let validOrder = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_")
-        guard digest.count == 32, !order.isEmpty, order.utf8.count <= 100,
+        guard ["USD", "MXN"].contains(currencyCode), digest.count == 32, !order.isEmpty, order.utf8.count <= 100,
               order.unicodeScalars.allSatisfy(validOrder.contains),
               !merchant.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, merchant.utf8.count <= 256,
               !merchant.unicodeScalars.contains(where: CharacterSet.controlCharacters.contains),
@@ -187,7 +190,7 @@ extension ComparisonStore {
             guard (latest?.revision ?? 0) == expectedRevision, latest != nil || record.kind == .finalReceipt else {
                 throw ComparisonStoreError.staleInventory
             }
-            if let latest, InventoryReceiptAlias.key(latest.latest.merchant) != InventoryReceiptAlias.key(record.merchant) {
+            if let latest, latest.latest.currencyCode != record.currencyCode || InventoryReceiptAlias.key(latest.latest.merchant) != InventoryReceiptAlias.key(record.merchant) {
                 throw ComparisonStoreError.operationConflict
             }
             let next = expectedRevision + 1

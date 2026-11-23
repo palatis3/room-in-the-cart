@@ -1,6 +1,23 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Currency": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Currency"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moneda"
+          }
+        }
+      }
+    },
     "Print dated list": {
       "extractionState": "manual",
       "localizations": {
@@ -221,19 +238,19 @@
         }
       }
     },
-    "Confirmed line total (USD), if provided": {
+    "Confirmed line total (%@), if provided": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Confirmed line total (USD), if provided"
+            "value": "Confirmed line total (%@), if provided"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Total confirmado del artículo (USD), si se proporcionó"
+            "value": "Total confirmado del artículo (%@), si se proporcionó"
           }
         }
       }
@@ -1988,13 +2005,13 @@
         }
       }
     },
-    "Enter source, store, branch and slot, and valid dollar amounts with at most two decimal places.": {
+    "Enter source, store, branch and slot, and valid amounts with at most two decimal places.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Enter source, store, branch and slot, and valid dollar amounts with at most two decimal places."
+            "value": "Enter source, store, branch and slot, and valid amounts with at most two decimal places."
           }
         },
         "es": {
@@ -2073,19 +2090,19 @@
         }
       }
     },
-    "Expected charges · USD": {
+    "Expected charges · %@": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Expected charges · USD"
+            "value": "Expected charges · %@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cargos previstos · USD"
+            "value": "Cargos previstos · %@"
           }
         }
       }
@@ -4810,19 +4827,19 @@
         }
       }
     },
-    "US dollars. Leave blank when unknown; enter zero only if confirmed.": {
+    "Leave blank when unknown; enter zero only if confirmed.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "US dollars. Leave blank when unknown; enter zero only if confirmed."
+            "value": "Leave blank when unknown; enter zero only if confirmed."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dólares estadounidenses. Deja en blanco si no se sabe; escribe cero solo si está confirmado."
+            "value": "Deja en blanco si no se sabe; escribe cero solo si está confirmado."
           }
         }
       }
@@ -7530,19 +7547,19 @@
         }
       }
     },
-    "Lower offered price (USD)": {
+    "Lower offered price (%@)": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lower offered price (USD)"
+            "value": "Lower offered price (%@)"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Precio mínimo ofrecido (USD)"
+            "value": "Precio mínimo ofrecido (%@)"
           }
         }
       }
@@ -7615,19 +7632,19 @@
         }
       }
     },
-    "Offered price (USD)": {
+    "Offered price (%@)": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Offered price (USD)"
+            "value": "Offered price (%@)"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Precio ofrecido (USD)"
+            "value": "Precio ofrecido (%@)"
           }
         }
       }
@@ -8261,19 +8278,19 @@
         }
       }
     },
-    "Upper offered price (USD)": {
+    "Upper offered price (%@)": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Upper offered price (USD)"
+            "value": "Upper offered price (%@)"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Precio máximo ofrecido (USD)"
+            "value": "Precio máximo ofrecido (%@)"
           }
         }
       }
@@ -8540,19 +8557,19 @@
         }
       }
     },
-    "Amount (USD)": {
+    "Amount (%@)": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Amount (USD)"
+            "value": "Amount (%@)"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Importe (USD)"
+            "value": "Importe (%@)"
           }
         }
       }
@@ -8948,19 +8965,19 @@
         }
       }
     },
-    "Inherited allowance for this original line (USD, optional)": {
+    "Inherited allowance for this original line (%@, optional)": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Inherited allowance for this original line (USD, optional)"
+            "value": "Inherited allowance for this original line (%@, optional)"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Límite asignado previamente a esta línea original (USD, opcional)"
+            "value": "Límite asignado previamente a esta línea original (%@, opcional)"
           }
         }
       }
@@ -8982,19 +8999,19 @@
         }
       }
     },
-    "Lower amount (USD)": {
+    "Lower amount (%@)": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lower amount (USD)"
+            "value": "Lower amount (%@)"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Importe mínimo (USD)"
+            "value": "Importe mínimo (%@)"
           }
         }
       }
@@ -9679,19 +9696,19 @@
         }
       }
     },
-    "Upper amount (USD)": {
+    "Upper amount (%@)": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Upper amount (USD)"
+            "value": "Upper amount (%@)"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Importe máximo (USD)"
+            "value": "Importe máximo (%@)"
           }
         }
       }
@@ -9713,19 +9730,19 @@
         }
       }
     },
-    "Whole-checkout allowance (USD, optional)": {
+    "Whole-checkout allowance (%@, optional)": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Whole-checkout allowance (USD, optional)"
+            "value": "Whole-checkout allowance (%@, optional)"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Límite para toda la compra (USD, opcional)"
+            "value": "Límite para toda la compra (%@, opcional)"
           }
         }
       }

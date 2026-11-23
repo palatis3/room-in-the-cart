@@ -848,9 +848,9 @@ private enum LedgerDeletionJournal {
         }
     }
 
-    func startShop(title: String, authorize: (@MainActor () -> Bool)? = nil, onSelected: ((UUID) -> Void)? = nil) async -> Bool {
+    func startShop(title: String, currency: Currency = .groceryDefault(), authorize: (@MainActor () -> Bool)? = nil, onSelected: ((UUID) -> Void)? = nil) async -> Bool {
         await change(key: "start-shop", onShopSelected: onSelected, authorize: authorize) { workspace in
-            let shop = ShoppingLedger(title: title)
+            let shop = ShoppingLedger(title: title, basis: ShopBasis(currency: currency))
             workspace.shops.append(shop)
             workspace.selectedShopID = shop.id
         }

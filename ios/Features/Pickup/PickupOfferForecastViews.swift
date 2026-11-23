@@ -18,13 +18,13 @@ struct PickupOfferCostDraft: Equatable {
     static func literal(_ money: Money) -> String {
         "\(money.minorUnits / 100).\(String(format: "%02lld", money.minorUnits % 100))"
     }
-    func evidence() throws -> CostEvidence {
+    func evidence(currency: Currency = .usd) throws -> CostEvidence {
         switch kind {
         case "exact":
-            guard let amount = try ComparisonModel.money(lower) else { throw DomainError.invalidNumber }
+            guard let amount = try ComparisonModel.money(lower, currency: currency) else { throw DomainError.invalidNumber }
             return .exact(amount)
         case "bounded":
-            guard let low = try ComparisonModel.money(lower), let high = try ComparisonModel.money(upper) else { throw DomainError.invalidNumber }
+            guard let low = try ComparisonModel.money(lower, currency: currency), let high = try ComparisonModel.money(upper, currency: currency) else { throw DomainError.invalidNumber }
             return .bounded(lower: low, upper: high, reason: reason)
         default: return .unknown(reason: reason)
         }
@@ -130,10 +130,10 @@ struct PickupOfferForecastDraft: Equatable {
         let rules = journey.needs.filter { $0.orderLineID == offer.lineID }.map { need in
             PickupOfferDishRule(needID: need.id, decision: decisions[need.id] ?? .unreviewed, exclusionsConfirmed: exclusionsConfirmed.contains(need.id))
         }
-        return PickupOfferEvaluationInputs(offeredUsable: amount, retainedOriginalCharge: try retained.evidence(),
-            lineAllowance: try ComparisonModel.money(lineAllowance), dishRules: rules,
+        return PickupOfferEvaluationInputs(offeredUsable: amount, retainedOriginalCharge: try retained.evidence(currency: journey.currency),
+            lineAllowance: try ComparisonModel.money(lineAllowance, currency: journey.currency), dishRules: rules,
             includedOfferIDs: Array(included.union([offer.id])).sorted { $0.uuidString < $1.uuidString },
-            otherCheckoutCost: try otherCost.evidence(), wholeCheckoutCap: try ComparisonModel.money(wholeCap),
+            otherCheckoutCost: try otherCost.evidence(currency: journey.currency), wholeCheckoutCap: try ComparisonModel.money(wholeCap, currency: journey.currency),
             checkoutSource: source, checkoutObservedAt: observedAt)
     }
 }
@@ -180,9 +180,9 @@ struct PickupOfferForecastEditor: View {
                     .id(draft.usableUnit)
             }
             Text(pTr("Enter the total usable yield covered by the offered price. A package count or label is not a confirmed edible yield. Missing mass-to-volume conversions stay unresolved."))
-            PickupOfferCostEditor(title: pTr("Charge for the original amount still expected"), draft: $draft.retained, identifier: "pickup.offer.retained")
-            Text(pTr("Inherited allowance for this original line (USD, optional)")).font(.caption)
-            TextField(pTr("Inherited allowance for this original line (USD, optional)"), text: $draft.lineAllowance)
+            PickupOfferCostEditor(title: pTr("Charge for the original amount still expected"), draft: $draft.retained, currency: journey.currency, identifier: "pickup.offer.retained")
+            Text(String(format: pTr("Inherited allowance for this original line (%@, optional)"), journey.currency.rawValue)).font(.caption)
+            TextField(String(format: pTr("Inherited allowance for this original line (%@, optional)"), journey.currency.rawValue), text: $draft.lineAllowance)
                 .keyboardType(.decimalPad).accessibilityIdentifier("pickup.offer.lineAllowance")
             Text(pTr("The retained original charge consumes this line allowance. It is separate from the maximum price authorized for the replacement."))
         }
@@ -232,10 +232,10 @@ struct PickupOfferForecastEditor: View {
     }
     private var checkoutSection: some View {
         Section(pTr("Combined checkout evidence")) {
-            PickupOfferCostEditor(title: pTr("Net cost of everything outside the selected offers"), draft: $draft.otherCost, identifier: "pickup.offer.otherCost")
+            PickupOfferCostEditor(title: pTr("Net cost of everything outside the selected offers"), draft: $draft.otherCost, currency: journey.currency, identifier: "pickup.offer.otherCost")
             Text(pTr("Include unaffected items and all applicable fees, tax, deposits, and discounts once. Exclude every selected replacement and its retained original charge; those are added separately. A later shortfall does not create a new placement fee."))
-            Text(pTr("Whole-checkout allowance (USD, optional)")).font(.caption)
-            TextField(pTr("Whole-checkout allowance (USD, optional)"), text: $draft.wholeCap)
+            Text(String(format: pTr("Whole-checkout allowance (%@, optional)"), journey.currency.rawValue)).font(.caption)
+            TextField(String(format: pTr("Whole-checkout allowance (%@, optional)"), journey.currency.rawValue), text: $draft.wholeCap)
                 .keyboardType(.decimalPad).accessibilityIdentifier("pickup.offer.wholeCap")
             Text(pTr("Source of this checkout evidence")).font(.caption)
             TextField(pTr("Source of this checkout evidence"), text: $draft.source).accessibilityIdentifier("pickup.offer.checkoutSource")
@@ -248,6 +248,7 @@ struct PickupOfferForecastEditor: View {
 private struct PickupOfferCostEditor: View {
     let title: String
     @Binding var draft: PickupOfferCostDraft
+    let currency: Currency
     let identifier: String
     var body: some View {
         Text(title).font(.headline)
@@ -257,13 +258,13 @@ private struct PickupOfferCostEditor: View {
             Text(pTr("Unknown price")).tag("unknown")
         }.accessibilityIdentifier(identifier + ".kind")
         if draft.kind != "unknown" {
-            Text(pTr(draft.kind == "bounded" ? "Lower amount (USD)" : "Amount (USD)")).font(.caption)
-            TextField(pTr(draft.kind == "bounded" ? "Lower amount (USD)" : "Amount (USD)"), text: $draft.lower)
+            Text(String(format: pTr(draft.kind == "bounded" ? "Lower amount (%@)" : "Amount (%@)"), currency.rawValue)).font(.caption)
+            TextField(String(format: pTr(draft.kind == "bounded" ? "Lower amount (%@)" : "Amount (%@)"), currency.rawValue), text: $draft.lower)
                 .keyboardType(.decimalPad).accessibilityIdentifier(identifier + ".lower")
         }
         if draft.kind == "bounded" {
-            Text(pTr("Upper amount (USD)")).font(.caption)
-            TextField(pTr("Upper amount (USD)"), text: $draft.upper).keyboardType(.decimalPad).accessibilityIdentifier(identifier + ".upper")
+            Text(String(format: pTr("Upper amount (%@)"), currency.rawValue)).font(.caption)
+            TextField(String(format: pTr("Upper amount (%@)"), currency.rawValue), text: $draft.upper).keyboardType(.decimalPad).accessibilityIdentifier(identifier + ".upper")
         }
         if draft.kind != "exact" {
             Text(pTr("Why this charge is unresolved")).font(.caption)

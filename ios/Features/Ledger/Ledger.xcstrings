@@ -1154,18 +1154,18 @@
         }
       }
     },
-    "Currency: USD": {
+    "Currency: %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Currency: USD"
+            "value": "Currency: %@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Moneda: USD"
+            "value": "Moneda: %@"
           }
         }
       }
@@ -1682,18 +1682,18 @@
         }
       }
     },
-    "Fixed reserve (USD, optional)": {
+    "Fixed reserve (%@, optional)": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fixed reserve (USD, optional)"
+            "value": "Fixed reserve (%@, optional)"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reserva fija (USD, opcional)"
+            "value": "Reserva fija (%@, opcional)"
           }
         }
       }
@@ -2178,18 +2178,18 @@
         }
       }
     },
-    "Known fees (USD, unknown if blank)": {
+    "Known fees (%@, unknown if blank)": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Known fees (USD, unknown if blank)"
+            "value": "Known fees (%@, unknown if blank)"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cargos conocidos (USD; desconocidos si se deja en blanco)"
+            "value": "Cargos conocidos (%@; desconocidos si se deja en blanco)"
           }
         }
       }
@@ -3171,18 +3171,18 @@
         }
       }
     },
-    "Retailer total (USD, unknown if blank)": {
+    "Retailer total (%@, unknown if blank)": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Retailer total (USD, unknown if blank)"
+            "value": "Retailer total (%@, unknown if blank)"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Total de la tienda (USD; desconocido si se deja en blanco)"
+            "value": "Total de la tienda (%@; desconocido si se deja en blanco)"
           }
         }
       }
@@ -3780,18 +3780,18 @@
         }
       }
     },
-    "Spending cap (USD, optional)": {
+    "Spending cap (%@, optional)": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Spending cap (USD, optional)"
+            "value": "Spending cap (%@, optional)"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Límite de gasto (USD, opcional)"
+            "value": "Límite de gasto (%@, opcional)"
           }
         }
       }
@@ -4228,18 +4228,18 @@
         }
       }
     },
-    "Use a nonnegative USD amount with no more than two decimal places.": {
+    "Use a nonnegative %@ amount with no more than two decimal places.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Use a nonnegative USD amount with no more than two decimal places."
+            "value": "Use a nonnegative %@ amount with no more than two decimal places."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Usa una cantidad no negativa en USD con un máximo de dos decimales."
+            "value": "Usa una cantidad no negativa en %@ con un máximo de dos decimales."
           }
         }
       }
@@ -4580,18 +4580,18 @@
         }
       }
     },
-    "First pack price, USD": {
+    "First pack price, %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "First pack price, USD"
+            "value": "First pack price, %@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Precio del primer paquete, USD"
+            "value": "Precio del primer paquete, %@"
           }
         }
       }
@@ -4660,18 +4660,18 @@
         }
       }
     },
-    "Item-only spending limit, optional": {
+    "Item-only spending limit (%@, optional)": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Item-only spending limit, optional"
+            "value": "Item-only spending limit (%@, optional)"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Límite de gasto de este artículo, opcional"
+            "value": "Límite de gasto para este artículo (%@, opcional)"
           }
         }
       }
@@ -4900,18 +4900,18 @@
         }
       }
     },
-    "Second pack price, USD": {
+    "Second pack price, %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Second pack price, USD"
+            "value": "Second pack price, %@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Precio del segundo paquete, USD"
+            "value": "Precio del segundo paquete, %@"
           }
         }
       }

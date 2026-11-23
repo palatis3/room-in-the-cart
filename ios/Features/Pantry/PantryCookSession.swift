@@ -206,11 +206,11 @@ private extension PickupCheckoutMealSource {
         if let saved {
             journey = try JSONDecoder().decode(PickupJourney.self, from: saved.payload)
             try PickupModel.validate(journey)
-            guard journey.id == shopID, journey.savedAt == saved.savedAt else { throw Failure.changed }
+            guard journey.id == shopID, journey.currency == shop.basis.currency, journey.savedAt == saved.savedAt else { throw Failure.changed }
         } else {
             // A ledger-only dinner already belongs to a real shopping plan. Its
             // local cook receipt is created only when the shopper commits.
-            journey = PickupJourney(id: shopID, savedAt: now)
+            journey = PickupJourney(id: shopID, standaloneCurrency: shop.basis.currency, savedAt: now)
         }
         let recovery: PickupRecoveryMealDefinition?
         if let history = journey.mealRecovery, history.domain.events.contains(where: { $0.request.target.id == mealID }) {

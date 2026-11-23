@@ -41,7 +41,7 @@ struct ReceiptRecognition {
         fileDigest = draft.imageDigest?.map { String(format: "%02x", $0) }.joined()
         document = ReceiptAcquisition.identity(["receipt-document", owner.uuidString, source])
         var keys: [Int: UUID] = [:]
-        var fields = [document.uuidString, merchantDay.uuidString, String(revision), draft.reference, draft.receiptTotal]
+        var fields = [document.uuidString, merchantDay.uuidString, String(revision), draft.reference, draft.receiptTotal, draft.currency.rawValue]
         for row in draft.stockLines {
             let raw = Self.normalize(row.original)
             keys[row.ordinal] = Self.wordingKey(raw)

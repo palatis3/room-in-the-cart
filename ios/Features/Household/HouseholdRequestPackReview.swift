@@ -43,7 +43,7 @@ struct HouseholdRequestPackSelection: Equatable {
     let line: ShopperBasketLine
     let reviewedAt: Date
     func decisionEvidence() throws -> ReviewedRequestPackEvidence {
-        guard let usable = candidate.usable else { throw RequestPackError.invalid }
+        guard candidate.price.map({ $0.currency == .usd }) ?? true, let usable = candidate.usable else { throw RequestPackError.invalid }
         func amount(_ value: Quantity) -> ReviewedRequestPackEvidence.Quantity {
             .init(numerator: String(value.amount.numerator), denominator: String(value.amount.denominator), unit: value.unit.rawValue, originalLiteral: value.originalLiteral)
         }
@@ -72,7 +72,7 @@ enum HouseholdRequestPackReview {
                   candidate.label.count <= 240, candidate.label == candidate.label.trimmingCharacters(in: .whitespacesAndNewlines), !candidate.source.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
                   candidate.source.utf8.count <= 2_048, candidate.observedAt.timeIntervalSince1970.isFinite,
                   candidate.observedAt <= at.addingTimeInterval(300),
-                  candidate.price.map({ (0...1_000_000_000).contains($0.minorUnits) }) ?? true,
+                  candidate.price.map({ $0.currency == .usd && (0...1_000_000_000).contains($0.minorUnits) }) ?? true,
                   candidate.availablePacks.map({ (0...10_000).contains($0) }) ?? true,
                   candidate.usable.map({ $0.amount <= (try! Rational(1_000_000_000)) }) ?? true else { throw RequestPackError.invalid }
             // Same real offer evaluated by the existing engine against an unpriced
@@ -86,7 +86,7 @@ enum HouseholdRequestPackReview {
             return HouseholdRequestPackResult(candidate: candidate, calculation: calculated, available: available)
         }
         let eligible = rows.filter { $0.canSelect && $0.calculation.totalCost != nil }
-        let cheapest = eligible.compactMap { $0.calculation.totalCost }.min()
+        let cheapest = eligible.compactMap { $0.calculation.totalCost }.min(by: <)
         let ids = Set(eligible.filter { $0.calculation.totalCost == cheapest }.map(\.id))
         return HouseholdRequestPackComparison(needed: needed, results: rows, cheapestIDs: ids,
             hasUnresolvedAlternatives: rows.contains { $0.candidate.availability == .unknown || !$0.candidate.matchesRequest || ($0.candidate.availability != .unavailable && (!$0.available || $0.calculation.totalCost == nil)) })

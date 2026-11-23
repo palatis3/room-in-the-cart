@@ -2074,6 +2074,43 @@ import XCTest
         XCTAssertEqual(lots.count, 1)
     }
 
+    func testPesoReceiptReopensWithConfirmedLinePrice() {
+        let printed = "Oats 3 count MXN 42.75"
+        openMixedTypedReceipt(printed)
+        let picker = app.groceryCurrencyPicker("receipt.currency")
+        reveal(picker)
+        assertGroceryCurrency("MXN", in: picker)
+        picker.tap()
+        app.selectGroceryCurrency(code: "USD", label: "US dollars (USD)")
+
+        receiptTap(app.buttons["receipt.action.0"])
+        receiptTap(app.buttons["Put this food away"])
+        receiptTap(app.buttons["receipt.printedQuantity.0"])
+        enterReceiptField("3", id: "receipt.usable.0")
+        let confirmPrice = app.buttons["receipt.printedPrice.0"]
+        assertText("The printed currency differs from USD.")
+        XCTAssertFalse(confirmPrice.exists)
+
+        receiptTap(picker, initiallyUpward: false)
+        app.selectGroceryCurrency(code: "MXN", label: "Mexican pesos (MXN)")
+        reveal(confirmPrice)
+        XCTAssertEqual(confirmPrice.label, "I paid this line total in MXN")
+        receiptTap(confirmPrice)
+        receiptTap(app.buttons["receipt.review"])
+        receiptTap(app.buttons["receipt.commit"])
+        XCTAssertTrue(app.staticTexts["receipt.status"].waitForExistence(timeout: 8))
+        receiptTap(app.buttons["Done"])
+
+        app.terminate()
+        launch(reset: false)
+        receiptTap(app.shopToolButton("shop.myPantry"))
+        receiptTap(app.buttons["pantry.receiptHistory"])
+        assertText(printed)
+        let paid = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@ AND label CONTAINS %@ AND label CONTAINS %@",
+                                                        "Paid line total", "MXN", "42.75")).firstMatch
+        reveal(paid)
+    }
+
     func testReceiptPaidTotalCanBeMarkedUnknownWithoutBecomingFree() {
         launch(reset: true)
         receiptTap(app.shopToolButton("shop.myPantry"))
@@ -2867,6 +2904,39 @@ import XCTest
         }
         tap(element("ledgerUndoImport"))
         XCTAssertTrue(element("ledgerUndoImport").waitForNonExistence(timeout: 10))
+    }
+
+    func testPesoPickupCapSurvivesColdRelaunch() {
+        launch(reset: true, region: "MX")
+        openShoppingList()
+        startAnotherPickupFromList()
+        let picker = app.groceryCurrencyPicker("ledgerShopCurrency")
+        reveal(picker)
+        assertGroceryCurrency("MXN", in: picker)
+        fill("Mercado", into: "ledgerShopName")
+        tap(app.buttons["ledgerCreateShop"])
+
+        let facts = app.buttons["ledgerFacts"]
+        tap(facts)
+        let cap = app.textFields["ledgerCap"]
+        reveal(cap)
+        XCTAssertTrue(cap.label.contains("MXN"), cap.debugDescription)
+        tap(cap)
+        cap.typeText("325.50")
+        tap(app.buttons["ledgerFactsKeyboardDone"])
+        tap(app.buttons["ledgerReviewFacts"])
+        tap(app.buttons["ledgerCommitFacts"])
+        XCTAssertTrue(app.buttons["ledgerCommitFacts"].waitForNonExistence(timeout: 8))
+
+        app.terminate()
+        launch(reset: false)
+        openShoppingList()
+        reveal(facts)
+        XCTAssertTrue(facts.label.contains("MXN") && facts.label.contains("325.50"), facts.debugDescription)
+        tap(facts)
+        reveal(cap)
+        XCTAssertTrue(cap.label.contains("MXN"), cap.debugDescription)
+        XCTAssertEqual(cap.value as? String, "325.5")
     }
 
     func testNaturalListReviewsTimingThenAddsOnlyToChosenPickup() {
@@ -5120,9 +5190,10 @@ import XCTest
         XCTAssertTrue(printOptions.waitForNonExistence(timeout: 8), app.debugDescription)
     }
 
-    private func launch(reset: Bool, spanish: Bool = false, privateRecovery: Bool = false, sourceRemoval: Bool = false,
+    private func launch(reset: Bool, spanish: Bool = false, region: String = "US", privateRecovery: Bool = false, sourceRemoval: Bool = false,
                         sharedReceiptToken: String? = nil, contentSize: UIContentSizeCategory? = nil) {
-        app.launchArguments = ["--ui-testing", "-AppleLanguages", spanish ? "(es)" : "(en)", "-AppleLocale", spanish ? "es_US" : "en_US"]
+        let language = spanish ? "es" : "en"
+        app.launchArguments = ["--ui-testing", "-AppleLanguages", "(\(language))", "-AppleLocale", "\(language)_\(region)"]
         if reset { app.launchArguments.append("--reset-test-workspace") }
         if let sharedReceiptToken { app.launchArguments += ["--receipt-share-test-store", sharedReceiptToken] }
         if let contentSize { app.launchArguments += ["-UIPreferredContentSizeCategoryName", contentSize.rawValue] }

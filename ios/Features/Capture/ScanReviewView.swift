@@ -427,8 +427,8 @@ import CoreDomain
                         if let proposal, !edited.priceNote.isEmpty, proposal.amount == nil,
                            proposal.acceptsFieldNotes || proposal.hasConflictingCurrency {
                             receiptFormatHint(captureText(proposal.hasConflictingCurrency
-                                ? "The receipt shows another currency. Leave the USD line total blank."
-                                : "Enter the printed line total in USD, such as USD 4.82. Leave blank if the currency is unclear."),
+                                ? "The printed currencies conflict or are unsupported. Leave the line total blank."
+                                : "Enter the printed line total, such as MXN 4.82 or USD 4.82. Leave blank if the currency is unclear."),
                                               identifier: "scan.receipt.printedAmountHint")
                         }
                         if let proposal, !proposal.acceptsFieldNotes,

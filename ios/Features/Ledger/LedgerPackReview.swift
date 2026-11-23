@@ -46,7 +46,7 @@ struct LedgerPackReview {
             bindings: ledger.workspace.dinnerPlanning.portionBindings) : nil
         let confirmed = try canonicalStockEvidence?.confirmedQuantity(for: requirement) ?? stockEvidence?.confirmedQuantity(for: requirement)
         let request = ComparisonRequest(itemName: requirement.name, needed: requirement.quantity,
-            confirmedAtHome: confirmed, protectedAmount: requirement.protectedQuantity, offerA: offerA, offerB: offerB, itemCap: itemCap)
+            confirmedAtHome: confirmed, protectedAmount: requirement.protectedQuantity, offerA: offerA, offerB: offerB, itemCap: itemCap, currency: shop.basis.currency)
         return LedgerPackReview(operationID: UUID(), sourceWorkspaceID: workspaceID, workspaceRevision: ledger.revision,
             bindings: ledger.workspace.dinnerPlanning.portionBindings, sourceShop: shop, lineID: lineID, requirement: requirement, stockEvidence: stockEvidence, canonicalStockEvidence: canonicalStockEvidence, grossBasis: grossBasis, request: request,
             result: try PackComparison.evaluate(request), reviewedAt: at, source: source)

@@ -35,8 +35,7 @@ func dinnerStoreSlot(_ date: Date, zoneID: String?, locale: Locale = .current) -
 }
 func dinnerMoney(_ money: Money?) -> String {
     guard let money else { return dinnerText("Unresolved") }
-    let formatter = NumberFormatter(); formatter.numberStyle = .currency; formatter.currencyCode = money.currency.rawValue
-    return formatter.string(from: NSDecimalNumber(value: money.minorUnits).dividing(by: 100)) ?? "\(money.minorUnits) USD cents"
+    return moneyText(money)
 }
 func dinnerIssue(_ issue: String) -> String {
     // Domain issues are closed product strings. Unknown internal diagnostics are

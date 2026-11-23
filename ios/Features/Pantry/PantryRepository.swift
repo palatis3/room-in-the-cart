@@ -619,6 +619,7 @@ final class PantryRepository {
     func savePrice(_ evidence: PrivatePriceEvidence, expected: InventoryState, at now: Date) async throws {
         try requireAccess()
         guard expected.active, expected.workspaceID == originID else { throw PantryReceiptError.stale }
+        try evidence.validateForRecording()
         let row = try PantryPriceCodec.row(evidence)
         let existing = try await store.priceRows(id: row.id, limit: 1)
         try requireAccess()
@@ -765,7 +766,7 @@ final class PantryRepository {
         }
         var facts = try source.facts(receiptID: receiptID, snapshot: before, at: now, lineDocumentID: plan.document)
         for value in prior.values {
-            guard value.merchant == source.merchant.trimmingCharacters(in: .whitespacesAndNewlines), value.purchaseDate == source.purchaseDate, value.purchaseDay == source.purchaseDay else { throw PantryReceiptError.changedEvidence }
+            guard value.currency == source.currency, value.merchant == source.merchant.trimmingCharacters(in: .whitespacesAndNewlines), value.purchaseDate == source.purchaseDate, value.purchaseDay == source.purchaseDay else { throw PantryReceiptError.changedEvidence }
             if let old = value.transactionReference, let new = facts.first?.transactionReference, old != new { throw PantryReceiptError.changedEvidence }
         }
         let priorByID = Dictionary(uniqueKeysWithValues: prior.values.map { ($0.id,$0) })
@@ -787,7 +788,7 @@ final class PantryRepository {
                       old.name == fact.name || preservedName,
                       old.originalLine == fact.originalLine || (mapped != nil && ReceiptRecognition.normalize(old.originalLine) == ReceiptRecognition.normalize(fact.originalLine)),
                       old.received == fact.received,
-                      old.usable == fact.usable, old.paidLineTotal == fact.paidLineTotal, old.stock == fact.stock,
+                      old.usable == fact.usable, old.currency == fact.currency, old.paidLineTotal == fact.paidLineTotal, old.stock == fact.stock,
                       old.purchaseDate == fact.purchaseDate, old.purchaseDay == fact.purchaseDay, old.merchant == fact.merchant else { throw PantryReceiptError.changedEvidence }
                 if let recognition, !plan.bound.contains(line.ordinal), plan.authorizedRows.contains(old.id) {
                     bindings.append(recognition.binding(old, ordinal: line.ordinal, additionalDocument: plan.document != nil))

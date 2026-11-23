@@ -12,10 +12,12 @@ public struct CheckoutContext: Codable, Equatable, Sendable {
     public let commitmentsID: UUID
     public let observedAt: Date
     public let source: String
+    public let currency: Currency?
     public init(storeID: String, branchID: String, mode: ShoppingMode, slot: String,
-                commitmentsID: UUID, observedAt: Date, source: String) {
+                commitmentsID: UUID, observedAt: Date, source: String, currency: Currency? = nil) {
         self.storeID = storeID; self.branchID = branchID; self.mode = mode; self.slot = slot
         self.commitmentsID = commitmentsID; self.observedAt = observedAt; self.source = source
+        self.currency = currency
     }
 }
 
@@ -24,6 +26,16 @@ public enum CostEvidence: Codable, Equatable, Sendable {
     case exact(Money)
     case bounded(lower: Money, upper: Money, reason: String)
     case unknown(reason: String)
+}
+
+extension CostEvidence {
+    public func evidenceCurrency() throws -> Currency? {
+        switch self {
+        case .exact(let value): return value.currency
+        case .bounded(let lower, let upper, _): return try Currency.matching([lower.currency, upper.currency])
+        case .unknown: return nil
+        }
+    }
 }
 
 public struct CheckoutLine: Codable, Equatable, Sendable, Identifiable {
@@ -77,6 +89,28 @@ public struct CheckoutQuote: Codable, Equatable, Sendable {
         self.scope = scope; self.context = context; self.pricing = pricing
     }
 }
+extension CheckoutQuote {
+    public func evidenceCurrency() throws -> Currency? {
+        switch pricing {
+        case .inclusiveTotal(let evidence):
+            return try Currency.matching([context.currency, evidence.evidenceCurrency()])
+        case let .components(lines, _, fees, discounts, tax, deposits):
+            var currencies = try [context.currency, tax.evidenceCurrency(), deposits.evidenceCurrency()]
+            currencies += try lines.map { try $0.cost.evidenceCurrency() }
+            currencies += try discounts.map { try $0.amount.evidenceCurrency() }
+            for fee in fees {
+                switch fee.rule {
+                case .fixed(let evidence):
+                    currencies.append(try evidence.evidenceCurrency())
+                case .waivedAt(let threshold, let evidence, _):
+                    currencies.append(threshold.currency)
+                    currencies.append(try evidence.evidenceCurrency())
+                }
+            }
+            return try Currency.matching(currencies)
+        }
+    }
+}
 public struct CheckoutCap: Codable, Equatable, Sendable {
     public let scope: CheckoutScope
     public let commitmentsID: UUID
@@ -125,14 +159,16 @@ public enum CheckoutError: Error, Equatable, Sendable {
 }
 
 public enum CheckoutEngine {
-    public static let roundingPolicy = "USD-cents-exact; inclusive-fee-threshold"
+    public static let roundingPolicy = "currency-minor-units-exact; inclusive-fee-threshold"
 
-    public static func evaluate(_ quote: CheckoutQuote, cap: CheckoutCap? = nil) throws -> CheckoutResult {
-        try evaluateWithFees(quote, cap: cap).result
+    public static func evaluate(_ quote: CheckoutQuote, cap: CheckoutCap? = nil, currency: Currency? = nil) throws -> CheckoutResult {
+        try evaluateWithFees(quote, cap: cap, currencyHint: currency).result
     }
 
-    static func evaluateWithFees(_ quote: CheckoutQuote, cap: CheckoutCap? = nil) throws -> (result: CheckoutResult, fees: CheckoutAmount?) {
+    static func evaluateWithFees(_ quote: CheckoutQuote, cap: CheckoutCap? = nil, currencyHint: Currency? = nil) throws -> (result: CheckoutResult, fees: CheckoutAmount?) {
         try validate(quote.context)
+        let currency = try Currency.matching([quote.evidenceCurrency(), cap?.amount.currency, currencyHint]) ?? .usd
+        func money(_ minorUnits: Int64) -> Money { Money(minorUnits: minorUnits, currency: currency) }
         var issues: [CheckoutUncertainty] = []
         let total: Interval
         var feeAmount: CheckoutAmount?
@@ -188,7 +224,7 @@ public enum CheckoutEngine {
                 }
                 charges = try charges.adding(amount)
             }
-            feeAmount = CheckoutAmount(lowerBound: Money(minorUnits: charges.lower), upperBound: charges.upper.map { Money(minorUnits: $0) })
+            feeAmount = CheckoutAmount(lowerBound: money(charges.lower), upperBound: charges.upper.map(money))
             let taxAmount = try interval(tax, component: "tax", issues: &issues)
             let depositAmount = try interval(deposits, component: "deposits", issues: &issues)
             total = try goods.subtractingDiscount(allDiscounts).adding(charges).adding(taxAmount).adding(depositAmount)
@@ -198,13 +234,13 @@ public enum CheckoutEngine {
             guard cap.amount.minorUnits >= 0 else { throw CheckoutError.invalidEvidence }
             if cap.scope != quote.scope || cap.commitmentsID != quote.context.commitmentsID { assessment = .scopeMismatch }
             else if let upper = total.upper, upper <= cap.amount.minorUnits {
-                assessment = .within(maximumCheckout: Money(minorUnits: upper), minimumHeadroom: Money(minorUnits: cap.amount.minorUnits - upper))
+                assessment = .within(maximumCheckout: money(upper), minimumHeadroom: money(cap.amount.minorUnits - upper))
             } else if total.lower > cap.amount.minorUnits {
-                assessment = .over(minimumCheckout: Money(minorUnits: total.lower), minimumOverage: Money(minorUnits: total.lower - cap.amount.minorUnits))
+                assessment = .over(minimumCheckout: money(total.lower), minimumOverage: money(total.lower - cap.amount.minorUnits))
             } else { assessment = .unresolved }
         } else { assessment = .notProvided }
         return (CheckoutResult(scope: quote.scope,
-                              total: CheckoutAmount(lowerBound: Money(minorUnits: total.lower), upperBound: total.upper.map { Money(minorUnits: $0) }),
+                              total: CheckoutAmount(lowerBound: money(total.lower), upperBound: total.upper.map(money)),
                               uncertainties: issues, cap: assessment), feeAmount)
     }
 
@@ -212,7 +248,9 @@ public enum CheckoutEngine {
         let a = before.context, b = after.context
         guard before.scope == after.scope, a.storeID == b.storeID, a.branchID == b.branchID,
               a.mode == b.mode, a.slot == b.slot, a.commitmentsID == b.commitmentsID else { throw CheckoutError.incomparableBasis }
-        let first = try evaluate(before, cap: cap), second = try evaluate(after, cap: cap)
+        let currency = try Currency.matching([before.evidenceCurrency(), after.evidenceCurrency(), cap?.amount.currency])
+        let first = try evaluateWithFees(before, cap: cap, currencyHint: currency).result
+        let second = try evaluateWithFees(after, cap: cap, currencyHint: currency).result
         let change: Money?
         if let old = first.total.exact, let new = second.total.exact { change = try new.subtracting(old) }
         else { change = nil }
@@ -224,10 +262,12 @@ public enum CheckoutEngine {
     /// The revised COMPLETE quote still must be evaluated jointly, including fee changes.
     public static func replacementCeiling(lineAllowance: Money, retainedOriginalCharge: Money,
                                           wholeCheckoutRemaining: Money?) throws -> Money? {
-        guard lineAllowance.minorUnits >= 0, retainedOriginalCharge.minorUnits >= 0 else { throw CheckoutError.invalidEvidence }
+        guard lineAllowance.minorUnits >= 0, retainedOriginalCharge.minorUnits >= 0,
+              lineAllowance.currency == retainedOriginalCharge.currency else { throw CheckoutError.invalidEvidence }
         guard let wholeCheckoutRemaining else { return nil }
+        guard wholeCheckoutRemaining.currency == lineAllowance.currency else { throw CheckoutError.incomparableBasis }
         let line = max(0, try lineAllowance.subtracting(retainedOriginalCharge).minorUnits)
-        return Money(minorUnits: min(line, max(0, wholeCheckoutRemaining.minorUnits)))
+        return Money(minorUnits: min(line, max(0, wholeCheckoutRemaining.minorUnits)), currency: lineAllowance.currency)
     }
 
     private static func validate(_ context: CheckoutContext) throws {
@@ -555,6 +595,7 @@ public struct BasketPlan: Codable, Equatable, Sendable, Identifiable {
     private struct Undo: Codable, Equatable, Sendable { let operationID: UUID; let proposalID: UUID; let expectedRevision: UUID; let revision: BasketRevision }
     private static func validate(_ lines: [BasketLine], at: Date) throws {
         guard at.timeIntervalSinceReferenceDate.isFinite, Set(lines.map(\.id)).count == lines.count else { throw CheckoutError.duplicateIdentity }
+        _ = try Currency.matching(lines.map { try $0.expectedCost.evidenceCurrency() })
         for line in lines {
             guard !line.name.isEmpty, line.name.utf8.count <= 2_048 else { throw CheckoutError.invalidEvidence }
             try line.quantity.validate()

@@ -653,20 +653,87 @@
         }
       }
     },
-    "English and Spanish follow your iPhone’s app language setting. Food names and USD stay as entered.": {
-      "comment": "US Spanish draft: human language review required before release. User-entered food names are not translated.",
+    "Currency": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "English and Spanish follow your iPhone’s app language setting. Food names and USD stay as entered."
+            "value": "Currency"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El inglés y el español siguen la configuración de idioma de la app en tu iPhone. Los nombres de los alimentos y la moneda USD se mantienen como los ingresaste."
+            "value": "Moneda"
+          }
+        }
+      }
+    },
+    "US dollars (USD)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "US dollars (USD)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dólares estadounidenses (USD)"
+          }
+        }
+      }
+    },
+    "Mexican pesos (MXN)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mexican pesos (MXN)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pesos mexicanos (MXN)"
+          }
+        }
+      }
+    },
+    "Your iPhone’s app language controls English and Spanish. Saved prices keep their original currency.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your iPhone’s app language controls English and Spanish. Saved prices keep their original currency."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El idioma de la app se elige en tu iPhone. Los precios guardados conservan su moneda original."
+          }
+        }
+      }
+    },
+    "Shared receipts save prices in USD. You can share the food and quantities from a peso receipt.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared receipts save prices in USD. You can share the food and quantities from a peso receipt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los recibos compartidos guardan los precios en USD. Puedes compartir los alimentos y las cantidades de un recibo en pesos."
           }
         }
       }

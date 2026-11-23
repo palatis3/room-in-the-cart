@@ -152,8 +152,8 @@ private struct PickupAmendmentEditor: View {
         .keyboardDoneAction(visible: referenceFocused, title: pTr("Done")) { referenceFocused = false }
         .disabled(model.saving)
         .sheet(item: $editing) { selection in
-            if canAccess {
-                AmendmentLineEditor(selection: selection) { updated in
+            if canAccess, let journey = model.journey {
+                AmendmentLineEditor(selection: selection, currency: journey.currency) { updated in
                     guard canAccess else { return }
                     if let index = lines.firstIndex(where: { $0.id == selection.id }) {
                         if let updated { lines[index] = updated } else { lines.remove(at: index) }
@@ -170,6 +170,7 @@ private struct PickupAmendmentEditor: View {
 
 private struct AmendmentLineEditor: View {
     let selection: AmendmentLineSelection
+    let currency: Currency
     let save: (BasketLine?) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var name: String
@@ -180,8 +181,9 @@ private struct AmendmentLineEditor: View {
     @FocusState private var focused: Field?
     private enum Field { case name, amount, price }
 
-    init(selection: AmendmentLineSelection, save: @escaping (BasketLine?) -> Void) {
+    init(selection: AmendmentLineSelection, currency: Currency, save: @escaping (BasketLine?) -> Void) {
         self.selection = selection
+        self.currency = currency
         self.save = save
         _name = State(initialValue: selection.line?.name ?? "")
         _amount = State(initialValue: selection.line?.quantity.amount.description ?? "")
@@ -207,7 +209,7 @@ private struct AmendmentLineEditor: View {
                     ForEach(UnitOfMeasure.allCases.filter { selection.line?.quantity.unit.dimension == nil ||
                         $0.dimension == selection.line?.quantity.unit.dimension }, id: \.self) { Text(pTr($0.rawValue)).tag($0) }
                 }
-                WorkingField(pTr("Confirmed line total (USD), if provided")) {
+                WorkingField(String(format: pTr("Confirmed line total (%@), if provided"), currency.rawValue)) {
                     TextField("", text: $price)
                         .textFieldStyle(.roundedBorder)
                         .keyboardType(.decimalPad).focused($focused, equals: .price)
@@ -235,7 +237,7 @@ private struct AmendmentLineEditor: View {
             let sameAmount = old?.quantity.amount == entered.amount && old?.quantity.unit == unit
             let quantity = sameAmount ? old?.quantity ?? entered : entered
             let cost: CostEvidence
-            if let money = try ComparisonModel.money(price) {
+            if let money = try ComparisonModel.money(price, currency: currency) {
                 cost = .exact(money)
             } else if sameAmount, let old {
                 cost = old.expectedCost

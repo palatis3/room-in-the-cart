@@ -8,7 +8,9 @@ struct SavedCouponReceipt {
     let rows: [ReviewedReceiptDecision]
     let pickupIDs: Set<UUID>
 
-    func permits(shopID: UUID) -> Bool { pickupIDs.isEmpty || pickupIDs.contains(shopID) }
+    func permits(shop: ShoppingLedger) -> Bool {
+        header.currencyCode == shop.basis.currency.rawValue && (pickupIDs.isEmpty || pickupIDs.contains(shop.id))
+    }
 
     var products: [ReviewedReceiptDecision] {
         rows.filter { row in
@@ -20,14 +22,16 @@ struct SavedCouponReceipt {
     }
 
     var discounts: [ReviewedReceiptDecision] {
-        rows.filter { $0.kind == .chargeOrReturn && CouponReceiptEvidence.isDiscountLine($0.original) }
+        guard let currency = Currency(rawValue: header.currencyCode) else { return [] }
+        return rows.filter { $0.kind == .chargeOrReturn && CouponReceiptEvidence.isDiscountLine($0.original, currency: currency) }
     }
 
     func evidence(itemID: UUID?, day: MealDay, check: CouponPackCheck,
                   discount: CouponReceiptEvidence.Discount) -> CouponReceiptEvidence? {
         guard let item = products.first(where: { $0.id == itemID }) else { return nil }
         if case .printed(let id, let wording, let amount) = discount {
-            guard id != item.id, discounts.contains(where: { $0.id == id && $0.original == wording }),
+            guard amount.currency.rawValue == header.currencyCode, id != item.id,
+                  discounts.contains(where: { $0.id == id && $0.original == wording }),
                   CouponReceiptEvidence.shows(amount: amount, in: wording) else { return nil }
         }
         return CouponReceiptEvidence(receiptID: header.id, itemLineID: item.id, itemWording: item.original,
@@ -146,7 +150,7 @@ private struct ReceiptCouponList: View {
                 }
                 ForEach(model.workspace.shops) { shop in
                     let lines = couponLines(in: shop, pickupID: pickupID)
-                    if !lines.isEmpty, saved?.permits(shopID: shop.id) != false {
+                    if !lines.isEmpty, saved?.permits(shop: shop) != false {
                         Section([shop.title, shop.currentStop.name].filter { !$0.isEmpty }.joined(separator: " · ")) {
                             ForEach(lines) { line in
                                 if let pin = line.pinnedCoupon {
@@ -240,14 +244,15 @@ private struct ReceiptCouponEditor: View {
     }
 
     private func evidence(from source: SavedCouponReceipt) -> CouponReceiptEvidence? {
-        guard authorize(), source.permits(shopID: shop.id), let day, let check = CouponCheckFields.check(count: count, size: size) else { return nil }
+        guard authorize(), source.permits(shop: shop), let day,
+              let check = CouponCheckFields.check(count: count, size: size) else { return nil }
         let result: CouponReceiptEvidence.Discount
         switch discount {
         case .unknown: result = .unverified
         case .absent: result = .absent
         case .printed:
             guard let row = source.discounts.first(where: { $0.id == discountRow }),
-                  let value = try? ComparisonModel.money(amount.replacingOccurrences(of: Locale.current.decimalSeparator ?? ".", with: "."))
+                  let value = try? ComparisonModel.money(amount.replacingOccurrences(of: Locale.current.decimalSeparator ?? ".", with: "."), currency: shop.basis.currency)
             else { return nil }
             result = .printed(lineID: row.id, wording: row.original, amount: value)
         }
@@ -315,8 +320,8 @@ private struct ReceiptCouponEditor: View {
                     Text(shelfText("Choose a receipt line")).tag(nil as UUID?)
                     ForEach(saved.discounts) { row in Text(verbatim: row.original).tag(Optional(row.id)) }
                 }.accessibilityIdentifier("receipt.couponDiscountLine")
-                WorkingField(shelfText("Discount amount shown ($)")) {
-                    workingTextField(shelfText("Discount amount shown ($)"), text: $amount).keyboardType(.decimalPad)
+                WorkingField(shelfFormat("Discount amount shown (%@)", shop.basis.currency.rawValue)) {
+                    workingTextField(shelfFormat("Discount amount shown (%@)", shop.basis.currency.rawValue), text: $amount).keyboardType(.decimalPad)
                         .focused($field).accessibilityIdentifier("receipt.couponAmount")
                 }
                 if !amount.isEmpty && evidence(from: saved) == nil {

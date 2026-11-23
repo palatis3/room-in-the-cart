@@ -167,10 +167,10 @@ final class TonightPurchaseEstimateTests: XCTestCase {
             unresolvedFoods: [], profile: nil)
         let estimate = try TonightPurchaseEstimate.estimate(match, workspace: .init(), workspaceID: UUID(), shopID: nil, at: now)
         XCTAssertTrue(estimate.complete)
-        XCTAssertEqual(estimate.subtotal, .zero)
+        XCTAssertEqual(estimate.subtotal, Money(minorUnits: 0, currency: .groceryDefault()))
         XCTAssertTrue(estimate.packages.isEmpty)
         let cash = try estimate.additionalCash(addedCharges: nil, chargesComplete: false)
-        XCTAssertEqual(cash.known, .zero)
+        XCTAssertEqual(cash.known, estimate.subtotal)
         XCTAssertTrue(cash.complete)
     }
 }

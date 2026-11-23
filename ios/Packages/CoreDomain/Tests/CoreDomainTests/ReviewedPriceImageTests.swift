@@ -7,13 +7,29 @@ final class ReviewedPriceImageTests: XCTestCase {
         let wording = "Members only · 2 for $5"
         let guess = ReviewedShelfImage.propose(wording)
         XCTAssertEqual(guess.packages, 2)
-        XCTAssertEqual(guess.amount, Money(minorUnits: 500))
+        XCTAssertEqual(guess.amountMinor, 500)
         XCTAssertEqual(guess.conditions, wording)
         XCTAssertNil(guess.currencyCode)
+        XCTAssertTrue(guess.currencyUnspecified)
         XCTAssertEqual(ReviewedShelfImage.propose("2 por €5,25").currencyCode, "EUR")
         XCTAssertEqual(ReviewedShelfImage.propose("2 for £5").currencyCode, "GBP")
         XCTAssertEqual(ReviewedShelfImage.propose("2 for $5 CAD").currencyCode, "CAD")
         XCTAssertNil(ReviewedShelfImage.propose("2 for $5, also €5").currencyCode)
+        for wording in ["2 por MX$45,50", "2 por Mex$45.50", "2 por $45.50 MXN", "2 por 45.50 MXN", "2 por MXN45.50", "2 por MXN$45.50", "2 por $45.50 M.N.", "2 por $45.50 pesos mexicanos"] {
+            let offer = ReviewedShelfImage.propose(wording)
+            XCTAssertEqual(offer.currencyCode, "MXN", wording)
+            XCTAssertEqual(offer.amountMinor, 4550, wording)
+            XCTAssertEqual(offer.packages, 2, wording)
+        }
+        XCTAssertNil(ReviewedShelfImage.propose("2 por MX$45 USD").currencyCode)
+        XCTAssertNil(ReviewedShelfImage.propose("2 por US$45 MXN").currencyCode)
+        XCTAssertNil(ReviewedShelfImage.propose("2 por $45 MXN CAD").currencyCode)
+        XCTAssertNil(ReviewedShelfImage.propose("2 por $45 MXN AUD").currencyCode)
+        for wording in ["2 por $45 MXN USD", "2 por $45 MXN CHF", "2 por S$45", "2 por $45 ¥"] {
+            let conflict = ReviewedShelfImage.propose(wording)
+            XCTAssertNil(conflict.currencyCode, wording)
+            XCTAssertFalse(conflict.currencyUnspecified, wording)
+        }
         let printed = try PriceImageLine(digest: Data(repeating: 1, count: 32), ordinal: 2, wording: wording, uncertain: true)
         XCTAssertEqual(try PriceImageLine(digest: printed.digest, ordinal: 2, wording: wording, uncertain: true).shelfID, printed.shelfID)
         XCTAssertNotEqual(try PriceImageLine(digest: printed.digest, ordinal: 3, wording: wording, uncertain: true).shelfID, printed.shelfID)
@@ -23,6 +39,26 @@ final class ReviewedPriceImageTests: XCTestCase {
             sourceText: wording, shelfImage: .init(printed: printed, basis: .bundle))
         XCTAssertNil(try observation.unitPrice(in: .pound))
         XCTAssertFalse(observation.isPaidPrice)
+        func record(_ wording: String, currency: String, amount: Int64? = 500) throws -> PrivatePriceEvidence {
+            let printed = try PriceImageLine(digest: Data(repeating: 1, count: 32), ordinal: 0, wording: wording, uncertain: false)
+            return .init(id: printed.shelfID, source: .shelf, name: "Pasta", store: "Market", date: Date(),
+                         currencyCode: currency, amountMinor: amount, pack: nil, sourceText: wording,
+                         shelfImage: .init(printed: printed, basis: .unknown))
+        }
+        let legacy = try record("MXN 5.00", currency: "USD")
+        let reopened = try JSONDecoder().decode(PrivatePriceEvidence.self, from: JSONEncoder().encode(legacy))
+        XCTAssertEqual(reopened, legacy)
+        XCTAssertNoThrow(try reopened.validate())
+        XCTAssertThrowsError(try reopened.validateForRecording())
+        for code in ["USD", "MXN", "CAD", "EUR", "GBP"] {
+            XCTAssertNoThrow(try record(code + " 5.00", currency: code).validateForRecording())
+        }
+        XCTAssertNoThrow(try record("$5.00", currency: "MXN").validateForRecording())
+        XCTAssertThrowsError(try record("$5.00", currency: "EUR").validateForRecording())
+        for words in ["MXN 5.00 USD", "JPY 5.00", "€5 or $5"] {
+            XCTAssertThrowsError(try record(words, currency: "MXN").validateForRecording())
+            XCTAssertNoThrow(try record(words, currency: "", amount: nil).validateForRecording())
+        }
     }
 
     func testCheckoutProposesUniqueBilingualFieldsAndLeavesAmbiguousAmountsForReview() throws {
@@ -82,16 +118,16 @@ final class ReviewedPriceImageTests: XCTestCase {
 
     func testShelfPackageSizeAndPriceStayIndependentOfUnitRatesAndPromotions() {
         let shelf = ReviewedShelfImage.propose("Yogur 1,5 kg — socios 2 por $5,50 USD")
-        XCTAssertEqual(shelf.amount?.minorUnits, 550)
+        XCTAssertEqual(shelf.amountMinor, 550)
         XCTAssertEqual(shelf.packages, 2)
-        XCTAssertEqual(ReviewedShelfImage.propose("Members only 2 for $5 USD 500 g").amount?.minorUnits, 500)
-        XCTAssertEqual(ReviewedShelfImage.propose("Aceite 250 ml 4,90 EUR").amount?.minorUnits, 490)
-        XCTAssertNil(ReviewedShelfImage.propose("Members 2 for $5, regular $4 each").amount)
+        XCTAssertEqual(ReviewedShelfImage.propose("Members only 2 for $5 USD 500 g").amountMinor, 500)
+        XCTAssertEqual(ReviewedShelfImage.propose("Aceite 250 ml 4,90 EUR").amountMinor, 490)
+        XCTAssertNil(ReviewedShelfImage.propose("Members 2 for $5, regular $4 each").amountMinor)
         XCTAssertEqual(shelf.packageSize?.amount, try? Rational(3, 2))
         XCTAssertEqual(shelf.packageSize?.unit, .kilogram)
         XCTAssertNotNil(shelf.conditions)
         XCTAssertEqual(ReviewedShelfImage.propose("Milk 12 fl oz $2.75").packageSize?.unit, .fluidOunce)
-        XCTAssertEqual(ReviewedShelfImage.propose("Oats 500g $3.29").amount?.minorUnits, 329)
+        XCTAssertEqual(ReviewedShelfImage.propose("Oats 500g $3.29").amountMinor, 329)
         let rate = ReviewedShelfImage.propose("unit price $0.75 per 100 g")
         XCTAssertNil(rate.packageSize)
         XCTAssertEqual(rate.rateQuantity?.amount, try? Rational(100))
@@ -101,8 +137,8 @@ final class ReviewedPriceImageTests: XCTestCase {
         XCTAssertEqual(ReviewedShelfImage.propose("$4/lb").rateQuantity?.unit, .pound)
         XCTAssertNil(ReviewedShelfImage.propose("Tea 100 g or 250 g $4.00").packageSize)
         XCTAssertNil(ReviewedShelfImage.propose("Juice 6 x 12 fl oz $8").packageSize)
-        XCTAssertNil(ReviewedShelfImage.propose("Save $1.50 with coupon").amount)
-        XCTAssertNil(ReviewedShelfImage.propose("Was $6.00 now $4.00").amount)
+        XCTAssertNil(ReviewedShelfImage.propose("Save $1.50 with coupon").amountMinor)
+        XCTAssertNil(ReviewedShelfImage.propose("Was $6.00 now $4.00").amountMinor)
     }
 
     func testCheckoutKeepsPrintedTotalIndependentOfUnknownTaxTipAndSubtotal() throws {

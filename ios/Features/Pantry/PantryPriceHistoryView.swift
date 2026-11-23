@@ -128,7 +128,7 @@ private struct PantryPriceDetail: View {
                         }
                     } else { Text(verbatim: row.sourceText) }
                 }
-                if row.currencyCode == "USD", row.amountMinor != nil, row.isPaidPrice || row.source == .shelf || row.source == .currentQuote,
+                if row.currencyCode == "USD", row.shelfCurrencyMatches, row.amountMinor != nil, row.isPaidPrice || row.source == .shelf || row.source == .currentQuote,
                    let scope = household.projection, scope.enrolled, scope.grantId == nil, !household.locked, household.identity != nil {
                     NavigationLink(HistoryCopy.text("Review for a shared shop")) {
                         PrivatePricePublicationView(pantry: model, household: household, price: row, state: state)
@@ -232,7 +232,7 @@ private struct PantryComparablePrice: View {
             Text(verbatim: price.store + " · " + dates.purchaseDay(price))
             if let rate {
                 Text(verbatim: (Decimal(rate.numerator) / Decimal(rate.denominator) / 100).formatted(
-                    .currency(code: price.currencyCode).precision(.fractionLength(2...4))) + " / " + pantryUnit(unit))
+                    .currency(code: price.currencyCode).presentation(.isoCode).precision(.fractionLength(2...4))) + " / " + pantryUnit(unit))
             } else { Text(pantryText("Unit price unavailable")) }
         }
         .task(id: state.revision) {
@@ -282,7 +282,7 @@ private struct PantryPriceCreditEditor: View {
                 TextField(pantryText("Price source wording"), text: $wording, axis: .vertical)
                 Button(pantryText("Review price")) {
                     do {
-                        let minor = try Money(decimal: amount.replacingOccurrences(of: locale.decimalSeparator ?? ".", with: ".")).minorUnits
+                        let minor = try Money.minorUnits(decimal: amount.replacingOccurrences(of: locale.decimalSeparator ?? ".", with: "."))
                         let candidate = PrivatePriceEvidence(id: UUID(), source: .adjustment(target: price.id, revision: price.revision, kind: kind),
                             foodID: price.foodID, linkedLotID: price.linkedLotID, name: price.name, variant: price.variant, store: price.store,
                             branch: price.branch, mode: price.mode, date: Date(), currencyCode: price.currencyCode,
@@ -348,7 +348,7 @@ private func packageLabel(_ pack: PrivatePriceEvidence.Pack) -> String {
 
 private func priceAmount(_ row: PrivatePriceEvidence) -> String {
     guard let minor = row.amountMinor else { return pantryText("Price unknown") }
-    return (Decimal(minor) / 100).formatted(.currency(code: row.currencyCode))
+    return (Decimal(minor) / 100).formatted(.currency(code: row.currencyCode).presentation(.isoCode))
 }
 
 private enum PriceEntryKind: CaseIterable {
@@ -390,7 +390,7 @@ private struct PantryPriceEditor: View {
     @State private var branch = ""
     @State private var mode: FulfillmentMode?
     @State private var date = Date()
-    @State private var currency = "USD"
+    @State private var currency = Currency.groceryDefault().rawValue
     @State private var amount = ""
     @State private var packages = "1"
     @State private var quantity = ""
@@ -420,6 +420,13 @@ private struct PantryPriceEditor: View {
         _date = State(initialValue: original.date)
         _currency = State(initialValue: original.currencyCode)
         _amount = State(initialValue: original.amountMinor.map { NSDecimalNumber(decimal: Decimal($0) / 100).stringValue } ?? "")
+        if let image = original.shelfImage {
+            let currencies = ReviewedShelfImage.priceCurrencies(in: image.printed.effectiveWording)
+            if !currencies.contains(original.currencyCode) {
+                _currency = State(initialValue: currencies.count == 1 ? currencies[0] : "")
+                _amount = State(initialValue: "")
+            }
+        }
         _packages = State(initialValue: String(original.pack?.count ?? 1))
         if let pack = original.pack {
             _quantity = State(initialValue: pack.perPackage.amount.description)
@@ -493,11 +500,21 @@ private struct PantryPriceEditor: View {
                     ForEach(FulfillmentMode.allCases, id: \.self) { value in Text(value.ledgerLabel).tag(Optional(value)) }
                 }
                 ReceiptDatePicker(title: pantryText("Price date"), identifier: "prices.date", date: $date)
-                PriceChoice("Currency", value: currency.isEmpty ? pantryText("Choose the printed currency") : currency, selection: $currency) {
-                    if printed != nil { Text(pantryText("Choose the printed currency")).tag("") }
-                    ForEach(PrivatePriceEvidence.supportedCurrencies, id: \.self) { Text(verbatim: $0).tag($0) }
+                let currencies = printed.map { ReviewedShelfImage.priceCurrencies(in: $0.effectiveWording) } ?? PrivatePriceEvidence.supportedCurrencies
+                if currencies.isEmpty {
+                    Text(pantryText("This label has no single supported currency. You can save the wording with the price unknown."))
+                } else {
+                    if let code = currencies.first, currencies.count == 1 {
+                        LabeledContent(pantryText("Currency"), value: code)
+                    } else {
+                        PriceChoice("Currency", value: currency.isEmpty ? pantryText("Choose the printed currency") : currency, selection: $currency) {
+                            if printed != nil { Text(pantryText("Choose the printed currency")).tag("") }
+                            ForEach(currencies, id: \.self) { Text(verbatim: $0).tag($0) }
+                        }
+                    }
+                    TextField(entryKind == .shelf && printed != nil ? pantryText("Printed price amount") : pantryText("Total for all packages"), text: $amount)
+                        .keyboardType(.decimalPad).accessibilityIdentifier("prices.total").focused($focused, equals: "amount")
                 }
-                TextField(entryKind == .shelf && printed != nil ? pantryText("Printed price amount") : pantryText("Total for all packages"), text: $amount).keyboardType(.decimalPad).accessibilityIdentifier("prices.total").focused($focused, equals: "amount")
                 Section(pantryText("Package basis")) {
                     if entryKind != .shelf || printed == nil || priceBasis != .unit {
                         WorkingField(pantryText("Number of packages")) {
@@ -530,7 +547,7 @@ private struct PantryPriceEditor: View {
             guard newKind != .shelf, printed != nil else { return }
             printed = nil
             priceBasis = .unknown
-            currency = "USD"
+            currency = Currency.groceryDefault(for: locale).rawValue
             amount = ""
             packages = "1"
             quantity = ""
@@ -546,7 +563,8 @@ private struct PantryPriceEditor: View {
                     let suggestion = ReviewedShelfImage.propose(line.effectiveWording)
                     currency = suggestion.currencyCode ?? ""
                     packages = String(suggestion.packages ?? 1)
-                    amount = suggestion.amount.map { NSDecimalNumber(decimal: Decimal($0.minorUnits) / 100).stringValue } ?? ""
+                    let canPrice = suggestion.currencyCode != nil || suggestion.currencyUnspecified
+                    amount = canPrice ? suggestion.amountMinor.map { NSDecimalNumber(decimal: Decimal($0) / 100).stringValue } ?? "" : ""
                     eligibility = suggestion.conditions ?? ""
                     priceBasis = suggestion.priceBasis
                     let measurement = suggestion.rateQuantity ?? suggestion.packageSize
@@ -586,9 +604,9 @@ private struct PantryPriceEditor: View {
         let evidence = try PrivatePriceEvidence(id: image?.printed.shelfID ?? id, revision: (original?.revision ?? 0) + 1, source: entryKind.source,
             foodID: original?.foodID, linkedLotID: original?.linkedLotID, name: name,
             variant: text(variant), store: store, branch: text(branch), mode: mode, date: date, currencyCode: currency,
-            amountMinor: text(amount).map { try Money(decimal: decimal($0)).minorUnits }, pack: pack,
+            amountMinor: text(amount).map { try Money.minorUnits(decimal: decimal($0)) }, pack: pack,
             eligibility: text(eligibility), sourceText: text(source) ?? entryKind.label, shelfImage: image, taxTreatment: tax)
-        try evidence.validate()
+        try evidence.validateForRecording()
         return evidence
     }
 
@@ -744,7 +762,7 @@ struct ShelfPaidPriceView: View {
                     Text(verbatim: store.isEmpty ? ledgerText("Store not set") : store)
                     Text(asOf, style: .date)
                     Text(verbatim: (isUnitLabel ? pantryText("Printed unit-price quantity") + " · " : "") + packageLabel(shelfPack))
-                    if let amount = offer.amountMinor { Text(verbatim: (Decimal(amount) / 100).formatted(.currency(code: offer.currency).locale(locale))) }
+                    if let amount = offer.amountMinor { Text(verbatim: (Decimal(amount) / 100).formatted(.currency(code: offer.currency).presentation(.isoCode).locale(locale))) }
                     Text(verbatim: offer.eligibility.isEmpty ? pantryText("Offer conditions unrecorded") : offer.eligibility)
                     Text(verbatim: shelfTaxLabel(offer.tax))
                 }.accessibilityElement(children: .combine)
@@ -777,6 +795,6 @@ struct ShelfPaidPriceView: View {
     }
     private func rate(_ cents: Rational) -> String {
         (Decimal(cents.numerator) / Decimal(cents.denominator) / 100).formatted(
-            .currency(code: offer.currency).precision(.fractionLength(2...6)).locale(locale))
+            .currency(code: offer.currency).presentation(.isoCode).precision(.fractionLength(2...6)).locale(locale))
     }
 }

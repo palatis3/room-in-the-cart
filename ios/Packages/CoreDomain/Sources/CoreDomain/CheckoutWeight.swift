@@ -17,6 +17,7 @@ extension CheckoutEngine {
               rate.minorUnits > 0, increment > .zero,
               case let .components(lines, complete, fees, discounts, tax, deposits) = quote.pricing,
               complete, lines.contains(where: { $0.id == lineID }) else { return .unresolved }
+        guard rate.currency == cap.amount.currency else { throw CheckoutError.incomparableBasis }
         _ = try evaluate(quote, cap: cap)
         func exact(_ evidence: CostEvidence) -> Money? {
             switch evidence {
@@ -26,19 +27,20 @@ extension CheckoutEngine {
             }
         }
         guard let taxAmount = exact(tax), let depositAmount = exact(deposits) else { return .unresolved }
-        var otherItems = Money(minorUnits: 0), reductions = Money(minorUnits: 0)
+        let zero = Money(minorUnits: 0, currency: rate.currency)
+        var otherItems = zero, reductions = zero
         for item in lines where item.id != lineID {
             guard let amount = exact(item.cost) else { return .unresolved }
-            otherItems = try Money(minorUnits: checkedAdd(otherItems.minorUnits, amount.minorUnits))
+            otherItems = try otherItems.adding(amount)
         }
         for discount in discounts {
             guard let amount = exact(discount.amount) else { return .unresolved }
-            reductions = try Money(minorUnits: checkedAdd(reductions.minorUnits, amount.minorUnits))
+            reductions = try reductions.adding(amount)
         }
         let available = try cap.amount.subtracting(taxAmount).subtracting(depositAmount)
         guard available.minorUnits >= 0 else { return .noPositiveIncrement }
         let remainder = try available.subtracting(otherItems)
-        let beforeFees = try Money(minorUnits: checkedAdd(remainder.minorUnits, reductions.minorUnits))
+        let beforeFees = try remainder.adding(reductions)
         guard beforeFees.minorUnits >= 0 else { return .noPositiveIncrement }
         let stepCost = try increment.multiplied(by: Rational(rate.minorUnits))
         guard rounding != .unknown || stepCost.denominator == 1 else { return .unresolved }
@@ -62,7 +64,7 @@ extension CheckoutEngine {
             if rounding == .nearestCent {
                 cents = try rawCharge.roundedNearest()
             } else { cents = try rawCharge.roundedUp() }
-            let charge = Money(minorUnits: cents)
+            let charge = Money(minorUnits: cents, currency: rate.currency)
             let priced = lines.map { item in
                 item.id == lineID ? CheckoutLine(id: item.id, name: item.name, cost: .exact(charge), thresholdEligible: item.thresholdEligible) : item
             }

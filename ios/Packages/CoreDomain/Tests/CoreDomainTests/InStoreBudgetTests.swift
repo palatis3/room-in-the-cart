@@ -5,6 +5,67 @@ final class InStoreBudgetTests: XCTestCase {
     private let one = Quantity(amount: .one, unit: .count, originalLiteral: "1")
     private let zone = "America/New_York"
 
+    func testPesoTripRetainsPricesAndRejectsForeignAmounts() throws {
+        let price = Money(minorUnits: 4250, currency: .mxn)
+        var shop = ShoppingLedger(basis: ShopBasis(currency: .mxn))
+        let id = try shop.addManualLine(name: "Limones", quantity: one)
+        try shop.setChecked(lineID: id, checked: true)
+        try shop.setBudgetFlexible(lineID: id, expectedRevision: shop.revisionID, flexible: true)
+
+        let zero = Money(minorUnits: 0, currency: .mxn)
+        XCTAssertEqual(shop.pickedCartSubtotal.total, zero)
+        XCTAssertEqual(try shop.previewBudgetDeferral(lineID: id).after.total, zero)
+        let weighed = PickedShelfPrice(rate: price, unit: .kilogram,
+            measured: Quantity(amount: try Rational(1, 2), unit: .kilogram, originalLiteral: "0.5"))
+        let halfKilo = Money(minorUnits: 2125, currency: .mxn)
+        XCTAssertEqual(try weighed.lineTotal(), halfKilo)
+        try shop.recordPickedPrice(lineID: id, expectedRevision: shop.revisionID, total: halfKilo,
+            membership: false, weighted: true, conditionsConfirmed: true, shelf: weighed)
+        XCTAssertEqual(try shop.previewBudgetDeferral(lineID: id).after.total, zero)
+
+        let saved = try JSONDecoder().decode(ShoppingLedger.self, from: JSONEncoder().encode(shop))
+        try saved.validate()
+        XCTAssertEqual(saved.basis.currency, .mxn)
+        XCTAssertEqual(saved.pickedCartSubtotal.total, halfKilo)
+        XCTAssertThrowsError(try shop.recordPickedPrice(lineID: id, expectedRevision: shop.revisionID, total: .zero,
+            membership: false, weighted: false, conditionsConfirmed: true))
+        let unknownForeignWeight = PickedShelfPrice(rate: .zero, unit: .kilogram, measured: nil)
+        XCTAssertThrowsError(try shop.recordPickedPrice(lineID: id, expectedRevision: shop.revisionID, total: nil,
+            membership: false, weighted: true, conditionsConfirmed: false, shelf: unknownForeignWeight))
+        XCTAssertThrowsError(try shop.updateBasis(ShopBasis(currency: .usd)))
+        XCTAssertThrowsError(try shop.applyDinnerChanges([.adoptBasis(ShopBasis(currency: .usd))],
+            expectedRevisionID: shop.revisionID, revisionID: UUID(), operationID: UUID(), at: Date()))
+        XCTAssertEqual(shop, saved)
+
+        let day = try MealDay(year: 2026, month: 11, day: 22, timeZoneIdentifier: "America/Mexico_City")
+        let terms = ShopCouponTerms(qualifyingSize: "", minimumPacks: 1, validThrough: day)
+        try shop.pinCoupon(lineID: id, expectedRevision: shop.revisionID, terms: terms, clipped: true)
+        func evidence(_ wording: String, _ amount: Money) -> CouponReceiptEvidence {
+            CouponReceiptEvidence(receiptID: UUID(), itemLineID: UUID(), itemWording: "Limones",
+                day: day, check: CouponPackCheck(packCount: 1, size: .matches),
+                discount: .printed(lineID: UUID(), wording: wording, amount: amount))
+        }
+        XCTAssertThrowsError(try shop.reviewCouponReceipt(lineID: id, expectedRevision: shop.revisionID,
+            evidence: evidence("Descuento USD 42.50", price)))
+        XCTAssertThrowsError(try shop.reviewCouponReceipt(lineID: id, expectedRevision: shop.revisionID,
+            evidence: evidence("Descuento $42.50", Money(minorUnits: 4250))))
+        try shop.reviewCouponReceipt(lineID: id, expectedRevision: shop.revisionID,
+            evidence: evidence("Descuento MXN 42.50", price))
+        XCTAssertEqual(shop.lines.first?.pinnedCoupon?.receipt?.savings, price)
+    }
+
+    func testLegacyTripWithoutCurrencyReopensInUSD() throws {
+        let original = ShoppingLedger(basis: ShopBasis(cap: Money(minorUnits: 2500), currency: .usd))
+        var json = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(original)) as? [String: Any])
+        var basis = try XCTUnwrap(json["basis"] as? [String: Any])
+        basis.removeValue(forKey: "currency")
+        json["basis"] = basis
+        let reopened = try JSONDecoder().decode(ShoppingLedger.self, from: JSONSerialization.data(withJSONObject: json))
+        XCTAssertEqual(reopened, original)
+        try reopened.validate()
+        XCTAssertEqual(reopened.pickedCartSubtotal.total.currency, .usd)
+    }
+
     func testShelfBudgetAtTheStorePreservesRequestedMeasuredAndProtectedNeeds() throws {
         var shop = ShoppingLedger(basis: ShopBasis(branch: "Corner market", mode: .inStore))
         let four = Quantity(amount: try Rational(4), unit: .count, originalLiteral: "4")

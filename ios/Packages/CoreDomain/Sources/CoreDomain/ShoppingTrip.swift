@@ -101,7 +101,7 @@ extension ShoppingLine {
         return stores.contains { $0.caseInsensitiveCompare(store) == .orderedSame }
     }
 
-    func validateTrip() throws {
+    func validateTrip(currency: Currency) throws {
         for pick in [tripPick, tripUndo?.pick].compactMap({ $0 }) {
             try pick.amount.validate()
             try ledgerDate(pick.at)
@@ -118,7 +118,7 @@ extension ShoppingLine {
         }
         try ledgerDate(tripUndo?.at)
         try ledgerDate(tripUndo?.checkedAt)
-        try tripUndo?.price?.validate()
+        try tripUndo?.price?.validate(currency: currency)
         try Self.validateStorePreferences(preferredStores ?? [])
     }
 

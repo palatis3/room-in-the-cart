@@ -21,6 +21,11 @@ final class PrivatePriceEvidenceTests: XCTestCase {
         XCTAssertFalse(try paid.comparablePaidPrice(to: offer, in: .kilogram))
         XCTAssertFalse(try paid.comparablePaidPrice(to: evidence(.currentQuote), in: .kilogram))
         XCTAssertFalse(try paid.comparablePaidPrice(to: evidence(.paidManual, currency: "EUR"), in: .kilogram))
+        let peso = try evidence(.paidManual, currency: "MXN")
+        try peso.validate()
+        XCTAssertFalse(try paid.comparablePaidPrice(to: peso, in: .kilogram))
+        XCTAssertTrue(try peso.comparablePaidPrice(to: evidence(.paidManual, currency: "MXN"), in: .kilogram))
+        XCTAssertEqual(try JSONDecoder().decode(PrivatePriceEvidence.self, from: JSONEncoder().encode(peso)), peso)
         XCTAssertFalse(try paid.comparablePaidPrice(to: evidence(.paidManual, variant: "Salted"), in: .kilogram))
         XCTAssertFalse(try paid.comparablePaidPrice(to: evidence(.paidManual, variant: nil), in: .kilogram))
         XCTAssertFalse(try paid.comparablePaidPrice(to: evidence(.paidManual, unit: .count), in: .kilogram))
@@ -29,11 +34,14 @@ final class PrivatePriceEvidenceTests: XCTestCase {
 
     func testOnlyExplicitlyAllocatedRefundForThisPaidRevisionChangesUnitCost() throws {
         let paid = try evidence(.paidManual, amount: 600)
-        func credit(_ kind: PrivatePriceEvidence.AdjustmentKind, revision: Int64 = 1) -> PrivatePriceEvidence {
+        func credit(_ kind: PrivatePriceEvidence.AdjustmentKind, revision: Int64 = 1, currency: String = "USD") -> PrivatePriceEvidence {
             .init(id: UUID(), source: .adjustment(target: paid.id, revision: revision, kind: kind),
-                  name: paid.name, store: paid.store, date: date, currencyCode: "USD", amountMinor: 100, pack: nil, sourceText: "Receipt credit")
+                  name: paid.name, store: paid.store, date: date, currencyCode: currency, amountMinor: 100, pack: nil, sourceText: "Receipt credit")
         }
         let returned = credit(.refund)
+        let pesos = credit(.refund, currency: "MXN")
+        XCTAssertThrowsError(try pesos.validateAdjustmentTarget(paid))
+        XCTAssertThrowsError(try paid.netAmount(adjustments: [pesos]))
         XCTAssertEqual(try paid.unitPrice(in: .kilogram, adjustments: [returned, credit(.unallocatedCredit), credit(.discount, revision: 2)]), try Rational(1_000))
         XCTAssertThrowsError(try paid.unitPrice(in: .kilogram, adjustments: [returned, returned]))
     }
@@ -55,7 +63,7 @@ extension PrivatePriceEvidenceTests {
         let last = try make(300)
         let records = try [make(100, days: -1), make(50, kind: .shelf), make(50, kind: .currentQuote), make(50, days: 1),
                            make(nil), make(100, variant: "Honey"), make(100, unit: .fluidOunce), make(100, tax: .included),
-                           make(100, terms: nil), make(100, currency: "CAD"), last]
+                           make(100, terms: nil), make(100, currency: "CAD"), make(300, currency: "MXN"), last]
         let matches = offer.candidates(in: records, through: date)
         XCTAssertEqual(matches.count, 2)
         XCTAssertEqual(offer.purchase(in: matches, chosenID: nil), last)
@@ -101,18 +109,23 @@ extension PrivatePriceEvidenceTests {
 
     func testReceiptDenominatorHonorsPurchasedVersusUsableAmountsAndUnknownLegacyTax() throws {
         let quantity = Quantity(amount: try Rational(12), unit: .ounce, originalLiteral: "12 oz")
-        func purchase(usable: Rational) throws -> PrivatePriceEvidence {
+        func purchase(usable: Rational, currency: Currency = .usd, hasPrice: Bool = true) throws -> PrivatePriceEvidence {
             try .init(receipt: ReceiptAcquisition(receiptID: UUID(), ordinal: 0, lotID: UUID(), foodID: UUID(),
                 merchant: "North", purchaseDate: date, transactionReference: nil, imageDigest: nil,
                 originalLine: "12 oz berries", name: "Berries", received: quantity,
                 usable: .init(amount: usable, unit: .ounce, originalLiteral: usable.description),
-                paidLineTotal: .init(minorUnits: 300), stock: .added(location: .fridge)))
+                paidLineTotal: hasPrice ? .init(minorUnits: 300, currency: currency) : nil, stock: .added(location: .fridge), currency: currency))
         }
         func offer(_ basis: ShelfPriceOffer.QuantityBasis) -> ShelfPriceOffer {
             .init(product: "Berries", variant: "", pack: .init(perPackage: quantity), amountMinor: 300,
                   currency: "USD", eligibility: "", tax: nil, basis: basis)
         }
         let paid = try purchase(usable: Rational(8))
+        let unknownPesos = try purchase(usable: Rational(8), currency: .mxn, hasPrice: false)
+        XCTAssertEqual(unknownPesos.currencyCode, "MXN")
+        XCTAssertNil(unknownPesos.amountMinor)
+        let pesos = try purchase(usable: Rational(8), currency: .mxn)
+        XCTAssertNil(try offer(.purchased).unitRates(for: pesos, adjustments: [], sameBasisConfirmed: true))
         XCTAssertNil(paid.taxTreatment)
         let purchasedRate = try XCTUnwrap(offer(.purchased).unitRates(for: paid, adjustments: [], sameBasisConfirmed: true))
         let usableRate = try XCTUnwrap(offer(.usable).unitRates(for: paid, adjustments: [], sameBasisConfirmed: true))

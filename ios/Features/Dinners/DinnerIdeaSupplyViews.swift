@@ -117,7 +117,10 @@ private struct IdeaSupplyEditor: View {
         _foodID = State(initialValue: previous?.foodID.flatMap { id in foods.contains { $0.id == id } ? id : nil })
         _packYield = State(initialValue: current?.pack?.usableQuantity?.amount.description ?? "")
         _unit = State(initialValue: current?.pack?.usableQuantity?.unit ?? ingredient.quantity?.unit ?? .count)
-        _price = State(initialValue: budget ? current?.pack?.price.map { String(format: "%lld.%02lld", $0.minorUnits / 100, $0.minorUnits % 100) } ?? "" : "")
+        let price = current?.pack?.price
+        if budget, let price, price.currency == shop.basis.currency {
+            _price = State(initialValue: String(format: "%lld.%02lld", price.minorUnits / 100, price.minorUnits % 100))
+        } else { _price = State(initialValue: "") }
         _source = State(initialValue: current?.source ?? "")
         _observedAt = State(initialValue: current?.observedAt ?? Date())
     }
@@ -163,7 +166,7 @@ private struct IdeaSupplyEditor: View {
                             focus: .packYield, identifier: "ideaSupplyYield")
                 DinnerUnitPicker(unit: $unit)
                 if budget {
-                    supplyField(dinnerText("Price per pack in USD"), value: $price,
+                    supplyField(dinnerFormat("Price per pack in %@", shop.basis.currency.rawValue), value: $price,
                                 focus: .price, identifier: "ideaSupplyPrice")
                 }
                 supplyField(dinnerText("Evidence source"), value: $source,
@@ -200,8 +203,8 @@ private struct IdeaSupplyEditor: View {
     private func apply() {
         do {
             let quantity = try DinnerEntry.quantity(packYield, unit: unit, preserving: originalPackQuantity)
-            let cost = budget ? try DinnerEntry.money(price) : nil
-            guard cost.map({ $0 >= .zero }) ?? true else { throw DomainError.invalidNumber }
+            let cost = budget ? try DinnerEntry.money(price, currency: shop.basis.currency) : nil
+            guard cost.map({ $0.minorUnits >= 0 }) ?? true else { throw DomainError.invalidNumber }
             let hasPack = quantity != nil || cost != nil
             if hasPack, source.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { throw DomainError.invalidNumber }
             guard foodID != nil || hasPack else { save(nil); return }

@@ -372,7 +372,9 @@ public enum DinnerScenarioEngine {
         let quote = CheckoutQuote(scope: scenario.scope, context: scenario.context,
             pricing: .components(lines: lines, lineSetComplete: quoteComplete, fees: scenario.fees,
                 discounts: scenario.discounts, tax: scenario.tax, deposits: scenario.deposits))
-        var checkout = try CheckoutEngine.evaluate(quote, cap: cap)
+        let currency = try Currency.matching([ledger?.basis.currency, cap?.amount.currency, quote.evidenceCurrency()]
+            + scenario.packs.map { $0.offer.price?.currency })
+        var checkout = try CheckoutEngine.evaluate(quote, cap: cap, currency: currency)
         if checkout.total.exact == nil, case .within = checkout.cap {
             // A range can bound this quote, but is not confirmed checkout cash for the plan.
             checkout = CheckoutResult(scope: checkout.scope, total: checkout.total, uncertainties: checkout.uncertainties, cap: .unresolved)
@@ -380,11 +382,11 @@ public enum DinnerScenarioEngine {
         if scenario.preparation.isFeasible == nil { issues.append("Preparation time is unconfirmed") }
         else if scenario.preparation.isFeasible == false { issues.append("Known preparation cannot fit the available time") }
         return DinnerScenarioResult(scenarioID: scenario.id, quote: quote, checkout: checkout, stockAllocation: stock,
-            ingredientValues: demandProofComplete ? try ingredientValues(for: scenario) : [:],
+            ingredientValues: demandProofComplete ? try ingredientValues(for: scenario, currency: checkout.total.lowerBound.currency) : [:],
             packs: packResults, foodCoverageComplete: foodComplete, timingFeasible: scenario.preparation.isFeasible, issues: issues,
             preferenceRevision: preferences?.revision, preferenceResults: preferenceResults)
     }
-    private static func ingredientValues(for scenario: DinnerScenario) throws -> [UUID: DinnerIngredientValue] {
+    private static func ingredientValues(for scenario: DinnerScenario, currency: Currency) throws -> [UUID: DinnerIngredientValue] {
         let packs = Dictionary(uniqueKeysWithValues: scenario.packs.map { ($0.foodID, $0.offer) })
         let demands = Dictionary(grouping: scenario.demands, by: \.commitmentID)
         var values: [UUID: DinnerIngredientValue] = [:]
@@ -402,8 +404,8 @@ public enum DinnerScenarioEngine {
                 total = try total.adding(minorUnits)
             }
             if complete {
-                values[meal.id] = try DinnerIngredientValue(total: Money(minorUnits: total.roundedNearest()),
-                    perServing: Money(minorUnits: total.divided(by: meal.portions).roundedNearest()))
+                values[meal.id] = try DinnerIngredientValue(total: Money(minorUnits: total.roundedNearest(), currency: currency),
+                    perServing: Money(minorUnits: total.divided(by: meal.portions).roundedNearest(), currency: currency))
             }
         }
         return values
@@ -426,6 +428,7 @@ public enum DinnerScenarioEngine {
             if Set(scenario.acceptedDinnerIDs).isSubset(of: alreadySelected) { continue }
             newChoices += 1
             let result = try evaluate(scenario, acceptedDinners: state.acceptedDinners, cap: cap, ledger: ledger, state: state, preferences: state.preferences(for: access))
+            guard baseline.checkout.total.lowerBound.currency == result.checkout.total.lowerBound.currency else { throw CheckoutError.incomparableBasis }
             _ = try CheckoutEngine.compare(before: baseline.quote, after: result.quote, cap: cap)
             compared.append((scenario, result))
         }
@@ -448,6 +451,7 @@ public enum DinnerScenarioEngine {
                   alternative.acceptedDinnerIDs.allSatisfy({ id in state.acceptedDinners.contains(where: { $0.id == id && $0.acceptedFallback }) }) else { continue }
             evaluated.append((alternative, try evaluate(alternative, acceptedDinners: state.acceptedDinners, cap: cap, ledger: ledger, state: state, preferences: state.preferences(for: access))))
         }
+        _ = try Currency.matching(evaluated.map { $0.1.checkout.total.lowerBound.currency })
         let feasible = evaluated.filter { pair in
             guard pair.1.feasible else { return false }
             if cap == nil { return true }
@@ -525,6 +529,15 @@ public struct StoreQuoteOption: Codable, Equatable, Sendable, Identifiable {
         self.quantitiesMatched = quantitiesMatched; self.singleStore = singleStore; self.trip = trip; self.cap = cap; self.adoptionBasis = adoptionBasis
     }
 }
+extension StoreQuoteOption {
+    public func evidenceCurrency() throws -> Currency? {
+        try Currency.matching([quote.evidenceCurrency(), cap?.amount.currency, observedItemSubtotal?.currency,
+                               trip.incrementalCash.evidenceCurrency(), orderMinimum?.minimum?.currency,
+                               orderMinimum?.eligibleSubtotal?.currency, unreviewedInclusiveTotal?.currency,
+                               adoptionBasis?.currency])
+    }
+}
+
 public struct TwoStoreQuotePair: Codable, Equatable, Sendable, Identifiable {
     public let id: UUID
     public let shopID: UUID
@@ -538,6 +551,7 @@ public struct TwoStoreQuotePair: Codable, Equatable, Sendable, Identifiable {
     }
     public func validate() throws {
         guard first.id != second.id, basisRevision >= 0 else { throw DinnerPlanningError.invalid("quotePair") }
+        _ = try Currency.matching([first.evidenceCurrency(), second.evidenceCurrency()])
         for option in [first, second] {
             try dinnerText(option.label); try option.commitments.validate()
             guard option.quote.context.commitmentsID == option.commitments.id,
@@ -552,10 +566,10 @@ public struct TwoStoreQuotePair: Codable, Equatable, Sendable, Identifiable {
             }
             if let terms = option.eligibilityTerms { try dinnerText(terms) }
             if let entered = option.unreviewedInclusiveTotal {
-                guard case .inclusiveTotal(.unknown) = option.quote.pricing, entered >= .zero else { throw DinnerPlanningError.invalid("unreviewedInclusiveTotal") }
+                guard case .inclusiveTotal(.unknown) = option.quote.pricing, entered.minorUnits >= 0 else { throw DinnerPlanningError.invalid("unreviewedInclusiveTotal") }
             }
             if let subtotal = option.observedItemSubtotal {
-                guard case .inclusiveTotal = option.quote.pricing, subtotal >= .zero else { throw DinnerPlanningError.invalid("quoteItemSubtotal") }
+                guard case .inclusiveTotal = option.quote.pricing, subtotal.minorUnits >= 0 else { throw DinnerPlanningError.invalid("quoteItemSubtotal") }
             }
             try option.adoptionBasis?.validate()
             if let basis = option.adoptionBasis {
@@ -594,22 +608,24 @@ public struct TwoStoreQuoteResult: Equatable, Sendable {
 }
 public enum TwoStoreQuoteEngine {
     public static func itemSubtotal(_ option: StoreQuoteOption) throws -> Money? {
+        let currency = try option.evidenceCurrency() ?? .usd
         switch option.quote.pricing {
         case .inclusiveTotal:
             return option.observedItemSubtotal
         case let .components(lines, complete, _, _, _, _):
             guard complete else { return nil }
-            var cents: Int64 = 0
+            var subtotal = Money(minorUnits: 0, currency: currency)
             for line in lines {
                 guard case let .exact(amount) = line.cost else { return nil }
-                cents = try checkedAdd(cents, amount.minorUnits)
+                subtotal = try subtotal.adding(amount)
             }
-            return Money(minorUnits: cents)
+            return subtotal
         }
     }
 
     static func tripTotal(_ option: StoreQuoteOption) throws -> CheckoutResult {
-        let checkout = try CheckoutEngine.evaluate(option.quote).total
+        let checkout = try CheckoutEngine.evaluate(option.quote, currency: option.evidenceCurrency()).total
+        let zero = Money(minorUnits: 0, currency: checkout.lowerBound.currency)
         let checkoutEvidence: CostEvidence
         if let exact = checkout.exact { checkoutEvidence = .exact(exact) }
         else if let upper = checkout.upperBound { checkoutEvidence = .bounded(lower: checkout.lowerBound, upper: upper, reason: "Checkout is bounded") }
@@ -621,19 +637,19 @@ public enum TwoStoreQuoteEngine {
                 return try CheckoutEngine.evaluate(CheckoutQuote(scope: option.quote.scope, context: option.quote.context,
                     pricing: .components(lines: [CheckoutLine(id: option.id, name: "Grocery checkout", cost: evidence)],
                         lineSetComplete: true, fees: [CheckoutFee(id: "incrementalTripCash", rule: .fixed(option.trip.incrementalCash))],
-                        discounts: [], tax: .exact(.zero), deposits: .exact(.zero))))
+                        discounts: [], tax: .exact(zero), deposits: .exact(zero))))
             case .components(let lines, let complete, let fees, let discounts, let tax, let deposits):
                 guard !fees.contains(where: { $0.id == "incrementalTripCash" }) else { throw DinnerPlanningError.invalid("reservedFeeID") }
                 return try CheckoutEngine.evaluate(CheckoutQuote(scope: option.quote.scope, context: option.quote.context,
                     pricing: .components(lines: lines, lineSetComplete: complete,
                         fees: fees + [CheckoutFee(id: "incrementalTripCash", rule: .fixed(option.trip.incrementalCash))],
-                        discounts: discounts, tax: tax, deposits: deposits)))
+                        discounts: discounts, tax: tax, deposits: deposits)), currency: checkout.lowerBound.currency)
             }
         }
         return try CheckoutEngine.evaluate(CheckoutQuote(scope: option.quote.scope, context: option.quote.context,
             pricing: .components(lines: [CheckoutLine(id: option.id, name: "Grocery checkout", cost: checkoutEvidence)],
                 lineSetComplete: true, fees: [CheckoutFee(id: "incrementalTripCash", rule: .fixed(option.trip.incrementalCash))],
-                discounts: [], tax: .exact(.zero), deposits: .exact(.zero))))
+                discounts: [], tax: .exact(zero), deposits: .exact(zero))))
     }
     public static func compare(_ pair: TwoStoreQuotePair, access: DinnerAccessContext, at now: Date) throws -> TwoStoreQuoteResult {
         try access.validate(shopID: pair.shopID, at: now, budget: true)
@@ -662,7 +678,7 @@ public enum TwoStoreQuoteEngine {
         } else { equivalent = a.supplies == nil && b.supplies == nil }
         let comparable = equivalent && a.commitments == b.commitments && a.quote.scope == b.quote.scope
             && a.quantitiesMatched && b.quantitiesMatched && a.singleStore && b.singleStore
-        let ar = try CheckoutEngine.evaluate(a.quote, cap: a.cap), br = try CheckoutEngine.evaluate(b.quote, cap: b.cap)
+        let ar = try CheckoutEngine.evaluate(a.quote, cap: a.cap, currency: a.evidenceCurrency()), br = try CheckoutEngine.evaluate(b.quote, cap: b.cap, currency: b.evidenceCurrency())
         let at = try tripTotal(a), bt = try tripTotal(b)
         let coverage = eligibleA && eligibleB
         let items = try comparable ? itemSubtotal(a).flatMap { first in

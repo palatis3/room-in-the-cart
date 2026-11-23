@@ -129,7 +129,7 @@ import SQLite3
             let match = try PantryMealMatcher.review(recipe: meal, reviewedFoods: [ingredient.id: foodID],
                 globallyFreeLots: supply.globallyFreeLots, unresolvedFoods: supply.unresolvedFoodIDs, profile: nil)
             return try TonightPlanChoice.prepare(match: match, pantryBasis: supply.basis, destinationShopID: nil,
-                newShopTitle: "Tonight choice", ledger: f.ledger, pickup: f.pickup, currentIdentity: { identity })
+                newShopTitle: "Tonight choice", newShopCurrency: .mxn, ledger: f.ledger, pickup: f.pickup, currentIdentity: { identity })
         }
         let outdated = try await prepare()
         let before = f.ledger.workspace
@@ -142,6 +142,7 @@ import SQLite3
         XCTAssertFalse(rejected)
         XCTAssertEqual(f.ledger.workspace, before)
         let choice = try await prepare()
+        XCTAssertEqual(choice.estimate?.subtotal, Money(minorUnits: 0, currency: .mxn))
         let stockBefore = try await repository.load(at: now)
         let denied = await TonightPlanChoice.apply(choice, ledger: f.ledger, pickup: f.pickup, currentIdentity: { nil })
         XCTAssertFalse(denied)
@@ -153,6 +154,7 @@ import SQLite3
         XCTAssertTrue(retried, reopened.error ?? "")
         XCTAssertEqual(reopened.workspace.shops.count, before.shops.count + 1)
         XCTAssertEqual(reopened.shop?.mealOccurrences.map(\.title), ["Rice bowls"])
+        XCTAssertEqual(reopened.shop?.basis.currency, .mxn)
         XCTAssertEqual(reopened.workspace.dinnerPlanning.applyReceipts.count, 1)
         let stockAfter = try await repository.load(at: now)
         XCTAssertEqual(stockAfter.state, stockBefore.state)
@@ -375,7 +377,7 @@ extension PantryPackModelRecoveryTests {
         let cup = Quantity(amount: .one, unit: .cup, originalLiteral: "1")
         let recipe = MealTemplate(title: "Lentil and tomato bowls", ingredients: [
             .init(name: "Lentils", quantity: cup), .init(name: "Tomatoes", quantity: q(2)), .init(name: "Rice", quantity: cup)])
-        var market = ShoppingLedger(title: "After work market")
+        var market = ShoppingLedger(title: "After work market", basis: ShopBasis(currency: .mxn))
         _ = try market.addManualLine(name: "Coffee", quantity: q(1))
         let seeded = await f.ledger.change(key: "finder-destination") {
             $0.shops.append(market); $0.selectedShopID = market.id; $0.mealTemplates.append(recipe)
@@ -431,6 +433,7 @@ extension PantryPackModelRecoveryTests {
         XCTAssertTrue(allocated)
         let decision = try DinnerPurchaseDecision(ledger: opened, pickup: f.pickup, shop: shop,
             occurrenceID: meal.id, identity: actor, linked: linked)
+        XCTAssertEqual(decision.selections.compactMap { $0.selectedResult.totalCost }, Array(repeating: Money(minorUnits: 0, currency: .mxn), count: linked.count))
         let confirmed = await decision.save(ledger: opened, authorize: { true })
         XCTAssertTrue(confirmed, opened.error ?? "")
         let covered = DinnerPantryPurchases.lines(ledger: opened, pickup: f.pickup, shop: shop, identity: actor)

@@ -37,7 +37,12 @@ public struct ShopperQuote: Codable, Equatable, Sendable {
             }
         }
     }
-    public let currency: String; public let scope: String; public let complete: Bool; public let capMinor: Int?
+    // The shared quote wire contract is USD-only. Reject other currencies before a
+    // shared draft can copy its minor units into a newly reviewed USD quote.
+    private enum WireCurrency: String, Codable { case usd = "USD" }
+    private let wireCurrency: WireCurrency
+    public var currency: String { wireCurrency.rawValue }
+    public let scope: String; public let complete: Bool; public let capMinor: Int?
     public let capScope: String; public let fee: Fee; public let taxesMinor: Int?
     public let depositsMinor: Int?; public let discountsMinor: Int?; public let observedAt: String; public let expiresAt: String
     public init(scope: String, complete: Bool, capMinor: Int?, capScope: String, fee: Fee,
@@ -47,7 +52,7 @@ public struct ShopperQuote: Codable, Equatable, Sendable {
         guard ["wholeCheckout", "item", "dinner"].contains(scope), ["wholeCheckout", "item", "dinner", "unknown"].contains(capScope),
               ["fixed", "threshold"].contains(fee.kind), amounts.allSatisfy({ (0...1_000_000_000).contains($0) }),
               observedAt.timeIntervalSince1970.isFinite, expiresAt.timeIntervalSince1970.isFinite, expiresAt > observedAt else { throw ClientError.configuration }
-        currency = "USD"; self.scope = scope; self.complete = complete; self.capMinor = capMinor; self.capScope = capScope; self.fee = fee
+        wireCurrency = .usd; self.scope = scope; self.complete = complete; self.capMinor = capMinor; self.capScope = capScope; self.fee = fee
         self.taxesMinor = taxesMinor; self.depositsMinor = depositsMinor; self.discountsMinor = discountsMinor
         self.observedAt = Self.timestamp(observedAt, original: original?.observedAt)
         self.expiresAt = Self.timestamp(expiresAt, original: original?.expiresAt)
@@ -64,10 +69,10 @@ public struct ShopperQuote: Codable, Equatable, Sendable {
         }
         return formatter.string(from: date)
     }
-    private enum CodingKeys: String, CodingKey { case currency, scope, complete, capMinor, capScope, fee, taxesMinor, depositsMinor, discountsMinor, observedAt, expiresAt }
+    private enum CodingKeys: String, CodingKey { case wireCurrency = "currency", scope, complete, capMinor, capScope, fee, taxesMinor, depositsMinor, discountsMinor, observedAt, expiresAt }
     public func encode(to encoder: Encoder) throws {
         var values = encoder.container(keyedBy: CodingKeys.self)
-        try values.encode(currency, forKey: .currency); try values.encode(scope, forKey: .scope); try values.encode(complete, forKey: .complete)
+        try values.encode(wireCurrency, forKey: .wireCurrency); try values.encode(scope, forKey: .scope); try values.encode(complete, forKey: .complete)
         try values.encode(capMinor, forKey: .capMinor); try values.encode(capScope, forKey: .capScope); try values.encode(fee, forKey: .fee)
         try values.encode(taxesMinor, forKey: .taxesMinor); try values.encode(depositsMinor, forKey: .depositsMinor)
         try values.encode(discountsMinor, forKey: .discountsMinor); try values.encode(observedAt, forKey: .observedAt); try values.encode(expiresAt, forKey: .expiresAt)

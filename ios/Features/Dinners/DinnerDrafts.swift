@@ -26,7 +26,7 @@ enum DinnerEntry {
         guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
         return Quantity(amount: try rational(text), unit: unit, originalLiteral: text)
     }
-    static func money(_ text: String) throws -> Money? {
+    static func money(_ text: String, currency: Currency = .usd) throws -> Money? {
         let value = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !value.isEmpty else { return nil }
         if let separator = value.firstIndex(where: { $0 == "," || $0 == "." }),
@@ -35,7 +35,7 @@ enum DinnerEntry {
         }
         let cents = try singleNumber(value).multiplied(by: Rational(100))
         guard cents.denominator == 1 else { throw DomainError.invalidNumber }
-        return Money(minorUnits: cents.numerator)
+        return Money(minorUnits: cents.numerator, currency: currency)
     }
     static func positive(_ text: String) throws -> Rational {
         let value = try rational(text); guard value > .zero else { throw DomainError.invalidNumber }; return value
@@ -85,7 +85,7 @@ enum DinnerDraftValidationError: LocalizedError, Equatable {
     var errorDescription: String? {
         switch self {
         case .totalServings: return dinnerText("Total servings: enter a number greater than zero.")
-        case .currencyPrecision: return dinnerText("Enter dollar amounts without thousands separators and with at most two decimal places, such as 1000.50.")
+        case .currencyPrecision: return dinnerText("Enter amounts without thousands separators and with at most two decimal places, such as 1000.50.")
         }
     }
 }
@@ -250,9 +250,9 @@ struct DinnerStoreDraft {
         return (lower, upper, reason)
     }
 
-    func orderMinimum() throws -> StoreOrderMinimum {
+    func orderMinimum(currency: Currency = .usd) throws -> StoreOrderMinimum {
         guard orderMinimumKind == .required else { return .init(orderMinimumKind) }
-        let value = StoreOrderMinimum(.required, minimum: try DinnerEntry.money(minimumAmount), eligibleSubtotal: try DinnerEntry.money(eligibleSubtotal))
+        let value = StoreOrderMinimum(.required, minimum: try DinnerEntry.money(minimumAmount, currency: currency), eligibleSubtotal: try DinnerEntry.money(eligibleSubtotal, currency: currency))
         _ = try value.status()
         return value
     }
@@ -265,7 +265,10 @@ struct DinnerStoreDraft {
     }
 
     func option(commitments: DinnerCommitmentSet, basis: ShopBasis) throws -> StoreQuoteOption {
-        let amount = try DinnerEntry.money(total)
+        if let saved, try (saved.evidenceCurrency() ?? .usd) != basis.currency {
+            throw DinnerPlanningError.stalePreview
+        }
+        let amount = try DinnerEntry.money(total, currency: basis.currency)
         let evidence: CostEvidence
         if case .inclusiveTotal(.unknown(let reason)) = saved?.quote.pricing,
            allChargesIncluded == (reason == Self.unknownTotal), amount == saved?.unreviewedInclusiveTotal {
@@ -280,7 +283,7 @@ struct DinnerStoreDraft {
         else if let original = saved?.quote.context.slot, Self.slotDate(original) == slot { slotText = original }
         else { slotText = ISO8601DateFormatter().string(from: slot) }
         let context = CheckoutContext(storeID: storeID, branchID: branch, mode: mode,
-            slot: slotText, commitmentsID: commitments.id, observedAt: observedAt, source: source)
+            slot: slotText, commitmentsID: commitments.id, observedAt: observedAt, source: source, currency: saved?.quote.context.currency ?? (basis.currency == .usd ? nil : basis.currency))
         var adopted = basis; adopted.branch = branch; adopted.mode = FulfillmentMode(rawValue: mode.rawValue) ?? .pickup
         if saved?.quote.context.slot == slotText { adopted.slot = saved?.adoptionBasis?.slot }
         else { adopted.slot = writtenSlot == nil ? slot : nil }
@@ -289,7 +292,7 @@ struct DinnerStoreDraft {
             adopted.timeZoneIdentifier = original.timeZoneIdentifier
             adopted.knownFees = original.knownFees
         }
-        let enteredCash = try DinnerEntry.money(tripCash)
+        let enteredCash = try DinnerEntry.money(tripCash, currency: basis.currency)
         let cash: CostEvidence
         switch saved?.trip.incrementalCash {
         case let .bounded(lower, upper, reason): cash = .bounded(lower: lower, upper: upper, reason: reason)
@@ -301,9 +304,9 @@ struct DinnerStoreDraft {
             quote: CheckoutQuote(scope: saved?.quote.scope ?? .wholeCheckout, context: context, pricing: retainedCheckout?.pricing ?? .inclusiveTotal(evidence)),
             available: availability == 0 ? nil : availability == 1, quantitiesMatched: quantitiesMatched, singleStore: singleStore,
             trip: StoreTripEvidence(incrementalCash: cash,
-                extraMinutes: try DinnerEntry.minutes(extraMinutes), tripAlreadyPlanned: alreadyPlanned), cap: cap, adoptionBasis: saved != nil && saved?.adoptionBasis == nil ? nil : adopted, observedItemSubtotal: try DinnerEntry.money(itemSubtotal),
+                extraMinutes: try DinnerEntry.minutes(extraMinutes), tripAlreadyPlanned: alreadyPlanned), cap: cap, adoptionBasis: saved != nil && saved?.adoptionBasis == nil ? nil : adopted, observedItemSubtotal: try DinnerEntry.money(itemSubtotal, currency: basis.currency),
             eligibilityTerms: eligibilityTerms.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : eligibilityTerms,
-            unreviewedInclusiveTotal: allChargesIncluded ? nil : amount, orderMinimum: saved?.orderMinimum == nil && orderMinimumKind == .unknown ? nil : try orderMinimum(),
+            unreviewedInclusiveTotal: allChargesIncluded ? nil : amount, orderMinimum: saved?.orderMinimum == nil && orderMinimumKind == .unknown ? nil : try orderMinimum(currency: basis.currency),
             supplies: try reviewedSupply(commitments.commitments.map(\.id)), eligibilityReviewed: saved?.eligibilityReviewed == nil && !eligibilityReviewed ? nil : eligibilityReviewed)
     }
 }

@@ -1,11 +1,16 @@
 import SwiftUI
 import CoreDomain
 
-private func changeText(_ key: String) -> String {
-    String(localized: String.LocalizationValue(key), table: "OneChange")
-}
-
 struct OneChangeDraft {
+    private var selectedCurrency: Currency
+    var currency: Currency {
+        get { selectedCurrency }
+        set { if !hasMoneyEntries { selectedCurrency = newValue } }
+    }
+    var hasMoneyEntries: Bool { !before.isEmpty || !after.isEmpty || !cap.isEmpty }
+
+    init(currency: Currency = .groceryDefault()) { selectedCurrency = currency }
+
     var change = ""
     var branch = ""
     var source = ""
@@ -27,11 +32,11 @@ struct OneChangeDraft {
             throw CheckoutError.incomparableBasis
         }
         let id = UUID()
-        let beforeObservation = LedgerCheckoutChange.Observation(amount: try ComparisonModel.money(before), includesAllCharges: beforeIncludesCharges)
-        let afterObservation = LedgerCheckoutChange.Observation(amount: try ComparisonModel.money(after), includesAllCharges: afterIncludesCharges)
+        let beforeObservation = LedgerCheckoutChange.Observation(amount: try ComparisonModel.money(before, currency: currency), includesAllCharges: beforeIncludesCharges)
+        let afterObservation = LedgerCheckoutChange.Observation(amount: try ComparisonModel.money(after, currency: currency), includesAllCharges: afterIncludesCharges)
         let preview = LedgerRetailerPreview(total: afterObservation.confirmedTotal, source: evidence, capturedAt: observed,
             includedCharges: afterIncludesCharges ? [changeText("All items, fees, discounts, tax and deposits")] : [])
-        let basis = ShopBasis(branch: location, slot: slot, cap: try ComparisonModel.money(cap), retailerPreview: preview)
+        let basis = ShopBasis(branch: location, slot: slot, cap: try ComparisonModel.money(cap, currency: currency), currency: currency, retailerPreview: preview)
         let proof = LedgerCheckoutChange(name: name, basis: basis, before: beforeObservation, after: afterObservation)
         let comparison = try proof.comparison(for: id)
         let shop = ShoppingLedger(id: id, title: name, basis: basis, initialCheckoutChange: proof)
@@ -82,6 +87,7 @@ struct CheckOneChangeView: View {
                     Section(changeText("Pickup draft saved")) {
                         Text(shop.title)
                         Text(shop.basis.branch)
+                        Text(comparisonCurrencyText(shop.basis.currency))
                         LabeledContent(pTr("Retailer preview total"), value: shop.basis.retailerPreview?.total.map(pMoney) ?? pTr("Unresolved"))
                     }
                     Button(pTr("Done")) { dismiss() }.accessibilityIdentifier("oneChange.finish")
@@ -96,7 +102,7 @@ struct CheckOneChangeView: View {
                         Button(changeText("Review this change")) {
                             field = nil
                             do { review = try draft.review(in: ledger); self.error = nil }
-                            catch { self.error = changeText("Check the change, store, source and USD amounts, and confirm the previews cover the same pickup.") }
+                            catch { self.error = changeText("Check the change, store, source and amounts, and confirm the previews cover the same pickup.") }
                         }.buttonStyle(PrimaryAction()).disabled(!ledger.ready || ledger.hasPendingSave)
                             .accessibilityIdentifier("oneChange.review")
                         if let error { Text(error).foregroundStyle(Theme.warning) }
@@ -161,14 +167,21 @@ struct CheckOneChangeView: View {
 
     private var pricingFields: some View {
         Section(pTr("Whole checkout")) {
-            changeField(changeText("Current checkout total in USD"), $draft.before, id: "before", money: true)
+            GroceryCurrencyPicker(selection: $draft.currency)
+                .disabled(draft.hasMoneyEntries)
+                .accessibilityIdentifier("oneChange.currency")
+            if draft.hasMoneyEntries {
+                Text(changeText("Clear both checkout totals and the cap to change currency."))
+                    .font(.footnote).foregroundStyle(Theme.secondary)
+            }
+            changeField(groceryCurrencyLabel("Current checkout total (%@)", draft.currency), $draft.before, id: "before", money: true)
             Toggle(changeText("Current total includes every item and charge"), isOn: $draft.beforeIncludesCharges)
                 .accessibilityIdentifier("oneChange.beforeIncludesCharges")
-            changeField(changeText("Changed checkout total in USD"), $draft.after, id: "after", money: true)
+            changeField(groceryCurrencyLabel("Changed checkout total (%@)", draft.currency), $draft.after, id: "after", money: true)
             Toggle(changeText("Changed total includes every item and charge"), isOn: $draft.afterIncludesCharges)
                 .accessibilityIdentifier("oneChange.afterIncludesCharges")
             Text(changeText("Check fees, promotions, discounts, tax and deposits on each preview. Leave an unknown amount blank."))
-            changeField(changeText("Firm whole-pickup cap in USD, optional"), $draft.cap, id: "cap", money: true)
+            changeField(groceryCurrencyLabel("Firm whole-pickup cap (%@, optional)", draft.currency), $draft.cap, id: "cap", money: true)
             Toggle(changeText("Both previews use the same pickup slot and keep the other quantities and protected portions."), isOn: $draft.samePickup)
                 .accessibilityIdentifier("oneChange.samePickup")
         }
@@ -210,6 +223,7 @@ private struct OneChangeEvidence: View {
     var body: some View {
         Section(proof.name) {
             Text(proof.basis.branch)
+            Text(comparisonCurrencyText(proof.basis.currency))
             Text(proof.basis.slot.map { ledgerDate($0, zone: proof.basis.timeZoneIdentifier) }
                  ?? changeText("Same pickup slot, time unrecorded"))
             if let evidence = proof.basis.retailerPreview {

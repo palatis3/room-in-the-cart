@@ -15,6 +15,7 @@ enum PickupOfferReview {
         try validate(price)
         if let ceiling { try validate(ceiling) }
         guard let ceiling else { return .noCeiling }
+        guard try price.evidenceCurrency().map({ $0 == ceiling.currency }) ?? true else { throw PickupOfferReviewError.invalid }
         switch price {
         case .exact(let amount): return amount <= ceiling ? .within : .over
         case .bounded(let lower, let upper, _):

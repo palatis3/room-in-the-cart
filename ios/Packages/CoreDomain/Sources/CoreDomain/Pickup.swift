@@ -500,16 +500,18 @@ public struct SettlementLedger: Codable, Equatable, Sendable {
         return true
     }
 
-    public func summary() throws -> SettlementSummary { try Self.summary(of: entries) }
+    public func summary(currency: Currency? = nil) throws -> SettlementSummary { try Self.summary(of: entries, currency: currency) }
 
-    public func summary(asOf date: Date) throws -> SettlementSummary {
-        try Self.summary(of: entries.filter { $0.occurredAt <= date })
+    public func summary(asOf date: Date, currency: Currency? = nil) throws -> SettlementSummary {
+        try Self.summary(of: entries.filter { $0.occurredAt <= date }, currency: currency ?? entries.first?.amount.currency)
     }
 
-    public static func summary(of entries: [SettlementEntry]) throws -> SettlementSummary {
+    public static func summary(of entries: [SettlementEntry], currency: Currency? = nil) throws -> SettlementSummary {
+        let currency = try Currency.matching([currency] + entries.map { $0.amount.currency }) ?? .usd
         var paid: Int64 = 0, pending: Int64 = 0, included: Int64 = 0, holds: Int64 = 0
         let settledCredits = Set(entries.filter { [.postedCredit, .includedCredit].contains($0.kind) }.compactMap(\.creditID))
         for entry in entries {
+            guard entry.amount.minorUnits >= 0 else { throw PickupError.invalidEvidence }
             switch entry.kind {
             case .postedCharge, .postedTopUp: paid = try checkedAdd(paid, entry.amount.minorUnits)
             case .postedCredit: paid = try checkedAdd(paid, -entry.amount.minorUnits)
@@ -520,8 +522,8 @@ public struct SettlementLedger: Codable, Equatable, Sendable {
             case .holdRelease: holds = try checkedAdd(holds, -entry.amount.minorUnits)
             }
         }
-        return SettlementSummary(paidSoFar: Money(minorUnits: paid), pendingCredits: Money(minorUnits: pending),
-                                 includedCredits: Money(minorUnits: included), paymentHolds: Money(minorUnits: holds))
+        return SettlementSummary(paidSoFar: Money(minorUnits: paid, currency: currency), pendingCredits: Money(minorUnits: pending, currency: currency),
+                                 includedCredits: Money(minorUnits: included, currency: currency), paymentHolds: Money(minorUnits: holds, currency: currency))
     }
 }
 

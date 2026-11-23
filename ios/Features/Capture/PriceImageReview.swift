@@ -6,6 +6,7 @@ import SwiftUI
 struct PriceImageReview: View {
     enum Purpose { case shelf, checkout }
     let purpose: Purpose
+    var currency: Currency = .groceryDefault()
     let authorized: () -> Bool
     var acceptShelf: (PriceImageLine) -> Void = { _ in }
     var acceptCheckout: (ReviewedCheckoutImage) -> Void = { _ in }
@@ -68,13 +69,16 @@ struct PriceImageReview: View {
                         }
                     }
                 } else {
+                    if lines.contains(where: { !PrintedCurrencyEvidence($0.effectiveWording).permits(currency) }) {
+                        Text(pantryFormat("Some printed prices use a different currency. Only amounts in %@ can be added to this shop.", currency.rawValue))
+                    }
                     ForEach(ReviewedCheckoutImage.Field.allCases, id: \.self) { field in
                         Section(priceImageField(field)) {
                             Picker(pantryText("Printed wording"), selection: Binding(
                                 get: { selections[field] ?? -1 }, set: { index in
                                     guard selections[field] != index else { return }
                                     selections[field] = index
-                                    let suggested = lines.indices.contains(index) ? ReviewedCheckoutImage.proposedAmount(for: field, from: lines[index]) : nil
+                                    let suggested = lines.indices.contains(index) ? ReviewedCheckoutImage.proposedAmount(for: field, from: lines[index], currency: currency) : nil
                                     amounts[field] = suggested.map { NSDecimalNumber(decimal: Decimal($0.minorUnits) / 100).stringValue }
                                     inclusions[field] = nil
                                 }
@@ -92,7 +96,7 @@ struct PriceImageReview: View {
                                 if line.uncertain {
                                     Text(pantryText("Uncertain image wording")).font(.subheadline).foregroundStyle(Theme.warning)
                                 }
-                                let amountLabel = pantryText("Shown USD amount, blank if unknown")
+                                let amountLabel = pantryFormat("Shown amount (%@), blank if unknown", currency.rawValue)
                                 WorkingField(amountLabel) {
                                     TextField(amountLabel, text: Binding(
                                         get: { amounts[field] ?? "" }, set: { amounts[field] = $0 }), prompt: Text(""))
@@ -101,6 +105,7 @@ struct PriceImageReview: View {
                                         .focused($focusedAmount, equals: field)
                                         .accessibilityIdentifier("priceImage.amount." + field.rawValue)
                                 }
+                                .disabled(!PrintedCurrencyEvidence(line.effectiveWording).permits(currency))
                                 if field != .total {
                                     Picker(pantryText("Relation to displayed total"), selection: Binding(
                                         get: { inclusions[field] ?? .unknown }, set: { inclusions[field] = $0 }
@@ -118,7 +123,8 @@ struct PriceImageReview: View {
                             let charges = try ReviewedCheckoutImage.Field.allCases.compactMap { field -> ReviewedCheckoutImage.Charge? in
                                 guard let i = selections[field], lines.indices.contains(i) else { return nil }
                                 let raw = (amounts[field] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-                                let amount = raw.isEmpty ? nil : try Money(decimal: raw.replacingOccurrences(of: locale.decimalSeparator ?? ".", with: "."))
+                                let amount = raw.isEmpty ? nil : try Money(decimal: raw.replacingOccurrences(of: locale.decimalSeparator ?? ".", with: "."), currency: currency)
+                                guard amount == nil || PrintedCurrencyEvidence(lines[i].effectiveWording).permits(currency) else { throw ScanFailure.needsReview }
                                 return .init(field: field, amount: amount, inclusion: inclusions[field] ?? .unknown, line: lines[i])
                             }
                             acceptCheckout(try .init(charges: charges))
@@ -174,7 +180,7 @@ struct PriceImageReview: View {
                 sourceDigest = digest
                 lines = recognized
                 if purpose == .checkout {
-                    let proposals = ReviewedCheckoutImage.proposals(from: recognized)
+                    let proposals = ReviewedCheckoutImage.proposals(from: recognized, currency: currency)
                     selections = proposals.mapValues { $0.line.ordinal }
                     amounts = proposals.compactMapValues { charge in
                         charge.amount.map { NSDecimalNumber(decimal: Decimal($0.minorUnits) / 100).stringValue }

@@ -13,15 +13,16 @@ public struct TonightPurchaseEstimate: Equatable, Sendable {
     public let packages: [Line]
     public let subtotal: Money?
     public let complete: Bool
+    public let currency: Currency
 
     /// Charges are the shopper-reviewed increase over the shop without this second
     /// meal. Existing cart fees and threshold waivers are not new cash costs.
     public func additionalCash(addedCharges: Money?, chargesComplete: Bool) throws -> (known: Money?, complete: Bool) {
-        if complete && packages.isEmpty { return (.zero, true) }
+        _ = try Currency.matching([currency, subtotal?.currency, addedCharges?.currency])
+        if complete && packages.isEmpty { return (Money(minorUnits: 0, currency: currency), true) }
         guard let addedCharges else { return (subtotal, false) }
-        guard addedCharges >= .zero else { throw CheckoutError.invalidEvidence }
-        let cents = try checkedAdd(subtotal?.minorUnits ?? 0, addedCharges.minorUnits)
-        return (Money(minorUnits: cents), complete && chargesComplete)
+        guard addedCharges.minorUnits >= 0 else { throw CheckoutError.invalidEvidence }
+        return (try subtotal?.adding(addedCharges) ?? addedCharges, complete && chargesComplete)
     }
 
     private struct Observation: Equatable {
@@ -46,8 +47,11 @@ public struct TonightPurchaseEstimate: Equatable, Sendable {
     /// A following meal is reviewed against the free pantry stock remaining after the first.
     /// Compare whole packages for both meals with those already needed for the first meal.
     public static func estimate(_ review: PantryMealMatcher.Review, after first: PantryMealMatcher.Review? = nil,
-                                workspace: LedgerWorkspace, workspaceID: UUID, shopID: UUID?, at now: Date) throws -> Self {
-        let unknown = Self(packages: [], subtotal: nil, complete: false)
+                                workspace: LedgerWorkspace, workspaceID: UUID, shopID: UUID?, at now: Date,
+                                currency fallbackCurrency: Currency = .groceryDefault()) throws -> Self {
+        let selectedShop = workspace.shops.first { $0.id == shopID }
+        let currency = selectedShop?.basis.currency ?? fallbackCurrency
+        let unknown = Self(packages: [], subtotal: nil, complete: false, currency: currency)
         let revision = workspace.dinnerPlanning.privateMealPreferences?.revision
         for meal in [first, review].compactMap({ $0 }) {
             guard meal.eligibility.eligible, !meal.ingredients.isEmpty, meal.preferenceRevision == revision else { return unknown }
@@ -56,15 +60,17 @@ public struct TonightPurchaseEstimate: Equatable, Sendable {
             guard first.recipe.id != review.recipe.id, first.canProjectRemainder,
                   let batch = first.batchUse, batch.lotID == review.batchUse?.lotID else { return unknown }
         }
-        if !review.numericIngredients.isEmpty && review.numericIngredients.allSatisfy(\.covered) { return Self(packages: [], subtotal: .zero, complete: true) }
-        guard let shopID, let shop = workspace.shops.first(where: { $0.id == shopID }) else { return unknown }
+        if !review.numericIngredients.isEmpty && review.numericIngredients.allSatisfy(\.covered) {
+            return Self(packages: [], subtotal: Money(minorUnits: 0, currency: currency), complete: true, currency: currency)
+        }
+        guard let shop = selectedShop else { return unknown }
         let next = try needs(review, workspace: workspace, workspaceID: workspaceID, shop: shop, at: now)
         let prior = try first.map { try needs($0, workspace: workspace, workspaceID: workspaceID, shop: shop, at: now) } ?? Needs()
         // An unidentified baseline purchase might supply any of the second meal's missing food.
         guard !prior.hasUnidentifiedFood else { return unknown }
 
         var lines: [Line] = []
-        var cents: Int64 = 0
+        var subtotal = Money(minorUnits: 0, currency: currency)
         var complete = !next.hasUnidentifiedFood && next.unpricedFoods.isEmpty
         for (foodID, need) in next.quoted.sorted(by: { $0.key.uuidString < $1.key.uuidString }) {
             let baseline = prior.quoted[foodID]
@@ -76,11 +82,11 @@ public struct TonightPurchaseEstimate: Equatable, Sendable {
             let count = try previous.adding(need.packs).roundedUp() - previous.roundedUp()
             guard count > 0 else { continue }
             let cost = try need.price.multiplied(by: count)
-            cents = try checkedAdd(cents, cost.minorUnits)
+            subtotal = try subtotal.adding(cost)
             lines.append(Line(id: foodID, package: need.observation.offer.label, count: count,
                               cost: cost, source: need.observation.source, observedAt: need.observation.date))
         }
-        return Self(packages: lines, subtotal: !lines.isEmpty || complete ? Money(minorUnits: cents) : nil, complete: complete)
+        return Self(packages: lines, subtotal: !lines.isEmpty || complete ? subtotal : nil, complete: complete, currency: currency)
     }
 
     private static func needs(_ review: PantryMealMatcher.Review, workspace: LedgerWorkspace,

@@ -14,18 +14,23 @@ struct ReceiptPrintedEvidence: Equatable {
     var storage: InventoryLocation?
     var uncertain = false
     private(set) var acceptsFieldNotes = false
-    private(set) var hasConflictingCurrency = false
+    var hasConflictingCurrency: Bool { currencyEvidence == .conflicting }
+    private(set) var currencyEvidence = PrintedCurrencyEvidence.unspecified
+
+    func permitsPayment(in currency: Currency) -> Bool {
+        currencyEvidence.permits(currency)
+    }
 
     // A final amount must be distinct from an explicit unit price. Preserve currency ambiguity for review.
-    private static let price = #/(?i)(?:US\$|USD\s*\$?|\$)\s*([0-9]{1,7}[.,][0-9]{2})(?:\s*USD)?\s*$/#
+    private static let price = #/(?i)(?=(?:US\$|M(?:EX|X)\$|USD|MXN|\$|[0-9]{1,7}[.,][0-9]{2}\s*(?:USD\b|MXN\b|M\.N\.|pesos\s+mexicanos\b)))(?:(?:US\$|M(?:EX|X)\$|(?:USD|MXN)\s*\$?|\$)\s*)?([0-9]{1,7}[.,][0-9]{2})(?:\s*(?:USD|MXN|M\.N\.|pesos\s+mexicanos))?\s*$/#
     private static let bareAmount = #/[0-9]{1,7}[.,][0-9]{2}/#
     private static let unmarkedTotal = #/\s+([0-9]{1,7}[.,][0-9]{2})\s*$/#
-    private static let unitPrice = #/(?i)(?:\s*@|\s+(at|a)\b)\s*(?:US\$|USD\s*\$?|\$)?\s*[0-9]+(?:[.,][0-9]{1,2})?(?:\s*(?:\/|per|por)\s*([a-z.]+))?\s*$/#
+    private static let unitPrice = #/(?i)(?:\s*@|\s+(at|a)\b)\s*(?:US\$|M(?:EX|X)\$|(?:USD|MXN)\s*\$?|\$)?\s*[0-9]+(?:[.,][0-9]{1,2})?(?:\s*(?:\/|per|por)\s*([a-z.]+))?\s*$/#
     private static let measure = #/(?i)\b([0-9]{1,5}(?:[.,][0-9]{1,3})?)\s*(fluid\s+ounces?|fl\.?\s*oz|fl\.?\s+ounces?|onzas?\s+l[ií]quidas?|oz\.?\s+l[ií]q(?:uidas)?|kg|kgs|kilogramos?|kilograms?|gramos?|grams?|gr|g|lb[s.]?|pounds?|libras?|ounces?|onzas?|oz|liters?|litros?|ml|l|count|ct|ea|each|units?|unidad(?:es)?|uds?)\b\.?/#
     private static let precedingBasis = #/(?i)\b(?:per|por)\s+(?:(?:each|cada)\s+)?[\p{L}]+\s*[:=]?\s*$/#
     private static let followingBasis = #/(?i)^\s*(?:/|per\b|por\b)/#
     private static let adjustment = #/(?i)^\s*(?:service fee|bottle deposit|sales tax|tax|impuesto|iva|subtotal|sub total|total|change|cambio|cash|efectivo|tender|visa|mastercard|payment|pago|discount|descuento|coupon|cup[oó]n|deposit|dep[oó]sito|fee|cargo|delivery fee|shipping|env[ií]o|tip|propina|refund|reembolso|return|devoluci[oó]n|promotion|promoci[oó]n)\b/#
-    private static let mixed = #/(?i)(?:[€£]|\b(?:CAD|EUR|GBP|MXN|AUD|BOGO|gratis|was|ahorra|save|oferta|coupon|cup[oó]n)\b|\b(?:buy|compra)\s+\w+\s+(?:get|recibe)\b|\b[0-9]+\s*(?:for|por)\s*[$0-9]|\d+\s*%|[0-9]\s*[x×]\s*[0-9]|\b(?:pack|pk)\s*(?:of|de)?\s*[0-9]|\d\s*\/\s*\d)/#
+    private static let mixed = #/(?i)(?:[€£]|\b(?:CAD|EUR|GBP|AUD|BOGO|gratis|was|ahorra|save|oferta|coupon|cup[oó]n)\b|\b(?:buy|compra)\s+\w+\s+(?:get|recibe)\b|\b[0-9]+\s*(?:for|por)\s*[$0-9]|\d+\s*%|[0-9]\s*[x×]\s*[0-9]|\b(?:pack|pk)\s*(?:of|de)?\s*[0-9]|\d\s*\/\s*\d)/#
     private static let signedValue = #/(?:^|\s)[−–-]\s*[$0-9]|\(\s*\$?\d+[.,]\d{2}\s*\)/#
     private static let otherNumbers = #/(?:[$€£@]|[0-9][.,][0-9]|[0-9]\s*[x×]|\s-\s*\d)/#
     // A leading multiplier or a trailing bare number can surround a plain product name.
@@ -48,7 +53,7 @@ struct ReceiptPrintedEvidence: Equatable {
     private static let dollarPrefixes: Set<String> = {
         let locale = NSLocale(localeIdentifier: "en_US")
         return Set(Locale.Currency.isoCurrencies.compactMap { currency in
-            guard currency.identifier != "USD",
+            guard !["USD","MXN"].contains(currency.identifier),
                   let symbol = locale.displayName(forKey: .currencySymbol, value: currency.identifier),
                   symbol.count > 1, symbol.hasSuffix("$") else { return nil }
             return String(symbol.dropLast()).uppercased()
@@ -58,20 +63,20 @@ struct ReceiptPrintedEvidence: Equatable {
         var markers = Set(Locale.Currency.isoCurrencies.map(\.identifier))
         for id in Locale.availableIdentifiers {
             let locale = Locale(identifier: id)
-            guard let code = locale.currency?.identifier, code != "USD", let symbol = locale.currencySymbol else { continue }
+            guard let code = locale.currency?.identifier, !["USD","MXN"].contains(code), let symbol = locale.currencySymbol else { continue }
             // Punctuation is already excluded from the accepted product name, but a
             // separately edited name must still respect local forms such as R$ and S/.
             let letters = symbol.trimmingCharacters(in: CharacterSet.letters.inverted).uppercased()
             if !letters.isEmpty { markers.insert(letters) }
         }
         markers.formUnion(["PESO", "PESOS", "EURO", "EUROS"])
-        return markers.subtracting(["US", "USD"])
+        return markers.subtracting(["US", "USD", "MX", "MEX", "MXN"])
     }()
 
-    private static func hasForeignCurrency(_ text: String) -> Bool {
+    static func hasForeignCurrency(_ text: String) -> Bool {
         guard text.contains(where: \.isNumber) else { return false }
         // Measurement units such as g and L can also be local currency abbreviations.
-        let wording = text.replacing(measure, with: "|").replacing(#/[():\[\]]/#, with: " ")
+        let wording = text.replacing(#/(?i)\b(?:pesos\s+mexicanos\b|M\.N\.)/#, with: "MXN").replacing(measure, with: "|").replacing(#/[():\[\]]/#, with: " ")
         if wording.unicodeScalars.contains(where: { $0.properties.generalCategory == .currencySymbol && $0 != "$" }) { return true }
         for match in wording.matches(of: currencyBeforePrice) {
             let token = match.1.uppercased()
@@ -91,7 +96,8 @@ struct ReceiptPrintedEvidence: Equatable {
     }
 
     static func standaloneAmount(_ text: String) -> String? {
-        text.trimmingCharacters(in: .whitespaces).wholeMatch(of: price).map { normalizedAmount($0.1) }
+        guard PrintedCurrencyEvidence(text) != .conflicting else { return nil }
+        return text.trimmingCharacters(in: .whitespaces).wholeMatch(of: price).map { normalizedAmount($0.1) }
     }
 
     static func isVoidedOrUnreceived(_ wording: String) -> Bool {
@@ -115,12 +121,19 @@ struct ReceiptPrintedEvidence: Equatable {
 
     init(_ row: ScanReceiptLine, knownStorage: [String:Set<InventoryLocation>]) {
         let text = row.reviewedText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let readings = Set([text, row.originalText, row.priceNote].filter { !$0.isEmpty })
+        let evidence = readings.map(PrintedCurrencyEvidence.init)
+        let explicit = Set(evidence.compactMap(\.currency))
+        if explicit.count > 1 || evidence.contains(.conflicting) || readings.contains(where: Self.hasForeignCurrency) {
+            currencyEvidence = .conflicting
+        } else if let currency = explicit.first {
+            currencyEvidence = .explicit(currency)
+        }
         if text.contains(Self.adjustment) { kind = .adjustment; return }
         if ReceiptPrintedDate.looksLikeDate(text) { kind = .date; return }
         guard !text.isEmpty, text.count <= 512, text.contains(where: \.isLetter),
               !text.contains("?"), !text.contains("�"), row.uncertainOCR != true else { kind = .unclear; uncertain = true; return }
         kind = .item
-        hasConflictingCurrency = Self.hasForeignCurrency(text) || (text != row.originalText && Self.hasForeignCurrency(row.originalText))
         guard !text.contains(Self.mixed), !text.contains(Self.signedValue) else { uncertain = true; return }
         var candidate = text
         Self.removeUnitPrice(from: &candidate)

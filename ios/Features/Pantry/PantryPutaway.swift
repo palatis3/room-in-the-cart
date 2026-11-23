@@ -116,7 +116,8 @@ extension PantryRepository {
         guard draft.tracksPutaway else { return (nil, false) }
         let prior = try await store.reviewedReceiptHeader(receiptID, owner: receiptOwner)
         try requireAccess()
-        let money = try ComparisonModel.money(draft.receiptTotal)
+        let money = try ComparisonModel.money(draft.receiptTotal.replacingOccurrences(of: ",", with: "."), currency: draft.currency)
+        guard money.map({ $0.minorUnits >= 0 && draft.permitsReceiptTotal }) ?? true else { throw PantryReceiptError.invalid }
         let reference = draft.reference.trimmingCharacters(in: .whitespacesAndNewlines)
         let selectedDay = draft.purchaseDay?.iso8601
         if let prior {
@@ -125,9 +126,9 @@ extension PantryRepository {
         let header = ReviewedReceiptHeader(id: receiptID, owner: receiptOwner,
             merchant: draft.merchant.trimmingCharacters(in: .whitespacesAndNewlines), date: prior?.date ?? draft.purchaseDate,
             totalMinor: money?.minorUnits ?? prior?.totalMinor, reference: reference.isEmpty ? prior?.reference : reference,
-            purchaseDay: prior == nil ? selectedDay : prior?.purchaseDay)
+            purchaseDay: prior == nil ? selectedDay : prior?.purchaseDay, currencyCode: draft.currency.rawValue)
         if let prior {
-            guard prior.merchant == header.merchant,
+            guard prior.currencyCode == header.currencyCode, prior.merchant == header.merchant,
                   prior.reference == nil || prior.reference == header.reference,
                   prior.totalMinor == nil || prior.totalMinor == header.totalMinor else { throw PantryReceiptError.changedEvidence }
         }
@@ -152,8 +153,7 @@ extension PantryRepository {
             case .chargeOrReturn: kind = .chargeOrReturn
             }
             guard row.documentLine?.stage != .order else { throw PantryReceiptError.invalid }
-            let paid = row.paid.trimmingCharacters(in: .whitespacesAndNewlines)
-            let cents = try paid.isEmpty ? nil : Money(decimal: paid).minorUnits
+            let cents = try row.paidTotal(in: draft.currency)?.minorUnits
             guard kind == .chargeOrReturn || (cents ?? 0) >= 0 else { throw PantryReceiptError.invalid }
             if let known = coordinates[row.ordinal], let fact, known != fact.lineID { throw PantryReceiptError.changedEvidence }
             return ReviewedReceiptDecision(id: coordinates[row.ordinal] ?? fact?.lineID ?? ReceiptAcquisition.lineID(receiptID: receiptID, ordinal: row.ordinal, document: documentID),

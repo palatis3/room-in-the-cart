@@ -61,6 +61,7 @@ public struct LedgerPackSelection: Codable, Equatable, Sendable, Identifiable {
         self.request = request; self.selectedOfferID = selectedOfferID; selectedResult = selected
         reviewedAt = at; self.source = source
         try validate()
+        guard selectedResult.totalCost?.currency == shop.basis.currency else { throw LedgerPackError.invalidEvidence }
     }
 
     public func validate() throws {
@@ -96,7 +97,7 @@ public struct LedgerPackSelection: Codable, Equatable, Sendable, Identifiable {
               selectedResult.totalCost != nil else { throw LedgerPackError.invalidEvidence }
         if isNoPurchase {
             guard (formatVersion == 2 || formatVersion == 3), packs == 0, purchased == .zero,
-                  selectedResult.amountToBuy == .zero, selectedResult.totalCost == .zero else { throw LedgerPackError.invalidEvidence }
+                  selectedResult.amountToBuy == .zero, selectedResult.totalCost?.minorUnits == 0 else { throw LedgerPackError.invalidEvidence }
         } else {
             guard packs > 0, purchased > .zero, outcome != .noPurchase else { throw LedgerPackError.invalidEvidence }
         }
@@ -105,7 +106,7 @@ public struct LedgerPackSelection: Codable, Equatable, Sendable, Identifiable {
     /// Historical evidence must still point at an actual retained source revision.
     public func validateReference(in shop: ShoppingLedger) throws {
         try validate()
-        guard shop.id == shopID, shop.lines.contains(where: { $0.id == lineID }),
+        guard selectedResult.totalCost?.currency == shop.basis.currency, shop.id == shopID, shop.lines.contains(where: { $0.id == lineID }),
               shop.revisions.contains(where: { $0.id == shopRevisionID && $0.basisRevision == basisRevision }) else { throw LedgerPackError.invalidEvidence }
     }
 
