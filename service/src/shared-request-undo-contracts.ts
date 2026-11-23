@@ -4,6 +4,7 @@ import {z} from 'zod';
 import {quoteSchema,decisionSchema} from './contracts.js';
 import {sharedDemandGraphSchema,sharedDemandReceiptSchema} from './shared-demand-contracts.js';
 import {factSchema,trackingStateSchema} from './shared-demand-tracking.js';
+import {groceryCurrencySchema} from './grocery-currency.js';
 export const requestUndoID=z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
 const id=requestUndoID,rev=z.number().int().min(1).max(2147483646),hash=z.string().regex(/^[a-f0-9]{64}$/).refine(x=>x!=='0'.repeat(64)),time=z.string().datetime({offset:true});
 const lineSchema=z.object({lineId:id,originalItem:z.string().min(1).max(240).refine(x=>x===x.trim()),packs:z.number().int().min(1).max(10000),unitPriceMinor:z.number().int().min(0).max(1000000000).nullable(),feeEligible:z.boolean()}).strict();
@@ -16,7 +17,7 @@ export const carryOriginSchema=z.object({sourceRequestId:id,targetRequestId:id,s
  sourceAuthorityEpoch:rev,targetAuthorityEpoch:rev,operationId:id}).strict();
 const basis=z.object({revision:rev.nullable(),reviewRequired:z.boolean()}).strict();
 const money=z.number().int().min(0).max(Number.MAX_SAFE_INTEGER);
-export const requestUndoBudgetSchema=z.object({currency:z.literal('USD'),totalMinor:money.nullable(),overCapMinor:money.nullable(),headroomMinor:z.number().int().min(-Number.MAX_SAFE_INTEGER).max(Number.MAX_SAFE_INTEGER).nullable(),
+export const requestUndoBudgetSchema=z.object({currency:groceryCurrencySchema,totalMinor:money.nullable(),overCapMinor:money.nullable(),headroomMinor:z.number().int().min(-Number.MAX_SAFE_INTEGER).max(Number.MAX_SAFE_INTEGER).nullable(),
  status:z.enum(['withinCap','overCap','unresolved','scopeMismatch']),scope:z.enum(['wholeCheckout','item','dinner']),
  missing:z.array(z.enum(['remaining_original_items','line_price','fee','tax','deposit','discount','cap','scope_mismatch'])).max(8),
  lowerBoundMinor:money,upperBoundMinor:money.nullable(),wholeCheckoutWithinCap:z.boolean()}).strict();

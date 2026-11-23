@@ -1,6 +1,7 @@
+import {requireSupportedCurrency} from './grocery-currency.js';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
-import { acquireHouseholdReceipt, householdReceiptBody } from './household-receipts.js';
+import { acquireHouseholdReceipt, householdReceiptBody, householdReceiptCurrency } from './household-receipts.js';
 import { digest } from './database.js';
 import { invalid, refresh, ServiceError, unavailable } from './errors.js';
 import { householdPantryEpoch, pantryRevision, physicalPantryPage } from './pantry-lots.js';
@@ -64,6 +65,7 @@ export async function changePantryGrant(ctx:Context,input:unknown) {
 export async function recordHouseholdPantryCommand(ctx:Context,input:unknown) {
   const epoch=currentEpoch(ctx), command=stockCommand.parse(input);
   if(command.grantEpoch!==epoch) throw refresh();
+  if(command.kind==='pantry.acquireReceipt')requireSupportedCurrency(ctx,householdReceiptCurrency(command.body));
   const window=await ctx.db.query(`SELECT 1 FROM ritc.replay_window WHERE household_id=$1 AND window_id=$2
     AND member_id=$3 AND device_id=$4 AND revoked_at IS NULL AND expires_at>$5`,
     [ctx.householdId,command.replayWindow,ctx.member.member_id,ctx.deviceId,ctx.now]);

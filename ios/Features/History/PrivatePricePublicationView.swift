@@ -53,7 +53,7 @@ private struct PrivatePricePublicationForm: View {
                         Text(verbatim: review.itemName).font(.headline)
                         if let variant = review.variant { Text(verbatim: variant) }
                         if case .exact(let minor) = review.price {
-                            LabeledContent(HistoryCopy.text("Entered price"), value: HistoryCopy.money(minor)).monospacedDigit()
+                            LabeledContent(HistoryCopy.text("Entered price"), value: HistoryCopy.money(minor, currency: review.currency)).monospacedDigit()
                         }
                         Text(verbatim: review.packLabel)
                         Text(verbatim: review.store + " · " + review.branch)
@@ -84,7 +84,7 @@ private struct PrivatePricePublicationForm: View {
                 } else {
                     Picker(HistoryCopy.text("Assigned shop"), selection: $shopID) {
                         Text(HistoryCopy.text("Choose shared shop")).tag("")
-                        ForEach(history.ownedShops) { shop in Text(HistoryCopy.shop(shop)).tag(shop.shopId) }
+                        ForEach(history.ownedShops.filter { $0.currency == price.currencyCode }) { shop in Text(HistoryCopy.shop(shop)).tag(shop.shopId) }
                     }
                     if history.ownedShopCursor != nil {
                         Button(HistoryCopy.text("Load more assigned shops")) { Task { await history.loadOwnedShops(more: true) } }
@@ -111,7 +111,7 @@ private struct PrivatePricePublicationForm: View {
         .navigationTitle(HistoryCopy.text("Review for a shared shop"))
         .task {
             await history.load()
-            shopID = history.currentShopID ?? ""
+            shopID = history.ownedShops.first { $0.shopId == history.currentShopID && $0.currency == price.currencyCode }?.shopId ?? ""
             branch = price.branch ?? ""
             mode = price.mode.flatMap { HistoryFulfillmentMode(rawValue: $0.rawValue) }
         }
@@ -125,7 +125,7 @@ enum PrivatePricePublication {
     static func observation(_ price: PrivatePriceEvidence, workspace: UUID, shop: HistoryOwnedShop,
                             branch: String, mode: HistoryFulfillmentMode) throws -> HistoryPriceObservation {
         try price.validateForRecording()
-        guard price.currencyCode == "USD", let minor = price.amountMinor, let amount = Int(exactly: minor),
+        guard price.currencyCode == shop.currency, Currency(rawValue: price.currencyCode) != nil, let minor = price.amountMinor, let amount = Int(exactly: minor),
               let revision = Int(exactly: price.revision) else { throw HistoryDraftError.invalid }
         let kind: HistoryPriceKind
         switch price.source {
@@ -147,6 +147,6 @@ enum PrivatePricePublication {
             usablePack: pack, price: .exact(minor: amount), store: price.store, branch: branch, channel: kind == .shelf ? .storeShelf : .unspecified,
             mode: mode, eligibility: price.eligibility ?? "", observedAt: HistoryDate.string(price.date), sourceText: price.sourceText,
             sourceLocale: Locale.current.identifier, evidenceKind: kind, sourceRevision: .init(sourceId: sourceID, revision: revision,
-                shopRevision: shop.revision, authorityEpoch: shop.authorityEpoch), variant: price.variant)
+                shopRevision: shop.revision, authorityEpoch: shop.authorityEpoch), variant: price.variant, currency: price.currencyCode)
     }
 }

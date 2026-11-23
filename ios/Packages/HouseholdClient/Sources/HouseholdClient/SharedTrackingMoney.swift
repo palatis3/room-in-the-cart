@@ -12,6 +12,7 @@ public struct SharedTrackingMoneyDisclosure: Decodable, Equatable, Sendable {
         before = try trackingDecode(ShopperBudget.self, from: c.superDecoder(forKey: .before), shape: requestUndoBudgetShape)
         after = try trackingDecode(ShopperBudget.self, from: c.superDecoder(forKey: .after), shape: requestUndoBudgetShape)
         try requestUndoBudget(before); try requestUndoBudget(after)
+        try demandRequire(before.currency == after.currency)
     }
 }
 public struct SharedTrackingMoneyAcknowledgments: Codable, Equatable, Sendable {

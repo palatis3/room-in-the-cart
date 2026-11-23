@@ -1,5 +1,7 @@
 import type {FinancialEntry,Period,SourceVersion} from './history-contracts.js';
 import {ServiceError} from './errors.js';
+import type {GroceryCurrency} from '../../shared/contracts/service-v1.js';
+import {requireMatchingCurrency} from './grocery-currency.js';
 const invalid=()=>new ServiceError(422,'invalid_financial_evidence','Review the linked charge, credit or hold evidence.');
 export function sum(values:number[]){let value=0n;for(const n of values){if(!Number.isSafeInteger(n))throw invalid();value+=BigInt(n);}if(value>BigInt(Number.MAX_SAFE_INTEGER)||value<BigInt(Number.MIN_SAFE_INTEGER))throw invalid();return Number(value);}
 export function appendFinancial(entries:FinancialEntry[],entry:FinancialEntry){
@@ -12,20 +14,23 @@ export function appendFinancial(entries:FinancialEntry[],entry:FinancialEntry){
  }else if(entry.creditId||entry.chargeEvidenceKey||entry.holdEvidenceKey)throw invalid();
  const result=[...entries,entry];settlement(result);return result;
 }
-export function settlement(entries:FinancialEntry[]){
+export function settlement(entries:FinancialEntry[],currency=entries[0]?.currency??'USD'){
+ for(const entry of entries)requireMatchingCurrency(entry.currency,currency);
  const settled=new Set(entries.filter(e=>['postedCredit','includedCredit'].includes(e.kind)).map(e=>e.creditId));
  return{postedNetMinor:sum(entries.map(e=>['postedCharge','postedTopUp'].includes(e.kind)?e.amountMinor:e.kind==='postedCredit'?-e.amountMinor:0)),pendingCreditsMinor:sum(entries.filter(e=>e.kind==='pendingCredit'&&!settled.has(e.creditId)).map(e=>e.amountMinor)),includedCreditsMinor:sum(entries.filter(e=>e.kind==='includedCredit').map(e=>e.amountMinor)),paymentHoldsMinor:sum(entries.map(e=>e.kind==='paymentHold'?e.amountMinor:e.kind==='holdRelease'?-e.amountMinor:0))};
 }
 export interface MoneyRange{lowerMinor:number;upperMinor:number|null}
-export interface ShopSummary{shopId:string;sourceVersion:SourceVersion;currency:'USD';postedNetMinor:number;pendingCreditsMinor:number;includedCreditsMinor:number;paymentHoldsMinor:number;expectedUnpaid:MoneyRange;projectedCommitment:MoneyRange;reconciledEntered:boolean}
-export function summarizeShop(shopId:string,sourceVersion:SourceVersion,entries:FinancialEntry[],expectation:MoneyRange|null,reviewed:boolean):ShopSummary{
- const value=settlement(entries),reconciledEntered=reviewed&&value.pendingCreditsMinor===0&&value.paymentHoldsMinor===0;
+export interface ShopSummary{shopId:string;sourceVersion:SourceVersion;currency:GroceryCurrency;postedNetMinor:number;pendingCreditsMinor:number;includedCreditsMinor:number;paymentHoldsMinor:number;expectedUnpaid:MoneyRange;projectedCommitment:MoneyRange;reconciledEntered:boolean}
+export function summarizeShop(shopId:string,sourceVersion:SourceVersion,entries:FinancialEntry[],expectation:MoneyRange|null,reviewed:boolean,currency:GroceryCurrency=entries[0]?.currency??'USD'):ShopSummary{
+ const value=settlement(entries,currency),reconciledEntered=reviewed&&value.pendingCreditsMinor===0&&value.paymentHoldsMinor===0;
  const projectedCommitment=reconciledEntered?{lowerMinor:value.postedNetMinor,upperMinor:value.postedNetMinor}:expectation?{lowerMinor:Math.max(value.postedNetMinor,expectation.lowerMinor),upperMinor:expectation.upperMinor===null?null:Math.max(value.postedNetMinor,expectation.upperMinor)}:{lowerMinor:Math.max(0,value.postedNetMinor),upperMinor:null};
- return{shopId,sourceVersion,currency:'USD',...value,expectedUnpaid:{lowerMinor:sum([projectedCommitment.lowerMinor,-value.postedNetMinor]),upperMinor:projectedCommitment.upperMinor===null?null:sum([projectedCommitment.upperMinor,-value.postedNetMinor])},projectedCommitment,reconciledEntered};
+ return{shopId,sourceVersion,currency,...value,expectedUnpaid:{lowerMinor:sum([projectedCommitment.lowerMinor,-value.postedNetMinor]),upperMinor:projectedCommitment.upperMinor===null?null:sum([projectedCommitment.upperMinor,-value.postedNetMinor])},projectedCommitment,reconciledEntered};
 }
 function ranges(values:MoneyRange[]){return{lowerMinor:sum(values.map(v=>v.lowerMinor)),upperMinor:values.some(v=>v.upperMinor===null)?null:sum(values.map(v=>v.upperMinor!))};}
-export function subtotal(shops:ShopSummary[]){return{shops,currency:'USD' as const,postedNetMinor:sum(shops.map(s=>s.postedNetMinor)),pendingCreditsMinor:sum(shops.map(s=>s.pendingCreditsMinor)),includedCreditsMinor:sum(shops.map(s=>s.includedCreditsMinor)),paymentHoldsMinor:sum(shops.map(s=>s.paymentHoldsMinor)),expectedUnpaid:ranges(shops.map(s=>s.expectedUnpaid)),projectedCommitment:ranges(shops.map(s=>s.projectedCommitment))};}
+export function subtotal(shops:ShopSummary[],currency:GroceryCurrency=shops[0]?.currency??'USD'){
+ for(const shop of shops)requireMatchingCurrency(shop.currency,currency);
+ return{shops,currency,postedNetMinor:sum(shops.map(s=>s.postedNetMinor)),pendingCreditsMinor:sum(shops.map(s=>s.pendingCreditsMinor)),includedCreditsMinor:sum(shops.map(s=>s.includedCreditsMinor)),paymentHoldsMinor:sum(shops.map(s=>s.paymentHoldsMinor)),expectedUnpaid:ranges(shops.map(s=>s.expectedUnpaid)),projectedCommitment:ranges(shops.map(s=>s.projectedCommitment))};}
 export function periodSummary(period:Period,shops:ShopSummary[],now:Date){
- const permitted=subtotal(shops),futureReservedMinor=sum(period.reservations.filter(r=>r.state.kind==='reserved').map(r=>r.amountMinor));
+ const permitted=subtotal(shops,period.currency),futureReservedMinor=sum(period.reservations.filter(r=>r.state.kind==='reserved').map(r=>r.amountMinor));
  return{permitted,futureReservedMinor,remaining:{minimumMinor:permitted.projectedCommitment.upperMinor===null?null:sum([period.shopBudgetMinor,-permitted.projectedCommitment.upperMinor,-futureReservedMinor]),maximumMinor:sum([period.shopBudgetMinor,-permitted.projectedCommitment.lowerMinor,-futureReservedMinor])},reconciledEnteredPeriod:Boolean(period.reviewedCompleteAt&&Date.parse(period.reviewedCompleteAt)<=now.getTime()&&futureReservedMinor===0&&shops.every(s=>s.reconciledEntered))};
 }

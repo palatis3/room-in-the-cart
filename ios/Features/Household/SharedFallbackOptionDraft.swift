@@ -14,10 +14,10 @@ struct FallbackPackDraft: Equatable {
 
     init(unit: UnitOfMeasure) { self.id = UUID(); self.unit = unit }
 
-    func offer() throws -> SharedFallbackOffer {
+    func offer(currency: Currency) throws -> SharedFallbackOffer {
         guard let qty = try DinnerEntry.quantity(amount, unit: unit), qty.amount > .zero,
               qty.amount.numerator <= 1_000_000_000, qty.amount.denominator <= 1_000_000_000,
-              let money = try DinnerEntry.money(price), (0...1_000_000_000).contains(money.minorUnits),
+              let money = try DinnerEntry.money(price, currency: currency), (0...1_000_000_000).contains(money.minorUnits),
               let cents = Int(exactly: money.minorUnits), let packs = Int(availability), (0...1_000_000).contains(packs),
               !label.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw ClientError.configuration }
         return .init(label: label, exclusionTags: DinnerEntry.list(exclusions),
@@ -67,15 +67,15 @@ struct CandidateReviewDraft: Identifiable, Equatable {
         ingredients = candidate.recipe.ingredients.map(CandidateFoodReview.init)
     }
 
-    func review(includeOffers: Bool) throws -> SharedFallbackReview {
+    func review(includeOffers: Bool, currency: Currency) throws -> SharedFallbackReview {
         let availablePacks = ingredients.filter { $0.hasOwnPack && $0.sharedPackID == nil }.map(\.pack)
         let rows = try ingredients.map { item -> SharedFallbackReview.Ingredient in
             let offer: SharedFallbackOffer?
             if !includeOffers { offer = nil }
             else if let id = item.sharedPackID {
                 guard let pack = availablePacks.first(where: { $0.id == id }) else { throw ClientError.configuration }
-                offer = try pack.offer()
-            } else { offer = item.hasOwnPack ? try item.pack.offer() : nil }
+                offer = try pack.offer(currency: currency)
+            } else { offer = item.hasOwnPack ? try item.pack.offer(currency: currency) : nil }
             return .init(ingredientId: item.id, sourceIds: item.sources.sorted { $0.uuidString < $1.uuidString }, offer: offer)
         }
         let minutes = try DinnerEntry.minutes(remaining, maximum: 1_000_000)
@@ -90,11 +90,11 @@ struct FallbackTripDraft: Equatable {
     var minutes = ""
     var budget = ""
     var charges = ""
-    func trip() throws -> SharedFallbackTrip? {
+    func trip(currency: Currency) throws -> SharedFallbackTrip? {
         guard include else { return nil }
-        guard let time = try DinnerEntry.minutes(minutes, maximum: 1_000_000), let ceiling = try DinnerEntry.money(budget),
-              let other = try DinnerEntry.money(charges), (0...1_000_000_000).contains(ceiling.minorUnits), (0...1_000_000_000).contains(other.minorUnits),
+        guard let time = try DinnerEntry.minutes(minutes, maximum: 1_000_000), let ceiling = try DinnerEntry.money(budget, currency: currency),
+              let other = try DinnerEntry.money(charges, currency: currency), (0...1_000_000_000).contains(ceiling.minorUnits), (0...1_000_000_000).contains(other.minorUnits),
               let limit = Int(exactly: ceiling.minorUnits), let fee = Int(exactly: other.minorUnits) else { throw ClientError.configuration }
-        return .init(minutes: time, budgetMinor: limit, chargesMinor: fee, currency: "USD")
+        return .init(minutes: time, budgetMinor: limit, chargesMinor: fee, currency: currency.rawValue)
     }
 }

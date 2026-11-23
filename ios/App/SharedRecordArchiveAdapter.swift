@@ -75,6 +75,13 @@ private struct SharedRecordText {
         }
     }
 
+    func money(_ amount: Int?, currency: String) -> String {
+        guard let amount else { return unknown }
+        let magnitude = amount.magnitude
+        let sign = amount < 0 ? "-" : ""
+        return "\(currency) \(sign)\(magnitude / 100)." + String(format: "%02llu", UInt64(magnitude % 100))
+    }
+
     func basketPurpose(_ purpose: String) -> String {
         switch purpose {
         case "create": word("Basket created", "Cesta creada")
@@ -100,7 +107,7 @@ extension SharedRecordArchiveAdapter {
             case let .mapped(tags, at): return item.label + " · " + tags.joined(separator: ", ") + " · " + at
             }
         }
-        func money(_ n: Int?) -> String { n.map { "USD \($0 / 100)." + String(format: "%02d", $0 % 100) } ?? unknown }
+        func money(_ amount: Int?) -> String { copy.money(amount, currency: value.quote.currency) }
         var lines = [word("Independent shared pickup record", "Registro independiente de compra compartida"),
             word("Read-only copy. Household access and checkout authority are not restored.", "Copia de solo lectura. No restablece acceso al hogar ni permisos de compra."),
             word("Source household: ", "Hogar de origen: ") + value.origin.householdId.string,
@@ -199,7 +206,6 @@ extension SharedHistoryArchiveAdapter {
         let value = try validate(record), copy = SharedRecordText(locale)
         let w = copy.word, unknown = copy.unknown
         func id(_ value: UUID) -> String { value.uuidString.lowercased() }
-        func money(_ amount: Int?) -> String { amount.map { "USD \($0 / 100)." + String(format: "%02d", $0 % 100) } ?? unknown }
         func quantity(_ q: SharedMealQuantity?) -> String {
             guard let q else { return unknown }
             return q.originalLiteral + " (" + copy.fraction(q.amount.numerator, q.amount.denominator, unit: q.unit) + ")"
@@ -215,11 +221,12 @@ extension SharedHistoryArchiveAdapter {
         }
         section("Basket revisions", "Revisiones de la cesta", value.basketRevisions.count)
         for basket in value.basketRevisions {
+            let q = basket.quote
+            func money(_ amount: Int?) -> String { copy.money(amount, currency: q.currency) }
             lines.append("#\(basket.revision) · \(basket.recordedAt) · \(HistoryCopy.phase(basket.phase, bundle: copy.bundle)) · \(copy.basketPurpose(basket.purpose))")
             for item in basket.basketLines {
                 lines.append(item.originalItem + " · \(item.packs) " + w("packs", "paquetes") + " · " + money(item.unitPriceMinor))
             }
-            let q = basket.quote
             lines.append(w("Entered quote; not posted spending", "Cotización ingresada; no gasto contabilizado"))
             lines.append(w("Scope / cap: ", "Alcance / límite: ") + copy.quoteScope(q.scope) + " / " + money(q.capMinor) + " · " + copy.quoteScope(q.capScope))
             lines.append(w("Observed / expires: ", "Observada / vence: ") + q.observedAt + " / " + q.expiresAt)
@@ -316,11 +323,13 @@ extension SharedHistoryArchiveAdapter {
                 if let predecessor = revision.predecessorRevision { lines.append(w("Previous food revision: ", "Revisión anterior de alimentos: ") + String(predecessor)) }
                 lines += graphLines(revision.graph, packs: revision.packReviews)
             }
+            let basketCurrencyByRevision = Dictionary(uniqueKeysWithValues: value.basketRevisions.map { ($0.revision, $0.quote.currency) })
             for revision in history.trackingRevisions {
+                guard let currency = basketCurrencyByRevision[revision.shopRevision] else { throw ArchiveError.invalidIdentity }
                 let food = revision.food
                 lines.append(revision.recordedAt + " · " + w("Basket revision: ", "Revisión de la cesta: ") + String(revision.shopRevision))
                 lines += graphLines(food.graph, packs: food.packReviews)
-                for row in food.basket { lines.append(row.name + " · \(row.packs) " + w(row.packs == 1 ? "pack" : "packs", row.packs == 1 ? "paquete" : "paquetes") + " · " + money(row.priceMinor)) }
+                for row in food.basket { lines.append(row.name + " · \(row.packs) " + w(row.packs == 1 ? "pack" : "packs", row.packs == 1 ? "paquete" : "paquetes") + " · " + copy.money(row.priceMinor, currency: currency)) }
                 for fact in food.catalog {
                     lines.append(fact.sourceLabel + " · " + fact.originalText + " · " + demandQuantity(fact.quantity))
                     if let original = fact.originalQuantityText { lines.append(original) }
@@ -389,15 +398,15 @@ extension SharedHistoryArchiveAdapter {
         section("Financial evidence", "Comprobantes financieros", value.financialEntries.count)
         let financialLabels: [ShopperFinancialEntry.Kind: String] = [.postedCharge: w("Posted charge", "Cargo contabilizado"), .postedTopUp: w("Posted top-up", "Compra adicional contabilizada"), .pendingCredit: w("Pending credit", "Crédito pendiente"), .postedCredit: w("Posted credit", "Crédito contabilizado"), .includedCredit: w("Included credit", "Crédito incluido"), .paymentHold: w("Payment hold", "Retención de pago"), .holdRelease: w("Hold release", "Liberación de retención")]
         for entry in value.financialEntries {
-            lines.append(entry.occurredAt + " · " + (financialLabels[entry.kind] ?? entry.kind.rawValue) + " · " + money(entry.amountMinor))
+            lines.append(entry.occurredAt + " · " + (financialLabels[entry.kind] ?? entry.kind.rawValue) + " · " + copy.money(entry.amountMinor, currency: entry.currency))
             lines.append(entry.sourceText)
         }
         section("Saved price observations", "Observaciones de precios guardadas", value.priceObservations.count)
         for price in value.priceObservations {
             lines.append(price.itemName + " · " + price.packLabel + " · " + price.observedAt)
             switch price.price {
-            case let .exact(minor): lines.append(money(minor))
-            case let .bounded(low, high, reason): lines.append(money(low) + " – " + money(high) + " · " + reason)
+            case let .exact(minor): lines.append(copy.money(minor, currency: price.currency))
+            case let .bounded(low, high, reason): lines.append(copy.money(low, currency: price.currency) + " – " + copy.money(high, currency: price.currency) + " · " + reason)
             case let .unknown(reason): lines.append(unknown + " · " + reason)
             }
             let channel = HistoryCopy.channel(price.channel.rawValue, bundle: copy.bundle)

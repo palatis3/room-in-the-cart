@@ -53,8 +53,8 @@ struct SharedOrderAmendmentView: View {
         .keyboardDoneAction(visible: referenceFocused, title: ht("Done")) { referenceFocused = false }
         .task { await refresh() }
         .sheet(item: $selected) { choice in
-            if canRead {
-                SharedAmendmentLineEditor(choice: choice) { line in
+            if canRead, let page {
+                SharedAmendmentLineEditor(choice: choice, currency: page.original.quote.currency) { line in
                     guard canRead, model.pending == nil else { return }
                     if let index = lines.firstIndex(where: { $0.lineId == choice.id.uuidString.lowercased() }) {
                         if let line { lines[index] = line } else { lines.remove(at: index) }
@@ -150,7 +150,7 @@ struct SharedOrderAmendmentView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(line.originalItem)
                 Text(String(format: OrderAmendmentCopy.text("Packs: %lld"), Int64(line.packs)))
-                Text(String(format: OrderAmendmentCopy.text("Price per pack: %@"), PlacementCopy.money(line.unitPriceMinor))).font(.caption)
+                Text(String(format: OrderAmendmentCopy.text("Price per pack: %@"), householdMoney(line.unitPriceMinor, currency: page?.original.quote.currency ?? ""))).font(.caption)
             }.accessibilityElement(children: .combine).accessibilityIdentifier(prefix + "." + line.lineId)
         }
     }
@@ -188,6 +188,7 @@ private struct AmendmentLineChoice: Identifiable {
 }
 private struct SharedAmendmentLineEditor: View {
     let choice: AmendmentLineChoice
+    let currency: String
     let save: (ShopperBasketLine?) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var name: String
@@ -196,8 +197,8 @@ private struct SharedAmendmentLineEditor: View {
     @State private var invalid = false
     @FocusState private var focus: Field?
     private enum Field { case name, packs, price }
-    init(choice: AmendmentLineChoice, save: @escaping (ShopperBasketLine?) -> Void) {
-        self.choice = choice; self.save = save
+    init(choice: AmendmentLineChoice, currency: String, save: @escaping (ShopperBasketLine?) -> Void) {
+        self.choice = choice; self.currency = currency; self.save = save
         _name = State(initialValue: choice.line?.originalItem ?? "")
         _packs = State(initialValue: choice.line.map { String($0.packs) } ?? "")
     }
@@ -217,7 +218,7 @@ private struct SharedAmendmentLineEditor: View {
                         .keyboardType(.numberPad)
                         .focused($focus, equals: .packs).accessibilityIdentifier("sharedOrder.packs")
                 }
-                WorkingField(OrderAmendmentCopy.text("Confirmed price per pack (USD), if provided")) {
+                WorkingField(String(format: OrderAmendmentCopy.text("Confirmed price per pack (%@), if provided"), currency)) {
                     TextField("", text: $price)
                         .textFieldStyle(.roundedBorder)
                         .keyboardType(.decimalPad).focused($focus, equals: .price)

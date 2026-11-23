@@ -34,6 +34,7 @@ public struct SharedTrackingUndoQuotes: Decodable, Equatable, Sendable {
         try demandExactKeys(decoder, ["before", "after"]); let c = try decoder.container(keyedBy: K.self)
         try requestUndoQuoteShape(c.superDecoder(forKey: .before)); try requestUndoQuoteShape(c.superDecoder(forKey: .after))
         before = try c.decode(ShopperQuote.self, forKey: .before); after = try c.decode(ShopperQuote.self, forKey: .after)
+        try demandRequire(before.currency == after.currency)
         _ = try SharedTrackingAction(.patch(.init(quote: before, lines: [])))
         _ = try SharedTrackingAction(.patch(.init(quote: after, lines: [])))
     }

@@ -18,6 +18,7 @@ extension SharedRequestUndoCandidate {
         try demandRequire(requestUndo.current.revision == base.requestRevision && requestUndo.beforeLink.operationId == targetOperationId && requestUndo.beforeLink.shopId == shopId)
         try demandRequire(packReviewLineIds.map(\.string) == action.body.lines.map(\.lineId) && demandUnique(packReviewLineIds))
         try requestUndoBudget(beforeCheckout); try requestUndoBudget(afterCheckout)
+        try demandRequire(beforeCheckout.currency == action.body.quote.currency && afterCheckout.currency == action.body.quote.currency)
         func acceptedSources(_ food: SharedRequestUndoFood) -> [SharedDemandSource] {
             if let catalog = food.catalog { return catalog.map(\.source) }
             return food.graph?.contributions.filter { $0.removedAt == nil }.map(\.source) ?? []

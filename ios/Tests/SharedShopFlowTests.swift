@@ -779,6 +779,36 @@ import LocalAuthentication
         draft.observedAt = draft.expiresAt
         XCTAssertThrowsError(try draft.candidate())
     }
+    func testNewShopCurrencyClearsEnteredAmountsAndExistingShopKeepsItsCurrency() throws {
+        var draft = SharedShopDraft()
+        draft.changeCurrency(.usd)
+        draft.lines = [.init(item: "Arroz", price: "4.50")]
+        draft.cap = "10.99"
+        draft.fee = "2.50"
+        draft.changeCurrency(.mxn)
+        XCTAssertEqual(draft.lines.first?.item, "Arroz")
+        XCTAssertEqual(draft.lines.first?.price, "")
+        XCTAssertEqual(draft.cap, "")
+        XCTAssertEqual(draft.fee, "")
+
+        draft.lines[0].price = "42,50"
+        draft.cap = "300"
+        let candidate = try draft.candidate()
+        XCTAssertEqual(candidate.quote.currency, "MXN")
+        XCTAssertEqual(candidate.quote.capMinor, 30_000)
+        XCTAssertEqual(candidate.lines[0].unitPriceMinor, 4250)
+
+        var fields = try candidate.commandBody()
+        fields["shopId"] = .string(UUID().uuidString)
+        fields["shopRevision"] = .integer(1)
+        fields["authorityEpoch"] = .integer(1)
+        fields["phase"] = .string("draft")
+        let shop = try JSONDecoder().decode(ShopperShop.self, from: JSONEncoder().encode(fields))
+        var reopened = try SharedShopDraft(shop)
+        reopened.changeCurrency(.usd)
+        XCTAssertEqual(try reopened.candidate(), candidate)
+    }
+
     func testShopDraftRequiresExplicitReviewAndEditsInvalidateIt() async throws {
         let fixture = SharedFlowService(); let mia = try await createdHousehold(fixture)
         let shared = try XCTUnwrap(mia.sharedShop)

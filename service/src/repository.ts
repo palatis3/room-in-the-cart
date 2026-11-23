@@ -23,16 +23,17 @@ import { isPantryCommand, pantryOperationExists, householdPantryEpoch } from './
 import { consumeSharedMealChange } from './shared-meal-changes.js';
 import {requireMealMove} from './meal-moves.js';
 import { randomBytes, randomUUID } from 'node:crypto';
-import type { OwnRequest, ShopperReceipt, RequestPurchaseOutcome, RequestPreview, QuoteBasis, BasketLine } from '../../shared/contracts/service-v1.js';
+import type { OwnRequest, ShopperReceipt, RequestPurchaseOutcome, RequestPreview, QuoteBasis, BasketLine, GroceryCurrency } from '../../shared/contracts/service-v1.js';
 import type { VerifiedIdentity,SessionStatusVerifier } from './auth.js';
 import { type Database,type Transaction,digest,tokenHash } from './database.js';
 import { accessEnded,unavailable,invalid,refresh,ServiceError } from './errors.js';
 import { type Envelope,type Decision,type PreviewInput,bodySchemas,decisionSchema } from './contracts.js';
 import { checkout } from './checkout.js';
-export interface AuthContext { sharedContentSafety?:boolean;identity:VerifiedIdentity; deviceToken?:string; trustedDeviceId?:string;ownRequestsOnly?:boolean;viewGrantId?:string;selectedShopId?:string;historicalReportShopId?:string }
+import {requireMatchingCurrency,requireSupportedCurrency} from './grocery-currency.js';
+export interface AuthContext { supportsMXN?:boolean; sharedContentSafety?:boolean;identity:VerifiedIdentity; deviceToken?:string; trustedDeviceId?:string;ownRequestsOnly?:boolean;viewGrantId?:string;selectedShopId?:string;historicalReportShopId?:string }
 export interface Member { member_id:string; kind:'adult'|'child'; organizer:boolean; can_contribute:boolean; preference_reader?:boolean; pantry_editor?:boolean; pantry_grant_epoch?:number; alias:string; state:string }
-export interface Context { sharedContentSafety?:boolean;db:Transaction; householdId:string; member:Member; deviceId:string; now:Date;ownRequestsOnly?:boolean;viewGrantId?:string;selectedShopId?:string }
-export interface Shop { household_id:string;shop_id:string;shopper_id:string;authority_epoch:number;revision:number;phase:string;quote:QuoteBasis;frozen_revision:number|null;placed_revision:number|null;supply_revision:number;recovery_revision?:number;store_basis_revision?:number|null;store_review_required?:boolean;confirmed_order_erased?:boolean;demand_revision?:number|null;demand_review_required?:boolean }
+export interface Context { supportsMXN?:boolean; sharedContentSafety?:boolean;db:Transaction; householdId:string; member:Member; deviceId:string; now:Date;ownRequestsOnly?:boolean;viewGrantId?:string;selectedShopId?:string }
+export interface Shop { household_id:string;shop_id:string;shopper_id:string;authority_epoch:number;revision:number;phase:string;currency:GroceryCurrency;quote:QuoteBasis;frozen_revision:number|null;placed_revision:number|null;supply_revision:number;recovery_revision?:number;store_basis_revision?:number|null;store_review_required?:boolean;confirmed_order_erased?:boolean;demand_revision?:number|null;demand_review_required?:boolean }
 export interface RequestRow { author_active:boolean;author_kind:string;author_alias:string;live_notice:string|null; carried_forward?:boolean;from_previous_shop?:boolean; purchase_outcome?:RequestPurchaseOutcome|null;request_id:string;author_id:string;shop_id:string;original_item:string;own_quantity:string|null;revision:number;authored_at:Date;received_at:Date;route:'current'|'next';status:OwnRequest['status'];clarification:string|null;clarification_author_id?:string|null;followup_to:string|null }
 // Earlier servers accept exactly 43 base64url characters. Include the scope
 // prefix in the hashed credential so removing it cannot bypass that boundary.
@@ -120,7 +121,7 @@ export class HouseholdRepository {
     const scopedMember=auth.viewGrantId||auth.ownRequestsOnly
       ? {...member,organizer:false,can_contribute:!auth.viewGrantId && member.can_contribute}
       : member;
-    return fn({sharedContentSafety:auth.sharedContentSafety===true&&this.options.sharedContentSafety===true,db,householdId,member:scopedMember,deviceId:device.device_id,now,...(auth.ownRequestsOnly?{ownRequestsOnly:true}:{}),...(auth.viewGrantId?{viewGrantId:auth.viewGrantId}:{}),...(auth.selectedShopId?{selectedShopId:auth.selectedShopId}:{})});
+    return fn({supportsMXN:auth.supportsMXN===true,sharedContentSafety:auth.sharedContentSafety===true&&this.options.sharedContentSafety===true,db,householdId,member:scopedMember,deviceId:device.device_id,now,...(auth.ownRequestsOnly?{ownRequestsOnly:true}:{}),...(auth.viewGrantId?{viewGrantId:auth.viewGrantId}:{}),...(auth.selectedShopId?{selectedShopId:auth.selectedShopId}:{})});
   }
   async workspaces(identity:VerifiedIdentity) {
     const db=await this.pool.connect();try{
@@ -239,6 +240,7 @@ export class HouseholdRepository {
     }else if(scope==='history-owned'){
       visible+=' AND s.history_retired_at IS NULL AND ($3::uuid IS NULL OR s.shop_id=$3)';
       values.push(ctx.selectedShopId??null);
+      if(!ctx.supportsMXN)visible+=" AND s.currency='USD'";
     }
     const source=`FROM ritc.shop s WHERE s.household_id=$1 AND ${visible}`;
     let boundary='';
@@ -254,12 +256,12 @@ export class HouseholdRepository {
       values.push(ctx.member.member_id,ctx.now);
       cutoff=`ritc.pickup_cutoff_passed(s.household_id,s.shop_id,$${values.length-1},$${values.length})`;
     }
-    const rows=(await ctx.db.query(`SELECT s.shop_id,s.shopper_id,s.created_at,s.phase,s.revision,s.authority_epoch,${cutoff} AS late
+    const rows=(await ctx.db.query(`SELECT s.shop_id,s.shopper_id,s.created_at,s.phase,s.revision,s.authority_epoch,s.currency,${cutoff} AS late
       ${source}${boundary} ORDER BY s.created_at DESC,s.shop_id DESC LIMIT 51`,values)).rows;
     if(scope==='requests')return{shops:rows.slice(0,50).map(s=>({
       shopId:s.shop_id,createdAt:s.created_at.toISOString(),nextShopOnly:s.phase!=='draft'||s.late
     })),nextCursor:rows.length>50?rows[49].shop_id:null};
-    return{shops:rows.slice(0,50).map(s=>({shopId:s.shop_id,createdAt:s.created_at.toISOString(),phase:s.phase,role:s.shopper_id===ctx.member.member_id?'shopper':'contributor',...(s.shopper_id===ctx.member.member_id?{revision:s.revision,authorityEpoch:s.authority_epoch}:{})})),nextCursor:rows.length>50?rows[49].shop_id:null};
+    return{shops:rows.slice(0,50).map(s=>({shopId:s.shop_id,createdAt:s.created_at.toISOString(),phase:s.phase,...(ctx.supportsMXN?{currency:s.currency}:{}),role:s.shopper_id===ctx.member.member_id?'shopper':'contributor',...(s.shopper_id===ctx.member.member_id?{revision:s.revision,authorityEpoch:s.authority_epoch}:{})})),nextCursor:rows.length>50?rows[49].shop_id:null};
   }
   private get carryNotice() {return this.options.allowChildNetwork?this.options.noticeVersion:null;}
   async deferredRequests(ctx:Context,shopId:string,after:string|null) {
@@ -325,7 +327,7 @@ export class HouseholdRepository {
     const shop=(await ctx.db.query<Shop>('SELECT * FROM ritc.shop WHERE household_id=$1 AND shop_id=$2',[ctx.householdId,shopId])).rows[0];
     if(!shop)throw unavailable();return shop;
   }
-  requireShopper(ctx:Context,shop:Shop) {if(ctx.ownRequestsOnly||ctx.viewGrantId||ctx.member.kind!=='adult'||shop.shopper_id!==ctx.member.member_id)throw unavailable();}
+  requireShopper(ctx:Context,shop:Shop) {if(ctx.ownRequestsOnly||ctx.viewGrantId||ctx.member.kind!=='adult'||shop.shopper_id!==ctx.member.member_id)throw unavailable();requireSupportedCurrency(ctx,shop.currency);}
   requireOrganizer(ctx:Context) {if(ctx.ownRequestsOnly||ctx.viewGrantId||ctx.member.kind!=='adult'||!ctx.member.organizer)throw unavailable();}
   checkBase(shop:Shop,base:Envelope['base']) {
     if(shop.authority_epoch!==base.authorityEpoch)throw new ServiceError(409,'authority_changed','Refresh shopper authority and review again.');
@@ -496,10 +498,10 @@ export class HouseholdRepository {
     if(command.kind==='shop.create') {
       this.requireOrganizer(ctx);scope='organizer';
       if(command.base.shopRevision!==0||command.base.authorityEpoch!==0)throw invalid();
-      const body=bodySchemas['shop.create'].parse(command.body);this.validateQuote(body.quote,ctx.now);checkout(body.lines,body.quote);
+      const body=bodySchemas['shop.create'].parse(command.body);requireSupportedCurrency(ctx,body.quote.currency);this.validateQuote(body.quote,ctx.now);checkout(body.lines,body.quote);
       const exists=await ctx.db.query('SELECT 1 FROM ritc.shop WHERE household_id=$1 AND shop_id=$2',[ctx.householdId,command.shopId]);
       if(exists.rowCount)throw new ServiceError(409,'shop_exists','Open the existing shop.');
-      await ctx.db.query('INSERT INTO ritc.shop(household_id,shop_id,shopper_id,quote) VALUES($1,$2,$3,$4)',[ctx.householdId,command.shopId,ctx.member.member_id,body.quote]);
+      await ctx.db.query('INSERT INTO ritc.shop(household_id,shop_id,shopper_id,quote,currency) VALUES($1,$2,$3,$4,$5)',[ctx.householdId,command.shopId,ctx.member.member_id,body.quote,body.quote.currency]);
       await ctx.db.query('INSERT INTO ritc.shop_authority(household_id,shop_id,epoch,member_id) VALUES($1,$2,1,$3)',[ctx.householdId,command.shopId,ctx.member.member_id]);
       await this.setLines(ctx,command.shopId,body.lines);await this.snapshot(ctx,command.shopId,operationId,'create');
       response=await this.receipt(ctx,command,operationId,'created');
@@ -627,7 +629,7 @@ export class HouseholdRepository {
     }
     if(c.kind==='request.apply')return this.apply(ctx,shop,c,operationId);
     if(c.kind==='shop.patch') {
-      this.requireDraft(shop);const b=bodySchemas['shop.patch'].parse(c.body);this.validateQuote(b.quote,ctx.now);checkout(b.lines,b.quote);
+      this.requireDraft(shop);const b=bodySchemas['shop.patch'].parse(c.body);requireMatchingCurrency(b.quote.currency,shop.currency);this.validateQuote(b.quote,ctx.now);checkout(b.lines,b.quote);
       let demandAcceptance:Awaited<ReturnType<typeof applyDemand>>=undefined;
       if(b.demandReview)demandAcceptance=await applyDemand(this,ctx,shop,c,operationId);
       else if(shop.demand_revision){if(!internalPriceOnly)throw new ServiceError(409,'demand_review_required','Review shared source quantities before changing this shop.');await assertPriceOnly(this,ctx,shop,c);}

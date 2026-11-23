@@ -5,13 +5,16 @@ enum HistoryCopy {
     static func text(_ key: String, bundle: Bundle = .main) -> String {
         String(localized: String.LocalizationValue(key), table: "History", bundle: bundle)
     }
-    static func money(_ minor: Int) -> String {
-        (Decimal(minor) / 100).formatted(.currency(code: "USD").presentation(.isoCode))
+    static func currencyLabel(_ key: String, currency: String) -> String {
+        String(format: text(key), locale: .current, currency)
     }
-    static func observedAmount(_ price: HistoryCostEvidence) -> String {
+    static func money(_ minor: Int, currency: String) -> String {
+        (Decimal(minor) / 100).formatted(.currency(code: currency).presentation(.isoCode))
+    }
+    static func observedAmount(_ price: HistoryCostEvidence, currency: String) -> String {
         switch price {
-        case .exact(let minor): money(minor)
-        case .bounded(let lower, let upper, _): money(lower) + " – " + money(upper)
+        case .exact(let minor): money(minor, currency: currency)
+        case .bounded(let lower, let upper, _): money(lower, currency: currency) + " – " + money(upper, currency: currency)
         case .unknown: text("Unknown price")
         }
     }
@@ -24,11 +27,11 @@ enum HistoryCopy {
         if let timeZoneID, let zone = TimeZone(identifier: timeZoneID) { display.timeZone = zone }
         return display.string(from: value)
     }
-    static func range(_ value: HistoryMoneyRange) -> String {
-        money(value.lowerMinor) + " – " + (value.upperMinor.map(money) ?? HistoryCopy.text("Unknown upper bound"))
+    static func range(_ value: HistoryMoneyRange, currency: String) -> String {
+        money(value.lowerMinor, currency: currency) + " – " + (value.upperMinor.map { money($0, currency: currency) } ?? HistoryCopy.text("Unknown upper bound"))
     }
     static func shop(_ value: HistoryOwnedShop) -> String {
-        HistoryCopy.text("Assigned shop") + " · " + date(value.createdAt) + " · " + phase(value.phase) + " · " + String(value.shopId.suffix(8))
+        HistoryCopy.text("Assigned shop") + " · " + date(value.createdAt) + " · " + phase(value.phase) + " · " + value.currency + " · " + String(value.shopId.suffix(8))
     }
     static func phase(_ value: String, bundle: Bundle = .main) -> String {
         switch value {

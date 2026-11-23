@@ -128,7 +128,7 @@ private struct PantryPriceDetail: View {
                         }
                     } else { Text(verbatim: row.sourceText) }
                 }
-                if row.currencyCode == "USD", row.shelfCurrencyMatches, row.amountMinor != nil, row.isPaidPrice || row.source == .shelf || row.source == .currentQuote,
+                if Currency(rawValue: row.currencyCode) != nil, row.shelfCurrencyMatches, row.amountMinor != nil, row.isPaidPrice || row.source == .shelf || row.source == .currentQuote,
                    let scope = household.projection, scope.enrolled, scope.grantId == nil, !household.locked, household.identity != nil {
                     NavigationLink(HistoryCopy.text("Review for a shared shop")) {
                         PrivatePricePublicationView(pantry: model, household: household, price: row, state: state)

@@ -18,6 +18,7 @@ import {sharedDemandChangeSchema,demandQuantitySchema,demandReviewSchema,type De
 import {SharedDemandError,applyDemandChange,undoDemandChange,validateDemandGraph,demandLineTotals,convertDemandQuantity} from './shared-demand-domain.js';
 import {sharedMealSchema,preserveProtectedMeal} from './shared-meal-planning.js';
 import {mealDemandSources,mealSourceKey,exactSourceExclusions,requestDemandSource} from './shared-demand-sources.js';
+import {requireMatchingCurrency} from './grocery-currency.js';
 const id=z.string().uuid().transform(s=>s.toLowerCase());
 const delta=sharedDemandChangeSchema.omit({schemaVersion:true,operationId:true,householdId:true,shopId:true,baseRevision:true,at:true});
 const pack=z.object({lineId:id,usablePerPack:demandQuantitySchema.nullable(),acceptUnresolved:z.boolean()}).strict();
@@ -75,6 +76,7 @@ export async function actionFacts(repo:HouseholdRepository,ctx:Context,shop:Shop
  const meals=await repo.meals(ctx,shop.shop_id);let request:any=null;let body:any,lines:any[],quote=shop.quote;
  if(input.action.kind==='shop.patch'){
   assert(!('demandReview' in input.action.body),'nested_demand_review');body=bodySchemas['shop.patch'].parse(input.action.body);lines=body.lines;quote=body.quote;
+  requireMatchingCurrency(quote.currency,shop.quote.currency);
   if(body.mealEdit){const e=body.mealEdit,old=meals.find(m=>m.occurrenceId===e.occurrenceId);assert((old?.revision??null)===e.baseMealRevision,'stale_meal');if(protectMeal)protectMeal(old?sharedMealSchema.parse(old.meal):undefined,e.meal,e.occurrenceId);else preserveProtectedMeal(old?sharedMealSchema.parse(old.meal):undefined,e.meal);
    assert(old||e.meal,'stale_meal');assert(old||meals.length<100,'meal_limit');
    if(e.dinnerSwap)await checkDraftDinnerSwap(ctx,old?sharedMealSchema.parse(old.meal):undefined,e.meal,e.preferenceReview);

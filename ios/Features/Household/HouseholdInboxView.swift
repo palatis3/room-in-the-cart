@@ -1,5 +1,6 @@
 import SwiftUI
 import HouseholdClient
+import CoreDomain
 
 struct HouseholdInboxView: View {
     @ObservedObject var model: HouseholdModel
@@ -205,7 +206,7 @@ struct HouseholdRequestDecisionView: View {
                                     Stepper(value: $model.packs, in: 1...10_000) {
                                         LabeledContent(ht("Whole packs"), value: model.packs.formatted())
                                     }
-                                    workingTextField(ht("Price per pack in USD, blank if unknown"), text: $model.price).keyboardType(.decimalPad)
+                                    workingTextField(householdCurrencyLabel("Price per pack in %@, blank if unknown", currency: shop.quote.currency), text: $model.price).keyboardType(.decimalPad)
                                         .accessibilityIdentifier("household.decision.price")
                                         .focused($inputFocus, equals: "price")
                                     Toggle(ht("Counts toward the retailer fee threshold"), isOn: $model.feeEligible)
@@ -450,8 +451,11 @@ struct ShopperBudgetView: View {
     }
 }
 func householdMoney(_ amount: Int?, currency: String) -> String {
-    guard let amount else { return ht("Unknown") }
-    return (Decimal(amount) / 100).formatted(.currency(code: currency))
+    guard let amount, let currency = Currency(rawValue: currency) else { return ht("Unknown") }
+    return moneyText(Money(minorUnits: Int64(amount), currency: currency))
+}
+func householdCurrencyLabel(_ key: String, currency: String) -> String {
+    String(format: ht(key), locale: .current, currency)
 }
 struct RequestReadTimeLabel: View {
     let asOf: String?

@@ -102,6 +102,8 @@ The separately authorized household page also includes nullable `purchaseObserva
 
 To add a lot, submit `{v:1, kind:"pantry.addLot", clientKey, replayWindow, grantEpoch, pantryRevision, body}`. The body contains `foodName`, `location` (`pantry`, `fridge` or `freezer`), nullable `storedAt` and `useFirstAt`, `exclusionTags`, `confirmedAt`, and nullable `quantity`. A quantity uses the existing exact rational amount, unit and original literal. The server commits one lot and its initial observation together under the household stock revision. A retry from the same device with the original live grant and replay window returns the original receipt. A changed intent needs a new client key. After a grant changes or a stock review goes stale, read the current page before submitting a new intent.
 
+Reviewed receipt acquisitions use `pantry.acquireReceipt`. Each receipt has one currency, USD or MXN. Send an explicit `body.currency` and each known `paidMinor`. Omit the amount or send null when the price is unknown. Legacy writes use `paidUSDMinor` and default to USD. Later selections and retries preserve the currency attached to the original receipt identity. Clients declaring `X-Grocery-Currencies: USD,MXN` receive the currency and paid amount together for newly submitted records. Older pantry clients still receive receipt quantities for MXN records, with the paid amount omitted.
+
 The placed-shop pantry endpoint retains its pantry/freezer location vocabulary. A shopper with standalone pantry authority can select compatible standalone lots through the existing shop commands. The joint allocator uses those same physical observations for reservations and shortfalls.
 
 ### Tonight from shared pantry food

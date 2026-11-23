@@ -65,18 +65,18 @@
         }
       }
     },
-    "Applicable cap in USD, optional": {
+    "Applicable cap in %@, optional": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Applicable cap in USD, optional"
+            "value": "Applicable cap in %@, optional"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Límite aplicable en USD, opcional"
+            "value": "Límite aplicable en %@, opcional"
           }
         }
       }

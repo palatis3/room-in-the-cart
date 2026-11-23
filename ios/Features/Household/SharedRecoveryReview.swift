@@ -56,8 +56,8 @@ struct SharedRecoveryReview: View {
                 if (intent.dinnerSwap == true || intent.undoesSwap != nil), let shop = model.shop {
                     if intent.proposesExtraTrip {
                         Section(sharedRecoveryText("Optional top-up estimate")) {
-                            TextField(sharedRecoveryText("Price of all additional packs"), text: $extraPacks).keyboardType(.decimalPad)
-                            TextField(sharedRecoveryText("Additional checkout charges"), text: $extraCharges).keyboardType(.decimalPad)
+                            TextField(sharedRecoveryText("Price of all additional packs") + " (" + shop.quote.currency + ")", text: $extraPacks).keyboardType(.decimalPad)
+                            TextField(sharedRecoveryText("Additional checkout charges") + " (" + shop.quote.currency + ")", text: $extraCharges).keyboardType(.decimalPad)
                             let packs = try? HouseholdInboxModel.priceMinor(extraPacks)
                             let charges = try? HouseholdInboxModel.priceMinor(extraCharges)
                             let extra = packs.flatMap { amount in charges.map { amount + $0 } }

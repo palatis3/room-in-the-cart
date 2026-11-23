@@ -1,6 +1,23 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Changing currency clears the entered prices and amounts.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changing currency clears the entered prices and amounts."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar la moneda borra los precios e importes ingresados."
+          }
+        }
+      }
+    },
     "Role offered by this invitation": {
       "localizations": {
         "en": {
@@ -2814,22 +2831,6 @@
         }
       }
     },
-    "An App Store subscription can continue to renew after account deletion.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "An App Store subscription can continue to renew after account deletion."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tu suscripción del App Store puede seguir renovándose después de eliminar la cuenta."
-          }
-        }
-      }
-    },
     "An adult contributor can send requests. This invitation does not assign a paid seat or shopper authority.": {
       "localizations": {
         "en": {
@@ -3515,19 +3516,19 @@
         }
       }
     },
-    "Cap in USD, blank if unknown": {
+    "Cap in %@, blank if unknown": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cap in USD, blank if unknown"
+            "value": "Cap in %@, blank if unknown"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Límite en USD; deja en blanco si no se conoce"
+            "value": "Límite en %@; deja en blanco si no se conoce"
           }
         }
       }
@@ -5428,19 +5429,19 @@
         }
       }
     },
-    "Deposits in USD, blank if unknown": {
+    "Deposits in %@, blank if unknown": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deposits in USD, blank if unknown"
+            "value": "Deposits in %@, blank if unknown"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Depósitos en USD; deja en blanco si no se conocen"
+            "value": "Depósitos en %@; deja en blanco si no se conocen"
           }
         }
       }
@@ -5541,19 +5542,19 @@
         }
       }
     },
-    "Discounts in USD, blank if unknown": {
+    "Discounts in %@, blank if unknown": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Discounts in USD, blank if unknown"
+            "value": "Discounts in %@, blank if unknown"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Descuentos en USD; deja en blanco si no se conocen"
+            "value": "Descuentos en %@; deja en blanco si no se conocen"
           }
         }
       }
@@ -6440,19 +6441,19 @@
         }
       }
     },
-    "Fee at or above threshold in USD, blank if unknown": {
+    "Fee at or above threshold in %@, blank if unknown": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fee at or above threshold in USD, blank if unknown"
+            "value": "Fee at or above threshold in %@, blank if unknown"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tarifa al alcanzar el umbral en USD; deja en blanco si no se conoce"
+            "value": "Tarifa al alcanzar el umbral en %@; deja en blanco si no se conoce"
           }
         }
       }
@@ -6473,19 +6474,19 @@
         }
       }
     },
-    "Fee below threshold in USD, blank if unknown": {
+    "Fee below threshold in %@, blank if unknown": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fee below threshold in USD, blank if unknown"
+            "value": "Fee below threshold in %@, blank if unknown"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tarifa por debajo del umbral en USD; deja en blanco si no se conoce"
+            "value": "Tarifa por debajo del umbral en %@; deja en blanco si no se conoce"
           }
         }
       }
@@ -6523,19 +6524,19 @@
         }
       }
     },
-    "Fee threshold in USD": {
+    "Fee threshold in %@": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fee threshold in USD"
+            "value": "Fee threshold in %@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Umbral de la tarifa en USD"
+            "value": "Umbral de la tarifa en %@"
           }
         }
       }
@@ -7403,6 +7404,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Idea guardada en este hogar. La aprobación y la propuesta son acciones separadas; no se ha cambiado ninguna comida ni paquete."
+          }
+        }
+      }
+    },
+    "If you have an App Store subscription, cancel it before deleting your account to avoid future charges. Apple can continue billing after you delete this account.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you have an App Store subscription, cancel it before deleting your account to avoid future charges. Apple can continue billing after you delete this account."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si tienes una suscripción del App Store, cancélala antes de eliminar tu cuenta para evitar cargos futuros. Apple puede seguir cobrándote después de que elimines esta cuenta."
           }
         }
       }
@@ -10167,18 +10184,18 @@
         }
       }
     },
-    "Price per pack in USD, blank if unknown": {
+    "Price per pack in %@, blank if unknown": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Price per pack in USD, blank if unknown"
+            "value": "Price per pack in %@, blank if unknown"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Precio por paquete en USD; en blanco si se desconoce"
+            "value": "Precio por paquete en %@; en blanco si se desconoce"
           }
         }
       }
@@ -12022,19 +12039,19 @@
         }
       }
     },
-    "Retailer fee in USD, blank if unknown": {
+    "Retailer fee in %@, blank if unknown": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Retailer fee in USD, blank if unknown"
+            "value": "Retailer fee in %@, blank if unknown"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tarifa de la tienda en USD; deja en blanco si no se conoce"
+            "value": "Tarifa de la tienda en %@; deja en blanco si no se conoce"
           }
         }
       }
@@ -15037,19 +15054,19 @@
         }
       }
     },
-    "Tax in USD, blank if unknown": {
+    "Tax in %@, blank if unknown": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tax in USD, blank if unknown"
+            "value": "Tax in %@, blank if unknown"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impuesto en USD; deja en blanco si no se conoce"
+            "value": "Impuesto en %@; deja en blanco si no se conoce"
           }
         }
       }

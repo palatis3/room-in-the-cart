@@ -56,6 +56,7 @@ struct ReceiptTripPlan: Identifiable, Equatable {
 
     init(shared order: SharedConfirmedOrder, household: String) throws {
         try order.validate(shopID: order.shopId)
+        guard let currency = Currency(rawValue: order.original.quote.currency) else { throw ClientError.invalidResponse }
         id = order.shopId; branch = household; countsPacks = true; deliveryKeys = []
         let format = ISO8601DateFormatter()
         format.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
@@ -66,7 +67,7 @@ struct ReceiptTripPlan: Identifiable, Equatable {
             guard let id = UUID(uuidString: line.lineId) else { throw ClientError.invalidResponse }
             let count = Int64(line.packs)
             let total: CostEvidence
-            if let price = line.unitPriceMinor { total = .exact(try Money(minorUnits: Int64(price)).multiplied(by: count)) }
+            if let price = line.unitPriceMinor { total = .exact(try Money(minorUnits: Int64(price), currency: currency).multiplied(by: count)) }
             else { total = .unknown(reason: "unknown") }
             return BasketLine(id: id, name: line.originalItem, quantity: Quantity(amount: try Rational(count), unit: .count, originalLiteral: String(count)), expectedCost: total)
         }

@@ -5,6 +5,7 @@ import { recipeReview } from './meal-preferences.js';
 import { z } from 'zod';
 import { sharedMealSchema } from './shared-meal-planning.js';
 import {reviewedPackEvidenceSchema,matchesReviewedPack} from './request-pack-evidence.js';
+import {groceryCurrencySchema} from './grocery-currency.js';
 export const uuid = z.string().uuid();
 const minor = z.number().int().min(0).max(1_000_000_000);
 const timestamp = z.string().datetime({ offset: true });
@@ -12,7 +13,7 @@ const item = z.string().trim().min(1).max(240);
 const ownQuantity = z.string().trim().min(1).max(80).nullable();
 export const lineSchema = z.object({ lineId: uuid, originalItem: item, packs: z.number().int().min(1).max(10_000), unitPriceMinor: minor.nullable(), feeEligible: z.boolean().default(true) }).strict();
 export const quoteSchema = z.object({
-  currency: z.literal('USD'), scope: z.enum(['wholeCheckout','item','dinner']), complete: z.boolean(), capMinor: minor.nullable(), capScope: z.enum(['wholeCheckout','item','dinner','unknown']),
+  currency: groceryCurrencySchema, scope: z.enum(['wholeCheckout','item','dinner']), complete: z.boolean(), capMinor: minor.nullable(), capScope: z.enum(['wholeCheckout','item','dinner','unknown']),
   fee: z.discriminatedUnion('kind', [
     z.object({ kind: z.literal('fixed'), amountMinor: minor.nullable() }).strict(),
     z.object({ kind: z.literal('threshold'), thresholdMinor: minor, belowMinor: minor.nullable(), aboveMinor: minor.nullable() }).strict(),

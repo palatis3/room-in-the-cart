@@ -11,10 +11,10 @@ public struct ShopperFinancialEntry: Codable, Equatable, Identifiable, Sendable 
     public let occurredAt, sourceText: String
     public let creditId, chargeEvidenceKey, holdEvidenceKey: UUID?
 
-    public init(kind: Kind, amountMinor: Int, occurredAt: String, sourceText: String,
+    public init(kind: Kind, amountMinor: Int, occurredAt: String, sourceText: String, currency: String = "USD",
                 creditId: UUID? = nil, chargeEvidenceKey: UUID? = nil, holdEvidenceKey: UUID? = nil) {
         id = UUID(); evidenceKey = UUID()
-        self.kind = kind; self.amountMinor = amountMinor; currency = "USD"
+        self.kind = kind; self.amountMinor = amountMinor; self.currency = currency
         self.occurredAt = occurredAt; self.sourceText = sourceText
         self.creditId = creditId; self.chargeEvidenceKey = chargeEvidenceKey; self.holdEvidenceKey = holdEvidenceKey
     }
@@ -30,6 +30,7 @@ public struct ShopperFinancialEntry: Codable, Equatable, Identifiable, Sendable 
 public struct ShopperFinancialRecord: Equatable, Sendable {
     public let shopID: UUID
     public let version: HistorySourceVersion
+    public let currency: String
     public let entries: [ShopperFinancialEntry]
 }
 
@@ -39,6 +40,9 @@ struct ShopperFinancialPage: Decodable, Sendable {
     let evidenceSource: String
     let entries: [ShopperFinancialEntry]
     let nextCursor: UUID?
+    private let currencyCode: GroceryWireCurrency?
+    var currency: String { (currencyCode ?? .usd).rawValue }
+    private enum CodingKeys: String, CodingKey { case shopId, sourceVersion, evidenceSource, entries, nextCursor, currencyCode = "currency" }
 }
 
 public enum ShopperFinancialAction: Codable, Equatable, Sendable {

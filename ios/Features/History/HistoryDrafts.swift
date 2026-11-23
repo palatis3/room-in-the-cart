@@ -1,5 +1,6 @@
 import Foundation
 import HouseholdClient
+import CoreDomain
 
 enum HistoryDraftError: Error { case invalid }
 enum HistoryDate {
@@ -28,6 +29,14 @@ enum HistoryMoney {
 struct HistoryObservationDraft: Equatable {
     var id = UUID().uuidString.lowercased()
     var shopID = ""
+    private(set) var currency: Currency = .groceryDefault()
+    mutating func selectShop(_ shop: HistoryOwnedShop?) {
+        shopID = shop?.shopId ?? ""
+        let next = shop.flatMap { Currency(rawValue: $0.currency) } ?? .groceryDefault()
+        guard currency != next else { return }
+        currency = next
+        exactPrice = ""; lowerPrice = ""; upperPrice = ""
+    }
     var evidenceKind: HistoryPriceKind = .shelf
     var variant = ""
     var itemName = "", packLabel = "", store = "", branch = "", eligibility = "", sourceText = ""
@@ -55,7 +64,7 @@ struct HistoryObservationDraft: Equatable {
         return try .init(id: id, shopId: shopID, itemName: itemName, packLabel: packLabel, usablePack: pack, price: price,
                          store: store, branch: branch, channel: channel, mode: mode, eligibility: eligibility,
                          observedAt: HistoryDate.string(observedAt), sourceText: sourceText, sourceLocale: sourceLocale,
-                         evidenceKind: evidenceKind, variant: variant.isEmpty ? nil : variant)
+                         evidenceKind: evidenceKind, variant: variant.isEmpty ? nil : variant, currency: currency.rawValue)
     }
 }
 struct HistoryReservationDraft: Equatable, Identifiable {
@@ -81,6 +90,14 @@ struct HistoryReservationDraft: Equatable, Identifiable {
 struct HistoryPeriodDraft: Equatable {
     var id = UUID().uuidString.lowercased()
     var baseRevision = 0
+    private(set) var currency: Currency
+
+    mutating func changeCurrency(_ next: Currency) {
+        guard baseRevision == 0, currency != next else { return }
+        currency = next
+        budget = ""; excludedReserve = ""
+        shopIDs.removeAll(); reservations.removeAll()
+    }
     var title = "", timeZoneID: String
     var startsAt: Date, endsAt: Date
     var budget = "", excludedReserve = ""
@@ -89,13 +106,15 @@ struct HistoryPeriodDraft: Equatable {
     var reviewedComplete = false
     var reviewedCompleteAt = Date()
     private var terminalReservations: [HistoryFutureReservation] = []
-    init(start: Date = Date(), calendar: Calendar = .current) {
+    init(start: Date = Date(), calendar: Calendar = .current, currency: Currency = .groceryDefault()) {
+        self.currency = currency
         timeZoneID = calendar.timeZone.identifier
         startsAt = start
         endsAt = calendar.date(byAdding: .day, value: 14, to: start) ?? start
     }
     init(_ value: HistorySavedBudgetPeriod) {
         let period = value.period
+        currency = Currency(rawValue: period.currency)!
         id = period.id; baseRevision = value.revision; title = period.title; timeZoneID = period.timeZoneId
         startsAt = HistoryDate.date(period.startsAt) ?? .distantPast; endsAt = HistoryDate.date(period.endsAt) ?? .distantPast
         budget = HistoryMoney.text(period.shopBudgetMinor); excludedReserve = HistoryMoney.text(period.alreadyExcludedReserveMinor)
@@ -115,7 +134,7 @@ struct HistoryPeriodDraft: Equatable {
         guard terminalReservations.allSatisfy({ original in values.contains(original) }) else { throw HistoryDraftError.invalid }
         return try .init(id: id, title: title, startsAt: HistoryDate.string(startsAt), endsAt: HistoryDate.string(endsAt), timeZoneId: timeZoneID,
                          shopBudgetMinor: HistoryMoney.minor(budget)!, alreadyExcludedReserveMinor: HistoryMoney.minor(excludedReserve, optional: true),
-                         shopIds: shopIDs, reservations: values, reviewedCompleteAt: reviewedComplete ? HistoryDate.string(reviewedCompleteAt) : nil)
+                         shopIds: shopIDs, reservations: values, reviewedCompleteAt: reviewedComplete ? HistoryDate.string(reviewedCompleteAt) : nil, currency: currency.rawValue)
     }
 }
 struct HistoryPriceFilter: Equatable {

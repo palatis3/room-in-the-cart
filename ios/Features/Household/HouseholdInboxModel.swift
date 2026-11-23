@@ -407,6 +407,7 @@ enum ShopperDelivery: Equatable {
                 base: .init(shopRevision: shop.shopRevision, authorityEpoch: shop.authorityEpoch, requestRevision: selected.revision), decision: decision)
             guard start == generation, draft == draftGeneration else { return }
             guard matchesPairEvidence(value, decision: decision),
+                  value.before.currency == shop.quote.currency, value.after.currency == shop.quote.currency,
                   (value.sameItemEvidence != nil) == (decision.choice == "sameItem"), value.choice == decision.choice, value.shopRevision == shop.shopRevision,
                   value.authorityEpoch == shop.authorityEpoch, value.requestRevision == selected.revision else { throw ClientError.invalidResponse }
             reviewedDecision = .init(request: selected, shop: shop, decision: decision, preview: value)

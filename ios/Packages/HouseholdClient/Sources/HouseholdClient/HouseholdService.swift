@@ -267,6 +267,7 @@ public actor HouseholdService {
         var req = request(base: configuration.baseURL, path: "v1/households/\(receipt.householdId)/bootstrap",
                           method: "GET", token: current.accessToken)
         req.setValue("1", forHTTPHeaderField: "X-Shared-Content-Safety")
+        req.setValue("USD,MXN", forHTTPHeaderField: "X-Grocery-Currencies")
         req.setValue(receipt.deviceToken, forHTTPHeaderField: "X-Device-Token")
         req.setValue(receipt.householdId, forHTTPHeaderField: "X-Household-ID")
         let value: HouseholdBootstrap = try await transport.json(req)
@@ -576,6 +577,7 @@ public actor HouseholdService {
         var entries: [ShopperFinancialEntry] = []
         var seen = Set<UUID>()
         var version: HistorySourceVersion?
+        var currency: String?
         var cursor: UUID?
         repeat {
             guard start == generation else { throw ClientError.cancelled }
@@ -583,20 +585,23 @@ public actor HouseholdService {
                 query: cursor.map { [.init(name: "cursor", value: $0.uuidString)] } ?? [])
             guard page.shopId == UUID(uuidString: shopID), page.evidenceSource == "shopper_reported",
                   page.entries.count <= 50, entries.count + page.entries.count <= 2000,
-                  page.entries.allSatisfy({ $0.currency == "USD" && $0.amountMinor >= 0 && seen.insert($0.id).inserted }),
+                  page.entries.allSatisfy({ ($0.currency == page.currency) && $0.amountMinor >= 0 && seen.insert($0.id).inserted }),
                   page.nextCursor == nil || (page.entries.count == 50 && page.nextCursor == page.entries.last?.id)
             else { throw ClientError.invalidResponse }
             try page.sourceVersion.validate()
             if let version, version != page.sourceVersion { throw ClientError.service(status: 409, code: "source_changed", correlationID: nil, retryAfter: nil) }
+            guard currency == nil || currency == page.currency else { throw ClientError.invalidResponse }
             version = page.sourceVersion
+            currency = page.currency
             entries += page.entries
             cursor = page.nextCursor
         } while cursor != nil
-        guard generation == start, let version, let id = UUID(uuidString: shopID) else { throw ClientError.cancelled }
-        return ShopperFinancialRecord(shopID: id, version: version, entries: entries)
+        guard generation == start, let version, let currency, let id = UUID(uuidString: shopID) else { throw ClientError.cancelled }
+        return ShopperFinancialRecord(shopID: id, version: version, currency: currency, entries: entries)
     }
     public func prepareFinancial(_ action: ShopperFinancialAction, reviewed record: ShopperFinancialRecord) async throws -> ShopperFinancialIntent {
         let start = generation
+        if case .append(let entry) = action, entry.currency != record.currency { throw ClientError.configuration }
         let scope = try await authorizeShopper(shopID: record.shopID.uuidString.lowercased())
         guard start == generation, let subject, let enrollment else { throw ClientError.cancelled }
         return .init(clientKey: UUID(), subject: subject, householdID: scope.household.id, memberID: scope.memberId,
@@ -649,7 +654,9 @@ public actor HouseholdService {
         }
         try await authorizeShopper(shopID: shopID, capability: capability)
         guard start == generation else { throw ClientError.cancelled }
-        return try await perform("shops/\(shopID)/previews", method: "POST", body: encoded(Input(requestId: requestID, base: base, decision: decision)))
+        let result: ShopperPreview = try await perform("shops/\(shopID)/previews", method: "POST", body: encoded(Input(requestId: requestID, base: base, decision: decision)))
+        try demandRequire(result.before.currency == result.after.currency && GroceryWireCurrency.supports(result.before.currency))
+        return result
     }
     public func executeShopper(_ operation: PendingOperation) async throws -> ShopperReceipt {
         if operation.sharedRequestUndoBinding != nil { return try await executeRequestAcceptanceUndo(operation) }
@@ -1068,11 +1075,12 @@ public actor HouseholdService {
         do { try response.observation.validate() } catch { throw ClientError.invalidResponse }
         return response.observation
     }
-    public func budgetHistory(shopIDs: [String]) async throws -> HistoryPermittedSubtotal {
-        guard shopIDs.count <= 100, HistoryValidation.uniqueIDs(shopIDs) else { throw ClientError.configuration }
-        struct Input: Encodable { let shopIds: [String] }
+    public func budgetHistory(shopIDs: [String], currency: String = "USD") async throws -> HistoryPermittedSubtotal {
+        guard GroceryWireCurrency.supports(currency), shopIDs.count <= 100, HistoryValidation.uniqueIDs(shopIDs) else { throw ClientError.configuration }
+        struct Input: Encodable { let shopIds: [String]; let currency: String? }
         struct Response: Decodable, Sendable { let permitted: HistoryPermittedSubtotal }
-        let response: Response = try await historyRead("budget-history", method: "POST", body: encoded(Input(shopIds: shopIDs)))
+        let response: Response = try await historyRead("budget-history", method: "POST", body: encoded(Input(shopIds: shopIDs, currency: currency == "USD" ? nil : currency)))
+        guard response.permitted.currency == currency else { throw ClientError.invalidResponse }
         try response.permitted.validate(allowedShopIDs: shopIDs)
         return response.permitted
     }
@@ -1142,7 +1150,7 @@ public actor HouseholdService {
         try intent.validate()
         try matchesHistory(subject: intent.subject, household: intent.householdID, member: intent.memberID, device: intent.deviceID)
         let start = generation
-        let permitted = try await budgetHistory(shopIDs: intent.period.shopIds)
+        let permitted = try await budgetHistory(shopIDs: intent.period.shopIds, currency: intent.period.currency)
         guard generation == start else { throw ClientError.cancelled }
         guard permitted.shops.count == intent.period.shopIds.count else { throw ClientError.service(status: 404, code: "unavailable", correlationID: nil, retryAfter: nil) }
         var sources = intent.period.shopIds
@@ -1150,7 +1158,7 @@ public actor HouseholdService {
             let current = try await budgetPeriod(periodID: intent.period.id)
             guard generation == start else { throw ClientError.cancelled }
             // A cached pending envelope must not restore details hidden by current source access.
-            guard case .complete(let saved) = current else { throw ClientError.service(status: 404, code: "unavailable", correlationID: nil, retryAfter: nil) }
+            guard case .complete(let saved) = current, saved.period.currency == intent.period.currency else { throw ClientError.service(status: 404, code: "unavailable", correlationID: nil, retryAfter: nil) }
             sources += saved.period.shopIds
         }
         try await requireWritableHistorySources(sources)
@@ -1160,7 +1168,7 @@ public actor HouseholdService {
     public func prepareBudgetPeriod(_ period: HistoryBudgetPeriod, baseRevision: Int) async throws -> BudgetPeriodIntent {
         try period.validate(); guard baseRevision >= 0, baseRevision < Int.max else { throw ClientError.configuration }
         let start = generation
-        let permitted = try await budgetHistory(shopIDs: period.shopIds)
+        let permitted = try await budgetHistory(shopIDs: period.shopIds, currency: period.currency)
         guard generation == start else { throw ClientError.cancelled }
         guard permitted.shops.count == period.shopIds.count else { throw ClientError.service(status: 404, code: "unavailable", correlationID: nil, retryAfter: nil) }
         var sources = period.shopIds
@@ -1168,6 +1176,7 @@ public actor HouseholdService {
             let current = try await savedBudgetPeriod(periodID: period.id)
             guard generation == start else { throw ClientError.cancelled }
             sources += current.period.shopIds
+            guard current.period.currency == period.currency else { throw ClientError.configuration }
             guard current.revision == baseRevision else { throw ClientError.service(status: 409, code: "stale_base", correlationID: nil, retryAfter: nil) }
             for old in current.period.reservations where old.state != .reserved {
                 guard period.reservations.contains(old) else { throw ClientError.service(status: 409, code: "reservation_final", correlationID: nil, retryAfter: nil) }
@@ -1307,6 +1316,7 @@ public actor HouseholdService {
         var req = request(base: configuration.baseURL, path: "v1/households/\(householdID)/\(path)",
                           method: method, token: access.accessToken, body: body)
         req.setValue("1", forHTTPHeaderField: "X-Shared-Content-Safety")
+        req.setValue("USD,MXN", forHTTPHeaderField: "X-Grocery-Currencies")
         if absolutePath { req.url = configuration.baseURL.appendingPathComponent(path) }
         req.setValue(enrollment.deviceToken, forHTTPHeaderField: "X-Device-Token")
         req.setValue(householdID, forHTTPHeaderField: "X-Household-ID")

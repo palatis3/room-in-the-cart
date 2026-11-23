@@ -60,9 +60,9 @@ final class SharedFallbackDraftTests: XCTestCase {
         let data = try JSONSerialization.data(withJSONObject: ["candidateId":UUID().uuidString, "revision":2, "usual":false, "recipe":json])
         let candidate = try JSONDecoder().decode(SharedFallbackLibrary.Candidate.self, from: data)
         var review = CandidateReviewDraft(candidate)
-        XCTAssertEqual(try review.review(includeOffers: false).remainingElapsedMinutes, 12)
+        XCTAssertEqual(try review.review(includeOffers: false, currency: .usd).remainingElapsedMinutes, 12)
         review.remaining = ""
-        let cleared = try review.review(includeOffers: false)
+        let cleared = try review.review(includeOffers: false, currency: .usd)
         XCTAssertNil(cleared.remainingElapsedMinutes)
         XCTAssertEqual(cleared.remainingTimeUnknown, true)
         for index in review.ingredients.indices {
@@ -72,32 +72,32 @@ final class SharedFallbackDraftTests: XCTestCase {
             review.ingredients[index].pack.price = "1,49"
             review.ingredients[index].pack.availability = "2"
         }
-        let independent = try review.review(includeOffers: true)
+        let independent = try review.review(includeOffers: true, currency: .usd)
         let firstPack = try XCTUnwrap(independent.ingredients[0].offer)
         XCTAssertNotEqual(firstPack.packId, independent.ingredients[1].offer?.packId)
         review.ingredients[1].sharedPackID = firstPack.packId
         review.ingredients[1].hasOwnPack = false
-        let linked = try review.review(includeOffers: true)
+        let linked = try review.review(includeOffers: true, currency: .usd)
         XCTAssertEqual(linked.ingredients[1].offer, firstPack)
         XCTAssertEqual(firstPack.priceMinor, 149)
         review.ingredients[0].hasOwnPack = false
-        XCTAssertThrowsError(try review.review(includeOffers: true))
-        XCTAssertTrue(try review.review(includeOffers: false).ingredients.allSatisfy { $0.offer == nil })
+        XCTAssertThrowsError(try review.review(includeOffers: true, currency: .usd))
+        XCTAssertTrue(try review.review(includeOffers: false, currency: .usd).ingredients.allSatisfy { $0.offer == nil })
     }
 
     func testTripRequiresReviewedTimeChargesAndLimitEvenWhenZero() throws {
         var trip = FallbackTripDraft()
-        XCTAssertNil(try trip.trip())
+        XCTAssertNil(try trip.trip(currency: .usd))
         trip.include = true
         trip.minutes = "12"; trip.budget = "5,20"
-        XCTAssertThrowsError(try trip.trip())
+        XCTAssertThrowsError(try trip.trip(currency: .usd))
         trip.charges = "0"
-        let reviewed = try XCTUnwrap(trip.trip())
+        let reviewed = try XCTUnwrap(trip.trip(currency: .usd))
         XCTAssertEqual(reviewed.chargesMinor, 0)
         XCTAssertEqual(reviewed.minutes, 12)
         XCTAssertEqual(reviewed.budgetMinor, 520)
         XCTAssertEqual(reviewed.currency, "USD")
         trip.budget = "-1"
-        XCTAssertThrowsError(try trip.trip())
+        XCTAssertThrowsError(try trip.trip(currency: .usd))
     }
 }

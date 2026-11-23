@@ -38,6 +38,7 @@ extension SharedTrackingIntent {
         }
         if case .request(let action) = kind.action {
             guard let requestPreview else { throw ClientError.configuration }
+            try demandRequire(requestPreview.before.currency == page.checkout.currency && requestPreview.after.currency == page.checkout.currency)
             try demandRequire(requestPreview.previewId == action.previewId.string && requestPreview.shopRevision == base.shopRevision && requestPreview.authorityEpoch == base.authorityEpoch)
             try demandRequire(demandRevision(requestPreview.requestRevision) && requestPreview.requestRevision < Int(Int32.max) && ["add", "link"].contains(requestPreview.choice))
             try demandRequire(!requestPreview.requiresOverageAcceptance || action.acceptOverage)
@@ -83,6 +84,7 @@ extension SharedTrackingCandidateReview {
         }
         if let packs = intent.kind.packs { try demandRequire(after.packReviews == packs) }
         if case .patch(let body) = candidate.action.command {
+            try demandRequire(body.quote.currency == page.checkout.currency)
             let rows = body.lines.map { line in (line.lineId, line) }
             try demandRequire(rows.count == after.basket.count)
             for basket in after.basket {

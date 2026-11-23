@@ -81,7 +81,7 @@ public struct EnteredStoreQuote: Codable, Equatable, Sendable {
             for row in supplies { try row.validate() }
         }
         func text(_ s: String, limit: Int = 240) -> Bool { !s.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && s.utf16.count <= limit }
-        guard [label,store,branch,source].allSatisfy({ text($0) }), ["pickup","delivery","inStore"].contains(mode), currency == "USD",
+        guard [label,store,branch,source].allSatisfy({ text($0) }), ["pickup","delivery","inStore"].contains(mode), GroceryWireCurrency.supports(currency),
               HistoryValidation.date(slot) != nil, HistoryValidation.date(observedAt) != nil, terms.utf16.count <= 500,
               [itemsMinor,checkoutMinor,tripMinor,capMinor].allSatisfy({ $0 == nil || (0...1_000_000_000).contains($0!) }),
               extraMinutes == nil || (0...525_600).contains(extraMinutes!), ["wholeCheckout","itemsOnly"].contains(capScope) else { throw ClientError.configuration }
@@ -91,7 +91,10 @@ public struct EnteredStoreQuoteOptions: Codable, Equatable, Sendable {
     public let first: EnteredStoreQuote; public let second: EnteredStoreQuote
     public init(first: EnteredStoreQuote, second: EnteredStoreQuote) { self.first = first; self.second = second }
     public subscript(_ choice: StoreQuoteChoice) -> EnteredStoreQuote { choice == .first ? first : second }
-    public func validate() throws { try first.validate(); try second.validate() }
+    public func validate() throws {
+        try first.validate(); try second.validate()
+        guard first.currency == second.currency else { throw ClientError.configuration }
+    }
 }
 public struct StoreQuoteComparison: Codable, Equatable, Sendable {
     public struct Cap: Codable, Equatable, Sendable {
@@ -127,8 +130,13 @@ public struct StoreQuotePage: Codable, Equatable, Sendable {
         }
     }
     public let shopId: UUID; public let shopRevision: Int; public let authorityEpoch: Int; public let grantRevision: Int
+    private let currencyCode: GroceryWireCurrency?
+    public var currency: String { (currencyCode ?? .usd).rawValue }
     public let shopper: Bool; public let phase: String; public let adults: [Adult]; public let commitments: [Commitment]
     public let currentBasis: Basis?; public let pairs: [Pair]; public let nextCursor: UUID?
+    private enum CodingKeys: String, CodingKey {
+        case shopId, shopRevision, authorityEpoch, grantRevision, currencyCode = "currency", shopper, phase, adults, commitments, currentBasis, pairs, nextCursor
+    }
     public func validate() throws {
         guard shopRevision > 0, authorityEpoch > 0, grantRevision >= 0, ["draft","frozen","placed","closed"].contains(phase),
               pairs.count <= 30, Set(pairs.map(\.id)).count == pairs.count, adults.count <= 100,
@@ -136,6 +144,7 @@ public struct StoreQuotePage: Codable, Equatable, Sendable {
               shopper || adults.isEmpty, commitments.count <= 500 else { throw ClientError.invalidResponse }
         for p in pairs {
             try p.options.validate()
+            guard p.options.first.currency == currency, p.options.second.currency == currency else { throw ClientError.invalidResponse }
             guard p.baseRevision > 0, p.authorityEpoch > 0, p.grantRevision >= 0, HistoryValidation.date(p.savedAt) != nil,
                   p.proposals.count <= 100, Set(p.proposals.map(\.id)).count == p.proposals.count,
                   shopper || p.own else { throw ClientError.invalidResponse }

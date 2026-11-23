@@ -32,6 +32,8 @@ struct SharedFallbackOptionsView: View {
         _candidates = State(initialValue: library.candidates.map(CandidateReviewEditor.init))
     }
 
+    private var currency: Currency? { shop.shop.flatMap { Currency(rawValue: $0.quote.currency) } }
+
     private var live: Bool {
         scene == .active && model.canSuggest && model.library == library &&
         showsReviewedRecovery(page, model: shop, household: household) && shop.pending == nil
@@ -39,7 +41,7 @@ struct SharedFallbackOptionsView: View {
 
     var body: some View {
         WorkingForm {
-            if live {
+            if live, let currency {
                 Section(target.title) {
                     Text(verbatim: sharedMealScheduleText(target.day))
                     if !target.exclusions.isEmpty { LabeledContent(ht("Meal exclusions"), value: target.exclusions.joined(separator: ", ")) }
@@ -49,8 +51,8 @@ struct SharedFallbackOptionsView: View {
                     Toggle(fallbackText("Compare a top-up trip"), isOn: $trip.include).accessibilityIdentifier("fallback.trip.include")
                     if trip.include {
                         TextField(fallbackText("Round-trip minutes"), text: $trip.minutes).keyboardType(.numberPad).focused($editing)
-                        TextField(fallbackText("Whole-trip spending limit (USD)"), text: $trip.budget).keyboardType(.decimalPad).focused($editing)
-                        TextField(fallbackText("Extra charges and travel cost (USD)"), text: $trip.charges).keyboardType(.decimalPad).focused($editing)
+                        TextField(fallbackCurrencyLabel("Whole-trip spending limit (%@)", currency: currency.rawValue), text: $trip.budget).keyboardType(.decimalPad).focused($editing)
+                        TextField(fallbackCurrencyLabel("Extra charges and travel cost (%@)", currency: currency.rawValue), text: $trip.charges).keyboardType(.decimalPad).focused($editing)
                     }
                 }
                 ForEach(candidates) { editor in
@@ -59,7 +61,7 @@ struct SharedFallbackOptionsView: View {
                         Toggle(editor.title, isOn: $editor.selected).accessibilityIdentifier("fallback.select." + editor.id.uuidString)
                         if editor.selected {
                             NavigationLink(fallbackText("Review ingredients, food and time")) {
-                                SharedFallbackIngredientView(editor: editor, page: page, includeOffers: trip.include, edited: invalidate)
+                                SharedFallbackIngredientView(editor: editor, page: page, includeOffers: trip.include, currency: currency, edited: invalidate)
                             }.accessibilityIdentifier("fallback.food." + editor.id.uuidString)
                         }
                     }
@@ -113,8 +115,9 @@ struct SharedFallbackOptionsView: View {
     private func compare() async {
         guard live, !preparing else { return }
         do {
-            let enteredTrip = try trip.trip()
-            let reviews = try candidates.filter(\.selected).map { try $0.draft.review(includeOffers: enteredTrip != nil) }
+            guard let currency else { throw ClientError.configuration }
+            let enteredTrip = try trip.trip(currency: currency)
+            let reviews = try candidates.filter(\.selected).map { try $0.draft.review(includeOffers: enteredTrip != nil, currency: currency) }
             message = nil
             hasCompared = false
             await model.rank(reviews, trip: enteredTrip, occurrence: target.id, page: page, reviewed: library)
@@ -156,7 +159,7 @@ struct SharedFallbackOptionsView: View {
                     if let packs = row.availablePacks { LabeledContent(fallbackText("Packs available"), value: packs.formatted()) }
                     if let currency = row.currency {
                         if let amount = row.extraCashMinor { LabeledContent(fallbackText("Whole-trip extra cash"), value: fallbackCash(amount, currency)) }
-                        if let limit = row.budgetMinor { LabeledContent(fallbackText("Whole-trip spending limit (USD)"), value: fallbackCash(limit, currency)) }
+                        if let limit = row.budgetMinor { LabeledContent(fallbackCurrencyLabel("Whole-trip spending limit (%@)", currency: currency), value: fallbackCash(limit, currency)) }
                     }
                 }
             }
@@ -186,12 +189,16 @@ struct SharedFallbackOptionFacts: View {
             ForEach(option.buys, id: \.ingredientId) { buy in
                 LabeledContent(buy.label, value: fallbackText("Packs required") + " " + buy.packs.formatted() + " · " + fallbackCash(buy.subtotalMinor, currency))
             }
-            LabeledContent(fallbackText("Extra charges and travel cost (USD)"),
+            LabeledContent(fallbackCurrencyLabel("Extra charges and travel cost (%@)", currency: currency),
                            value: fallbackCash(option.extraCashMinor - option.merchandiseMinor, currency))
             LabeledContent(fallbackText("Whole-trip extra cash"), value: fallbackCash(option.extraCashMinor, currency))
         }
     }
 
+}
+
+func fallbackCurrencyLabel(_ key: String, currency: String) -> String {
+    String(format: fallbackText(key), locale: .current, currency)
 }
 
 private func fallbackCash(_ cents: Int, _ currency: String) -> String {

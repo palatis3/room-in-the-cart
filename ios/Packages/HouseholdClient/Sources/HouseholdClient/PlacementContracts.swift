@@ -110,7 +110,7 @@ public struct PlacementPendingReport: Codable, Equatable, Identifiable, Sendable
               HistoryValidation.date(occurredAt) != nil, HistoryValidation.date(receivedAt) != nil, HistoryValidation.date(snapshotCreatedAt) != nil,
               snapshotDigest.range(of: "^[0-9a-f]{64}$", options: .regularExpression) != nil, source == "shopper_reported",
               ["pending_reconciliation", "applied", "rejected"].contains(state), snapshot.lines.count <= 200,
-              HistoryValidation.uniqueIDs(snapshot.lines.map(\.lineId)), snapshot.quote.currency == "USD", snapshot.budget.currency == "USD",
+              HistoryValidation.uniqueIDs(snapshot.lines.map(\.lineId)), snapshot.budget.currency == snapshot.quote.currency,
               resolutionOperationId.map({ HistoryValidation.ids([$0]) }) ?? true, resolutionClientKey.map({ HistoryValidation.ids([$0]) }) ?? true,
               state != "pending_reconciliation" || (resolutionOperationId == nil && resolutionClientKey == nil) else { throw ClientError.invalidResponse }
     }

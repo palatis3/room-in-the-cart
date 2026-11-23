@@ -1,5 +1,12 @@
 import Foundation
 
+enum GroceryWireCurrency: String, Codable, Sendable {
+    case usd = "USD"
+    case mxn = "MXN"
+
+    static func supports(_ code: String) -> Bool { Self(rawValue: code) != nil }
+}
+
 /// Private shopper projections are separate from contributor request responses.
 public struct ShopperBasketLine: Codable, Equatable, Identifiable, Sendable {
     public var id: String { lineId }
@@ -37,22 +44,19 @@ public struct ShopperQuote: Codable, Equatable, Sendable {
             }
         }
     }
-    // The shared quote wire contract is USD-only. Reject other currencies before a
-    // shared draft can copy its minor units into a newly reviewed USD quote.
-    private enum WireCurrency: String, Codable { case usd = "USD" }
-    private let wireCurrency: WireCurrency
+    private let wireCurrency: GroceryWireCurrency
     public var currency: String { wireCurrency.rawValue }
     public let scope: String; public let complete: Bool; public let capMinor: Int?
     public let capScope: String; public let fee: Fee; public let taxesMinor: Int?
     public let depositsMinor: Int?; public let discountsMinor: Int?; public let observedAt: String; public let expiresAt: String
     public init(scope: String, complete: Bool, capMinor: Int?, capScope: String, fee: Fee,
                 taxesMinor: Int?, depositsMinor: Int?, discountsMinor: Int?, observedAt: Date, expiresAt: Date,
-                preservingTimestampsFrom original: ShopperQuote? = nil) throws {
+                currency: String = "USD", preservingTimestampsFrom original: ShopperQuote? = nil) throws {
         let amounts = [capMinor, fee.amountMinor, fee.thresholdMinor, fee.belowMinor, fee.aboveMinor, taxesMinor, depositsMinor, discountsMinor].compactMap { $0 }
-        guard ["wholeCheckout", "item", "dinner"].contains(scope), ["wholeCheckout", "item", "dinner", "unknown"].contains(capScope),
+        guard let wireCurrency = GroceryWireCurrency(rawValue: currency), ["wholeCheckout", "item", "dinner"].contains(scope), ["wholeCheckout", "item", "dinner", "unknown"].contains(capScope),
               ["fixed", "threshold"].contains(fee.kind), amounts.allSatisfy({ (0...1_000_000_000).contains($0) }),
               observedAt.timeIntervalSince1970.isFinite, expiresAt.timeIntervalSince1970.isFinite, expiresAt > observedAt else { throw ClientError.configuration }
-        wireCurrency = .usd; self.scope = scope; self.complete = complete; self.capMinor = capMinor; self.capScope = capScope; self.fee = fee
+        self.wireCurrency = wireCurrency; self.scope = scope; self.complete = complete; self.capMinor = capMinor; self.capScope = capScope; self.fee = fee
         self.taxesMinor = taxesMinor; self.depositsMinor = depositsMinor; self.discountsMinor = discountsMinor
         self.observedAt = Self.timestamp(observedAt, original: original?.observedAt)
         self.expiresAt = Self.timestamp(expiresAt, original: original?.expiresAt)

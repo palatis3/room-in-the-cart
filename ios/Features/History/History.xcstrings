@@ -257,6 +257,23 @@
         }
       }
     },
+    "Changing currency clears the entered budget, assigned shops and reservations.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changing currency clears the entered budget, assigned shops and reservations."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar la moneda borra el presupuesto ingresado, las compras asignadas y las reservas."
+          }
+        }
+      }
+    },
     "Check access again": {
       "localizations": {
         "en": {
@@ -1298,18 +1315,18 @@
         }
       }
     },
-    "Lower price in USD": {
+    "Lower price in %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lower price in USD"
+            "value": "Lower price in %@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Precio mínimo en USD"
+            "value": "Precio mínimo en %@"
           }
         }
       }
@@ -1730,18 +1747,18 @@
         }
       }
     },
-    "Period planning envelope · USD": {
+    "Period planning envelope · %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Period planning envelope · USD"
+            "value": "Period planning envelope · %@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fondo de planificación del período · USD"
+            "value": "Fondo de planificación del período · %@"
           }
         }
       }
@@ -1938,18 +1955,18 @@
         }
       }
     },
-    "Price evidence · USD": {
+    "Price evidence · %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Price evidence · USD"
+            "value": "Price evidence · %@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Registro de precios · USD"
+            "value": "Registro de precios · %@"
           }
         }
       }
@@ -1970,18 +1987,18 @@
         }
       }
     },
-    "Price in USD": {
+    "Price in %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Price in USD"
+            "value": "Price in %@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Precio en USD"
+            "value": "Precio en %@"
           }
         }
       }
@@ -2258,34 +2275,34 @@
         }
       }
     },
-    "Reserve already excluded, optional USD": {
+    "Reserve already excluded, optional %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reserve already excluded, optional USD"
+            "value": "Reserve already excluded, optional %@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reserva ya excluida, USD opcional"
+            "value": "Reserva ya excluida, %@ opcional"
           }
         }
       }
     },
-    "Reserved amount in USD": {
+    "Reserved amount in %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reserved amount in USD"
+            "value": "Reserved amount in %@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Importe reservado en USD"
+            "value": "Importe reservado en %@"
           }
         }
       }
@@ -2562,18 +2579,18 @@
         }
       }
     },
-    "Shop budget after excluded reserve, USD": {
+    "Shop budget after excluded reserve, %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Shop budget after excluded reserve, USD"
+            "value": "Shop budget after excluded reserve, %@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Presupuesto de compras tras excluir la reserva, USD"
+            "value": "Presupuesto de compras tras excluir la reserva, %@"
           }
         }
       }
@@ -2914,18 +2931,18 @@
         }
       }
     },
-    "Upper price in USD": {
+    "Upper price in %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Upper price in USD"
+            "value": "Upper price in %@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Precio máximo en USD"
+            "value": "Precio máximo en %@"
           }
         }
       }

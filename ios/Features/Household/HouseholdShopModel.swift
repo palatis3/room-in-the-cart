@@ -13,6 +13,16 @@ struct SharedShopLineDraft: Identifiable, Equatable {
 struct SharedShopDraft: Equatable {
     private let originalQuote: ShopperQuote?
     var lines: [SharedShopLineDraft] = []
+    private(set) var currency: Currency = .groceryDefault()
+    var canChooseCurrency: Bool { originalQuote == nil }
+
+    mutating func changeCurrency(_ next: Currency) {
+        guard canChooseCurrency, currency != next else { return }
+        currency = next
+        for index in lines.indices { lines[index].price = "" }
+        cap = ""; fee = ""; tax = ""; deposits = ""; discounts = ""
+        threshold = ""; belowFee = ""; aboveFee = ""
+    }
     var mealEdit: SharedMealEdit?
     var scope = "wholeCheckout", capScope = "wholeCheckout"
     var complete = false
@@ -24,7 +34,8 @@ struct SharedShopDraft: Equatable {
     }
     init() { originalQuote = nil }
     init(_ shop: ShopperShop) throws {
-        originalQuote = shop.quote
+        guard let currency = Currency(rawValue: shop.quote.currency) else { throw ClientError.invalidResponse }
+        originalQuote = shop.quote; self.currency = currency
         lines = try shop.lines.map {
             guard let id = UUID(uuidString: $0.id) else { throw ClientError.invalidResponse }
             return .init(id: id, item: $0.originalItem, packs: $0.packs, price: Self.amount($0.unitPriceMinor), feeEligible: $0.feeEligible)
@@ -45,7 +56,7 @@ struct SharedShopDraft: Equatable {
         } else { feeValue = .fixed(try money(fee)) }
         let quote = try ShopperQuote(scope: scope, complete: complete, capMinor: money(cap), capScope: capScope, fee: feeValue,
             taxesMinor: money(tax), depositsMinor: money(deposits), discountsMinor: money(discounts), observedAt: observedAt, expiresAt: expiresAt,
-            preservingTimestampsFrom: originalQuote)
+            currency: currency.rawValue, preservingTimestampsFrom: originalQuote)
         return try .init(quote: quote, lines: lines.map { try .init(lineId: $0.id, originalItem: $0.item.trimmingCharacters(in: .whitespacesAndNewlines),
             packs: $0.packs, unitPriceMinor: money($0.price), feeEligible: $0.feeEligible) })
     }
@@ -740,7 +751,8 @@ struct SharedShopTransfer: Equatable {
         }
         guard generation == start, scope.shopId == shopID, canManage else { throw ClientError.cancelled }
         financialRetry = stored?.version.authorityEpoch == record.version.authorityEpoch ? stored : nil
-        financialSummary = try SettlementLedger.summary(of: record.entries.map { try $0.settlementEntry() })
+        guard let currency = Currency(rawValue: record.currency), shop?.quote.currency == record.currency else { throw ClientError.invalidResponse }
+        financialSummary = try SettlementLedger.summary(of: record.entries.map { try $0.settlementEntry() }, currency: currency)
         financialRecord = record; notice = nil
     }
     func writeFinancial(_ action: ShopperFinancialAction, reviewed record: ShopperFinancialRecord) async -> Bool {
