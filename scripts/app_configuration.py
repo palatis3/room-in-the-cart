@@ -238,6 +238,18 @@ def require_release_metadata(info):
             raise ValueError(f"Release metadata has an invalid {key}")
 
 
+def household_access_configured(info):
+    # An existing account can connect even when requesting new email codes is disabled.
+    return all(info.get(key) for key in ("HouseholdServiceURL", "SupabaseProjectURL", "SupabasePublishableKey"))
+
+
+def privacy_manifest_profile(info):
+    if (info.get("RITCBuildEnvironment") == "Release" and info.get("RITCEmailOTPEnabled") == "NO"
+            and not household_access_configured(info)):
+        return "Private"
+    return "Connected"
+
+
 def require_private_release_metadata(info):
     if info.get("RITCBuildEnvironment") != "Release":
         raise ValueError("Private App Store metadata requires a Release build")
@@ -245,7 +257,7 @@ def require_private_release_metadata(info):
         raise ValueError("Private App Store release requires email sign-in to be disabled")
     # Adult sign-in, child invitations and the membership screen can use an
     # existing account when all three settings are present, even with OTP off.
-    if all(info.get(key) for key in ("HouseholdServiceURL", "SupabaseProjectURL", "SupabasePublishableKey")):
+    if household_access_configured(info):
         raise ValueError("Private App Store release has connected household access enabled")
 
     website = info.get("PublicWebsiteURL")

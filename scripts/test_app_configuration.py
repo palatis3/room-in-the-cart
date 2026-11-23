@@ -11,12 +11,30 @@ import xml.etree.ElementTree as ET
 
 import generate_xcode_project as project
 from app_configuration import (PUBLIC_SETTINGS, build_settings, compiled_metadata,
-                               load_configuration, require_private_release_metadata, require_release_metadata,
+                               load_configuration, privacy_manifest_profile, require_private_release_metadata, require_release_metadata,
                                valid_page_url, valid_support_email, valid_operator_name)
 from check_built_app import SHARE_ACTIVATION_RULE, verify_built_app, verify_distribution_entitlements
 
 
 class AppConfigurationTests(unittest.TestCase):
+
+    def test_app_resource_uses_configuration_and_reachable_household_access(self):
+        endpoints = {"serviceURL": "https://service.grocery-app.com", "supabaseURL": "https://auth.grocery-app.com",
+                     "publishableKey": "sb_publishable_review"}
+        for release, selected in (({}, "Private"), ({"publicWebsiteURL": "https://grocery-app.com"}, "Private"),
+                                  ({"emailOTPEnabled": True}, "Connected"), (endpoints, "Connected"),
+                                  ({**endpoints, "serviceURL": ""}, "Private")):
+            with self.subTest(release=release), patch.object(project, "load_configuration", return_value=release), \
+                    patch.object(project, "OBJECTS", {}):
+                project.outputs()
+                phase = project.OBJECTS[project.ident("app:resources")]
+                paths = [project.OBJECTS[project.OBJECTS[identifier]["fileRef"]]["path"] for identifier in phase["files"]]
+                self.assertEqual([p for p in paths if p.endswith(".xcprivacy")],
+                                 ["Resources/Privacy/$(RITC_PRIVACY_PROFILE)/PrivacyInfo.xcprivacy"])
+                for name, expected in (("Release", selected), ("Debug", "Connected"), ("Staging", "Connected")):
+                    settings = project.OBJECTS[project.ident("config:app:" + name)]["buildSettings"]
+                    self.assertEqual(settings["RITC_PRIVACY_PROFILE"], expected)
+
 
     def test_regional_age_check_is_an_explicit_boolean_in_its_own_environment(self):
         with tempfile.TemporaryDirectory() as folder:
@@ -424,7 +442,8 @@ class BuiltAppVerificationTests(unittest.TestCase):
             shutil.copyfile(self.root / "ios/Extensions" / folder / "PrivacyInfo.xcprivacy",
                             extension / "PrivacyInfo.xcprivacy")
         (app / "Assets.car").write_bytes(b"fixture asset catalog")
-        shutil.copyfile(self.root / "ios/Resources/PrivacyInfo.xcprivacy", app / "PrivacyInfo.xcprivacy")
+        profile = privacy_manifest_profile(bundles[app])
+        shutil.copyfile(self.root / "ios/Resources/Privacy" / profile / "PrivacyInfo.xcprivacy", app / "PrivacyInfo.xcprivacy")
         for language in ("en", "es"):
             localized = app / f"{language}.lproj"
             localized.mkdir()
@@ -493,24 +512,40 @@ class BuiltAppVerificationTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 2)
                 self.assertIn(message, result.stderr)
 
-    def test_household_privacy_declarations_in_app_manifest(self):
-        with (self.app / "PrivacyInfo.xcprivacy").open("rb") as handle:
-            manifest = plistlib.load(handle)
-        declared = {row["NSPrivacyCollectedDataType"]: row for row in manifest["NSPrivacyCollectedDataTypes"]}
-        for kind in ("EmailsOrTextMessages", "CustomerSupport", "ProductInteraction"):
-            with self.subTest(kind=kind):
-                row = declared["NSPrivacyCollectedDataType" + kind]
-                self.assertTrue(row["NSPrivacyCollectedDataTypeLinked"])
-                self.assertFalse(row["NSPrivacyCollectedDataTypeTracking"])
-                self.assertEqual(row["NSPrivacyCollectedDataTypePurposes"],
-                                 ["NSPrivacyCollectedDataTypePurposeAppFunctionality"])
-        for kind in ("UserID", "OtherUserContent"):
-            with self.subTest(kind=kind):
-                row = declared["NSPrivacyCollectedDataType" + kind]
-                self.assertTrue(row["NSPrivacyCollectedDataTypeLinked"])
-                self.assertFalse(row["NSPrivacyCollectedDataTypeTracking"])
-                self.assertIn("NSPrivacyCollectedDataTypePurposeProductPersonalization",
-                              row["NSPrivacyCollectedDataTypePurposes"])
+    def test_rejects_swapped_privacy_manifests(self):
+        staging = self.make_app("Staging", "dev.roominthecart.app.staging", "roominthecart-staging", "iPhoneOS")
+        private = self.app / "PrivacyInfo.xcprivacy"
+        connected = staging / "PrivacyInfo.xcprivacy"
+        private_bytes, connected_bytes = private.read_bytes(), connected.read_bytes()
+        self.assertNotEqual(private_bytes, connected_bytes)
+        private.write_bytes(connected_bytes)
+        connected.write_bytes(private_bytes)
+        for bundle, name in ((self.app, "Release"), (staging, "Staging")):
+            with self.subTest(configuration=name), self.assertRaisesRegex(ValueError, "differs from the reviewed source"):
+                verify_built_app(bundle, name)
+
+    def test_source_validator_rejects_wrong_purposes_links_and_required_reasons(self):
+        from check_privacy_manifests import verify_app_privacy_manifests
+        fixtures = self.path / "manifest-fixtures"
+        shutil.copytree(self.root / "ios/Resources/Privacy", fixtures / "Resources/Privacy")
+        for profile in ("Private", "Connected"):
+            source = fixtures / "Resources/Privacy" / profile / "PrivacyInfo.xcprivacy"
+            original = source.read_bytes()
+            for field in ("purpose", "linked", "reason"):
+                with self.subTest(profile=profile, field=field):
+                    manifest = plistlib.loads(original)
+                    barcode = next(r for r in manifest["NSPrivacyCollectedDataTypes"]
+                                   if r["NSPrivacyCollectedDataType"] == "NSPrivacyCollectedDataTypeSearchHistory")
+                    if field == "purpose":
+                        barcode["NSPrivacyCollectedDataTypePurposes"] = ["NSPrivacyCollectedDataTypePurposeAppFunctionality"]
+                    elif field == "linked":
+                        barcode["NSPrivacyCollectedDataTypeLinked"] = False
+                    else:
+                        manifest["NSPrivacyAccessedAPITypes"][0]["NSPrivacyAccessedAPITypeReasons"] = []
+                    source.write_bytes(plistlib.dumps(manifest))
+                    with self.assertRaisesRegex(ValueError, profile + ":"):
+                        verify_app_privacy_manifests(fixtures)
+                    source.write_bytes(original)
 
     def test_checks_each_extension_privacy_manifest(self):
         for extension in (self.widget, self.share):
