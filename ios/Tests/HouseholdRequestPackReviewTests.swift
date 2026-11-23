@@ -89,10 +89,45 @@ final class HouseholdRequestPackReviewTests: XCTestCase {
         XCTAssertTrue(result.results[0].calculation.issues.contains(.usableConversionUnknown))
         XCTAssertTrue(result.results[1].calculation.issues.contains(.usableQuantityUnknown))
     }
-    func testHouseholdReviewRejectsAPesoOfferBeforeWritingUSDMinorUnits() throws {
-        var peso = pack("A", price: 400)
-        peso.price = Money(minorUnits: 400, currency: .mxn)
-        XCTAssertThrowsError(try HouseholdRequestPackReview.calculate(needed: q(8), candidates: [peso], at: now))
+    @MainActor func testHouseholdReviewPreservesPesoMinorUnitsOnlyForAnMXNShop() async throws {
+        let (mxnModel, mxnServer, mxnURL) = try await setup(currency: "MXN")
+        defer { try? FileManager.default.removeItem(at: mxnURL.deletingLastPathComponent()) }
+        let (usdModel, usdServer, usdURL) = try await setup()
+        defer { try? FileManager.default.removeItem(at: usdURL.deletingLastPathComponent()) }
+        let needed = q(8)
+        var pesoOffer = pack("Peso")
+        pesoOffer.price = Money(minorUnits: 405, currency: .mxn)
+
+        XCTAssertThrowsError(try HouseholdRequestPackReview.calculate(needed: needed, candidates: [pesoOffer, pack("Dollar")], at: now))
+        let comparison = try HouseholdRequestPackReview.calculate(needed: needed, candidates: [pesoOffer], at: now)
+        let row = try XCTUnwrap(comparison.results.first)
+        XCTAssertEqual(comparison.cheapestIDs, ["Peso"])
+        XCTAssertEqual(row.calculation.totalCost, Money(minorUnits: 810, currency: .mxn))
+
+        let usdScope = try XCTUnwrap(usdModel.packReviewScope)
+        XCTAssertEqual(usdScope.shop.quote.currency, "USD")
+        XCTAssertThrowsError(try HouseholdRequestPackReview.select(row, needed: needed, scope: usdScope, at: now))
+        XCTAssertEqual(usdServer.previewCount, 0)
+        XCTAssertEqual(usdServer.commandCount, 0)
+
+        let mxnScope = try XCTUnwrap(mxnModel.packReviewScope)
+        XCTAssertEqual(mxnScope.shop.quote.currency, "MXN")
+        let selection = try HouseholdRequestPackReview.select(row, needed: needed, scope: mxnScope, at: now)
+        XCTAssertTrue(mxnModel.usePackSelection(selection))
+        await mxnModel.review()
+
+        let preview = try XCTUnwrap(mxnModel.preview)
+        XCTAssertEqual(preview.after.currency, "MXN")
+        XCTAssertEqual(preview.after.totalMinor, 810)
+        XCTAssertTrue(preview.requiresOverageAcceptance)
+        XCTAssertFalse(mxnModel.canApply)
+        let decision = try XCTUnwrap(mxnServer.previewBody?["decision"] as? [String: Any])
+        let line = try XCTUnwrap(decision["line"] as? [String: Any])
+        XCTAssertEqual(line["packs"] as? Int, 2)
+        XCTAssertEqual(line["unitPriceMinor"] as? Int, 405)
+        let evidence = try XCTUnwrap(decision["reviewedPackEvidence"] as? [String: Any])
+        XCTAssertEqual(evidence["unitPriceMinor"] as? Int, 405)
+        XCTAssertEqual(mxnServer.commandCount, 0)
     }
 
     func testTiesAndExplicitFreePriceRemainDifferentFromUnknown() throws {
@@ -102,9 +137,9 @@ final class HouseholdRequestPackReviewTests: XCTestCase {
         XCTAssertThrowsError(try HouseholdRequestPackReview.calculate(needed:q(8),candidates:[invalid],at:now))
         XCTAssertThrowsError(try HouseholdRequestPackReview.calculate(needed:q(0),candidates:[pack("A")],at:now))
     }
-    @MainActor private func setup(existing:Bool=false) async throws -> (HouseholdInboxModel,S24FixtureServer,URL) {
+    @MainActor private func setup(existing:Bool=false, currency: String = "USD") async throws -> (HouseholdInboxModel,S24FixtureServer,URL) {
         let url=FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathComponent("outbox.json")
-        let server=S24FixtureServer(includeExistingLine:existing)
+        let server=S24FixtureServer(includeExistingLine:existing, currency: currency)
         addTeardownBlock { server.close() }
         let model=try await s24FixtureModel(server:server,outboxURL:url)
         model.select(try XCTUnwrap(model.requests.first)); model.choice = .add
