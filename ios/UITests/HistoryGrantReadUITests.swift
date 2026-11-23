@@ -4,12 +4,13 @@ import XCTest
 /// Real production entry/models/client against a guarded transport. No physical VoiceOver claim.
 @MainActor final class HistoryGrantReadUITests: XCTestCase {
     private var app: XCUIApplication!
+    private let launchLocale = Locale(identifier: "en_US")
     private let allowed = "90000000-0000-4000-8000-000000000005"
     private let foreign = "90000000-0000-4000-8000-000000000006"
     override func setUpWithError() throws {
         continueAfterFailure = false
         app = XCUIApplication(bundleIdentifier:"dev.roominthecart.app.debug")
-        app.launchArguments = ["--ui-testing","--history-grant-read-fixture","-AppleLanguages","(en)","-AppleLocale","en_US","-UIPreferredContentSizeCategoryName","UICTContentSizeCategoryL"]
+        app.launchArguments = ["--ui-testing","--history-grant-read-fixture","-AppleLanguages","(en)","-AppleLocale",launchLocale.identifier,"-UIPreferredContentSizeCategoryName","UICTContentSizeCategoryL"]
     }
     override func tearDownWithError() throws {
         if testRun?.failureCount ?? 0 > 0 { capture("E09-grant-read-failure") }; app.terminate()
@@ -19,7 +20,8 @@ import XCTest
         let create = element("history.newObservation"); reveal(create); XCTAssertFalse(create.isEnabled)
         XCTAssertFalse(app.staticTexts[foreign].exists,"A remembered foreign source must not become a visible saved reference")
         openAllowedObservation()
-        assertText("Grant-only oats"); assertText("12 oz dry pack"); assertText("$3.49")
+        assertText("Grant-only oats"); assertText("12 oz dry pack")
+        reveal(displayedUSD(minorUnits: 349))
         capture("E09-free-granted-observation-without-shopper-authority")
         tap(element("history.loadPrices")); atLeast("paid",1)
         assertText("Your authorized saved raw records remain available")
@@ -53,6 +55,8 @@ import XCTest
         XCTAssertTrue(element("history.openRawPeriod").waitForExistence(timeout: 8))
         XCTAssertFalse(app.staticTexts["Permitted saved November plan"].exists)
         openRawPlan(); assertText("Permitted saved November plan")
+        let savedBudget = displayedUSD(minorUnits: 10_000)
+        reveal(savedBudget)
         tap(element("fixture.h09.revoke"))
         tap(element("history.openRawPeriod")); atLeast("denied",1)
         XCTAssertTrue(app.buttons["Check access again"].waitForExistence(timeout:12))
@@ -61,7 +65,7 @@ import XCTest
         XCTAssertFalse(app.buttons.containing(NSPredicate(format:"label CONTAINS %@",allowed)).firstMatch.exists)
         tap(app.buttons["Check access again"])
         XCTAssertFalse(app.staticTexts["Permitted saved November plan"].exists)
-        XCTAssertFalse(app.staticTexts["$100.00"].exists)
+        XCTAssertFalse(savedBudget.exists)
         assertNoWrites()
         capture("E09-revocation-clears-raw-envelope-and-saved-source")
     }
@@ -131,6 +135,11 @@ import XCTest
         setFilter(start, enabled: true)
         XCTAssertNotEqual(date.label, chosen, "A refreshed history session starts with a new date selection")
     }
+    private func displayedUSD(minorUnits: Int) -> XCUIElement {
+        let amount = (Decimal(minorUnits) / 100).formatted(.currency(code: "USD").presentation(.isoCode).locale(launchLocale))
+        return app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", amount)).firstMatch
+    }
+
     private func openGrantedHistory() {
         app.launch()
         XCTAssertTrue(element("fixture.h09.openHistory").waitForExistence(timeout:20))

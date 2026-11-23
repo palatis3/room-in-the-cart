@@ -3502,7 +3502,7 @@ import XCTest
         assertText("Set aside two lunch wraps first")
         back(to: "Close the pickup")
         tap(app.buttons["Close the pickup"])
-        try fillReviewedFields([("Amount", "2.00")], doneIdentifier: "pickup.settlement.doneTyping")
+        try fillReviewedFields([("Amount (USD)", "2.00")], doneIdentifier: "pickup.settlement.doneTyping")
         tap(app.buttons["Save financial evidence"])
         let missingReceipt = app.alerts["Evidence not saved"]
         XCTAssertTrue(missingReceipt.waitForExistence(timeout: 5))
