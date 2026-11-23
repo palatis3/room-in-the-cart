@@ -39,9 +39,11 @@ Do not interpret a normal suite's skip as a StoreKit pass. A local plan should e
 
 These are local StoreKit scenarios, not Apple server-notification or second-device evidence. The unavailable-service test exercises interrupted delivery. Interactive purchase-sheet interruptions, subscription management UI, reinstall on another physical device, real storefront prices, server reconciliation, grace configuration in App Store Connect, and release review remain subsequent evidence.
 
-## US English and US Spanish
+## US and Mexico storefront prices
 
-Both plan configurations use app region `US` and StoreKit storefront `USA`. App language is `en-US` or `es-US`. The English StoreKit product-metadata locale is `en_US`; the Spanish product-metadata locale is explicitly `es_MX`, with Spanish (Mexico) offer text and a US dollar price. This does **not** switch the storefront to Mexico or change the app language to Mexican Spanish. The Spanish test-plan configuration is named `US Spanish app · Spanish (Mexico) offer · USA storefront` so results preserve the distinction.
+Both plan configurations start on the USA storefront with app region `US`. The English app requests `en_US` product metadata. The US Spanish app requests `es_MX` metadata so the same US dollar offer appears in Spanish. The offer test then switches the StoreKit session to the `MEX` storefront with `es_MX` metadata. It checks the storefront reported by StoreKit, the Spanish product name, MXN currency and the app’s use of the exact display price returned by StoreKit.
+
+The local catalog supplies a single fixture price. The production USD and MXN amounts require verification against the real subscription in each App Store sandbox storefront.
 
 The first actual SDK 27 simulator run verified that setting `SKTestSession.locale` to `es_US` normalizes it to `es_MX`. The original exact-es_US assertion therefore failed and is recorded below. Apple's official locale table lists Spanish (Mexico) as an additional supported language for the United States storefront; its metadata shortcode list documents `es-MX` and `es-ES`, not `es-US`. The fixture now uses supported metadata, while the tests separately assert the app's Spanish language/US region, retained metadata locale, StoreKit USA storefront, USD currency and expected Spanish offer. US Spanish app copy/accessibility acceptance still requires the parent's UI/human review. [Apple United States storefront languages](https://developer.apple.com/help/app-store-connect/reference/app-information/app-store-localizations/), [Apple metadata locales](https://developer.apple.com/documentation/appstoreconnectapi/managing-metadata-in-your-app-by-using-locale-shortcodes)
 

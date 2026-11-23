@@ -91,24 +91,38 @@ import StoreKitTest
     }
 
     func testLocalAnnualOfferUsesStoreKitPriceAndLocale() async throws {
-        let storefront = StoreKitMembershipStorefront()
-        let offer = try await storefront.load(productID: productID)
+        let appLanguage = ProcessInfo.processInfo.environment["RITC_APP_LANGUAGE"] ?? "en-US"
+        XCTAssertEqual(Locale.current.region?.identifier, "US")
+        XCTAssertEqual(Locale.current.language.languageCode?.identifier, String(appLanguage.prefix(2)))
+
+        let spanishOffer = "Household (prueba local)"
+        let usName = session.locale.language.languageCode?.identifier == "es" ? spanishOffer : "Household (local test)"
+        try await assertAnnualOffer(country: "USA", currency: "USD", name: usName)
+
+        session.storefront = "MEX"
+        session.locale = Locale(identifier: "es_MX")
+        try await AppStore.sync()
+        try await assertAnnualOffer(country: "MEX", currency: "MXN", name: spanishOffer)
+    }
+
+    private func assertAnnualOffer(country: String, currency: String, name: String) async throws {
+        try await eventually("StoreKit reports the \(country) storefront") {
+            await Storefront.current?.countryCode == country
+        }
+        let offer = try await StoreKitMembershipStorefront().load(productID: productID)
         XCTAssertEqual(offer.productID, productID)
         XCTAssertEqual(offer.periodValue, 1)
         XCTAssertEqual(offer.periodUnit, .year)
-        let expected = session.locale.language.languageCode?.identifier == "es" ? "Household (prueba local)" : "Household (local test)"
-        XCTAssertEqual(offer.displayName, expected)
+        XCTAssertEqual(offer.displayName, name)
         let products = try await Product.products(for: [productID])
         let product = try XCTUnwrap(products.first)
-        XCTAssertEqual(offer.displayPrice, product.displayPrice)
-        XCTAssertEqual(product.price, Decimal(string: "49.99")) // Fixture hypothesis, never a production-price assertion.
         XCTAssertFalse(product.isFamilyShareable)
-        XCTAssertEqual(product.priceFormatStyle.currencyCode, "USD")
-        let storefrontCountry = await Storefront.current?.countryCode
-        XCTAssertEqual(storefrontCountry, "USA")
-        XCTAssertEqual(Locale.current.region?.identifier, "US")
-        let appLanguage = ProcessInfo.processInfo.environment["RITC_APP_LANGUAGE"] ?? "en-US"
-        XCTAssertEqual(Locale.current.language.languageCode?.identifier, String(appLanguage.prefix(2)))
+        XCTAssertEqual(product.priceFormatStyle.currencyCode, currency)
+        XCTAssertFalse(offer.displayPrice.isEmpty)
+        XCTAssertEqual(offer.displayPrice, product.displayPrice)
+        if country == "USA" {
+            XCTAssertEqual(product.price, Decimal(string: "49.99")) // Local fixture price.
+        }
     }
 
     func testPurchaseDoesNotFinishOrGrantAccessWithoutDurableServiceDelivery() async throws {
