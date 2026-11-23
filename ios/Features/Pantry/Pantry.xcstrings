@@ -8837,6 +8837,22 @@
         }
       }
     },
+    "This label has no single supported currency. You can save the wording with the price unknown.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This label has no single supported currency. You can save the wording with the price unknown."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se puede confirmar una sola moneda compatible en esta etiqueta. Puedes guardar el texto sin indicar el precio."
+          }
+        }
+      }
+    },
     "Price unknown": {
       "localizations": {
         "en": {
@@ -15456,6 +15472,278 @@
           "stringUnit": {
             "state": "translated",
             "value": "Guardando el cambio…"
+          }
+        }
+      }
+    },
+    "Shown amount (%@), blank if unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shown amount (%@), blank if unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importe mostrado (%@), en blanco si se desconoce"
+          }
+        }
+      }
+    },
+    "Paid receipt total in %@, if known": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paid receipt total in %@, if known"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total pagado del recibo en %@, si lo sabes"
+          }
+        }
+      }
+    },
+    "I paid the printed total %@ in %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I paid the printed total %@ in %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pagué el total impreso %1$@ en %2$@"
+          }
+        }
+      }
+    },
+    "I paid this line total in %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I paid this line total in %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pagué este importe en %@"
+          }
+        }
+      }
+    },
+    "The printed currency differs from %@. You can still review the food and quantity.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The printed currency differs from %@. You can still review the food and quantity."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La moneda impresa difiere de %@. Puedes revisar el alimento y la cantidad."
+          }
+        }
+      }
+    },
+    "Confirmed paid line total in %@, optional": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed paid line total in %@, optional"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importe pagado confirmado del artículo en %@ (opcional)"
+          }
+        }
+      }
+    },
+    "Corrected paid line total in %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corrected paid line total in %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importe pagado corregido del artículo en %@"
+          }
+        }
+      }
+    },
+    "Printed line total in %@, if known": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Printed line total in %@, if known"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importe impreso del artículo en %@, si lo sabes"
+          }
+        }
+      }
+    },
+    "Final charge in %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Final charge in %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargo final en %@"
+          }
+        }
+      }
+    },
+    "Printed adjustment in %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Printed adjustment in %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajuste impreso en %@"
+          }
+        }
+      }
+    },
+    "Check the currency printed beside the final total.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the currency printed beside the final total."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa la moneda impresa junto al total final."
+          }
+        }
+      }
+    },
+    "Change the receipt currency?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change the receipt currency?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Cambiar la moneda del recibo?"
+          }
+        }
+      }
+    },
+    "Review prices in %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review prices in %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar precios en %@"
+          }
+        }
+      }
+    },
+    "This clears the entered amounts and reads the printed prices again. Your food selections and quantities are kept.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This clears the entered amounts and reads the printed prices again. Your food selections and quantities are kept."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se borrarán los importes ingresados y se volverán a leer los precios impresos. Se conservarán los alimentos seleccionados y sus cantidades."
+          }
+        }
+      }
+    },
+    "Clear the entered receipt prices and priced trip links to change currency.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear the entered receipt prices and priced trip links to change currency."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para cambiar la moneda, borra los importes ingresados y los vínculos con precios de la compra planeada."
+          }
+        }
+      }
+    },
+    "Some printed prices use a different currency. Only amounts in %@ can be added to this shop.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some printed prices use a different currency. Only amounts in %@ can be added to this shop."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Algunos precios impresos están en otra moneda. Solo puedes agregar importes en %@ a esta compra."
           }
         }
       }

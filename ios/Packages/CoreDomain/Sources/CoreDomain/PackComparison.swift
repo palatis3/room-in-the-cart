@@ -31,9 +31,10 @@ public struct ComparisonRequest: Codable, Hashable, Sendable {
     public let offerA: PackOffer
     public let offerB: PackOffer
     public let itemCap: Money?
+    public let currency: Currency?
 
     public init(itemName: String, needed: Quantity?, confirmedAtHome: Quantity? = nil,
-                protectedAmount: Quantity? = nil, offerA: PackOffer, offerB: PackOffer, itemCap: Money? = nil) {
+                protectedAmount: Quantity? = nil, offerA: PackOffer, offerB: PackOffer, itemCap: Money? = nil, currency: Currency? = nil) {
         self.itemName = itemName
         self.needed = needed
         self.confirmedAtHome = confirmedAtHome
@@ -41,14 +42,19 @@ public struct ComparisonRequest: Codable, Hashable, Sendable {
         self.offerA = offerA
         self.offerB = offerB
         self.itemCap = itemCap
+        self.currency = currency
     }
 }
 
 extension ComparisonRequest {
+    fileprivate func evidenceCurrency() throws -> Currency? {
+        try Currency.matching([currency, offerA.price?.currency, offerB.price?.currency, itemCap?.currency])
+    }
+
     /// Cents per one usable unit of the requested food. Both rates use the same
     /// denominator, independent of the number of whole packs needed at checkout.
     public var comparableUnitPrices: (a: Rational, b: Rational)? {
-        guard let unit = needed?.unit else { return nil }
+        guard let unit = needed?.unit, (try? evidenceCurrency()) != nil else { return nil }
         func rate(_ offer: PackOffer) -> Rational? {
             guard let price = offer.price, let usable = offer.usableQuantity,
                   let amount = try? usable.converted(to: unit, using: offer.confirmedConversion),
@@ -103,8 +109,9 @@ public struct ComparisonResult: Codable, Equatable, Sendable {
 public enum PackComparison {
     public static func evaluate(_ request: ComparisonRequest) throws -> ComparisonResult {
         try validate(request)
-        let a = try evaluate(request.offerA, request: request)
-        let b = try evaluate(request.offerB, request: request)
+        let currency = try request.evidenceCurrency() ?? .usd
+        let a = try evaluate(request.offerA, request: request, currency: currency)
+        let b = try evaluate(request.offerB, request: request, currency: currency)
         var preferred: String?
         if a.isResolved, b.isResolved, let ac = a.totalCost, let bc = b.totalCost, ac != bc {
             preferred = ac < bc ? a.offerID : b.offerID
@@ -135,7 +142,7 @@ public enum PackComparison {
         }
     }
 
-    private static func evaluate(_ offer: PackOffer, request: ComparisonRequest) throws -> OfferResult {
+    private static func evaluate(_ offer: PackOffer, request: ComparisonRequest, currency: Currency) throws -> OfferResult {
         var issues: [ComparisonIssue] = []
         var amountToBuy: Rational?, protected: Rational?, packs: Int64?
         var purchased: Rational?, leftover: Rational?, remaining: Rational?, cost: Money?
@@ -153,7 +160,7 @@ public enum PackComparison {
                     purchased = .zero
                     leftover = try stock.subtracting(need.amount)
                     remaining = .zero
-                    cost = .zero // No purchase; never substitutes zero for an unknown pack price.
+                    cost = Money(minorUnits: 0, currency: currency) // No purchase; never substitutes zero for an unknown pack price.
                 } else if let usable = offer.usableQuantity {
                     if let yield = try usable.converted(to: need.unit, using: offer.confirmedConversion) {
                         if yield == .zero {
@@ -176,7 +183,7 @@ public enum PackComparison {
         let headroom = try request.itemCap.flatMap { cap in try cost.map { try cap.subtracting($0) } }
         let ceiling: Money?
         if let cap = request.itemCap, let packs, packs > 0 {
-            ceiling = Money(minorUnits: cap.minorUnits / packs)
+            ceiling = Money(minorUnits: cap.minorUnits / packs, currency: cap.currency)
         } else { ceiling = nil }
         return OfferResult(offerID: offer.id, packsToBuy: packs, totalCost: cost,
                            amountToBuy: amountToBuy, purchasedAmount: purchased, leftover: leftover,

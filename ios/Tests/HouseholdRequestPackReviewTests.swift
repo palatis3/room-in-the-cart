@@ -89,6 +89,12 @@ final class HouseholdRequestPackReviewTests: XCTestCase {
         XCTAssertTrue(result.results[0].calculation.issues.contains(.usableConversionUnknown))
         XCTAssertTrue(result.results[1].calculation.issues.contains(.usableQuantityUnknown))
     }
+    func testHouseholdReviewRejectsAPesoOfferBeforeWritingUSDMinorUnits() throws {
+        var peso = pack("A", price: 400)
+        peso.price = Money(minorUnits: 400, currency: .mxn)
+        XCTAssertThrowsError(try HouseholdRequestPackReview.calculate(needed: q(8), candidates: [peso], at: now))
+    }
+
     func testTiesAndExplicitFreePriceRemainDifferentFromUnknown() throws {
         let result = try HouseholdRequestPackReview.calculate(needed:q(8),candidates:[pack("A",price:0),pack("B",price:0)],at:now)
         XCTAssertEqual(result.cheapestIDs,["A","B"]); XCTAssertEqual(result.results[0].calculation.totalCost,.zero)

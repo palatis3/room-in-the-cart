@@ -97,7 +97,7 @@ struct LedgerPackChoiceView: View {
                                               sourceUnit: draft.aUnit, targetUnit: requirement.quantity.unit,
                                               conversion: $draft.aConversion, identifier: "ledgerPackConversion-a")
                     }
-                    TextField(ledgerText("First pack price, USD"), text: $draft.aPrice).keyboardType(.decimalPad).focused($field, equals: .firstPrice)
+                    TextField(ledgerFormat("First pack price, %@", draft.currency.rawValue), text: $draft.aPrice).keyboardType(.decimalPad).focused($field, equals: .firstPrice)
                 }
                 Section(ledgerText("Second pack")) {
                     TextField(ledgerText("Second pack label"), text: $draft.bLabel).focused($field, equals: .secondLabel)
@@ -108,12 +108,12 @@ struct LedgerPackChoiceView: View {
                                               sourceUnit: draft.bUnit, targetUnit: requirement.quantity.unit,
                                               conversion: $draft.bConversion, identifier: "ledgerPackConversion-b")
                     }
-                    TextField(ledgerText("Second pack price, USD"), text: $draft.bPrice).keyboardType(.decimalPad).focused($field, equals: .secondPrice)
+                    TextField(ledgerFormat("Second pack price, %@", draft.currency.rawValue), text: $draft.bPrice).keyboardType(.decimalPad).focused($field, equals: .secondPrice)
                 }
                 Section(ledgerText("Reviewed price evidence")) {
                     TextField(ledgerText("Where you checked these packs and prices"), text: $source).focused($field, equals: .source)
                     DatePicker(ledgerText("Checked at"), selection: $observedAt)
-                    TextField(ledgerText("Item-only spending limit, optional"), text: $draft.cap).keyboardType(.decimalPad).focused($field, equals: .cap)
+                    TextField(ledgerFormat("Item-only spending limit (%@, optional)", draft.currency.rawValue), text: $draft.cap).keyboardType(.decimalPad).focused($field, equals: .cap)
                     Text(ledgerText("Blank amount or price stays unresolved. A resolved pack can be selected even when the other pack is unknown."))
                     Button(ledgerText("Review whole packs"), action: prepare).buttonStyle(PrimaryAction()).accessibilityIdentifier("ledgerReviewPacks")
                 }
@@ -138,7 +138,7 @@ struct LedgerPackChoiceView: View {
             .onChange(of: ingredient, initial: true) { previous, current in
                 guard let current else { draft.aConversion = nil; draft.bConversion = nil; return }
                 if !initialized || previous?.shopID != current.shopID || previous?.lineID != current.lineID {
-                    draft = ComparisonDraft()
+                    draft = ComparisonDraft(currency: model.workspace.shops.first(where: { $0.id == current.shopID })?.basis.currency ?? .groceryDefault())
                     draft.aUnit = current.unit
                     draft.bUnit = current.unit
                     initialized = true

@@ -92,7 +92,7 @@ struct ReceiptTripLink: Equatable {
     let printedTotal: Money?
 
     init?(receiptLineID: UUID, printed: Quantity, portions: [UUID: Quantity], printedTotal: Money?) {
-        guard !portions.isEmpty, printed.amount > .zero, printedTotal.map({ $0 >= .zero }) != false else { return nil }
+        guard !portions.isEmpty, printed.amount > .zero, printedTotal.map({ $0.minorUnits >= 0 }) != false else { return nil }
         var sum = Rational.zero
         for part in portions.values {
             guard part.unit == printed.unit, part.amount > .zero, let next = try? sum.adding(part.amount) else { return nil }
@@ -111,7 +111,8 @@ struct ReceiptTripLink: Equatable {
             guard let quantity = link.portions[planned.id], let amount = try? quantity.converted(to: planned.quantity.unit),
                   let total = try? sum.adding(amount) else { return .incompatible }
             sum = total
-            if let price = link.printedTotal, link.portions.count == 1 {
+            if let price = link.printedTotal, link.portions.count == 1,
+               case .exact(let expected) = planned.expectedCost, price.currency == expected.currency {
                 let result = cents.addingReportingOverflow(price.minorUnits)
                 if result.overflow { completePrice = false } else { cents = result.partialValue }
             } else { completePrice = false }

@@ -102,7 +102,7 @@ struct PantryReceiptEntry: View {
                             if let fact = facts[decision.id] {
                                 confirmationLine(fact, review: review)
                             } else {
-                                PutawayDecisionLabel(row: decision)
+                                PutawayDecisionLabel(row: decision, currencyCode: putaway.header.currencyCode)
                             }
                         }
                     } else if let first = review.facts.first {
@@ -122,7 +122,7 @@ struct PantryReceiptEntry: View {
                     Button(pantryText("Edit receipt lines")) { self.review = nil; message = nil }.disabled(working)
                 }
             } else if let overlap, let proposed = draft {
-                PutawayOverlapReview(prompt: overlap) { choice in
+                PutawayOverlapReview(prompt: overlap, currencyCode: proposed.currency.rawValue) { choice in
                     var next = proposed
                     next.overlapChoices[overlap.basis] = choice
                     prepare(next)
@@ -168,6 +168,7 @@ struct PantryReceiptEntry: View {
                         storeFocusRequest = nil
                     }
                     ReceiptPurchaseDateFields(draft: value, scroll: proxy)
+                    ReceiptCurrencyPicker(draft: value, lockedByComparison: receiptTripReview.links.values.contains { $0.printedTotal != nil })
                     if model.supportsReceiptAliases {
                         ReceiptLanguagePicker(language: Binding(get: { value.wrappedValue.language }, set: {
                             value.wrappedValue.clearAliases()
@@ -186,19 +187,23 @@ struct PantryReceiptEntry: View {
                     .contentShape(Rectangle())
                     .simultaneousGesture(TapGesture().onEnded { field = "reference" })
                     if displayed.tracksPutaway {
-                        let totalTitle = putawayText("Paid receipt total in USD, if known")
+                        let totalTitle = pantryFormat("Paid receipt total in %@, if known", displayed.currency.rawValue)
                         WorkingField(totalTitle) {
                             TextField(totalTitle, text: value.receiptTotal, prompt: Text(""))
                                 .keyboardType(.decimalPad)
                                 .receiptInputChrome()
                                 .focused($field, equals: "receiptTotal")
                                 .accessibilityIdentifier("receipt.total")
+                                .disabled(!displayed.permitsReceiptTotal)
                         }
                         .contentShape(Rectangle())
                         .simultaneousGesture(TapGesture().onEnded { field = "receiptTotal" })
-                        if let total = displayed.printedPaidTotal,
+                        if !displayed.permitsReceiptTotal {
+                            Text(pantryText("Check the currency printed beside the final total."))
+                        }
+                        if let total = displayed.printedPaidTotal, displayed.permitsReceiptTotal,
                            displayed.receiptTotal.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                            Button(String(format: putawayText("I paid the printed total %@ in USD"), total.wording)) {
+                            Button(pantryFormat("I paid the printed total %@ in %@", total.wording, displayed.currency.rawValue)) {
                                 guard model.permitsReceiptSource, draft?.draftID == displayed.draftID else { return }
                                 field = nil
                                 draft?.usePrintedPaidTotal()
@@ -401,9 +406,9 @@ struct PantryReceiptEntry: View {
                                displayed: ReceiptImportDraft, grouped: Bool) -> some View {
         PantryReceiptLineEditor(line: captureDraftBinding(line, in: value.lines), lots: model.snapshot?.lots ?? [], purchases: model.recentPurchases, aliases: aliases.filter {
             InventoryReceiptAlias.key($0.merchant) == InventoryReceiptAlias.key(displayed.merchant) && $0.language == displayed.language && ReceiptImportDraft.containsWording($0.wording, in: line.original)
-        }, receiptLanguage: displayed.language, matchesCurrent: {
+        }, receiptLanguage: displayed.language, currency: displayed.currency, matchesCurrent: {
             model.permitsReceiptSource && draft?.draftID == displayed.draftID &&
-                draft?.merchant == displayed.merchant && draft?.language == displayed.language &&
+                draft?.merchant == displayed.merchant && draft?.language == displayed.language && draft?.currency == displayed.currency &&
                 draft?.lines.first(where: { $0.id == line.id }) == line
         }, verifyAlias: { alias in
             let current = try? await model.receiptAliases(merchant: displayed.merchant, language: displayed.language)
@@ -521,6 +526,7 @@ struct PantryReceiptEntry: View {
         accept(source)
         guard var current = draft, current.draftID == source.id else { return }
         current.tracksPutaway = false
+        if let currency = Currency(rawValue: original.currencyCode) { current.changeCurrency(currency) }
         current.reference = original.order
         if let date = original.purchaseDate {
             current.purchaseDate = date
@@ -716,12 +722,32 @@ struct ReceiptPurchaseDateFields: View {
     }
 }
 
+struct ReceiptCurrencyPicker: View {
+    @Binding var draft: ReceiptImportDraft
+    var lockedByComparison = false
+
+    var body: some View {
+        let locked = !draft.canChangeCurrency || lockedByComparison
+        GroceryCurrencyPicker(selection: Binding(get: { draft.currency }, set: { next in
+            if !locked { draft.changeCurrency(next) }
+        }))
+        .disabled(locked)
+        .accessibilityIdentifier("receipt.currency")
+        if locked {
+            Text(pantryText("Clear the entered receipt prices and priced trip links to change currency."))
+                .font(.footnote)
+        }
+    }
+}
+
 struct PantryReceiptLineEditor: View {
     @Binding var line: ReceiptImportDraft.Line
     let lots: [InventoryLot]
     let purchases: [PantryRecentPurchase]
     let aliases: [InventoryReceiptAlias]
     let receiptLanguage: String
+    var currency: Currency = .usd
+    var supportsPaidPrice = true
     let matchesCurrent: @MainActor () -> Bool
     let verifyAlias: @MainActor (InventoryReceiptAlias) async -> Bool
     var assist: (() -> Void)? = nil
@@ -983,15 +1009,23 @@ struct PantryReceiptLineEditor: View {
         } else {
             Text(putawayText("Saves receipt evidence only. No food goes into Pantry.")).font(.subheadline)
         }
-        if let printed = line.printed, let amount = printed.amount, let wording = printed.priceWording, line.documentLine?.stage != .order {
+        if supportsPaidPrice { paidPriceFields }
+    }
+
+    @ViewBuilder private var paidPriceFields: some View {
+        if line.permitsPayment(in: currency), let printed = line.printed, let amount = printed.amount, let wording = printed.priceWording, line.documentLine?.stage != .order {
             LabeledContent(pantryText("Possible printed line total"), value: wording)
             Button { line.paid = amount } label: {
-                JournalActionLabel(pantryText("I paid this line total in USD"), systemImage: "arrow.right.circle")
+                JournalActionLabel(pantryFormat("I paid this line total in %@", currency.rawValue), systemImage: "arrow.right.circle")
             }
             .accessibilityIdentifier("receipt.printedPrice.\(line.ordinal)")
         }
-        labeledField(pantryText("Confirmed paid line total in USD, optional"), text: $line.paid,
+        if !line.permitsPayment(in: currency) {
+            Text(pantryFormat("The printed currency differs from %@. You can still review the food and quantity.", currency.rawValue))
+        }
+        labeledField(pantryFormat("Confirmed paid line total in %@, optional", currency.rawValue), text: $line.paid,
                      focusKey: "paid-\(line.ordinal)", keyboard: line.treatment == .chargeOrReturn ? .numbersAndPunctuation : .decimalPad)
+            .disabled(!line.permitsPayment(in: currency))
     }
 }
 
@@ -1010,7 +1044,12 @@ private func receiptError(_ error: Error) -> String {
 }
 
 func receiptMoney(_ price: Money) -> String {
-    (Decimal(price.minorUnits) / 100).formatted(.currency(code: price.currency.rawValue))
+    receiptMoney(price.minorUnits, currencyCode: price.currency.rawValue)
+}
+
+func receiptMoney(_ minor: Int64, currencyCode: String) -> String {
+    if let currency = Currency(rawValue: currencyCode) { return moneyText(Money(minorUnits: minor, currency: currency)) }
+    return (Decimal(minor) / 100).formatted(.currency(code: currencyCode).presentation(.isoCode))
 }
 
 struct PantryReceiptHistory: View {
@@ -1141,7 +1180,7 @@ struct PantryReceiptHistory: View {
 
     private func saveCorrection(_ original: ReceiptAcquisition, total: Money?) {
         guard !busy, let state = reviewedState, original.paidLineTotal != total,
-              total.map({ $0 >= .zero }) ?? true else { return }
+              total.map({ $0.minorUnits >= 0 }) ?? true else { return }
         busy = true
         Task {
             do {
@@ -1197,7 +1236,7 @@ private struct ReceiptPriceCorrection: View {
     private(set) var dates = ReceiptDateDisplay()
 
     private var enteredTotal: Money? {
-        guard let total = try? Money(decimal: price), total >= .zero else { return nil }
+        guard let total = try? Money(decimal: price.replacingOccurrences(of: ",", with: "."), currency: original.currency), total.minorUnits >= 0 else { return nil }
         return total
     }
 
@@ -1213,8 +1252,8 @@ private struct ReceiptPriceCorrection: View {
             Text(pantryFormat("Receipt revision %@", String(original.revision)))
             if let current = original.paidLineTotal { Text(pantryFormat("Paid line total %@", receiptMoney(current))) }
             else { Text(pantryText("Paid price unknown")) }
-            WorkingField(pantryText("Corrected paid line total in USD")) {
-                TextField(pantryText("Corrected paid line total in USD"), text: $price, prompt: Text(""))
+            WorkingField(pantryFormat("Corrected paid line total in %@", original.currency.rawValue)) {
+                TextField(pantryFormat("Corrected paid line total in %@", original.currency.rawValue), text: $price, prompt: Text(""))
                     .keyboardType(.decimalPad).focused($priceFocused)
             }
             Text(pantryText("A correction adds a price revision. Pantry quantities and posted spending stay the same."))
@@ -1279,7 +1318,7 @@ struct ReceiptTripDifferenceReview: View {
                   planned.packages?.isEmpty != false, !trip.countsPacks, row.documentLine?.stage != .order,
                   let printed = row.printed, !printed.uncertain, let amount = printed.quantity, let unit = printed.unit,
                   let quantity = try? ComparisonModel.quantity(amount, unit),
-                  let value = printed.amount, let money = try? Money(decimal: value),
+                  row.permitsPayment(in: draft.currency), let value = printed.amount, let money = try? Money(decimal: value, currency: draft.currency),
                   let link = ReceiptTripLink(receiptLineID: row.id, printed: quantity, portions: [planned.id: quantity], printedTotal: money),
                   ReceiptTripLink.compare(planned, with: [row.id: link]) == .matched else { return nil }
             return link
@@ -1404,7 +1443,7 @@ struct ReceiptTripDifferenceReview: View {
     @ViewBuilder private func assignment(for row: ReceiptImportDraft.Line) -> some View {
         if let trip = state.trip, trips.contains(trip) {
             NavigationStack {
-                ReceiptTripAssignLine(row: row, trip: trip, existing: state.links[row.id],
+                ReceiptTripAssignLine(row: row, trip: trip, currency: draft.currency, existing: state.links[row.id],
                     suggestion: candidate(row, trip: trip)) { match in
                     guard trips.contains(trip), state.trip == trip else { return }
                     state.links[row.id] = match
@@ -1449,6 +1488,7 @@ struct ReceiptTripDifferenceReview: View {
 private struct ReceiptTripAssignLine: View {
     let row: ReceiptImportDraft.Line
     let trip: ReceiptTripPlan
+    let currency: Currency
     let accept: (ReceiptTripLink?) -> Void
     @State private var primary: UUID?
     @State private var secondary: UUID?
@@ -1461,8 +1501,8 @@ private struct ReceiptTripAssignLine: View {
     @FocusState private var focus: String?
     @Environment(\.dismiss) private var dismiss
 
-    init(row: ReceiptImportDraft.Line, trip: ReceiptTripPlan, existing: ReceiptTripLink?, suggestion: UUID?, accept: @escaping (ReceiptTripLink?) -> Void) {
-        self.row = row; self.trip = trip; self.accept = accept
+    init(row: ReceiptImportDraft.Line, trip: ReceiptTripPlan, currency: Currency, existing: ReceiptTripLink?, suggestion: UUID?, accept: @escaping (ReceiptTripLink?) -> Void) {
+        self.row = row; self.trip = trip; self.currency = currency; self.accept = accept
         _checkedPacks = State(initialValue: existing != nil)
         let parts = trip.lines.compactMap { line in existing?.portions[line.id].map { (line.id, $0) } }
         _primary = State(initialValue: parts.first?.0 ?? suggestion)
@@ -1474,7 +1514,7 @@ private struct ReceiptTripAssignLine: View {
         _secondAmount = State(initialValue: parts.count == 2 ? parts[1].1.amount.description : "")
         if let money = existing?.printedTotal {
             _price = State(initialValue: NSDecimalNumber(decimal: Decimal(money.minorUnits) / 100).stringValue)
-        } else { _price = State(initialValue: existing == nil ? row.printed?.amount ?? "" : "") }
+        } else { _price = State(initialValue: existing == nil && row.permitsPayment(in: currency) ? row.printed?.amount ?? "" : "") }
     }
 
     private var selectedPacks: [BasketLine] {
@@ -1492,7 +1532,7 @@ private struct ReceiptTripAssignLine: View {
             portions[secondary] = other
         }
         let entry = price.trimmingCharacters(in: .whitespacesAndNewlines)
-        let money = try? Money(decimal: entry)
+        let money = row.permitsPayment(in: currency) ? try? Money(decimal: entry.replacingOccurrences(of: ",", with: "."), currency: currency) : nil
         guard entry.isEmpty || money != nil else { return nil }
         return .init(receiptLineID: row.id, printed: total, portions: portions, printedTotal: money)
     }
@@ -1505,7 +1545,7 @@ private struct ReceiptTripAssignLine: View {
                 ForEach(UnitOfMeasure.allCases, id: \.self) { unit in Text(pantryUnit(unit)).tag(unit) }
             }
         }
-        TextField(captureText("Printed line total in USD, if known"), text: $price).keyboardType(.decimalPad).focused($focus, equals: "price")
+        TextField(pantryFormat("Printed line total in %@, if known", currency.rawValue), text: $price).keyboardType(.decimalPad).focused($focus, equals: "price")
     }
 
     @ViewBuilder private var splitControls: some View {

@@ -16,6 +16,10 @@ import HouseholdClient
             variant: "Unsalted", store: "Market", branch: "Main", date: Date(timeIntervalSince1970: 1_750_000_000),
             currencyCode: "USD", amountMinor: 500, pack: .init(count: 2, perPackage:
                 Quantity(amount: try Rational(400), unit: .gram, originalLiteral: "400 g")), sourceText: "2 bags")
+        let pesos = PrivatePriceEvidence(id: UUID(), source: .paidManual, name: "Nueces", store: "Mercado",
+            date: paid.date, currencyCode: "MXN", amountMinor: 500, pack: paid.pack, sourceText: "2 bolsas")
+        XCTAssertNoThrow(try pesos.validate())
+        XCTAssertThrowsError(try PrivatePricePublication.observation(pesos, workspace: origin, shop: assigned, branch: "Centro", mode: .inStore))
         let published = try PrivatePricePublication.observation(paid, workspace: origin, shop: assigned, branch: "Main", mode: .inStore)
         XCTAssertEqual(published.evidenceKind, .paidManual)
         XCTAssertEqual(published.usablePack?.amount.numerator, 800)

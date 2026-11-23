@@ -34,7 +34,7 @@ public struct DinnerIdeaFoodEvidence: Codable, Equatable, Sendable, Identifiable
         try dinnerText(ingredientName)
         guard basisRevision >= 0, foodID != nil || pack != nil else { throw DinnerPlanningError.invalid("ideaSupply") }
         if let pack {
-            guard let source, let observedAt, pack.price.map({ $0 >= .zero }) ?? true,
+            guard let source, let observedAt, pack.price.map({ $0.minorUnits >= 0 }) ?? true,
                   pack.usableQuantity != nil || pack.price != nil else { throw DinnerPlanningError.invalid("ideaPack") }
             try dinnerText(source)
             try dinnerText(pack.label)

@@ -17,7 +17,7 @@ import LocalStore
         let friday = try MealDay(year: 2026, month: 11, day: 20, timeZoneIdentifier: thursday.timeZoneIdentifier)
         let recipe = MealTemplate(title: "Sopa de lentejas", servings: try Rational(3),
             ingredients: [.init(name: "Lentejas", quantity: Quantity(amount: .one, unit: .cup, originalLiteral: "1 taza"))])
-        var shop = ShoppingLedger(title: "This week")
+        var shop = ShoppingLedger(title: "This week", basis: ShopBasis(currency: .mxn))
         let mealID = try shop.chooseMeal(recipe, at: now)
         let meal = try XCTUnwrap(shop.mealOccurrences.first)
         struct Document: Encodable { let formatVersion = 1; let workspace: LedgerWorkspace }
@@ -36,7 +36,9 @@ import LocalStore
         let review = try await port.review(draft)
         try await port.apply(review)
         try await port.apply(review)
-        let afterCook = try await port.load(shopID: shop.id, mealID: mealID)
+        let savedDinner = try await port.read(shopID: shop.id, mealID: mealID)
+        XCTAssertEqual(savedDinner.journey.currency, .mxn)
+        let afterCook = savedDinner.context
         let thursdayHold = try XCTUnwrap(afterCook.inventory.reservations.first { $0.cookedDinner?.day == thursday })
         let undoBeforeMove = try await port.reviewUndo(shopID: shop.id, mealID: mealID)
         let move = try XCTUnwrap(CookedDinnerChange(thursdayHold, action: .move(friday)))

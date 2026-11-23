@@ -71,6 +71,7 @@ struct DinnerScenarioDraft {
     let shopID: UUID
     let baseRevision: UUID
     let planningRevision: UUID
+    let currency: Currency
     let zone: String
     var meals = [DinnerScenarioMealDraft()]
     var foods: [DinnerFoodEvidenceDraft] = []
@@ -100,6 +101,7 @@ struct DinnerScenarioDraft {
     var availableMinutes = ""
     var recipeYieldsReviewed = false
     init(shop: ShoppingLedger, state: DinnerPlanningState) {
+        currency = shop.basis.currency
         shopID = shop.id; baseRevision = shop.revisionID; planningRevision = state.revisionID; zone = shop.basis.timeZoneIdentifier
         branch = shop.basis.branch; mode = ShoppingMode(rawValue: shop.basis.mode.rawValue) ?? .pickup; slot = shop.basis.slot ?? Date()
         if let scheduled = try? DinnerLibraryPairings.scheduledMeals(shop: shop, state: state), !scheduled.isEmpty {
@@ -181,7 +183,7 @@ struct DinnerScenarioDraft {
                 packs.append(DinnerPackSelection(id: food.packID, foodID: food.id,
                     offer: PackOffer(id: food.packID.uuidString, label: food.packLabel,
                         usableQuantity: food.yieldReviewed ? try DinnerEntry.quantity(food.packAmount, unit: food.packUnit) : nil,
-                        price: try DinnerEntry.money(food.packPrice)), availability: available, thresholdEligible: food.feeEligible))
+                        price: try DinnerEntry.money(food.packPrice, currency: currency)), availability: available, thresholdEligible: food.feeEligible))
             }
         }
         guard essentials.allSatisfy({ !$0.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) else {
@@ -189,9 +191,9 @@ struct DinnerScenarioDraft {
         }
         let lines = try (baseline + essentials).map { CheckoutLine(id: $0.id, name: $0.name, cost: try evidence($0.cost, missing: "Unchanged basket line cost is unknown"), thresholdEligible: $0.feeEligible) }
         let context = CheckoutContext(storeID: store, branchID: branch, mode: mode,
-            slot: ISO8601DateFormatter().string(from: slot), commitmentsID: commitmentSetID, observedAt: observedAt, source: source)
+            slot: ISO8601DateFormatter().string(from: slot), commitmentsID: commitmentSetID, observedAt: observedAt, source: source, currency: currency)
         let enteredFee = try evidence(fee, missing: "Fees are unknown")
-        let rule = try DinnerEntry.money(feeThreshold).map {
+        let rule = try DinnerEntry.money(feeThreshold, currency: currency).map {
             CheckoutFeeRule.waivedAt(threshold: $0, belowThreshold: enteredFee, basis: .eligibleItemsBeforeDiscounts)
         } ?? .fixed(enteredFee)
         let fees = [CheckoutFee(id: "reviewed-fees", rule: rule)]
@@ -221,7 +223,7 @@ struct DinnerScenarioDraft {
             current: try scenario(candidate: false), candidate: try scenario(candidate: true), cap: cap)
     }
     private func evidence(_ text: String, missing: String) throws -> CostEvidence {
-        try DinnerEntry.money(text).map(CostEvidence.exact) ?? .unknown(reason: missing)
+        try DinnerEntry.money(text, currency: currency).map(CostEvidence.exact) ?? .unknown(reason: missing)
     }
 }
 struct DinnerScenarioMealDraftSnapshot: Equatable {

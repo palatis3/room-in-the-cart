@@ -25,6 +25,33 @@ final class PickupCheckoutDraftTests: XCTestCase {
         return value
     }
 
+    @MainActor func testPesoCheckoutKeepsCurrencyAfterRelaunchAndRejectsDollarReplacement() async throws {
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: file) }
+        let model = PickupModel(databaseURL: file)
+        let pesos = Money(minorUnits: 1250, currency: .mxn)
+        let product = BasketLine(id: lineID, name: "Tortillas", quantity: line().quantity, expectedCost: .exact(pesos))
+        let started = await model.start(from: [product], shopID: shopID, context: context(), ledgerBasis: ShopBasis(currency: .mxn))
+        XCTAssertTrue(started)
+        let source = try XCTUnwrap(model.journey)
+        var draft = PickupCheckoutDraft(journey: source)
+        draft.inclusive = true; draft.total = "12.50"; draft.cap = "20"
+        let submission = try draft.submission(for: source)
+        XCTAssertEqual(submission.quote.pricing, .inclusiveTotal(.exact(pesos)))
+        XCTAssertEqual(submission.cap?.amount, Money(minorUnits: 2000, currency: .mxn))
+        let saved = await model.setQuote(submission.quote, cap: submission.cap, reviewed: draft)
+        XCTAssertTrue(saved)
+        let reopened = PickupModel(databaseURL: file)
+        await reopened.load()
+        let edited = PickupCheckoutDraft(journey: try XCTUnwrap(reopened.journey))
+        XCTAssertEqual(edited.currency, .mxn)
+        XCTAssertEqual(reopened.result?.total.exact, pesos)
+        let dollars = CheckoutQuote(scope: .wholeCheckout, context: context(), pricing: .inclusiveTotal(.exact(money(1250))))
+        let replaced = await reopened.setQuote(dollars, cap: nil)
+        XCTAssertFalse(replaced)
+        XCTAssertEqual(reopened.result?.total.exact, pesos)
+    }
+
     @MainActor private func legacyFrozenCheckout(in model: PickupModel) async throws
         -> (quote: CheckoutQuote, cap: CheckoutCap, snapshot: HandoffSnapshot) {
         let quote = CheckoutQuote(scope: .wholeCheckout, context: context(), pricing: .inclusiveTotal(.exact(money(300))))

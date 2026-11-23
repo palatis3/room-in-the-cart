@@ -10,6 +10,23 @@ import XCTest
             lines: lines.enumerated().map { .init(id: $0.offset + 1, text: $0.element) })])
     }
 
+    func testPesoPDFKeepsReviewedCurrencyForAdjustmentsAndFood() throws {
+        var review = DeliveryPDFReview(document: document(["Pedido #MEX123", "Leche 1 L $18.00", "Propina MX$2.50",
+            "Total pagado 20.50 MXN"]), origin: UUID(), locale: Locale(identifier: "es_US"))
+        XCTAssertEqual(review.currency, .mxn)
+        let record = review.record(at: .now)
+        XCTAssertEqual(record.currencyCode, "MXN")
+        XCTAssertEqual(record.finalCents, 2050)
+        XCTAssertEqual(record.lines.map(\.cents), [1800, 250])
+        review.changeCurrency(.usd)
+        XCTAssertFalse(review.permitsTotal)
+        review.total = "20.50"
+        XCTAssertNil(review.record(at: .now).finalCents)
+        XCTAssertNil(review.record(at: .now).lines.last?.cents)
+        let ambiguous = DeliveryPDFReview(document: document(["Total $20.50"]), origin: UUID(), locale: Locale(identifier: "en_MX"))
+        XCTAssertEqual(ambiguous.record(at: .now).currencyCode, "MXN")
+    }
+
     func testPrintedDeliveryDayRendersInEnglishAndSpanishWithOrWithoutAPurchaseDate() throws {
         var eastern = Calendar(identifier: .gregorian)
         eastern.timeZone = try XCTUnwrap(TimeZone(identifier: "America/New_York"))
@@ -97,7 +114,7 @@ import XCTest
         let total = DeliveryPDFReview(document: document(["Uber Eats", "Pedido #12345", "Total pagado $10,00"]), origin: UUID())
         XCTAssertEqual(total.total, "10.00")
         XCTAssertTrue(total.rows.filter(\.included).isEmpty)
-        XCTAssertNil(DeliveryPDFReview.usdSuffix("Total CAD $10.00"))
+        XCTAssertNil(DeliveryPDFReview.priceSuffix("Total CAD $10.00", currency: .usd))
         XCTAssertEqual(DeliveryPDFReview.suggest("Hamburguesa caliente $2,00", restaurant: false), .readyToEat)
         XCTAssertEqual(DeliveryPDFReview.suggest("Hamburguesa $2,00", restaurant: false), .unresolved)
     }

@@ -12,8 +12,8 @@ import CoreDomain
         try? FileManager.default.removeItem(at: database.deletingLastPathComponent())
         super.tearDown()
     }
-    private func observations() -> OneChangeDraft {
-        var draft = OneChangeDraft()
+    private func observations(currency: Currency = .usd) -> OneChangeDraft {
+        var draft = OneChangeDraft(currency: currency)
         draft.change = "Defer the coffee, keep salsa for dinner"
         draft.branch = "North Market – West"
         draft.source = "Two checkout screens from the retailer app"
@@ -26,6 +26,24 @@ import CoreDomain
         draft.afterIncludesCharges = true
         draft.samePickup = true
         return draft
+    }
+
+    func testPesoChangeAndOriginalProofSurviveSaveAndReopen() async throws {
+        let ledger = LedgerModel(databaseURL: database)
+        await ledger.open()
+        var draft = observations(currency: .mxn)
+        draft.currency = .usd
+        XCTAssertEqual(draft.currency, .mxn)
+        let review = try draft.review(in: ledger)
+        XCTAssertEqual(review.comparison.change, Money(minorUnits: -460, currency: .mxn))
+        let saved = await review.save(in: ledger)
+        XCTAssertTrue(saved)
+        let reopened = LedgerModel(databaseURL: database)
+        await reopened.open()
+        let shop = try XCTUnwrap(reopened.shop)
+        XCTAssertEqual(shop.basis.currency, .mxn)
+        XCTAssertEqual(shop.basis.cap, Money(minorUnits: 3800, currency: .mxn))
+        XCTAssertEqual(try shop.initialCheckoutChange?.comparison(for: shop.id).change, review.comparison.change)
     }
 
     func testExplicitReviewAndSaveCreatesOneDraftWithItsActualAfterPriceAndNoInventedItems() async throws {

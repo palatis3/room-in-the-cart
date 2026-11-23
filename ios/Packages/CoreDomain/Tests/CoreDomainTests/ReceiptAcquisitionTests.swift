@@ -2,6 +2,28 @@ import XCTest
 @testable import CoreDomain
 
 final class ReceiptAcquisitionTests: XCTestCase {
+    func testUnknownMexicanReceiptPriceKeepsCurrencyThroughCorrectionAndReadback() throws {
+        let quantity = Quantity(amount: .one, unit: .count, originalLiteral: "1")
+        let original = ReceiptAcquisition(receiptID: UUID(), ordinal: 0, lotID: UUID(), foodID: UUID(), merchant: "Mercado",
+            purchaseDate: Date(), transactionReference: nil, imageDigest: nil, originalLine: "Frijoles", name: "Frijoles",
+            received: quantity, usable: quantity, paidLineTotal: nil, stock: .added(location: .cupboard), currency: .mxn)
+        let reopened = try JSONDecoder().decode(ReceiptAcquisition.self, from: JSONEncoder().encode(original))
+        XCTAssertEqual(try PrivatePriceEvidence(receipt: reopened).currencyCode, "MXN")
+        XCTAssertThrowsError(try reopened.correctingPaidTotal(Money(minorUnits: 400)))
+        let corrected = try reopened.correctingPaidTotal(Money(minorUnits: 400, currency: .mxn))
+        XCTAssertEqual(try corrected.correctingPaidTotal(nil).currency, .mxn)
+        let digest = Data(repeating: 16, count: 32)
+        let lines = try ["Subtotal $40", "Total a pagar 48.25 MXN"].enumerated().map {
+            try PriceImageLine(digest: digest, ordinal: $0.offset, wording: $0.element, uncertain: false)
+        }
+        let proposals = ReviewedCheckoutImage.proposals(from: lines, currency: .mxn)
+        XCTAssertEqual(proposals[.subtotal]?.amount, Money(minorUnits: 4000, currency: .mxn))
+        XCTAssertEqual(proposals[.total]?.amount, Money(minorUnits: 4825, currency: .mxn))
+        XCTAssertNil(ReviewedCheckoutImage.proposedAmount(for: .total, from: lines[1], currency: .usd))
+        let relabeled = ReviewedCheckoutImage.Charge(field: .total, amount: Money(minorUnits: 4825), inclusion: .unknown, line: lines[1])
+        XCTAssertThrowsError(try ReviewedCheckoutImage(charges: [relabeled]))
+    }
+
     func testExactEvidenceAndConfirmedTransactionIdentifyALineIndependentlyOfFoodAndPrice() {
         let draft = UUID(), photo = Data(repeating: 0x47, count: 32)
         let manual = ReceiptAcquisition.receiptID(merchant: "Market", transactionReference: nil, imageDigest: nil, draftID: draft)

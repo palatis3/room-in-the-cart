@@ -96,6 +96,13 @@ final class PantryArchiveIndex {
                 try putMetadata(kind: "price/" + origin.uuidString + "/" + price.id.uuidString,
                                 id: String(price.revision), bytes: ArchiveCodec.canonical(price))
             case .acquisition(let origin, let row):
+                let group = "receiptCurrency/" + origin.uuidString
+                let currency = Data(row.currency.rawValue.utf8)
+                if let previous = try metadata(kind: group, id: row.receiptID.uuidString) {
+                    guard previous == currency else { throw Failure.invalid }
+                } else {
+                    try putMetadata(kind: group, id: row.receiptID.uuidString, bytes: currency)
+                }
                 try putMetadata(kind: "receipt/" + origin.uuidString, id: row.id.uuidString, bytes: ArchiveCodec.canonical(row))
             case .originalLot(let original) where original.revision == 1:
                 try execute("INSERT INTO baselines(lot,payload) VALUES (?,?)", texts: [original.id.uuidString], data: ArchiveCodec.canonical(original))

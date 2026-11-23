@@ -3334,19 +3334,19 @@
         }
       }
     },
-    "Known added charges in USD": {
+    "Known added charges in %@": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Known added charges in USD"
+            "value": "Known added charges in %@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cargos adicionales conocidos en USD"
+            "value": "Cargos adicionales conocidos en %@"
           }
         }
       }

@@ -124,7 +124,7 @@ private struct PrivatePricePublicationForm: View {
 enum PrivatePricePublication {
     static func observation(_ price: PrivatePriceEvidence, workspace: UUID, shop: HistoryOwnedShop,
                             branch: String, mode: HistoryFulfillmentMode) throws -> HistoryPriceObservation {
-        try price.validate()
+        try price.validateForRecording()
         guard price.currencyCode == "USD", let minor = price.amountMinor, let amount = Int(exactly: minor),
               let revision = Int(exactly: price.revision) else { throw HistoryDraftError.invalid }
         let kind: HistoryPriceKind

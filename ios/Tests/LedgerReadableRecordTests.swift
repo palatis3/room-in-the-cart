@@ -10,6 +10,20 @@ final class LedgerReadableRecordTests: XCTestCase {
         let workspace: LedgerWorkspace
     }
 
+    @MainActor func testShopReadbackShowsStoredPesoCurrencyAndPickedSubtotal() throws {
+        let total = Money(minorUnits: 2450, currency: .mxn)
+        var shop = ShoppingLedger(title: "Mercado", basis: ShopBasis(cap: total, currency: .mxn))
+        let line = try shop.addManualLine(name: "Limones", quantity: nil)
+        try shop.setChecked(lineID: line, checked: true)
+        try shop.recordPickedPrice(lineID: line, expectedRevision: shop.revisionID, total: total,
+            membership: false, weighted: false, conditionsConfirmed: false)
+        let bytes = try RecordsNativeCodec.canonical(Document(workspace: LedgerWorkspace(shops: [shop], selectedShopID: shop.id)))
+        let record = try LedgerReadableRecord.text(bytes)
+        XCTAssertTrue(record.contains(ledgerFormat("Currency: %@", "MXN")))
+        XCTAssertTrue(record.contains(pickedSubtotalText(shop.pickedCartSubtotal)))
+        XCTAssertTrue(record.contains(moneyText(total)))
+    }
+
     @MainActor func testTypedItemAndListProvenanceAgreeAcrossReadableRecordSections() throws {
         var shop = ShoppingLedger(title: "Groceries")
         let typed = try XCTUnwrap(QuickGrocery.stage("Rice", in: shop))

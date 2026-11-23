@@ -1,5 +1,6 @@
 import XCTest
 import CoreDomain
+import RecordArchive
 @testable import RoomInTheCart
 
 @MainActor final class PickupReadableRecordTests: XCTestCase {
@@ -7,6 +8,68 @@ import CoreDomain
     private func at(_ minute: Int) -> Date { start.addingTimeInterval(TimeInterval(minute * 60)) }
     private func count(_ amount: Int64, _ original: String? = nil) throws -> Quantity {
         Quantity(amount: try Rational(amount), unit: .count, originalLiteral: original ?? String(amount))
+    }
+
+    func testEncryptedRecoveryReopensPesosAlongsideLegacyDollarsAndRejectsMixedPickup() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let registryURL = directory.appendingPathComponent("registry.json")
+        func pickup(_ currency: Currency) throws -> PickupJourney {
+            var journey = PickupJourney(id: UUID(), savedAt: start)
+            if currency == .mxn { journey.standaloneCurrency = currency }
+            let price = Money(minorUnits: 3201, currency: currency)
+            let line = BasketLine(id: UUID(), name: "Arroz", quantity: try count(1), expectedCost: .exact(price))
+            let revision = UUID()
+            journey.basket = try BasketPlan(id: journey.id, revisionID: revision, lines: [line], createdAt: start)
+            let context = CheckoutContext(storeID: "Tienda", branchID: "Centro", mode: .pickup, slot: "Hoy",
+                commitmentsID: journey.id, observedAt: start, source: "Etiqueta", currency: journey.standaloneCurrency)
+            journey.context = context
+            journey.quotedRevisionID = revision
+            journey.quote = CheckoutQuote(scope: .wholeCheckout, context: context, pricing: .inclusiveTotal(.exact(price)))
+            return journey
+        }
+        func record(_ journey: PickupJourney) throws -> ArchiveRecord {
+            let bytes = try RecordsNativeCodec.canonical(journey)
+            return ArchiveRecord(id: journey.id.uuidString, origin: "pickups/fixture", revision: ArchiveCodec.digest(bytes),
+                kind: .pickup, title: "Arroz", savedAtMilliseconds: ArchiveCodec.milliseconds(start), nativePayload: bytes)
+        }
+        let mxn = try pickup(.mxn), usd = try pickup(.usd)
+        let records = try [record(mxn), record(usd)]
+        let registry = try RecoveryRegistry(url: registryURL)
+        let model = RecordsToolsModel(registry: registry, snapshot: { .init(records: records) },
+                                     validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        await model.refresh()
+        model.selectAll()
+        model.generateRecoveryKey()
+        await model.prepareExport(.encryptedRecovery)
+        let file = directory.appendingPathComponent("shops.json")
+        try XCTUnwrap(model.preparedDocument).data.write(to: file)
+        await model.importFile(file, recipes: false)
+        XCTAssertEqual(model.review?.rows.count, 2)
+        await model.applyReviewedImport()
+        let reopened = try RecoveryRegistry(url: registryURL)
+        let saved = try await reopened.refreshList()
+        XCTAssertEqual(saved.count, 2)
+        for copy in saved {
+            let value = try RecordsNativeCodec.pickup(XCTUnwrap(copy.record.nativePayload))
+            XCTAssertEqual(value, copy.record.id == mxn.id.uuidString ? mxn : usd)
+            for region in ["en_US", "es_MX"] {
+                let locale = Locale(identifier: region)
+                let text = try PickupReadableRecord.text(value, locale: locale)
+                XCTAssertTrue(text.contains(value.currency.rawValue))
+                XCTAssertTrue(text.contains(moneyText(.init(minorUnits: 3201, currency: value.currency), locale: locale)))
+            }
+        }
+        var mixed = mxn
+        mixed.cap = CheckoutCap(scope: .wholeCheckout, commitmentsID: mxn.id, amount: Money(minorUnits: 3201, currency: .usd))
+        let invalid = try ArchiveCodec.make(records: [record(mixed)], kind: .personalRecovery, origin: "backup", revision: "2")
+        try ArchiveCodec.encode(invalid).write(to: file)
+        await model.importFile(file, recipes: false)
+        XCTAssertNil(model.review)
+        XCTAssertNotNil(model.error)
+        let after = try await registry.refreshList()
+        XCTAssertEqual(after, saved)
     }
 
     func testPersistedTimelineKeepsOriginalOrderCorrectionsOffersAndCashDistinct() throws {

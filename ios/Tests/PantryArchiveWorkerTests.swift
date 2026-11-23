@@ -246,6 +246,18 @@ import RecordArchive
             mode: .inStore, date: now, currencyCode: "CAD", amountMinor: 500, pack: nil, eligibility: wording,
             sourceText: wording, shelfImage: .init(printed: printed, basis: .bundle))
         let initial = try await f.store.inventoryState()
+        let mexicanLabel = try PriceImageLine(digest: Data(repeating: 8, count: 32), ordinal: 0, wording: "MXN 5.00", uncertain: false)
+        let historicalUSD = PrivatePriceEvidence(id: mexicanLabel.shelfID, source: .shelf, name: "Nueces", store: "Market",
+            date: now, currencyCode: "USD", amountMinor: 500, pack: nil, sourceText: mexicanLabel.wording,
+            shelfImage: .init(printed: mexicanLabel, basis: .unknown))
+        do {
+            try await repository.savePrice(historicalUSD, expected: initial, at: now)
+            XCTFail("New entries must match the printed currency")
+        } catch DomainError.invalidInput("shelfImageCurrency") {}
+        let archive = PantryArchiveCodec.Snapshot(descriptor: .init(originID: initial.workspaceID, inventoryRevision: initial.revision, capturedAt: now),
+            lots: [], observations: [], events: [], reservations: [], sourceLinks: [], history: [.price(originID: initial.workspaceID, historicalUSD)])
+        XCTAssertEqual(try PantryArchiveCodec.decode(PantryArchiveCodec.encode(archive)), archive)
+        XCTAssertEqual(try PantryPriceCodec.evidence(PantryPriceCodec.row(historicalUSD)), historicalUSD)
         let lotsBefore = try await f.store.inventoryRecords(kind: .lot)
         try await repository.savePrice(shelf, expected: initial, at: now)
         let page = try await repository.pricePage()
@@ -271,16 +283,16 @@ import RecordArchive
         f.cleanup.track(repository)
         let id = UUID()
         let unit = Quantity(amount: try Rational(500), unit: .gram, originalLiteral: "500 g")
-        func manual(_ revision: Int64, _ minor: Int64) -> PrivatePriceEvidence {
+        func manual(_ revision: Int64, _ minor: Int64, currency: String) -> PrivatePriceEvidence {
             .init(id: id, revision: revision, source: .paidManual, name: "Rice", variant: "Brown", store: "East market",
-                branch: "South", mode: .inStore, date: now, currencyCode: "USD", amountMinor: minor, pack: .init(count: 2, perPackage: unit),
+                branch: "South", mode: .inStore, date: now, currencyCode: currency, amountMinor: minor, pack: .init(count: 2, perPackage: unit),
                 sourceText: "Reviewed at the till")
         }
-        let original = manual(1, 500), corrected = manual(2, 460)
+        let original = manual(1, 500, currency: "USD"), corrected = manual(2, 460, currency: "MXN")
         try await repository.savePrice(original, expected: f.store.inventoryState(), at: now)
         try await repository.savePrice(corrected, expected: f.store.inventoryState(), at: now)
         let credit = PrivatePriceEvidence(id: UUID(), source: .adjustment(target: id, revision: 2, kind: .refund),
-            name: "Rice", store: "East market", date: now, currencyCode: "USD", amountMinor: 40, pack: nil, sourceText: "Damaged bag")
+            name: "Rice", store: "East market", date: now, currencyCode: "MXN", amountMinor: 40, pack: nil, sourceText: "Damaged bag")
         try await repository.savePrice(credit, expected: f.store.inventoryState(), at: now)
         let page = try await repository.pricePage()
         XCTAssertEqual(Set(page.standalone.map(\.id)), [id, credit.id])

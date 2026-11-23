@@ -256,7 +256,10 @@ enum PantryArchiveCodec {
             guard acquisitions[origin, default: [:]].updateValue(row, forKey: row.id) == nil else { throw Failure.invalid }
         }
         for (origin, rows) in acquisitions {
+            var receiptCurrencies: [UUID: Currency] = [:]
             for row in rows.values {
+                if let previous = receiptCurrencies.updateValue(row.currency, forKey: row.receiptID),
+                   previous != row.currency { throw Failure.invalid }
                 if origin == value.descriptor.originID { try PantryAcquisitionCodec.validateLot(row, lot: lots[row.lotID]) }
                 if let id = row.supersedesID {
                     guard let prior = rows[id], try prior.correctingPaidTotal(row.paidLineTotal) == row else { throw Failure.invalid }

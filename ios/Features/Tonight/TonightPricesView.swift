@@ -64,7 +64,7 @@ private struct SecondMealCashReview: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
-            let charge = try? DinnerEntry.money(entered)
+            let charge = try? DinnerEntry.money(entered, currency: estimate.currency)
             if let charge {
                 LabeledContent(tonightText("Added fees, tax and deposits"), value: dinnerMoney(charge))
             }
@@ -93,7 +93,7 @@ private struct SecondMealCashReview: View {
             NavigationStack {
                 WorkingForm {
                     Text(tonightText("Enter only fees, tax and deposits added by buying groceries for this second meal. Exclude charges already due for your shop."))
-                    TextField(tonightText("Known added charges in USD"), text: $draft)
+                    TextField(String(format: tonightText("Known added charges in %@"), estimate.currency.rawValue), text: $draft)
                         .keyboardType(.decimalPad)
                         .accessibilityIdentifier("tonight.second.feeAmount")
                     Text(tonightText("Enter 0 for no added charges. Leave blank if unknown."))
@@ -121,7 +121,7 @@ private struct SecondMealCashReview: View {
 
     private var validDraft: Bool {
         do {
-            let charge = try DinnerEntry.money(draft)
+            let charge = try DinnerEntry.money(draft, currency: estimate.currency)
             guard charge != nil || draft.isEmpty else { return false }
             _ = try estimate.additionalCash(addedCharges: charge, chargesComplete: draftReviewed)
             return true

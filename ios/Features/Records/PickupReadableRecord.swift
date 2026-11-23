@@ -11,7 +11,7 @@ struct PickupReadableRecord {
         value.formatted(Date.FormatStyle(date: .abbreviated, time: .standard, locale: locale, timeZone: zone))
     }
     private func money(_ value: Money) -> String {
-        (Decimal(value.minorUnits) / 100).formatted(.currency(code: value.currency.rawValue).locale(locale))
+        moneyText(value, locale: locale)
     }
     private func quantity(_ value: Quantity) -> String {
         let normalized = pQuantity(value, language: language)
@@ -49,7 +49,7 @@ struct PickupReadableRecord {
         case .item: return pickupLabel("Selected items only")
         }
     }
-    private func quote(_ value: CheckoutQuote, cap: CheckoutCap?) throws -> [String] {
+    private func quote(_ value: CheckoutQuote, cap: CheckoutCap?, currency: Currency? = nil) throws -> [String] {
         let context = value.context
         let mode: String
         switch context.mode {
@@ -84,7 +84,7 @@ struct PickupReadableRecord {
             }
             rows += [field("Tax", price(tax)), field("Deposits and other charges", price(deposits))]
         }
-        let result = try CheckoutEngine.evaluate(value, cap: cap)
+        let result = try CheckoutEngine.evaluate(value, cap: cap, currency: currency)
         let total = result.total
         let amount = total.exact.map(money) ?? total.upperBound.map { money(total.lowerBound) + " – " + money($0) }
             ?? (pickupLabel("At least") + " " + money(total.lowerBound) + " · " + pickupLabel("total unresolved"))
@@ -120,7 +120,7 @@ struct PickupReadableRecord {
         func quoteEvidence(_ title: String, _ saved: CheckoutQuote, cap: CheckoutCap?) throws {
             let observed = saved.context.observedAt
             let header = [pickupLabel(title), field("Checkout evidence recorded at", date(observed))]
-            events.append((observed, (header + (try quote(saved, cap: cap))).joined(separator: "\n")))
+            events.append((observed, (header + (try quote(saved, cap: cap, currency: j.currency))).joined(separator: "\n")))
         }
         for prior in j.earlierQuotes {
             try quoteEvidence("Earlier checkout quote", prior.quote, cap: prior.cap)
@@ -142,8 +142,8 @@ struct PickupReadableRecord {
                 if let frozen = j.frozenQuotes[snapshot.id] {
                     rows.append(field("Checkout evidence recorded at", date(frozen.context.observedAt)))
                     if let cap = j.frozenCaps?[snapshot.id.uuidString] {
-                        rows += try quote(frozen, cap: cap)
-                    } else if frozen != j.quote { rows += try quote(frozen, cap: nil) }
+                        rows += try quote(frozen, cap: cap, currency: j.currency)
+                    } else if frozen != j.quote { rows += try quote(frozen, cap: nil, currency: j.currency) }
                     else { rows.append(pickupLabel("No spending cap recorded with this frozen copy")) }
                 }
                 event(snapshot.createdAt, pickupLabel("Frozen · placement unconfirmed"), rows)
@@ -279,7 +279,7 @@ struct PickupReadableRecord {
         }
         if let closed = j.closedAt { event(closed, pickupLabel("Pickup closed")) }
         if !j.settlement.entries.isEmpty {
-            let summary = try j.settlement.summary(asOf: j.savedAt)
+            let summary = try j.settlement.summary(asOf: j.savedAt, currency: j.currency)
             current.append([field("Paid so far", money(summary.paidSoFar)), field("Pending credits · not deducted", money(summary.pendingCredits)),
                             field("Credits already included in charges", money(summary.includedCredits)),
                             field("Payment holds · not spending", money(summary.paymentHolds))].joined(separator: "\n"))
@@ -317,6 +317,7 @@ struct PickupReadableRecord {
             current.append(rows.joined(separator: "\n"))
         }
         // Stable sorting keeps source order when several facts share a timestamp.
-        return (events.sorted { $0.0 < $1.0 }.map(\.1) + current).joined(separator: "\n\n")
+        let history = events.sorted { $0.0 < $1.0 }.map(\.1) + current
+        return ([field("Currency", j.currency.rawValue)] + history).joined(separator: "\n\n")
     }
 }

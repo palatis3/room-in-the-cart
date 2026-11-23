@@ -53,17 +53,17 @@ private struct PickupOfferDraft: Equatable {
         let evidence: CostEvidence
         switch priceKind {
         case "bounded":
-            guard let lower = try ComparisonModel.money(price), let upper = try ComparisonModel.money(upper) else { throw DomainError.invalidNumber }
+            guard let lower = try ComparisonModel.money(price, currency: journey.currency), let upper = try ComparisonModel.money(upper, currency: journey.currency) else { throw DomainError.invalidNumber }
             evidence = .bounded(lower: lower, upper: upper, reason: reason)
         case "unknown": evidence = .unknown(reason: reason)
         default:
-            if let value = try ComparisonModel.money(price) { evidence = .exact(value) }
+            if let value = try ComparisonModel.money(price, currency: journey.currency) { evidence = .exact(value) }
             else { evidence = .unknown(reason: pTr("Offered price is not confirmed.")) }
         }
         return PickupOffer(id: id, lineID: line.id, replacement: replacement,
             required: try quantity(required, unit: original?.required.unit ?? line.ordered.unit, original: original?.required),
             remainingOriginal: try quantity(remaining, unit: original?.remainingOriginal.unit ?? line.ordered.unit, original: original?.remainingOriginal),
-            price: evidence, ceiling: try ComparisonModel.money(ceiling),
+            price: evidence, ceiling: try ComparisonModel.money(ceiling, currency: journey.currency),
             deadline: try RetailerDeadline(cutoff: deadline, timeZoneID: zone), fallback: fallback,
             householdPreference: preference, retailerResponse: response)
     }
@@ -170,11 +170,11 @@ struct PickupOfferEditorView: View {
                 Text(pTr("Unknown price")).tag("unknown")
             }.accessibilityIdentifier("pickup.offer.price.kind")
             if draft.priceKind != "unknown" {
-                TextField(pTr(draft.priceKind == "bounded" ? "Lower offered price (USD)" : "Offered price (USD)"), text: $draft.price)
+                TextField(String(format: pTr(draft.priceKind == "bounded" ? "Lower offered price (%@)" : "Offered price (%@)"), journey.currency.rawValue), text: $draft.price)
                     .keyboardType(.decimalPad).accessibilityIdentifier(draft.priceKind == "bounded" ? "pickup.offer.price.lower" : "pickup.offer.price")
             }
             if draft.priceKind == "bounded" {
-                TextField(pTr("Upper offered price (USD)"), text: $draft.upper).keyboardType(.decimalPad).accessibilityIdentifier("pickup.offer.price.upper")
+                TextField(String(format: pTr("Upper offered price (%@)"), journey.currency.rawValue), text: $draft.upper).keyboardType(.decimalPad).accessibilityIdentifier("pickup.offer.price.upper")
             }
             if draft.priceKind != "exact" {
                 TextField(pTr("Why the offered price is unresolved"), text: $draft.reason).accessibilityIdentifier("pickup.offer.price.reason")

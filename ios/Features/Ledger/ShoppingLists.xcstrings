@@ -1153,18 +1153,18 @@
         }
       }
     },
-    "Total for this picked amount ($)": {
+    "Total for this picked amount (%@)": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Total for this picked amount ($)"
+            "value": "Total for this picked amount (%@)"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Total por la cantidad en el carrito ($)"
+            "value": "Total por la cantidad en el carrito (%@)"
           }
         }
       }

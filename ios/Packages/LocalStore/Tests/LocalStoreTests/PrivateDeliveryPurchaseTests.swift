@@ -27,7 +27,7 @@ final class PrivateDeliveryPurchaseTests: XCTestCase {
         let person = UUID()
         let record = PrivateDeliveryRevision(digest: Data(repeating: 9, count: 32), layoutID: UUID(),
             order: "Delivery-123", merchant: "Market", kind: .finalReceipt, purchaseDate: nil, deliveryDate: delivered,
-            importedAt: imported, finalCents: 200, lines: [], deliveryTimeZoneIdentifier: calendar.timeZone.identifier)
+            importedAt: imported, finalCents: 200, lines: [], deliveryTimeZoneIdentifier: calendar.timeZone.identifier, currencyCode: "MXN")
         _ = try await store.savePrivateDelivery(record, persona: person, expectedRevision: 0)
         try await store.close()
 
@@ -35,6 +35,7 @@ final class PrivateDeliveryPurchaseTests: XCTestCase {
         let result = try await reopened.privateDeliveryWithFile(persona: person, digest: record.digest)
         let entry = try XCTUnwrap(result)
         XCTAssertEqual(entry.latest, record)
+        XCTAssertEqual(entry.latest.currencyCode, "MXN")
         XCTAssertNil(entry.latest.purchaseDate)
         XCTAssertNil(entry.latest.purchaseDay)
         XCTAssertEqual(entry.latest.deliveryTimeZoneIdentifier, "America/New_York")
@@ -66,6 +67,7 @@ final class PrivateDeliveryPurchaseTests: XCTestCase {
         json.removeValue(forKey: "deliveryTimeZoneIdentifier")
         json.removeValue(forKey: "deliveryDay")
         let legacy = try decoded()
+        XCTAssertEqual(legacy.currencyCode, "USD")
         XCTAssertNoThrow(try legacy.validate())
         XCTAssertEqual(legacy.purchaseDay, "2026-11-17")
         XCTAssertEqual(legacy.deliveryDate, delivered)

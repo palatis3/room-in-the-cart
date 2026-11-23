@@ -6,6 +6,65 @@ import SQLite3
 @testable import RoomInTheCart
 
 final class AppModelTests: XCTestCase {
+    func testPesoAndDollarReadbackAcrossUSAndMexicanLocales() {
+        for identifier in ["en_US", "es_US", "es_MX", "en_MX"] {
+            let locale = Locale(identifier: identifier)
+            XCTAssertTrue(moneyText(Money(minorUnits: 4090, currency: .mxn), locale: locale).contains("MXN"))
+            let dollars = moneyText(Money(minorUnits: 4090, currency: .usd), locale: locale)
+            XCTAssertTrue(dollars.contains(locale.region?.identifier == "MX" ? "USD" : "$"))
+        }
+    }
+
+    @MainActor
+    func testComparisonRepeatsItsCurrencyOnReopenCorrectionAndExport() async throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let app = AppModel(databaseURL: directory.appendingPathComponent("local.sqlite"))
+        await app.open()
+        let store = try XCTUnwrap(app.store)
+        var draft = makeDraft(unknownSecondYield: false, currency: .mxn)
+        draft.currency = .usd
+        XCTAssertEqual(draft.currency, .mxn)
+        let model = ComparisonModel(draft: draft)
+        await model.save(in: store)
+        await app.refresh()
+        let record = try XCTUnwrap(app.records.first)
+        let reopened = try app.decode(record)
+        XCTAssertEqual(reopened.currency, .mxn)
+        let corrected = ComparisonModel(draft: reopened, savedRevision: record.revision)
+        corrected.draft.aPrice = "2.00"
+        await corrected.save(in: store)
+        await app.refresh()
+        let revised = try XCTUnwrap(app.records.first)
+        let payload = try RecordsNativeCodec.comparison(revised.payload)
+        XCTAssertEqual(payload.answer?.offerA.totalCost, Money(minorUnits: 400, currency: .mxn))
+        XCTAssertEqual(payload.answer?.offerA.itemHeadroom, Money(minorUnits: 2600, currency: .mxn))
+        XCTAssertEqual(payload.draft.aPrice, "2.00")
+        XCTAssertTrue(try payload.readableText().contains("MXN"))
+        XCTAssertFalse(try payload.readableText().contains("USD"))
+        try await store.close()
+    }
+
+    @MainActor
+    func testAbsentCurrencyOnLegacyPricedDraftDecodesAsUSD() throws {
+        let original = makeDraft(unknownSecondYield: false)
+        let object = try JSONSerialization.jsonObject(with: JSONEncoder().encode(original))
+        var legacy = try XCTUnwrap(object as? [String: Any])
+        legacy.removeValue(forKey: "priceCurrency")
+        var decoded = try JSONDecoder().decode(ComparisonDraft.self, from: JSONSerialization.data(withJSONObject: legacy))
+        XCTAssertEqual(decoded.currency, .usd)
+        decoded.currency = .mxn
+        XCTAssertEqual(decoded.currency, .usd)
+        let request = try ComparisonModel(draft: decoded).request()
+        XCTAssertEqual(request.offerA.price, Money(minorUnits: 349, currency: .usd))
+        decoded.aPrice = ""
+        decoded.bPrice = ""
+        decoded.cap = ""
+        decoded.currency = .mxn
+        decoded.aPrice = "3.49"
+        XCTAssertEqual(try ComparisonModel(draft: decoded).request().offerA.price, Money(minorUnits: 349, currency: .mxn))
+    }
+
     @MainActor
     func testSettingAsideOneOfferRemainsPrivateReversibleAndPreservesBothPricesAfterReopen() async throws {
         let directory = try temporaryDirectory()
@@ -459,7 +518,7 @@ final class AppModelTests: XCTestCase {
         let draft = makeConversionDraft()
         let request = try ComparisonModel(draft: draft).request()
         let payload = SavedPayload(draft: draft, calculationVersion: SavedPayload.currentCalculationVersion,
-            normalizedRequest: request, answer: try PackComparison.evaluate(request), roundingPolicy: SavedPayload.currentRoundingPolicy)
+            normalizedRequest: request, answer: try PackComparison.evaluate(request), roundingPolicy: SavedPayload.roundingPolicy(for: draft.currency))
         let bytes = try RecordsNativeCodec.canonical(payload)
         let record = ArchiveRecord(id: draft.id.uuidString, origin: "comparisons/" + UUID().uuidString,
             revision: ArchiveCodec.digest(bytes), kind: .comparison, title: draft.item, savedAtMilliseconds: 1_700_000_000_000,
@@ -472,7 +531,7 @@ final class AppModelTests: XCTestCase {
         await model.prepareExport(.ownerText)
         let owner = String(decoding: try XCTUnwrap(model.preparedDocument).data, as: UTF8.self)
         let unitRates = try [Rational(349, 60), Rational(300, 80)].map {
-            comparisonUnitPriceText($0, in: .gram, locale: .current)
+            comparisonUnitPriceText($0, in: .gram, currency: draft.currency, locale: .current)
         }
         let draftOnly = try SavedPayload(draft: draft).readableText()
         for rate in unitRates {
@@ -498,13 +557,14 @@ final class AppModelTests: XCTestCase {
     @MainActor
     func testComparisonAmountLabelsKeepSingularUnitsAndDistinguishWeightFromVolume() throws {
         for locale in [Locale(identifier: "en_US"), Locale(identifier: "es_MX")] {
-            let style = Decimal.FormatStyle.Currency(code: "USD", locale: locale).precision(.fractionLength(2...4))
+            let usd = Decimal.FormatStyle.Currency(code: "USD", locale: locale)
+            let style = (locale.region?.identifier == "MX" ? usd.presentation(.isoCode) : usd).precision(.fractionLength(2...4))
             let unit = UnitOfMeasure.count.comparisonLabel(for: .one)
-            let exact = comparisonUnitPriceText(try Rational(30), in: .count, locale: locale)
+            let exact = comparisonUnitPriceText(try Rational(30), in: .count, currency: .usd, locale: locale)
             XCTAssertEqual(exact, message("%@ per 1 %@", (Decimal(30) / 100).formatted(style), unit))
-            let third = comparisonUnitPriceText(try Rational(100, 3), in: .count, locale: locale)
+            let third = comparisonUnitPriceText(try Rational(100, 3), in: .count, currency: .usd, locale: locale)
             XCTAssertEqual(third, message("About %@ per 1 %@", (Decimal(3333) / 10_000).formatted(style), unit))
-            let tiny = comparisonUnitPriceText(try Rational(1, 200), in: .count, locale: locale)
+            let tiny = comparisonUnitPriceText(try Rational(1, 200), in: .count, currency: .usd, locale: locale)
             XCTAssertEqual(tiny, message("Less than %@ per 1 %@", (Decimal(1) / 10_000).formatted(style), unit))
         }
         let cases: [(UnitOfMeasure, String)] = [
@@ -795,8 +855,8 @@ final class AppModelTests: XCTestCase {
         try await reopenedStore.close()
     }
 
-    private func makeDraft(unknownSecondYield: Bool) -> ComparisonDraft {
-        var draft = ComparisonDraft()
+    private func makeDraft(unknownSecondYield: Bool, currency: Currency = .usd) -> ComparisonDraft {
+        var draft = ComparisonDraft(currency: currency)
         draft.item = "Tortillas — family wraps"
         draft.needed = " 12.000 "
         draft.stock = "00.00"
@@ -812,7 +872,7 @@ final class AppModelTests: XCTestCase {
     }
 
     private func makeConversionDraft() -> ComparisonDraft {
-        var draft = ComparisonDraft()
+        var draft = ComparisonDraft(currency: .usd)
         draft.item = "Flour"
         draft.needed = "120"
         draft.unit = .gram

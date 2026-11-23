@@ -212,7 +212,7 @@ enum PickupFallbackOptions {
                 guard let offer = offers[food], let limit = Int64(offer.availablePacks), limit > 0,
                       let yield = try? DinnerEntry.quantity(offer.packYield, unit: offer.packUnit),
                       let usable = try yield.converted(to: exemplar.amount.unit), usable > .zero,
-                      let price = try? DinnerEntry.money(offer.packPrice), price.minorUnits >= 0 else { valid = false; break }
+                      let price = try? DinnerEntry.money(offer.packPrice, currency: journey.currency), price.minorUnits >= 0 else { valid = false; break }
                 let packs = try short.divided(by: usable).roundedUp()
                 guard packs <= limit else { valid = false; break }
                 let subtotal = try price.multiplied(by: packs)
@@ -222,14 +222,14 @@ enum PickupFallbackOptions {
                 buys.append(.init(id: food, label: offer.packLabel, count: packs, cost: subtotal))
             }
             guard valid else { continue }
-            var extraCash = Money(minorUnits: cost)
+            var extraCash = Money(minorUnits: cost, currency: journey.currency)
             if count > 0 {
                 // The original pickup cap is not evidence of money left for a second checkout.
-                guard let budget = try? DinnerEntry.money(draft.topUpBudget), let charges = try? DinnerEntry.money(draft.topUpCharges),
+                guard let budget = try? DinnerEntry.money(draft.topUpBudget, currency: journey.currency), let charges = try? DinnerEntry.money(draft.topUpCharges, currency: journey.currency),
                       budget.minorUnits >= 0, charges.minorUnits >= 0 else { continue }
                 let total = cost.addingReportingOverflow(charges.minorUnits)
                 guard !total.overflow, total.partialValue <= budget.minorUnits else { continue }
-                extraCash = Money(minorUnits: total.partialValue)
+                extraCash = Money(minorUnits: total.partialValue, currency: journey.currency)
             }
             let travel = count > 0 ? try? DinnerEntry.minutes(draft.tripMinutes) : 0
             guard let travel, elapsed + travel <= available else { continue }
@@ -241,7 +241,7 @@ enum PickupFallbackOptions {
             let exclusions = Set(rules + dinner.template.exclusions + dinner.template.ingredients.flatMap(\.exclusions)).sorted()
             buys.sort { ($0.label, $0.id.uuidString) < ($1.label, $1.id.uuidString) }
             results.append(.init(id: dinner.id,title: dinner.template.title,buys: buys,
-                                 portions: portions,ingredients: ingredients,exclusions: exclusions,minutes: elapsed + travel,packCount: count,merchandise: .init(minorUnits: cost),extraCash: extraCash,repeatRequired: repeatRequired, reviewedPantryBasis: canonical?.basis))
+                                 portions: portions,ingredients: ingredients,exclusions: exclusions,minutes: elapsed + travel,packCount: count,merchandise: .init(minorUnits: cost, currency: journey.currency),extraCash: extraCash,repeatRequired: repeatRequired, reviewedPantryBasis: canonical?.basis))
         }
         return results.sorted {
             if $0.packCount != $1.packCount { return $0.packCount < $1.packCount }

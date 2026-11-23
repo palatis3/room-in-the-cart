@@ -510,7 +510,7 @@ import UIKit
         let done = app.buttons["Done"]
         enterCheckoutTerms([("Store", "Family market"), ("Branch", "Main branch"),
                             ("Pickup or delivery slot", "Tuesday 5 PM"), ("Source of these prices", "Retailer quote"),
-                            ("Spending cap", "38")], above: done)
+                            ("Spending cap (USD)", "38")], above: done)
         XCTAssertTrue(done.waitForExistence(timeout: 3) && done.isHittable)
         done.tap()
         XCTAssertTrue(done.waitForNonExistence(timeout: 5))
@@ -522,7 +522,7 @@ import UIKit
 
         let option = "Compare an authorization hold"
         let compareHold = app.switches[option]
-        let holdLabel = "Retailer-displayed hold"
+        let holdLabel = "Retailer-displayed hold (USD)"
         let fundsLabel = "Available funds (private, this screen only)"
         let hold = app.textFields[holdLabel]
         let funds = app.textFields[fundsLabel]
@@ -634,7 +634,7 @@ import UIKit
         let done = app.buttons["Done"]
         let terms = [("Store", "Family market"), ("Branch", "Main branch"),
                      ("Pickup or delivery slot", "Tuesday 5 PM"), ("Source of these prices", "Retailer quote"),
-                     ("Spending cap", "38")]
+                     ("Spending cap (USD)", "38")]
         let charges: [(String, String?)] = [("Price for rice", "34"), ("Fee below threshold or fixed fee", "0"),
                                             ("Eligible discount", "0"), ("Tax", knownTax ? "0" : nil),
                                             ("Deposits and other charges", "0")]

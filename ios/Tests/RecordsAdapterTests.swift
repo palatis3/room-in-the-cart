@@ -16,14 +16,14 @@ final class RecordsAdapterTests: XCTestCase {
         return url
     }
     @MainActor private func comparison(legacy: Bool = false, edit: (inout ComparisonDraft) -> Void = { _ in }) throws -> ArchiveRecord {
-        var draft = ComparisonDraft()
+        var draft = ComparisonDraft(currency: .usd)
         draft.item = "Arroz"; draft.needed = "2"; draft.unit = .count
         draft.aLabel = "Original A"; draft.aQuantity = "1"; draft.aPrice = "3.49"
         draft.bLabel = "Original B"; draft.bQuantity = "2"; draft.bPrice = "5.00"
         edit(&draft)
         let request = try ComparisonModel(draft: draft).request()
         let payload = legacy ? SavedPayload(draft: draft) : SavedPayload(draft: draft, calculationVersion: SavedPayload.currentCalculationVersion,
-            normalizedRequest: request, answer: try PackComparison.evaluate(request), roundingPolicy: SavedPayload.currentRoundingPolicy)
+            normalizedRequest: request, answer: try PackComparison.evaluate(request), roundingPolicy: SavedPayload.roundingPolicy(for: draft.currency))
         let data = try RecordsNativeCodec.canonical(payload)
         return ArchiveRecord(id: draft.id.uuidString, origin: "comparisons/fixture", revision: ArchiveCodec.digest(data),
             kind: .comparison, title: draft.item, savedAtMilliseconds: 1_800_000_000_000,

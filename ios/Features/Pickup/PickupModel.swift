@@ -12,8 +12,7 @@ func pCook(_ key: String, language: String) -> String {
     return bundle.localizedString(forKey: key, value: key, table: "Pickup")
 }
 
-func pMoney(_ money: Money) -> String { Decimal(money.minorUnits).dividing(by: 100).formatted(.currency(code: "USD")) }
-private extension Decimal { func dividing(by value: Decimal) -> Decimal { self / value } }
+func pMoney(_ money: Money) -> String { moneyText(money) }
 func pExclusions(_ values: [String]) -> String {
     var seen = Set<String>()
     return values.filter { seen.insert($0).inserted }.joined(separator: ", ")
@@ -213,6 +212,9 @@ struct PickupJourney: Codable, Equatable, Identifiable {
     var mealRecovery: PickupMealRecoveryHistory?
     var cookedMeals: [PantryCookRecord]?
     var ledgerBasis: ShopBasis?
+    // Standalone and carried-forward pickups may have no shopping-list basis.
+    var standaloneCurrency: Currency?
+    var currency: Currency { ledgerBasis?.currency ?? standaloneCurrency ?? context?.currency ?? cap?.amount.currency ?? .usd }
     var ledgerSourceRevisionID: UUID?
     var ledgerPackSelections: [LedgerPackSelection] = []
     var originShopID: UUID?
@@ -281,7 +283,7 @@ extension PickupJourney {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case recipientSends, mealSource, mealRecovery, cookedMeals, earlierQuotes, basketPriceTerms
+        case standaloneCurrency, recipientSends, mealSource, mealRecovery, cookedMeals, earlierQuotes, basketPriceTerms
         case awayCarryovers, id, savedAt, version, revision, basket, context, cap, quote, quotedRevisionID, frozenQuotes, frozenCaps, pickup, needs, plannedNeeds, needDetails, ledgerBasis, ledgerSourceRevisionID, ledgerPackSelections, originShopID, nextShopReview, carriedMeals, urgent, stockLots, stockNeeds, repairs, deferred, flexible, proposals, undoneProposals, offers, offerActions, notes, cookShareEvents, settlement, closedAt, feedback
     }
     init(from decoder: Decoder) throws {
@@ -302,6 +304,7 @@ extension PickupJourney {
         if let decoded = try container.decodeIfPresent([AllocationNeed].self, forKey: .needs) { needs = decoded }
         if let decoded = try container.decodeIfPresent([AllocationNeed].self, forKey: .plannedNeeds) { plannedNeeds = decoded }
         if let decoded = try container.decodeIfPresent([PickupNeedDetail].self, forKey: .needDetails) { needDetails = decoded }
+        standaloneCurrency = try container.decodeIfPresent(Currency.self, forKey: .standaloneCurrency)
         ledgerBasis = try container.decodeIfPresent(ShopBasis.self, forKey: .ledgerBasis)
         ledgerSourceRevisionID = try container.decodeIfPresent(UUID.self, forKey: .ledgerSourceRevisionID)
         ledgerPackSelections = try container.decodeIfPresent([LedgerPackSelection].self, forKey: .ledgerPackSelections) ?? []
@@ -796,7 +799,7 @@ struct PickupPersistenceLocation {
             return try? CheckoutEngine.evaluate(frozen, cap: value.frozenCaps?[snapshot.id.uuidString])
         }
         guard let quote = value.quote, value.quotedRevisionID == basket.current.id else { return nil }
-        return try? CheckoutEngine.evaluate(quote, cap: value.cap)
+        return try? CheckoutEngine.evaluate(quote, cap: value.cap, currency: value.currency)
     }
     var allocation: StockAllocationResult? {
         guard let value = journey else { return nil }
@@ -1124,6 +1127,10 @@ struct PickupPersistenceLocation {
         do {
             let basket = try BasketPlan(id: shopID, revisionID: UUID(), lines: lines, createdAt: clock())
             var value = PickupJourney(id: shopID, savedAt: clock())
+            if ledgerBasis == nil {
+                let currencies = try lines.compactMap { try $0.expectedCost.evidenceCurrency() }
+                value.standaloneCurrency = context.currency ?? cap?.amount.currency ?? currencies.first ?? .groceryDefault()
+            }
             value.basketPriceTerms = .from(context, scope: PickupPricingTerms.scope(cap: cap, basis: ledgerBasis))
             value.basket = basket; value.context = context; value.cap = cap; value.plannedNeeds = plannedNeeds
             value.ledgerBasis = ledgerBasis; value.ledgerSourceRevisionID = ledgerSourceRevisionID; value.needDetails = needDetails
@@ -1366,7 +1373,7 @@ struct PickupPersistenceLocation {
                 let expected = try draft.submission(for: value, workspaceID: sourceWorkspaceID)
                 guard expected.quote == quote, expected.cap == cap else { throw PickupCheckoutDraftError.staleSource }
             }
-            _ = try CheckoutEngine.evaluate(quote, cap: cap)
+            _ = try CheckoutEngine.evaluate(quote, cap: cap, currency: value.currency)
             if value.basketPriceTerms == nil, value.quote == nil, let source = value.context {
                 value.basketPriceTerms = .from(source, scope: PickupPricingTerms.scope(cap: value.cap, basis: value.ledgerBasis))
             }
@@ -1608,7 +1615,7 @@ struct PickupPersistenceLocation {
         if let current = journey, current.basket == nil, current.closedAt == nil {
             value = current
         } else {
-            value = PickupJourney(id: PickupCheckoutMealSource.identity("urgent-meal-plan", [need.id]), savedAt: clock())
+            value = PickupJourney(id: PickupCheckoutMealSource.identity("urgent-meal-plan", [need.id]), standaloneCurrency: .groceryDefault(), savedAt: clock())
         }
         value.urgent.append(need)
         value.stockLots.append(ConfirmedStockLot(id: need.id, foodID: need.id, name: need.food, usable: need.available, confirmedAt: need.confirmedAt))
@@ -1628,7 +1635,7 @@ struct PickupPersistenceLocation {
         }
         var candidate = journey
         if createIfEmpty, ready, journeys.isEmpty, original == nil, priorLot == nil {
-            candidate = PickupJourney(id: journeyID, savedAt: clock())
+            candidate = PickupJourney(id: journeyID, standaloneCurrency: .groceryDefault(), savedAt: clock())
         }
         guard let current = candidate, current.id == journeyID, !saving, pending == nil else { return false }
         do {
@@ -1696,12 +1703,24 @@ struct PickupPersistenceLocation {
         } else if !recordedReplacements.isEmpty { throw PickupModelError.invalid }
         try value.validateAwayCarryovers()
         try value.ledgerBasis?.validate()
+        let currency = value.currency
+        guard [value.context?.currency, value.cap?.amount.currency, value.standaloneCurrency,
+               value.mealSource?.shop.basis.currency].compactMap({ $0 }).allSatisfy({ $0 == currency })
+        else { throw PickupModelError.invalid }
+        func validateCurrency(of line: BasketLine) throws {
+            if let recorded = try line.expectedCost.evidenceCurrency(), recorded != currency { throw PickupModelError.invalid }
+        }
+        if let basket = value.basket {
+            for revision in basket.revisions { try revision.lines.forEach(validateCurrency) }
+            for amendment in basket.amendments { try amendment.lines.forEach(validateCurrency) }
+        }
+        for deferred in value.deferred { try validateCurrency(of: deferred.line) }
         guard value.ledgerPackSelections.count <= 10_000,
               Set(value.ledgerPackSelections.map(\.lineID)).count == value.ledgerPackSelections.count else { throw PickupModelError.invalid }
         let noPurchaseLineIDs = Set(value.ledgerPackSelections.filter(\.isNoPurchase).map(\.lineID))
         for selection in value.ledgerPackSelections {
             try selection.validate()
-            guard selection.shopID == value.id, selection.shopRevisionID == value.ledgerSourceRevisionID,
+            guard selection.selectedResult.totalCost?.currency == currency, selection.shopID == value.id, selection.shopRevisionID == value.ledgerSourceRevisionID,
                   (noPurchaseLineIDs.contains(selection.lineID) || value.basket?.revisions.contains(where: { revision in revision.lines.contains(where: { $0.id == selection.lineID }) }) == true) else { throw PickupModelError.invalid }
         }
         guard value.originShopID != value.id, Set(value.needDetails.map(\.id)).count == value.needDetails.count else { throw PickupModelError.invalid }
@@ -1743,25 +1762,26 @@ struct PickupPersistenceLocation {
             guard value.needs.isEmpty, value.settlement.entries.isEmpty, value.basket?.placements.isEmpty != false else { throw PickupModelError.invalid }
         }
         let basketRevisionIDs = Set(value.basket?.revisions.map(\.id) ?? [])
+        for quote in value.frozenQuotes.values { _ = try CheckoutEngine.evaluate(quote, currency: currency) }
         if let caps = value.frozenCaps {
             let snapshots = Set(value.basket?.snapshots.map(\.id) ?? [])
             for (key, cap) in caps {
                 guard let id = UUID(uuidString: key), id.uuidString == key, snapshots.contains(id),
                       let quote = value.frozenQuotes[id] else { throw PickupModelError.invalid }
-                _ = try CheckoutEngine.evaluate(quote, cap: cap)
+                _ = try CheckoutEngine.evaluate(quote, cap: cap, currency: currency)
             }
         }
         var previousRevision: Int64 = -1
         for earlier in value.earlierQuotes {
             guard earlier.id > previousRevision, earlier.id < value.revision, basketRevisionIDs.contains(earlier.basketRevisionID)
             else { throw PickupModelError.invalid }
-            _ = try CheckoutEngine.evaluate(earlier.quote, cap: earlier.cap)
+            _ = try CheckoutEngine.evaluate(earlier.quote, cap: earlier.cap, currency: currency)
             previousRevision = earlier.id
         }
         if let quote = value.quote {
             guard let revisionID = value.quotedRevisionID,
                   value.basket?.revisions.contains(where: { $0.id == revisionID }) == true else { throw PickupModelError.invalid }
-            _ = try CheckoutEngine.evaluate(quote, cap: value.cap)
+            _ = try CheckoutEngine.evaluate(quote, cap: value.cap, currency: value.currency)
         } else if value.quotedRevisionID != nil { throw PickupModelError.invalid }
         for need in value.urgent {
             guard !need.food.isEmpty, !need.meal.isEmpty, need.confirmedAt.timeIntervalSinceReferenceDate.isFinite,
@@ -1771,7 +1791,14 @@ struct PickupPersistenceLocation {
         _ = try ConfirmedStockAllocator.allocate(lots: value.stockLots, needs: value.stockNeeds)
         guard value.cookShareEvents.allSatisfy({ event in value.notes.contains { $0.id == event.noteID } }),
               value.offerActions.allSatisfy({ event in value.offers.contains { $0.id == event.offerID } }) else { throw PickupModelError.invalid }
-        _ = try value.settlement.summary()
+        for offer in value.offers {
+            let inputs = offer.evaluation?.inputs
+            let currencies = try [offer.price.evidenceCurrency(), offer.ceiling?.currency, inputs?.lineAllowance?.currency,
+                                  inputs?.retainedOriginalCharge.evidenceCurrency(), inputs?.otherCheckoutCost.evidenceCurrency(),
+                                  inputs?.wholeCheckoutCap?.currency, offer.evaluation?.effectiveNoteCeiling?.currency]
+            guard currencies.compactMap({ $0 }).allSatisfy({ $0 == currency }) else { throw PickupModelError.invalid }
+        }
+        _ = try value.settlement.summary(currency: value.currency)
     }
     private func nextDraftID(for source: UUID) -> UUID {
         var bytes = Array(SHA256.hash(data: Data(("room-in-the-cart/next-shop/" + source.uuidString).utf8)).prefix(16))
@@ -1811,6 +1838,7 @@ struct PickupPersistenceLocation {
             let newID = nextDraftID(for: previous.id)
             let lines = accepted.map { BasketLine(id: UUID(), name: $0.line.name, quantity: $0.line.quantity, expectedCost: .unknown(reason: pTr("Recheck the price for this shop")), itemExclusions: $0.line.itemExclusions ?? []) }
             var next = PickupJourney(id: newID, savedAt: clock())
+            next.standaloneCurrency = previous.currency
             next.originShopID = previous.id
             next.nextShopReview = review
             next.basket = try BasketPlan(id: newID, revisionID: UUID(), lines: lines, createdAt: clock())

@@ -66,7 +66,7 @@ import CoreDomain
         let computed = try PackComparison.evaluate(request)
         if let version = payload.calculationVersion {
             guard version == SavedPayload.currentCalculationVersion,
-                  payload.roundingPolicy == SavedPayload.currentRoundingPolicy,
+                  payload.roundingPolicy == SavedPayload.roundingPolicy(for: payload.draft.currency),
                   payload.normalizedRequest == request, payload.answer == computed else {
                 throw EntryError.unsupportedVersion
             }

@@ -18,6 +18,7 @@ struct PrivateDeliveryReceiptsView: View {
     @State private var status: String?
     @State private var busy = false
     @State private var deleting = false
+    @State private var pendingCurrency: Currency?
     @State private var generation = UUID()
     private(set) var dates = ReceiptDateDisplay()
 
@@ -96,7 +97,26 @@ struct PrivateDeliveryReceiptsView: View {
             Picker(pantryText("Document type"), selection: value.kind) {
                 ForEach(PrivateDeliveryRevision.Kind.allCases, id: \.self) { Text($0.title).tag($0) }
             }
-            TextField(pantryText("Final charge in USD"), text: value.total).keyboardType(.decimalPad)
+            GroceryCurrencyPicker(selection: Binding(get: { value.wrappedValue.currency }, set: { next in
+                if next != value.wrappedValue.currency { pendingCurrency = next }
+            }))
+                .confirmationDialog(pantryText("Change the receipt currency?"), isPresented: Binding(
+                    get: { pendingCurrency != nil }, set: { if !$0 { pendingCurrency = nil } }
+                ), titleVisibility: .visible, presenting: pendingCurrency) { next in
+                    Button(pantryFormat("Review prices in %@", next.rawValue)) {
+                        value.wrappedValue.changeCurrency(next)
+                        pendingCurrency = nil
+                    }
+                    Button(pantryText("Cancel"), role: .cancel) { pendingCurrency = nil }
+                } message: { _ in
+                    Text(pantryText("This clears the entered amounts and reads the printed prices again. Your food selections and quantities are kept."))
+                }
+                .accessibilityIdentifier("deliveryReceipt.currency")
+            TextField(pantryFormat("Final charge in %@", value.wrappedValue.currency.rawValue), text: value.total).keyboardType(.decimalPad)
+                .disabled(!value.wrappedValue.permitsTotal)
+            if !value.wrappedValue.permitsTotal {
+                Text(pantryText("Check the currency printed beside the final total."))
+            }
             optionalDate(pantryText("Purchase date on receipt"), identifier: "deliveryReceipt.purchaseDate", value.purchaseDate)
                 .environment(\.timeZone, value.wrappedValue.receiptTimeZone)
             optionalDate(pantryText("Delivery date on receipt"), identifier: "deliveryReceipt.deliveryDate", value.deliveryDate)
@@ -120,8 +140,9 @@ struct PrivateDeliveryReceiptsView: View {
                             ForEach(PrivateDeliveryRevision.Disposition.allCases, id: \.self) { Text($0.title).tag($0) }
                         }
                         if row.wrappedValue.evidence.disposition.financial {
-                            TextField(pantryText("Printed adjustment in USD"), text: row.amount)
+                            TextField(pantryFormat("Printed adjustment in %@", value.wrappedValue.currency.rawValue), text: row.amount)
                                 .keyboardType(.numbersAndPunctuation)
+                                .disabled(!PrintedCurrencyEvidence(row.wrappedValue.evidence.wording).permits(value.wrappedValue.currency) || ReceiptPrintedEvidence.hasForeignCurrency(row.wrappedValue.evidence.wording))
                         } else {
                             quantity(row.wrappedValue.evidence)
                         }
@@ -168,7 +189,7 @@ struct PrivateDeliveryReceiptsView: View {
         let original = history.last { $0.latest.kind == .finalReceipt && $0.latest.lines.contains { !$0.disposition.financial } }
         Section {
             Text(head.latest.merchant + " · " + head.latest.order)
-            LabeledContent(pantryText("Final charge in USD"), value: amount(head.latest))
+            LabeledContent(pantryFormat("Final charge in %@", head.latest.currencyCode), value: amount(head.latest))
         }
         ForEach(history, id: \.revision) { entry in
             Section(entry.latest.kind.title) {
@@ -197,7 +218,7 @@ struct PrivateDeliveryReceiptsView: View {
                             }.accessibilityHint(pantryText("Line treatment"))
                             quantity(line)
                         }
-                        if let cents = line.cents { Text(usd(cents)).font(.caption) }
+                        if let cents = line.cents { Text(receiptMoney(Int64(cents), currencyCode: entry.latest.currencyCode)).font(.caption) }
                         if entry.revision == original?.revision, !line.disposition.financial, line.disposition != .unresolved {
                             Toggle(pantryText(line.disposition.storage == nil ? "Save leftovers" : "Select for putaway"),
                                    isOn: Binding(get: { selected.contains(line.id) }, set: { include in
@@ -233,8 +254,7 @@ struct PrivateDeliveryReceiptsView: View {
         }
         return Text(pantryText("Quantity unknown")).font(.caption)
     }
-    private func usd(_ cents: Int) -> String { (Decimal(cents) / 100).formatted(.currency(code: "USD")) }
-    private func amount(_ row: PrivateDeliveryRevision) -> String { row.finalCents.map(usd) ?? pantryText("Updated total unknown") }
+    private func amount(_ row: PrivateDeliveryRevision) -> String { row.finalCents.map { receiptMoney(Int64($0), currencyCode: row.currencyCode) } ?? pantryText("Updated total unknown") }
 
     private func read(_ url: URL) async {
         guard authorized, !busy else { return }
@@ -319,6 +339,6 @@ struct PrivateDeliveryReceiptsView: View {
     }
 
     private func clear() {
-        generation = UUID(); draft = nil; history = []; purchases = []; selected = []; confirmed = false; status = nil
+        generation = UUID(); pendingCurrency = nil; draft = nil; history = []; purchases = []; selected = []; confirmed = false; status = nil
     }
 }

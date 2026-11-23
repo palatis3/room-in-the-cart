@@ -9,6 +9,29 @@ import XCTest
 @testable import RoomInTheCart
 
 @MainActor final class ReceiptDocumentTests: XCTestCase {
+    func testPrintedPesoAndDollarEvidenceCannotBeRelabeledByManualNotes() throws {
+        for wording in ["Maíz 2 kg MXN $4.82", "Maíz 2 kg MX$4,82", "Maíz 2 kg 4.82 MXN", "Maíz 2 kg $4.82 M.N.", "Maíz 2 kg 4.82 pesos mexicanos"] {
+            let printed = ReceiptPrintedEvidence(.init(originalText: wording), knownStorage: [:])
+            XCTAssertTrue(printed.permitsPayment(in: .mxn), wording)
+            XCTAssertFalse(printed.permitsPayment(in: .usd), wording)
+            XCTAssertEqual(printed.quantity, "2", wording)
+            XCTAssertEqual(printed.amount, "4.82", wording)
+            let conflict = ReceiptPrintedEvidence(.init(originalText: wording, priceNote: "USD 4.82"), knownStorage: [:])
+            XCTAssertNil(conflict.amount)
+        }
+        XCTAssertFalse(ReceiptPrintedEvidence(.init(originalText: "Milk 1 L US$4.82"), knownStorage: [:]).permitsPayment(in: .mxn))
+        let target = CaptureTarget(workspaceID: UUID(), containerID: UUID(), objectID: UUID(), revision: 1, kind: .receiptEvidence)
+        let wording = "Leche 1 L $4.82"
+        let source = SourceMediaRecord(id: UUID(), target: target, originalText: wording, reviewedLabel: "Mercado",
+            imageJPEG: nil, barcode: nil, receiptLines: [.init(originalText: wording)], capturedAt: .now)
+        for (locale, expected) in [("es_US", Currency.usd), ("en_MX", .mxn)] {
+            var draft = try ReceiptImportDraft(source: source, locale: Locale(identifier: locale))
+            XCTAssertEqual(draft.currency, expected)
+            draft.lines[0].paid = "4.82"
+            XCTAssertEqual(try draft.lines[0].paidTotal(in: expected), Money(minorUnits: 482, currency: expected))
+        }
+    }
+
     func testSelectedDocumentFoodsStartPutawayWithoutAssumingAmountsOrChangingOtherDecisions() async throws {
         let foods = ["2 LATAS LENTEJAS 3.20", "YOGUR NATURAL 2.40", "ARROZ 1.50",
                      "No salt added beans", "Yogur sin azúcar", "No added sugar applesauce received"]
@@ -224,7 +247,7 @@ import XCTest
                         "PRECIO UNITARIO", "BEANS 2 CT @ $1.20", "BEANS 2 FOR $1.20", "BEANS $1.20"] {
             XCTAssertTrue(document([.init(id: 1, text: wording, bounds: left), amount]).amountAssociations.isEmpty, wording)
         }
-        for wording in ["$2.40/kg", "-$2.40", "$2.40 $5.60", "2.40", "MXN $2.40"] {
+        for wording in ["$2.40/kg", "-$2.40", "$2.40 $5.60", "2.40", "CAD $2.40"] {
             XCTAssertTrue(document([beans, .init(id: 2, text: wording, bounds: right)]).amountAssociations.isEmpty, wording)
         }
 
@@ -418,7 +441,7 @@ import XCTest
         XCTAssertEqual(proposal(wording, note: "USD 4.28").amount, "4.28")
         XCTAssertNil(proposal(wording, note: "4.28").amount)
         XCTAssertNil(proposal("MAÍZ 2 CT 4.82", note: "4.82").amount)
-        XCTAssertNil(proposal("MAÍZ 2 CT MXN 4.82", note: "4.82").amount)
+        XCTAssertEqual(proposal("MAÍZ 2 CT MXN 4.82", note: "4.82").amount, "4.82")
         XCTAssertNil(proposal(wording, note: "4.82").quantity)
 
         let target = CaptureTarget(workspaceID: UUID(), containerID: UUID(), objectID: UUID(), revision: 1, kind: .receiptEvidence)
@@ -485,7 +508,7 @@ import XCTest
         for wording in ["SUBTOTAL", "TOTAL", "AMOUNT DUE", "TAX", "TOTAL PAID USD 12.35"] {
             XCTAssertNil(document([amount, .init(id: 2, text: wording, bounds: left)]).printedPaidTotal(selected: both), wording)
         }
-        for wording in ["12.35", "MXN $12.35", "$12.35 CAD", "$12.35 A", "$12.35/kg", "$12.35 $9.55"] {
+        for wording in ["12.35", "MXN $12.35 USD", "$12.35 CAD", "$12.35 A", "$12.35/kg", "$12.35 $9.55"] {
             XCTAssertNil(document([.init(id: 1, text: wording, bounds: right), paid]).printedPaidTotal(selected: both), wording)
         }
         XCTAssertNil(document([amount, paid], method: .textFile).printedPaidTotal(selected: both))
@@ -791,10 +814,14 @@ extension ReceiptDocumentTests {
         let other = BasketLine(id: b, name: "Yogurt", quantity: try unit("1"), expectedCost: .exact(.init(minorUnits: 200)))
         var links: [UUID: ReceiptTripLink] = [:]
         XCTAssertEqual(ReceiptTripLink.compare(first, with: links), .noEvidence)
-        func add(_ total: Quantity, _ portions: [UUID: Quantity], cents: Int64?) throws {
+        func add(_ total: Quantity, _ portions: [UUID: Quantity], cents: Int64?, currency: Currency = .usd) throws {
             let id = UUID()
-            links[id] = try XCTUnwrap(.init(receiptLineID: id, printed: total, portions: portions, printedTotal: cents.map { Money(minorUnits: $0) }))
+            links[id] = try XCTUnwrap(.init(receiptLineID: id, printed: total, portions: portions, printedTotal: cents.map { Money(minorUnits: $0, currency: currency) }))
         }
+        try add(unit("1"), [a: unit("1")], cents: 200, currency: .mxn)
+        try add(unit("1"), [a: unit("1")], cents: 200, currency: .usd)
+        XCTAssertEqual(ReceiptTripLink.compare(first, with: links), .priceUnknown)
+        links = [:]
         try add(unit("1"), [a: unit("1")], cents: 200)
         XCTAssertEqual(ReceiptTripLink.compare(first, with: links), .quantity)
         try add(unit("1"), [a: unit("1")], cents: 200)

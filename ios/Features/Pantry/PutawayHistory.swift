@@ -111,7 +111,7 @@ struct ReviewedReceiptHeading: View {
             if let reference = header.reference { Text(verbatim: reference) }
             if let cents = header.totalMinor {
                 LabeledContent(putawayText("Paid receipt total")) {
-                    Text(verbatim: receiptMoney(Money(minorUnits: cents)))
+                    Text(verbatim: receiptMoney(cents, currencyCode: header.currencyCode))
                         .fontWeight(.semibold).monospacedDigit().foregroundStyle(Theme.ink)
                 }
             } else {
@@ -124,6 +124,7 @@ struct ReviewedReceiptHeading: View {
 
 struct PutawayDecisionLabel: View {
     let row: ReviewedReceiptDecision
+    let currencyCode: String
     private var label: String {
         switch row.kind {
         case .eaten: putawayText("Ate this")
@@ -142,7 +143,7 @@ struct PutawayDecisionLabel: View {
             if row.kind == .linked, let lotID = row.lotID {
                 Text(pantryFormat("Link delivery: %@ · %@", row.name, String(lotID.uuidString.suffix(8))))
             }
-            if let paid = row.paidMinor { Text(pantryFormat("Paid line total %@", receiptMoney(Money(minorUnits: paid)))).monospacedDigit() }
+            if let paid = row.paidMinor { Text(pantryFormat("Paid line total %@", receiptMoney(paid, currencyCode: currencyCode))).monospacedDigit() }
             else { Text(pantryText("Paid price unknown")) }
             ReceiptPaperLine(wording: row.original)
         }.padding(.vertical, 4).accessibilityElement(children: .combine)
@@ -151,17 +152,18 @@ struct PutawayDecisionLabel: View {
 
 struct PutawayOverlapReview: View {
     let prompt: PutawayOverlap
+    let currencyCode: String
     let choose: (PutawayOverlap.Choice) -> Void
     let edit: () -> Void
 
     var body: some View {
         Section(putawayText("Check a repeated receipt line")) {
             Text(putawayText("This wording appears in an earlier review of this purchase. Check the original lines before adding another."))
-            PutawayDecisionLabel(row: prompt.line)
+            PutawayDecisionLabel(row: prompt.line, currencyCode: currencyCode)
         }
         Section(putawayText("Previously reviewed")) {
             ForEach(prompt.earlier) { old in
-                PutawayDecisionLabel(row: old)
+                PutawayDecisionLabel(row: old, currencyCode: currencyCode)
                 if prompt.canUse(old) {
                     Button(putawayText("Use this saved decision")) { choose(.earlier(old.id)) }
                 }
@@ -240,7 +242,7 @@ struct PutawayHistoryDetail: View {
                     model.permitsReceiptSource && model.generation == token
                 })
                 ForEach(rows.sorted { $0.ordinal < $1.ordinal }) { row in
-                    PutawayDecisionLabel(row: row).listRowBackground(Theme.surface)
+                    PutawayDecisionLabel(row: row, currencyCode: header.currencyCode).listRowBackground(Theme.surface)
                 }
                 if rows.contains(where: { $0.lotID != nil }) {
                     NavigationLink(putawayText("Pantry quantities and price revisions")) {
@@ -295,12 +297,12 @@ struct ReviewedReceiptCopySelection {
         if store { lines.append(header.merchant) }
         if date { lines.append(purchaseDay) }
         if total, let cents = header.totalMinor {
-            lines.append(putawayText("Paid receipt total") + " · " + receiptMoney(Money(minorUnits: cents)))
+            lines.append(putawayText("Paid receipt total") + " · " + receiptMoney(cents, currencyCode: header.currencyCode))
         }
         for row in rows {
             if names.contains(row.id) { lines.append(row.name) }
             if amounts.contains(row.id), let paid = row.paidMinor {
-                lines.append(pantryFormat("Paid line total %@", receiptMoney(Money(minorUnits: paid))))
+                lines.append(pantryFormat("Paid line total %@", receiptMoney(paid, currencyCode: header.currencyCode)))
             }
         }
         return lines.joined(separator: "\n")
@@ -356,7 +358,7 @@ private struct ReviewedReceiptCopyView: View {
                             .accessibilityIdentifier("receipt.copy.store")
                         Toggle(purchaseDay, isOn: $selection.date)
                         if let cents = header.totalMinor {
-                            Toggle(putawayText("Paid receipt total") + " · " + receiptMoney(Money(minorUnits: cents)),
+                            Toggle(putawayText("Paid receipt total") + " · " + receiptMoney(cents, currencyCode: header.currencyCode),
                                    isOn: $selection.total)
                         }
                     }
@@ -365,7 +367,7 @@ private struct ReviewedReceiptCopyView: View {
                             Toggle(row.name, isOn: includes(row.id, in: $selection.names))
                                 .accessibilityIdentifier("receipt.copy.name." + row.id.uuidString)
                             if let paid = row.paidMinor {
-                                Toggle(pantryFormat("Paid line total %@", receiptMoney(Money(minorUnits: paid))),
+                                Toggle(pantryFormat("Paid line total %@", receiptMoney(paid, currencyCode: header.currencyCode)),
                                        isOn: includes(row.id, in: $selection.amounts))
                                 .accessibilityIdentifier("receipt.copy.amount." + row.id.uuidString)
                             }

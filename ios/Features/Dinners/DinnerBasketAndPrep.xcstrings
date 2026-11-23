@@ -1,6 +1,23 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Grocery subtotal budget (%@, optional)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grocery subtotal budget (%@, optional)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Presupuesto para el subtotal de la compra (%@, opcional)"
+          }
+        }
+      }
+    },
     "%lld minutes": {
       "localizations": {
         "en": {

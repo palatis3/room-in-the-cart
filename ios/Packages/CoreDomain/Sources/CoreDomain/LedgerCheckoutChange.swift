@@ -31,13 +31,13 @@ public struct LedgerCheckoutChange: Codable, Equatable, Sendable {
               basis.mode == .pickup, basis.capScope == .wholeShop, basis.capFirmness == .firm,
               let preview = basis.retailerPreview, preview.total == after.confirmedTotal,
               before.amount != nil || after.amount != nil,
-              [before.amount, after.amount].compactMap({ $0 }).allSatisfy({ $0 >= .zero }) else {
+              [before.amount, after.amount].compactMap({ $0 }).allSatisfy({ $0.currency == basis.currency && $0.minorUnits >= 0 }) else {
             throw CheckoutError.invalidEvidence
         }
         // The shopper confirmed the slot matched even if its time wasn't recorded.
         let context = CheckoutContext(storeID: basis.branch, branchID: basis.branch, mode: .pickup,
             slot: basis.slot?.ISO8601Format() ?? "same-undated-slot", commitmentsID: shopID,
-            observedAt: preview.capturedAt, source: preview.source)
+            observedAt: preview.capturedAt, source: preview.source, currency: basis.currency)
         func quote(_ observation: Observation) -> CheckoutQuote {
             let evidence = observation.confirmedTotal.map(CostEvidence.exact) ?? .unknown(reason: "Not confirmed")
             return CheckoutQuote(scope: .wholeCheckout, context: context, pricing: .inclusiveTotal(evidence))

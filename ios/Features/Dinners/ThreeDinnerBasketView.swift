@@ -61,7 +61,7 @@ struct ThreeDinnerBasketView: View {
                 DatePicker(dinnerPlanFormat("Night %lld", Int64(index + 1)), selection: $days[index], displayedComponents: .date)
                 TextField(dinnerPlanText("Available minutes (optional)"), text: $minutes[index]).keyboardType(.numberPad)
             }
-            TextField(dinnerPlanText("Grocery subtotal budget (optional)"), text: $budget).keyboardType(.decimalPad)
+            TextField(dinnerPlanFormat("Grocery subtotal budget (%@, optional)", (model.shop?.basis.currency ?? .groceryDefault()).rawValue), text: $budget).keyboardType(.decimalPad)
             Stepper(dinnerPlanFormat("Additional lunch portions per dinner: %lld", Int64(lunch)), value: $lunch, in: 0...20)
         } footer: { Text(dinnerPlanText("Choose three open nights. Each new lunch hold comes from the recipe’s unassigned servings.")) }
         if let shop = model.shop {
@@ -103,7 +103,7 @@ struct ThreeDinnerBasketView: View {
                     !model.state.weekNotes.contains { $0.shopID == shop.id && $0.kind == .away && $0.day.hasSameCivilDate(as: day) }
                 }) else { message = dinnerPlanText("Choose three different open nights."); return }
                 _ = try minutes.map { try DinnerEntry.minutes($0, maximum: 1440) }
-                _ = try DinnerEntry.money(budget)
+                _ = try DinnerEntry.money(budget, currency: shop.basis.currency)
                 groceries = try DinnerBasketGroceryDraft.prepare(recipes: recipes, shop: shop, history: model.workspace.packSelections, workspace: workspace)
                 page = 1; message = nil
             } catch { model.report(error) }
@@ -125,7 +125,7 @@ struct ThreeDinnerBasketView: View {
                         Picker(dinnerText("Unit"), selection: $row.unit) {
                             ForEach(UnitOfMeasure.allCases, id: \.self) { Text(dinnerUnit($0)).tag($0) }
                         }
-                        TextField(dinnerPlanText("Price per pack"), text: $row.price).keyboardType(.decimalPad)
+                        TextField(dinnerFormat("Price per pack in %@", (model.shop?.basis.currency ?? .groceryDefault()).rawValue), text: $row.price).keyboardType(.decimalPad)
                         TextField(dinnerPlanText("Store and pack label"), text: $row.source)
                         DatePicker(dinnerPlanText("Price observed"), selection: $row.observed, in: ...Date(), displayedComponents: .date)
                     }
@@ -181,9 +181,9 @@ struct ThreeDinnerBasketView: View {
     private func search(pins: [Int: UUID] = [:], exclude: Set<UUID> = []) {
         guard current, let shop = model.shop else { return }
         do {
-            let dates = try civilDays(shop), cap = try DinnerEntry.money(budget), holds = try Rational(Int64(lunch))
+            let dates = try civilDays(shop), cap = try DinnerEntry.money(budget, currency: shop.basis.currency), holds = try Rational(Int64(lunch))
             let limits = try minutes.map { try DinnerEntry.minutes($0, maximum: 1440) }
-            let foods = try groceries.flatMap { try $0.resolved() }
+            let foods = try groceries.flatMap { try $0.resolved(currency: shop.basis.currency) }
             let access = try model.access(for: shopID), state = model.state, choices = recipes, now = model.clock()
             searching = true
             Task {

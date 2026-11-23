@@ -103,19 +103,19 @@
         }
       }
     },
-    "Changed checkout total in USD": {
+    "Changed checkout total (%@)": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Changed checkout total in USD"
+            "value": "Changed checkout total (%@)"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Total de la compra con el cambio en USD"
+            "value": "Total de la compra con el cambio (%@)"
           }
         }
       }
@@ -188,19 +188,70 @@
         }
       }
     },
-    "Check the change, store, source and USD amounts, and confirm the previews cover the same pickup.": {
+    "Check the change, store, source and amounts, and confirm the previews cover the same pickup.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Check the change, store, source and USD amounts, and confirm the previews cover the same pickup."
+            "value": "Check the change, store, source and amounts, and confirm the previews cover the same pickup."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Revisa el cambio, la tienda, la fuente y los importes en USD. Confirma que las dos vistas previas corresponden a la misma recogida."
+            "value": "Revisa el cambio, la tienda, la fuente y los importes. Confirma que las dos vistas previas corresponden al mismo pedido."
+          }
+        }
+      }
+    },
+    "Check the price in %@ and the usable amount for one pack against this label.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the price in %@ and the usable amount for one pack against this label."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa que el precio en %@ y la cantidad utilizable de un paquete coincidan con la etiqueta."
+          }
+        }
+      }
+    },
+    "Clear both checkout totals and the cap to change currency.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear both checkout totals and the cap to change currency."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para cambiar de moneda, borra los dos totales y el límite de gasto."
+          }
+        }
+      }
+    },
+    "Clear both pack prices and the item spending limit to change currency.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear both pack prices and the item spending limit to change currency."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para cambiar de moneda, borra los dos precios y el límite de gasto del artículo."
           }
         }
       }
@@ -222,19 +273,36 @@
         }
       }
     },
-    "Current checkout total in USD": {
+    "Currency: %@": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Current checkout total in USD"
+            "value": "Currency: %@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Total actual de la compra en USD"
+            "value": "Moneda: %@"
+          }
+        }
+      }
+    },
+    "Current checkout total (%@)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current checkout total (%@)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total actual de la compra (%@)"
           }
         }
       }
@@ -256,19 +324,36 @@
         }
       }
     },
-    "Firm whole-pickup cap in USD, optional": {
+    "Enter a price in %@ with up to two decimal places.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Firm whole-pickup cap in USD, optional"
+            "value": "Enter a price in %@ with up to two decimal places."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Límite fijo para toda la compra en USD, opcional"
+            "value": "Ingresa un precio en %@ con hasta dos decimales."
+          }
+        }
+      }
+    },
+    "Firm whole-pickup cap (%@, optional)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Firm whole-pickup cap (%@, optional)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Límite fijo para toda la compra (%@, opcional)"
           }
         }
       }
@@ -307,6 +392,23 @@
         }
       }
     },
+    "Item spending limit (%@, optional)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item spending limit (%@, optional)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Límite de gasto para este artículo (%@, opcional)"
+          }
+        }
+      }
+    },
     "Leave without saving": {
       "extractionState": "manual",
       "localizations": {
@@ -337,6 +439,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Borrador de recogida guardado"
+          }
+        }
+      }
+    },
+    "Price for one pack (%@)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price for one pack (%@)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio de un paquete (%@)"
           }
         }
       }
@@ -524,6 +643,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "No se pudo verificar la comparación guardada."
+          }
+        }
+      }
+    },
+    "Use this %@ price and printed amount for one usable pack": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use this %@ price and printed amount for one usable pack"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar este precio en %@ y la cantidad impresa para un paquete utilizable"
           }
         }
       }

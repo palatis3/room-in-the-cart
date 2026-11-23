@@ -52,13 +52,15 @@ public struct ReceiptAcquisition: Codable, Equatable, Sendable, Identifiable {
     public let name: String
     public let received: Quantity
     public let usable: Quantity
+    private let storedCurrency: Currency?
+    public var currency: Currency { storedCurrency ?? paidLineTotal?.currency ?? .usd }
     public let paidLineTotal: Money?
     public let stock: Stock
 
     public init(receiptID: UUID, ordinal: Int, lotID: UUID, foodID: UUID, merchant: String, purchaseDate: Date,
                 transactionReference: String?, imageDigest: Data?, originalLine: String, name: String,
                 received: Quantity, usable: Quantity, paidLineTotal: Money?, stock: Stock,
-                revision: Int64 = 1, supersedesID: UUID? = nil, savedPickup: SavedPickup? = nil, documentLine: DocumentLine? = nil, lineDocumentID: UUID? = nil, purchaseDay: MealDay? = nil) {
+                revision: Int64 = 1, supersedesID: UUID? = nil, savedPickup: SavedPickup? = nil, documentLine: DocumentLine? = nil, lineDocumentID: UUID? = nil, purchaseDay: MealDay? = nil, currency: Currency? = nil) {
         self.lineDocumentID = lineDocumentID
         self.documentLine = documentLine
         self.savedPickup = savedPickup
@@ -77,6 +79,8 @@ public struct ReceiptAcquisition: Codable, Equatable, Sendable, Identifiable {
         self.name = name
         self.received = received
         self.usable = usable
+        let denomination = currency ?? paidLineTotal?.currency ?? .usd
+        self.storedCurrency = denomination == .usd ? nil : denomination
         self.paidLineTotal = paidLineTotal
         self.stock = stock
         self.revision = revision
@@ -124,11 +128,11 @@ public struct ReceiptAcquisition: Codable, Equatable, Sendable, Identifiable {
     }
 
     public func correctingPaidTotal(_ total: Money?) throws -> Self {
-        guard revision < Int64.max, total != paidLineTotal else { throw InventoryError.invalid("receiptCorrection") }
+        guard revision < Int64.max, total != paidLineTotal, total == nil || total?.currency == currency else { throw InventoryError.invalid("receiptCorrection") }
         let corrected = Self(receiptID: receiptID, ordinal: ordinal, lotID: lotID, foodID: foodID, merchant: merchant,
             purchaseDate: purchaseDate, transactionReference: transactionReference, imageDigest: imageDigest, originalLine: originalLine,
             name: name, received: received, usable: usable, paidLineTotal: total, stock: stock,
-            revision: revision + 1, supersedesID: id, savedPickup: savedPickup, documentLine: documentLine, lineDocumentID: lineDocumentID, purchaseDay: purchaseDay)
+            revision: revision + 1, supersedesID: id, savedPickup: savedPickup, documentLine: documentLine, lineDocumentID: lineDocumentID, purchaseDay: purchaseDay, currency: currency)
         try corrected.validate()
         return corrected
     }
@@ -152,7 +156,7 @@ public struct ReceiptAcquisition: Codable, Equatable, Sendable, Identifiable {
               imageDigest.map({ $0.count == 32 }) ?? true,
               transactionReference.map({ !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && $0.utf8.count <= 256 && !$0.contains("\0") }) ?? true,
               purchaseDate.timeIntervalSinceReferenceDate.isFinite,
-              paidLineTotal.map({ $0 >= .zero }) ?? true else { throw InventoryError.invalid("receiptLine") }
+              paidLineTotal.map({ $0.minorUnits >= 0 && $0.currency == currency }) ?? true else { throw InventoryError.invalid("receiptLine") }
         try received.validate(); try usable.validate()
         guard received.amount > .zero, received.unit == usable.unit, usable.amount >= .zero, usable.amount <= received.amount else {
             throw InventoryError.invalid("receiptAmounts")

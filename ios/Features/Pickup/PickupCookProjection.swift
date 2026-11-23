@@ -124,9 +124,10 @@ enum PickupCookProjection {
         return ["\(pCook("Allocated", language: language)): \(allocated)", "\(pCook("Still short", language: language)): \(shortfall)"]
     }
     static func budgetText(_ result: CheckoutResult, language: String) -> String {
-        if let exact = result.total.exact { return pMoney(exact) }
-        if let upper = result.total.upperBound { return "\(pMoney(result.total.lowerBound)) – \(pMoney(upper))" }
-        return "\(pCook("At least", language: language)) \(pMoney(result.total.lowerBound)) · \(pCook("total unresolved", language: language))"
+        func formatted(_ money: Money) -> String { moneyText(money, locale: Locale(identifier: language)) }
+        if let exact = result.total.exact { return formatted(exact) }
+        if let upper = result.total.upperBound { return "\(formatted(result.total.lowerBound)) – \(formatted(upper))" }
+        return "\(pCook("At least", language: language)) \(formatted(result.total.lowerBound)) · \(pCook("total unresolved", language: language))"
     }
 }
 

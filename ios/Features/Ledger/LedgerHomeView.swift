@@ -366,7 +366,7 @@ struct LedgerHomeView: View {
             VStack(alignment: .leading, spacing: 7) {
                 Label(ledgerText("Pickup details"), systemImage: "slider.horizontal.3").font(.headline)
                 Text(shop.basis.branch.isEmpty ? ledgerText("Store not set") : shop.basis.branch)
-                Text(shop.basis.mode.ledgerLabel)
+                Text(shop.basis.mode.ledgerLabel + " · " + ledgerFormat("Currency: %@", shop.basis.currency.rawValue))
                 if let date = shop.basis.slot { Text(ledgerDate(date, zone: shop.basis.timeZoneIdentifier)) }
                 else { Text(ledgerText("Date not set")) }
                 if let cap = shop.basis.cap {
@@ -778,6 +778,7 @@ struct LedgerNewShopView: View {
     @ObservedObject var model: LedgerModel
     @Environment(\.dismiss) private var dismiss
     private let originalID: UUID?
+    @State private var currency: Currency = .groceryDefault()
     private let namingShoppingList: Bool
     private let originalTitle: String
     private let onShopSelected: ((UUID) -> Void)?
@@ -807,6 +808,11 @@ struct LedgerNewShopView: View {
             }.contentShape(Rectangle())
                 .simultaneousGesture(TapGesture().onEnded { editingName = true })
                 .disabled(model.saving || model.hasPendingSave)
+            if originalID == nil {
+                GroceryCurrencyPicker(selection: $currency)
+                    .accessibilityIdentifier("ledgerShopCurrency")
+                    .disabled(model.saving || model.hasPendingSave)
+            }
             if model.saving || model.hasPendingSave || model.error != nil {
                 LedgerSaveStatus(model: model, showsLastSave: false, onRetried: { dismiss() })
             }
@@ -831,7 +837,7 @@ struct LedgerNewShopView: View {
                 guard model.workspace.selectedShopID == id, shop.title == originalTitle else { throw LedgerError.stalePreview }
                 shop.title = name
             }) { dismiss() }
-        } else if await model.startShop(title: name, authorize: authorize, onSelected: onShopSelected) { dismiss() }
+        } else if await model.startShop(title: name, currency: currency, authorize: authorize, onSelected: onShopSelected) { dismiss() }
     }
 }
 

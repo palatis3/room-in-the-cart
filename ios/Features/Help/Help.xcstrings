@@ -1,6 +1,38 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Choose US dollars (USD) or Mexican pesos (MXN) before entering prices. Use the same currency for both packs. A saved comparison keeps its original currency.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose US dollars (USD) or Mexican pesos (MXN) before entering prices. Use the same currency for both packs. A saved comparison keeps its original currency."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Antes de anotar los precios, elige dólares estadounidenses (USD) o pesos mexicanos (MXN). Usa la misma moneda para los dos paquetes. La comparación guardada conserva su moneda original."
+          }
+        }
+      }
+    },
+    "When you review a receipt, check its currency before recording the amount you paid. If you cannot tell which currency the store used, you can still save the groceries and leave the price blank.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When you review a receipt, check its currency before recording the amount you paid. If you cannot tell which currency the store used, you can still save the groceries and leave the price blank."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al revisar un ticket, comprueba la moneda antes de anotar cuánto pagaste. Si no sabes en qué moneda te cobraron, puedes guardar los alimentos y dejar el precio en blanco."
+          }
+        }
+      }
+    },
     "Regional age checks": {
       "localizations": {
         "en": {

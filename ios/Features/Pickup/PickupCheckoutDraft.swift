@@ -28,6 +28,7 @@ struct PickupPricingTerms: Codable, Equatable {
 /// The form is an edit of saved evidence, not a reconstruction from its result.
 /// Unchanged fields keep their original evidence and the metadata they do not edit.
 struct PickupCheckoutDraft {
+    private(set) var currency: Currency = .usd
     var store = "" { willSet { pinEditedPricing() } }
     var branch = "" { willSet { pinEditedPricing() } }
     var slot = "" { willSet { pinEditedPricing() } }
@@ -100,6 +101,7 @@ struct PickupCheckoutDraft {
     init() {}
 
     init(journey: PickupJourney, workspaceID: UUID? = nil, now: Date = Date()) {
+        currency = journey.currency
         sourceWorkspaceID = workspaceID
         journeyID = journey.id; basketRevisionID = journey.basket?.current.id
         earlierQuoteRevision = journey.earlierQuotes.last?.id
@@ -175,7 +177,7 @@ struct PickupCheckoutDraft {
 
     func matchesSource(_ journey: PickupJourney, workspaceID: UUID? = nil) -> Bool {
         journey.basket?.phase == .draft && (sourceWorkspaceID == nil || sourceWorkspaceID == workspaceID) && journey.id == journeyID && basketRevisionID != nil && journey.basket?.current.id == basketRevisionID
-            && journey.quote == originalQuote && journey.quotedRevisionID == originalQuotedRevisionID
+            && journey.currency == currency && journey.quote == originalQuote && journey.quotedRevisionID == originalQuotedRevisionID
             && journey.earlierQuotes.last?.id == earlierQuoteRevision && journey.ledgerSourceRevisionID == ledgerSourceRevisionID
             && journey.context == originalContext && journey.cap == originalCap
     }
@@ -188,11 +190,11 @@ struct PickupCheckoutDraft {
         }
         let commitmentsID = (hasSavedPricing ? originalQuote?.context : originalContext)?.commitmentsID ?? journey.id
         let context = CheckoutContext(storeID: store, branchID: branch, mode: mode, slot: slot,
-                                      commitmentsID: commitmentsID, observedAt: observed, source: source)
+                                      commitmentsID: commitmentsID, observedAt: observed, source: source, currency: originalContext?.currency ?? (currency == .usd ? nil : currency))
         let pricing = try makePricing()
         let capAmount: Money?
         if let originalCap, cap == Self.literal(originalCap.amount) { capAmount = originalCap.amount }
-        else { capAmount = try ComparisonModel.money(cap) }
+        else { capAmount = try ComparisonModel.money(cap, currency: currency) }
         let savedCap = capAmount.map {
             CheckoutCap(scope: capScope, commitmentsID: originalCap?.commitmentsID ?? commitmentsID, amount: $0)
         }
@@ -206,23 +208,23 @@ struct PickupCheckoutDraft {
             if inclusive == initialInput.inclusive {
                 switch originalPricing {
                 case .inclusiveTotal(let evidence):
-                    return .inclusiveTotal(try Self.edited(total, initialInput.total, evidence))
+                    return .inclusiveTotal(try edited(total, initialInput.total, evidence))
                 case let .components(lines, _, fees, discounts, savedTax, savedDeposits):
                     let editedLines = try lines.map {
                         CheckoutLine(id: $0.id, name: $0.name,
-                                     cost: try Self.edited(prices[$0.id] ?? "", initialInput.prices[$0.id] ?? "", $0.cost),
+                                     cost: try edited(prices[$0.id] ?? "", initialInput.prices[$0.id] ?? "", $0.cost),
                                      thresholdEligible: $0.thresholdEligible)
                     }
                     let editedFees: [CheckoutFee]
                     if let saved = fees.first {
                         let evidence: CostEvidence
                         switch saved.rule { case .fixed(let value), .waivedAt(_, let value, _): evidence = value }
-                        let cost = try Self.edited(fee, initialInput.fee, evidence)
+                        let cost = try edited(fee, initialInput.fee, evidence)
                         let rule: CheckoutFeeRule
                         let thresholdAmount: Money?
                         if threshold == initialInput.threshold, case .waivedAt(let savedThreshold, _, _) = saved.rule {
                             thresholdAmount = savedThreshold
-                        } else { thresholdAmount = try ComparisonModel.money(threshold) }
+                        } else { thresholdAmount = try ComparisonModel.money(threshold, currency: currency) }
                         if let amount = thresholdAmount {
                             let basis: FeeThresholdBasis
                             if case .waivedAt(_, _, let savedBasis) = saved.rule { basis = savedBasis }
@@ -235,39 +237,39 @@ struct PickupCheckoutDraft {
                     let editedDiscounts: [CheckoutDiscount]
                     if let saved = discounts.first {
                         editedDiscounts = [CheckoutDiscount(id: saved.id,
-                            amount: try Self.edited(discount, initialInput.discount, saved.amount),
+                            amount: try edited(discount, initialInput.discount, saved.amount),
                             reducesEligibleSubtotal: saved.reducesEligibleSubtotal)]
                     } else if discount == initialInput.discount { editedDiscounts = [] }
                     else { editedDiscounts = [try newDiscount()] }
                     return .components(lines: editedLines, lineSetComplete: complete, fees: editedFees,
-                        discounts: editedDiscounts, tax: try Self.edited(tax, initialInput.tax, savedTax),
-                        deposits: try Self.edited(deposits, initialInput.deposits, savedDeposits))
+                        discounts: editedDiscounts, tax: try edited(tax, initialInput.tax, savedTax),
+                        deposits: try edited(deposits, initialInput.deposits, savedDeposits))
                 }
             }
         }
-        if inclusive { return .inclusiveTotal(try Self.evidence(total)) }
+        if inclusive { return .inclusiveTotal(try evidence(total)) }
         return .components(lines: try basketLines.map {
-            CheckoutLine(id: $0.id, name: $0.name, cost: try Self.evidence(prices[$0.id] ?? ""))
+            CheckoutLine(id: $0.id, name: $0.name, cost: try evidence(prices[$0.id] ?? ""))
         }, lineSetComplete: complete, fees: [try newFee()], discounts: [try newDiscount()],
-           tax: try Self.evidence(tax), deposits: try Self.evidence(deposits))
+           tax: try evidence(tax), deposits: try evidence(deposits))
     }
 
     private func newFee() throws -> CheckoutFee {
         let rule: CheckoutFeeRule
-        if let amount = try ComparisonModel.money(threshold) {
-            rule = .waivedAt(threshold: amount, belowThreshold: try Self.evidence(fee), basis: .eligibleItemsAfterEligibleDiscounts)
-        } else { rule = .fixed(try Self.evidence(fee)) }
+        if let amount = try ComparisonModel.money(threshold, currency: currency) {
+            rule = .waivedAt(threshold: amount, belowThreshold: try evidence(fee), basis: .eligibleItemsAfterEligibleDiscounts)
+        } else { rule = .fixed(try evidence(fee)) }
         return CheckoutFee(id: "retailer-fee", rule: rule)
     }
     private func newDiscount() throws -> CheckoutDiscount {
-        CheckoutDiscount(id: "eligible-discount", amount: try Self.evidence(discount), reducesEligibleSubtotal: true)
+        CheckoutDiscount(id: "eligible-discount", amount: try evidence(discount), reducesEligibleSubtotal: true)
     }
-    private static func edited(_ text: String, _ originalText: String, _ original: CostEvidence) throws -> CostEvidence {
+    private func edited(_ text: String, _ originalText: String, _ original: CostEvidence) throws -> CostEvidence {
         if text == originalText { return original }
         return try evidence(text)
     }
-    private static func evidence(_ text: String) throws -> CostEvidence {
-        try ComparisonModel.money(text).map(CostEvidence.exact) ?? .unknown(reason: pTr("Not confirmed"))
+    private func evidence(_ text: String) throws -> CostEvidence {
+        try ComparisonModel.money(text, currency: currency).map(CostEvidence.exact) ?? .unknown(reason: pTr("Not confirmed"))
     }
     private static func literal(_ amount: Money) -> String { (Decimal(amount.minorUnits) / 100).description }
     private static func literal(_ evidence: CostEvidence) -> String {

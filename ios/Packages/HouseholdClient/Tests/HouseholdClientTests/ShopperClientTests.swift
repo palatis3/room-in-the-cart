@@ -18,6 +18,18 @@ extension HouseholdClientTests {
     private func budget(total: Int, overage: Int) -> String {
         "{\"currency\":\"USD\",\"totalMinor\":\(total),\"overCapMinor\":\(overage),\"headroomMinor\":\(3800-total),\"status\":\"\(overage > 0 ? "overCap" : "withinCap")\",\"scope\":\"wholeCheckout\",\"missing\":[],\"lowerBoundMinor\":\(total),\"upperBoundMinor\":\(total),\"wholeCheckoutWithinCap\":\(overage == 0)}"
     }
+    func testSharedShopRefusesMXNQuoteBeforeRebuildingDraftInUSD() throws {
+        let quote = try ShopperQuote(scope: "wholeCheckout", complete: true, capMinor: 5000, capScope: "wholeCheckout",
+            fee: .fixed(0), taxesMinor: 0, depositsMinor: 0, discountsMinor: 0,
+            observedAt: Date(timeIntervalSince1970: 1000), expiresAt: Date(timeIntervalSince1970: 2000))
+        let wire = try JSONEncoder().encode(quote)
+        XCTAssertEqual(try JSONDecoder().decode(ShopperQuote.self, from: wire), quote)
+        var fields = try XCTUnwrap(JSONSerialization.jsonObject(with: wire) as? [String: Any])
+        fields["currency"] = "MXN"
+        let shop: [String: Any] = ["shopId": shopID, "shopRevision": 1, "authorityEpoch": 1,
+                                    "phase": "draft", "lines": [], "quote": fields]
+        XCTAssertThrowsError(try JSONDecoder().decode(ShopperShop.self, from: JSONSerialization.data(withJSONObject: shop)))
+    }
     func testContributorCannotFetchShopperPayloadDespiteAdvertisedCapabilities() async throws {
         let auth = try auth(); var privateCalls = 0
         let stateLock = NSLock()

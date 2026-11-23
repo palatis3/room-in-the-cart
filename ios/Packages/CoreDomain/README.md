@@ -26,7 +26,7 @@ let result = try PackComparison.evaluate(request)
 - `needed` is the total accepted need, including `protectedAmount`. Protection partitions that total; it never adds another copy of the demand. Protection greater than need is invalid.
 - `confirmedAtHome` means matched, confirmed usable stock available for this need. Reservations for other needs have already been removed. Nil counts no confirmed supply; it does not claim an empty pantry.
 - `usableQuantity` describes **one package**. Nil means unknown yield. Zero means no usable food, leaving the need open.
-- `price` describes **one package** in USD cents. Nil never becomes a free package. When existing stock covers the whole need, zero packages have zero purchase cost independently of the unknown package price.
+- `price` describes **one package** in USD or MXN minor units. Both offers and the item cap must use the same currency. Nil never becomes a free package. When existing stock covers the whole need, zero packages have zero purchase cost independently of the unknown package price.
 - A missing need yields unresolved results. An explicit zero need is distinct.
 - All rational output quantities use `ComparisonResult.unit`, the needed unit.
 - Metric and US customary conversions are exact and versioned as `us-customary-metric-v1`. Weight and volume never convert implicitly. `UnitBasis` records an explicitly confirmed, ingredient-specific ratio. Store this evidence with the quantity or offer; never reuse it automatically for a different ingredient.

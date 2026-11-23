@@ -68,32 +68,34 @@ public struct CouponReceiptEvidence: Codable, Equatable, Sendable {
         self.discount = discount
     }
 
-    /// Accept one printed USD adjustment. An item price, tax, promotion for a future trip,
+    /// Accept one printed adjustment. An item price, tax, promotion for a future trip,
     /// or a combined "total savings" line cannot substantiate this individual coupon.
-    private static func adjustmentAmount(in wording: String) -> Money? {
+    private static func adjustmentMinorUnits(in wording: String, currency: Currency?) -> Int64? {
         guard wording.utf8.count <= 2048 else { return nil }
+        let printed = PrintedCurrencyEvidence(wording)
+        guard printed != .conflicting, currency.map(printed.permits) != false else { return nil }
         let text = wording.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier: "en_US_POSIX"))
         guard text.contains(#/\b(?:coupon|cupon|cpn|mfrcpn|discount|descuento|descto|ahorro|savings|markdown)\b/#),
-              !text.contains(#/[€£¥%]|\b(?:cad|eur|gbp|mxn|aud|tax|impuesto|iva|total|subtotal|refund|return|devolucion|cambio|eligible|eligibility|valid|expires|next|proxima|proximo|valido|vence|minimum|minimo)\b/#)
+              !text.contains(#/[€£¥%]|\b(?:tax|impuesto|iva|total|subtotal|refund|return|devolucion|cambio|eligible|eligibility|valid|expires|next|proxima|proximo|valido|vence|minimum|minimo)\b/#)
         else { return nil }
         let numbers = text.split { !$0.isNumber && $0 != "." && $0 != "," }
-        let amounts = numbers.compactMap { number -> Money? in
+        let amounts = numbers.compactMap { number -> Int64? in
             let decimal = number.replacingOccurrences(of: ",", with: ".")
             let parts = decimal.split(separator: ".", omittingEmptySubsequences: false)
             guard parts.count == 2, !parts[0].isEmpty, parts[1].count == 2 else { return nil }
-            return try? Money(decimal: decimal)
+            return Int64(parts.joined())
         }
         guard amounts.count == 1, let amount = amounts.first,
-              (1...1_000_000_000).contains(amount.minorUnits) else { return nil }
+              (1...1_000_000_000).contains(amount) else { return nil }
         return amount
     }
 
-    public static func isDiscountLine(_ wording: String) -> Bool {
-        adjustmentAmount(in: wording) != nil
+    public static func isDiscountLine(_ wording: String, currency: Currency? = nil) -> Bool {
+        adjustmentMinorUnits(in: wording, currency: currency) != nil
     }
 
     public static func shows(amount: Money, in wording: String) -> Bool {
-        adjustmentAmount(in: wording) == amount
+        adjustmentMinorUnits(in: wording, currency: amount.currency) == amount.minorUnits
     }
 
     /// Every printed adjustment can fund a reviewed saving only once across the private workspace.
@@ -130,7 +132,8 @@ public struct PinnedShopCoupon: Codable, Equatable, Sendable {
         return terms.qualification(on: receipt.day, check: receipt.check) == .qualifies
     }
 
-    func validate() throws {
+    func validate(currency: Currency) throws {
+        if case .printed(_, _, let amount) = receipt?.discount, amount.currency != currency { throw LedgerError.invalid("couponCurrency") }
         try terms.validate()
         try pickCheck?.validate()
         try receipt?.validate()
@@ -142,12 +145,13 @@ public struct PinnedShopCoupon: Codable, Equatable, Sendable {
 extension ShoppingLedger {
     public mutating func pinCoupon(lineID: UUID, expectedRevision: UUID, terms: ShopCouponTerms?,
                                    clipped: Bool, pickCheck: CouponPackCheck? = nil) throws {
+        let currency = basis.currency
         try updateBudgetLine(lineID, revision: expectedRevision, operation: "pinnedCoupon") { line in
             guard line.pinnedCoupon?.receipt == nil else { throw LedgerError.stalePreview }
             guard let terms else { line.pinnedCoupon = nil; return }
             let pin = PinnedShopCoupon(terms: terms, clipped: clipped, pickCheck: pickCheck,
                 checkedAt: pickCheck == nil ? nil : line.inStorePickedAt, receipt: nil)
-            try pin.validate()
+            try pin.validate(currency: currency)
             line.pinnedCoupon = pin
         }
     }
@@ -163,7 +167,7 @@ extension ShoppingLedger {
     public mutating func reviewCouponReceipt(lineID: UUID, expectedRevision: UUID, evidence: CouponReceiptEvidence) throws {
         try evidence.validate()
         if case .printed(let printedID, _, _) = evidence.discount {
-            guard evidence.savings != nil else { throw LedgerError.invalid("couponDiscount") }
+            guard evidence.savings?.currency == basis.currency else { throw LedgerError.invalid("couponDiscount") }
             guard !lines.contains(where: { line in
                 guard line.id != lineID, let other = line.pinnedCoupon?.receipt, other.receiptID == evidence.receiptID,
                       case .printed(let used, _, _) = other.discount else { return false }

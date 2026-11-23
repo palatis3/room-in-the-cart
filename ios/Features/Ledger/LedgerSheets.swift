@@ -1067,7 +1067,7 @@ struct LedgerFactsView: View {
                         .focused($inputFocus, equals: .timeZone)
                 }.disabled(model.saving || model.hasPendingSave)
                 Section {
-                    TextField(ledgerText("Spending cap (USD, optional)"), text: $cap).keyboardType(.decimalPad)
+                    TextField(ledgerFormat("Spending cap (%@, optional)", basis.currency.rawValue), text: $cap).keyboardType(.decimalPad)
                         .accessibilityIdentifier("ledgerCap")
                         .focused($inputFocus, equals: .cap)
                     Picker(ledgerText("What the cap covers"), selection: $basis.capScope) {
@@ -1079,13 +1079,13 @@ struct LedgerFactsView: View {
                         Text(ledgerText("Firm limit")).tag(CapFirmness.firm)
                         Text(ledgerText("Flexible limit")).tag(CapFirmness.flexible)
                     }
-                    TextField(ledgerText("Fixed reserve (USD, optional)"), text: $reserve).keyboardType(.decimalPad)
+                    TextField(ledgerFormat("Fixed reserve (%@, optional)", basis.currency.rawValue), text: $reserve).keyboardType(.decimalPad)
                         .focused($inputFocus, equals: .reserve)
                     if !needsFreshEvidence {
-                        TextField(ledgerText("Known fees (USD, unknown if blank)"), text: $fees).keyboardType(.decimalPad)
+                        TextField(ledgerFormat("Known fees (%@, unknown if blank)", basis.currency.rawValue), text: $fees).keyboardType(.decimalPad)
                             .focused($inputFocus, equals: .fees)
                     }
-                    Text(ledgerText("Currency: USD"))
+                    Text(ledgerFormat("Currency: %@", basis.currency.rawValue))
                 } header: { Text(ledgerText("Spending cap")) } footer: {
                     Text(ledgerText("A dinner-only cap does not cover the whole pickup. Missing prices and fees remain unknown."))
                 }.disabled(model.saving || model.hasPendingSave)
@@ -1111,7 +1111,7 @@ struct LedgerFactsView: View {
                                 self.screenshot = nil; retailerTotal = ""; retailerSource = ""; includedCharges = ""
                             }
                         } else {
-                        TextField(ledgerText("Retailer total (USD, unknown if blank)"), text: $retailerTotal).keyboardType(.decimalPad)
+                        TextField(ledgerFormat("Retailer total (%@, unknown if blank)", basis.currency.rawValue), text: $retailerTotal).keyboardType(.decimalPad)
                             .focused($inputFocus, equals: .retailerTotal)
                         TextField(ledgerText("Source of the retailer preview"), text: $retailerSource, axis: .vertical)
                             .focused($inputFocus, equals: .retailerSource)
@@ -1161,7 +1161,7 @@ struct LedgerFactsView: View {
     }
 
     private func checkoutImage(for terms: ShopBasis.RetailerTerms) -> some View {
-        PriceImageReview(purpose: .checkout, authorized: { status == .editing && terms == currentTerms }, acceptCheckout: { reviewed in
+        PriceImageReview(purpose: .checkout, currency: basis.currency, authorized: { status == .editing && terms == currentTerms }, acceptCheckout: { reviewed in
             guard status == .editing, terms == currentTerms else { return }
             screenshot = reviewed
             hasRetailerPreview = true
@@ -1179,9 +1179,9 @@ struct LedgerFactsView: View {
                 validation = ledgerText("Enter a valid time zone, such as America/New_York.")
                 return
             }
-            basis.cap = try ComparisonModel.money(cap)
-            basis.fixedReserve = try ComparisonModel.money(reserve)
-            basis.knownFees = needsFreshEvidence ? nil : try ComparisonModel.money(fees)
+            basis.cap = try ComparisonModel.money(cap, currency: basis.currency)
+            basis.fixedReserve = try ComparisonModel.money(reserve, currency: basis.currency)
+            basis.knownFees = needsFreshEvidence ? nil : try ComparisonModel.money(fees, currency: basis.currency)
             if hasRetailerPreview && !needsFreshEvidence {
                 let charges: [String]
                 if let saved = original.basis.retailerPreview, currentTerms == original.basis.retailerTerms,
@@ -1190,7 +1190,7 @@ struct LedgerFactsView: View {
                 } else {
                     charges = includedCharges.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
                 }
-                basis.retailerPreview = LedgerRetailerPreview(total: try ComparisonModel.money(retailerTotal), source: retailerSource,
+                basis.retailerPreview = LedgerRetailerPreview(total: try ComparisonModel.money(retailerTotal, currency: basis.currency), source: retailerSource,
                                                               capturedAt: retailerDate, includedCharges: charges, screenshot: screenshot)
             } else { basis.retailerPreview = nil }
             basis.slot = hasSlot ? slot : nil
@@ -1198,7 +1198,7 @@ struct LedgerFactsView: View {
             guard status == .editing else { return }
             validation = nil
             reviewing = true
-        } catch { validation = ledgerText("Use a nonnegative USD amount with no more than two decimal places.") }
+        } catch { validation = ledgerFormat("Use a nonnegative %@ amount with no more than two decimal places.", basis.currency.rawValue) }
     }
     private func imageSummary(_ screenshot: ReviewedCheckoutImage) -> some View {
         ForEach(screenshot.charges, id: \.field) { charge in

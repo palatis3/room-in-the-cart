@@ -51,6 +51,15 @@ struct ReceiptImportDraft {
         var selectedIntact = false
         var checkedPack = false
         var paid: String = ""
+        func permitsPayment(in currency: Currency) -> Bool {
+            printed?.permitsPayment(in: currency) ?? PrintedCurrencyEvidence(original).permits(currency)
+        }
+        func paidTotal(in currency: Currency) throws -> Money? {
+            let value = paid.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !value.isEmpty else { return nil }
+            guard permitsPayment(in: currency) else { throw PantryReceiptError.invalid }
+            return try Money(decimal: value.replacingOccurrences(of: ",", with: "."), currency: currency)
+        }
         var canComparePurchase: Bool { documentLine?.stage != .order && printed?.kind != .date && printed?.kind != .adjustment }
     }
 
@@ -64,6 +73,20 @@ struct ReceiptImportDraft {
     var rescanDecision: ReceiptRescanDecision?
     var merchant: String
     var language = Bundle.main.preferredLocalizations.first?.hasPrefix("es") == true ? "es" : "en"
+    var currency: Currency = .groceryDefault()
+    var canChangeCurrency: Bool {
+        receiptTotal.isEmpty && lines.allSatisfy { $0.paid.isEmpty }
+    }
+    mutating func changeCurrency(_ next: Currency) {
+        guard canChangeCurrency else { return }
+        currency = next
+    }
+    var permitsReceiptTotal: Bool {
+        if let printedPaidTotal, !PrintedCurrencyEvidence(printedPaidTotal.wording).permits(currency) { return false }
+        return lines.filter { $0.original.contains(#/(?i)^\s*(?:grand total|total pagado|total paid|total del pedido|total a pagar|total)\b/#) }
+            .allSatisfy { $0.permitsPayment(in: currency) }
+    }
+
     var tracksPutaway = false
     var receiptTotal = ""
     var printedPaidTotal: ExtractedReceiptDocument.PrintedPaidTotal?
@@ -79,7 +102,7 @@ struct ReceiptImportDraft {
     var dateConfirmed = false
     var lines: [Line]
 
-    init(source: SourceMediaRecord, fromSavedPickup: Bool = false, lots: [InventoryLot] = [], now: Date = Date(), timeZone: TimeZone = .current) throws {
+    init(source: SourceMediaRecord, fromSavedPickup: Bool = false, lots: [InventoryLot] = [], now: Date = Date(), timeZone: TimeZone = .current, locale: Locale = .current) throws {
         try source.validate()
         guard source.target.kind == .receiptEvidence, !source.receiptLines.isEmpty else { throw ScanFailure.needsReview }
         savedPickup = fromSavedPickup ? .init(originID: source.target.workspaceID, id: source.target.containerID) : nil
@@ -88,6 +111,7 @@ struct ReceiptImportDraft {
         documentLayoutID = source.documentLayoutID
         firstSectionDigest = source.firstSectionDigest
         imageDigest = source.documentDigest ?? source.imageJPEG.map { Data(SHA256.hash(data: $0)) }
+        currency = PrintedCurrencyEvidence.reviewCurrency(for: source.receiptLines.flatMap { [$0.originalText, $0.reviewedText, $0.priceNote] }, locale: locale)
         merchant = source.reviewedLabel
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = timeZone
@@ -140,8 +164,8 @@ struct ReceiptImportDraft {
     var stockLines: [Line] { lines.filter { $0.treatment.recordsStock } }
 
     mutating func usePrintedPaidTotal() {
-        guard tracksPutaway, receiptTotal.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-              let printedPaidTotal else { return }
+        guard tracksPutaway, permitsReceiptTotal, receiptTotal.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              let printedPaidTotal, PrintedCurrencyEvidence(printedPaidTotal.wording).permits(currency) else { return }
         receiptTotal = printedPaidTotal.amount
     }
 
@@ -178,7 +202,7 @@ struct ReceiptImportDraft {
                 foodID: foodID, merchant: cleaned(merchant), purchaseDate: purchaseDate,
                 transactionReference: cleaned(reference).isEmpty ? nil : cleaned(reference), imageDigest: imageDigest,
                 originalLine: row.original, name: cleaned(row.name), received: received, usable: usable,
-                paidLineTotal: cleaned(row.paid).isEmpty ? nil : Money(decimal: cleaned(row.paid)), stock: stock, savedPickup: savedPickup, documentLine: row.documentLine, lineDocumentID: lineDocumentID, purchaseDay: purchaseDay)
+                paidLineTotal: row.paidTotal(in: currency), stock: stock, savedPickup: savedPickup, documentLine: row.documentLine, lineDocumentID: lineDocumentID, purchaseDay: purchaseDay, currency: currency)
             try fact.validate()
             return fact
         }

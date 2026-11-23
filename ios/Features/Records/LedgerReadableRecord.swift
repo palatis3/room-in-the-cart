@@ -49,7 +49,7 @@ import CoreDomain
                               row.foodID == nil ? dinnerText("No confirmed match") : ledgerText("Food match saved. Available quantity in this record is unknown.")]
                     if let pack = row.pack {
                         lines += [pack.label, dinnerFormat("Usable in one pack: %@", quantity(pack.usableQuantity)),
-                                  field(dinnerText("Price per pack in USD"), dinnerMoney(pack.price))]
+                                  field(shelfText("Price per pack"), dinnerMoney(pack.price))]
                         if let basis = pack.confirmedConversion { lines.append(conversion(basis)) }
                     }
                     if let source = row.source { lines.append(field(dinnerText("Evidence source"), source)) }
@@ -69,7 +69,8 @@ import CoreDomain
     private static func shoppingList(_ shop: ShoppingLedger, in workspace: LedgerWorkspace) throws -> [String] {
         let basis = shop.basis
         var lines = [joined([shop.title, revision(shop.revision)]),
-                     joined([basis.mode.ledgerLabel, basis.branch, basis.slot.map { ledgerDate($0, zone: basis.timeZoneIdentifier) } ?? ledgerText("Date not set")])]
+                     joined([basis.mode.ledgerLabel, basis.branch, basis.slot.map { ledgerDate($0, zone: basis.timeZoneIdentifier) } ?? ledgerText("Date not set")]),
+                     ledgerFormat("Currency: %@", basis.currency.rawValue)]
         if let cap = basis.cap {
             lines.append(joined([ledgerText("Spending cap"), dinnerMoney(cap), basis.capScope.ledgerLabel,
                                  ledgerText(basis.capFirmness == .firm ? "Firm limit" : "Flexible limit")]))

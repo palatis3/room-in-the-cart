@@ -152,7 +152,7 @@ struct DinnerScenarioEditor: View {
                     Text(dinnerText("Create each food identity explicitly. A confirmed lot is shared once across every matched need; outside reservations are protected first."))
                     ForEach($draft.foods) { $food in
                         NavigationLink(food.name.isEmpty ? dinnerText("Name and review this food") : food.name) {
-                            DinnerFoodEvidenceEditor(food: $food, usesFreePantryStock: draft.leftoverPantryBasis != nil
+                            DinnerFoodEvidenceEditor(food: $food, currency: draft.currency, usesFreePantryStock: draft.leftoverPantryBasis != nil
                                 && draft.reviewedLeftovers.contains { $0.foodID == food.id })
                         }
                     }
@@ -281,14 +281,14 @@ private struct DinnerScenarioBasketFields: View {
             ForEach($draft.baseline) { $line in
                 VStack(alignment: .leading) {
                     Text(line.name).font(.headline)
-                    TextField(dinnerText("Complete unchanged line cost in USD, optional"), text: $line.cost)
+                    TextField(dinnerFormat("Complete unchanged line cost in %@, optional", draft.currency.rawValue), text: $line.cost)
                     if !draft.feeThreshold.isEmpty { Toggle(dinnerText("Counts toward the fee threshold"), isOn: $line.feeEligible) }
                 }
             }
             ForEach($draft.essentials) { $line in
                 VStack(alignment: .leading) {
                     TextField(dinnerText("Household essential"), text: $line.name)
-                    TextField(dinnerText("Essential cost in USD, optional"), text: $line.cost)
+                    TextField(dinnerFormat("Essential cost in %@, optional", draft.currency.rawValue), text: $line.cost)
                     if !draft.feeThreshold.isEmpty {
                         Toggle(dinnerText("Counts toward the fee threshold"), isOn: $line.feeEligible)
                     }
@@ -299,10 +299,10 @@ private struct DinnerScenarioBasketFields: View {
             }
             Toggle(dinnerText("Every other dinner, lunch, side and staple is included once"), isOn: $draft.baselineComplete)
             Toggle(dinnerText("Compared recipe purchases are excluded from these remaining line costs"), isOn: $draft.baselineExcludesComparedRecipes)
-            TextField(dinnerText("All checkout fees in USD, optional"), text: $draft.fee)
+            TextField(dinnerFormat("All checkout fees in %@, optional", draft.currency.rawValue), text: $draft.fee)
             TextField(dinnerText("Fee waived at eligible subtotal, optional"), text: $draft.feeThreshold)
-            TextField(dinnerText("Tax in USD, optional"), text: $draft.tax)
-            TextField(dinnerText("Deposits in USD, optional"), text: $draft.deposits)
+            TextField(dinnerFormat("Tax in %@, optional", draft.currency.rawValue), text: $draft.tax)
+            TextField(dinnerFormat("Deposits in %@, optional", draft.currency.rawValue), text: $draft.deposits)
             Text(dinnerText("Enter the fixed fee or the fee below a confirmed waiver threshold. Review complex discounts separately."))
         }
     }
@@ -329,6 +329,7 @@ private struct DinnerScenarioContextFields: View {
 }
 private struct DinnerFoodEvidenceEditor: View {
     @Binding var food: DinnerFoodEvidenceDraft
+    let currency: Currency
     let usesFreePantryStock: Bool
     var body: some View {
         WorkingForm {
@@ -364,7 +365,7 @@ private struct DinnerFoodEvidenceEditor: View {
                 TextField(dinnerText("Confirmed usable amount per pack, optional"), text: $food.packAmount)
                 DinnerUnitPicker(unit: $food.packUnit)
                 Toggle(dinnerText("Usable pack yield reviewed"), isOn: $food.yieldReviewed)
-                TextField(dinnerText("Price of one pack in USD, optional"), text: $food.packPrice)
+                TextField(dinnerFormat("Price of one pack in %@, optional", currency.rawValue), text: $food.packPrice)
                 Picker(dinnerText("Required product availability"), selection: $food.availability) {
                     Text(dinnerText("Unknown")).tag(0)
                     Text(dinnerText("Reviewed available")).tag(1)

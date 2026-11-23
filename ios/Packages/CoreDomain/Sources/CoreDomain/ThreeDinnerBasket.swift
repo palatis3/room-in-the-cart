@@ -66,6 +66,7 @@ public enum ThreeDinnerBasket {
               minutes.count == 3, minutes.allSatisfy({ $0.map { (0...1440).contains($0) } ?? true }),
               budget?.minorUnits ?? 0 >= 0, recipes.count <= 12, Set(recipes.map(\.id)).count == recipes.count
         else { throw DinnerPlanningError.invalid("basketNights") }
+        _ = try Currency.matching([shop.basis.currency, budget?.currency] + foods.map { $0.offer?.price?.currency })
         for day in days {
             try day.validate()
             guard !shop.mealOccurrences.contains(where: { $0.removedAt == nil && $0.scheduledDay?.hasSameCivilDate(as: day) == true }),
@@ -110,7 +111,7 @@ public enum ThreeDinnerBasket {
                 for third in pools[2] where first.template.id != third.template.id && second.template.id != third.template.id {
                     let meals = [first, second, third]
                     guard visited.insert(Set(meals.map(\.id))).inserted else { continue }
-                    let plan = try price(meals, foods: foods, identity: identity)
+                    let plan = try price(meals, foods: foods, identity: identity, currency: shop.basis.currency)
                     if let budget, plan.subtotal > budget { continue }
                     top.append(plan)
                     top.sort { a, b in
@@ -126,7 +127,7 @@ public enum ThreeDinnerBasket {
         return top
     }
 
-    private static func price(_ meals: [AcceptedDinner], foods: [Food], identity: [Member: UUID]) throws -> Plan {
+    private static func price(_ meals: [AcceptedDinner], foods: [Food], identity: [Member: UUID], currency: Currency) throws -> Plan {
         var recipeQuantities: [UUID: [Quantity?]] = [:]
         var recipeNames: [UUID: [String]] = [:]
         for meal in meals {
@@ -138,7 +139,7 @@ public enum ThreeDinnerBasket {
             }
         }
         var lines: [Line] = []
-        var subtotal: Int64 = 0
+        var subtotal = Money(minorUnits: 0, currency: currency)
         for food in foods {
             guard food.existingLine != nil || recipeQuantities[food.id] != nil else { continue }
             let quantities = (food.existingLine != nil ? [food.existingQuantity] : []) + (recipeQuantities[food.id] ?? [])
@@ -153,12 +154,12 @@ public enum ThreeDinnerBasket {
                     if let price = offer.price, price.minorUnits >= 0 {
                         let priced = try price.multiplied(by: packs)
                         cost = priced
-                        subtotal = try checkedAdd(subtotal, priced.minorUnits)
+                        subtotal = try subtotal.adding(priced)
                     }
                 }
             }
             lines.append(.init(food: food, recipes: recipeNames[food.id] ?? [], packs: count, cost: cost))
         }
-        return Plan(meals: meals, lines: lines, subtotal: Money(minorUnits: subtotal))
+        return Plan(meals: meals, lines: lines, subtotal: subtotal)
     }
 }

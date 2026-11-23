@@ -23,7 +23,7 @@ public struct PickedShelfPrice: Codable, Equatable, Sendable {
               let amount = try measured.converted(to: unit) else { throw LedgerError.invalid("shelfAmount") }
         let cents = try amount.multiplied(by: Rational(rate.minorUnits)).roundedNearest()
         guard cents <= 1_000_000_000 else { throw LedgerError.invalid("shelfTotal") }
-        return Money(minorUnits: cents)
+        return Money(minorUnits: cents, currency: rate.currency)
     }
 }
 
@@ -65,7 +65,7 @@ extension ShoppingLedger {
         guard !impact.protected else { throw LedgerError.invalid("protectedPick") }
         let before = pickedCartSubtotal
         let removed = priceForCurrentPick(lineID: lineID)?.includedTotal
-        let after = try PickedCartSubtotal(total: before.total.subtracting(removed ?? .zero),
+        let after = try PickedCartSubtotal(total: removed.map(before.total.subtracting) ?? before.total,
             priced: before.priced - (removed == nil ? 0 : 1), picked: before.picked - 1)
         return BudgetDeferralPreview(before: before, after: after, affectedDinners: impact.dinners)
     }

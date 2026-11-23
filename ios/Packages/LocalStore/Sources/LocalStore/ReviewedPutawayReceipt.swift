@@ -7,6 +7,8 @@ public struct ReviewedReceiptHeader: Equatable, Codable, Identifiable, Sendable 
     public let merchant: String
     public let date: Date
     public let purchaseDay: String?
+    private let storedCurrency: String?
+    public var currencyCode: String { storedCurrency ?? "USD" }
     public let totalMinor: Int64?
     public let reference: String?
 
@@ -22,12 +24,13 @@ public struct ReviewedReceiptHeader: Equatable, Codable, Identifiable, Sendable 
         return components.isValidDate(in: calendar)
     }
 
-    public init(id: UUID, owner: UUID, merchant: String, date: Date, totalMinor: Int64?, reference: String? = nil, purchaseDay: String? = nil) {
+    public init(id: UUID, owner: UUID, merchant: String, date: Date, totalMinor: Int64?, reference: String? = nil, purchaseDay: String? = nil, currencyCode: String = "USD") {
         self.id = id
         self.owner = owner
         self.merchant = merchant
         self.date = date
         self.purchaseDay = purchaseDay
+        self.storedCurrency = currencyCode == "USD" ? nil : currencyCode
         self.totalMinor = totalMinor
         self.reference = reference
     }
@@ -73,7 +76,7 @@ public struct ReviewedPutawayReceipt: Equatable, Codable, Sendable {
         let validText: (String, Int) -> Bool = { text, bytes in
             !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && text.utf8.count <= bytes && !text.contains("\0")
         }
-        guard (layout == nil) == (ordinals == nil),
+        guard ["USD", "MXN"].contains(header.currencyCode), (layout == nil) == (ordinals == nil),
               ordinals.map({ $0.count == decisions.count && Set($0).count == $0.count && $0.allSatisfy { (0..<4000).contains($0) } }) ?? true,
               header.purchaseDay.map(ReviewedReceiptHeader.validDay) ?? true,
               validText(header.merchant, 256), header.date.timeIntervalSinceReferenceDate.isFinite,
@@ -111,7 +114,7 @@ extension ComparisonDatabase {
     func savePutaway(_ review: ReviewedPutawayReceipt) throws {
         let header = review.header
         if let prior = try putawayHeader(header.id) {
-            guard prior.owner == header.owner, prior.date == header.date, prior.purchaseDay == header.purchaseDay, prior.merchant == header.merchant,
+            guard prior.currencyCode == header.currencyCode, prior.owner == header.owner, prior.date == header.date, prior.purchaseDay == header.purchaseDay, prior.merchant == header.merchant,
                   prior.reference == nil || prior.reference == header.reference,
                   prior.totalMinor == nil || prior.totalMinor == header.totalMinor else { throw ComparisonStoreError.operationConflict }
         }

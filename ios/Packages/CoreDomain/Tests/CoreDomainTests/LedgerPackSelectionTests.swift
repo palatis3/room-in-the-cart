@@ -15,6 +15,22 @@ final class LedgerPackSelectionTests: XCTestCase {
         XCTAssertEqual(try PackComparison.evaluate(selection.request).scope, .itemOnly)
         XCTAssertEqual(try shop.quantity(forLineID: line)?.amount, try Rational(10))
     }
+    func testPackSelectionMustBelongToTripsCurrency() throws {
+        var shop = ShoppingLedger(basis: ShopBasis(currency: .mxn))
+        let line = try shop.addManualLine(name: "Tortillas", quantity: q(12))
+        let requirement = try LedgerPackRequirement.review(shop: shop, lineID: line)
+        func selection(currency: Currency) throws -> LedgerPackSelection {
+            let price = Money(minorUnits: 2250, currency: currency)
+            let request = ComparisonRequest(itemName: requirement.name, needed: requirement.quantity,
+                protectedAmount: requirement.protectedQuantity,
+                offerA: PackOffer(id: "a", label: "Seis", usableQuantity: q(6), price: price),
+                offerB: PackOffer(id: "b", label: "Cuatro", usableQuantity: q(4), price: price))
+            return try LedgerPackSelection(workspaceID: UUID(), shop: shop, lineID: line, request: request,
+                selectedOfferID: "a", at: Date(), source: "Etiqueta")
+        }
+        XCTAssertEqual(try selection(currency: .mxn).selectedResult.totalCost, Money(minorUnits: 4500, currency: .mxn))
+        XCTAssertThrowsError(try selection(currency: .usd))
+    }
     func testServingGroupProtectionUsesItsPartitionInsideMealAmount() throws {
         var shop = ShoppingLedger()
         try shop.chooseMeal(MealTemplate(title: "Soup", servings: try Rational(6),

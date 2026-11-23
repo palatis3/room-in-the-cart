@@ -32,7 +32,7 @@ import XCTest
         // and reopening the keyboard left XCTest waiting for keyboard animations.
         for (label, value) in [("Store", "Hydration market"), ("Branch", "Main branch"),
                                ("Pickup or delivery slot", "Tuesday 5 PM"), ("Source of these prices", "Reviewed checkout snapshot"),
-                               ("Spending cap", "10.00")] {
+                               ("Spending cap (USD)", "10.00")] {
             enter(value, field: app.textFields[label], replacing: true)
         }
         // Finish the text-entry group before reaching a different control. XCTest
@@ -60,7 +60,7 @@ import XCTest
     private func assertRestoredCheckout() {
         for (label, expected) in [("Store", "Hydration market"),
                                   ("Branch", "Main branch"), ("Pickup or delivery slot", "Tuesday 5 PM"),
-                                  ("Source of these prices", "Reviewed checkout snapshot"), ("Spending cap", "10")] {
+                                  ("Source of these prices", "Reviewed checkout snapshot"), ("Spending cap (USD)", "10")] {
             let field = app.textFields[label]; reveal(field)
             XCTAssertEqual(field.value as? String, expected, "Restored checkout field: " + label)
         }

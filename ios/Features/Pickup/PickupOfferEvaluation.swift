@@ -94,7 +94,7 @@ enum PickupOfferEvaluation {
         return evidence.effectiveNoteCeiling == effectiveCeiling(offer: offer, result: result)
     }
     private static func effectiveCeiling(offer: PickupOffer, result: PickupOfferEvaluationResult) -> Money? {
-        [offer.ceiling, result.lineMaximum, result.replacementMaximum].compactMap { $0 }.min()
+        [offer.ceiling, result.lineMaximum, result.replacementMaximum].compactMap { $0 }.min { $0.minorUnits < $1.minorUnits }
     }
 
     private static func selected(offer: PickupOffer, journey: PickupJourney) throws -> [PickupOffer] {
@@ -207,10 +207,10 @@ enum PickupOfferEvaluation {
                 quantityEvidence?.dishRules = []
                 issues.append(.dishUnreviewed)
             }
-            let lineCost = try sum([retained, selected.price], context: context, cap: evidence?.lineAllowance)
+            let lineCost = try sum([retained, selected.price], context: context, currency: journey.currency, cap: evidence?.lineAllowance)
             let lineMaximum: Money?
             if let allowance = evidence?.lineAllowance, let retainedUpper = upper(retained) {
-                lineMaximum = Money(minorUnits: max(0, try allowance.subtracting(retainedUpper).minorUnits))
+                lineMaximum = Money(minorUnits: max(0, try allowance.subtracting(retainedUpper).minorUnits), currency: allowance.currency)
             } else { lineMaximum = nil }
             selectedAssessments.append(PickupOfferSelectedAssessment(id: selected.id, name: selected.replacement,
                 offerAssessment: try PickupOfferReview.assess(price: selected.price, ceiling: selected.ceiling),
@@ -220,27 +220,30 @@ enum PickupOfferEvaluation {
             allDishes += dishResults
             issues += dishResults.flatMap(\.issues)
         }
-        let priced = try sum(costs, context: context, cap: input.wholeCheckoutCap)
+        let priced = try sum(costs, context: context, currency: journey.currency, cap: input.wholeCheckoutCap)
         let total = cost(priced.total)
-        let without = try sum(costsWithoutCurrentReplacement, context: context).total
+        let without = try sum(costsWithoutCurrentReplacement, context: context, currency: journey.currency).total
         let checkoutAssessment = assessment(priced)
         if upper(total) == nil { issues.append(.unknownCost) }
         var lineMaximum: Money?
         if let allowance = input.lineAllowance, let retained = upper(input.retainedOriginalCharge) {
-            lineMaximum = Money(minorUnits: max(0, try allowance.subtracting(retained).minorUnits))
+            lineMaximum = Money(minorUnits: max(0, try allowance.subtracting(retained).minorUnits), currency: allowance.currency)
         }
         var maximum: Money?
         if let cap = input.wholeCheckoutCap, let otherUpper = without.upperBound {
-            let remaining = Money(minorUnits: max(0, try cap.subtracting(otherUpper).minorUnits))
+            let remaining = Money(minorUnits: max(0, try cap.subtracting(otherUpper).minorUnits), currency: cap.currency)
             if let line = input.lineAllowance, let retained = upper(input.retainedOriginalCharge) {
                 maximum = try CheckoutEngine.replacementCeiling(lineAllowance: line, retainedOriginalCharge: retained, wholeCheckoutRemaining: remaining)
             } else if input.lineAllowance == nil { maximum = remaining }
-            if let ceiling = offer.ceiling, let existing = maximum { maximum = min(existing, ceiling) }
+            if let ceiling = offer.ceiling, let existing = maximum {
+                guard ceiling.currency == existing.currency else { throw PickupOfferEvaluationError.invalid }
+                maximum = existing.minorUnits <= ceiling.minorUnits ? existing : ceiling
+            }
         }
         if !current { issues.append(.staleSource) }
         let overage = input.wholeCheckoutCap.flatMap { cap -> Money? in
             guard priced.total.lowerBound > cap else { return nil }
-            return Money(minorUnits: priced.total.lowerBound.minorUnits - cap.minorUnits)
+            return Money(minorUnits: priced.total.lowerBound.minorUnits - cap.minorUnits, currency: cap.currency)
         }
         return PickupOfferEvaluationResult(selectedOffers: selectedAssessments, combinedCost: total, minimumCost: priced.total.lowerBound,
             maximumCost: priced.total.upperBound, minimumOverage: current ? overage : nil,
@@ -264,12 +267,13 @@ enum PickupOfferEvaluation {
     private static func upper(_ evidence: CostEvidence) -> Money? {
         switch evidence { case .exact(let value): return value; case .bounded(_, let value, _): return value; case .unknown: return nil }
     }
-    private static func sum(_ costs: [CostEvidence], context: CheckoutContext, cap: Money? = nil) throws -> CheckoutResult {
+    private static func sum(_ costs: [CostEvidence], context: CheckoutContext, currency: Currency, cap: Money? = nil) throws -> CheckoutResult {
         for cost in costs { _ = try PickupOfferReview.assess(price: cost, ceiling: nil) }
+        let zero = Money(minorUnits: 0, currency: currency)
         let quote = CheckoutQuote(scope: .wholeCheckout, context: context,
             pricing: .components(lines: costs.enumerated().map { index, cost in
                 CheckoutLine(id: UUID(uuidString: String(format: "00000000-0000-0000-0000-%012d", index + 1))!, name: "Reviewed component", cost: cost)
-            }, lineSetComplete: true, fees: [], discounts: [], tax: .exact(.zero), deposits: .exact(.zero)))
+            }, lineSetComplete: true, fees: [], discounts: [], tax: .exact(zero), deposits: .exact(zero)))
         return try CheckoutEngine.evaluate(quote, cap: cap.map { CheckoutCap(scope: .wholeCheckout, commitmentsID: context.commitmentsID, amount: $0) })
     }
     private static func cost(_ amount: CheckoutAmount) -> CostEvidence {

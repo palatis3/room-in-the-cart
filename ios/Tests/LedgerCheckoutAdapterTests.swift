@@ -677,11 +677,13 @@ final class LedgerCheckoutAdapterTests: XCTestCase {
         let urgent = UrgentMealNeed(id: UUID(), food: "Wraps", meal: "Dinner", required: quantity(6), available: quantity(4), due: nil, confirmedAt: Date())
         _ = await pickup.addUrgent(urgent)
         let origin = try XCTUnwrap(pickup.journey?.id)
-        let deferred = DeferredPickupNeed(id: UUID(), sourceShopID: origin, line: BasketLine(id: UUID(), name: "Coffee", quantity: quantity(1), expectedCost: .exact(Money(minorUnits: 460)), itemExclusions: ["caffeine"]))
-        _ = await pickup.change { $0.deferred = [deferred] }
+        let deferred = DeferredPickupNeed(id: UUID(), sourceShopID: origin, line: BasketLine(id: UUID(), name: "Coffee", quantity: quantity(1), expectedCost: .exact(Money(minorUnits: 460, currency: .mxn)), itemExclusions: ["caffeine"]))
+        let recorded = await pickup.change { $0.standaloneCurrency = .mxn; $0.deferred = [deferred] }
+        XCTAssertTrue(recorded)
         _ = await pickup.startNextShop(accept: [deferred.id])
         let next = try XCTUnwrap(pickup.journey)
         XCTAssertTrue(next.isFreshNextShopDraft)
+        XCTAssertEqual(next.currency, .mxn)
         let first = await LedgerCheckoutAdapter.openNextShop(next, ledger: ledger)
         XCTAssertTrue(first)
         let firstLineIDs = ledger.shop?.lines.map(\.id)
@@ -689,6 +691,7 @@ final class LedgerCheckoutAdapterTests: XCTestCase {
         XCTAssertTrue(second)
         XCTAssertEqual(ledger.workspace.shops.count, 1)
         XCTAssertEqual(ledger.shop?.id, next.id)
+        XCTAssertEqual(ledger.shop?.basis.currency, .mxn)
         XCTAssertEqual(ledger.shop?.lines.map(\.id), firstLineIDs)
         let carriedShop = try XCTUnwrap(ledger.shop)
         let review = try LedgerCheckoutAdapter.review(shop: carriedShop, workspaceRevision: ledger.revision, previous: next)
@@ -704,6 +707,7 @@ final class LedgerCheckoutAdapterTests: XCTestCase {
         XCTAssertEqual(pickup.journeys.count, 2)
         XCTAssertFalse(try XCTUnwrap(pickup.journey).isFreshNextShopDraft)
         XCTAssertEqual(pickup.journey?.context, review.context)
+        XCTAssertEqual(review.context.currency, .mxn)
     }
 
     @MainActor func testMonthOldMarketCoffeeBoughtByAnotherPersonDropsFromReviewedCheckoutAndOtherDeferralSurvivesRestart() async throws {

@@ -6536,6 +6536,40 @@
           }
         }
       }
+    },
+    "The printed currencies conflict or are unsupported. Leave the line total blank.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The printed currencies conflict or are unsupported. Leave the line total blank."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las monedas impresas no coinciden o no son compatibles. Deja en blanco el importe del artículo."
+          }
+        }
+      }
+    },
+    "Enter the printed line total, such as MXN 4.82 or USD 4.82. Leave blank if the currency is unclear.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the printed line total, such as MXN 4.82 or USD 4.82. Leave blank if the currency is unclear."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe el importe impreso del artículo, por ejemplo, MXN 4.82 o USD 4.82. Déjalo en blanco si no está clara la moneda."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

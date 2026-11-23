@@ -6,9 +6,7 @@ enum HistoryCopy {
         String(localized: String.LocalizationValue(key), table: "History", bundle: bundle)
     }
     static func money(_ minor: Int) -> String {
-        let formatter = NumberFormatter(); formatter.numberStyle = .currency; formatter.currencyCode = "USD"
-        formatter.minimumFractionDigits = 2; formatter.maximumFractionDigits = 2
-        return formatter.string(from: NSDecimalNumber(decimal: Decimal(minor) / 100)) ?? "USD " + NSDecimalNumber(decimal: Decimal(minor) / 100).stringValue
+        (Decimal(minor) / 100).formatted(.currency(code: "USD").presentation(.isoCode))
     }
     static func observedAmount(_ price: HistoryCostEvidence) -> String {
         switch price {

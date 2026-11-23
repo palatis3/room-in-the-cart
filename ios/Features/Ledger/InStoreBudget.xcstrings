@@ -257,18 +257,18 @@
         }
       }
     },
-    "Discount amount shown ($)": {
+    "Discount amount shown (%@)": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Discount amount shown ($)"
+            "value": "Discount amount shown (%@)"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Importe del descuento impreso ($)"
+            "value": "Importe del descuento impreso (%@)"
           }
         }
       }
@@ -737,34 +737,50 @@
         }
       }
     },
-    "Price per %@ ($)": {
+    "Price per %@ (%@)": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Price per %@ ($)"
+            "value": "Price per %@ (%@)"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Precio por %@ ($)"
+            "value": "Precio por %@ (%@)"
           }
         }
       }
     },
-    "Price per pack ($)": {
+    "Price per pack": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Price per pack ($)"
+            "value": "Price per pack"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Precio por paquete ($)"
+            "value": "Precio por paquete"
+          }
+        }
+      }
+    },
+    "Price per pack (%@)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price per pack (%@)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio por paquete (%@)"
           }
         }
       }

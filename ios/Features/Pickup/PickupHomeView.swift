@@ -146,7 +146,7 @@ struct PickupEvidenceField<Field: Hashable>: View {
             .controlSize(.large)
             .keyboardType(.decimalPad)
             .focused(focus, equals: field)
-            .accessibilityHint(pTr("US dollars. Leave blank when unknown; enter zero only if confirmed."))
+            .accessibilityHint(pTr("Leave blank when unknown; enter zero only if confirmed."))
     }
 }
 @MainActor func pickupEvidence(_ text: String) throws -> CostEvidence {
@@ -309,14 +309,14 @@ struct PickupCheckoutView: View {
                     Text(pTr("Dinners only")).tag(CheckoutScope.dinner)
                     Text(pTr("Selected items only")).tag(CheckoutScope.item)
                 }
-                PickupEvidenceField(title: pTr("Spending cap"), amount: $draft.cap, focus: $field, field: .cap)
+                PickupEvidenceField(title: pTr("Spending cap") + " (" + draft.currency.rawValue + ")", amount: $draft.cap, focus: $field, field: .cap)
                 Picker(pTr("Spending cap scope"), selection: $draft.capScope) {
                     Text(pTr("Whole checkout")).tag(CheckoutScope.wholeCheckout)
                     Text(pTr("Dinners only")).tag(CheckoutScope.dinner)
                     Text(pTr("Selected items only")).tag(CheckoutScope.item)
                 }
             }.disabled(draftIsStale)
-            Section(pTr("Expected charges · USD")) {
+            Section(String(format: pTr("Expected charges · %@"), draft.currency.rawValue)) {
                 if draft.pricingNeedsReplacement || draft.replacingPricing, let pricing = draft.originalPricing {
                     Text(pTr("Pricing details to preserve")).font(.headline)
                     if let original = draft.reviewedQuote {
@@ -375,9 +375,9 @@ struct PickupCheckoutView: View {
                 Section(pTr("Payment hold · separate from spending")) {
                     Toggle(pTr("Compare an authorization hold"), isOn: $comparingHold)
                     if comparingHold {
-                        PickupEvidenceField(title: pTr("Retailer-displayed hold"), amount: $hold, focus: $field, field: .hold)
+                        PickupEvidenceField(title: pTr("Retailer-displayed hold") + " (" + draft.currency.rawValue + ")", amount: $hold, focus: $field, field: .hold)
                         PickupEvidenceField(title: pTr("Available funds (private, this screen only)"), amount: $availableFunds, focus: $field, field: .funds)
-                        if let held = try? ComparisonModel.money(hold), let funds = try? ComparisonModel.money(availableFunds), let gap = try? held.subtracting(funds) {
+                        if let held = try? ComparisonModel.money(hold, currency: draft.currency), let funds = try? ComparisonModel.money(availableFunds, currency: draft.currency), let gap = try? held.subtracting(funds) {
                             Text("\(pTr("Hold less available funds")): \(pMoney(gap))")
                         } else { Text(pTr("Hold comparison unresolved")) }
                     }
@@ -521,7 +521,7 @@ struct PickupCheckoutView: View {
         } catch PickupCheckoutDraftError.reviewReplacement {
             formError = pTr("Review the saved pricing before starting a replacement.")
         } catch {
-            formError = pTr("Enter source, store, branch and slot, and valid dollar amounts with at most two decimal places.")
+            formError = pTr("Enter source, store, branch and slot, and valid amounts with at most two decimal places.")
         }
     }
     @MainActor private func commit(_ review: QuoteReview) async {
@@ -874,9 +874,9 @@ private struct PickupWeightReview: View {
         return quote
     }
     private var limit: CheckoutWeightLimit {
-        guard let lineID, let quote = currentQuote, let price = try? ComparisonModel.money(rate),
+        guard let lineID, let journey, let quote = currentQuote, let price = try? ComparisonModel.money(rate, currency: journey.currency),
               let step = try? ListQuantityParser.numericAmount(increment) else { return .unresolved }
-        return (try? CheckoutEngine.maximumWeight(quote: quote, cap: journey?.cap, lineID: lineID,
+        return (try? CheckoutEngine.maximumWeight(quote: quote, cap: journey.cap, lineID: lineID,
             rate: price, increment: step, rounding: rounding)) ?? .unresolved
     }
 
@@ -910,7 +910,7 @@ private struct PickupWeightReview: View {
                 Picker(pTr("Price and increment unit"), selection: $unit) {
                     ForEach([UnitOfMeasure.pound, .ounce, .kilogram, .gram], id: \.self) { Text(pTr($0.rawValue)).tag($0) }
                 }
-                PickupEvidenceField(title: pTr("Price per selected weight unit"), amount: $rate, focus: $field, field: .rate, identifier: "checkout.weightRate")
+                PickupEvidenceField(title: pTr("Price per selected weight unit") + " (" + (journey?.currency.rawValue ?? "") + ")", amount: $rate, focus: $field, field: .rate, identifier: "checkout.weightRate")
                 VStack(alignment: .leading, spacing: 4) {
                     Text(pTr("Retailer billing increment")).font(.caption).accessibilityHidden(true)
                     TextField(pTr("Retailer billing increment"), text: $increment)

@@ -42,7 +42,7 @@ public struct PrivatePriceEvidence: Codable, Equatable, Identifiable, Sendable {
         }
     }
 
-    public static let supportedCurrencies = ["USD", "CAD", "EUR", "GBP"]
+    public static let supportedCurrencies = ["USD", "MXN", "CAD", "EUR", "GBP"]
 
     public let id: UUID
     public let revision: Int64
@@ -98,7 +98,7 @@ public struct PrivatePriceEvidence: Codable, Equatable, Identifiable, Sendable {
                                    documentLine: receipt.documentLine, imageDigest: receipt.imageDigest)
         self.init(id: receipt.lineID, revision: receipt.revision, source: .paidReceipt(source),
                   foodID: receipt.foodID, linkedLotID: receipt.lotID, name: receipt.name, store: receipt.merchant, date: receipt.purchaseDate,
-                  currencyCode: receipt.paidLineTotal?.currency.rawValue ?? Currency.usd.rawValue,
+                  currencyCode: receipt.currency.rawValue,
                   amountMinor: receipt.paidLineTotal?.minorUnits, pack: Pack(perPackage: receipt.received),
                   sourceText: receipt.originalLine, confirmedUsable: receipt.usable)
         try validate()
@@ -113,7 +113,7 @@ public struct PrivatePriceEvidence: Codable, Equatable, Identifiable, Sendable {
 
     public func validate() throws {
         guard revision > 0, date.timeIntervalSinceReferenceDate.isFinite,
-              Self.supportedCurrencies.contains(currencyCode),
+              Self.supportedCurrencies.contains(currencyCode) || (shelfImage != nil && amountMinor == nil && currencyCode.isEmpty),
               amountMinor.map({ $0 >= 0 }) ?? true else { throw DomainError.invalidInput("priceEvidence") }
         for text in [name, store, variant, branch, eligibility].compactMap({ $0 }) {
             try ledgerText(text, nonempty: true, maximum: 512)
@@ -143,6 +143,18 @@ public struct PrivatePriceEvidence: Codable, Equatable, Identifiable, Sendable {
             guard amountMinor != nil else { throw DomainError.invalidInput("manualPaidPrice") }
         case .shelf, .currentQuote: break
         }
+    }
+
+    /// Older shelf records preserve the denomination the shopper entered. A new price revision or
+    /// publication must also agree with the currency visible in the reviewed image wording.
+    public var shelfCurrencyMatches: Bool {
+        guard let shelfImage, amountMinor != nil else { return true }
+        return ReviewedShelfImage.priceCurrencies(in: shelfImage.printed.effectiveWording).contains(currencyCode)
+    }
+
+    public func validateForRecording() throws {
+        try validate()
+        guard shelfCurrencyMatches else { throw DomainError.invalidInput("shelfImageCurrency") }
     }
 
     public func validateAdjustmentTarget(_ paid: Self) throws {

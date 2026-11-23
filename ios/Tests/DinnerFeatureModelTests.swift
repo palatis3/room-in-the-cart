@@ -20,6 +20,26 @@ import CoreDomain
     }
 }
 @MainActor final class DinnerFeatureModelTests: XCTestCase {
+    func testStoreQuoteEditsUseSavedPesosAndRejectAChangedShopCurrency() throws {
+        var draft = DinnerStoreDraft()
+        draft.storeID = "Market"; draft.branch = "Centro"; draft.source = "App"; draft.label = "Market"
+        draft.total = "40"; draft.tripCash = "5"; draft.itemSubtotal = "30"; draft.allChargesIncluded = true
+        draft.orderMinimumKind = .required; draft.minimumAmount = "20"; draft.eligibleSubtotal = "30"
+        let commitments = DinnerCommitmentSet(commitments: [])
+        let basis = ShopBasis(currency: .mxn)
+        let saved = try draft.option(commitments: commitments, basis: basis)
+        XCTAssertEqual(saved.quote.pricing, .inclusiveTotal(.exact(Money(minorUnits: 4000, currency: .mxn))))
+        XCTAssertEqual(saved.trip.incrementalCash, .exact(Money(minorUnits: 500, currency: .mxn)))
+        XCTAssertEqual(saved.orderMinimum?.minimum?.currency, .mxn)
+        XCTAssertEqual(saved.observedItemSubtotal?.currency, .mxn)
+        let reopened = try JSONDecoder().decode(StoreQuoteOption.self, from: JSONEncoder().encode(saved))
+        var edit = DinnerStoreDraft(reopened)
+        edit.total = "42"
+        let revised = try edit.option(commitments: commitments, basis: basis)
+        XCTAssertEqual(revised.quote.pricing, .inclusiveTotal(.exact(Money(minorUnits: 4200, currency: .mxn))))
+        XCTAssertThrowsError(try edit.option(commitments: commitments, basis: ShopBasis(currency: .usd)))
+    }
+
     func testDinnerPickupOpeningSeparatesLoadingFailureAndLostAccess() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }

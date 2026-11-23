@@ -11,7 +11,9 @@ public struct PickedLinePrice: Codable, Sendable, Equatable {
     let basisRevision: Int
     public internal(set) var shelf: PickedShelfPrice? = nil
 
-    func validate() throws {
+    func validate(currency: Currency) throws {
+        guard total.map({ $0.currency == currency }) != false,
+              shelf.map({ $0.rate.currency == currency }) != false else { throw LedgerError.invalid("pickedCurrency") }
         // Bounded well above a grocery line, so the subtotal of 10,000 lines also fits.
         if let total, !(0...1_000_000_000).contains(total.minorUnits) { throw LedgerError.invalid("pickedPrice") }
         guard checkedAt.timeIntervalSinceReferenceDate.isFinite, basisRevision >= 0 else { throw LedgerError.invalid("pickedPrice") }
@@ -41,7 +43,8 @@ extension ShoppingLedger {
 
     private func currentPrice(for line: ShoppingLine) -> PickedLinePrice? {
         guard let price = line.pickedPrice, !line.isTrashed, !line.isHandled, price.checkedAt == line.inStorePickedAt,
-              price.name == line.name, price.basisRevision == basisRevision else { return nil }
+              price.name == line.name, price.basisRevision == basisRevision,
+              price.total.map({ $0.currency == basis.currency }) != false else { return nil }
         let actual = line.tripPick?.amount ?? (try? quantity(forLineID: line.id))
         return price.quantity == actual ? price : nil
     }
@@ -49,7 +52,7 @@ extension ShoppingLedger {
     public var pickedCartSubtotal: PickedCartSubtotal {
         let picked = lines.filter { $0.inStorePickedAt != nil && !$0.isTrashed && !$0.isHandled }
         let amounts = picked.compactMap { currentPrice(for: $0)?.includedTotal }
-        return PickedCartSubtotal(total: Money(minorUnits: amounts.reduce(0) { $0 + $1.minorUnits }),
+        return PickedCartSubtotal(total: Money(minorUnits: amounts.reduce(0) { $0 + $1.minorUnits }, currency: basis.currency),
                                   priced: amounts.count, picked: picked.count)
     }
 }
