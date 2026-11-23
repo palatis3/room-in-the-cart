@@ -1,4 +1,5 @@
 import {createPrivateKey,createPublicKey} from 'node:crypto';
+import {getVercelOidcToken} from '@vercel/oidc';
 import {z} from 'zod';
 import type {Database} from './database.js';
 import {privacyPhase,withPrivacyClient} from './privacy-call.js';
@@ -19,7 +20,8 @@ const configurationSchema=z.object({
  pins:durableJournalPinsSchema,
  writerPrivateKey:pem.startsWith('-----BEGIN PRIVATE KEY-----'),
  authorityPublicKey:pem.startsWith('-----BEGIN PUBLIC KEY-----'),
- authority:z.object({origin:z.string().max(512),writerToken:z.string().max(256),ca:pem.optional()}).strict(),
+ authority:z.object({origin:z.string().max(512),writerToken:z.string().max(256),ca:pem.optional(),
+  vercelTrustedSource:z.boolean().optional()}).strict(),
  observer:z.object({
   connection:z.object({
    host:z.string().min(1).max(300),port:z.number().int().min(1).max(65535),database:name,user:name,
@@ -77,7 +79,9 @@ export function createPrivacyRuntime(pool:Database,environment:NodeJS.ProcessEnv
   const authorityPublicKey=createPublicKey(config.authorityPublicKey);
   const {password,tls,...connection}=observer.connection;
   if(environment.VERCEL==='1'&&!tls)throw Error('A pinned observer TLS endpoint is required');
+  if(config.authority.vercelTrustedSource&&environment.VERCEL!=='1')throw Error('Vercel journal identity requires a Vercel runtime');
   authority=createHTTPSJournalAuthority({pins,origin:config.authority.origin,writerToken:config.authority.writerToken,
+   ...(config.authority.vercelTrustedSource?{getVercelTrustedSourceToken:()=>getVercelOidcToken()}:{}),
    ...(config.authority.ca?{ca:config.authority.ca}:{})});
   source=createPostgresCommittedSource({...observer,pins,authorityPublicKey,
    connection:{...connection,...(password!==undefined?{password}:{}),...(tls?{tls}:{})},

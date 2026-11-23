@@ -3,6 +3,7 @@ import {createHash,randomUUID,randomBytes,sign} from 'node:crypto';
 import {execFileSync,spawn} from 'node:child_process';
 import {once} from 'node:events';
 import {chmod,mkdir,mkdtemp,readFile,rm,writeFile} from 'node:fs/promises';
+import {createServer} from 'node:https';
 import {join,resolve} from 'node:path';
 import {createInterface} from 'node:readline';
 import {setTimeout as delay} from 'node:timers/promises';
@@ -14,7 +15,7 @@ import {migrate} from '../scripts/migrate.mjs';
 import {createPostgresJournalAuthority} from '../dist/privacy-journal-pg-authority.js';
 import {createPostgresCommittedSource} from '../dist/privacy-journal-pg-source.js';
 import {durableJournalScopeDigest,verifyDurableAdmissionReceipt} from '../dist/privacy-journal-durable.js';
-import {createHTTPSJournalAuthority} from '../dist/privacy-journal-https.js';
+import {createHTTPSJournalAuthority,journalAuthorityHandler} from '../dist/privacy-journal-https.js';
 import {activateIndependentSuccessor,createIndependentRecovery,registerIndependentSuccessor,verifyIndependentArchiveWindow,verifyIndependentRecovery} from '../dist/privacy-journal-recovery.js';
 import {validatePrivacyRestoreEvents,verifyPrivacyJournal} from '../dist/privacy-journal.js';
 import {MAX_JOURNAL_BYTES,MAX_JOURNAL_RECORDS,MAX_INTENT_RESOLUTION_OVERHEAD,MAX_SOURCE_EVENT_BYTES} from '../dist/privacy-journal-limits.js';
@@ -181,6 +182,38 @@ function cli(script,...args){
  return JSON.parse(execFileSync(process.execPath,[fileURLToPath(new URL('../scripts/'+script,import.meta.url)),...args],
   {env:environment,stdio:['ignore','pipe','pipe'],timeout:15000}).toString());
 }
+
+test('the HTTPS journal acquires its Vercel identity per call and fails closed before sending on identity failure',async()=>{
+ const f=fixture(),writerToken=randomBytes(32).toString('base64url'),observations=[];
+ const listener=journalAuthorityHandler({pins:f.pins,writerToken,authority:f.authority,records:f.recordTransport,uncertainty:f.uncertainty});
+ const server=createServer(tls,(req,res)=>{
+  observations.push({bearer:req.headers.authorization,oidc:req.headers['x-vercel-trusted-oidc-idp-token']});
+  listener(req,res);
+ });
+ server.listen(0,'127.0.0.1');await once(server,'listening');
+ const config={pins:f.pins,writerToken,origin:`https://127.0.0.1:${server.address().port}`,ca:tls.cert};
+ const direct=createHTTPSJournalAuthority(config);
+ let calls=0,loadToken=async()=>`synthetic.identity${++calls}.signature`;
+ const protectedClient=createHTTPSJournalAuthority({...config,getVercelTrustedSourceToken:()=>loadToken()});
+ const entered=gate(),release=gate();
+ try{
+  await direct.authority.readCurrent(nonce(time()));
+  await protectedClient.authority.readCurrent(nonce(time()));
+  await protectedClient.authority.readCurrent(nonce(time()));
+  assert.deepEqual(observations.map(x=>x.oidc),[undefined,'synthetic.identity1.signature','synthetic.identity2.signature']);
+  assert(observations.every(x=>x.bearer===`Bearer ${writerToken}`));
+  loadToken=async()=>{throw Error('Synthetic unavailable request identity');};
+  await assert.rejects(protectedClient.authority.readCurrent(nonce(time())),/Vercel journal identity is unavailable/);
+  loadToken=async()=>'';
+  await assert.rejects(protectedClient.authority.readCurrent(nonce(time())),/Vercel journal identity is unavailable/);
+  loadToken=async()=>{entered.resolve();await release.promise;return 'synthetic.delayed.signature';};
+  const controller=new AbortController();
+  const cancelled=protectedClient.authority.readCurrent({...nonce(time()),signal:controller.signal});
+  await entered.promise;controller.abort();await assert.rejects(cancelled,{code:'deletion_unavailable'});
+  release.resolve();await delay(20);
+  assert.equal(observations.length,3);
+ }finally{release.resolve();direct.close();protectedClient.close();await new Promise(resolve=>server.close(resolve));}
+});
 
 test('the two runtime roles cannot replace, delete, or impersonate retained records and admissions',async()=>{
  const registration=await register(),ports=await registration.open();
