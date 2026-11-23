@@ -113,9 +113,10 @@ extension PantryRepository {
 
     func preparePutaway(_ draft: ReceiptImportDraft, receiptID: UUID, documentID: UUID?,
                         facts: [ReceiptAcquisition]) async throws -> (value: ReviewedPutawayReceipt?, changed: Bool) {
-        guard draft.tracksPutaway else { return (nil, false) }
         let prior = try await store.reviewedReceiptHeader(receiptID, owner: receiptOwner)
         try requireAccess()
+        if let prior, prior.currencyCode != draft.currency.rawValue { throw PantryReceiptError.changedEvidence }
+        guard draft.tracksPutaway else { return (nil, false) }
         let money = try ComparisonModel.money(draft.receiptTotal.replacingOccurrences(of: ",", with: "."), currency: draft.currency)
         guard money.map({ $0.minorUnits >= 0 && draft.permitsReceiptTotal }) ?? true else { throw PantryReceiptError.invalid }
         let reference = draft.reference.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -128,7 +129,7 @@ extension PantryRepository {
             totalMinor: money?.minorUnits ?? prior?.totalMinor, reference: reference.isEmpty ? prior?.reference : reference,
             purchaseDay: prior == nil ? selectedDay : prior?.purchaseDay, currencyCode: draft.currency.rawValue)
         if let prior {
-            guard prior.currencyCode == header.currencyCode, prior.merchant == header.merchant,
+            guard prior.merchant == header.merchant,
                   prior.reference == nil || prior.reference == header.reference,
                   prior.totalMinor == nil || prior.totalMinor == header.totalMinor else { throw PantryReceiptError.changedEvidence }
         }

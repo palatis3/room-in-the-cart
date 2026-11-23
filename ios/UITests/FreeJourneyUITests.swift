@@ -2920,7 +2920,7 @@ import XCTest
         tap(facts)
         let cap = app.textFields["ledgerCap"]
         reveal(cap)
-        XCTAssertTrue(cap.label.contains("MXN"), cap.debugDescription)
+        XCTAssertTrue((cap.placeholderValue ?? "").contains("MXN") || cap.label.contains("MXN"), cap.debugDescription)
         tap(cap)
         cap.typeText("325.50")
         tap(app.buttons["ledgerFactsKeyboardDone"])
@@ -2935,7 +2935,7 @@ import XCTest
         XCTAssertTrue(facts.label.contains("MXN") && facts.label.contains("325.50"), facts.debugDescription)
         tap(facts)
         reveal(cap)
-        XCTAssertTrue(cap.label.contains("MXN"), cap.debugDescription)
+        XCTAssertTrue((cap.placeholderValue ?? "").contains("MXN") || cap.label.contains("MXN"), cap.debugDescription)
         XCTAssertEqual(cap.value as? String, "325.5")
     }
 

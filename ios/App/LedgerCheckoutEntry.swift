@@ -161,7 +161,8 @@ enum LedgerCheckoutAdapter {
         let context = CheckoutContext(storeID: shop.basis.branch, branchID: shop.basis.branch,
             mode: mode,
             slot: shop.basis.slot.map { "\($0.ISO8601Format()) · \(shop.basis.timeZoneIdentifier)" } ?? "",
-            commitmentsID: shop.id, observedAt: observedAt, source: preview?.source ?? pTr("Shopper-entered list"), currency: shop.basis.currency)
+            commitmentsID: shop.id, observedAt: observedAt, source: preview?.source ?? pTr("Shopper-entered list"),
+            currency: shop.basis.currency == .usd ? nil : shop.basis.currency)
         let scope: CheckoutScope
         switch shop.basis.capScope { case .wholeShop: scope = .wholeCheckout; case .dinnersOnly: scope = .dinner; case .selectedItems: scope = .item }
         let cap = shop.basis.cap.map { CheckoutCap(scope: scope, commitmentsID: shop.id, amount: $0) }

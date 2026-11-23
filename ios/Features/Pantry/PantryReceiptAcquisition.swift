@@ -111,7 +111,7 @@ struct ReceiptImportDraft {
         documentLayoutID = source.documentLayoutID
         firstSectionDigest = source.firstSectionDigest
         imageDigest = source.documentDigest ?? source.imageJPEG.map { Data(SHA256.hash(data: $0)) }
-        currency = PrintedCurrencyEvidence.reviewCurrency(for: source.receiptLines.flatMap { [$0.originalText, $0.priceNote] }, locale: locale)
+        currency = PrintedCurrencyEvidence.reviewCurrency(for: source.receiptLines.flatMap { [$0.originalText, $0.reviewedText, $0.priceNote] }, locale: locale)
         merchant = source.reviewedLabel
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = timeZone
