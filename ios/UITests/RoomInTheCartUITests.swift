@@ -935,7 +935,7 @@ final class RoomInTheCartUITests: XCTestCase {
             let renewal = language == "en" ?
                 "If you have an App Store subscription, cancel it before deleting your account to avoid future charges. Apple can continue billing after you delete this account." :
                 "Si tienes una suscripción del App Store, cancélala antes de eliminar tu cuenta para evitar cargos futuros. Apple puede seguir cobrándote después de que elimines esta cuenta."
-            reveal(app.staticTexts[renewal])
+            reveal(app.staticTexts.matching(NSPredicate(format: "label == %@", renewal)).firstMatch)
             XCTAssertFalse(app.buttons[language == "en" ? "Request permanent deletion" : "Solicitar la eliminación permanente"].exists)
             screenshot("Account-deletion-scope-" + language)
             app.terminate()
