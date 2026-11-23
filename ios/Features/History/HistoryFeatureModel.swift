@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 import HouseholdClient
+import CoreDomain
 
 struct HistoryRuntimeScope: Equatable, Sendable {
     let generation: UUID; let subject: String; let householdID: String; let memberID: String; let currentShopID: String?
@@ -74,10 +75,12 @@ enum HistoryReviewedWrite: Equatable {
     var currentShopID: String? { authorized ? scope?.currentShopID : nil }
     var canEdit: Bool { authorized && !busy && storeEpoch != nil && !hasUnresolvedWrite }
     var canBeginObservation: Bool { canEdit && !ownedShops.isEmpty }
-    var canReviewObservation: Bool { canEdit && ownedShops.contains { $0.shopId.lowercased() == observationDraft.shopID.lowercased() } }
-    private func ownedCurrentShop(_ id: String?) -> String {
-        guard let id, ownedShops.contains(where: { $0.shopId.lowercased() == id.lowercased() }) else { return "" }
-        return id
+    var canReviewObservation: Bool { canEdit && ownedShop(observationDraft.shopID)?.currency == observationDraft.currency.rawValue }
+    private func ownedShop(_ id: String?) -> HistoryOwnedShop? {
+        ownedShops.first { $0.shopId.lowercased() == id?.lowercased() }
+    }
+    func selectObservationShop(_ id: String?) {
+        observationDraft.selectShop(ownedShop(id))
     }
     var canEditSelectedPeriod: Bool {
         guard canEdit, let period = selectedPeriod else { return false }
@@ -125,7 +128,7 @@ enum HistoryReviewedWrite: Equatable {
             readableShopIDs = Set(readable.shopIds); readableShopCursor = readable.nextCursor
             periods = page.periods; periodCursor = page.nextCursor
             storeEpoch = epoch; references = saved.observations.filter { $0.matches(current) }
-            refreshReferences(); observationDraft.shopID = ownedCurrentShop(current.currentShopID)
+            refreshReferences(); selectObservationShop(current.currentShopID)
             if let candidate {
                 do { try await authorize(candidate) }
                 catch ClientError.service(let status, let code, _, _) where status == 404 && code == "unavailable" {
@@ -237,12 +240,12 @@ enum HistoryReviewedWrite: Equatable {
             notice = nil
         } catch { if live(start) { await fail(error) } }
     }
-    func beginObservation() { guard canBeginObservation else { return }; observationDraft = .init(); observationDraft.shopID = ownedCurrentShop(currentShopID); selectedObservation = nil; cancelReview() }
+    func beginObservation() { guard canBeginObservation else { return }; observationDraft = .init(); selectObservationShop(currentShopID); selectedObservation = nil; cancelReview() }
     func beginPeriod() {
         guard canEdit else { return }
-        var draft = HistoryPeriodDraft()
-        let id = ownedCurrentShop(currentShopID)
-        if !id.isEmpty { draft.shopIDs = [id] }
+        let currentShop = ownedShop(currentShopID)
+        var draft = HistoryPeriodDraft(currency: currentShop.flatMap { Currency(rawValue: $0.currency) } ?? .groceryDefault())
+        if let currentShop { draft.shopIDs = [currentShop.shopId] }
         periodDraft = draft
         selectedPeriod = nil
         periodAnalysis = nil
@@ -250,7 +253,7 @@ enum HistoryReviewedWrite: Equatable {
     }
     func canAssignPeriodShop(_ id: String) -> Bool {
         guard canEdit, let draft = periodDraft, draft.shopIDs.count < 100,
-              !ownedCurrentShop(id).isEmpty else { return false }
+              ownedShop(id)?.currency == draft.currency.rawValue else { return false }
         return !draft.shopIDs.contains { $0.lowercased() == id.lowercased() }
     }
     func assignPeriodShop(_ id: String) {
@@ -262,7 +265,7 @@ enum HistoryReviewedWrite: Equatable {
         cancelReview()
         guard canBeginObservation, let source = observation.sourceRevision, let assigned = ownedShops.first(where: {
             $0.shopId == observation.shopId
-        }), assigned.revision == source.shopRevision, assigned.authorityEpoch == source.authorityEpoch else { throw HistoryDraftError.invalid }
+        }), assigned.revision == source.shopRevision, assigned.authorityEpoch == source.authorityEpoch, assigned.currency == observation.currency else { throw HistoryDraftError.invalid }
         try observation.validate()
         reviewed = .observation(observation)
         approved = false
@@ -276,7 +279,11 @@ enum HistoryReviewedWrite: Equatable {
     }
     func reviewPeriod() {
         guard canEdit, let periodDraft else { return }
-        do { reviewed = .period(try periodDraft.dto(), baseRevision: periodDraft.baseRevision); approved = false; notice = nil }
+        do {
+            guard periodDraft.shopIDs.allSatisfy({ ownedShop($0)?.currency == periodDraft.currency.rawValue }) else { throw HistoryDraftError.invalid }
+            reviewed = .period(try periodDraft.dto(), baseRevision: periodDraft.baseRevision)
+            approved = false; notice = nil
+        }
         catch { cancelReview(); notice = HistoryCopy.text("Check the period dates, time zone, budget, assigned shops and reservation evidence before reviewing.") }
     }
     func applyReviewed() async {

@@ -55,6 +55,27 @@ test('official Apple gateway refuses the Xcode StoreKit fixture in both Apple en
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
+test('Apple billing accepts the deployment PEM secret and rejects conflicting or unusable key settings', t => {
+  const dir = mkdtempSync(join(tmpdir(), 'ritc-billing-deployment-key-'));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  createTestCredentials(dir);
+  const env = {
+    APPLE_BUNDLE_ID: 'test.only.ritc', APPLE_PRODUCT_ID: 'test.only.household', APPLE_ENVIRONMENT: 'Production',
+    APPLE_APP_ID: '12345', APPLE_ROOT_CA_PATHS: join(dir, 'root.pem'),
+    APPLE_SIGNING_KEY_PEM: readFileSync(join(dir, 'key.pem'), 'utf8'),
+    APPLE_KEY_ID: 'TESTONLY', APPLE_ISSUER_ID: '00000000-0000-4000-8000-000000000001',
+  };
+  const routes = appleGatewaysFromEnvironment(env);
+  assert.ok(routes.primary instanceof OfficialAppleBillingGateway);
+  assert.ok(routes.notifications.sandbox);
+  assert.throws(() => appleGatewaysFromEnvironment({ ...env, APPLE_SIGNING_KEY_PATH: join(dir, 'key.pem') }),
+    /exactly one Apple signing key source/);
+  assert.throws(() => appleGatewaysFromEnvironment({ ...env, APPLE_SIGNING_KEY_PEM: '' }),
+    /Incomplete Apple billing environment/);
+  assert.throws(() => appleGatewaysFromEnvironment({ ...env, APPLE_SIGNING_KEY_PEM: 'invalid fixture signing key' }),
+    { message: 'Apple billing requires a readable P-256 signing key' });
+});
+
 test('consent delivery verifies appData and any nested app download using the designated environment', async t => {
   const dir = mkdtempSync(join(tmpdir(), 'ritc-consent-notification-'));
   t.after(() => rmSync(dir, {recursive:true, force:true}));

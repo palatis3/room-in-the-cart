@@ -460,11 +460,13 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
                     for (line, rawLine) in zip(acquisition.lines, lines) {
                         guard line.delivery == nil, let quantity = rawLine["usable"] else { return try response([:], 400) }
                         let id = UUID().uuidString
+                        var evidence: [String: Any] = ["merchant": acquisition.merchant, "purchaseDay": acquisition.purchaseDay,
+                                                       "line": rawLine]
+                        if let currency = body["currency"] as? String { evidence["currency"] = currency }
                         lots.append(["lotId": id, "foodName": line.foodName, "location": line.location.rawValue,
                                      "origin": "manual", "exclusionTags": [], "observation": ["observationId": id,
                                          "quantity": quantity, "confirmedAt": "2026-11-17T10:00:00Z"],
-                                     "receiptEvidence": ["merchant": acquisition.merchant, "purchaseDay": acquisition.purchaseDay,
-                                                         "line": rawLine]])
+                                     "receiptEvidence": evidence])
                         saved.append(["ordinal": line.ordinal, "lotId": id])
                     }
                     let receipt: [String: Any] = ["v": 1, "kind": kind, "householdId": household, "operationId": UUID().uuidString,

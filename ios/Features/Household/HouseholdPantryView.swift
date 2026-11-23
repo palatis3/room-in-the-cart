@@ -94,7 +94,7 @@ private struct HouseholdPantryView: View {
                                     }
                                     if let evidence = lot.receiptEvidence {
                                         Text(evidence.merchant + " · " + dates.civilDay(evidence.purchaseDay, style: .abbreviated))
-                                        HouseholdReceiptLineFacts(row: evidence.line)
+                                        HouseholdReceiptLineFacts(row: evidence.line, currency: evidence.currency)
                                     }
                                     PantryStorageFacts(storedAt: lot.storedAt, useFirstAt: lot.useFirstAt, tags: lot.exclusionTags)
                                 }.accessibilityElement(children: .combine)

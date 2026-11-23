@@ -222,19 +222,19 @@
         }
       }
     },
-    "Extra charges and travel cost (USD)": {
+    "Extra charges and travel cost (%@)": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Extra charges and travel cost (USD)"
+            "value": "Extra charges and travel cost (%@)"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cargos adicionales y costo del viaje (USD)"
+            "value": "Cargos adicionales y costo del viaje (%@)"
           }
         }
       }
@@ -528,19 +528,19 @@
         }
       }
     },
-    "Price per pack (USD)": {
+    "Price per pack (%@)": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Price per pack (USD)"
+            "value": "Price per pack (%@)"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Precio por paquete (USD)"
+            "value": "Precio por paquete (%@)"
           }
         }
       }
@@ -1038,19 +1038,19 @@
         }
       }
     },
-    "Whole-trip spending limit (USD)": {
+    "Whole-trip spending limit (%@)": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Whole-trip spending limit (USD)"
+            "value": "Whole-trip spending limit (%@)"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Límite de gasto de todo el viaje (USD)"
+            "value": "Límite de gasto de todo el viaje (%@)"
           }
         }
       }

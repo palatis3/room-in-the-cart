@@ -1,3 +1,4 @@
+import {requireMatchingCurrency} from './grocery-currency.js';
 import {chosenFallbacks,fallbackDecision,FallbackConstraint,requireAssistance} from './shared-fallback-options.js';
 import {loadAcceptedFallbacks,linkAcceptedFallback} from './shared-fallback-registry.js';
 import type {BillingService} from './billing/service.js';
@@ -109,6 +110,7 @@ async function decision(ctx:Context,shop:Shop,request:z.infer<typeof recoveryPre
     const swap=(request.intent.dinnerSwap || request.intent.undoesSwap) ? await swapReview(ctx,shop,basis,request.intent) : undefined;
     if(request.intent.fallback) {
       const selection=request.intent.fallback;
+      if(selection.trip)requireMatchingCurrency(selection.trip.currency,shop.quote.currency);
       const target=basis.meals.find(m=>m.occurrenceId===request.intent.occurrenceId);
       const candidate=(await loadAcceptedFallbacks(ctx,[selection.review.candidateId])).find(c=>c.candidateId===selection.review.candidateId && c.revision===selection.review.revision);
       if(!target || !candidate || recoveryDigest(basis.base)!==recoveryDigest(request.base)) throw refresh();

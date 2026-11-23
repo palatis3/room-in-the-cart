@@ -19,7 +19,7 @@ extension SharedOperationUndoHistory {
     }
 }
 private func undoBudget(_ value: ShopperBudget) throws {
-    try demandRequire(value.currency == "USD" && ["withinCap", "overCap", "unresolved", "scopeMismatch"].contains(value.status))
+    try demandRequire(GroceryWireCurrency.supports(value.currency) && ["withinCap", "overCap", "unresolved", "scopeMismatch"].contains(value.status))
     try demandRequire(["wholeCheckout", "item", "dinner"].contains(value.scope) && value.lowerBoundMinor >= 0)
     try demandRequire([value.totalMinor, value.overCapMinor, value.upperBoundMinor].compactMap { $0 }.allSatisfy { $0 >= 0 })
     try demandRequire(value.upperBoundMinor.map { $0 >= value.lowerBoundMinor } ?? true)
@@ -61,9 +61,9 @@ extension SharedOperationUndoCandidate {
         _ = try ShopperShopCandidate(quote: action.body.quote, lines: action.body.lines)
         let quote = action.body.quote
         guard let observed = demandTime(quote.observedAt), let expires = demandTime(quote.expiresAt) else { throw ClientError.invalidResponse }
-        try demandRequire(quote.currency == "USD")
+        try demandRequire(quote.currency == shop.quote.currency && beforeCheckout.currency == quote.currency && afterCheckout.currency == quote.currency)
         _ = try ShopperQuote(scope: quote.scope, complete: quote.complete, capMinor: quote.capMinor, capScope: quote.capScope,
-            fee: quote.fee, taxesMinor: quote.taxesMinor, depositsMinor: quote.depositsMinor, discountsMinor: quote.discountsMinor, observedAt: observed, expiresAt: expires)
+            fee: quote.fee, taxesMinor: quote.taxesMinor, depositsMinor: quote.depositsMinor, discountsMinor: quote.discountsMinor, observedAt: observed, expiresAt: expires, currency: quote.currency)
         try demandRequire(demandUnique(scope.touchedLines.map(\.lineId)) && demandUnique(packReviewLineIds))
         try demandRequire(packReviewLineIds.map(\.string) == action.body.lines.map(\.lineId))
         try demandRequire(Set(packReviewLineIds) == Set(after.lines.filter { $0.trashedAt == nil }.map(\.id)))

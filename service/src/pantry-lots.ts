@@ -1,3 +1,4 @@
+import {projectHouseholdReceiptEvidence,type ReceiptEvidence} from './household-receipts.js';
 import { activeFulfillment, remainingPromise } from './cook-quantities.js';
 import type {Context,Shop} from './repository.js';
 import {z} from 'zod';
@@ -120,9 +121,9 @@ export async function physicalPantryPage(ctx:Context,cursor:string|null,shop?:Sh
   // A staple purchase reviews immutable delivery evidence, never a later cook
   // balance head. This field is limited to the separately authorized household page.
   const purchases=shop?[]:await storedDeliveryEvidence(ctx,page.flatMap(l=>l.delivery_source_id?[l.delivery_source_id]:[]),null,true);
-  const receipts=!shop && ids.length ? (await ctx.db.query<{lot_id:string,evidence:unknown}>(
+  const receipts=!shop && ids.length ? (await ctx.db.query<{lot_id:string,evidence:ReceiptEvidence}>(
     'SELECT lot_id,evidence FROM ritc.household_receipt_line WHERE household_id=$1 AND lot_id=ANY($2::uuid[])',[ctx.householdId,ids])).rows : [];
-  const receiptByLot=new Map(receipts.map(r=>[r.lot_id,r.evidence]));
+  const receiptByLot=new Map(receipts.map(r=>[r.lot_id,projectHouseholdReceiptEvidence(ctx,r.evidence)]));
   const lots=page.map(l=>{
     const physical=materialize(l,heads,delivered.find(s=>s.sourceId===l.lot_id));
     const purchase=purchases.find(s=>s.sourceId===l.lot_id);

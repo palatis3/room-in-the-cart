@@ -5,20 +5,25 @@ import {storedDeliveryEvidence} from './delivery-evidence.js';
 import {invalid,refresh,ServiceError} from './errors.js';
 import {amount,cmp} from './physical-quantity.js';
 import {usableQuantitySchema} from './recovery-contracts.js';
+import {groceryCurrencySchema} from './grocery-currency.js';
 import type {Context} from './repository.js';
 
 const id=z.string().uuid().toLowerCase();
 const text=(max:number)=>z.string().min(1).refine(s=>s.trim().length>0 && Buffer.byteLength(s)<=max && !/[\u0000\uD800-\uDFFF]/u.test(s));
 const quantity=usableQuantitySchema.refine(q=>!/[\u0000\uD800-\uDFFF]/u.test(q.originalLiteral));
-const lineSchema=z.object({
+const lineFields=z.object({
   ordinal:z.number().int().min(0).max(3999),original:text(2048),foodName:text(240),
-  received:quantity,usable:quantity,paidUSDMinor:z.number().int().min(0).max(2_147_483_647).nullish().default(null),
+  received:quantity,usable:quantity,
   location:z.enum(['pantry','fridge','freezer']),
   delivery:z.object({lotId:id,observationId:id}).strict().nullish().default(null),
   printed:z.object({page:z.number().int().min(1).max(20),line:z.number().int().min(1).max(200),
     method:z.enum(['textFile','pdfText','pdfOCR','imageOCR']),stage:z.enum(['order','receipt','finalInvoice'])}).strict().nullish().default(null)
-}).strict().refine(l=>l.received.amount.numerator>0 && l.received.unit===l.usable.unit && cmp(amount(l.usable),amount(l.received))<=0
-  && (l.printed?(l.printed.page-1)*200+l.printed.line-1===l.ordinal:l.ordinal<200));
+}).strict();
+const reviewedLine=(l:z.infer<typeof lineFields>)=>l.received.amount.numerator>0 && l.received.unit===l.usable.unit
+  && cmp(amount(l.usable),amount(l.received))<=0 && (l.printed?(l.printed.page-1)*200+l.printed.line-1===l.ordinal:l.ordinal<200);
+const paidMinor=z.number().int().min(0).max(2_147_483_647).nullable();
+const legacyLine=lineFields.extend({paidUSDMinor:paidMinor.nullish().default(null)}).refine(reviewedLine);
+const currencyLine=lineFields.extend({paidMinor:paidMinor.nullish().default(null)}).refine(reviewedLine);
 // Same length-prefixed identity as CoreDomain. The server verifies the transaction
 // key before accepting a segmented source, even if only its first page was selected.
 function printedTransactionId(merchant:string,reference:string):string {
@@ -34,10 +39,14 @@ function printedTransactionId(merchant:string,reference:string):string {
   const hex=bytes.toString('hex');
   return [hex.slice(0,8),hex.slice(8,12),hex.slice(12,16),hex.slice(16,20),hex.slice(20)].join('-');
 }
-export const householdReceiptBody=z.object({
+const receiptFields=z.object({
   receiptId:id,imageId:id.nullish().default(null),layoutId:id.optional(),merchant:text(256),purchaseDay:z.iso.date(),zone:text(100),
-  reference:text(256).nullish().default(null),segmentedPhotos:z.literal(true).optional(),lines:z.array(lineSchema).min(1).max(50)
-}).strict().refine(b=>new Set(b.lines.map(l=>l.ordinal)).size===b.lines.length &&
+  reference:text(256).nullish().default(null),segmentedPhotos:z.literal(true).optional()
+}).strict();
+export const householdReceiptBody=z.union([
+  receiptFields.extend({lines:z.array(legacyLine).min(1).max(50)}),
+  receiptFields.extend({currency:groceryCurrencySchema,lines:z.array(currencyLine).min(1).max(50)})
+]).refine(b=>new Set(b.lines.map(l=>l.ordinal)).size===b.lines.length &&
   new Set(b.lines.flatMap(l=>l.delivery?[l.delivery.lotId]:[])).size===b.lines.filter(l=>l.delivery).length).refine(b=>{
   if(!b.segmentedPhotos) return !b.lines.some(l=>l.printed?.method==='imageOCR' && l.printed.page>1);
   return !!b.reference && !!b.imageId && !!b.layoutId && b.imageId!==b.receiptId &&
@@ -45,6 +54,25 @@ export const householdReceiptBody=z.object({
 });
 type Body=z.infer<typeof householdReceiptBody>;
 type Row=Body['lines'][number];
+export type ReceiptEvidence={merchant:string,purchaseDay:string,reference:string|null,line:Row,currency?:z.infer<typeof groceryCurrencySchema>};
+
+export function householdReceiptCurrency(body:Body) {
+  return 'currency' in body?body.currency:'USD';
+}
+
+function canonicalReceiptLine(evidence:ReceiptEvidence) {
+  const {line,...header}=evidence;
+  if ('paidMinor' in line) return evidence;
+  const {paidUSDMinor,...fields}=line;
+  return {...header,currency:'USD',line:{...fields,paidMinor:paidUSDMinor??null}};
+}
+
+export function projectHouseholdReceiptEvidence(ctx:Context,evidence:ReceiptEvidence) {
+  if (ctx.supportsMXN || !('paidMinor' in evidence.line)) return evidence;
+  const {paidMinor,...line}=evidence.line;
+  return {merchant:evidence.merchant,purchaseDay:evidence.purchaseDay,reference:evidence.reference,
+    line:{...line,paidUSDMinor:evidence.currency==='USD'?paidMinor:null}};
+}
 const layoutReview=()=>new ServiceError(409,'receipt_layout_review','Check the saved receipt. For a missed item, reopen its original file or add the food separately.');
 const conflict=()=>new ServiceError(409,'receipt_conflict','This receipt or delivery already has different evidence.');
 function dayAt(now:Date,zone:string) {
@@ -55,7 +83,7 @@ function dayAt(now:Date,zone:string) {
 // Caller holds the household write lock, after checking actor, device, window, grant epoch and stock revision.
 export async function acquireHouseholdReceipt(ctx:Context,body:Body,operationId:string,base:number) {
   if(body.purchaseDay>dayAt(ctx.now,body.zone)) throw invalid();
-  const h=ctx.householdId;
+  const h=ctx.householdId,currency=householdReceiptCurrency(body);
   const sources=[...new Set([body.receiptId,...(body.imageId?[body.imageId]:[])])];
   const aliases=await ctx.db.query<{receipt_id:string}>('SELECT DISTINCT receipt_id FROM ritc.receipt_source_key WHERE household_id=$1 AND source_id=ANY($2::uuid[])',[h,sources]);
   if(aliases.rows.length>1) throw conflict();
@@ -66,12 +94,13 @@ export async function acquireHouseholdReceipt(ctx:Context,body:Body,operationId:
     ? digest({householdId:h,receiptId,imageId:body.imageId,layoutId:byteDefined?null:body.layoutId??null})
     : null;
   const isNewReceipt=aliases.rows.length===0;
-  const origin=isNewReceipt?null:(await ctx.db.query<{original_layout_digest:string|null}>(
-    'SELECT original_layout_digest FROM ritc.receipt_source_key WHERE household_id=$1 AND source_id=$2',[h,receiptId])).rows[0];
+  const origin=isNewReceipt?null:(await ctx.db.query<{original_layout_digest:string|null,currency:typeof currency}>(
+    'SELECT original_layout_digest,currency FROM ritc.receipt_source_key WHERE household_id=$1 AND source_id=$2',[h,receiptId])).rows[0];
+  if (origin && origin.currency!==currency) throw conflict();
   const sameLayout=isNewReceipt || (layout!==null && origin?.original_layout_digest===layout);
-  await ctx.db.query(`INSERT INTO ritc.receipt_source_key(household_id,source_id,receipt_id,original_layout_digest)
-    SELECT $1,source,$3,CASE WHEN source=$3::uuid THEN $4::text END FROM unnest($2::uuid[]) source
-    ON CONFLICT DO NOTHING`,[h,sources,receiptId,isNewReceipt?layout:null]);
+  await ctx.db.query(`INSERT INTO ritc.receipt_source_key(household_id,source_id,receipt_id,original_layout_digest,currency)
+    SELECT $1,source,$3,CASE WHEN source=$3::uuid THEN $4::text END,$5 FROM unnest($2::uuid[]) source
+    ON CONFLICT DO NOTHING`,[h,sources,receiptId,isNewReceipt?layout:null,currency]);
   // A later partial selection may be the first to carry a confirmed reference.
   // Any contradicting retained line is sufficient to reject an alternate source key.
   const mismatch=(await ctx.db.query(`SELECT evidence->>'reference' AS reference FROM ritc.household_receipt_line
@@ -83,7 +112,7 @@ export async function acquireHouseholdReceipt(ctx:Context,body:Body,operationId:
   if((await ctx.db.query('SELECT 1 FROM ritc.retired_receipt_line WHERE household_id=$1 AND receipt_id=$2 AND ordinal=ANY($3::int[]) LIMIT 1',[h,receiptId,ordinals])).rowCount) throw refresh();
   // On another layout, even identical evidence at a known position could be a different printed copy.
   if(!sameLayout) throw layoutReview();
-  const prior=await ctx.db.query<{ordinal:number,lot_id:string,evidence:unknown}>('SELECT ordinal,lot_id,evidence FROM ritc.household_receipt_line WHERE household_id=$1 AND receipt_id=$2 AND ordinal=ANY($3::int[])',[h,receiptId,ordinals]);
+  const prior=await ctx.db.query<{ordinal:number,lot_id:string,evidence:ReceiptEvidence}>('SELECT ordinal,lot_id,evidence FROM ritc.household_receipt_line WHERE household_id=$1 AND receipt_id=$2 AND ordinal=ANY($3::int[])',[h,receiptId,ordinals]);
   const existing=new Map(prior.rows.map(r=>[r.ordinal,r]));
   const links=body.lines.flatMap(row=>!existing.has(row.ordinal)&&row.delivery?[row.delivery.lotId]:[]);
   const deliveries=links.length?await storedDeliveryEvidence(ctx,links,null,true):[];
@@ -93,9 +122,10 @@ export async function acquireHouseholdReceipt(ctx:Context,body:Body,operationId:
   const fresh:{lot_id:string,ordinal:number,location:string,food_name:string,usable:Row['usable'],add:boolean,evidence:unknown}[]=[];
   const receiptLines=body.lines.map(row=>{
     const old=existing.get(row.ordinal);
-    const evidence={merchant:body.merchant,purchaseDay:body.purchaseDay,reference:body.reference,line:row};
+    const evidence={merchant:body.merchant,purchaseDay:body.purchaseDay,reference:body.reference,
+      ...('currency' in body?{currency}:{}),line:row};
     if(old) {
-      if(digest(old.evidence)!==digest(evidence)) throw conflict();
+      if(digest(canonicalReceiptLine(old.evidence))!==digest(canonicalReceiptLine(evidence))) throw conflict();
       return {ordinal:row.ordinal,lotId:old.lot_id};
     }
     const link=row.delivery;

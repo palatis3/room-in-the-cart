@@ -1,4 +1,5 @@
-/** Service v1 wire contracts. All IDs are opaque UUIDs. Money is integer USD cents. */
+/** Service v1 wire contracts. All IDs are opaque UUIDs. Money uses integer minor units. */
+export type GroceryCurrency = 'USD' | 'MXN';
 export type RequestStatus = 'pending' | 'clarified' | 'added' | 'deferred' | 'handled' | 'dismissed' | 'withdrawn';
 export interface OwnRequest {
   requestId: string; shopId: string; revision: number; originalItem: string; ownQuantity: string | null;
@@ -44,12 +45,12 @@ export type FeeRule = { kind: 'fixed'; amountMinor: number | null } |
   { kind: 'threshold'; thresholdMinor: number; belowMinor: number | null; aboveMinor: number | null };
 export interface BasketLine { lineId: string; originalItem: string; packs: number; unitPriceMinor: number | null; feeEligible: boolean }
 export interface QuoteBasis {
-  currency: 'USD'; scope: 'wholeCheckout' | 'item' | 'dinner'; complete: boolean; capMinor: number | null; capScope: 'wholeCheckout' | 'item' | 'dinner' | 'unknown';
+  currency: GroceryCurrency; scope: 'wholeCheckout' | 'item' | 'dinner'; complete: boolean; capMinor: number | null; capScope: 'wholeCheckout' | 'item' | 'dinner' | 'unknown';
   fee: FeeRule; taxesMinor: number | null; depositsMinor: number | null; discountsMinor: number | null;
   observedAt: string; expiresAt: string;
 }
 export interface BudgetResult {
-  currency: 'USD'; totalMinor: number | null; overCapMinor: number | null; headroomMinor: number | null;
+  currency: GroceryCurrency; totalMinor: number | null; overCapMinor: number | null; headroomMinor: number | null;
   status: 'withinCap' | 'overCap' | 'unresolved' | 'scopeMismatch'; scope: QuoteBasis['scope']; missing: string[];
   lowerBoundMinor: number; upperBoundMinor: number | null; wholeCheckoutWithinCap: boolean;
 }

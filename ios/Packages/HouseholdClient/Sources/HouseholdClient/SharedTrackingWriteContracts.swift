@@ -19,10 +19,9 @@ public struct SharedTrackingAction: Codable, Equatable, Sendable {
         case .patch(let body):
             _ = try ShopperShopCandidate(quote: body.quote, lines: body.lines, reviewedStoreBasisRevision: body.reviewedStoreBasisRevision)
             guard let observed = demandTime(body.quote.observedAt), let expires = demandTime(body.quote.expiresAt) else { throw ClientError.invalidResponse }
-            try demandRequire(body.quote.currency == "USD")
             _ = try ShopperQuote(scope: body.quote.scope, complete: body.quote.complete, capMinor: body.quote.capMinor, capScope: body.quote.capScope,
                 fee: body.quote.fee, taxesMinor: body.quote.taxesMinor, depositsMinor: body.quote.depositsMinor, discountsMinor: body.quote.discountsMinor,
-                observedAt: observed, expiresAt: expires)
+                observedAt: observed, expiresAt: expires, currency: body.quote.currency)
             if let edit = body.mealEdit {
                 try demandIDs([edit.occurrenceId, edit.proposalId, edit.changeProposalId])
                 try demandRequire(edit.baseMealRevision.map { demandRevision($0) } ?? true)

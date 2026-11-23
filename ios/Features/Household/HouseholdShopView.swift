@@ -1,6 +1,7 @@
 import SwiftUI
 import UIKit
 import HouseholdClient
+import CoreDomain
 
 struct HouseholdShopView: View {
     @ObservedObject var model: HouseholdModel
@@ -204,6 +205,12 @@ private struct SharedShopEditor: View {
     @ObservedObject var model: HouseholdShopModel
     var body: some View {
         Section(ht("Entered shared items")) {
+            if model.draft.canChooseCurrency {
+                GroceryCurrencyPicker(selection: Binding(get: { model.draft.currency }, set: { model.draft.changeCurrency($0) }))
+                Text(ht("Changing currency clears the entered prices and amounts."))
+            } else {
+                LabeledContent(tr("Currency"), value: model.draft.currency.rawValue)
+            }
             Text(ht("Enter each actual pack separately from its price. A blank price remains unknown."))
             ForEach(model.draft.lines) { snapshot in
                 let line = dinnerDraftBinding(snapshot, in: $model.draft.lines)
@@ -212,7 +219,7 @@ private struct SharedShopEditor: View {
                     TextField(ht("Pack or item name"), text: line.item)
                         .accessibilityIdentifier("sharedShop.line." + id.uuidString.lowercased() + ".item")
                     Stepper(value: line.packs, in: 1...10_000) { LabeledContent(ht("Whole packs"), value: line.wrappedValue.packs.formatted()) }
-                    TextField(ht("Price per pack in USD, blank if unknown"), text: line.price).keyboardType(.decimalPad).accessibilityIdentifier("sharedShop.line." + id.uuidString.lowercased() + ".price")
+                    TextField(householdCurrencyLabel("Price per pack in %@, blank if unknown", currency: model.draft.currency.rawValue), text: line.price).keyboardType(.decimalPad).accessibilityIdentifier("sharedShop.line." + id.uuidString.lowercased() + ".price")
                     Toggle(ht("Counts toward the retailer fee threshold"), isOn: line.feeEligible)
                     Button(ht("Remove this shared line"), role: .destructive) { model.draft.lines.removeAll { $0.id == id } }
                 }
@@ -223,19 +230,19 @@ private struct SharedShopEditor: View {
         Section(ht("Entered quote and cap")) {
             Picker(ht("Quote scope"), selection: $model.draft.scope) { scopeOptions }
             Picker(ht("Cap scope"), selection: $model.draft.capScope) { scopeOptions; Text(ht("Unknown")).tag("unknown") }
-            costField("Cap in USD, blank if unknown", $model.draft.cap)
+            costField("Cap in %@, blank if unknown", $model.draft.cap)
             Picker(ht("Retailer fee rule"), selection: $model.draft.feeKind) {
                 Text(ht("Fixed fee")).tag("fixed"); Text(ht("Fee depends on eligible subtotal")).tag("threshold")
             }
-            if model.draft.feeKind == "fixed" { costField("Retailer fee in USD, blank if unknown", $model.draft.fee) }
+            if model.draft.feeKind == "fixed" { costField("Retailer fee in %@, blank if unknown", $model.draft.fee) }
             else {
-                costField("Fee threshold in USD", $model.draft.threshold)
-                costField("Fee below threshold in USD, blank if unknown", $model.draft.belowFee)
-                costField("Fee at or above threshold in USD, blank if unknown", $model.draft.aboveFee)
+                costField("Fee threshold in %@", $model.draft.threshold)
+                costField("Fee below threshold in %@, blank if unknown", $model.draft.belowFee)
+                costField("Fee at or above threshold in %@, blank if unknown", $model.draft.aboveFee)
             }
-            costField("Tax in USD, blank if unknown", $model.draft.tax)
-            costField("Deposits in USD, blank if unknown", $model.draft.deposits)
-            costField("Discounts in USD, blank if unknown", $model.draft.discounts)
+            costField("Tax in %@, blank if unknown", $model.draft.tax)
+            costField("Deposits in %@, blank if unknown", $model.draft.deposits)
+            costField("Discounts in %@, blank if unknown", $model.draft.discounts)
             DatePicker(ht("Quote recorded"), selection: $model.draft.observedAt)
             DatePicker(ht("Quote expires"), selection: $model.draft.expiresAt).accessibilityIdentifier("sharedShop.quote.expires")
             Text(ht("Only enter zero when confirmed. Unknown or incomplete costs remain unresolved in request previews."))
@@ -252,7 +259,10 @@ private struct SharedShopEditor: View {
     @ViewBuilder private var scopeOptions: some View {
         Text(ht("Whole checkout")).tag("wholeCheckout"); Text(ht("Item only")).tag("item"); Text(ht("Dinner only")).tag("dinner")
     }
-    private func costField(_ key: String, _ binding: Binding<String>) -> some View { TextField(ht(key), text: binding).keyboardType(.decimalPad).accessibilityIdentifier("sharedShop.cost." + key) }
+    private func costField(_ key: String, _ binding: Binding<String>) -> some View {
+        TextField(householdCurrencyLabel(key, currency: model.draft.currency.rawValue), text: binding)
+            .keyboardType(.decimalPad).accessibilityIdentifier("sharedShop.cost." + key.replacingOccurrences(of: "%@", with: "USD"))
+    }
 }
 struct SharedShopFields: View {
     let quote: ShopperQuote; let lines: [ShopperBasketLine]
@@ -265,6 +275,7 @@ struct SharedShopFields: View {
                 Text(line.feeEligible ? ht("Counts toward the retailer fee threshold") : ht("Does not count toward the retailer fee threshold"))
             }
         }
+        LabeledContent(tr("Currency"), value: quote.currency)
         LabeledContent(ht("Quote scope"), value: householdScope(quote.scope))
         Text(quote.complete ? ht("All remaining items included") : ht("Remaining items are not confirmed complete"))
         LabeledContent(ht("Cap"), value: householdMoney(quote.capMinor, currency: quote.currency))

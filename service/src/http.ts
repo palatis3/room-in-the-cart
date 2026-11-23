@@ -170,6 +170,7 @@ export function createHTTPServer(options:HTTPOptions) {
         if(browserCookie&&options.browserAuth){try{browserIdentity=await withinCall(()=>options.browserAuth!.authenticate(browserCookie,invitationPreview?'preview':'current'));auth={identity:browserIdentity.identity};}catch(error){if(!(error instanceof ServiceError)||error.code!=='session_needed')throw error; if(url.pathname!=='/v1/session'||method!=='GET')throw error;}}
         const value=cookie(req);if(value){session=await withinCall(()=>repository.webIdentity(value,browserIdentity?.identity,invitationPreview));auth=session.auth;}
       }
+      if (auth && req.headers['x-grocery-currencies'] === 'USD,MXN') auth.supportsMXN = true;
       if(auth && req.headers['x-shared-content-safety']==='1') auth={...auth,sharedContentSafety:true};
       if(method==='GET'&&url.pathname==='/v1/session'&&!session){send(200,{authenticated:false});return;}
       if(url.pathname==='/v1/child-invitations/session'&&method==='GET'){send(200,await guardian.childSession(browserIdentity?.identity,browserIdentity&&options.browserAuth?await options.browserAuth.childBinding(browserIdentity.cookie):undefined));return;}
@@ -451,7 +452,7 @@ export function createHTTPServer(options:HTTPOptions) {
         if(path==='/price-observations'&&method==='GET'){const cursor=url.searchParams.get('cursor');if(cursor)uuid.parse(cursor);return history.observations(ctx,cursor);}
         const observation=/^\/price-observations\/([^/]+)$/.exec(path);
         if(observation&&method==='GET')return history.observation(ctx,uuid.parse(observation[1]));
-        if(path==='/budget-history'&&method==='POST')return history.budgets(ctx,budgetQuerySchema.parse(payload).shopIds);
+        if(path==='/budget-history'&&method==='POST'){const {shopIds,currency}=budgetQuerySchema.parse(payload);return history.budgets(ctx,shopIds,currency);}
         if(path==='/budget-periods'&&method==='GET'){const cursor=url.searchParams.get('cursor');if(cursor)uuid.parse(cursor);return history.periods(ctx,cursor);}
         if(path==='/budget-periods'&&method==='POST')return history.writePeriod(ctx,periodWriteSchema.parse(payload));
         const period=/^\/budget-periods\/([^/]+)(\/record)?$/.exec(path);

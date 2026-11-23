@@ -78,8 +78,11 @@ def check(config, name, fetch=fetch_json, *, existing_accounts_only=False):
     service = config["serviceURL"].rstrip("/")
     settings = fetch(auth + "/settings", {"apikey": config["publishableKey"]})
     providers = settings.get("external")
+    signup_disabled = settings.get("disable_signup")
     if (not isinstance(providers, dict) or providers.get("email") is not True
-            or settings.get("disable_signup") is not existing_accounts_only or settings.get("mailer_autoconfirm") is not False):
+            or not isinstance(signup_disabled, bool)
+            or (enabled and signup_disabled is not existing_accounts_only)
+            or settings.get("mailer_autoconfirm") is not False):
         raise ValueError("Supabase email account creation and verification settings do not match the app")
     if existing_accounts_only and (
         providers.get("anonymous_users") is not False or providers.get("phone") is not False

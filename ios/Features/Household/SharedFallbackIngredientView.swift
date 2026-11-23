@@ -7,16 +7,18 @@ struct SharedFallbackIngredientView: View {
     @State private var draft: CandidateReviewDraft
     let page: SharedRecoveryPage
     let includeOffers: Bool
+    let currency: Currency
     let edited: () -> Void
     @FocusState private var input: Field?
     private enum Field: Hashable {
         case minutes, label(UUID), yield(UUID), price(UUID), stock(UUID), exclusions(UUID)
     }
 
-    init(editor: CandidateReviewEditor, page: SharedRecoveryPage, includeOffers: Bool, edited: @escaping () -> Void) {
+    init(editor: CandidateReviewEditor, page: SharedRecoveryPage, includeOffers: Bool, currency: Currency, edited: @escaping () -> Void) {
         self.editor = editor
         self.page = page
         self.includeOffers = includeOffers
+        self.currency = currency
         self.edited = edited
         _draft = State(initialValue: editor.draft)
     }
@@ -95,7 +97,7 @@ struct SharedFallbackIngredientView: View {
                 Picker(sharedRecoveryText("Unit"), selection: binding.pack.unit) {
                     ForEach(UnitOfMeasure.allCases, id: \.self) { unit in Text(dinnerUnit(unit)).tag(unit) }
                 }
-                TextField(fallbackText("Price per pack (USD)"), text: binding.pack.price).keyboardType(.decimalPad).focused($input, equals: .price(row.id))
+                TextField(fallbackCurrencyLabel("Price per pack (%@)", currency: currency.rawValue), text: binding.pack.price).keyboardType(.decimalPad).focused($input, equals: .price(row.id))
                 TextField(fallbackText("Packs available"), text: binding.pack.availability).keyboardType(.numberPad).focused($input, equals: .stock(row.id))
                 TextField(fallbackText("Pack exclusions, one per line"), text: binding.pack.exclusions, axis: .vertical)
                     .focused($input, equals: .exclusions(row.id))

@@ -36,7 +36,7 @@ public struct HouseholdPantryPage: Decodable, Equatable, Sendable {
             if let receiptEvidence {
                 guard householdReceiptText(receiptEvidence.merchant, 256), householdReceiptDay(receiptEvidence.purchaseDay),
                       receiptEvidence.reference.map({ householdReceiptText($0, 256) }) != false else { throw ClientError.invalidResponse }
-                try receiptEvidence.line.validate()
+                try receiptEvidence.validate()
             }
             guard sharedMealText(foodName, 240), exclusionTags.count <= 20,
                   exclusionTags.allSatisfy({ sharedMealText($0, 240) }),

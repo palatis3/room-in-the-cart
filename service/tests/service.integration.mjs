@@ -1779,3 +1779,71 @@ test('segmented household receipts require the same printed transaction across e
     imageId:randomUUID(),layoutId:randomUUID()};
   assert.equal((await send(command(2,separate,[row(1)]))).data.savedCount,1);
 });
+
+test('shared receipt retries preserve paid currency and keep old pantry readers safe',async()=>{
+ const f=await fixture({createShop:false}),supportsMXN={'X-Grocery-Currencies':'USD,MXN'};
+ const read=async(headers={})=>{
+  const response=await f.http('Mia','GET','/pantry',undefined,headers);
+  assert.equal(response.status,200,JSON.stringify(response.data));
+  return response.data;
+ };
+ const rq=(lit)=>({amount:{numerator:1,denominator:1},unit:'count',originalLiteral:lit});
+ const pantryRevision=(await read()).pantryRevision;
+ const header={receiptId:randomUUID(),imageId:randomUUID(),layoutId:randomUUID(),merchant:'Mercado',zone:'UTC',purchaseDay:'2026-01-10'};
+ const line={ordinal:0,original:'Frijoles',foodName:'Frijoles',location:'pantry',received:rq('1 lata'),usable:rq('1 lata')};
+ const command=(body,revision=pantryRevision)=>({
+  v:1,kind:'pantry.acquireReceipt',replayWindow:f.actors.Mia.window,
+  clientKey:randomUUID(),grantEpoch:0,pantryRevision:revision,body
+ });
+ const write=(input,headers=supportsMXN)=>f.http('Mia','POST','/pantry/commands',input,headers);
+ const mxn={...header,currency:'MXN',lines:[{...line,paidMinor:12_900}]};
+ const input=command(mxn);
+ assert.equal((await write(input,{})).data.error.code,'currency_unsupported');
+ assert.equal((await write(command({...mxn,lines:[{...line,paidUSDMinor:12_900}]}))).status,422);
+ const first=await write(input);
+ assert.equal(first.status,200,JSON.stringify(first.data));
+ assert.deepEqual((await write(input)).data,first.data);
+ assert.equal((await write(input,{})).data.error.code,'currency_unsupported');
+
+ const receipt=(await read(supportsMXN)).lots[0].receiptEvidence;
+ assert.equal(receipt.currency,'MXN');
+ assert.equal(receipt.line.paidMinor,12_900);
+ assert.equal('paidUSDMinor' in receipt.line,false);
+ const historical=(await read()).lots[0].receiptEvidence;
+ assert.equal(historical.line.paidUSDMinor,null);
+ assert.equal('paidMinor' in historical.line,false);
+ assert.equal(historical.line.usable.originalLiteral,'1 lata');
+
+ let revision=first.data.pantryRevision;
+ const mistaken={...mxn,currency:'USD',lines:[{...line,ordinal:1,paidMinor:12_900}]};
+ assert.equal((await write(command(mistaken,revision))).data.error.code,'receipt_conflict');
+ assert.equal((await read()).pantryRevision,revision);
+
+ const legacy={...header,receiptId:randomUUID(),imageId:randomUUID(),layoutId:randomUUID(),merchant:'US Market',
+  lines:[{...line,foodName:'Beans',paidUSDMinor:129}]};
+ const old=await write(command(legacy,revision),{});
+ assert.equal(old.status,200,JSON.stringify(old.data));
+ revision=old.data.pantryRevision;
+ const normalized={...legacy,currency:'USD',lines:[{...line,foodName:'Beans',paidMinor:129}]};
+ const replay=await write(command(normalized,revision));
+ assert.equal(replay.status,200,JSON.stringify(replay.data));
+ assert.equal(replay.data.savedCount,0);
+ assert.deepEqual(replay.data.receiptLines,old.data.receiptLines);
+ assert.equal((await read()).lots.find(l=>l.foodName==='Beans').receiptEvidence.line.paidUSDMinor,129);
+
+ for(const currency of ['USD','MXN']) {
+  const body={...header,receiptId:randomUUID(),imageId:randomUUID(),layoutId:randomUUID(),currency,lines:[line]};
+  const omittedPrice=command(body,revision),saved=await write(omittedPrice);
+  assert.equal(saved.status,200,JSON.stringify(saved.data));
+  assert.equal(saved.data.savedCount,1);
+  const nullPrice={...omittedPrice,body:{...body,lines:[{...line,paidMinor:null}]}};
+  const retry=await write(nullPrice);
+  assert.equal(retry.status,200,JSON.stringify(retry.data));
+  assert.deepEqual(retry.data,saved.data);
+  const lotId=saved.data.receiptLines[0].lotId;
+  const unpriced=(await read(supportsMXN)).lots.find(l=>l.lotId===lotId).receiptEvidence;
+  assert.equal(unpriced.currency,currency);
+  assert.equal(unpriced.line.paidMinor,null);
+  revision=saved.data.pantryRevision;
+ }
+});

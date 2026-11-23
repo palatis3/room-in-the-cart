@@ -58,8 +58,10 @@ final class S24FixtureServer: @unchecked Sendable {
     let includeExistingLine: Bool
     let cerealScenario: Bool
     let includeMealFacts: Bool
-    init(includeExistingLine: Bool = false, cerealScenario: Bool = false, includeMealFacts: Bool = true) {
+    let currency: String
+    init(includeExistingLine: Bool = false, cerealScenario: Bool = false, includeMealFacts: Bool = true, currency: String = "USD") {
         self.includeExistingLine = includeExistingLine; self.cerealScenario = cerealScenario; self.includeMealFacts = includeMealFacts
+        self.currency = currency
     }
     static let protectedLunches: [[String: Any]] = [
         ["occurrenceId":"88888888-8888-4888-8888-888888888888", "revision":1,
@@ -100,7 +102,7 @@ final class S24FixtureServer: @unchecked Sendable {
         if path.hasSuffix("/inbox") { return try json(["requests":[requestRow],"nextCursor":NSNull()]) }
         if path.hasSuffix("/shops/" + Self.shop) {
             if accessRevoked { return (403, Data()) }
-            let quote = try ShopperQuote(scope: "wholeCheckout", complete: true, capMinor: cerealScenario ? 3800 : 500, capScope: "wholeCheckout", fee: .fixed(0), taxesMinor: 0, depositsMinor: 0, discountsMinor: 0, observedAt: Date().addingTimeInterval(-60), expiresAt: Date().addingTimeInterval(3600))
+            let quote = try ShopperQuote(scope: "wholeCheckout", complete: true, capMinor: cerealScenario ? 3800 : 500, capScope: "wholeCheckout", fee: .fixed(0), taxesMinor: 0, depositsMinor: 0, discountsMinor: 0, observedAt: Date().addingTimeInterval(-60), expiresAt: Date().addingTimeInterval(3600), currency: currency)
             let data = try JSONSerialization.jsonObject(with: JSONEncoder().encode(quote))
             var shop: [String: Any] = ["shopId":Self.shop,"shopRevision":revision + (recordedLines.isEmpty ? 0 : 1),"authorityEpoch":1,"phase":"draft","quote":data,"lines":recordedLines + (cerealScenario ? [["lineId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","originalItem":"Original pickup items","packs":1,"unitPriceMinor":3720,"feeEligible":true]] : []) + (includeExistingLine ? [["lineId":"77777777-7777-4777-8777-777777777777","originalItem":"Existing wraps","packs":1,"unitPriceMinor":0,"feeEligible":true]] : [])]
             if includeMealFacts { shop["meals"] = Self.protectedLunches }
@@ -111,7 +113,9 @@ final class S24FixtureServer: @unchecked Sendable {
             let basket = recordedLines + (cerealScenario ? [["lineId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","originalItem":"Original pickup items","packs":1,"unitPriceMinor":3720,"feeEligible":true]] : []) + (includeExistingLine ? [["lineId":"77777777-7777-4777-8777-777777777777","originalItem":"Existing wraps","packs":1,"unitPriceMinor":0,"feeEligible":true]] : [])
             let total = basket.contains { $0["unitPriceMinor"] is NSNull } ? nil : basket.reduce(0) { $0 + ($1["unitPriceMinor"] as? Int ?? 0) * ($1["packs"] as? Int ?? 1) }
             let catalog: [[String: Any]] = recordedLines.map { line in ["id": Self.requestID, "revision": 1, "source": ["kind": "request", "requestId": Self.requestID, "appliedRequestRevision": 1], "sourceLabel": "Request", "originalText": requestRow["originalItem"]!, "originalQuantityText": requestRow["ownQuantity"]!, "quantity": NSNull(), "sourceExclusions": [], "requiredLineId": line["lineId"]!] }
-            return try json(ModelTrackingReadFixture.page(household: Self.household, shop: Self.shop, revision: revision + (recordedLines.isEmpty ? 0 : 1), basket: basket, checkout: ModelTrackingReadFixture.budget(total, cap: cerealScenario ? 3800 : 500), catalog: catalog))
+            var checkout = ModelTrackingReadFixture.budget(total, cap: cerealScenario ? 3800 : 500)
+            checkout["currency"] = currency
+            return try json(ModelTrackingReadFixture.page(household: Self.household, shop: Self.shop, revision: revision + (recordedLines.isEmpty ? 0 : 1), basket: basket, checkout: checkout, catalog: catalog))
         }
         if request.httpMethod == "GET", path.hasSuffix("/shops/" + Self.shop + "/demand") {
             if accessRevoked { return (403, Data()) }
@@ -127,7 +131,7 @@ final class S24FixtureServer: @unchecked Sendable {
             let cap = cerealScenario ? 3800 : 500
             let change: Int? = decision["choice"] as? String == "add" ? unit.map { $0 * (line?["packs"] as? Int ?? 1) } : 0
             let total = change.map { before + $0 }
-            func budget(_ amount: Int?) -> [String: Any] { ["currency":"USD","totalMinor":amount as Any? ?? NSNull(),"overCapMinor":amount.map { max(0,$0-cap) } as Any? ?? NSNull(),"headroomMinor":amount.map { max(0,cap-$0) } as Any? ?? NSNull(),"status":amount.map { $0 > cap ? "overCap" : "withinCap" } ?? "unresolved","scope":"wholeCheckout","missing":amount == nil ? ["line_price"] : [],"lowerBoundMinor":amount ?? before,"upperBoundMinor":amount as Any? ?? NSNull(),"wholeCheckoutWithinCap":amount.map { $0 <= cap } ?? false] }
+            func budget(_ amount: Int?) -> [String: Any] { ["currency":currency,"totalMinor":amount as Any? ?? NSNull(),"overCapMinor":amount.map { max(0,$0-cap) } as Any? ?? NSNull(),"headroomMinor":amount.map { max(0,cap-$0) } as Any? ?? NSNull(),"status":amount.map { $0 > cap ? "overCap" : "withinCap" } ?? "unresolved","scope":"wholeCheckout","missing":amount == nil ? ["line_price"] : [],"lowerBoundMinor":amount ?? before,"upperBoundMinor":amount as Any? ?? NSNull(),"wholeCheckoutWithinCap":amount.map { $0 <= cap } ?? false] }
             return try json(["previewId":"55555555-5555-4555-8555-555555555555","expiresAt":"2099-01-01T00:00:00Z","shopRevision":revision,"authorityEpoch":1,"requestRevision":1,"choice":decision["choice"]!,"before":budget(before),"after":budget(total),"changeMinor":change as Any? ?? NSNull(),"requiresOverageAcceptance":total.map { $0 > cap } ?? false,"requiresUnknownAcceptance":total == nil])
         }
         if path.hasSuffix("/replay-windows") { return try json(["id":"66666666-6666-4666-8666-666666666666","expiresAt":"2099-01-01T00:00:00Z"]) }

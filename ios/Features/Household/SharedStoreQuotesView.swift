@@ -50,10 +50,11 @@ private struct SharedStoreQuotesContent: View {
     var body: some View {
         ScrollViewReader { proxy in
         WorkingForm {
-            if let page = model.page {
+            if let page = model.page, let currency = Currency(rawValue: page.currency) {
                 Section {
                     Text(StoreQuoteCopy.text("Manual observations only. Enter two complete single-store plans for the same shared basket. No retailer, route, order, or location is contacted.")).accessibilityIdentifier("sharedQuotes.scope")
                     LabeledContent(ht("Revision"), value: page.shopRevision.formatted())
+                    LabeledContent(tr("Currency"), value: page.currency)
                     Text(page.shopper ? StoreQuoteCopy.text("You are the assigned shopper. Only you can adopt a reviewed store choice.") : StoreQuoteCopy.text("Your saved comparisons stay private until you explicitly propose one to the assigned shopper."))
                     if page.phase != "draft" { Text(StoreQuoteCopy.text("This shop is frozen or placed. Saved proof is read-only; it cannot change the order.")) }
                     if let basis = page.currentBasis {
@@ -70,7 +71,7 @@ private struct SharedStoreQuotesContent: View {
                     if page.commitments.isEmpty { Text(StoreQuoteCopy.text("The assigned shopper must review a shared basket before comparing stores.")) }
                 }
                 if model.review == nil && !model.hasPending {
-                    if entering && page.phase == "draft" { editor(page) }
+                    if entering && page.phase == "draft" { editor(page, currency: currency) }
                     else if page.phase == "draft" {
                         Button(StoreQuoteCopy.text("Enter two store quotes")) { entering = true; entryNotice = nil }
                             .disabled(page.commitments.isEmpty).accessibilityIdentifier("sharedQuotes.enter")
@@ -203,17 +204,17 @@ private struct SharedStoreQuotesContent: View {
         .keyboardDoneAction(visible: inputFocus != nil, title: ledgerText("Done")) { inputFocus = nil }
         }
     }
-    @ViewBuilder private func editor(_ page: StoreQuotePage) -> some View {
+    @ViewBuilder private func editor(_ page: StoreQuotePage, currency: Currency) -> some View {
         DinnerStoreFields(title: dinnerText("First store"), prefix: "sharedQuotes.first.", draft: $first.store, focus: $inputFocus,
-            commitmentRows: page.commitments.map { ($0.id, $0.label) }, showsEligibilityReview: false)
-        termsAndCap(first: true)
+            currency: currency, commitmentRows: page.commitments.map { ($0.id, $0.label) }, showsEligibilityReview: false)
+        termsAndCap(first: true, currency: currency)
         DinnerStoreFields(title: dinnerText("Second store"), prefix: "sharedQuotes.second.", draft: $second.store, focus: $inputFocus,
-            commitmentRows: page.commitments.map { ($0.id, $0.label) }, showsEligibilityReview: false)
-        termsAndCap(first: false)
+            currency: currency, commitmentRows: page.commitments.map { ($0.id, $0.label) }, showsEligibilityReview: false)
+        termsAndCap(first: false, currency: currency)
         Section {
             Button(StoreQuoteCopy.text("Review private comparison save")) {
                 do {
-                    let options = try EnteredStoreQuoteOptions(first: entered(first, commitments: page.commitments), second: entered(second, commitments: page.commitments))
+                    let options = try EnteredStoreQuoteOptions(first: entered(first, commitments: page.commitments, currency: currency), second: entered(second, commitments: page.commitments, currency: currency))
                     _ = try SharedStoreQuoteMath.compare(options, commitments: page.commitments, shopID: page.shopId)
                     acknowledgedReviewID = nil; entryNotice = nil
                     Task { await model.prepareSave(options) }
@@ -224,11 +225,11 @@ private struct SharedStoreQuotesContent: View {
             Button(dinnerText("Cancel")) { entering = false }
         }
     }
-    private func termsAndCap(first isFirst: Bool) -> some View {
+    private func termsAndCap(first isFirst: Bool, currency: Currency) -> some View {
         Section(isFirst ? StoreQuoteCopy.text("First store conditions and cap") : StoreQuoteCopy.text("Second store conditions and cap")) {
             Toggle(StoreQuoteCopy.text("Eligibility and price conditions reviewed"), isOn: isFirst ? $first.eligibilityReviewed : $second.eligibilityReviewed)
                 .accessibilityIdentifier(isFirst ? "sharedQuotes.first.eligibility" : "sharedQuotes.second.eligibility")
-            EnteredQuoteValueField(title: StoreQuoteCopy.text("Applicable cap in USD, optional"), value: isFirst ? $first.cap : $second.cap,
+            EnteredQuoteValueField(title: String(format: StoreQuoteCopy.text("Applicable cap in %@, optional"), currency.rawValue), value: isFirst ? $first.cap : $second.cap,
                 identifier: isFirst ? "sharedQuotes.first.cap" : "sharedQuotes.second.cap", focus: $inputFocus)
             Picker(StoreQuoteCopy.text("Cap scope"), selection: isFirst ? $first.capScope : $second.capScope) {
                 Text(dinnerText("Whole pickup")).tag("wholeCheckout")
@@ -236,10 +237,10 @@ private struct SharedStoreQuotesContent: View {
             }
         }
     }
-    private func entered(_ entry: SharedStoreQuoteDraft, commitments: [StoreQuotePage.Commitment]) throws -> EnteredStoreQuote {
+    private func entered(_ entry: SharedStoreQuoteDraft, commitments: [StoreQuotePage.Commitment], currency: Currency) throws -> EnteredStoreQuote {
         let draft = entry.store
-        func cents(_ text: String) throws -> Int? { try DinnerEntry.money(text).map { Int($0.minorUnits) } }
-        let minimum = try draft.orderMinimum()
+        func cents(_ text: String) throws -> Int? { try DinnerEntry.money(text, currency: currency).map { Int($0.minorUnits) } }
+        let minimum = try draft.orderMinimum(currency: currency)
         let wireMinimum = EnteredOrderMinimum(kind: .init(rawValue: minimum.kind.rawValue) ?? .unknown,
             minimumMinor: minimum.minimum.map { Int($0.minorUnits) }, eligibleSubtotalMinor: minimum.eligibleSubtotal.map { Int($0.minorUnits) })
         let supplies = try draft.reviewedSupply(commitments.map(\.id))?.map {
@@ -248,7 +249,7 @@ private struct SharedStoreQuotesContent: View {
         }
         let value = EnteredStoreQuote(label: draft.reviewedLabel, store: draft.storeID, branch: draft.branch, mode: draft.mode.rawValue,
             slot: ISO8601DateFormatter().string(from: draft.slot), observedAt: ISO8601DateFormatter().string(from: draft.observedAt), source: draft.source,
-            terms: draft.eligibilityTerms, itemsMinor: try cents(draft.itemSubtotal), checkoutMinor: try cents(draft.total), allChargesIncluded: draft.allChargesIncluded,
+            currency: currency.rawValue, terms: draft.eligibilityTerms, itemsMinor: try cents(draft.itemSubtotal), checkoutMinor: try cents(draft.total), allChargesIncluded: draft.allChargesIncluded,
             available: draft.availability == 0 ? nil : draft.availability == 1, quantitiesMatched: draft.quantitiesMatched, singleStore: draft.singleStore,
             tripAlreadyPlanned: draft.alreadyPlanned, tripMinor: try cents(draft.tripCash), extraMinutes: try DinnerEntry.minutes(draft.extraMinutes),
             capMinor: try cents(entry.cap), capScope: entry.capScope, eligibilityConfirmed: entry.eligibilityReviewed,
@@ -311,14 +312,15 @@ private struct SharedStoreQuoteFacts: View {
             if let date = serviceDate(value.observedAt) { LabeledContent(dinnerText("Observed at"), value: date.formatted(date: .complete, time: .shortened)) }
             if !value.terms.isEmpty { Text(dinnerFormat("Price conditions: %@", value.terms)) }
             Text(value.eligibilityConfirmed ? StoreQuoteCopy.text("Eligibility reviewed") : StoreQuoteCopy.text("Eligibility unresolved"))
-            Text(dinnerFormat("Items before fees and discounts: %@", dinnerMoney(value.itemsMinor.map { Money(minorUnits: Int64($0)) })))
+            Text(dinnerFormat("Items before fees and discounts: %@", householdMoney(value.itemsMinor, currency: value.currency)))
             Text(dinnerFormat("Checkout: %@", dinnerMoney(result.checkout.total.exact)))
-            Text(dinnerFormat("Incremental trip cash: %@", dinnerMoney(value.tripMinor.map { Money(minorUnits: Int64($0)) })))
+            Text(dinnerFormat("Incremental trip cash: %@", householdMoney(value.tripMinor, currency: value.currency)))
             Text(dinnerFormat("Checkout plus incremental trip cash: %@", dinnerMoney(result.tripInclusive.total.exact)))
             Text(value.tripAlreadyPlanned ? dinnerText("Trip already planned") : dinnerText("Additional trip"))
             if let minutes = value.extraMinutes { Text(dinnerFormat("Extra minutes: %d", minutes)) }
             Text(value.available == true ? dinnerText("Required availability reviewed") : dinnerText("Required availability unresolved"))
-            QuoteOrderEvidenceSummary(status: result.minimumStatus, minimum: value.orderMinimum?.reviewedMinimum,
+            let minimum = Currency(rawValue: value.currency).flatMap { value.orderMinimum?.reviewedMinimum(currency: $0) }
+            QuoteOrderEvidenceSummary(status: result.minimumStatus, minimum: minimum,
                 rows: value.supplies?.compactMap { try? $0.reviewedSupply() } ?? [],
                 names: Dictionary(uniqueKeysWithValues: commitments.map { ($0.id, $0.label) }))
             cap(value)
@@ -326,7 +328,7 @@ private struct SharedStoreQuoteFacts: View {
     }
     @ViewBuilder private func cap(_ value: EnteredStoreQuote) -> some View {
         if let cap = value.capMinor {
-            Text(String(format: StoreQuoteCopy.text("Applicable cap: %@ · %@"), dinnerMoney(Money(minorUnits: Int64(cap))), StoreQuoteCopy.text(value.capScope == "itemsOnly" ? "Items before fees and discounts only" : "Whole checkout")))
+            Text(String(format: StoreQuoteCopy.text("Applicable cap: %@ · %@"), householdMoney(cap, currency: value.currency), StoreQuoteCopy.text(value.capScope == "itemsOnly" ? "Items before fees and discounts only" : "Whole checkout")))
             if let assessment = try? SharedStoreQuoteMath.capAssessment(value, commitmentsID: shopID) { Text(dinnerCap(assessment)) }
         } else { Text(dinnerText("No cap supplied")) }
     }

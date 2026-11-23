@@ -1,3 +1,4 @@
+import {requireMatchingCurrency} from './grocery-currency.js';
 import type {BillingService} from './billing/service.js';
 import {billingUnavailable} from './billing/domain.js';
 import {requirePlaced} from './delivery-evidence.js';
@@ -225,6 +226,7 @@ export function fallbackDecision(state:State,chosen:Set<string>,target:RecoveryM
 export async function rankSharedFallbacks(ctx:Context,shop:Shop,input:unknown,load:RecoveryPublicationLoader) {
   requirePlaced(shop);
   const request=fallbackOptionsSchema.parse(input);
+  if(request.trip)requireMatchingCurrency(request.trip.currency,shop.quote.currency);
   if(unique(request.reviews.map(r=>r.candidateId)).length!==request.reviews.length) throw invalid();
   const state=await loadSharedRecoveryDecisionBasis(ctx,shop,load);
   const target=state.basis.meals.find(m=>m.occurrenceId===request.occurrenceId);

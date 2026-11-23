@@ -22,10 +22,10 @@ public struct SharedRecordHistory: Decodable, Equatable, Sendable {
             try demandRequire(["create", "patch", "decision", "freeze", "reopen", "placed"].contains(purpose))
             _ = try ShopperShopCandidate(quote: quote, lines: basketLines)
             guard let observed = demandTime(quote.observedAt), let expires = demandTime(quote.expiresAt) else { throw ClientError.invalidResponse }
-            try demandRequire(quote.currency == "USD" && (quote.fee.kind != "threshold" || quote.fee.thresholdMinor != nil))
+            try demandRequire(quote.fee.kind != "threshold" || quote.fee.thresholdMinor != nil)
             _ = try ShopperQuote(scope: quote.scope, complete: quote.complete, capMinor: quote.capMinor, capScope: quote.capScope,
                 fee: quote.fee, taxesMinor: quote.taxesMinor, depositsMinor: quote.depositsMinor, discountsMinor: quote.discountsMinor,
-                observedAt: observed, expiresAt: expires)
+                observedAt: observed, expiresAt: expires, currency: quote.currency)
         }
     }
     public struct MealRevision: Decodable, Equatable, Sendable {
@@ -413,8 +413,10 @@ public struct SharedRecordHistory: Decodable, Equatable, Sendable {
             try historyQuantityValue(reservation.quantity)
         }
         for decision in decisions { try decision.validate(); try demandRequire(decision.shopId == origin.shopId.uuid && demandRevision(decision.version)) }
+        let currencies = Set(basketRevisions.map { $0.quote.currency } + financialEntries.map(\.currency) + priceObservations.map(\.currency))
+        try demandRequire(currencies.count <= 1)
         for entry in financialEntries {
-            try demandRequire(HistoryValidation.cents(entry.amountMinor) && entry.currency == "USD" && demandTime(entry.occurredAt) != nil && HistoryValidation.text(entry.sourceText, 8192))
+            try demandRequire(HistoryValidation.cents(entry.amountMinor) && GroceryWireCurrency.supports(entry.currency) && demandTime(entry.occurredAt) != nil && HistoryValidation.text(entry.sourceText, 8192))
         }
         try demandRequire(priceObservations.allSatisfy { UUID(uuidString: $0.shopId) == origin.shopId.uuid })
         let historicalOccurrences = Set(mealRevisions.filter { $0.meal != nil }.map(\.occurrenceId))

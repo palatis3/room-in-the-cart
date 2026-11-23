@@ -70,7 +70,7 @@ extension HouseholdService: SharedStoreQuotesServing {}
         } catch { fail(error, start: start) }
     }
     func prepareSave(_ options: EnteredStoreQuoteOptions) async {
-        guard canPrepare, let page, !page.commitments.isEmpty else { return }
+        guard canPrepare, let page, !page.commitments.isEmpty, options.first.currency == page.currency, options.second.currency == page.currency else { return }
         await prepare(.pairs, request: .init(page: page, options: options))
     }
     func selectionAllowed(_ pair: StoreQuotePage.Pair, choice: StoreQuoteChoice) -> Bool {
@@ -162,10 +162,10 @@ extension HouseholdService: SharedStoreQuotesServing {}
 }
 
 extension EnteredOrderMinimum {
-    var reviewedMinimum: StoreOrderMinimum {
+    func reviewedMinimum(currency: Currency) -> StoreOrderMinimum {
         StoreOrderMinimum(StoreOrderMinimum.Kind(rawValue: kind.rawValue) ?? .unknown,
-            minimum: minimumMinor.map { Money(minorUnits: Int64($0)) },
-            eligibleSubtotal: eligibleSubtotalMinor.map { Money(minorUnits: Int64($0)) })
+            minimum: minimumMinor.map { Money(minorUnits: Int64($0), currency: currency) },
+            eligibleSubtotal: eligibleSubtotalMinor.map { Money(minorUnits: Int64($0), currency: currency) })
     }
 }
 extension EnteredCommitmentSupply {
@@ -186,15 +186,16 @@ enum SharedStoreQuoteMath {
             DinnerCommitment(id: $0.id, name: $0.label, kind: .staple, portions: try Rational(Int64($0.packs)), protected: false)
         })
         func option(_ source: EnteredStoreQuote, id: UUID) throws -> StoreQuoteOption {
+            guard let currency = Currency(rawValue: source.currency) else { throw ClientError.configuration }
             let context = CheckoutContext(storeID: source.store, branchID: source.branch, mode: ShoppingMode(rawValue: source.mode)!, slot: source.slot,
                 commitmentsID: same.id, observedAt: serviceDate(source.observedAt)!, source: source.source)
-            let evidence = source.allChargesIncluded ? source.checkoutMinor.map { CostEvidence.exact(Money(minorUnits: Int64($0))) } ?? .unknown(reason: "Checkout total is unknown") : .unknown(reason: "Checkout charges are unreviewed")
+            let evidence = source.allChargesIncluded ? source.checkoutMinor.map { CostEvidence.exact(Money(minorUnits: Int64($0), currency: currency)) } ?? .unknown(reason: "Checkout total is unknown") : .unknown(reason: "Checkout charges are unreviewed")
             return StoreQuoteOption(id: id, label: source.label, commitments: same,
                 quote: CheckoutQuote(scope: .wholeCheckout, context: context, pricing: .inclusiveTotal(evidence)),
                 available: source.available, quantitiesMatched: source.quantitiesMatched, singleStore: source.singleStore,
-                trip: StoreTripEvidence(incrementalCash: source.tripMinor.map { .exact(Money(minorUnits: Int64($0))) } ?? .unknown(reason: "Trip cash is unknown"), extraMinutes: source.extraMinutes, tripAlreadyPlanned: source.tripAlreadyPlanned),
-                observedItemSubtotal: source.itemsMinor.map { Money(minorUnits: Int64($0)) }, eligibilityTerms: source.terms.isEmpty ? nil : source.terms,
-                orderMinimum: source.orderMinimum?.reviewedMinimum, supplies: try source.supplies?.map { try $0.reviewedSupply() }, eligibilityReviewed: source.eligibilityConfirmed)
+                trip: StoreTripEvidence(incrementalCash: source.tripMinor.map { .exact(Money(minorUnits: Int64($0), currency: currency)) } ?? .unknown(reason: "Trip cash is unknown"), extraMinutes: source.extraMinutes, tripAlreadyPlanned: source.tripAlreadyPlanned),
+                observedItemSubtotal: source.itemsMinor.map { Money(minorUnits: Int64($0), currency: currency) }, eligibilityTerms: source.terms.isEmpty ? nil : source.terms,
+                orderMinimum: source.orderMinimum?.reviewedMinimum(currency: currency), supplies: try source.supplies?.map { try $0.reviewedSupply() }, eligibilityReviewed: source.eligibilityConfirmed)
         }
         let pair = TwoStoreQuotePair(shopID: shopID, baseRevisionID: shopID, basisRevision: 0, first: try option(options.first,id: firstID), second: try option(options.second,id: secondID))
         return try TwoStoreQuoteEngine.evaluateEnteredQuotes(pair)
@@ -204,12 +205,13 @@ enum SharedStoreQuoteMath {
 extension SharedStoreQuoteMath {
     static func capAssessment(_ source: EnteredStoreQuote, commitmentsID: UUID) throws -> CheckoutCapAssessment {
         try source.validate()
+        guard let currency = Currency(rawValue: source.currency) else { throw ClientError.configuration }
         let scope: CheckoutScope = source.capScope == "itemsOnly" ? .item : .wholeCheckout
         let context = CheckoutContext(storeID: source.store, branchID: source.branch, mode: ShoppingMode(rawValue: source.mode)!, slot: source.slot,
             commitmentsID: commitmentsID, observedAt: serviceDate(source.observedAt)!, source: source.source)
         let amount = source.capScope == "itemsOnly" ? source.itemsMinor : (source.allChargesIncluded ? source.checkoutMinor : nil)
-        let quote = CheckoutQuote(scope: scope, context: context, pricing: .inclusiveTotal(amount.map { .exact(Money(minorUnits: Int64($0))) } ?? .unknown(reason: "Cap basis is unknown")))
-        let cap = source.capMinor.map { CheckoutCap(scope: scope, commitmentsID: commitmentsID, amount: Money(minorUnits: Int64($0))) }
+        let quote = CheckoutQuote(scope: scope, context: context, pricing: .inclusiveTotal(amount.map { .exact(Money(minorUnits: Int64($0), currency: currency)) } ?? .unknown(reason: "Cap basis is unknown")))
+        let cap = source.capMinor.map { CheckoutCap(scope: scope, commitmentsID: commitmentsID, amount: Money(minorUnits: Int64($0), currency: currency)) }
         return try CheckoutEngine.evaluate(quote, cap: cap).cap
     }
 }

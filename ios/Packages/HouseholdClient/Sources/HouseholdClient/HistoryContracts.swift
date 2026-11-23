@@ -79,15 +79,15 @@ public struct HistoryPriceObservation: Codable, Equatable, Identifiable, Sendabl
                 usablePack: HistoryUsablePack?, price: HistoryCostEvidence, store: String, branch: String,
                 channel: HistoryPriceChannel, mode: HistoryFulfillmentMode, eligibility: String,
                 observedAt: String, sourceText: String, sourceLocale: String, evidenceKind: HistoryPriceKind? = nil,
-                sourceRevision: HistoryPriceSourceRevision? = nil, variant: String? = nil) throws {
+                sourceRevision: HistoryPriceSourceRevision? = nil, variant: String? = nil, currency: String = "USD") throws {
         self.evidenceKind = evidenceKind; self.sourceRevision = sourceRevision; self.variant = variant
         self.id = id; self.shopId = shopId; self.itemName = itemName; self.packLabel = packLabel; self.usablePack = usablePack
-        self.price = price; currency = "USD"; self.store = store; self.branch = branch; self.channel = channel; self.mode = mode
+        self.price = price; self.currency = currency; self.store = store; self.branch = branch; self.channel = channel; self.mode = mode
         self.eligibility = eligibility; self.observedAt = observedAt; self.sourceText = sourceText; self.sourceLocale = sourceLocale
         try validate()
     }
     public func validate() throws {
-        guard HistoryValidation.ids([id, shopId]), currency == "USD", HistoryValidation.date(observedAt) != nil,
+        guard HistoryValidation.ids([id, shopId]), GroceryWireCurrency.supports(currency), HistoryValidation.date(observedAt) != nil,
               [itemName, packLabel, store, branch, sourceLocale].allSatisfy({ HistoryValidation.text($0, 512) }),
               HistoryValidation.text(eligibility, 2048, empty: true), HistoryValidation.text(sourceText, 8192) else { throw ClientError.configuration }
         if let ref = sourceRevision {
@@ -148,14 +148,14 @@ public struct HistoryBudgetPeriod: Codable, Equatable, Identifiable, Sendable {
     public var currency: String; public var shopBudgetMinor: Int; public var alreadyExcludedReserveMinor: Int?
     public var shopIds: [String]; public var reservations: [HistoryFutureReservation]; public var reviewedCompleteAt: String?
     public init(id: String = UUID().uuidString.lowercased(), title: String, startsAt: String, endsAt: String, timeZoneId: String,
-                shopBudgetMinor: Int, alreadyExcludedReserveMinor: Int?, shopIds: [String], reservations: [HistoryFutureReservation], reviewedCompleteAt: String?) throws {
-        self.id = id; self.title = title; self.startsAt = startsAt; self.endsAt = endsAt; self.timeZoneId = timeZoneId; currency = "USD"
+                shopBudgetMinor: Int, alreadyExcludedReserveMinor: Int?, shopIds: [String], reservations: [HistoryFutureReservation], reviewedCompleteAt: String?, currency: String = "USD") throws {
+        self.id = id; self.title = title; self.startsAt = startsAt; self.endsAt = endsAt; self.timeZoneId = timeZoneId; self.currency = currency
         self.shopBudgetMinor = shopBudgetMinor; self.alreadyExcludedReserveMinor = alreadyExcludedReserveMinor
         self.shopIds = shopIds; self.reservations = reservations; self.reviewedCompleteAt = reviewedCompleteAt; try validate()
     }
     public func validate() throws {
         guard HistoryValidation.ids([id]), HistoryValidation.text(title, 512), HistoryValidation.text(timeZoneId, 100), TimeZone(identifier: timeZoneId) != nil,
-              let start = HistoryValidation.date(startsAt), let end = HistoryValidation.date(endsAt), start < end, currency == "USD",
+              let start = HistoryValidation.date(startsAt), let end = HistoryValidation.date(endsAt), start < end, GroceryWireCurrency.supports(currency),
               HistoryValidation.cents(shopBudgetMinor), alreadyExcludedReserveMinor.map(HistoryValidation.cents) ?? true,
               shopIds.count <= 100, HistoryValidation.uniqueIDs(shopIds), reservations.count <= 1000,
               HistoryValidation.uniqueIDs(reservations.map(\.id)) else { throw ClientError.configuration }
@@ -198,7 +198,7 @@ public struct HistoryShopBudgetSummary: Codable, Equatable, Sendable {
         self.expectedUnpaid = expectedUnpaid; self.projectedCommitment = projectedCommitment; self.reconciledEntered = reconciledEntered
     }
     func validate() throws {
-        guard HistoryValidation.ids([shopId]), currency == "USD", HistoryValidation.safe(postedNetMinor),
+        guard HistoryValidation.ids([shopId]), GroceryWireCurrency.supports(currency), HistoryValidation.safe(postedNetMinor),
               [pendingCreditsMinor, includedCreditsMinor, paymentHoldsMinor].allSatisfy({ $0 >= 0 && HistoryValidation.safe($0) }),
               !reconciledEntered || (pendingCreditsMinor == 0 && paymentHoldsMinor == 0) else { throw ClientError.invalidResponse }
         try sourceVersion.validate(); try expectedUnpaid.validate(); try projectedCommitment.validate()
@@ -214,9 +214,10 @@ public struct HistoryPermittedSubtotal: Codable, Equatable, Sendable {
         self.expectedUnpaid = expectedUnpaid; self.projectedCommitment = projectedCommitment
     }
     func validate(allowedShopIDs: [String]? = nil) throws {
-        guard currency == "USD", shops.count <= 100, HistoryValidation.uniqueIDs(shops.map(\.shopId)) else { throw ClientError.invalidResponse }
+        guard GroceryWireCurrency.supports(currency), shops.count <= 100, HistoryValidation.uniqueIDs(shops.map(\.shopId)) else { throw ClientError.invalidResponse }
         for shop in shops {
             try shop.validate()
+            guard shop.currency == currency else { throw ClientError.invalidResponse }
             if let allowedShopIDs, !allowedShopIDs.contains(where: { HistoryValidation.sameID($0, shop.shopId) }) { throw ClientError.invalidResponse }
         }
         guard try postedNetMinor == HistoryValidation.sum(shops.map(\.postedNetMinor)),
@@ -268,7 +269,7 @@ public struct HistoryCompletePeriod: Codable, Equatable, Sendable {
     func validate(id: String) throws {
         try HistorySavedBudgetPeriod(periodId: periodId, revision: revision, period: period).validate(id: id)
         try permitted.validate(allowedShopIDs: period.shopIds)
-        guard permitted.shops.count == period.shopIds.count,
+        guard permitted.currency == period.currency, permitted.shops.count == period.shopIds.count,
               try futureReservedMinor == HistoryValidation.sum(period.reservations.filter { $0.state == .reserved }.map(\.amountMinor)),
               try remaining.maximumMinor == HistoryValidation.sum([period.shopBudgetMinor, -permitted.projectedCommitment.lowerMinor, -futureReservedMinor]) else { throw ClientError.invalidResponse }
         if let upper = permitted.projectedCommitment.upperMinor {
@@ -369,7 +370,11 @@ enum HistoryValidation {
 public struct HistoryOwnedShop: Codable, Equatable, Identifiable, Sendable {
     public var id: String { shopId }
     public let shopId: String; public let createdAt: String; public let phase: String; public let role: String; public let revision: Int; public let authorityEpoch: Int
-    public init(shopId: String, createdAt: String, phase: String, role: String = "shopper", revision: Int, authorityEpoch: Int) {
+    private let currencyCode: GroceryWireCurrency?
+    public var currency: String { (currencyCode ?? .usd).rawValue }
+    private enum CodingKeys: String, CodingKey { case shopId, createdAt, phase, role, revision, authorityEpoch, currencyCode = "currency" }
+    public init(shopId: String, createdAt: String, phase: String, role: String = "shopper", revision: Int, authorityEpoch: Int, currency: String = "USD") {
+        currencyCode = GroceryWireCurrency(rawValue: currency)
         self.shopId = shopId; self.createdAt = createdAt; self.phase = phase; self.role = role; self.revision = revision; self.authorityEpoch = authorityEpoch
     }
 }

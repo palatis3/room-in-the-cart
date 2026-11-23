@@ -22,6 +22,13 @@ class NativeBackendTests(unittest.TestCase):
 
     def test_configured_staging_with_disabled_email(self):
         self.assertFalse(self.probe())
+        self.settings["disable_signup"] = True
+        self.assertFalse(self.probe())
+
+    def test_disabled_staging_still_requires_an_explicit_signup_setting(self):
+        del self.settings["disable_signup"]
+        with self.assertRaisesRegex(ValueError, "account creation"):
+            self.probe()
 
     def test_email_disagreement_and_non_boolean_status(self):
         for wrong in (True, 0, None):

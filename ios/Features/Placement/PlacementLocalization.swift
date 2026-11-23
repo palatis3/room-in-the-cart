@@ -1,12 +1,11 @@
 import Foundation
+import CoreDomain
 
 enum PlacementCopy {
     static func text(_ key: String) -> String { String(localized: String.LocalizationValue(key), table: "Placement") }
-    static func money(_ minor: Int?) -> String {
-        guard let minor else { return PlacementCopy.text("Unknown") }
-        let formatter = NumberFormatter(); formatter.numberStyle = .currency; formatter.currencyCode = "USD"
-        formatter.minimumFractionDigits = 2; formatter.maximumFractionDigits = 2
-        return formatter.string(from: NSDecimalNumber(decimal: Decimal(minor) / 100)) ?? "USD " + NSDecimalNumber(decimal: Decimal(minor) / 100).stringValue
+    static func money(_ minor: Int?, currency: String) -> String {
+        guard let minor, let currency = Currency(rawValue: currency) else { return text("Unknown") }
+        return moneyText(Money(minorUnits: Int64(minor), currency: currency))
     }
     static func date(_ source: String) -> String {
         let parser = ISO8601DateFormatter(); parser.formatOptions = [.withInternetDateTime, .withFractionalSeconds]

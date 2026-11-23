@@ -3,6 +3,7 @@ import { digest } from './database.js';
 import { ServiceError, unavailable } from './errors.js';
 import { parseCommand } from './contracts.js';
 import type { Context, HouseholdRepository } from './repository.js';
+import { groceryCurrencySchema, requireMatchingCurrency, requireSupportedCurrency } from './grocery-currency.js';
 const id = z.string().uuid().transform(v => v.toLowerCase());
 const cents = z.number().int().min(0).max(1000000000).nullable();
 const text = z.string().trim().min(1).max(240);
@@ -17,7 +18,7 @@ const supply = z.object({commitmentId:id, unit:z.enum(['count','gram','millilite
     requiredUnits:z.number().int().min(1).max(1_000_000_000), usableUnitsPerPackage:z.number().int().min(1).max(1_000_000_000),
     packages:z.number().int().min(0).max(100_000)}).strict();
 const option = z.object({ label: text, store: text, branch: text, mode: z.enum(['pickup', 'delivery', 'inStore']), slot: date, observedAt: date,
-    source: text, currency: z.literal('USD'), terms: z.string().trim().max(500), itemsMinor: cents, checkoutMinor: cents, allChargesIncluded: z.boolean(),
+    source: text, currency: groceryCurrencySchema, terms: z.string().trim().max(500), itemsMinor: cents, checkoutMinor: cents, allChargesIncluded: z.boolean(),
     available: z.boolean().nullable(), quantitiesMatched: z.boolean(), singleStore: z.boolean(), tripAlreadyPlanned: z.boolean(), tripMinor: cents,
     extraMinutes: z.number().int().min(0).max(525600).nullable(),
     capMinor: cents.optional().default(null), capScope: z.enum(['wholeCheckout', 'itemsOnly']).optional().default('wholeCheckout'),
@@ -57,7 +58,7 @@ export function compareStoreQuotes(pair: StoreQuoteOptions, commitmentIds?: stri
         (!commitmentIds || left.length===commitmentIds.length && commitmentIds.every(id=>needs.has(id.toLowerCase()))) &&
         right.every(row=>{const original=needs.get(row.commitmentId.toLowerCase());
             return original?.unit===row.unit && original.requiredUnits===row.requiredUnits;}) : !left && !right;
-    const comparable = equivalent && first.quantitiesMatched && second.quantitiesMatched && first.singleStore && second.singleStore;
+    const comparable = first.currency === second.currency && equivalent && first.quantitiesMatched && second.quantitiesMatched && first.singleStore && second.singleStore;
     const checkout = (entered: StoreQuoteOptions['first']) => entered.allChargesIncluded ? entered.checkoutMinor : null;
     const tripTotal = (entered: StoreQuoteOptions['first']) => {
         const total = checkout(entered);
@@ -101,6 +102,7 @@ export class SharedStoreQuotes {
         const permission = shopper ? null : (await ctx.db.query('SELECT revision FROM ritc.shop_budget_grant WHERE household_id=$1 AND shop_id=$2 AND member_id=$3 AND enabled AND authority_epoch=$4', [ctx.householdId, shopId, ctx.member.member_id, shop.authority_epoch])).rows[0];
         if (!shopper && !permission)
             throw unavailable();
+        requireSupportedCurrency(ctx, shop.currency);
         return { shop, shopper, grantRevision: Number(permission?.revision ?? 0) };
     }
     private async commitments(ctx: Context, shopId: string) {
@@ -148,7 +150,7 @@ export class SharedStoreQuotes {
       JOIN ritc.store_quote_pair p ON p.household_id=a.household_id AND p.shop_id=a.shop_id AND p.pair_id=a.pair_id
       WHERE s.household_id=$1 AND s.shop_id=$2`, [ctx.householdId, shopId])).rows[0];
         const selected = current?.chosen;
-        return { shopId, shopRevision: shop.revision, authorityEpoch: shop.authority_epoch, grantRevision, shopper, phase: shop.phase, adults,
+        return { shopId, ...(ctx.supportsMXN ? { currency: shop.currency } : {}), shopRevision: shop.revision, authorityEpoch: shop.authority_epoch, grantRevision, shopper, phase: shop.phase, adults,
             commitments: await this.commitments(ctx, shopId), currentBasis: selected ? { store: selected.store, branch: selected.branch, mode: selected.mode, slot: selected.slot, revision: current.revision } : null,
             pairs: rows.slice(0, 30).map(p => ({ pairId: p.pair_id, baseRevision: p.shop_revision, savedAt: p.created_at, own: p.own, commitments: p.commitments, options: p.options,
                 authorityEpoch: p.authority_epoch, grantRevision: p.grant_revision,
@@ -190,6 +192,8 @@ export class SharedStoreQuotes {
         }
         else if (action === 'pairs') {
             const { options: entered } = save.parse(input);
+            requireMatchingCurrency(entered.first.currency, shop.currency);
+            requireMatchingCurrency(entered.second.currency, shop.currency);
             if ([entered.first, entered.second].some(o => Date.parse(o.observedAt) > ctx.now.getTime() + 300000))
                 throw new ServiceError(422, 'future_evidence', 'Use the time the quote was observed.');
             const commitments = await this.commitments(ctx, shopId);
@@ -215,6 +219,7 @@ export class SharedStoreQuotes {
             if (p.shop_revision !== shop.revision)
                 throw stale();
             const entered = p.options as StoreQuoteOptions, selected = entered[selection.choice];
+            requireMatchingCurrency(selected.currency, shop.currency);
             const ids=p.commitments.map((line:{id:string})=>line.id);
             if (!compareStoreQuotes(entered,ids).comparable || !orderable(selected,ids))
                 throw new ServiceError(409, 'unreviewed_coverage', 'Review package quantities, eligibility and availability.');

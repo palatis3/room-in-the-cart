@@ -932,9 +932,10 @@ final class RoomInTheCartUITests: XCTestCase {
             let signIn = language == "en" ? "Sign in to your adult account to review deletion. Saved receipts can be checked after sign-out." :
                 "Inicia sesión con tu cuenta de adulto para revisar la eliminación. Puedes consultar los comprobantes guardados después de cerrar sesión."
             reveal(app.staticTexts.matching(NSPredicate(format: "label == %@", configured ? signIn : unavailable)).firstMatch)
-            let renewal = language == "en" ? "An App Store subscription can continue to renew after account deletion." :
-                "Tu suscripción del App Store puede seguir renovándose después de eliminar la cuenta."
-            reveal(app.staticTexts[renewal])
+            let renewal = language == "en" ?
+                "If you have an App Store subscription, cancel it before deleting your account to avoid future charges. Apple can continue billing after you delete this account." :
+                "Si tienes una suscripción del App Store, cancélala antes de eliminar tu cuenta para evitar cargos futuros. Apple puede seguir cobrándote después de que elimines esta cuenta."
+            reveal(app.staticTexts.matching(NSPredicate(format: "label == %@", renewal)).firstMatch)
             XCTAssertFalse(app.buttons[language == "en" ? "Request permanent deletion" : "Solicitar la eliminación permanente"].exists)
             screenshot("Account-deletion-scope-" + language)
             app.terminate()

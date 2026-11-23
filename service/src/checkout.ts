@@ -24,7 +24,7 @@ export function checkout(lines: readonly BasketLine[], quote: QuoteBasis): Budge
   if(!sameScope)missing.push('scope_mismatch');
   const overCapMinor=comparable?Math.max(0,totalMinor!-quote.capMinor!):null;
   const status=!sameScope?'scopeMismatch':comparable?(overCapMinor!>0?'overCap':'withinCap'):'unresolved';
-  return{currency:'USD',totalMinor,overCapMinor,headroomMinor:comparable?quote.capMinor!-totalMinor!:null,
+  return{currency:quote.currency,totalMinor,overCapMinor,headroomMinor:comparable?quote.capMinor!-totalMinor!:null,
     status,scope:quote.scope,missing:[...new Set(missing)],lowerBoundMinor,upperBoundMinor:totalMinor,
     wholeCheckoutWithinCap:quote.scope==='wholeCheckout'&&status==='withinCap'};
 }

@@ -13,9 +13,9 @@ private struct RequestPackDraft: Equatable {
     var feeEligible = true
     var source = ""
     var observedAt = Date()
-    @MainActor func candidate() throws -> HouseholdRequestPackCandidate {
+    @MainActor func candidate(currency: Currency) throws -> HouseholdRequestPackCandidate {
         let quantity = try requestPackQuantity(usable, unit: unit)
-        let price = try HouseholdInboxModel.priceMinor(price).map { Money(minorUnits: Int64($0)) }
+        let price = try HouseholdInboxModel.priceMinor(price).map { Money(minorUnits: Int64($0), currency: currency) }
         let maximum: Int?
         if limit.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { maximum = nil }
         else { guard let value = Int(limit), value >= 0 else { throw RequestPackError.invalid }; maximum = value }
@@ -61,8 +61,8 @@ struct HouseholdRequestPackReviewView: View {
                         Text(row.candidate.observedAt.formatted())
                         Text("\(ht("Usable per pack")): \(row.candidate.usable.map { pQuantity($0) } ?? ht("Unknown"))")
                         LabeledContent(ht("Whole packs needed"), value: row.calculation.packsToBuy.map(String.init) ?? ht("Unknown"))
-                        LabeledContent(ht("Price per pack"), value: householdMoney(row.candidate.price.map { Int($0.minorUnits) }, currency: "USD"))
-                        LabeledContent(ht("Pack purchase total"), value: householdMoney(row.calculation.totalCost.map { Int($0.minorUnits) }, currency: "USD"))
+                        LabeledContent(ht("Price per pack"), value: householdMoney(row.candidate.price.map { Int($0.minorUnits) }, currency: scope.shop.quote.currency))
+                        LabeledContent(ht("Pack purchase total"), value: householdMoney(row.calculation.totalCost.map { Int($0.minorUnits) }, currency: scope.shop.quote.currency))
                         if comparison.cheapestIDs.contains(row.id) { Text(ht("Cheapest sufficient option among reviewed available packs with known prices")).accessibilityIdentifier("household.pack.cheapest") }
                         if !row.candidate.matchesRequest { Text(ht("Product match has not been confirmed.")) }
                         if !row.available { Text(ht("Availability is unknown or insufficient for the required whole packs.")) }
@@ -107,8 +107,9 @@ struct HouseholdRequestPackReviewView: View {
         Text(ht("Usable amount in one pack, blank if unknown")).font(.caption)
         TextField(ht("Usable amount in one pack, blank if unknown"), text: draft.usable).keyboardType(.numbersAndPunctuation).accessibilityIdentifier("household.pack.\(index).usable")
         Picker(ht("Pack usable unit"), selection: draft.unit) { ForEach(UnitOfMeasure.allCases, id: \.self) { Text($0.displayName).tag($0) } }
-        Text(ht("Price per pack in USD, blank if unknown")).font(.caption)
-        TextField(ht("Price per pack in USD, blank if unknown"), text: draft.price).keyboardType(.decimalPad).accessibilityIdentifier("household.pack.\(index).price")
+        let priceLabel = householdCurrencyLabel("Price per pack in %@, blank if unknown", currency: model.packReviewScope?.shop.quote.currency ?? "")
+        Text(priceLabel).font(.caption)
+        TextField(priceLabel, text: draft.price).keyboardType(.decimalPad).accessibilityIdentifier("household.pack.\(index).price")
         Picker(ht("Reviewed availability"), selection: draft.availability) {
             Text(ht("Available")).tag(RequestPackAvailability.confirmed)
             Text(ht("Unavailable")).tag(RequestPackAvailability.unavailable)
@@ -146,8 +147,8 @@ struct HouseholdRequestPackReviewView: View {
     private func reset() { comparison = nil; reviewedScope = nil; failure = false }
     private func compare() {
         do {
-            guard let scope = model.packReviewScope, let need = try requestPackQuantity(needed, unit: unit) else { throw RequestPackError.invalid }
-            comparison = try HouseholdRequestPackReview.calculate(needed: need, candidates: [first.candidate(), second.candidate()])
+            guard let scope = model.packReviewScope, let currency = Currency(rawValue: scope.shop.quote.currency), let need = try requestPackQuantity(needed, unit: unit) else { throw RequestPackError.invalid }
+            comparison = try HouseholdRequestPackReview.calculate(needed: need, candidates: [first.candidate(currency: currency), second.candidate(currency: currency)])
             reviewedScope = scope; failure = false
         } catch { comparison = nil; reviewedScope = nil; failure = true }
     }
@@ -163,7 +164,7 @@ struct HouseholdChosenPackSummary: View {
             Text("\(ht("Usable per pack")): \(selection.candidate.usable.map { pQuantity($0) } ?? ht("Unknown"))")
             Text("\(ht("Price source")): \(selection.candidate.source) · \(selection.candidate.observedAt.formatted())")
             LabeledContent(ht("Whole packs"), value: selection.line.packs.formatted())
-            LabeledContent(ht("Price per pack"), value: householdMoney(selection.line.unitPriceMinor, currency: "USD"))
+            LabeledContent(ht("Price per pack"), value: householdMoney(selection.line.unitPriceMinor, currency: selection.scope.shop.quote.currency))
             Text(ht("Selecting a pack only prepares the decision. Review and apply the household preview to change the plan."))
         }.accessibilityIdentifier("household.pack.selected")
     }

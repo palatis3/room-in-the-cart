@@ -93,10 +93,10 @@ enum SharedTrackingFacts {
         LabeledContent(st("Protected unbound commitments"), value: String(coverage.protectedUnboundFactIds.count))
         LabeledContent(st("Untracked basket items"), value: String(coverage.untrackedBasketIds.count))
     }
-    @ViewBuilder static func basketFacts(_ row: SharedTrackingBasketLine) -> some View {
+    @ViewBuilder static func basketFacts(_ row: SharedTrackingBasketLine, currency: String) -> some View {
         Text(row.name)
         LabeledContent(st("Whole packs"), value: String(row.packs))
-        LabeledContent(st("Unit price"), value: row.priceMinor.map { (Double($0) / 100).formatted(.currency(code: "USD")) } ?? st("Unknown"))
+        LabeledContent(st("Unit price"), value: householdMoney(row.priceMinor, currency: currency))
         Text(st(row.feeEligible ? "Counts toward the fee threshold" : "Does not count toward the fee threshold"))
     }
     @ViewBuilder static func identifiers(_ title: String, _ ids: [SharedDemandID], state: SharedTrackingState) -> some View {
@@ -108,7 +108,7 @@ enum SharedTrackingFacts {
     static func fieldName(_ value: SharedOperationUndoTouchedLine.Field) -> String {
         switch value { case .membership: st("Basket membership"); case .originalItem: st("Item name"); case .packs: st("Whole packs"); case .unitPriceMinor: st("Price per pack"); case .feeEligible: st("Fee threshold eligibility") }
     }
-    @ViewBuilder static func changes(_ changes: SharedTrackingChanges) -> some View {
+    @ViewBuilder static func changes(_ changes: SharedTrackingChanges, currency: String) -> some View {
         switch changes {
         case .none: EmptyView()
         case .mealActionChange(let change):
@@ -155,8 +155,8 @@ enum SharedTrackingFacts {
                 ForEach(undo.reversedAssertions.edges, id: \.id) { edge in Text(SharedDemandCopy.quantity(edge.quantity)); Text(edge.confirmation.evidence) }
                 ForEach(undo.reversedAssertions.packReviews, id: \.lineId) { Text(SharedDemandCopy.quantity($0.usablePerPack)) }
                 ForEach(undo.basketChanges, id: \.id) { delta in
-                    if let before = delta.before { Text(st("Before")); basketFacts(before) }
-                    if let after = delta.after { Text(st("After")); basketFacts(after) }
+                    if let before = delta.before { Text(st("Before")); basketFacts(before, currency: currency) }
+                    if let after = delta.after { Text(st("After")); basketFacts(after, currency: currency) }
                 }
                 Text(st("Transferred facts remain unbound and protected; later contribution identities are retained."))
                 ForEach(undo.transferredFactIds, id: \.self) { Text($0.string) }

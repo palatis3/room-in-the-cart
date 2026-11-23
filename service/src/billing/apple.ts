@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { X509Certificate } from 'node:crypto';
+import { createPrivateKey, X509Certificate } from 'node:crypto';
 import {
   AppStoreServerAPIClient, Environment, SignedDataVerifier, Status,
   type JWSTransactionDecodedPayload, type JWSRenewalInfoDecodedPayload,
@@ -156,9 +156,9 @@ export interface ReviewBilling {
   sandbox: AppleBillingGateway;
 }
 
-/** Configuration and key paths belong to the deployment. Clients never select a gateway. */
+/** Configuration and the signing key belong to the deployment. Clients never select a gateway. */
 export function appleGatewaysFromEnvironment(env: NodeJS.ProcessEnv = process.env): { primary: AppleBillingGateway | null; review?: ReviewBilling; notifications?: NotificationDestinations } {
-  const names = ['APPLE_BUNDLE_ID','APPLE_PRODUCT_ID','APPLE_ENVIRONMENT','APPLE_ROOT_CA_PATHS','APPLE_SIGNING_KEY_PATH','APPLE_KEY_ID','APPLE_ISSUER_ID'] as const;
+  const names = ['APPLE_BUNDLE_ID','APPLE_PRODUCT_ID','APPLE_ENVIRONMENT','APPLE_ROOT_CA_PATHS','APPLE_SIGNING_KEY_PATH','APPLE_SIGNING_KEY_PEM','APPLE_KEY_ID','APPLE_ISSUER_ID'] as const;
   const householdIDs = new Set(env.APPLE_REVIEW_HOUSEHOLD_IDS ? env.APPLE_REVIEW_HOUSEHOLD_IDS.split(',').map(id => id.trim().toLowerCase()) : []);
   if (householdIDs.size && (env.APPLE_ENVIRONMENT !== 'Production' || [...householdIDs].some(id => !uuid.test(id)))) {
     throw new Error('APPLE_REVIEW_HOUSEHOLD_IDS requires a Production billing configuration and comma-separated household UUIDs');
@@ -172,14 +172,24 @@ export function appleGatewaysFromEnvironment(env: NodeJS.ProcessEnv = process.en
     rootCertificates: env.APPLE_ROOT_CA_PATHS.split(',').map(path => readFileSync(path.trim())),
   };
   const sandboxVerifier = () => new OfficialNotificationGateway({ ...verification, environment: 'Sandbox' });
-  const purchaseSettings = [env.APPLE_PRODUCT_ID, env.APPLE_SIGNING_KEY_PATH, env.APPLE_KEY_ID, env.APPLE_ISSUER_ID];
+  const signingKeyPath = env.APPLE_SIGNING_KEY_PATH;
+  const signingKeyPEM = env.APPLE_SIGNING_KEY_PEM;
+  const purchaseSettings = [env.APPLE_PRODUCT_ID, signingKeyPEM || signingKeyPath, env.APPLE_KEY_ID, env.APPLE_ISSUER_ID];
   if (purchaseSettings.every(value => !value) && !householdIDs.size) {
     return { primary: null, notifications: { primary: new OfficialNotificationGateway(verification),
       ...(verification.environment === 'Production' ? { sandbox: sandboxVerifier() } : {}) } };
   }
   if (purchaseSettings.some(value => !value)) throw new Error('Incomplete Apple billing environment');
+  if (signingKeyPath && signingKeyPEM) throw new Error('Configure exactly one Apple signing key source');
+  let signingKey: string;
+  try {
+    signingKey = signingKeyPEM || readFileSync(signingKeyPath!, 'utf8');
+    if (createPrivateKey(signingKey).asymmetricKeyDetails?.namedCurve !== 'prime256v1') throw new Error();
+  } catch {
+    throw new Error('Apple billing requires a readable P-256 signing key');
+  }
   const config: AppleConfiguration = { ...verification, productID: env.APPLE_PRODUCT_ID!,
-    signingKey: readFileSync(env.APPLE_SIGNING_KEY_PATH!, 'utf8'), keyID: env.APPLE_KEY_ID!, issuerID: env.APPLE_ISSUER_ID! };
+    signingKey, keyID: env.APPLE_KEY_ID!, issuerID: env.APPLE_ISSUER_ID! };
   const primary = new OfficialAppleBillingGateway(config);
   if (!householdIDs.size) return verification.environment === 'Production' ? { primary, notifications: { primary, sandbox: sandboxVerifier() } } : { primary };
   const sandbox = new OfficialAppleBillingGateway({ ...config, environment: 'Sandbox' });

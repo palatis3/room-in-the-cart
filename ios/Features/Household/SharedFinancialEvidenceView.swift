@@ -21,15 +21,15 @@ extension ShopperFinancialEntry.Kind {
 }
 
 extension ShopperFinancialEntry {
-    fileprivate var money: Money { Money(minorUnits: Int64(amountMinor)) }
+    fileprivate var displayedAmount: String { householdMoney(amountMinor, currency: currency) }
     fileprivate var choice: String {
         let date = serviceDate(occurredAt)?.formatted(date: .abbreviated, time: .shortened) ?? occurredAt
-        return "\(sourceText) · \(pMoney(money)) · \(date) · \(evidenceKey.uuidString.prefix(8))"
+        return "\(sourceText) · \(displayedAmount) · \(date) · \(evidenceKey.uuidString.prefix(8))"
     }
     func settlementEntry() throws -> SettlementEntry {
         guard let kind = SettlementKind(rawValue: kind.rawValue), let date = serviceDate(occurredAt),
-              currency == "USD", (0...1_000_000_000_000).contains(amountMinor) else { throw ClientError.invalidResponse }
-        return .init(id: id, evidenceKey: evidenceKey.uuidString, kind: kind, amount: money, occurredAt: date,
+              let evidenceCurrency = Currency(rawValue: currency), (0...1_000_000_000_000).contains(amountMinor) else { throw ClientError.invalidResponse }
+        return .init(id: id, evidenceKey: evidenceKey.uuidString, kind: kind, amount: Money(minorUnits: Int64(amountMinor), currency: evidenceCurrency), occurredAt: date,
                      creditID: creditId?.uuidString, chargeEvidenceKey: chargeEvidenceKey?.uuidString,
                      holdEvidenceKey: holdEvidenceKey?.uuidString)
     }
@@ -73,7 +73,7 @@ struct SharedFinancialEvidenceView: View {
                         ForEach(record.entries.reversed()) { entry in
                             VStack(alignment: .leading) {
                                 Text(entry.kind.label).font(.headline)
-                                Text(pMoney(entry.money)); Text(entry.sourceText)
+                                Text(entry.displayedAmount); Text(entry.sourceText)
                                 Text(serviceDate(entry.occurredAt)?.formatted() ?? entry.occurredAt).font(.footnote)
                                 if let key = entry.chargeEvidenceKey ?? entry.holdEvidenceKey,
                                    let original = record.entries.first(where: { $0.evidenceKey == key }) {
@@ -172,9 +172,9 @@ private struct SharedFinancialEditor: View {
                 }
                 if kind == .holdRelease {
                     linkage(pTr("Original payment hold"), placeholder: pTr("Choose a hold"), entries: holds)
-                    if let originalHold { settlementFact(pTr("Amount"), value: pMoney(originalHold.money)) }
+                    if let originalHold { settlementFact(pTr("Amount"), value: originalHold.displayedAmount) }
                 } else {
-                    PickupEvidenceField(title: pTr("Amount"), amount: $amount, focus: $field, field: .amount, identifier: "financial.amount")
+                    PickupEvidenceField(title: pTr("Amount") + " (" + reviewed.currency + ")", amount: $amount, focus: $field, field: .amount, identifier: "financial.amount")
                 }
                 TextField(financialText("Receipt or statement evidence"), text: $evidence).focused($field, equals: .evidence).accessibilityIdentifier("financial.evidence")
                 DatePicker(pTr("Evidence date"), selection: $date, in: ...Date())
@@ -200,7 +200,7 @@ private struct SharedFinancialEditor: View {
         guard valid, let cents else { return }
         let creditID: UUID?
         if case .pending(let id) = credit { creditID = id } else { creditID = isCredit ? UUID() : nil }
-        let entry = ShopperFinancialEntry(kind: kind, amountMinor: cents, occurredAt: date.ISO8601Format(), sourceText: evidence,
+        let entry = ShopperFinancialEntry(kind: kind, amountMinor: cents, occurredAt: date.ISO8601Format(), sourceText: evidence, currency: reviewed.currency,
                                          creditId: creditID, chargeEvidenceKey: isCredit ? linked : nil,
                                          holdEvidenceKey: kind == .holdRelease ? linked : nil)
         Task {

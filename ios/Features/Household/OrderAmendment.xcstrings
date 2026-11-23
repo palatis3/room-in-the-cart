@@ -545,19 +545,19 @@
         }
       }
     },
-    "Confirmed price per pack (USD), if provided": {
+    "Confirmed price per pack (%@), if provided": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Confirmed price per pack (USD), if provided"
+            "value": "Confirmed price per pack (%@), if provided"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Precio confirmado por paquete (USD), si se proporcionó"
+            "value": "Precio confirmado por paquete (%@), si se proporcionó"
           }
         }
       }

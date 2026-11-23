@@ -28,7 +28,7 @@ All `{h}` paths are `/v1/households/{h}`. POST mutations require the existing br
 | `POST /price-observations` | `{clientKey,observation:PriceObservation}` | `{observationId,shopId,recorded:true}`. Free/manual record. |
 | `GET /price-observations/{id}` | — | `{observation:PriceObservation}`. Free/saved record with current source authority. |
 | `GET /price-observations?cursor={observationId}` | — | `{observations:PriceObservation[],nextCursor}`. Paid history; at most 100 permitted observations. |
-| `POST /budget-history` | `{shopIds:UUID[]}` | `{permitted:PermittedSubtotal}`. Paid; at most 100 requested IDs. Unknown/foreign/retired/inaccessible shops contribute no rows or signals. |
+| `POST /budget-history` | `{shopIds:UUID[],currency?:'USD'|'MXN'}` | `{permitted:PermittedSubtotal}`. Paid. At most 100 requested IDs. The subtotal covers currently authorized sources in the requested currency, which defaults to USD. |
 | `GET /budget-periods?cursor={periodId}` | — | `{periods:[{periodId,revision,updatedAt}],nextCursor}`. Free own saved-record discovery, at most 50; no funding/title/hidden-shop data. |
 | `POST /budget-periods` | `PeriodWrite` | `PeriodReceipt`. Paid explicit full plan; baseRevision 0 creates, otherwise exact current revision. |
 | `GET /budget-periods/{id}` | — | `PeriodResponse`. Paid; complete current scope is required for envelope/remaining data. |
@@ -36,7 +36,9 @@ All `{h}` paths are `/v1/households/{h}`. POST mutations require the existing br
 
 All history mutations bind `(household,actor,clientKey)` to the operation, target and full canonical payload. Exact retries return their original durable receipt after current authority is checked. Changed intent with a used key returns `key_reused`; new financial actions against a changed quote/authority/evidence version return `stale_source`. Read current source facts again before forming a new action. Financial evidence keys and linked credit/hold IDs are UUID identities, not bank-account numbers or user-supplied authority.
 
-Text is preserved with explicit UTF-8 byte bounds. Pack labels, source text, observed date, store, branch, channel, fulfillment mode, eligibility and locale are separate fields. A warehouse observation is not conflated with a retailer website; a mass ounce is not a fluid ounce or a count. No implicit density/pack conversion or automatic price matching occurs. All amounts are integer USD cents; another currency is rejected rather than converted or mixed.
+Text is preserved with explicit UTF-8 byte bounds. Pack labels, source text, observed date, store, branch, channel, fulfillment mode, eligibility and locale are separate fields. A warehouse observation is not conflated with a retailer website; a mass ounce is not a fluid ounce or a count. Amounts use integer minor units in USD or MXN. The shop’s original checkout quote fixes the currency of its basket prices, caps, store quotes, price observations and financial entries. Each budget period has a fixed currency and accepts sources in that currency. The service performs no currency conversion.
+
+Clients that support both currencies send `X-Grocery-Currencies: USD,MXN`. Their history-owned shop rows and financial pages include the shop currency. Earlier clients use the USD history scopes. Current budget grants and existing paid-seat checks still apply in both currencies.
 
 ## Financial and period semantics
 

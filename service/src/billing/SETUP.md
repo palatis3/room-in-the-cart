@@ -8,9 +8,18 @@ The submitted app connects to the service origin embedded in Release. On that se
 | --- | --- |
 | `APPLE_BUNDLE_ID`, `APPLE_PRODUCT_ID` | The Release app's bundle identifier and auto-renewable subscription product identifier, matching the signed build and App Store Connect. |
 | `APPLE_APP_ID` | The positive numeric Apple ID from the Release app record. |
-| `APPLE_ROOT_CA_PATHS` | Comma-separated paths to trusted Apple root CA certificate files available in the deployed runtime. |
-| `APPLE_KEY_ID`, `APPLE_ISSUER_ID`, `APPLE_SIGNING_KEY_PATH` | The In-App Purchase key ID, issuer UUID and path to its protected private key file. Verify the deployed function can read each configured file. Keep the private key outside the repository and app bundle. |
+| `APPLE_ROOT_CA_PATHS` | Comma-separated paths to trusted Apple root CA certificate files available in the deployed runtime. Vercel packages the certificates under `service/src/billing/certificates` with the API function. |
+| `APPLE_KEY_ID`, `APPLE_ISSUER_ID` | The In-App Purchase key ID and issuer UUID. |
+| `APPLE_SIGNING_KEY_PEM` or `APPLE_SIGNING_KEY_PATH` | Supply exactly one source. Vercel uses the complete multiline `.p8` contents as a server-side Secret. A standalone process can read the same key from a protected file path. Keep the private key outside the repository and app bundle. |
 | `APPLE_REVIEW_HOUSEHOLD_IDS` | Optional comma-separated UUIDs of dedicated fictional review households on the Release service. An empty or absent value routes every household to the primary environment. |
+
+For Vercel, set `APPLE_ROOT_CA_PATHS` to the following repository-relative paths. The three certificates come from [Apple PKI](https://www.apple.com/certificateauthority/).
+
+```text
+service/src/billing/certificates/AppleIncRootCertificate.cer,service/src/billing/certificates/AppleRootCA-G2.cer,service/src/billing/certificates/AppleRootCA-G3.cer
+```
+
+From a directory linked to the intended Vercel project, use `vercel env add APPLE_SIGNING_KEY_PEM production --type secret < /absolute/private/path/SubscriptionKey.p8` to supply the existing key without copying its contents into a command. Use the Production target of the separately linked staging project for a staging deployment built with `--prod`. Check the selected project's deployment protection and target before creating the deployment.
 
 Provision the review purchaser and any second adult using the normal household enrollment flow. Use a fresh fictional household for each independent purchase scenario. Confirm its UUID from the service and restrict invitations to review participants. Set the same review list across serving instances before the first sandbox purchase and keep it in place throughout review and restore testing. Updates to the list take effect when the runtime restarts. Retire a review household through normal account lifecycle procedures before removing its UUID. An existing purchase stays bound to its original environment and household.
 
@@ -29,7 +38,7 @@ For purchases, each endpoint verifies the outer Apple signature and the signed t
 
 ## Consent revocation
 
-The same V2 URLs can receive consent revocations before enabling purchases. Configure `APPLE_BUNDLE_ID`, `APPLE_ROOT_CA_PATHS`, `APPLE_ENVIRONMENT` and, for Production, `APPLE_APP_ID`. Leave all four purchase settings and the review household list absent for a verification-only deployment. A Production deployment then accepts a signed production notification at the primary URL and a signed sandbox notification at the sandbox URL. A standalone Sandbox deployment accepts sandbox notifications at the primary URL.
+The same V2 URLs can receive consent revocations before enabling purchases. Configure `APPLE_BUNDLE_ID`, `APPLE_ROOT_CA_PATHS`, `APPLE_ENVIRONMENT` and, for Production, `APPLE_APP_ID`. Leave the product ID, signing key sources, key ID, issuer ID and the review household list absent for a verification-only deployment. A Production deployment then accepts a signed production notification at the primary URL and a signed sandbox notification at the sandbox URL. A standalone Sandbox deployment accepts sandbox notifications at the primary URL.
 
 For `RESCIND_CONSENT`, the service verifies Apple’s signed envelope and checks its `appData` bundle and environment, plus the app Apple ID in production. When Apple supplies `appData.signedAppTransactionInfo`, the service also verifies that nested app transaction. Apply migration 072 before enabling delivery. A successful reply follows a durable insert of the environment, notification UUID and Apple’s signature timestamp. Repeated delivery has one receipt per environment. The service discards the signed payload and download identifier. [Apple’s appData schema](https://developer.apple.com/documentation/appstoreservernotifications/appdata)
 

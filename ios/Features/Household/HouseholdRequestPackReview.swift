@@ -43,7 +43,7 @@ struct HouseholdRequestPackSelection: Equatable {
     let line: ShopperBasketLine
     let reviewedAt: Date
     func decisionEvidence() throws -> ReviewedRequestPackEvidence {
-        guard candidate.price.map({ $0.currency == .usd }) ?? true, let usable = candidate.usable else { throw RequestPackError.invalid }
+        guard candidate.price.map({ $0.currency.rawValue == scope.shop.quote.currency }) ?? true, let usable = candidate.usable else { throw RequestPackError.invalid }
         func amount(_ value: Quantity) -> ReviewedRequestPackEvidence.Quantity {
             .init(numerator: String(value.amount.numerator), denominator: String(value.amount.denominator), unit: value.unit.rawValue, originalLiteral: value.originalLiteral)
         }
@@ -56,6 +56,7 @@ struct HouseholdRequestPackSelection: Equatable {
               reviewedAt <= at.addingTimeInterval(300) else { throw RequestPackError.stale }
         let result = try HouseholdRequestPackReview.calculate(needed: needed, candidates: [candidate], at: at).results[0]
         guard result.canSelect, result.calculation.packsToBuy == Int64(line.packs),
+              candidate.price.map({ $0.currency.rawValue == scope.shop.quote.currency }) ?? true,
               candidate.label == line.originalItem, candidate.price.map({ Int($0.minorUnits) }) == line.unitPriceMinor,
               candidate.feeEligible == line.feeEligible else { throw RequestPackError.invalid }
     }
@@ -66,13 +67,13 @@ enum HouseholdRequestPackReview {
     static func calculate(needed: Quantity, candidates: [HouseholdRequestPackCandidate], at: Date = Date()) throws -> HouseholdRequestPackComparison {
         guard needed.amount > .zero, needed.amount <= (try Rational(1_000_000_000)),
               !candidates.isEmpty, candidates.count <= 20, Set(candidates.map(\.id)).count == candidates.count,
-              at.timeIntervalSince1970.isFinite else { throw RequestPackError.invalid }
+              at.timeIntervalSince1970.isFinite, Set(candidates.compactMap { $0.price?.currency }).count <= 1 else { throw RequestPackError.invalid }
         let rows = try candidates.map { candidate -> HouseholdRequestPackResult in
             guard !candidate.label.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
                   candidate.label.count <= 240, candidate.label == candidate.label.trimmingCharacters(in: .whitespacesAndNewlines), !candidate.source.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
                   candidate.source.utf8.count <= 2_048, candidate.observedAt.timeIntervalSince1970.isFinite,
                   candidate.observedAt <= at.addingTimeInterval(300),
-                  candidate.price.map({ $0.currency == .usd && (0...1_000_000_000).contains($0.minorUnits) }) ?? true,
+                  candidate.price.map({ (0...1_000_000_000).contains($0.minorUnits) }) ?? true,
                   candidate.availablePacks.map({ (0...10_000).contains($0) }) ?? true,
                   candidate.usable.map({ $0.amount <= (try! Rational(1_000_000_000)) }) ?? true else { throw RequestPackError.invalid }
             // Same real offer evaluated by the existing engine against an unpriced

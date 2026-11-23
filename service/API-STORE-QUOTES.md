@@ -10,7 +10,7 @@ All routes use the ordinary verified live identity, enrolled device, household t
 
 The response contains:
 
-- `shopId`, `shopRevision`, `authorityEpoch`, `grantRevision` (zero for the assigned shopper), `shopper`, and `phase`.
+- `shopId`, `shopRevision`, `authorityEpoch`, `grantRevision` (zero for the assigned shopper), `shopper`, and `phase`. Requests with `X-Grocery-Currencies: USD,MXN` also receive the shop `currency`.
 - `commitments`: the current server-snapshotted basket line identities, original labels, and whole-pack counts, as `{id,label,packs}`. Each saved pair preserves its own exact commitment snapshot and shop revision. No device-private meal, stock, or local ledger is inferred or uploaded.
 - `adults`: only for the assigned shopper, eligible other adults with `{id,label,revision,enabled}`. Other readers receive an empty array.
 - `currentBasis`: the last adopted `{store,branch,mode,slot,revision}`, or null when none exists or its personal proof was erased. This is a reviewed choice of store, not a price or order.
@@ -57,7 +57,7 @@ Each of exactly two options records:
 }
 ```
 
-`mode` is `pickup`, `delivery`, or `inStore`. Time values are ISO instants with offsets. `terms` preserves the entered package, fee, discount and eligibility explanation. `quantitiesMatched` explicitly confirms that the option covers the same complete server-snapshotted commitments; it never infers equivalence from equal spend. `singleStore` excludes incomplete split-store alternatives. Availability is true, false, or null. Missing eligibility defaults to unconfirmed. `itemsMinor`, `checkoutMinor`, `tripMinor`, `extraMinutes`, and `capMinor` preserve unknown as null, independently from zero. Monetary inputs are nonnegative integer USD cents, at most 1,000,000,000; optional time is an integer number of minutes up to 525,600. Future quote evidence beyond five minutes is refused. Source and observation time remain attached to dated proof; there is no fetched stock or freshness promise.
+`mode` is `pickup`, `delivery`, or `inStore`. Time values are ISO instants with offsets. `terms` preserves the entered package, fee, discount and eligibility explanation. `quantitiesMatched` explicitly confirms that the option covers the same complete server-snapshotted commitments; it never infers equivalence from equal spend. `singleStore` excludes incomplete split-store alternatives. Availability is true, false, or null. Missing eligibility defaults to unconfirmed. `itemsMinor`, `checkoutMinor`, `tripMinor`, `extraMinutes`, and `capMinor` preserve unknown as null, independently from zero. Monetary inputs use nonnegative integer minor units, at most 1,000,000,000. Both options must use the shop’s currency (USD or MXN). Optional time is an integer number of minutes up to 525,600. Future quote evidence beyond five minutes is refused. Source and observation time remain attached to dated proof; there is no fetched stock or freshness promise.
 
 The adult reviews the order minimum for each store. Use `{"kind":"noneRequired"}` when the store explicitly has no minimum, or `{"kind":"required","minimumMinor":3000,"eligibleSubtotalMinor":3200}` for an entered minimum and eligible subtotal. An omitted minimum, an unknown minimum or eligible subtotal, or an unmet minimum keeps the chosen option unavailable for proposal and adoption.
 

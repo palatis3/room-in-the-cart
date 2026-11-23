@@ -93,13 +93,13 @@ final class NativeServiceWireTests: XCTestCase {
         XCTAssertEqual(reopened.lots, after.lots)
         let received = SharedMealQuantity(amount: .init(numerator: 2), unit: "count", originalLiteral: "2")
         let receiptLines = [
-            HouseholdReceiptLine(ordinal: 0, original: "2 LENTES", foodName: "Lentils", received: received, usable: received,
-                                 paidUSDMinor: 129, location: .pantry),
+            HouseholdReceiptLine(ordinal: 0, original: "2 LENTES MXN 1.29", foodName: "Lentils", received: received, usable: received,
+                                 paidMinor: 129, location: .pantry),
             HouseholdReceiptLine(ordinal: 3, original: "Milk damaged", foodName: "Milk", received: received, usable: zero,
-                                 paidUSDMinor: nil, location: .fridge)
+                                 paidMinor: nil, location: .fridge)
         ]
         let imported = HouseholdReceiptAcquisition(receiptId: UUID(), imageId: nil, merchant: "Fictional market",
-            purchaseDay: "2025-01-01", zone: "UTC", reference: "Fictional receipt 42", lines: receiptLines)
+            purchaseDay: "2025-01-01", zone: "UTC", reference: "Fictional receipt 42", lines: receiptLines, currency: "MXN")
         let batch = try await service.prepareHouseholdPantryChange(.receipt(imported), reviewed: reopened, session: actor)
         let durable = try JSONDecoder().decode(HouseholdPantryIntent.self, from: JSONEncoder().encode(batch))
         let committed = try await service.submitHouseholdPantryChange(batch, session: actor)
@@ -108,7 +108,9 @@ final class NativeServiceWireTests: XCTestCase {
         XCTAssertEqual(committed.savedCount, 2)
         let reloaded = try await service.householdPantryPage(for: actor)
         XCTAssertEqual(reloaded.pantryRevision, reopened.pantryRevision + 1)
-        XCTAssertEqual(reloaded.lots.compactMap(\.receiptEvidence).map(\.line).sorted { $0.ordinal < $1.ordinal }, receiptLines)
+        let reopenedEvidence = reloaded.lots.compactMap(\.receiptEvidence)
+        XCTAssertEqual(reopenedEvidence.map(\.currency), ["MXN", "MXN"])
+        XCTAssertEqual(reopenedEvidence.map(\.line).sorted { $0.ordinal < $1.ordinal }, receiptLines)
         XCTAssertTrue(scope.canBrowseHouseholdTonight)
         let tonight = try await service.householdTonight(for: actor)
         XCTAssertEqual(tonight.pantryRevision, reloaded.pantryRevision)

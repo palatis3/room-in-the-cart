@@ -68,7 +68,7 @@ public struct SharedIndependentRecord: Decodable, Equatable, Sendable {
         try demandRequire(food.catalog.allSatisfy { $0.source.origin.0.map { occurrences.contains($0) } ?? true })
         let money = [quote.capMinor, quote.fee.amountMinor, quote.fee.thresholdMinor, quote.fee.belowMinor, quote.fee.aboveMinor, quote.taxesMinor, quote.depositsMinor, quote.discountsMinor].compactMap { $0 }
         try demandRequire(quote.fee.kind != "threshold" || quote.fee.thresholdMinor != nil)
-        try demandRequire(quote.currency == "USD" && money.allSatisfy { (0...1_000_000_000).contains($0) })
+        try demandRequire(money.allSatisfy { (0...1_000_000_000).contains($0) })
         try demandRequire(["wholeCheckout", "item", "dinner"].contains(quote.scope) && ["wholeCheckout", "item", "dinner", "unknown"].contains(quote.capScope))
         guard let observed = demandTime(quote.observedAt), let expires = demandTime(quote.expiresAt) else { throw ClientError.invalidResponse }
         try demandRequire(expires > observed)

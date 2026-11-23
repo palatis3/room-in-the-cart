@@ -310,6 +310,29 @@ final class SharedRecordArchiveTests: XCTestCase {
         let remaining = await registry.list()
         XCTAssertTrue(remaining.isEmpty)
     }
+    @MainActor func testReadableSharedRecordsKeepMexicanPesoPrices() throws {
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        let fixture = try String(contentsOf: root.appendingPathComponent("shared/fixtures/shared-records/history-carried-v1.json"), encoding: .utf8)
+        let pesos = fixture.replacingOccurrences(of: #"("currency"\s*:\s*)"USD""#, with: #"$1"MXN""#, options: .regularExpression)
+        let source = try SharedRecordHistoryWire.snapshot(from: Data(pesos.utf8))
+        let record = try SharedHistoryArchiveAdapter.make(source)
+        let spanish = try SharedHistoryArchiveAdapter.readable(record, locale: Locale(identifier: "es_MX"))
+        XCTAssertTrue(spanish.contains("MXN 38.00"))
+        XCTAssertFalse(spanish.contains("USD "))
+
+        var snapshot = try self.record()
+        var payload = try XCTUnwrap(JSONSerialization.jsonObject(with: XCTUnwrap(snapshot.nativePayload)) as? [String: Any])
+        var quote = try XCTUnwrap(payload["quote"] as? [String: Any])
+        quote["currency"] = "MXN"
+        quote["capMinor"] = 4_295
+        payload["quote"] = quote
+        let value = try SharedRecordWire.independentRecord(from: JSONSerialization.data(withJSONObject: payload))
+        snapshot.nativePayload = try value.independentData()
+        let readable = try SharedRecordArchiveAdapter.readable(snapshot, locale: Locale(identifier: "en_US"))
+        XCTAssertTrue(readable.contains("MXN 42.95"))
+        XCTAssertFalse(readable.contains("USD "))
+    }
+
     @MainActor func testReadableOwnerCopyKeepsOriginalWordingAndUnknownsInBothLanguages() throws {
         let value = try record()
         let english = try SharedRecordArchiveAdapter.readable(value, locale: Locale(identifier: "en_US"))

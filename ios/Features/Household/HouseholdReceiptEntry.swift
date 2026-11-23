@@ -27,10 +27,9 @@ extension ReceiptImportDraft {
                 switch row.location { case .cupboard: location = .pantry; case .fridge: location = .fridge; case .freezer: location = .freezer }
             }
             let paid = try row.paidTotal(in: currency)
-            if let paid, paid.currency != .usd { throw PantryReceiptError.invalid }
             return .init(ordinal: row.ordinal, original: row.original, foodName: row.name.trimmingCharacters(in: .whitespacesAndNewlines),
                          received: try quantity(row.received, unit: row.unit), usable: try quantity(row.usable, unit: row.unit),
-                         paidUSDMinor: paid.map { Int($0.minorUnits) },
+                         paidMinor: paid.map { Int($0.minorUnits) },
                          location: location, delivery: delivery, printed: row.documentLine.map {
                 .init(page: $0.page, line: $0.line, method: $0.method.rawValue, stage: $0.stage.rawValue)
             })
@@ -51,7 +50,7 @@ extension ReceiptImportDraft {
             layout = ReceiptAcquisition.identity(scope + ["reviewed"] + lines.map(\.original))
         }
         let receipt = HouseholdReceiptAcquisition(receiptId: receiptID, imageId: imageID, merchant: merchant.trimmingCharacters(in: .whitespacesAndNewlines), purchaseDay: purchaseDay.iso8601,
-        zone: purchaseDay.timeZoneIdentifier, reference: ref.isEmpty ? nil : ref, lines: rows, layoutId: layout, segmentedPhotos: segmented ? true : nil)
+        zone: purchaseDay.timeZoneIdentifier, reference: ref.isEmpty ? nil : ref, lines: rows, layoutId: layout, segmentedPhotos: segmented ? true : nil, currency: currency.rawValue)
         try receipt.validate()
         return receipt
     }
@@ -59,6 +58,7 @@ extension ReceiptImportDraft {
 
 struct HouseholdReceiptLineFacts: View {
     let row: HouseholdReceiptLine
+    let currency: String
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
             Text(row.foodName).font(.headline)
@@ -67,8 +67,8 @@ struct HouseholdReceiptLineFacts: View {
             Text(pantryFormat("Usable %@", deliveryQuantityText(row.usable)))
             Text(pantryLocation(row.location.rawValue))
             if row.delivery != nil { Text(pantryText("Link evidence to the delivered batch. Its pantry count stays the same.")) }
-            if let paid = row.paidUSDMinor {
-                Text(pantryFormat("Paid line total %@", (Decimal(paid) / 100).formatted(.currency(code: "USD"))))
+            if let paid = row.paidMinor {
+                Text(pantryFormat("Paid line total %@", receiptMoney(Int64(paid), currencyCode: currency)))
             } else { Text(pantryText("Paid price unknown")) }
         }
     }
@@ -82,7 +82,7 @@ struct HouseholdReceiptFacts: View {
         Text(receipt.merchant).font(.headline)
         Text(dates.civilDay(receipt.purchaseDay, zone: TimeZone(identifier: receipt.zone) ?? .gmt))
         if let reference = receipt.reference { Text(reference) }
-        ForEach(receipt.lines, id: \.ordinal) { HouseholdReceiptLineFacts(row: $0) }
+        ForEach(receipt.lines, id: \.ordinal) { HouseholdReceiptLineFacts(row: $0, currency: receipt.currency) }
     }
 }
 
@@ -153,9 +153,6 @@ struct HouseholdReceiptEntry: View {
                     .simultaneousGesture(TapGesture().onEnded { field = "reference" })
                     ReceiptPurchaseDateFields(draft: value, scroll: scroll)
                     ReceiptCurrencyPicker(draft: value, lockedByComparison: tripState.links.values.contains { $0.printedTotal != nil })
-                    if displayed.currency != .usd {
-                        Text(tr("Shared receipts save prices in USD. You can share the food and quantities from a peso receipt."))
-                    }
                 }
                 if let householdModel {
                     HouseholdReceiptTripLink(household: householdModel, pantry: model, page: page, draft: displayed, state: $tripState)
@@ -163,7 +160,7 @@ struct HouseholdReceiptEntry: View {
                 Text(pantryText("Select only food you received. Leave fees, discounts, nonfood and unreadable lines skipped."))
                 ForEach(displayed.lines) { row in
                     PantryReceiptLineEditor(line: captureDraftBinding(row, in: value.lines), lots: [], purchases: [], aliases: [],
-                        receiptLanguage: displayed.language, currency: displayed.currency, supportsPaidPrice: displayed.currency == .usd, matchesCurrent: { model.permitsReceiptReview(page) },
+                        receiptLanguage: displayed.language, currency: displayed.currency, supportsPaidPrice: true, matchesCurrent: { model.permitsReceiptReview(page) },
                         verifyAlias: { _ in false }, householdDeliveries: deliveries, field: $field)
                 }
                 Button(pantryText("Review selected food")) {

@@ -17,7 +17,7 @@ async function call(a,path,method='GET',body,headers={}){const r=await fetch(ori
 function ok(r,status=200){assert.equal(r.status,status,JSON.stringify(r.data));return r.data;}
 async function enroll(a,h){a.device=ok(await call(a,`/v1/households/${h}/devices`,'POST',{}),201).deviceToken;a.window=ok(await call(a,`/v1/households/${h}/replay-windows`,'POST',{})).id;}
 async function fixture(){const owner=await actor(),created=ok(await call(owner,'/v1/households','POST',{clientKey:randomUUID(),label:'History fixture',alias:'Adult',adultAttestation:true}),201),h=created.householdId,base=`/v1/households/${h}`;owner.id=created.memberId;await enroll(owner,h);
- const shop=async(price=10000)=>{const id=randomUUID(),quote={currency:'USD',scope:'wholeCheckout',complete:true,capMinor:100000,capScope:'wholeCheckout',fee:{kind:'fixed',amountMinor:0},taxesMinor:0,depositsMinor:0,discountsMinor:0,observedAt:new Date(Date.now()-60000).toISOString(),expiresAt:new Date(Date.now()+3600000).toISOString()};ok(await call(owner,base+'/commands','POST',{v:1,replayWindow:owner.window,clientKey:randomUUID(),shopId:id,kind:'shop.create',base:{shopRevision:0,authorityEpoch:0},body:{quote,lines:[{lineId:randomUUID(),originalItem:'Private basket source',packs:1,unitPriceMinor:price,feeEligible:true}]}}));return id;};
+ const shop=async(price=10000,currency='USD',headers={})=>{const id=randomUUID(),quote={currency,scope:'wholeCheckout',complete:true,capMinor:100000,capScope:'wholeCheckout',fee:{kind:'fixed',amountMinor:0},taxesMinor:0,depositsMinor:0,discountsMinor:0,observedAt:new Date(Date.now()-60000).toISOString(),expiresAt:new Date(Date.now()+3600000).toISOString()};ok(await call(owner,base+'/commands','POST',{v:1,replayWindow:owner.window,clientKey:randomUUID(),shopId:id,kind:'shop.create',base:{shopRevision:0,authorityEpoch:0},body:{quote,lines:[{lineId:randomUUID(),originalItem:'Private basket source',packs:1,unitPriceMinor:price,feeEligible:true}]}},headers));return id;};
  const shopId=await shop();async function paid(){const token=ok(await call(owner,base+'/billing/purchase-context','POST',{})).appAccountToken,original=String(Date.now())+String(Math.floor(Math.random()*1e6)),now=Date.now();subscriptions.set(original,{environment:'Sandbox',originalTransactionID:original,transactionID:original,appAccountToken:token,productID:'fixture.household.yearly',purchasedAt:now,signedAt:now,expiresAt:now+3600000,graceExpiresAt:null,status:'active'});ok(await call(owner,'/v1/billing/verify','POST',{householdId:h,signedTransactionInfo:original}));return original;}
  const version=async(id=shopId)=>ok(await call(owner,base+`/shops/${id}/financial-evidence`)).sourceVersion;
  const financial=async(entry,id=shopId)=>{const input={clientKey:randomUUID(),sourceVersion:await version(id),entry};return{input,result:ok(await call(owner,base+`/shops/${id}/financial-evidence`,'POST',input))};};
@@ -305,4 +305,99 @@ test('reviewed private prices publish immutable scoped revisions without posting
   kind:'shop.transferAuthority',base:{shopRevision:1,authorityEpoch:1},body:{newShopperId:reader.id}}));
  assert.equal((await post(f.owner,corrected)).status,404);
  assert.equal((await post(reader,{...corrected,id:randomUUID(),sourceRevision:{...source,revision:3}})).status,409);
+});
+
+test('mixed-currency households keep price evidence, quotes and budget totals in the selected shop currency',async()=>{
+ const f=await fixture(),headers={'X-Grocery-Currencies':'USD,MXN'};
+ await f.paid();
+ const usd=f.shopId,mxn=await f.shop(28_500,'MXN',headers);
+ const get=(path,scoped=headers)=>call(f.owner,f.base+path,'GET',undefined,scoped);
+ const post=(path,body,scoped=headers)=>call(f.owner,f.base+path,'POST',body,scoped);
+ const shopPath='/shops/'+mxn,shop=ok(await get(shopPath));
+ const patch=(currency,id=mxn)=>({
+  v:1,kind:'shop.patch',shopId:id,replayWindow:f.owner.window,clientKey:randomUUID(),
+  base:{shopRevision:1,authorityEpoch:1},body:{quote:{...shop.quote,currency},lines:shop.lines}
+ });
+ assert.equal(shop.quote.currency,'MXN');
+ assert.equal((await get(shopPath,{})).data.error.code,'currency_unsupported');
+ assert.equal((await post('/commands',patch('USD'))).data.error.code,'currency_mismatch');
+ assert.equal((await post('/commands',patch('MXN',usd))).data.error.code,'currency_mismatch');
+ const create={...patch('MXN'),kind:'shop.create',shopId:randomUUID(),base:{shopRevision:0,authorityEpoch:0}};
+ assert.equal((await post('/commands',create,{})).data.error.code,'currency_unsupported');
+ await assert.rejects(admin.query("UPDATE ritc.shop SET currency='USD',quote=jsonb_set(quote,'{currency}','\"USD\"') WHERE shop_id=$1",[mxn]),{code:'23514'});
+ const other=await joinAdult(f);
+ assert.equal((await call(other,f.base+shopPath,'GET',undefined,headers)).status,404);
+ const request=ok(await call(other,f.base+'/commands','POST',{
+  v:1,kind:'request.send',shopId:mxn,replayWindow:other.window,clientKey:randomUUID(),
+  base:{shopRevision:0,authorityEpoch:0},body:{clientRequestId:randomUUID(),originalItem:'Tortillas',
+   ownQuantity:'one pack',authoredAt:new Date().toISOString()}
+ })).request;
+ assert.equal(request.originalItem,'Tortillas');
+ assert.equal('unitPriceMinor' in request,false);
+
+ const observed={...observation(mxn),currency:'MXN'};
+ assert.equal((await post('/price-observations',{clientKey:randomUUID(),observation:{...observed,currency:'USD'}})).data.error.code,'currency_mismatch');
+ ok(await post('/price-observations',{clientKey:randomUUID(),observation:observed}));
+ assert.deepEqual(ok(await get('/price-observations')).observations,[observed]);
+ assert.deepEqual(ok(await get('/price-observations',{})).observations,[]);
+ assert.equal((await get('/price-observations?cursor='+observed.id,{})).status,404);
+
+ const path=shopPath+'/financial-evidence',sourceVersion=ok(await get(path)).sourceVersion;
+ const charge=entry('postedCharge',12_345,{currency:'MXN'});
+ const makeAppend=(entry,version=sourceVersion)=>({clientKey:randomUUID(),sourceVersion:version,entry});
+ const wrong=await post(path,makeAppend({...charge,currency:'USD'}));
+ assert.equal(wrong.data.error.code,'currency_mismatch');
+ const input=makeAppend(charge),receipt=ok(await post(path,input));
+ assert.deepEqual(ok(await post(path,input)),receipt);
+ const credit=entry('postedCredit',345,{currency:'MXN',creditId:randomUUID(),chargeEvidenceKey:charge.evidenceKey});
+ ok(await post(path,makeAppend(credit,receipt.sourceVersion)));
+ await f.financial(entry('postedCharge',500),usd);
+ const page=ok(await get(path));
+ assert.equal(page.currency,'MXN');
+ assert.deepEqual(page.entries.map(e=>[e.amountMinor,e.currency]),[[12_345,'MXN'],[345,'MXN']]);
+ assert.equal(ok(await get(shopPath+'/records/history/v1')).record.financialEntries[0].currency,'MXN');
+ assert.equal((await get(path,{})).data.error.code,'currency_unsupported');
+ assert.equal((await call(other,f.base+path,'GET',undefined,headers)).status,404);
+ ok(await post(shopPath+'/store-quotes/grants',{
+  operationId:randomUUID(),shopRevision:1,authorityEpoch:1,grantRevision:0,adultId:other.id,enabled:true,targetRevision:0
+ }));
+ assert.equal(ok(await call(other,f.base+path,'GET',undefined,headers)).currency,'MXN');
+ assert.equal((await call(other,f.base+path,'POST',makeAppend(charge),headers)).status,404);
+
+ const option={label:'Market',store:'Store',branch:'Branch',mode:'pickup',source:'Entered by shopper',
+  currency:'MXN',terms:'',slot:shop.quote.expiresAt,observedAt:shop.quote.observedAt,itemsMinor:28_500,
+  checkoutMinor:28_500,allChargesIncluded:true,available:true,quantitiesMatched:true,singleStore:true,
+  tripAlreadyPlanned:true,tripMinor:0,extraMinutes:0,eligibilityConfirmed:true,orderMinimum:{kind:'noneRequired'}};
+ const pair=(second)=>({operationId:randomUUID(),shopRevision:1,authorityEpoch:1,grantRevision:0,options:{first:option,second}});
+ const quotes=shopPath+'/store-quotes';
+ assert.equal((await post(quotes+'/pairs',pair({...option,currency:'USD'}))).data.error.code,'currency_mismatch');
+ ok(await post(quotes+'/pairs',pair({...option,checkoutMinor:29_000})));
+ const quotePage=ok(await call(other,f.base+quotes,'GET',undefined,headers));
+ assert.equal(quotePage.currency,'MXN');
+ const ownQuotes=ok(await get(quotes));
+ assert.equal(ownQuotes.pairs[0].comparison.cashDelta,500);
+ assert.equal((await get(quotes,{})).data.error.code,'currency_unsupported');
+
+ const query={shopIds:[usd,mxn]},usdSubtotal=ok(await post('/budget-history',query,{})).permitted;
+ assert.equal(usdSubtotal.currency,'USD');
+ assert.equal(usdSubtotal.postedNetMinor,500);
+ assert.deepEqual(usdSubtotal.shops.map(s=>s.shopId),[usd]);
+ const mxnSubtotal=ok(await post('/budget-history',{...query,currency:'MXN'})).permitted;
+ assert.equal(mxnSubtotal.currency,'MXN');
+ assert.equal(mxnSubtotal.postedNetMinor,12_000);
+ assert.deepEqual(mxnSubtotal.projectedCommitment,{lowerMinor:28_500,upperMinor:28_500});
+ assert.deepEqual(mxnSubtotal.shops.map(s=>s.shopId),[mxn]);
+ assert.deepEqual(ok(await get('/shops?scope=history-owned')).shops.map(s=>s.currency).sort(),['MXN','USD']);
+ assert.deepEqual(ok(await get('/shops?scope=history-owned',{})).shops.map(s=>s.shopId),[usd]);
+
+ const mxnPeriod={...period([mxn]),currency:'MXN'};
+ const save=(plan,baseRevision=0)=>({clientKey:randomUUID(),baseRevision,period:plan});
+ assert.equal((await post('/budget-periods',save({...mxnPeriod,shopIds:[usd,mxn]}))).data.error.code,'currency_mismatch');
+ ok(await post('/budget-periods',save(mxnPeriod)));
+ const plan=ok(await get('/budget-periods/'+mxnPeriod.id));
+ assert.equal(plan.period.currency,'MXN');
+ assert.equal(plan.permitted.projectedCommitment.lowerMinor,28_500);
+ assert.equal(plan.remaining.minimumMinor,16_500);
+ assert.equal((await post('/budget-periods',save({...mxnPeriod,currency:'USD',shopIds:[]},1))).data.error.code,'currency_mismatch');
+ assert.deepEqual(ok(await get('/budget-periods',{})).periods,[]);
 });

@@ -90,7 +90,11 @@ export function projectSharedHistory(raw:unknown,asOf:Date){
  check(record.deliveries.sources.every(r=>baskets.get(r.placedRevision)?.basketLines.some(l=>l.lineId===r.lineId)));
  check(record.deliveries.observations.every(r=>sources.has(r.body.sourceId)));
  check([...record.deliveries.matches,...record.deliveries.reservations].every(r=>sources.has(r.sourceId)&&meals.has(r.occurrenceId+'/'+r.mealRevision)));
- check(record.decisions.every(r=>r.shopId===record.origin.shopId));check(record.priceObservations.every(r=>r.shopId===record.origin.shopId));
+ const currency=record.basketRevisions[0]?.quote.currency;
+ check(record.basketRevisions.every(r=>r.quote.currency===currency));
+ check(record.financialEntries.every(r=>r.currency===currency));
+ check(record.decisions.every(r=>r.shopId===record.origin.shopId));
+ check(record.priceObservations.every(r=>r.shopId===record.origin.shopId&&r.currency===currency));
  if(record.foodHistory){
   const history=record.foodHistory,graphs=new Map(history.demandRevisions.map(r=>[r.graph.revision,r]));
   unique(history.demandRevisions.map(r=>r.graph.revision));unique(history.demandRevisions.map(r=>r.shopRevision));unique(history.trackingRevisions.map(r=>r.shopRevision));
@@ -247,7 +251,7 @@ export async function readSharedRecordHistory(repo:HouseholdRepository,ctx:Conte
  const matches=await rows(`SELECT ${targets},matched FROM ritc.delivery_ingredient_review WHERE household_id=$1 AND shop_id=$2 ORDER BY supply_revision LIMIT 2001`);
  const reservations=await rows(`SELECT ${targets},group_id AS "groupId",quantity FROM ritc.delivery_reservation WHERE household_id=$1 AND shop_id=$2 ORDER BY supply_revision LIMIT 2001`);
  const decisions=(await rows(`SELECT decision_id AS id,shop_id AS "shopId",version,kind,product,dish,occasion,decision,outcome,CASE WHEN promoted_at IS NULL THEN 'one_shop' ELSE 'lasting' END AS scope,recorded_at AS "recordedAt",observed_at AS "observedAt",promoted_at AS "promotedAt" FROM ritc.family_decision WHERE household_id=$1 AND shop_id=$2 ORDER BY recorded_at,decision_id LIMIT 2001`)).map(r=>({...r,recordedAt:time(r.recordedAt),observedAt:optionalTime(r.observedAt),promotedAt:optionalTime(r.promotedAt)}));
- const financialEntries=(await rows(`SELECT entry_id AS id,evidence_key AS "evidenceKey",kind,amount_minor AS "amountMinor",'USD' AS currency,occurred_at AS "occurredAt",credit_id AS "creditId",charge_evidence_key AS "chargeEvidenceKey",hold_evidence_key AS "holdEvidenceKey",source_text AS "sourceText" FROM ritc.financial_entry WHERE household_id=$1 AND shop_id=$2 ORDER BY created_at,entry_id LIMIT 2001`)).map(r=>({...r,amountMinor:Number(r.amountMinor),occurredAt:time(r.occurredAt)}));
+ const financialEntries=(await rows(`SELECT entry_id AS id,evidence_key AS "evidenceKey",kind,amount_minor AS "amountMinor",currency,occurred_at AS "occurredAt",credit_id AS "creditId",charge_evidence_key AS "chargeEvidenceKey",hold_evidence_key AS "holdEvidenceKey",source_text AS "sourceText" FROM ritc.financial_entry WHERE household_id=$1 AND shop_id=$2 ORDER BY created_at,entry_id LIMIT 2001`)).map(r=>({...r,amountMinor:Number(r.amountMinor),occurredAt:time(r.occurredAt)}));
  const priceObservations=(await rows(`SELECT record FROM ritc.price_observation WHERE household_id=$1 AND shop_id=$2 AND retired_at IS NULL ORDER BY observed_at,observation_id LIMIT 2001`)).map(r=>r.record);
  const demandRevisions=(await rows(`SELECT shop_revision,predecessor,created_at,graph,graph_digest,pack_review FROM ritc.shared_demand_revision WHERE household_id=$1 AND shop_id=$2 ORDER BY revision LIMIT 2001`)).map(r=>{
   check(r.graph_digest!==null&&r.graph_digest===digest(r.graph)&&r.pack_review!==null);

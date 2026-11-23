@@ -26,7 +26,7 @@ func requestUndoReceipt(_ decoder: Decoder) throws -> SharedDemandReceipt {
 }
 func requestUndoBudget(_ value: ShopperBudget) throws {
     let maxMoney = 9_007_199_254_740_991
-    try demandRequire(value.currency == "USD" && ["withinCap", "overCap", "unresolved", "scopeMismatch"].contains(value.status))
+    try demandRequire(GroceryWireCurrency.supports(value.currency) && ["withinCap", "overCap", "unresolved", "scopeMismatch"].contains(value.status))
     try demandRequire(["wholeCheckout", "item", "dinner"].contains(value.scope) && (0...maxMoney).contains(value.lowerBoundMinor))
     try demandRequire([value.totalMinor, value.overCapMinor, value.upperBoundMinor].compactMap { $0 }.allSatisfy { (0...maxMoney).contains($0) })
     try demandRequire(value.headroomMinor.map { (-maxMoney...maxMoney).contains($0) } ?? true)

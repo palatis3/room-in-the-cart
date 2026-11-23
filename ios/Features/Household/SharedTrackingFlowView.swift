@@ -330,7 +330,7 @@ struct SharedTrackingFlowView: View {
             }
         }
         SharedTrackingFacts.graphFacts(review.candidate.after.graph, title: st("After"))
-        SharedTrackingFacts.changes(review.candidate.disclosure.changes)
+        SharedTrackingFacts.changes(review.candidate.disclosure.changes, currency: review.candidate.disclosure.money.after.currency)
         Section(st("Complete pickup review")) {
             switch review.candidate.action.command {
             case .patch(let action): SharedShopFields(quote: action.quote, lines: action.lines)
@@ -442,7 +442,7 @@ struct SharedTrackingFlowView: View {
                     SharedTrackingFacts.contribution(source)
                     if let old = state.graph.lines.first(where: { $0.id == source.lineId }) { Text(old.name) }
                     else { TextField(st("Restored basket name"), text: model.entry(\.rebindName, empty: "")); unit(model.entry(\.rebindUnit, empty: .count), title: st("Food total unit")) }
-                    if let existing = state.basket.first(where: { $0.id == source.lineId }) { SharedTrackingFacts.basketFacts(existing) }
+                    if let existing = state.basket.first(where: { $0.id == source.lineId }) { SharedTrackingFacts.basketFacts(existing, currency: page.checkout.currency) }
                     else {
                         Stepper(st("Whole packs") + ": \(model.draft.rebindPacks)", value: model.entry(\.rebindPacks, empty: 1), in: 1...1000)
                         Text(st("A restored new basket row starts with unknown price. Review its price separately afterward."))

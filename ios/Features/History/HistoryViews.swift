@@ -1,5 +1,6 @@
 import SwiftUI
 import HouseholdClient
+import CoreDomain
 
 /// Manual, reviewed service records. No local ledger or imported archive is uploaded here.
 struct HistoryEntryView: View {
@@ -147,7 +148,7 @@ struct HistoryEntryView: View {
                 } label: {
                     VStack(alignment: .leading, spacing: 4) {
                         let name = Text(verbatim: observation.itemName).font(.headline).foregroundStyle(Theme.ink)
-                        let amount = Text(verbatim: HistoryCopy.observedAmount(observation.price))
+                        let amount = Text(verbatim: HistoryCopy.observedAmount(observation.price, currency: observation.currency))
                             .font(.body.weight(.semibold)).monospacedDigit().foregroundStyle(Theme.ink)
                         ViewThatFits(in: .horizontal) {
                             HStack(alignment: .firstTextBaseline) {
@@ -174,7 +175,7 @@ struct HistoryEntryView: View {
 
     @ViewBuilder private var observationEditor: some View {
         Section(HistoryCopy.text("Observed item and pack")) {
-            shopPicker(selection: $model.observationDraft.shopID)
+            shopPicker(selection: Binding(get: { model.observationDraft.shopID }, set: { model.selectObservationShop($0) }))
             Picker(pantryText("Price source"), selection: $model.observationDraft.evidenceKind) {
                 ForEach([HistoryPriceKind.shelf, .paidManual, .quote], id: \.self) { kind in Text(HistoryCopy.priceKind(kind)).tag(kind) }
             }
@@ -195,19 +196,19 @@ struct HistoryEntryView: View {
                     .font(.footnote)
             }
         }.autocorrectionDisabled().disabled(model.busy)
-        Section(HistoryCopy.text("Price evidence · USD")) {
+        Section(HistoryCopy.currencyLabel("Price evidence · %@", currency: model.observationDraft.currency.rawValue)) {
             Picker(HistoryCopy.text("Price certainty"), selection: $model.observationDraft.priceKind) {
                 Text(HistoryCopy.text("Exact entered price")).tag("exact")
                 Text(HistoryCopy.text("Entered price range")).tag("bounded")
                 Text(HistoryCopy.text("Unknown price")).tag("unknown")
             }
             if model.observationDraft.priceKind == "exact" {
-                TextField(HistoryCopy.text("Price in USD"), text: $model.observationDraft.exactPrice).keyboardType(.decimalPad)
+                TextField(HistoryCopy.currencyLabel("Price in %@", currency: model.observationDraft.currency.rawValue), text: $model.observationDraft.exactPrice).keyboardType(.decimalPad)
                     .focused($focusedAmount, equals: .exactPrice)
             } else if model.observationDraft.priceKind == "bounded" {
-                TextField(HistoryCopy.text("Lower price in USD"), text: $model.observationDraft.lowerPrice).keyboardType(.decimalPad)
+                TextField(HistoryCopy.currencyLabel("Lower price in %@", currency: model.observationDraft.currency.rawValue), text: $model.observationDraft.lowerPrice).keyboardType(.decimalPad)
                     .focused($focusedAmount, equals: .lowerPrice)
-                TextField(HistoryCopy.text("Upper price in USD"), text: $model.observationDraft.upperPrice).keyboardType(.decimalPad)
+                TextField(HistoryCopy.currencyLabel("Upper price in %@", currency: model.observationDraft.currency.rawValue), text: $model.observationDraft.upperPrice).keyboardType(.decimalPad)
                     .focused($focusedAmount, equals: .upperPrice)
             }
             if model.observationDraft.priceKind != "exact" {
@@ -277,9 +278,9 @@ struct HistoryEntryView: View {
                 Section(HistoryCopy.text("Period plan and entered evidence")) {
                     HistoryPeriodDetails(period: value.period)
                     HistorySubtotalDetails(subtotal: value.permitted)
-                    LabeledContent(HistoryCopy.text("Future plans still reserved"), value: HistoryCopy.money(value.futureReservedMinor)).monospacedDigit()
-                    LabeledContent(HistoryCopy.text("Conditional minimum remaining"), value: value.remaining.minimumMinor.map(HistoryCopy.money) ?? HistoryCopy.text("Unknown")).monospacedDigit()
-                    LabeledContent(HistoryCopy.text("Conditional maximum remaining"), value: HistoryCopy.money(value.remaining.maximumMinor)).monospacedDigit()
+                    LabeledContent(HistoryCopy.text("Future plans still reserved"), value: HistoryCopy.money(value.futureReservedMinor, currency: value.period.currency)).monospacedDigit()
+                    LabeledContent(HistoryCopy.text("Conditional minimum remaining"), value: value.remaining.minimumMinor.map { HistoryCopy.money($0, currency: value.period.currency) } ?? HistoryCopy.text("Unknown")).monospacedDigit()
+                    LabeledContent(HistoryCopy.text("Conditional maximum remaining"), value: HistoryCopy.money(value.remaining.maximumMinor, currency: value.period.currency)).monospacedDigit()
                     Text(value.reconciledEnteredPeriod ? HistoryCopy.text("Entered evidence has been reconciled for this period. This is not bank verification.") : HistoryCopy.text("This period is incomplete. Remaining amounts are conditional, not a verified balance."))
                     if model.canEditSelectedPeriod {
                         Button(HistoryCopy.text("Edit this period plan")) { model.editSelectedPeriod() }
@@ -301,14 +302,22 @@ struct HistoryEntryView: View {
     }
 
     @ViewBuilder private var periodEditor: some View {
-        Section(HistoryCopy.text("Period planning envelope · USD")) {
+        let currency = model.periodDraft?.currency ?? .groceryDefault()
+        Section(HistoryCopy.currencyLabel("Period planning envelope · %@", currency: currency.rawValue)) {
+            if model.periodDraft?.baseRevision == 0 {
+                GroceryCurrencyPicker(selection: Binding(get: { currency }, set: {
+                    selectedShop = ""
+                    model.periodDraft?.changeCurrency($0)
+                }))
+                Text(HistoryCopy.text("Changing currency clears the entered budget, assigned shops and reservations."))
+            }
             TextField(HistoryCopy.text("Period title"), text: periodField(\.title))
             DatePicker(HistoryCopy.text("Period starts"), selection: periodDate(\.startsAt)).environment(\.timeZone, planningTimeZone)
             DatePicker(HistoryCopy.text("Period ends"), selection: periodDate(\.endsAt)).environment(\.timeZone, planningTimeZone)
             TextField(HistoryCopy.text("Planning time zone"), text: periodField(\.timeZoneID)).textInputAutocapitalization(.never).autocorrectionDisabled()
-            TextField(HistoryCopy.text("Shop budget after excluded reserve, USD"), text: periodField(\.budget)).keyboardType(.decimalPad)
+            TextField(HistoryCopy.currencyLabel("Shop budget after excluded reserve, %@", currency: currency.rawValue), text: periodField(\.budget)).keyboardType(.decimalPad)
                 .focused($focusedAmount, equals: .budget)
-            TextField(HistoryCopy.text("Reserve already excluded, optional USD"), text: periodField(\.excludedReserve)).keyboardType(.decimalPad)
+            TextField(HistoryCopy.currencyLabel("Reserve already excluded, optional %@", currency: currency.rawValue), text: periodField(\.excludedReserve)).keyboardType(.decimalPad)
                 .focused($focusedAmount, equals: .excludedReserve)
             Text(HistoryCopy.text("The budget is already net of the excluded reserve. The reserve is explanatory and will not be subtracted twice."))
                 .font(.footnote)
@@ -316,7 +325,7 @@ struct HistoryEntryView: View {
                 .font(.footnote)
         }.disabled(model.busy)
         Section(HistoryCopy.text("Assigned shops")) {
-            shopPicker(selection: $selectedShop)
+            shopPicker(selection: $selectedShop, currency: currency.rawValue)
             Button(HistoryCopy.text("Assign selected shop")) {
                 model.assignPeriodShop(selectedShop)
             }.disabled(!model.canAssignPeriodShop(selectedShop)).frame(minHeight: 44)
@@ -343,7 +352,7 @@ struct HistoryEntryView: View {
                         .font(.footnote)
                 } else {
                     TextField(HistoryCopy.text("Original plan or deferral wording"), text: reservationField(reservation.id, \.originalText), axis: .vertical)
-                    TextField(HistoryCopy.text("Reserved amount in USD"), text: reservationField(reservation.id, \.amount)).keyboardType(.decimalPad)
+                    TextField(HistoryCopy.currencyLabel("Reserved amount in %@", currency: currency.rawValue), text: reservationField(reservation.id, \.amount)).keyboardType(.decimalPad)
                         .focused($focusedAmount, equals: .reservation(reservation.id))
                     DatePicker(HistoryCopy.text("Planned date and time"), selection: reservationDate(reservation.id)).environment(\.timeZone, planningTimeZone)
                     Picker(HistoryCopy.text("Reservation state"), selection: reservationField(reservation.id, \.state)) {
@@ -422,11 +431,11 @@ struct HistoryEntryView: View {
         }
     }
 
-    private func shopPicker(selection: Binding<String>) -> some View {
+    private func shopPicker(selection: Binding<String>, currency: String? = nil) -> some View {
         Group {
             Picker(HistoryCopy.text("Authorized shop"), selection: selection) {
                 Text(HistoryCopy.text("Choose a shop")).tag("")
-                ForEach(model.ownedShops, id: \.shopId) { shop in
+                ForEach(model.ownedShops.filter { currency == nil || $0.currency == currency }, id: \.shopId) { shop in
                     Text(HistoryCopy.shop(shop)).tag(shop.shopId)
                 }
             }
@@ -497,9 +506,9 @@ private struct HistoryObservationDetails: View {
                 Text("\(pack.amount.numerator)/\(pack.amount.denominator) " + HistoryCopy.unit(pack.unit.rawValue))
             } else { Text(HistoryCopy.text("Usable pack quantity not recorded")) }
             switch observation.price {
-            case .exact(let minor): LabeledContent(HistoryCopy.text("Entered price"), value: HistoryCopy.money(minor)).monospacedDigit()
+            case .exact(let minor): LabeledContent(HistoryCopy.text("Entered price"), value: HistoryCopy.money(minor, currency: observation.currency)).monospacedDigit()
             case .bounded(let lower, let upper, let reason):
-                LabeledContent(HistoryCopy.text("Entered price range"), value: HistoryCopy.money(lower) + " – " + HistoryCopy.money(upper)).monospacedDigit()
+                LabeledContent(HistoryCopy.text("Entered price range"), value: HistoryCopy.money(lower, currency: observation.currency) + " – " + HistoryCopy.money(upper, currency: observation.currency)).monospacedDigit()
                 Text(reason)
             case .unknown(let reason): Text(HistoryCopy.text("Unknown price")); Text(reason)
             }
@@ -527,15 +536,15 @@ private struct HistoryPeriodDetails: View {
             LabeledContent(HistoryCopy.text("Period starts"), value: HistoryCopy.date(period.startsAt, timeZoneID: period.timeZoneId))
             LabeledContent(HistoryCopy.text("Period ends"), value: HistoryCopy.date(period.endsAt, timeZoneID: period.timeZoneId))
             LabeledContent(HistoryCopy.text("Planning time zone"), value: period.timeZoneId)
-            LabeledContent(HistoryCopy.text("Shop budget after excluded reserve"), value: HistoryCopy.money(period.shopBudgetMinor)).monospacedDigit()
+            LabeledContent(HistoryCopy.text("Shop budget after excluded reserve"), value: HistoryCopy.money(period.shopBudgetMinor, currency: period.currency)).monospacedDigit()
             if let reserve = period.alreadyExcludedReserveMinor {
-                LabeledContent(HistoryCopy.text("Reserve already excluded"), value: HistoryCopy.money(reserve)).monospacedDigit()
+                LabeledContent(HistoryCopy.text("Reserve already excluded"), value: HistoryCopy.money(reserve, currency: period.currency)).monospacedDigit()
             }
             ForEach(period.shopIds, id: \.self) { id in LabeledContent(HistoryCopy.text("Assigned shop reference"), value: id).font(.caption) }
             ForEach(period.reservations, id: \.id) { reservation in
                 VStack(alignment: .leading, spacing: 4) {
                     Text(reservation.originalText)
-                    Text(HistoryCopy.money(reservation.amountMinor))
+                    Text(HistoryCopy.money(reservation.amountMinor, currency: period.currency))
                     Text(HistoryCopy.date(reservation.plannedAt, timeZoneID: period.timeZoneId))
                     switch reservation.state {
                     case .reserved: Text(HistoryCopy.text("Reserved for a future shop"))
@@ -556,18 +565,18 @@ private struct HistorySubtotalDetails: View {
     let subtotal: HistoryPermittedSubtotal
     var body: some View {
         Group {
-            LabeledContent(HistoryCopy.text("Entered posted net spending"), value: HistoryCopy.money(subtotal.postedNetMinor)).monospacedDigit()
-            LabeledContent(HistoryCopy.text("Expected credits, not yet deducted"), value: HistoryCopy.money(subtotal.pendingCreditsMinor)).monospacedDigit()
-            LabeledContent(HistoryCopy.text("Credits already included, not deducted again"), value: HistoryCopy.money(subtotal.includedCreditsMinor)).monospacedDigit()
-            LabeledContent(HistoryCopy.text("Payment holds, not spending"), value: HistoryCopy.money(subtotal.paymentHoldsMinor)).monospacedDigit()
-            LabeledContent(HistoryCopy.text("Expected unpaid amount"), value: HistoryCopy.range(subtotal.expectedUnpaid)).monospacedDigit()
-            LabeledContent(HistoryCopy.text("Projected commitment including posted spending"), value: HistoryCopy.range(subtotal.projectedCommitment)).monospacedDigit()
+            LabeledContent(HistoryCopy.text("Entered posted net spending"), value: HistoryCopy.money(subtotal.postedNetMinor, currency: subtotal.currency)).monospacedDigit()
+            LabeledContent(HistoryCopy.text("Expected credits, not yet deducted"), value: HistoryCopy.money(subtotal.pendingCreditsMinor, currency: subtotal.currency)).monospacedDigit()
+            LabeledContent(HistoryCopy.text("Credits already included, not deducted again"), value: HistoryCopy.money(subtotal.includedCreditsMinor, currency: subtotal.currency)).monospacedDigit()
+            LabeledContent(HistoryCopy.text("Payment holds, not spending"), value: HistoryCopy.money(subtotal.paymentHoldsMinor, currency: subtotal.currency)).monospacedDigit()
+            LabeledContent(HistoryCopy.text("Expected unpaid amount"), value: HistoryCopy.range(subtotal.expectedUnpaid, currency: subtotal.currency)).monospacedDigit()
+            LabeledContent(HistoryCopy.text("Projected commitment including posted spending"), value: HistoryCopy.range(subtotal.projectedCommitment, currency: subtotal.currency)).monospacedDigit()
             Text(HistoryCopy.text("Pending credits do not reduce posted spending. Holds are separate. A missing upper bound keeps the minimum remaining amount unknown."))
                 .font(.footnote)
             ForEach(subtotal.shops, id: \.shopId) { shop in
                 DisclosureGroup {
-                    LabeledContent(HistoryCopy.text("Entered posted net spending"), value: HistoryCopy.money(shop.postedNetMinor)).monospacedDigit()
-                    LabeledContent(HistoryCopy.text("Expected unpaid amount"), value: HistoryCopy.range(shop.expectedUnpaid)).monospacedDigit()
+                    LabeledContent(HistoryCopy.text("Entered posted net spending"), value: HistoryCopy.money(shop.postedNetMinor, currency: shop.currency)).monospacedDigit()
+                    LabeledContent(HistoryCopy.text("Expected unpaid amount"), value: HistoryCopy.range(shop.expectedUnpaid, currency: shop.currency)).monospacedDigit()
                     Text(shop.reconciledEntered ? HistoryCopy.text("Current entered evidence reconciled") : HistoryCopy.text("Shop evidence remains incomplete"))
                 } label: { Text(shop.shopId).font(.caption) }
             }

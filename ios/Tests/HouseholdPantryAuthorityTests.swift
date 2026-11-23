@@ -318,10 +318,12 @@ private actor PantryTestService: HouseholdPantryServing {
         pesoReceipt.changeCurrency(.mxn)
         XCTAssertEqual(pesoReceipt.currency, .mxn)
         pesoReceipt.lines[0].paid = "4.10"
-        XCTAssertThrowsError(try pesoReceipt.householdReceipt(for: page, deliveries: []))
+        let reviewedPesoReceipt = try pesoReceipt.householdReceipt(for: page, deliveries: [])
+        XCTAssertEqual(reviewedPesoReceipt.currency, "MXN")
+        XCTAssertEqual(reviewedPesoReceipt.lines.map(\.paidMinor), [410, nil])
         pesoReceipt.lines[0].paid = ""
         let quantitiesOnly = try pesoReceipt.householdReceipt(for: page, deliveries: [])
-        XCTAssertTrue(quantitiesOnly.lines.allSatisfy { $0.paidUSDMinor == nil })
+        XCTAssertTrue(quantitiesOnly.lines.allSatisfy { $0.paidMinor == nil })
         XCTAssertEqual(quantitiesOnly.lines.map(\.received), reviewed.lines.map(\.received))
         var identified = draft
         identified.reference = "Transaction 123"
@@ -330,7 +332,8 @@ private actor PantryTestService: HouseholdPantryServing {
         XCTAssertNotNil(reviewed.layoutId)
         XCTAssertEqual(reviewed.layoutId, withReference.layoutId)
         XCTAssertEqual(reviewed.lines.map(\.ordinal), [0, 2])
-        XCTAssertEqual(reviewed.lines.map(\.paidUSDMinor), [410, nil])
+        XCTAssertEqual(reviewed.currency, "USD")
+        XCTAssertEqual(reviewed.lines.map(\.paidMinor), [410, nil])
         XCTAssertEqual(reviewed.lines.map(\.original), ["BEANS", "PERAS"])
         await service.failPreparation(with: .transport)
         let offline = await first.confirmChange(.receipt(reviewed), reviewed: page)
