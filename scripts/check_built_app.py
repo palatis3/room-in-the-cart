@@ -9,7 +9,7 @@ import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
-from app_configuration import (compiled_metadata, load_configuration, require_private_release_metadata,
+from app_configuration import (compiled_metadata, load_configuration, privacy_manifest_profile, require_private_release_metadata,
                                require_release_metadata)
 
 
@@ -110,7 +110,7 @@ def verify_built_app(app, configuration, *, require_production_metadata=False, r
     icon = info.get("CFBundleIcons", {}).get("CFBundlePrimaryIcon", {}).get("CFBundleIconName")
     require(icon == "AppIcon", "Missing app icon")
     require(nonempty_file(app / "Assets.car"), "Missing compiled asset catalog")
-    verify_privacy_manifest(app, ROOT / "ios/Resources")
+    verify_privacy_manifest(app, ROOT / "ios/Resources/Privacy" / privacy_manifest_profile(info))
     permission_keys = ["NSFaceIDUsageDescription", "NSRemindersFullAccessUsageDescription"]
     if (ROOT / "ios/Features/Capture/OnDeviceSpeechCapture.swift").is_file():
         permission_keys += ["NSMicrophoneUsageDescription", "NSSpeechRecognitionUsageDescription"]

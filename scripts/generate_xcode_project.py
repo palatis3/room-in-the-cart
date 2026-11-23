@@ -5,7 +5,8 @@ import hashlib
 import json
 import plistlib
 from pathlib import Path
-from app_configuration import build_settings, load_configuration
+from app_configuration import build_settings, compiled_metadata, load_configuration, privacy_manifest_profile
+from check_privacy_manifests import verify_app_privacy_manifests
 
 ROOT = Path(__file__).resolve().parents[1]
 IOS = ROOT / "ios"
@@ -72,6 +73,7 @@ def config_list(key, base, is_project=False):
                 settings["INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription[sdk=iphonesimulator*]"] = "Add a synthetic receipt to this test simulator for the Photos picker check."
             configuration = load_configuration(ROOT, name)
             settings.update(build_settings(configuration, name))
+            settings["RITC_PRIVACY_PROFILE"] = privacy_manifest_profile(compiled_metadata(configuration, name))
             if configuration.get("regionalAgeCheckEnabled") is True:
                 settings["CODE_SIGN_ENTITLEMENTS"] = "Configuration/AppRegionalAge.entitlements"
         configs.append(obj(f"config:{key}:{name}", "XCBuildConfiguration", buildSettings=settings, name=name))
@@ -88,6 +90,7 @@ def target(key, name, source_paths, product_type, bundle, dependencies=(), packa
             kind = {".xcassets": "folder.assetcatalog", ".xcstrings": "text.json.xcstrings", ".xcprivacy": "text.xml"}.get(p.suffix)
             if kind:
                 resources.append(build_file(str(p.relative_to(IOS)), kind))
+        resources.append(build_file("Resources/Privacy/$(RITC_PRIVACY_PROFILE)/PrivacyInfo.xcprivacy", "text.xml"))
     elif extension_folder:
         resources.append(build_file("Resources/Assets.xcassets", "folder.assetcatalog"))
         catalog = IOS / "Features/DeviceSurfaces/DeviceSurfaces.xcstrings"
@@ -165,6 +168,7 @@ def scheme(name, config, target_ids, local_storekit=False, performance=False):
 
 
 def outputs():
+    verify_app_privacy_manifests(IOS)
     OBJECTS.clear()
     package_names = tuple(sorted(p.parent.name for p in (IOS / "Packages").glob("*/Package.swift")))
     packages = [obj("package:" + name, "XCLocalSwiftPackageReference", relativePath="Packages/" + name) for name in package_names]
@@ -201,7 +205,7 @@ def outputs():
     product_group = obj("products", "PBXGroup", children=[ident(key + ":output") for key in ("app", "unit", "ui", *extension_keys) if ident(key + ":output") in OBJECTS], name="Products", sourceTree="<group>")
     refs = sorted(identifier for identifier, value in OBJECTS.items() if value["isa"] == "PBXFileReference" and value.get("sourceTree") == "<group>")
     group = obj("main", "PBXGroup", children=refs + [product_group], sourceTree="<group>")
-    settings = dict(ALWAYS_SEARCH_USER_PATHS="NO", CLANG_ENABLE_MODULES="YES", CLANG_ENABLE_OBJC_ARC="YES", IPHONEOS_DEPLOYMENT_TARGET="17.0", SDKROOT="iphoneos", SUPPORTED_PLATFORMS="iphoneos iphonesimulator", SUPPORTS_MACCATALYST="NO", SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD="NO", SWIFT_VERSION="5.0", TARGETED_DEVICE_FAMILY="1", MARKETING_VERSION="1.0", CURRENT_PROJECT_VERSION="3")
+    settings = dict(ALWAYS_SEARCH_USER_PATHS="NO", CLANG_ENABLE_MODULES="YES", CLANG_ENABLE_OBJC_ARC="YES", IPHONEOS_DEPLOYMENT_TARGET="17.0", SDKROOT="iphoneos", SUPPORTED_PLATFORMS="iphoneos iphonesimulator", SUPPORTS_MACCATALYST="NO", SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD="NO", SWIFT_VERSION="5.0", TARGETED_DEVICE_FAMILY="1", MARKETING_VERSION="1.0", CURRENT_PROJECT_VERSION="4")
     obj("project", "PBXProject", attributes={"BuildIndependentTargetsInParallel": "YES", "LastUpgradeCheck": "1600"}, buildConfigurationList=config_list("project", settings, True), compatibilityVersion="Xcode 14.0", developmentRegion="en", hasScannedForEncodings="0", knownRegions=["en", "es", "Base"], mainGroup=group, packageReferences=packages, productRefGroup=product_group, projectDirPath="", projectRoot="", targets=targets)
     project = {"archiveVersion": "1", "classes": {}, "objectVersion": "56", "objects": dict(sorted(OBJECTS.items())), "rootObject": ident("project")}
     result = {PROJECT / "project.pbxproj": "// !$*UTF8*$!\n" + serialize(project) + "\n"}
