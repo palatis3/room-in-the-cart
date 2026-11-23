@@ -7,6 +7,7 @@ import CoreDomain
         fileprivate let identity: CapturePrivateIdentity
         fileprivate let ledgerID: UUID
         fileprivate let pantryGeneration: UUID
+        fileprivate let destinationCurrency: Currency
         fileprivate let match: PantryMealMatcher.Review
         let estimate: TonightPurchaseEstimate?
         let pantryBasis: LedgerCanonicalPackStockEvidence.Basis
@@ -63,7 +64,8 @@ import CoreDomain
         let estimate = try? TonightPurchaseEstimate.estimate(match, workspace: ledger.workspace,
             workspaceID: ledgerID, shopID: destinationShopID, at: now, currency: destination.basis.currency)
         return Review(selection: selection, identity: identity, ledgerID: ledgerID,
-                      pantryGeneration: pickup.privatePantryGeneration, match: match, estimate: estimate, pantryBasis: basis)
+                      pantryGeneration: pickup.privatePantryGeneration, destinationCurrency: destination.basis.currency,
+                      match: match, estimate: estimate, pantryBasis: basis)
     }
 
     static func apply(_ review: Review, ledger: LedgerModel, pickup: PickupModel,
@@ -79,7 +81,7 @@ import CoreDomain
             let now = Date()
             if !workspace.dinnerPlanning.applyReceipts.contains(where: { $0.id == proposal.id }) {
                 let estimate = try? TonightPurchaseEstimate.estimate(review.match, workspace: workspace, workspaceID: review.ledgerID,
-                    shopID: review.createsPickup ? nil : proposal.shopID, at: now)
+                    shopID: review.createsPickup ? nil : proposal.shopID, at: now, currency: review.destinationCurrency)
                 guard estimate == review.estimate else { throw DinnerPlanningError.stalePreview }
             }
             try review.selection.apply(to: &workspace,

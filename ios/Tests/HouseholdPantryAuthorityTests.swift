@@ -313,6 +313,10 @@ private actor PantryTestService: HouseholdPantryServing {
         let reviewed = try draft.householdReceipt(for: page, deliveries: [])
         var pesoReceipt = draft
         pesoReceipt.changeCurrency(.mxn)
+        XCTAssertEqual(pesoReceipt.currency, .usd)
+        pesoReceipt.lines[0].paid = ""
+        pesoReceipt.changeCurrency(.mxn)
+        XCTAssertEqual(pesoReceipt.currency, .mxn)
         pesoReceipt.lines[0].paid = "4.10"
         XCTAssertThrowsError(try pesoReceipt.householdReceipt(for: page, deliveries: []))
         pesoReceipt.lines[0].paid = ""
