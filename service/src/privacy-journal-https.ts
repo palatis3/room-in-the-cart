@@ -59,12 +59,15 @@ async function readJSON(message:IncomingMessage):Promise<unknown>{
 }
 
 /** Serve only on the independently operated HTTPS service, with one pinned writer credential. */
-export function journalAuthorityHandler(configuration:Ports&{readonly pins:DurableJournalPins;readonly writerToken:string}):RequestListener{
+export function journalAuthorityHandler(configuration:(Ports|{readonly loadPorts:()=>Promise<Ports>})&{
+ readonly pins:DurableJournalPins;readonly writerToken:string;
+}):RequestListener{
  const credential=Buffer.from('Bearer '+tokenSchema.parse(configuration.writerToken));
  const scopeDigest=durableJournalScopeDigest(configuration.pins);
- const {authority,records,uncertainty}=configuration;
  let active=0;
  async function dispatch(command:Command,call:JournalCall):Promise<unknown>{
+  const {authority,records,uncertainty}='loadPorts' in configuration?await configuration.loadPorts():configuration;
+  call.signal.throwIfAborted();
   switch(command.action){
    case 'current':return authority.readCurrent({...call,requestNonce:command.nonce});
    case 'capacity':{
