@@ -576,9 +576,14 @@ test('operator waits for the source, seals exact intents, replays a prior backup
 
   const exportDirectory=join(dir,'recovery-export'),operatorPath=join(dir,'operator.json');
   await mkdir(exportDirectory,{mode:0o700});
-  const endpoint=(identity,host,port)=>({connection:{host,port,database:identity.database,user:identity.owner},databaseOid:identity.databaseOid,ownerOid:identity.ownerOid});
-  await writeFile(operatorPath,JSON.stringify({pins,writerPrivateKey:pem(config.writerPrivateKey),authorityPrivateKey:pem(config.authorityPrivateKey),
-   checkpoint:endpoint(config.checkpoint.identity,dir,55433),source:endpoint(config.source.identity,socket,55434),exportDirectory}),{mode:0o600});
+  const endpoint=(identity,host,port)=>({connection:{host,port,database:identity.database,user:identity.owner},databaseOid:identity.databaseOid,ownerRole:identity.owner,ownerOid:identity.ownerOid});
+  const operatorSettings={pins,writerPrivateKey:pem(config.writerPrivateKey),authorityPrivateKey:pem(config.authorityPrivateKey),
+   checkpoint:endpoint(config.checkpoint.identity,dir,55433),source:endpoint(config.source.identity,socket,55434),exportDirectory};
+  for(const endpointName of ['source','checkpoint']){
+   await writeFile(operatorPath,JSON.stringify({...operatorSettings,[endpointName]:{...operatorSettings[endpointName],ownerRole:'wrong_sql_owner'}}),{mode:0o600});
+   assert.throws(()=>cli('journal-recovery.mjs','recover',operatorPath),{status:1});
+  }
+  await writeFile(operatorPath,JSON.stringify(operatorSettings),{mode:0o600});
   const exported=cli('journal-recovery.mjs','recover',operatorPath);
   assert.equal(exported.bundleDigest,bundle.proof.bundleDigest);
   assert.deepEqual(await readFile(join(exportDirectory,'journal.ndjson')),bundle.bytes);
@@ -708,7 +713,8 @@ test('deployed runtime entry points bind deletion to the registered source and r
    recordDatabase:hostDatabase(objectRole),listen:{host:'127.0.0.1',port:0},tls:{key:tls.key.toString(),cert:tls.cert}}),
    {mode:0o600,flag:'wx'});
   authority=await startAuthority(path);
-  const {applicationName,...observer}=source.configuration;
+  const {applicationName,...observerBinding}=source.configuration;
+  const observer={...observerBinding,observerRole:source.observer};
   const config={version:1,pins:r.f.pins,writerPrivateKey:pem(r.f.writerKeys.privateKey),
    authorityPublicKey:r.f.authorityKeys.publicKeyPEM,authority:{origin:authority.origin,writerToken,ca:tls.cert},observer,
    retentionPolicy:policy,retentionApprovalReference,restoreApprovalReference};

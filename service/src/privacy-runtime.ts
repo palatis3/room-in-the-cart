@@ -24,9 +24,9 @@ const configurationSchema=z.object({
   vercelTrustedSource:z.boolean().optional()}).strict(),
  observer:z.object({
   connection:z.object({
-   host:z.string().min(1).max(300),port:z.number().int().min(1).max(65535),database:name,user:name,
+   host:z.string().min(1).max(300),port:z.number().int().min(1).max(65535),database:name,user:z.string().min(1).max(84),
    password:z.string().max(16384).optional(),tls:z.object({ca:pem,servername:name}).strict().optional(),
-  }).strict(),databaseOid:oid,observerRoleOid:oid,ownerRole:name,ownerRoleOid:oid,
+  }).strict(),databaseOid:oid,observerRole:name.optional(),observerRoleOid:oid,ownerRole:name,ownerRoleOid:oid,
  }).strict(),
  retentionPolicy:z.unknown(),retentionApprovalReference:reference,restoreApprovalReference:reference,
 }).strict();
@@ -77,13 +77,14 @@ export function createPrivacyRuntime(pool:Database,environment:NodeJS.ProcessEnv
   }
   const writerPrivateKey=createPrivateKey(config.writerPrivateKey);
   const authorityPublicKey=createPublicKey(config.authorityPublicKey);
-  const {password,tls,...connection}=observer.connection;
+  const {connection:{password,tls,...connection},observerRole,...observerBinding}=observer;
   if(environment.VERCEL==='1'&&!tls)throw Error('A pinned observer TLS endpoint is required');
   if(config.authority.vercelTrustedSource&&environment.VERCEL!=='1')throw Error('Vercel journal identity requires a Vercel runtime');
   authority=createHTTPSJournalAuthority({pins,origin:config.authority.origin,writerToken:config.authority.writerToken,
    ...(config.authority.vercelTrustedSource?{getVercelTrustedSourceToken:()=>getVercelOidcToken()}:{}),
    ...(config.authority.ca?{ca:config.authority.ca}:{})});
-  source=createPostgresCommittedSource({...observer,pins,authorityPublicKey,
+  source=createPostgresCommittedSource({...observerBinding,pins,authorityPublicKey,
+   ...(observerRole!==undefined?{observerRole}:{}),
    connection:{...connection,...(password!==undefined?{password}:{}),...(tls?{tls}:{})},
    applicationName:'ritc-privacy-'+role,maxConnections:1});
   const observerSource=source.source;
