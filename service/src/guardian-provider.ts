@@ -2,6 +2,7 @@ import {createHmac, timingSafeEqual} from 'node:crypto';
 import {z} from 'zod';
 import {ServiceError} from './errors.js';
 import {tokenHash} from './database.js';
+import {guardianChildCountry} from './guardian-policy.js';
 
 export type GuardianProviderConfiguration = {organizationId:string;environment:'test'|'production'} & ({scope:'organization';productId:null}|{scope:'product';productId:string});
 export interface GuardianVerificationRequest {
@@ -95,7 +96,7 @@ export class KWSParentVerificationGateway implements GuardianVerificationGateway
     this.tokens=new KWSClientCredentials(credentials.clientId,credentials.apiKey,credentials.userAgent,request);
   }
   async start(input:GuardianVerificationRequest):Promise<void>{
-    if(!z.email().max(320).safeParse(input.email).success||!/^US(-[A-Z]{2})?$/.test(input.location)||!['en','es'].includes(input.language)||input.userContext!=='parent'||Buffer.byteLength(input.externalPayload,'utf8')>250)throw new Error('Bounded KWS parent verification request required');
+    if(!z.email().max(320).safeParse(input.email).success||!guardianChildCountry(input.location)||!['en','es'].includes(input.language)||input.userContext!=='parent'||Buffer.byteLength(input.externalPayload,'utf8')>250)throw new Error('Bounded KWS parent verification request required');
     // No automatic resend: KWS exposes no idempotency/status contract for this
     // operation. A lost response leaves a durable uncertain attempt for callback.
     try{

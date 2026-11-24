@@ -17,11 +17,14 @@ extension HouseholdService {
     }
     public func prepareGuardianEnrollment(notice: GuardianNotice, childLocation: String, childID: String? = nil,
                                           guardianDeclaration: Bool) async throws -> GuardianEnrollmentIntent {
-        guard guardianDeclaration else { throw ClientError.configuration }
+        guard guardianDeclaration, GuardianChildCountry.country(for: childLocation) != nil else { throw ClientError.configuration }
         let binding = try guardianContext()
         let current = try await guardianNotice(language: notice.locale)
         guard current.available, current.notice == notice else { throw guardianStaleNotice() }
         guard binding == (try guardianContext()) else { throw ClientError.cancelled }
+        guard current.allowsChildLocation(childLocation) else {
+            throw ClientError.service(status: 409, code: "guardian_country_unavailable", correlationID: nil, retryAfter: nil)
+        }
         return try .init(binding: binding, kind: .create, notice: notice, childLocation: childLocation, childID: childID)
     }
     public func prepareGuardianVerification(enrollment: GuardianEnrollment) async throws -> GuardianEnrollmentIntent {

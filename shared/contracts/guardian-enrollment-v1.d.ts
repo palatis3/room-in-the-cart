@@ -5,6 +5,7 @@
  */
 export type GuardianUUID = string;
 export type GuardianLanguage = 'en' | 'es';
+export type GuardianChildCountry = 'US' | 'MX';
 export type GuardianScope = 'own_requests';
 export interface GuardianNotice {
   version: string; digest: string; locale: GuardianLanguage; text: string;
@@ -14,6 +15,8 @@ export interface GuardianNoticeResponse {
   available: boolean;
   reason: 'provider_configuration_required' | 'notice_approval_required' | null;
   notice: GuardianNotice | null;
+  /** Countries covered by both approved notices. Older servers imply US when available. */
+  availableChildCountries?: GuardianChildCountry[];
 }
 export type GuardianEnrollmentState =
   | 'awaiting_verification' | 'verification_pending' | 'verification_uncertain'

@@ -56,7 +56,7 @@ public struct GuardianEnrollmentIntent: Codable, Equatable, Identifiable, Sendab
         switch kind {
         case .create:
             guard let version = body.noticeVersion, let digest = body.noticeDigest, let location = body.childLocation,
-                  GuardianValidation.text(version, 200), GuardianValidation.text(digest, 256), GuardianValidation.text(location, 200),
+                  GuardianValidation.text(version, 200), GuardianValidation.text(digest, 256), GuardianChildCountry.country(for: location) != nil,
                   body.language != nil, body.guardianDeclaration == "parent_or_legal_guardian",
                   body.childId.map({ GuardianValidation.ids([$0]) }) ?? true else { throw ClientError.configuration }
             expected.noticeVersion = version; expected.noticeDigest = digest; expected.language = body.language

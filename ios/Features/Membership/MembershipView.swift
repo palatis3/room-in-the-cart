@@ -180,7 +180,7 @@ struct MembershipView: View {
             Text(mtr("Plan repeat weeks and compare dinner combinations using your own prices. Up to two named adults can plan."))
             VStack(alignment: .leading, spacing: 9) {
                 Text(String(format: mtr("%@ due when you confirm with Apple."), offer.displayPrice)).font(.headline)
-                Text(String(format: mtr("Renews at %@ each year. Manage or cancel in Apple subscriptions at least 24 hours before renewal. Apple shows the final charge."), offer.displayPrice))
+                Text(String(format: mtr("Renews at %@ each year. Apple may charge you in the 24 hours before renewal. Manage or cancel in Apple subscriptions. Apple shows the final charge."), offer.displayPrice))
                     .foregroundStyle(Theme.secondary)
                 if let context = model.context {
                     Text(String(format: mtr("Purchasing account: %@"), context.purchaserName))

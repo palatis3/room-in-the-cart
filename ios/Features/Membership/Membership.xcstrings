@@ -1784,19 +1784,19 @@
         }
       }
     },
-    "Renews at %@ each year. Manage or cancel in Apple subscriptions at least 24 hours before renewal. Apple shows the final charge.": {
+    "Renews at %@ each year. Apple may charge you in the 24 hours before renewal. Manage or cancel in Apple subscriptions. Apple shows the final charge.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Renews at %@ each year. Manage or cancel in Apple subscriptions at least 24 hours before renewal. Apple shows the final charge."
+            "value": "Renews at %@ each year. Apple may charge you in the 24 hours before renewal. Manage or cancel in Apple subscriptions. Apple shows the final charge."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "La suscripción se renueva por %@ cada año. Puedes administrarla en las suscripciones de Apple. Para cancelarla, hazlo al menos 24 horas antes de la renovación. Apple muestra el cobro final."
+            "value": "La suscripción se renueva por %@ cada año. Apple puede hacer el cobro durante las 24 horas previas a la renovación. Administra o cancela tu plan en las suscripciones de Apple. Apple muestra el importe final."
           }
         }
       }

@@ -53,6 +53,10 @@ extension HouseholdService: GuardianEnrollmentServing {}
     @Published var guardianDeclaration = false
     @Published var grantReviewed = false
     @Published var childLocation = ""
+    @Published var childCountry: GuardianChildCountry? {
+        didSet { if childCountry != oldValue { childUSRegion = "" } }
+    }
+    @Published var childUSRegion = ""
     @Published var childAlias = ""
     @Published var pairingCode = ""
     @Published var childSignInEmail = ""
@@ -63,7 +67,21 @@ extension HouseholdService: GuardianEnrollmentServing {}
     }
     var live: Bool { runtime() == scope }
     var available: Bool { live && availability?.available == true && availability?.notice != nil }
-    var canStart: Bool { available && !busy && !hasPending && epoch != nil && noticeReviewed && guardianDeclaration && !childLocation.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    var supportedChildCountries: [GuardianChildCountry] { availability?.supportedChildCountries ?? [] }
+    var usesLegacyChildLocation: Bool { supportedChildCountries == [.unitedStates] }
+    private var reviewedChildLocation: String? {
+        guard let availability else { return nil }
+        let location: String
+        if usesLegacyChildLocation {
+            location = childLocation.trimmingCharacters(in: .whitespacesAndNewlines)
+        } else {
+            guard let childCountry else { return nil }
+            let region = childUSRegion.trimmingCharacters(in: .whitespacesAndNewlines)
+            location = childCountry == .unitedStates && !region.isEmpty ? "US-" + region : childCountry.rawValue
+        }
+        return availability.allowsChildLocation(location) ? location : nil
+    }
+    var canStart: Bool { available && !busy && !hasPending && epoch != nil && noticeReviewed && guardianDeclaration && reviewedChildLocation != nil }
     var canGrant: Bool {
         guard available, !busy, !hasPending, let selected, let notice = availability?.notice,
               selected.state.rawValue == "verified", selected.noticeDigest == notice.digest, selected.noticeVersion == notice.version else { return false }
@@ -73,7 +91,8 @@ extension HouseholdService: GuardianEnrollmentServing {}
         generation = UUID(); epoch = nil; availability = nil; enrollments = []; selected = nil
         pending = nil; savedCandidate = nil; hasPending = false; invitation = nil; message = nil; busy = false
         noticeReviewed = false; guardianDeclaration = false; grantReviewed = false
-        childLocation = ""; childAlias = ""; childSignInEmail = ""; pairingCode = ""
+        clearResidence()
+        childAlias = ""; childSignInEmail = ""; pairingCode = ""
     }
     private func current(_ start: UUID) -> Bool { live && generation == start }
     func load() async {
@@ -85,6 +104,7 @@ extension HouseholdService: GuardianEnrollmentServing {}
         do {
             let notice = try await service.guardianNotice(language: language)
             guard current(start) else { return }; availability = notice
+            if let childCountry, !supportedChildCountries.contains(childCountry) { clearResidence() }
             let rows = try await service.guardianEnrollments()
             guard current(start) else { return }; enrollments = rows
             selected = rows.first { $0.enrollmentId == selectedID }
@@ -103,9 +123,9 @@ extension HouseholdService: GuardianEnrollmentServing {}
         selected = value; childAlias = value.childAlias ?? ""; childSignInEmail = ""; pairingCode = ""; grantReviewed = false; invitation = nil
     }
     func start() async {
-        guard canStart, let notice = availability?.notice else { return }
+        guard canStart, let notice = availability?.notice, let location = reviewedChildLocation else { return }
         await perform { try await self.service.prepareGuardianEnrollment(notice: notice,
-            childLocation: self.childLocation.trimmingCharacters(in: .whitespacesAndNewlines), childID: nil, guardianDeclaration: true) }
+            childLocation: location, childID: nil, guardianDeclaration: true) }
     }
     func requestVerification() async {
         guard available, let selected, selected.state.rawValue == "awaiting_verification" else { return }
@@ -166,6 +186,7 @@ extension HouseholdService: GuardianEnrollmentServing {}
             guard current(start) else { return }
             pending = nil; savedCandidate = nil; hasPending = false; selected = value
             enrollments.removeAll { $0.enrollmentId == value.enrollmentId }; enrollments.append(value)
+            if intent.kind == .create { clearResidence() }
             pairingCode = ""; childSignInEmail = ""; grantReviewed = false; guardianDeclaration = false
             message = GuardianCopy.text("Setup status confirmed by the household service.")
         }
@@ -186,6 +207,9 @@ extension HouseholdService: GuardianEnrollmentServing {}
             message = GuardianCopy.text("Local retry cleared after checking status. A setup or permission already saved by the service is unchanged.")
         } catch { await fail(error, start: start) }
     }
+    private func clearResidence() {
+        childLocation = ""; childCountry = nil; childUSRegion = ""
+    }
     private func fail(_ error: Error, start: UUID) async {
         guard current(start) else { return }
         if let value = error as? ClientError, let delay = RetryPolicy().delay(attempt: attempts, error: value) {
@@ -196,14 +220,20 @@ extension HouseholdService: GuardianEnrollmentServing {}
             try? await store.purge(householdID: scope.householdID, subject: scope.subject)
             guard current(start) else { return }; epoch = nil; savedCandidate = nil; hasPending = false
             availability = nil; enrollments = []; selected = nil; pending = nil; invitation = nil
+            clearResidence()
             childAlias = ""; childSignInEmail = ""; pairingCode = ""; noticeReviewed = false; grantReviewed = false
             message = GuardianCopy.text("Guardian access must be checked again. Unlock your household account.")
         case .service(let status, let code, _, _):
             if status == 403 || status == 404 {
                 try? await store.purge(householdID: scope.householdID, subject: scope.subject)
                 guard current(start) else { return }; epoch = nil; savedCandidate = nil; hasPending = false
-                availability = nil; enrollments = []; selected = nil; pending = nil; invitation = nil; childAlias = ""; childSignInEmail = ""; pairingCode = "" }
-            if code.contains("unavailable") || code.contains("configuration") || code.contains("notice_approval") {
+                availability = nil; enrollments = []; selected = nil; pending = nil; invitation = nil; childAlias = ""; childSignInEmail = ""; pairingCode = ""
+                clearResidence()
+            }
+            if code == "guardian_country_unavailable" {
+                availability = nil; noticeReviewed = false; clearResidence()
+                message = GuardianCopy.text("Child setup availability changed for the selected country. Refresh the notice and choose the child's country of residence again.")
+            } else if code.contains("unavailable") || code.contains("configuration") || code.contains("notice_approval") {
                 availability = nil; message = GuardianCopy.text("Child setup is unavailable until the verification service and current notices are approved.")
             } else if status == 409 {
                 message = GuardianCopy.text("Setup changed. Refresh and review the current notice and status before a new action.")
