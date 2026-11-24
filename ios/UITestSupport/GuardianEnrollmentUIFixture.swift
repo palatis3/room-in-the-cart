@@ -24,9 +24,12 @@ private enum GuardianFixtureData {
     static func decode<T: Decodable>(_ value: Any, as type: T.Type = T.self) throws -> T {
         try JSONDecoder().decode(type, from: JSONSerialization.data(withJSONObject: value, options: [.sortedKeys]))
     }
-    static func notice(available: Bool = true, digest: String = "reviewed-digest") throws -> GuardianNoticeResponse {
-        try decode(available ? ["available":true, "reason":NSNull(), "notice":["version":"notice-1", "digest":digest, "locale":"en", "text":"Fixture current guardian notice", "scope":"own_requests", "methodVersion":"fixture-only-method"]] :
-            ["available":false,"reason":"provider_configuration_required","notice":NSNull()])
+    static func notice(available: Bool, language: GuardianLanguage, includesMexico: Bool) throws -> GuardianNoticeResponse {
+        var response: [String: Any] = available ? ["available":true, "reason":NSNull(), "notice":["version":"notice-1", "digest":"reviewed-digest",
+            "locale":language.rawValue, "text":"Fixture current guardian notice", "scope":"own_requests", "methodVersion":"fixture-only-method"]] :
+            ["available":false,"reason":"provider_configuration_required","notice":NSNull()]
+        if available && includesMexico { response["availableChildCountries"] = ["US", "MX"] }
+        return try decode(response)
     }
     static func enrollment(_ state: String, revision: Int = 1) throws -> GuardianEnrollment {
         let verified = ["verified", "consented", "child_claimed", "child_approved", "active"].contains(state)
@@ -37,13 +40,17 @@ private enum GuardianFixtureData {
             "consentedAt":consented ? "2026-11-03T12:01:00Z" as Any : NSNull(), "claimId":["child_claimed", "child_approved", "active"].contains(state) ? claimID as Any : NSNull()])
     }
     static func intent(_ kind: GuardianEnrollmentIntent.Kind, scope: GuardianRuntimeScope, enrollment: GuardianEnrollment? = nil,
-                       notice: GuardianNotice? = nil, alias: String? = nil, pairingCode: String? = nil) throws -> GuardianEnrollmentIntent {
+                       notice: GuardianNotice? = nil, childLocation: String = "US", alias: String? = nil,
+                       pairingCode: String? = nil) throws -> GuardianEnrollmentIntent {
         let id = UUID().uuidString.lowercased()
         var body: [String: Any] = ["clientKey":id]
         if let enrollment { body["baseRevision"] = enrollment.revision }
         if let notice { body["noticeVersion"] = notice.version; body["noticeDigest"] = notice.digest }
         switch kind {
-        case .create: body["language"] = "en"; body["childLocation"] = "US"; body["guardianDeclaration"] = "parent_or_legal_guardian"
+        case .create:
+            body["language"] = notice?.locale.rawValue
+            body["childLocation"] = childLocation
+            body["guardianDeclaration"] = "parent_or_legal_guardian"
         case .consent: body["childAlias"] = alias; body["decision"] = "grant"; body["childSignInEmail"] = "fictional-child@example.invalid"
         case .childInvitation: body["secret"] = try GuardianSecret.generate()
         case .confirmChild: body["claimId"] = claimID; body["pairingCode"] = pairingCode
@@ -58,15 +65,18 @@ private enum GuardianFixtureData {
 }
 private actor GuardianNativeFixture: GuardianEnrollmentServing {
     let scope: GuardianRuntimeScope
-    var noticeValue: GuardianNoticeResponse
+    let available: Bool
+    let includesMexico: Bool
     var rows: [GuardianEnrollment]
     var lostResponse = false
     var denied = false
     var sent: [GuardianEnrollmentIntent] = []
     var verificationPrepared = 0
+    var confirmedLocation = ""
     var onRead: (@Sendable () async -> Void)?
-    init(scope: GuardianRuntimeScope, state: String = "awaiting_verification", available: Bool = true, empty: Bool = false) throws {
-        self.scope = scope; noticeValue = try GuardianFixtureData.notice(available: available)
+    init(scope: GuardianRuntimeScope, state: String = "awaiting_verification", available: Bool = true, empty: Bool = false,
+         includesMexico: Bool = false) throws {
+        self.scope = scope; self.available = available; self.includesMexico = includesMexico
         rows = empty ? [] : [try GuardianFixtureData.enrollment(state)]
     }
     func setLost(_ value: Bool) { lostResponse = value }
@@ -77,14 +87,16 @@ private actor GuardianNativeFixture: GuardianEnrollmentServing {
     func completeProvider() throws { guard rows.first?.state == .verificationPending else { return }; rows = [try GuardianFixtureData.enrollment("verified", revision: 3)] }
     func childClaims() throws { guard rows.first?.state == .consented else { return }; rows = [try GuardianFixtureData.enrollment("child_claimed", revision: 5)] }
     func verificationCount() -> Int { verificationPrepared }
-    func guardianNotice(language: GuardianLanguage) async throws -> GuardianNoticeResponse { noticeValue }
+    func guardianNotice(language: GuardianLanguage) async throws -> GuardianNoticeResponse {
+        try GuardianFixtureData.notice(available: available, language: language, includesMexico: includesMexico)
+    }
     func guardianEnrollments() async throws -> [GuardianEnrollment] {
         if let onRead { await onRead() }; if denied { throw ClientError.accessEnded }; return rows
     }
     func guardianEnrollment(enrollmentID: String) async throws -> GuardianEnrollment { rows[0] }
     func prepareGuardianEnrollment(notice: GuardianNotice, childLocation: String, childID: String?, guardianDeclaration: Bool) async throws -> GuardianEnrollmentIntent {
         guard guardianDeclaration else { throw ClientError.configuration }
-        return try GuardianFixtureData.intent(.create, scope: scope, notice: notice)
+        return try GuardianFixtureData.intent(.create, scope: scope, notice: notice, childLocation: childLocation)
     }
     func prepareGuardianVerification(enrollment: GuardianEnrollment) async throws -> GuardianEnrollmentIntent {
         verificationPrepared += 1; return try GuardianFixtureData.intent(.verification, scope: scope, enrollment: enrollment)
@@ -112,7 +124,11 @@ private actor GuardianNativeFixture: GuardianEnrollmentServing {
         case .consent: state = "consented"
         case .confirmChild: state = "child_approved"
         case .cancel: state = "cancelled"
-        default: state = "awaiting_verification"
+        case .create:
+            let fields = try JSONDecoder().decode([String: String].self, from: intent.bytes)
+            confirmedLocation = fields["childLocation"] ?? ""
+            state = "awaiting_verification"
+        case .childInvitation: throw ClientError.configuration
         }
         let value = try GuardianFixtureData.enrollment(state, revision: 2); rows = [value]; return value
     }
@@ -127,7 +143,9 @@ private actor GuardianNativeFixture: GuardianEnrollmentServing {
     private let fixture: GuardianNativeFixture
     @StateObject private var model: GuardianEnrollmentModel
     @State private var verificationCount = 0
+    @State private var confirmedLocation = ""
     private var childMode: Bool { ProcessInfo.processInfo.arguments.contains("--guardian-fixture-child") }
+    private var includesMexico: Bool { ProcessInfo.processInfo.arguments.contains("--guardian-fixture-mexico") }
     init() {
         let args = ProcessInfo.processInfo.arguments
         let unavailable = args.contains("--guardian-fixture-unavailable")
@@ -136,7 +154,7 @@ private actor GuardianNativeFixture: GuardianEnrollmentServing {
         let scope = GuardianRuntimeScope(subject: "fictional-guardian", householdID: GuardianFixtureData.householdID,
             memberID: GuardianFixtureData.memberID, generation: UUID(), enrollmentRevision: UUID())
         let service = try! GuardianNativeFixture(scope: scope, state: uncertain ? "verification_uncertain" : "awaiting_verification",
-            available: !unavailable, empty: unavailable || (!uncertain && !awaiting))
+            available: !unavailable, empty: unavailable || (!uncertain && !awaiting), includesMexico: args.contains("--guardian-fixture-mexico"))
         fixture = service
         _model = StateObject(wrappedValue: GuardianEnrollmentModel(scope:scope,service:service,
             store:GuardianIntentStore(vault:GuardianModelVault()),runtime:{ scope }))
@@ -148,6 +166,9 @@ private actor GuardianNativeFixture: GuardianEnrollmentServing {
             GuardianEnrollmentView(model:model, serviceURL: URL(string: "https://fixture.invalid")) {
                 Text("Fictional guardian fixture · no real emails or accounts")
                 Text(String(verificationCount)).accessibilityIdentifier("guardian.fixture.verificationRequests")
+                if includesMexico && !confirmedLocation.isEmpty {
+                    Text(verbatim: confirmedLocation).accessibilityIdentifier("guardian.fixture.confirmedLocation")
+                }
                 if model.selected?.state == .verificationPending {
                     Button("Fixture: verified adulthood") { Task { try? await fixture.completeProvider(); await model.load() } }
                         .accessibilityIdentifier("guardian.fixture.providerVerified")
@@ -159,7 +180,10 @@ private actor GuardianNativeFixture: GuardianEnrollmentServing {
             }
             .onChange(of:model.busy) { _, busy in if !busy {
                 if model.selected == nil, let row = model.enrollments.first { model.select(row) }
-                Task { verificationCount = await fixture.verificationCount() }
+                Task {
+                    verificationCount = await fixture.verificationCount()
+                    confirmedLocation = await fixture.confirmedLocation
+                }
             } }
             .task {
                 await model.load()

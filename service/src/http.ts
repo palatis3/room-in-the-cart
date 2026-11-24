@@ -123,7 +123,10 @@ export function createHTTPServer(options:HTTPOptions) {
         send(200,await options.billing.notification(repository.pool,input.signedPayload,destination));
         return;
       }
-      if(url.pathname==='/v1/guardian/availability'&&method==='GET'){const {notice:_,...availability}=guardian.notice(z.enum(['en','es']).parse(url.searchParams.get('language')??'en'));send(200,availability);return;}
+      if(url.pathname==='/v1/guardian/availability'&&method==='GET'){
+        const {available,reason}=guardian.notice(z.enum(['en','es']).parse(url.searchParams.get('language')??'en'));
+        send(200,{available,reason});return;
+      }
       if(url.pathname==='/v1/guardian/providers/kws/webhook'&&method==='POST'){const header=req.headers['x-kws-signature'];send(200,await guardian.webhook(await rawBody(req,16_384),typeof header==='string'?header:undefined));return;}
       const privacyStatus=/^\/v1\/privacy\/jobs\/([^/]+)$/.exec(url.pathname);
       if(privacyStatus&&method==='GET'){

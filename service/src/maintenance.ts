@@ -9,10 +9,14 @@ export interface MaintenanceResult {
 export async function assertWorkerRole(pool:Pick<Database,'query'>){
  const row=(await pool.query(`SELECT r.rolsuper,r.rolbypassrls,pg_has_role(current_user,'ritc_worker','USAGE') AS worker,
  pg_has_role(session_user,'ritc_app','MEMBER') AS application, current_user<>session_user AS switched_role,
+ (COALESCE(pg_has_role(session_user,to_regrole('ritc_moderator'),'MEMBER'),false)
+  OR COALESCE(has_function_privilege(session_user,to_regprocedure('ritc.moderation_queue()'),'EXECUTE'),false)
+  OR COALESCE(has_function_privilege(session_user,to_regprocedure('ritc.moderation_resolve(uuid,text)'),'EXECUTE'),false)
+  OR COALESCE(has_table_privilege(session_user,to_regclass('ritc.moderation_case'),'SELECT'),false)) AS moderation_operator,
  (EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='ritc' AND pg_has_role(session_user,c.relowner,'MEMBER'))
  OR EXISTS(SELECT 1 FROM pg_namespace WHERE nspname='ritc' AND pg_has_role(session_user,nspowner,'MEMBER'))
  OR EXISTS(SELECT 1 FROM pg_database WHERE datname=current_database() AND pg_has_role(session_user,datdba,'MEMBER'))) AS owns_tables FROM pg_roles r WHERE rolname=current_user`)).rows[0];
- if(!row?.worker||row.rolsuper||row.rolbypassrls||row.owns_tables||row.application||row.switched_role)throw new Error('Maintenance requires the separate non-owner, non-bypass worker role');
+ if(!row?.worker||row.rolsuper||row.rolbypassrls||row.owns_tables||row.application||row.moderation_operator||row.switched_role)throw new Error('Maintenance requires the separate non-owner, non-bypass worker role');
 }
 
 export class AuthMaintenance {

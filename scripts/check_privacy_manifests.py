@@ -13,8 +13,9 @@ def verify_app_privacy_manifests(ios):
     }
     connected = {
         **private, "Name": functionality, "UserID": personalized, "DeviceID": functionality,
+        "CoarseLocation": functionality,
         "OtherUserContent": personalized, "PhotosorVideos": functionality, "AudioData": functionality,
-        "OtherFinancialInfo": functionality, "ProductInteraction": functionality, "PurchaseHistory": analytics,
+        "OtherFinancialInfo": functionality, "ProductInteraction": analytics, "PurchaseHistory": analytics,
     }
     apis = {
         "NSPrivacyAccessedAPICategoryUserDefaults": ["CA92.1"],

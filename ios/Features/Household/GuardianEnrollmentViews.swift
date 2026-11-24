@@ -129,9 +129,7 @@ struct GuardianEnrollmentView<Withdrawal: View>: View {
             }
             if allowsNewSetup, model.available, !model.hasPending {
                 Section(GuardianCopy.text("Begin a new child setup")) {
-                    TextField(GuardianCopy.text("Child's country or region code"), text: $model.childLocation)
-                        .textInputAutocapitalization(.characters).autocorrectionDisabled()
-                        .accessibilityIdentifier("guardian.childLocation")
+                    childResidenceFields
                     Toggle(GuardianCopy.text("I am this child's parent or legal guardian"), isOn: $model.guardianDeclaration)
                         .accessibilityIdentifier("guardian.declaration")
                     Text(GuardianCopy.text("This is your declaration. The verification provider checks adulthood and does not independently establish your relationship to the child."))
@@ -158,6 +156,28 @@ struct GuardianEnrollmentView<Withdrawal: View>: View {
             Button(GuardianCopy.text("Check status, then clear local retry"), role: .destructive) { Task { await model.clearRetryAfterStatusReview() } }
             Button(GuardianCopy.text("Cancel")) { clearSelected = false }.accessibilityIdentifier("guardian.clearRetryCancel")
         } message: { Text(GuardianCopy.text("Clearing a local retry does not cancel setup or withdraw permission already saved by the household service.")) }
+    }
+    @ViewBuilder private var childResidenceFields: some View {
+        if model.usesLegacyChildLocation {
+            TextField(GuardianCopy.text("Child's country or region code"), text: $model.childLocation)
+                .textInputAutocapitalization(.characters).autocorrectionDisabled()
+                .accessibilityIdentifier("guardian.childLocation")
+        } else {
+            Picker(GuardianCopy.text("Child's country of residence"), selection: $model.childCountry) {
+                Text(GuardianCopy.text("Choose a country")).tag(GuardianChildCountry?.none)
+                ForEach(model.supportedChildCountries, id: \.self) { country in
+                    Text(GuardianCopy.text(country == .mexico ? "Mexico" : "United States")).tag(Optional(country))
+                }
+            }
+            .pickerStyle(.menu)
+            .accessibilityIdentifier("guardian.childCountry")
+            if model.childCountry == .unitedStates {
+                TextField(GuardianCopy.text("U.S. state or territory code (optional)"), text: $model.childUSRegion,
+                          prompt: Text(verbatim: "CA"))
+                    .textInputAutocapitalization(.characters).autocorrectionDisabled()
+                    .accessibilityIdentifier("guardian.childUSRegion")
+            }
+        }
     }
     @ViewBuilder private func selectedActions(_ selected: GuardianEnrollment) -> some View {
         switch selected.state.rawValue {

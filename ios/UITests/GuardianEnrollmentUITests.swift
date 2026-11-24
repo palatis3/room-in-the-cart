@@ -8,10 +8,10 @@ import XCTest
         if (testRun?.failureCount ?? 0) > 0 { capture("Guardian failure " + name) }
         app.terminate()
     }
-    private func launch(_ scenario: String? = nil, spanish: Bool = false, rootSynthetic: Bool = false) {
+    private func launch(_ scenario: String? = nil, spanish: Bool = false, rootSynthetic: Bool = false, appleLocale: String? = nil) {
         // Keep the XCTest runtime-logging crash workaround limited to iOS 17.
         if #unavailable(iOS 18) { app.launchEnvironment["OS_ACTIVITY_MODE"] = "disable" }
-        app.launchArguments = ["--ui-testing","--guardian-enrollment-fixture","-AppleLanguages",spanish ? "(es)" : "(en)","-AppleLocale",spanish ? "es_US" : "en_US"]
+        app.launchArguments = ["--ui-testing","--guardian-enrollment-fixture","-AppleLanguages",spanish ? "(es)" : "(en)","-AppleLocale",appleLocale ?? (spanish ? "es_US" : "en_US")]
         if spanish { app.launchArguments.append("--guardian-fixture-largest-text") }
         if let scenario { app.launchArguments.append(scenario) }
         if scenario == "--guardian-fixture-root" { app.launchArguments.append("--reset-guardian-root-fixture") }
@@ -417,6 +417,28 @@ import XCTest
         XCTAssertFalse(element("guardian.verify").exists)
         reveal(element("guardian.fixture.verificationRequests"),hitTarget:false)
         XCTAssertEqual(element("guardian.fixture.verificationRequests").label,"0")
+    }
+    func testMexicoEnrollmentRequiresExplicitChildResidenceOnAMexicanDevice() {
+        launch("--guardian-fixture-mexico", appleLocale: "es_MX")
+        toggle("guardian.reviewedNotice", searchTowardStart: true)
+        toggle("guardian.declaration")
+        let create = element("guardian.create")
+        reveal(create)
+        XCTAssertFalse(create.isEnabled)
+        let picker = element("guardian.childCountry")
+        reveal(picker, searchTowardStart: true)
+        XCTAssertTrue(picker.label.contains("Child's country of residence"))
+        let placeholder = picker.staticTexts["Choose a country"]
+        XCTAssertTrue(placeholder.exists && placeholder.isHittable)
+        placeholder.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        let mexico = app.buttons["Mexico"]
+        XCTAssertTrue(mexico.waitForExistence(timeout: 6) && mexico.isHittable)
+        mexico.tap()
+        tap("guardian.create")
+        state("Adulthood verification needed")
+        let confirmed = element("guardian.fixture.confirmedLocation")
+        reveal(confirmed, hitTarget: false)
+        XCTAssertEqual(confirmed.label, "MX")
     }
     func testNoticeDeclarationVerificationPermissionPairingAndDialogCancellation() {
         launch()

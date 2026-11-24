@@ -1169,6 +1169,108 @@
         }
       }
     },
+    "Child's country of residence": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Child's country of residence"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "País de residencia del menor"
+          }
+        }
+      }
+    },
+    "Choose a country": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a country"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selecciona un país"
+          }
+        }
+      }
+    },
+    "Mexico": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mexico"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "México"
+          }
+        }
+      }
+    },
+    "United States": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "United States"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estados Unidos"
+          }
+        }
+      }
+    },
+    "U.S. state or territory code (optional)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "U.S. state or territory code (optional)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Código de estado o territorio de EE. UU. (opcional)"
+          }
+        }
+      }
+    },
+    "Child setup availability changed for the selected country. Refresh the notice and choose the child's country of residence again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Child setup availability changed for the selected country. Refresh the notice and choose the child's country of residence again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambió la disponibilidad de la configuración para menores en el país seleccionado. Actualiza el aviso y vuelve a elegir el país de residencia del menor."
+          }
+        }
+      }
+    },
     "Child's country or region code": {
       "localizations": {
         "en": {

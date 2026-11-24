@@ -6,7 +6,9 @@ import {HouseholdRepository} from './repository.js';
 import {GuardianEnrollmentService,type GuardianApprovedNotice,type GuardianEnrollmentOptions} from './guardian.js';
 import {KWSParentVerificationGateway,KWSWebhookVerifier} from './guardian-provider.js';
 
-const noticeSchema=z.object({version:z.string().min(1).max(100),digest:z.string().regex(/^[0-9a-f]{64}$/),locale:z.enum(['en','es']),text:z.string().min(1).max(30_000),scope:z.literal('own_requests'),methodVersion:z.string().min(1).max(100),approvalReference:z.string().min(1).max(200)}).strict();
+const childCountriesSchema=z.array(z.enum(['US','MX'])).min(1).max(2)
+  .refine(values=>values.includes('US')&&new Set(values).size===values.length);
+const noticeSchema=z.object({version:z.string().min(1).max(100),digest:z.string().regex(/^[0-9a-f]{64}$/),locale:z.enum(['en','es']),text:z.string().min(1).max(30_000),scope:z.literal('own_requests'),methodVersion:z.string().min(1).max(100),approvalReference:z.string().min(1).max(200),childCountries:childCountriesSchema.optional()}).strict();
 /** Configuration preparation alone never turns on child access. A complete actual
  * provider, distinct verifier role, reviewed notices and matching method are all
  * needed. No Boolean/environment-only child-network override is accepted. */

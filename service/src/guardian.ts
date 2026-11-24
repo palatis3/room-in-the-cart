@@ -1,6 +1,6 @@
 import {randomBytes,randomUUID,createHmac} from 'node:crypto';
 import {z} from 'zod';
-import type {GuardianRetentionPolicy} from './guardian-policy.js';
+import {guardianChildCountry,type GuardianRetentionPolicy} from './guardian-policy.js';
 import type {VerifiedIdentity} from './auth.js';
 import type {Database,Transaction} from './database.js';
 import {canonical,digest,tokenHash} from './database.js';
@@ -9,13 +9,14 @@ import {ServiceError,unavailable,accessEnded} from './errors.js';
 import {requireRecentPrivacyAuthentication} from './privacy.js';
 import {KWSWebhookVerifier,type GuardianVerificationGateway} from './guardian-provider.js';
 import type {BrowserAuthService,ChildSigninBinding,EmailOTPProvider} from './browser-auth.js';
-import type {GuardianNotice,GuardianEnrollment} from '../../shared/contracts/guardian-enrollment-v1.js';
+import type {GuardianNotice,GuardianEnrollment,GuardianNoticeResponse,GuardianChildCountry} from '../../shared/contracts/guardian-enrollment-v1.js';
 
 const uuid=z.uuid();const hash=z.string().regex(/^[0-9a-f]{64}$/);
 const secret=z.string().regex(/^[A-Za-z0-9_-]{43}$/).refine(v=>Buffer.from(v,'base64url').toString('base64url')===v);
 const pairing=z.string().regex(/^[A-Z2-7]{8}$/);
 export const guardianCreateSchema=z.object({clientKey:uuid,noticeVersion:z.string().min(1).max(100),noticeDigest:hash,
-  language:z.enum(['en','es']),childLocation:z.string().regex(/^US(-[A-Z]{2})?$/),guardianDeclaration:z.literal('parent_or_legal_guardian'),childId:uuid.optional()}).strict();
+  language:z.enum(['en','es']),childLocation:z.string().refine(location=>guardianChildCountry(location)!==null),
+  guardianDeclaration:z.literal('parent_or_legal_guardian'),childId:uuid.optional()}).strict();
 export const guardianActionSchema=z.object({clientKey:uuid,baseRevision:z.number().int().positive()}).strict();
 export const guardianConsentSchema=guardianActionSchema.extend({noticeVersion:z.string().min(1).max(100),noticeDigest:hash,childAlias:z.string().trim().min(1).max(80),decision:z.literal('grant'),childSignInEmail:z.email().max(254)}).strict();
 export const childDeletionReviewSchema=z.object({enrollmentId:uuid,childSignInEmail:z.string().trim().email().max(254)}).strict();
@@ -31,6 +32,8 @@ export interface GuardianApprovedNotice extends GuardianNotice {
   /** Operator approval of the actual direct notice and the combined adulthood
    * proof + guardian declaration + explicit permission method, never inferred. */
   approvalReference:string;
+  /** Omitting this field preserves the existing US-only approval. */
+  childCountries?:readonly GuardianChildCountry[]|undefined;
 }
 export interface GuardianEnrollmentOptions {
   gateway?:GuardianVerificationGateway; webhookVerifier?:KWSWebhookVerifier; verifierPool?:Database;
@@ -53,17 +56,38 @@ export class GuardianEnrollmentService {
     }
   }
   get providerConfigured(){return Boolean(this.browserAuth&&this.otpProvider&&this.options.gateway&&this.options.webhookVerifier&&this.options.verifierPool&&this.options.emailDigestKey);}
-  private get noticesApproved(){const notices=this.options.notices??[];return Boolean(this.options.retentionPolicy?.approvalReference)&&notices.length===2&&new Set(notices.map(n=>n.locale)).size===2&&new Set(notices.map(n=>n.version)).size===1&&new Set(notices.map(n=>n.methodVersion)).size===1;}
-  notice(language:'en'|'es'){
-    const found=this.options.notices?.find(n=>n.locale===language);
-    const {approvalReference:_,...notice}=found??{approvalReference:'',version:'',digest:'',locale:language,text:'',scope:'own_requests' as const,methodVersion:''};
-    return{available:this.providerConfigured&&this.noticesApproved&&Boolean(found),reason:!this.providerConfigured?'provider_configuration_required' as const:!this.noticesApproved||!found?'notice_approval_required' as const:null,notice:found?notice:null};
+  private get approvedChildCountries():GuardianChildCountry[]{
+    const notices=this.options.notices??[];
+    if(!this.options.retentionPolicy?.approvalReference||notices.length!==2||
+      new Set(notices.map(n=>n.locale)).size!==2||new Set(notices.map(n=>n.version)).size!==1||
+      new Set(notices.map(n=>n.methodVersion)).size!==1)return [];
+    const mexicoApproved=notices.map(notice=>notice.childCountries?.includes('MX')??false);
+    if(mexicoApproved[0]!==mexicoApproved[1])return [];
+    return mexicoApproved[0]?['US','MX']:['US'];
   }
-  private enabled(language:'en'|'es'){
-    const value=this.notice(language);if(!value.available||!value.notice)throw disabled();return value.notice;
+  notice(language:'en'|'es'):GuardianNoticeResponse{
+    const found=this.options.notices?.find(n=>n.locale===language);
+    const availableChildCountries=this.providerConfigured?this.approvedChildCountries:[];
+    const available=availableChildCountries.length>0&&Boolean(found);
+    let notice:GuardianNotice|null=null;
+    if(found){
+      const {approvalReference:_,childCountries:__,...publicNotice}=found;
+      notice=publicNotice;
+    }
+    return {available,reason:!this.providerConfigured?'provider_configuration_required':!available?'notice_approval_required':null,
+      notice,availableChildCountries};
+  }
+  private enabled(language:'en'|'es',location:string){
+    const value=this.notice(language);
+    if(!value.available||!value.notice)throw disabled();
+    const country=guardianChildCountry(location);
+    if(!country||!value.availableChildCountries?.includes(country)){
+      throw new ServiceError(409,'guardian_country_unavailable','Child setup is unavailable for this country. Check the selected country.');
+    }
+    return value.notice;
   }
   private currentNotice(setup:Setup){
-    const notice=this.enabled(setup.language);if(notice.version!==setup.notice_version||notice.digest!==setup.notice_digest||notice.methodVersion!==setup.method_version)throw new ServiceError(409,'guardian_notice_changed','Read the current notice in a new guardian setup.');return notice;
+    const notice=this.enabled(setup.language,setup.child_location);if(notice.version!==setup.notice_version||notice.digest!==setup.notice_digest||notice.methodVersion!==setup.method_version)throw new ServiceError(409,'guardian_notice_changed','Read the current notice in a new guardian setup.');return notice;
   }
   private keyed(kind:string,value:string){if(!this.options.emailDigestKey)throw disabled();return createHmac('sha256',Buffer.from(this.options.emailDigestKey,'base64url')).update(kind+'\n'+value).digest('hex');}
   private guardian(ctx:Context){if(ctx.member.kind!=='adult'||ctx.viewGrantId)throw unavailable();}
@@ -168,7 +192,7 @@ export class GuardianEnrollmentService {
   async list(ctx:Context,identity:VerifiedIdentity){this.guardian(ctx);const rows=(await ctx.db.query('SELECT enrollment_id FROM ritc.guardian_enrollment WHERE household_id=$1 AND guardian_id=$2 AND guardian_device_id=$3 AND guardian_session=$4 ORDER BY created_at DESC LIMIT 100',[ctx.householdId,ctx.member.member_id,ctx.deviceId,identity.sessionId])).rows;const enrollments=[];for(const row of rows)enrollments.push(this.dto(await this.setup(ctx,identity,row.enrollment_id,true)));return{enrollments};}
   async read(ctx:Context,identity:VerifiedIdentity,id:string){return this.dto(await this.setup(ctx,identity,id,true));}
   async create(ctx:Context,identity:VerifiedIdentity,input:z.infer<typeof guardianCreateSchema>){
-    this.guardian(ctx);const notice=this.enabled(input.language);
+    this.guardian(ctx);const notice=this.enabled(input.language,input.childLocation);
     if(input.noticeVersion!==notice.version||input.noticeDigest!==notice.digest)throw new ServiceError(409,'guardian_notice_changed','Read the current guardian notice before continuing.');
     const prior=await this.prior(ctx,identity,input.clientKey,'create',input);if(prior){await this.setup(ctx,identity,prior.enrollment_id);return prior.response;}
     if(!input.childId&&!ctx.member.organizer)throw new ServiceError(403,'organizer_required','A household organizer must authorize a new child membership.');

@@ -24,6 +24,10 @@ const issuer='https://guardian.fixture.invalid',audience='authenticated';const {
 const verifier=new JWTIdentityVerifier({issuer,audience,jwksUrl:issuer+'/jwks'},createLocalJWKSet({keys:[jwk]}));
 const config={organizationId:randomUUID(),scope:'product',productId:randomUUID(),environment:'test'},signing='local-fixture-only-signing-secret';
 const notices=['en','es'].map(locale=>({locale,version:'fixture-reviewed-v1',methodVersion:'fixture-method-v1',scope:'own_requests',text:'Fictional reviewed notice '+locale,digest:tokenHash('Fictional reviewed notice '+locale),approvalReference:'fixture-only-not-legal-approval'}));
+const mexicoNotices=notices.map(notice=>{
+ const text=notice.text+' for US and MX';
+ return {...notice,text,digest:tokenHash(text),version:'fixture-reviewed-v2',childCountries:['US','MX']};
+});
 const requests=[],otpRequests=[],otpActors=new Map();let failDelivery=false,holdVerify;
 const pendingSignupFixture=new Map();
 const otpProvider={async start(email){otpRequests.push(email);const newSubject=pendingSignupFixture.get(email);if(newSubject){
@@ -68,6 +72,56 @@ async function requestChildAccount(f,enrollmentId,review,body=deletionReceipt())
  expectedChildDeletes.add(f.child.subject);
  return call(f.adult,f.base+childDeletionPath,'POST',{...body,enrollmentId,reviewId:review.reviewId});
 }
+
+test('Mexico enrollment requires a matching bilingual approval and sends only the approved residence to KWS',async()=>{
+ const f=await family();
+ const path=f.base+'/guardian/enrollments';
+ const available=language=>call(f.adult,f.base+'/guardian/notice?language='+language);
+ const input={clientKey:randomUUID(),noticeVersion:notices[1].version,noticeDigest:notices[1].digest,
+  language:'es',childLocation:'MX',guardianDeclaration:'parent_or_legal_guardian'};
+ assert.deepEqual(ok(await available('es')).availableChildCountries,['US']);
+ assert.equal((await call(f.adult,path,'POST',input)).data.error.code,'guardian_country_unavailable');
+ const original=guardian.options.notices;
+ try{
+  guardian.options.notices=[mexicoNotices[0],{...mexicoNotices[1],childCountries:['US']}];
+  const mismatch=ok(await available('es'));
+  assert.equal(mismatch.available,false);
+  assert.deepEqual(mismatch.availableChildCountries,[]);
+
+  guardian.options.notices=mexicoNotices;
+  const approved=ok(await available('es'));
+  assert.equal(approved.available,true);
+  assert.deepEqual(approved.availableChildCountries,['US','MX']);
+  assert.equal(approved.notice.digest,mexicoNotices[1].digest);
+  assert.equal(approved.notice.childCountries,undefined);
+  assert.equal((await call(f.adult,path,'POST',input)).data.error.code,'guardian_notice_changed');
+
+  const exact={...input,noticeVersion:approved.notice.version,noticeDigest:approved.notice.digest};
+  assert.equal((await call(f.adult,path,'POST',{...exact,childLocation:'MX-CMX'})).status,422);
+  const pending=ok(await call(f.adult,path,'POST',exact));
+  assert.equal((await admin.query('SELECT child_location FROM ritc.guardian_enrollment WHERE enrollment_id=$1',
+   [pending.enrollmentId])).rows[0].child_location,'MX');
+
+  guardian.options.notices=notices;
+  const sends=requests.length;
+  const disabled=await call(f.adult,path+'/'+pending.enrollmentId+'/verification','POST',
+   {clientKey:randomUUID(),baseRevision:pending.revision});
+  assert.equal(disabled.data.error.code,'guardian_country_unavailable');
+  assert.equal(requests.length,sends);
+
+  guardian.options.notices=mexicoNotices;
+  const sent=await start(f,pending);
+  assert.equal(sent.request.location,'MX');
+  assert.equal(sent.request.language,'es');
+  assert.equal(sent.request.userContext,'parent');
+  ok(await callback(event(sent.request)));
+  const verified=await read(f,pending.enrollmentId);
+  const granted=ok(await call(f.adult,path+'/'+pending.enrollmentId+'/consent','POST',
+   {clientKey:randomUUID(),baseRevision:verified.revision,noticeVersion:approved.notice.version,noticeDigest:approved.notice.digest,
+    childAlias:'Fictional child',decision:'grant',childSignInEmail:f.child.email}));
+  assert.equal(granted.state,'consented');
+ }finally{guardian.options.notices=original;}
+});
 
 test('notice/create/verification exact retry binds notice and exact current guardian session/device',async()=>{
  const f=await family();assert.equal(ok(await call(f.adult,f.base+'/guardian/notice')).available,true);
@@ -430,12 +484,17 @@ test('provider signup interrupted before child admission opens only an enrollmen
 });
 test('whole child account deletion reaches completion for a withdrawn profile and an interrupted child sign-in',async()=>{
  const worker=new pg.Pool({connectionString:process.env.TEST_WORKER_DATABASE_URL});
+ const originalNotices=guardian.options.notices;
  try{
-  for(const paired of [true,false]){
+  for(const [paired,country] of [[true,'US'],[false,'US'],[true,'MX']]){
+   const reviewNotice=country==='MX'?mexicoNotices[1]:notices[0];
+   guardian.options.notices=country==='MX'?mexicoNotices:notices;
    const f=await family();
    let enrollmentId;
    if(paired){
-    const state=await active(f);enrollmentId=state.setup.enrollmentId;
+    const state=await active(f,{childLocation:country,language:reviewNotice.locale,
+     noticeVersion:reviewNotice.version,noticeDigest:reviewNotice.digest});
+    enrollmentId=state.setup.enrollmentId;
     const consent=ok(await call(f.adult,f.base+'/guardian/consents')).consents[0];
     ok(await call(f.adult,f.base+'/guardian/consents/'+consent.consentId+'/revoke','POST',{}));
     assert.equal((await admin.query('SELECT 1 FROM ritc.privacy_job WHERE subject=$1',[f.child.subject])).rowCount,0);
@@ -465,7 +524,7 @@ test('whole child account deletion reaches completion for a withdrawn profile an
    assert.equal((await admin.query('SELECT 1 FROM auth.users WHERE id=$1',[f.adult.subject])).rowCount,1);
    ok(await call(f.adult,f.base+'/bootstrap'));
   }
- }finally{await worker.end();}
+ }finally{guardian.options.notices=originalNotices;await worker.end();}
 });
 
 test('child account reviews require recent actual guardian, exact child email, current device and unchanged authority',async()=>{

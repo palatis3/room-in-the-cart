@@ -1,6 +1,6 @@
 import type {PoolConfig} from 'pg';
 import {randomUUID} from 'node:crypto';
-import {Pool} from './database.js';
+import {Pool,type Database} from './database.js';
 import {AuthMaintenance,assertWorkerRole} from './maintenance.js';
 import {PrivacyMaintenance} from './privacy.js';
 import {createPrivacyRuntime} from './privacy-runtime.js';
@@ -9,7 +9,22 @@ import {SupabaseEmailOTPProvider} from './browser-auth.js';
 
 export const OPERATIONS_DEADLINE_MS=25_000;
 export const OPERATIONS_BATCH_SIZE=25;
+const MODERATION_BATCH_SIZE=500;
 export type OperationsMode='run'|'status';
+
+async function maintainModeration(pool:Database,mode:OperationsMode,enabled:boolean){
+ try{
+  const {rows:[row]}=await pool.query('SELECT * FROM ritc.moderation_maintenance($1,$2)',[MODERATION_BATCH_SIZE,mode==='run']);
+  return {state:'ready' as const,pending:Number(row.pending),expiredUnreviewed:Number(row.expired_unreviewed),
+   expiredCases:Number(row.expired_cases),expiredReceipts:Number(row.expired_receipts),
+   prunedUnreviewed:Number(row.pruned_unreviewed),moreExpired:row.more_expired===true};
+ }catch(error){
+  if(typeof error==='object'&&error&&'code' in error&&error.code==='42883'){
+   return enabled?{state:'configuration_required' as const}:null;
+  }
+  return {state:'unavailable' as const};
+ }
+}
 
 /** This pool never falls back to DATABASE_URL or ambient PG credentials. */
 export function workerDatabaseConfiguration(environment:NodeJS.ProcessEnv):PoolConfig{
@@ -74,11 +89,16 @@ export function createOperationsRuntime(environment:NodeJS.ProcessEnv=process.en
    signal.throwIfAborted();
    const row=(await pool.query('SELECT * FROM ritc.operations_health()')).rows[0];signal.throwIfAborted();
    const health={authDue:Number(row.auth_due),authRetryPending:Number(row.auth_retry_pending),authExpiredUnconfirmed:Number(row.auth_expired_unconfirmed),privacyPending:Number(row.privacy_pending),privacyDue:Number(row.privacy_due)};
+   const moderation=await maintainModeration(pool,mode,environment.SHARED_CONTENT_SAFETY_ENABLED==='true');
+   const moderationAttention=moderation?.state==='ready'
+    ? moderation.pending||moderation.expiredUnreviewed||moderation.prunedUnreviewed||moderation.moreExpired
+    : moderation!==null;
+   signal.throwIfAborted();
    return{event:'operations_result' as const,mode,durationMs:Date.now()-started,batchSize:OPERATIONS_BATCH_SIZE,
-    logoutProviderConfigured:Boolean(provider),privacyJobProcessingEnabled,privacyJournal,auth:authResult,privacy:privacyResult,guardian:guardianResult?{expired:Number(guardianResult.expired),purged:Number(guardianResult.purged),retentionConfigured:Boolean(guardianPolicy)}:null,health,
+    logoutProviderConfigured:Boolean(provider),privacyJobProcessingEnabled,privacyJournal,auth:authResult,privacy:privacyResult,guardian:guardianResult?{expired:Number(guardianResult.expired),purged:Number(guardianResult.purged),retentionConfigured:Boolean(guardianPolicy)}:null,health,moderation,
     attentionRequired:Boolean(health.authDue||health.authRetryPending||health.authExpiredUnconfirmed||health.privacyPending||
      authResult?.logoutExpiredUnconfirmed||authResult?.leaseLost||privacyAttention||privacyJournal.capacity?.nearLimit||
-     !['disabled','ready'].includes(privacyJournal.state)),
+     moderationAttention||!['disabled','ready'].includes(privacyJournal.state)),
    };
   }finally{running=false;}
  }};

@@ -2,6 +2,7 @@ import {createHmac, timingSafeEqual} from 'node:crypto';
 import {z} from 'zod';
 import {ServiceError} from './errors.js';
 import {tokenHash} from './database.js';
+import {guardianChildCountry} from './guardian-policy.js';
 
 export type GuardianProviderConfiguration = {organizationId:string;environment:'test'|'production'} & ({scope:'organization';productId:null}|{scope:'product';productId:string});
 export interface GuardianVerificationRequest {
@@ -95,12 +96,14 @@ export class KWSParentVerificationGateway implements GuardianVerificationGateway
     this.tokens=new KWSClientCredentials(credentials.clientId,credentials.apiKey,credentials.userAgent,request);
   }
   async start(input:GuardianVerificationRequest):Promise<void>{
-    if(!z.email().max(320).safeParse(input.email).success||!/^US(-[A-Z]{2})?$/.test(input.location)||!['en','es'].includes(input.language)||input.userContext!=='parent'||Buffer.byteLength(input.externalPayload,'utf8')>250)throw new Error('Bounded KWS parent verification request required');
+    if(!z.email().max(320).safeParse(input.email).success||!guardianChildCountry(input.location)||!['en','es'].includes(input.language)||input.userContext!=='parent'||Buffer.byteLength(input.externalPayload,'utf8')>250)throw new Error('Bounded KWS parent verification request required');
+    const language=input.location==='MX'&&input.language==='es'?'es-MX':input.language;
+    const payload=JSON.stringify({...input,language});
     // No automatic resend: KWS exposes no idempotency/status contract for this
     // operation. A lost response leaves a durable uncertain attempt for callback.
     try{
       const send=async()=>this.request(this.credentials.serviceOrigin+'/v1/verifications/send-email',{
-        method:'POST',headers:{Authorization:'Bearer '+await this.tokens.token(),'Content-Type':'application/json','User-Agent':this.credentials.userAgent},body:JSON.stringify(input),redirect:'error',signal:AbortSignal.timeout(5_000)});
+        method:'POST',headers:{Authorization:'Bearer '+await this.tokens.token(),'Content-Type':'application/json','User-Agent':this.credentials.userAgent},body:payload,redirect:'error',signal:AbortSignal.timeout(5_000)});
       let response=await send();
       // A definitive authentication rejection has not accepted the request.
       // Renew once as documented; timeouts, 5xx and lost replies never resend.

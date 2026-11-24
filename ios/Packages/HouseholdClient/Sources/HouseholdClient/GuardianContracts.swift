@@ -3,6 +3,18 @@ import Security
 
 public enum GuardianLanguage: String, Codable, CaseIterable, Sendable { case en, es }
 public enum GuardianScope: String, Codable, Sendable { case ownRequests = "own_requests" }
+public enum GuardianChildCountry: String, Codable, CaseIterable, Sendable {
+    case unitedStates = "US"
+    case mexico = "MX"
+
+    static func country(for location: String) -> Self? {
+        if let country = Self(rawValue: location) { return country }
+        let bytes = location.utf8
+        guard bytes.count == 5, bytes.starts(with: "US-".utf8),
+              bytes.suffix(2).allSatisfy({ (65...90).contains($0) }) else { return nil }
+        return .unitedStates
+    }
+}
 public struct GuardianNotice: Codable, Equatable, Sendable {
     public let version: String; public let digest: String; public let locale: GuardianLanguage; public let text: String
     public let scope: GuardianScope; public let methodVersion: String
@@ -16,8 +28,22 @@ public struct GuardianNoticeResponse: Codable, Equatable, Sendable {
         case providerConfigurationRequired = "provider_configuration_required", noticeApprovalRequired = "notice_approval_required"
     }
     public let available: Bool; public let reason: Reason?; public let notice: GuardianNotice?
+    public let availableChildCountries: [GuardianChildCountry]?
+
+    public var supportedChildCountries: [GuardianChildCountry] {
+        available ? availableChildCountries ?? [.unitedStates] : []
+    }
+
+    public func allowsChildLocation(_ location: String) -> Bool {
+        guard let country = GuardianChildCountry.country(for: location) else { return false }
+        return supportedChildCountries.contains(country)
+    }
+
     func validate(language: GuardianLanguage) throws {
         guard available ? reason == nil && notice != nil : reason != nil else { throw ClientError.invalidResponse }
+        if let countries = availableChildCountries {
+            guard Set(countries).count == countries.count, available == !countries.isEmpty else { throw ClientError.invalidResponse }
+        }
         if let notice { try notice.validate(); guard notice.locale == language else { throw ClientError.invalidResponse } }
     }
 }

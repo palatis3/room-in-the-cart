@@ -25,10 +25,12 @@ extension HouseholdClientTests {
     private var guardianInviteID: String { "00000000-0000-4000-8000-000000000064" }
     private var guardianDeviceID: String { "00000000-0000-4000-8000-000000000065" }
     private var guardianDigest: String { String(repeating: "d", count: 64) }
-    private func guardianNoticeBytes(available: Bool = true) throws -> Data {
-        try JSONSerialization.data(withJSONObject: ["available": available,
+    private func guardianNoticeBytes(available: Bool = true, countries: [String]? = nil) throws -> Data {
+        var response: [String: Any] = ["available": available,
             "reason": available ? NSNull() : "provider_configuration_required",
-            "notice": ["version": "approved-v1", "digest": guardianDigest, "locale": "en", "text": "Operator-approved notice fixture.", "scope": "own_requests", "methodVersion": "approved-method-v1"]])
+            "notice": ["version": "approved-v1", "digest": guardianDigest, "locale": "en", "text": "Operator-approved notice fixture.", "scope": "own_requests", "methodVersion": "approved-method-v1"]]
+        if let countries { response["availableChildCountries"] = countries }
+        return try JSONSerialization.data(withJSONObject: response)
     }
     private func guardianEnrollmentBytes(state: GuardianEnrollmentState = .awaitingVerification, revision: Int = 1,
                                          enrollmentID: String? = nil) throws -> Data {
@@ -147,6 +149,69 @@ extension HouseholdClientTests {
         do { _ = try await service.prepareGuardianEnrollment(notice: notice, childLocation: "US", guardianDeclaration: false); XCTFail("Missing declaration accepted") } catch {}
         do { _ = try await service.prepareGuardianEnrollment(notice: notice, childLocation: "US", guardianDeclaration: true); XCTFail("Unavailable provider accepted") } catch {}
         XCTAssertEqual(stateLock.withLock { mutations }, 0)
+    }
+
+    func testGuardianNoticeRejectsMalformedCountryAvailability() throws {
+        let decoder = JSONDecoder()
+        let legacy = try decoder.decode(GuardianNoticeResponse.self, from: guardianNoticeBytes())
+        try legacy.validate(language: .en)
+        XCTAssertEqual(legacy.supportedChildCountries, [.unitedStates])
+        XCTAssertTrue(legacy.allowsChildLocation("US-CA"))
+        XCTAssertFalse(legacy.allowsChildLocation("MX"))
+
+        let malformed: [[String]] = [[], ["US", "US"], ["US", "GB"]]
+        for countries in malformed {
+            XCTAssertThrowsError(try decoder.decode(GuardianNoticeResponse.self,
+                from: guardianNoticeBytes(countries: countries)).validate(language: .en))
+        }
+        let unavailable = try decoder.decode(GuardianNoticeResponse.self, from: guardianNoticeBytes(available: false, countries: []))
+        try unavailable.validate(language: .en)
+        XCTAssertFalse(unavailable.allowsChildLocation("US"))
+    }
+
+    func testMexicanGuardianEnrollmentRequiresCurrentAvailabilityAndPreservesRetryBytes() async throws {
+        let (service, auth) = try guardianService()
+        var countries: [String]? = nil
+        var bodies: [Data] = []
+        let stateLock = installGuardianHandler { request in
+            if let response = try self.guardianSetupResponse(request) { return response }
+            if request.url!.path.hasSuffix("/guardian/notice") { return (200, try self.guardianNoticeBytes(countries: countries)) }
+            XCTAssertEqual(request.httpMethod, "POST")
+            XCTAssertTrue(request.url!.path.hasSuffix("/guardian/enrollments"))
+            bodies.append(self.guardianBytes(request))
+            return (200, try self.guardianEnrollmentBytes())
+        }
+        _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456")
+        _ = try await service.enroll(householdID: household)
+        let response = try await service.guardianNotice(language: .en)
+        let notice = try XCTUnwrap(response.notice)
+        do {
+            _ = try await service.prepareGuardianEnrollment(notice: notice, childLocation: "MX", guardianDeclaration: true)
+            XCTFail("Mexico was offered by a legacy US-only notice")
+        } catch ClientError.service(let status, let code, _, _) where status == 409 && code == "guardian_country_unavailable" {}
+
+        stateLock.withLock { countries = ["US", "MX"] }
+        let current = try await service.guardianNotice(language: .en)
+        XCTAssertEqual(current.supportedChildCountries, [.unitedStates, .mexico])
+        let currentNotice = try XCTUnwrap(current.notice)
+        XCTAssertThrowsError(try GuardianEnrollmentIntent(binding: guardianBinding(), kind: .create, notice: currentNotice, childLocation: "MX-CMX"))
+        let us = try await service.prepareGuardianEnrollment(notice: currentNotice, childLocation: "US-CA", guardianDeclaration: true)
+        let usBody = try JSONDecoder().decode([String: String].self, from: us.bytes)
+        XCTAssertEqual(usBody["childLocation"], "US-CA")
+        let mexico = try await service.prepareGuardianEnrollment(notice: currentNotice, childLocation: "MX", guardianDeclaration: true)
+        let body = try JSONDecoder().decode([String: String].self, from: mexico.bytes)
+        XCTAssertEqual(body["childLocation"], "MX")
+        XCTAssertEqual(body["noticeDigest"], currentNotice.digest)
+        XCTAssertTrue(stateLock.withLock { bodies.isEmpty })
+
+        let store = GuardianIntentStore(vault: MemoryVault())
+        let epoch = await store.epoch()
+        try await store.save(mexico, expectedEpoch: epoch)
+        let saved = try await store.read()
+        let restored = try XCTUnwrap(saved.first)
+        _ = try await service.executeGuardianEnrollment(mexico)
+        _ = try await service.executeGuardianEnrollment(restored)
+        XCTAssertEqual(stateLock.withLock { bodies }, [mexico.bytes, mexico.bytes])
     }
 
     func testGuardianVerificationIsSeparateFromConsentAndRetriesOriginalRevisionAndBytes() async throws {
