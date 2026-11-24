@@ -23,14 +23,16 @@ test('documented OAuth token and PV request use fixed origins, Basic/Bearer and 
  const input={email:'guardian@fixture.invalid',location:'US-NY',language:'es',userContext:'parent',externalPayload:'opaque'};
  await gateway.start(input);
  await gateway.start({...input,location:'MX'});
- assert.equal(calls.length,3);assert.equal(calls[0].url,'https://auth.kidswebservices.com/auth/realms/kws/protocol/openid-connect/token');
+ await gateway.start({...input,location:'MX',language:'en'});
+ assert.equal(calls.length,4);assert.equal(calls[0].url,'https://auth.kidswebservices.com/auth/realms/kws/protocol/openid-connect/token');
  assert.equal(calls[0].options.headers.Authorization,'Basic '+Buffer.from('fixture-client:fixture-key').toString('base64'));assert.equal(calls[0].options.body.toString(),'grant_type=client_credentials&scope=verification');
  assert.equal(calls[1].url,'https://api.kidswebservices.com/v1/verifications/send-email');assert.deepEqual(JSON.parse(calls[1].options.body),input);assert.equal(calls[1].options.headers.Authorization,'Bearer fixture-token');assert.ok(calls[1].options.headers['User-Agent']);
- assert.deepEqual(JSON.parse(calls[2].options.body),{...input,location:'MX'});
+ assert.deepEqual(JSON.parse(calls[2].options.body),{...input,location:'MX',language:'es-MX'});
+ assert.deepEqual(JSON.parse(calls[3].options.body),{...input,location:'MX',language:'en'});
  for(const location of ['CA','MX-CMX','MX\n']){
   await assert.rejects(gateway.start({...input,location}),/Bounded KWS/);
  }
- assert.equal(calls.length,3);
+ assert.equal(calls.length,4);
  assert.throws(()=>new KWSParentVerificationGateway(configuration,{clientId:'fixture',apiKey:'fixture',userAgent:'fixture',serviceOrigin:'https://api.kidswebservices.com.evil.invalid'},request));
 });
 test('ambiguous PV reply is never retried and 202 is never considered verified proof',async()=>{
