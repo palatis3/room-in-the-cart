@@ -15,7 +15,7 @@ export interface GuardianVerificationGateway {
   start(request:GuardianVerificationRequest):Promise<void>;
 }
 const signedEvent=z.object({name:z.literal('parent-verified'),time:z.string().min(1).max(100),
-  orgId:z.uuid(),productId:z.uuid().nullable(),payload:z.object({parentEmail:z.email().max(320),externalPayload:z.string().max(250),
+  orgId:z.uuid(),productId:z.uuid().nullable().optional(),payload:z.object({parentEmail:z.email().max(320),externalPayload:z.string().max(250),
     status:z.object({verified:z.literal(true),transactionId:z.string().min(1).max(256)}).strict()}).strict()}).strict();
 const correlation=z.object({v:z.literal(1),h:z.uuid(),a:z.uuid(),n:z.string().regex(/^[A-Za-z0-9_-]{43}$/)}).strict();
 export type GuardianVerifiedEvent={householdId:string;attemptId:string;nonce:string;parentEmail:string;transactionId:string;eventDigest:string;eventTime:Date;signatureTime:Date} & GuardianProviderConfiguration;
@@ -43,7 +43,8 @@ export class KWSWebhookVerifier {
     let value:unknown;try{value=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(raw));}catch{throw denied();}
     const parsed=signedEvent.safeParse(value);if(!parsed.success)throw denied();
     const event=parsed.data;
-    if(event.orgId!==this.configuration.organizationId||event.productId!==this.configuration.productId)throw denied();
+    // Epic's organization-level events can omit productId. Product-scoped events must name the exact product.
+    if(event.orgId!==this.configuration.organizationId||(event.productId??null)!==this.configuration.productId)throw denied();
     const time=Date.parse(event.time);if(!Number.isFinite(time)||time<=0||time>now.getTime()+300_000)throw denied();
     let context:unknown;try{context=JSON.parse(event.payload.externalPayload);}catch{throw denied();}
     const external=correlation.safeParse(context);if(!external.success)throw denied();
