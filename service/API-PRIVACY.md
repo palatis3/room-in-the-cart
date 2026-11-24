@@ -108,12 +108,16 @@ Inject `PRIVACY_DELETION_JSON` into each enabled runtime. Its strict version 1 f
 | `pins` | Full registered durable journal scope, including writer and authority fingerprints |
 | `writerPrivateKey` | Writer's PKCS#8 Ed25519 private PEM |
 | `authorityPublicKey` | Independent authority's SPKI Ed25519 public PEM |
-| `authority` | `origin`, `writerToken`, optional `ca` PEM |
-| `observer` | `databaseOid`, `observerRoleOid`, `ownerRole`, `ownerRoleOid` and fixed `connection` with `host`, `port`, `database`, `user`, optional `password` and pinned `tls` with `ca` and `servername` |
+| `authority` | `origin`, `writerToken`, optional `ca` PEM and optional `vercelTrustedSource` boolean |
+| `observer` | `databaseOid`, `observerRoleOid`, `ownerRole`, `ownerRoleOid`, optional `observerRole`, and fixed `connection` with `host`, `port`, `database`, `user`, optional `password` and pinned `tls` with `ca` and `servername` |
 | `retentionPolicy` | Approved integer `receiptRetentionDays`, `erasureMarkerRetentionDays` and `verifiedBackupRetentionDays` |
 | `retentionApprovalReference`, `restoreApprovalReference` | References to the owner's actual approvals |
 
 Use `privacyDeploymentConfigurationId` from the built service to derive `pins.configurationId` from the issuer, validated policy and both approval references. Register that same ID in the source and checkpoint. The application and worker verify their own source binding against the dedicated observer and the registered pins before starting deletion work. The authority signs the aggregate capacity response against a fresh nonce. A mismatched source, unreachable authority or unresolved journal claim keeps deletion unavailable. Marker retention covers the verified backup and receipt horizons. Deployment custody keeps the authority signing key and database logins separate from these runtimes. See the [independent journal runbook](journal-authority/README.md).
+
+If a pooler requires a routing login such as `role.project-ref`, put that login in `observer.connection.user` and explicitly set `observer.observerRole` to the registered PostgreSQL role name. The runtime verifies both SQL role names and the observer OID. With a direct connection, `observerRole` defaults to `connection.user`.
+
+Set `authority.vercelTrustedSource` to `true` when the app and worker run on Vercel and the journal deployment uses Vercel Authentication. Enable Vercel OIDC on the caller project and authorize that exact project and environment pair under the journal project's Trusted Sources. Each journal call obtains the Vercel runtime identity and sends it to the configured journal origin in addition to the journal writer bearer. A missing runtime identity prevents the journal request. [Vercel Trusted Sources](https://vercel.com/docs/deployment-protection/methods-to-bypass-deployment-protection/trusted-sources)
 
 Both class-level `run` calls cap batch size at 100 and requested runtime at 25 seconds. Claims are durable 30-second leases, with bounded exponential retry delays up to one hour and content-free error categories. Provider requests time out after five seconds; an in-flight request can finish after the requested loop budget. Erasure calls additionally use a ten-second PostgreSQL statement timeout and two-second lock timeout. Each privacy lease processes at most 100 target profiles. Oversized profiles that repeatedly hit the statement timeout remain pending and require operational investigation; they are not marked erased.
 

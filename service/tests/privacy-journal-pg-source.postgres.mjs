@@ -112,6 +112,16 @@ test('SQL repeats exact source, origin and database pins and refuses SET ROLE or
  const wrong=await connection(observer,wrongURL);try{await assert.rejects(async()=>wrong.query('SELECT ritc.privacy_journal_source_binding($1,$2,$3,$4,$5::oid)',common),{code:'42501'});}finally{await wrong.end();}
  await assert.rejects(async()=>owner.query('SELECT ritc.privacy_journal_source_binding($1,$2,$3,$4,$5::oid)',common),{code:'42501'});
  assert.throws(()=>adapter({connection:{host:'/tmp',port:55432,database:adminURL.pathname.slice(1),user:ownerRole.name}}),/Separate/);
+ for(const role of [ownerRole.name,'ritc_app','ritc_worker'])assert.throws(()=>adapter({observerRole:role}),/Separate/);
+ const explicit=adapter({observerRole:observer});
+ try{assert.equal((await explicit.source.readOrigin(call())).sourceIdentity,pins.sourceIdentity);}finally{await stop(explicit);}
+ for(const mismatch of [{observerRole:observer+'.fixture-project'},{observerRole:'wrong_sql_observer'},
+  {observerRole:observer,observerRoleOid:String(Number(observerRole.oid)+1)},
+  {observerRole:observer,connection:{host:'/tmp',port:55432,database:adminURL.pathname.slice(1),user:'ritc_test_runtime'}}]){
+  const h=adapter(mismatch);
+  try{await assert.rejects(()=>h.source.readOrigin(call()),error=>
+   error.cause?.message==='Restricted committed-source role or database capability conflict');}finally{await stop(h);}
+ }
  for(const changes of [{pins:{...pins,sourceIdentity:'wrong-source'}},{databaseOid:String(Number(databaseOid)+1)},{connection:{host:'/tmp',port:55432,database:wrongURL.pathname.slice(1),user:observer}},{connection:{host:'/tmp',port:55432,database:adminURL.pathname.slice(1),user:'ritc_test_runtime'}}]){
   const h=adapter(changes);try{await assert.rejects(async()=>h.source.readOrigin(call()));}finally{await stop(h);}
  }

@@ -29,7 +29,7 @@ async function transaction<T>(pool:Database,call:JournalCall,work:(db:Transactio
  return withPrivacyClient(pool,call,async db=>{
   try{
    await db.query('BEGIN ISOLATION LEVEL READ COMMITTED');
-   await db.query("SET LOCAL synchronous_commit=on; SET LOCAL lock_timeout='1s'; SET LOCAL statement_timeout='4s'; SET LOCAL idle_in_transaction_session_timeout='4s'");
+   await db.query("SET LOCAL search_path=pg_catalog; SET LOCAL synchronous_commit=on; SET LOCAL lock_timeout='1s'; SET LOCAL statement_timeout='4s'; SET LOCAL idle_in_transaction_session_timeout='4s'");
    const value=await work(db);
    await db.query('COMMIT');
    return value;

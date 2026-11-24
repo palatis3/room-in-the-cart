@@ -3,16 +3,14 @@ import {createServer} from 'node:https';
 import {z} from 'zod';
 import {createPostgresJournalAuthority} from '../dist/privacy-journal-pg-authority.js';
 import {journalAuthorityHandler} from '../dist/privacy-journal-https.js';
-import {journalDatabase,journalDatabaseSchema,readPrivateFile} from './journal-authority-config.mjs';
+import {journalAuthorityConfigSchema,journalDatabase,readPrivateFile} from './journal-authority-config.mjs';
 
-const configurationSchema=z.object({pins:z.unknown(),writerToken:z.string(),writerPublicKey:z.string().min(1).max(8192),
- authorityPrivateKey:z.string().min(1).max(8192),checkpointDatabase:journalDatabaseSchema,recordDatabase:journalDatabaseSchema,
+const configurationSchema=journalAuthorityConfigSchema.extend({
  listen:z.object({host:z.string().min(1).max(255),port:z.number().int().min(0).max(65535)}).strict(),
  tls:z.object({key:z.string().min(1).max(65536),cert:z.string().min(1).max(262144)}).strict()}).strict();
 
 async function run(){
  const config=configurationSchema.parse(JSON.parse(await readPrivateFile(process.argv[2],1048576)));
- if(!/^-----BEGIN PUBLIC KEY-----\r?\n/.test(config.writerPublicKey))throw Error('Writer public key required');
  const checkpointPool=journalDatabase(config.checkpointDatabase,'ritc-journal-authority');
  let recordPool;
  try{

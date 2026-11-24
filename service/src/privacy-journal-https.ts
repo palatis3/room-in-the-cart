@@ -16,6 +16,7 @@ const path='/v1/journal';
 const maxEncodedBytes=4*Math.ceil(maxRecordBytes/3),maxBody=maxEncodedBytes+8192;
 const hash=z.string().regex(/^[0-9a-f]{64}$/);
 const tokenSchema=z.string().regex(/^[A-Za-z0-9_-]{43}$/).refine(value=>Buffer.from(value,'base64url').toString('base64url')===value);
+const oidcTokenSchema=z.string().max(8192).regex(/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/);
 const encoded=z.string().min(4).max(maxEncodedBytes);
 const operationSchema=z.object({scopeDigest:hash,eventId:z.string().uuid(),transition:z.enum(['intent','commit'])}).strict();
 const claimSchema=operationSchema.extend({claimId:z.string().uuid()});
@@ -59,12 +60,15 @@ async function readJSON(message:IncomingMessage):Promise<unknown>{
 }
 
 /** Serve only on the independently operated HTTPS service, with one pinned writer credential. */
-export function journalAuthorityHandler(configuration:Ports&{readonly pins:DurableJournalPins;readonly writerToken:string}):RequestListener{
+export function journalAuthorityHandler(configuration:(Ports|{readonly loadPorts:()=>Promise<Ports>})&{
+ readonly pins:DurableJournalPins;readonly writerToken:string;
+}):RequestListener{
  const credential=Buffer.from('Bearer '+tokenSchema.parse(configuration.writerToken));
  const scopeDigest=durableJournalScopeDigest(configuration.pins);
- const {authority,records,uncertainty}=configuration;
  let active=0;
  async function dispatch(command:Command,call:JournalCall):Promise<unknown>{
+  const {authority,records,uncertainty}='loadPorts' in configuration?await configuration.loadPorts():configuration;
+  call.signal.throwIfAborted();
   switch(command.action){
    case 'current':return authority.readCurrent({...call,requestNonce:command.nonce});
    case 'capacity':{
@@ -126,33 +130,44 @@ export function journalAuthorityHandler(configuration:Ports&{readonly pins:Durab
 
 /** Pinned, direct HTTPS client. The app holds no checkpoint database or signing credential. */
 export function createHTTPSJournalAuthority(configuration:{readonly pins:DurableJournalPins;readonly origin:string;
- readonly writerToken:string;readonly ca?:string}):Ports&{close():void}{
+ readonly writerToken:string;readonly ca?:string;
+ readonly getVercelTrustedSourceToken?:()=>Promise<string>}):Ports&{close():void}{
  const base=new URL(configuration.origin);
  if(base.protocol!=='https:'||base.pathname!=='/'||base.username||base.password||base.search||base.hash)throw Error('Fixed HTTPS journal origin required');
  const endpoint=new URL(path,base),scopeDigest=durableJournalScopeDigest(configuration.pins);
  const credential='Bearer '+tokenSchema.parse(configuration.writerToken);
+ const getVercelTrustedSourceToken=configuration.getVercelTrustedSourceToken;
  const agent=new Agent({keepAlive:true,maxSockets:4,rejectUnauthorized:true,minVersion:'TLSv1.2',
   ...(configuration.ca?{ca:configuration.ca}:{})});
  let closed=false;
  async function send<T>(command:Command,parent:JournalCall,schema:z.ZodType<T>):Promise<T>{
   if(closed)throw Error('Journal connection closed');
   const scope=new PrivacyCall(parent,5000);
-  try{return await scope.run(call=>new Promise<T>((resolve,reject)=>{
+  try{return await scope.run(async call=>{
    const body=JSON.stringify({version:1,scopeDigest,attemptId:call.attemptId,deadlineUnixMs:call.deadlineUnixMs,command});
-   if(Buffer.byteLength(body)>maxBody){reject(Error('Journal message too large'));return;}
+   const length=Buffer.byteLength(body);
+   if(length>maxBody)throw Error('Journal message too large');
+   const headers:Record<string,string|number>={Authorization:credential,'Content-Type':'application/json','Content-Length':length};
+   if(getVercelTrustedSourceToken){
+    const token=oidcTokenSchema.safeParse(await Promise.resolve().then(getVercelTrustedSourceToken).catch(()=>undefined));
+    if(!token.success)throw Error('Vercel journal identity is unavailable');
+    headers['x-vercel-trusted-oidc-idp-token']=token.data;
+   }
    scope.check();
-   const req=request(endpoint,{agent,method:'POST',signal:call.signal,headers:{Authorization:credential,
-    'Content-Type':'application/json','Content-Length':Buffer.byteLength(body)}},res=>{
-    if(res.statusCode===409&&res.headers['content-type']==='application/json'&&canRefuseWriter(command.action)){
-     readJSON(res).then(value=>{busyResponse.parse(value);reject(new JournalWriterBusy());}).catch(reject);return;
-    }
-    if(res.statusCode!==200||res.headers['content-type']!=='application/json'){
-     res.destroy();reject(Error('Independent journal request rejected'));return;
-    }
-    readJSON(res).then(value=>resolve(schema.parse(responseSchema.parse(value).value))).catch(reject);
+   if(closed)throw Error('Journal connection closed');
+   return new Promise<T>((resolve,reject)=>{
+    const req=request(endpoint,{agent,method:'POST',signal:call.signal,headers},res=>{
+     if(res.statusCode===409&&res.headers['content-type']==='application/json'&&canRefuseWriter(command.action)){
+      readJSON(res).then(value=>{busyResponse.parse(value);reject(new JournalWriterBusy());}).catch(reject);return;
+     }
+     if(res.statusCode!==200||res.headers['content-type']!=='application/json'){
+      res.destroy();reject(Error('Independent journal request rejected'));return;
+     }
+     readJSON(res).then(value=>resolve(schema.parse(responseSchema.parse(value).value))).catch(reject);
+    });
+    req.once('error',reject);req.end(body);
    });
-   req.once('error',reject);req.end(body);
-  }));}finally{scope.dispose();}
+  });}finally{scope.dispose();}
  }
  const signed=<T>(value:z.ZodType<T>)=>z.object({version:z.literal(1),domain:z.literal('ritc-privacy-journal-authority-v1'),
   scopeDigest:hash,authorityKeyId:z.string().min(1).max(100),requestNonce:hash,value,

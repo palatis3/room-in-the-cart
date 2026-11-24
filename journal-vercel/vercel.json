@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "fluid": true,
+  "build": { "env": { "NODEJS_HELPERS": "0" } },
+  "installCommand": "npm ci --ignore-scripts && npm --prefix ../service ci --ignore-scripts",
+  "buildCommand": "npm --prefix ../service run build",
+  "functions": {
+    "api/journal.js": { "maxDuration": 20, "supportsCancellation": true }
+  },
+  "rewrites": [
+    { "source": "/v1/journal", "destination": "/api/journal" }
+  ]
+}

@@ -3,6 +3,7 @@ import {createHash,randomUUID,randomBytes,sign} from 'node:crypto';
 import {execFileSync,spawn} from 'node:child_process';
 import {once} from 'node:events';
 import {chmod,mkdir,mkdtemp,readFile,rm,writeFile} from 'node:fs/promises';
+import {createServer} from 'node:https';
 import {join,resolve} from 'node:path';
 import {createInterface} from 'node:readline';
 import {setTimeout as delay} from 'node:timers/promises';
@@ -14,7 +15,7 @@ import {migrate} from '../scripts/migrate.mjs';
 import {createPostgresJournalAuthority} from '../dist/privacy-journal-pg-authority.js';
 import {createPostgresCommittedSource} from '../dist/privacy-journal-pg-source.js';
 import {durableJournalScopeDigest,verifyDurableAdmissionReceipt} from '../dist/privacy-journal-durable.js';
-import {createHTTPSJournalAuthority} from '../dist/privacy-journal-https.js';
+import {createHTTPSJournalAuthority,journalAuthorityHandler} from '../dist/privacy-journal-https.js';
 import {activateIndependentSuccessor,createIndependentRecovery,registerIndependentSuccessor,verifyIndependentArchiveWindow,verifyIndependentRecovery} from '../dist/privacy-journal-recovery.js';
 import {validatePrivacyRestoreEvents,verifyPrivacyJournal} from '../dist/privacy-journal.js';
 import {MAX_JOURNAL_BYTES,MAX_JOURNAL_RECORDS,MAX_INTENT_RESOLUTION_OVERHEAD,MAX_SOURCE_EVENT_BYTES} from '../dist/privacy-journal-limits.js';
@@ -32,26 +33,44 @@ const bin=resolve(process.env.TEST_POSTGRES_BIN),dir=await mkdtemp('/tmp/ritc-jc
 const data=join(dir,'data'),ownerRole='ritc_fixture_owner',objectRole='ritc_fixture_records',checkpointRole='ritc_fixture_checkpoint';
 const storeIdentity='fixture-record-store-v1';
 const environment={PATH:'/usr/bin:/bin',LANG:'C',LC_ALL:'C'};
+const vercel=process.env.TEST_VERCEL_JOURNAL_AUTHORITY==='1';
+const authorityDatabaseTLS=vercel&&process.env.TEST_VERCEL_JOURNAL_AUTHORITY_TLS==='1';
+const fixturePassword=randomBytes(32).toString('base64url');
+const keyPath=join(dir,'tls.key'),certPath=join(dir,'tls.crt');
 let running=false,owner,tls;
 const pool=user=>new pg.Pool({host:dir,port:55433,database:'postgres',user,password:()=>'',ssl:false,connectionTimeoutMillis:1500,max:2});
+const hostDatabase=user=>authorityDatabaseTLS
+ ?{host:'127.0.0.1',port:55433,database:'postgres',user,password:fixturePassword,ca:tls.cert}
+ :{host:dir,port:55433,database:'postgres',user};
 const pgTool=(tool,args)=>execFileSync(join(bin,tool),args,{env:environment,stdio:['ignore','pipe','pipe'],timeout:20_000});
-function start(){pgTool('pg_ctl',['-D',data,'-l',join(dir,'postgres.log'),'-o',`-h '' -k ${dir} -p 55433 -c unix_socket_permissions=0700`,'-w','start']);running=true;}
+function start(){
+ const network=authorityDatabaseTLS?`-h 127.0.0.1 -c ssl=on -c ssl_cert_file=${certPath} -c ssl_key_file=${keyPath}`:"-h ''";
+ pgTool('pg_ctl',['-D',data,'-l',join(dir,'postgres.log'),'-o',`${network} -k ${dir} -p 55433 -c unix_socket_permissions=0700`,'-w','start']);
+ running=true;
+}
 function stop(mode){pgTool('pg_ctl',['-D',data,'-m',mode,'-w','stop']);running=false;}
 before(async()=>{
- pgTool('initdb',['-D',data,'-A','trust','-U',ownerRole,'--no-locale','-E','UTF8']);start();
+ const config=join(dir,'tls.cnf');
+ await writeFile(config,'[req]\nprompt=no\ndistinguished_name=dn\nx509_extensions=ext\n[dn]\nCN=127.0.0.1\n[ext]\nbasicConstraints=critical,CA:TRUE\nsubjectAltName=IP:127.0.0.1\n');
+ execFileSync('openssl',['req','-new','-x509','-nodes','-newkey','rsa:2048','-days','1','-config',config,'-keyout',keyPath,'-out',certPath],{env:environment,stdio:'pipe',timeout:10000});
+ await chmod(keyPath,0o600);
+ tls={key:await readFile(keyPath),cert:await readFile(certPath,'utf8')};
+ const localAuth=['-A','trust'];
+ if(authorityDatabaseTLS){
+  const passwordFile=join(dir,'fixture-password');
+  await writeFile(passwordFile,fixturePassword,{mode:0o600});
+  localAuth.push('--auth-host=scram-sha-256','--pwfile',passwordFile);
+ }
+ pgTool('initdb',['-D',data,...localAuth,'-U',ownerRole,'--no-locale','-E','UTF8']);start();
  owner=pool(ownerRole);
  await owner.query(`CREATE ROLE ritc_checkpoint_runtime NOLOGIN; CREATE ROLE ritc_record_runtime NOLOGIN;
-  CREATE ROLE ${objectRole} LOGIN; CREATE ROLE ${checkpointRole} LOGIN;
+  CREATE ROLE ${objectRole} LOGIN PASSWORD '${fixturePassword}'; CREATE ROLE ${checkpointRole} LOGIN PASSWORD '${fixturePassword}';
   GRANT ritc_checkpoint_runtime TO ${checkpointRole}; GRANT ritc_record_runtime TO ${objectRole}`);
  await owner.query(await readFile(new URL('../journal-authority/001_checkpoint.sql',import.meta.url),'utf8'));
  await owner.query(await readFile(new URL('../journal-authority/002_recovery.sql',import.meta.url),'utf8'));
  await owner.query(await readFile(new URL('../journal-authority/003_worker_capacity.sql',import.meta.url),'utf8'));
  await owner.query(await readFile(new URL('../journal-authority/004_successor.sql',import.meta.url),'utf8'));
  await owner.query('INSERT INTO ritc_records.store(identity) VALUES($1)',[storeIdentity]);
- const config=join(dir,'tls.cnf'),keyPath=join(dir,'tls.key'),certPath=join(dir,'tls.crt');
- await writeFile(config,'[req]\nprompt=no\ndistinguished_name=dn\nx509_extensions=ext\n[dn]\nCN=127.0.0.1\n[ext]\nbasicConstraints=critical,CA:TRUE\nsubjectAltName=IP:127.0.0.1\n');
- execFileSync('openssl',['req','-new','-x509','-nodes','-newkey','rsa:2048','-days','1','-config',config,'-keyout',keyPath,'-out',certPath],{env:environment,stdio:'pipe',timeout:10000});
- tls={key:await readFile(keyPath),cert:await readFile(certPath,'utf8')};
 });
 after(async()=>{
  await owner?.end();
@@ -90,8 +109,11 @@ async function reserve(fixture,service,event,transition,context){
  return {ticket,claim,content};
 }
 async function startAuthority(configPath){
- const child=spawn(process.execPath,[fileURLToPath(new URL('../scripts/journal-authority.mjs',import.meta.url)),configPath],
-  {env:environment,stdio:['ignore','pipe','pipe']});
+ const entry=vercel?'./journal-vercel-host.mjs':'../scripts/journal-authority.mjs';
+ const env=vercel?{...environment,JOURNAL_AUTHORITY_TEST_ENTRY:process.env.JOURNAL_AUTHORITY_TEST_ENTRY,
+  ...(authorityDatabaseTLS?{VERCEL:'1'}:{})}:environment;
+ const child=spawn(process.execPath,[fileURLToPath(new URL(entry,import.meta.url)),configPath],
+  {env,stdio:['ignore','pipe','pipe']});
  const finished=once(child,'exit');finished.catch(()=>{});
  const reader=createInterface({input:child.stdout});
  child.stderr.resume();
@@ -160,6 +182,38 @@ function cli(script,...args){
  return JSON.parse(execFileSync(process.execPath,[fileURLToPath(new URL('../scripts/'+script,import.meta.url)),...args],
   {env:environment,stdio:['ignore','pipe','pipe'],timeout:15000}).toString());
 }
+
+test('the HTTPS journal acquires its Vercel identity per call and fails closed before sending on identity failure',async()=>{
+ const f=fixture(),writerToken=randomBytes(32).toString('base64url'),observations=[];
+ const listener=journalAuthorityHandler({pins:f.pins,writerToken,authority:f.authority,records:f.recordTransport,uncertainty:f.uncertainty});
+ const server=createServer(tls,(req,res)=>{
+  observations.push({bearer:req.headers.authorization,oidc:req.headers['x-vercel-trusted-oidc-idp-token']});
+  listener(req,res);
+ });
+ server.listen(0,'127.0.0.1');await once(server,'listening');
+ const config={pins:f.pins,writerToken,origin:`https://127.0.0.1:${server.address().port}`,ca:tls.cert};
+ const direct=createHTTPSJournalAuthority(config);
+ let calls=0,loadToken=async()=>`synthetic.identity${++calls}.signature`;
+ const protectedClient=createHTTPSJournalAuthority({...config,getVercelTrustedSourceToken:()=>loadToken()});
+ const entered=gate(),release=gate();
+ try{
+  await direct.authority.readCurrent(nonce(time()));
+  await protectedClient.authority.readCurrent(nonce(time()));
+  await protectedClient.authority.readCurrent(nonce(time()));
+  assert.deepEqual(observations.map(x=>x.oidc),[undefined,'synthetic.identity1.signature','synthetic.identity2.signature']);
+  assert(observations.every(x=>x.bearer===`Bearer ${writerToken}`));
+  loadToken=async()=>{throw Error('Synthetic unavailable request identity');};
+  await assert.rejects(protectedClient.authority.readCurrent(nonce(time())),/Vercel journal identity is unavailable/);
+  loadToken=async()=>'';
+  await assert.rejects(protectedClient.authority.readCurrent(nonce(time())),/Vercel journal identity is unavailable/);
+  loadToken=async()=>{entered.resolve();await release.promise;return 'synthetic.delayed.signature';};
+  const controller=new AbortController();
+  const cancelled=protectedClient.authority.readCurrent({...nonce(time()),signal:controller.signal});
+  await entered.promise;controller.abort();await assert.rejects(cancelled,{code:'deletion_unavailable'});
+  release.resolve();await delay(20);
+  assert.equal(observations.length,3);
+ }finally{release.resolve();direct.close();protectedClient.close();await new Promise(resolve=>server.close(resolve));}
+});
 
 test('the two runtime roles cannot replace, delete, or impersonate retained records and admissions',async()=>{
  const registration=await register(),ports=await registration.open();
@@ -279,10 +333,9 @@ test('worker allowances survive provider retry and lost completion observation a
   observer=createPostgresCommittedSource({pins:r.f.pins,authorityPublicKey:r.f.authorityKeys.publicKey,...source.configuration});
   const writerToken=randomBytes(32).toString('base64url');
   const path=join(dir,'authority-config.json');
-  const database=user=>({host:dir,port:55433,database:'postgres',user});
   await writeFile(path,JSON.stringify({pins:r.f.pins,writerToken,writerPublicKey:r.f.writerKeys.publicKeyPEM,
    authorityPrivateKey:r.f.authorityKeys.privateKey.export({format:'pem',type:'pkcs8'}).toString(),
-   checkpointDatabase:database(checkpointRole),recordDatabase:database(objectRole),
+   checkpointDatabase:hostDatabase(checkpointRole),recordDatabase:hostDatabase(objectRole),
    listen:{host:'127.0.0.1',port:0},tls:{key:tls.key.toString('utf8'),cert:tls.cert}}),{mode:0o600,flag:'wx'});
   server=await startAuthority(path);
   const configuration={pins:r.f.pins,origin:server.origin,writerToken,ca:tls.cert};
@@ -523,9 +576,14 @@ test('operator waits for the source, seals exact intents, replays a prior backup
 
   const exportDirectory=join(dir,'recovery-export'),operatorPath=join(dir,'operator.json');
   await mkdir(exportDirectory,{mode:0o700});
-  const endpoint=(identity,host,port)=>({connection:{host,port,database:identity.database,user:identity.owner},databaseOid:identity.databaseOid,ownerOid:identity.ownerOid});
-  await writeFile(operatorPath,JSON.stringify({pins,writerPrivateKey:pem(config.writerPrivateKey),authorityPrivateKey:pem(config.authorityPrivateKey),
-   checkpoint:endpoint(config.checkpoint.identity,dir,55433),source:endpoint(config.source.identity,socket,55434),exportDirectory}),{mode:0o600});
+  const endpoint=(identity,host,port)=>({connection:{host,port,database:identity.database,user:identity.owner},databaseOid:identity.databaseOid,ownerRole:identity.owner,ownerOid:identity.ownerOid});
+  const operatorSettings={pins,writerPrivateKey:pem(config.writerPrivateKey),authorityPrivateKey:pem(config.authorityPrivateKey),
+   checkpoint:endpoint(config.checkpoint.identity,dir,55433),source:endpoint(config.source.identity,socket,55434),exportDirectory};
+  for(const endpointName of ['source','checkpoint']){
+   await writeFile(operatorPath,JSON.stringify({...operatorSettings,[endpointName]:{...operatorSettings[endpointName],ownerRole:'wrong_sql_owner'}}),{mode:0o600});
+   assert.throws(()=>cli('journal-recovery.mjs','recover',operatorPath),{status:1});
+  }
+  await writeFile(operatorPath,JSON.stringify(operatorSettings),{mode:0o600});
   const exported=cli('journal-recovery.mjs','recover',operatorPath);
   assert.equal(exported.bundleDigest,bundle.proof.bundleDigest);
   assert.deepEqual(await readFile(join(exportDirectory,'journal.ndjson')),bundle.bytes);
@@ -650,13 +708,13 @@ test('deployed runtime entry points bind deletion to the registered source and r
   const configurationId=privacyDeploymentConfigurationId({issuer,policy,retentionApprovalReference,restoreApprovalReference});
   const {r}=await recoveryFixture(source,configurationId);
   const writerToken=randomBytes(32).toString('base64url'),path=join(dir,'runtime-authority.json');
-  const database=user=>({host:dir,port:55433,database:'postgres',user});
   await writeFile(path,JSON.stringify({pins:r.f.pins,writerToken,writerPublicKey:r.f.writerKeys.publicKeyPEM,
-   authorityPrivateKey:pem(r.f.authorityKeys.privateKey),checkpointDatabase:database(checkpointRole),
-   recordDatabase:database(objectRole),listen:{host:'127.0.0.1',port:0},tls:{key:tls.key.toString(),cert:tls.cert}}),
+   authorityPrivateKey:pem(r.f.authorityKeys.privateKey),checkpointDatabase:hostDatabase(checkpointRole),
+   recordDatabase:hostDatabase(objectRole),listen:{host:'127.0.0.1',port:0},tls:{key:tls.key.toString(),cert:tls.cert}}),
    {mode:0o600,flag:'wx'});
   authority=await startAuthority(path);
-  const {applicationName,...observer}=source.configuration;
+  const {applicationName,...observerBinding}=source.configuration;
+  const observer={...observerBinding,observerRole:source.observer};
   const config={version:1,pins:r.f.pins,writerPrivateKey:pem(r.f.writerKeys.privateKey),
    authorityPublicKey:r.f.authorityKeys.publicKeyPEM,authority:{origin:authority.origin,writerToken,ca:tls.cert},observer,
    retentionPolicy:policy,retentionApprovalReference,restoreApprovalReference};
@@ -807,25 +865,26 @@ test('deployed runtime entry points bind deletion to the registered source and r
 test('overlapping HTTPS writers defer without poisoning the losing app or worker',async()=>{
  const source=await sourceCluster(),runtime=source.pool(source.runtime),workerPool=source.pool(source.worker);
  const writing=gate(),resume=gate();
- let server,remote,observer,winnerWrite;
+ let server,competingServer,remote,competingRemote,observer,winnerWrite;
  try{
   const {r}=await recoveryFixture(source);
   const {pins}=r.f,writerToken=randomBytes(32).toString('base64url');
   const path=join(dir,'contention-authority.json');
-  const database=user=>({host:dir,port:55433,database:'postgres',user});
   await writeFile(path,JSON.stringify({pins,writerToken,writerPublicKey:r.f.writerKeys.publicKeyPEM,
-   authorityPrivateKey:pem(r.f.authorityKeys.privateKey),checkpointDatabase:database(checkpointRole),
-   recordDatabase:database(objectRole),listen:{host:'127.0.0.1',port:0},tls:{key:tls.key.toString(),cert:tls.cert}}),
+   authorityPrivateKey:pem(r.f.authorityKeys.privateKey),checkpointDatabase:hostDatabase(checkpointRole),
+   recordDatabase:hostDatabase(objectRole),listen:{host:'127.0.0.1',port:0},tls:{key:tls.key.toString(),cert:tls.cert}}),
    {mode:0o600,flag:'wx'});
   server=await startAuthority(path);
+  competingServer=await startAuthority(path);
   remote=createHTTPSJournalAuthority({pins,origin:server.origin,writerToken,ca:tls.cert});
+  competingRemote=createHTTPSJournalAuthority({pins,origin:competingServer.origin,writerToken,ca:tls.cert});
   observer=createPostgresCommittedSource({pins,authorityPublicKey:r.f.authorityKeys.publicKey,...source.configuration});
   const ports={...remote,source:observer.source};
   const app=r.f.adapter(ports),worker=r.f.adapter(ports);
-  const winner=r.f.adapter({...ports,records:{...remote.records,async putExact(...args){
+  const winner=r.f.adapter({...competingRemote,source:observer.source,records:{...competingRemote.records,async putExact(...args){
    writing.resolve();
    await resume.promise;
-   return remote.records.putExact(...args);
+   return competingRemote.records.putExact(...args);
   }}});
 
   const issuer='https://contention.fixture.invalid/auth/v1',subject=randomUUID(),sessionId=randomUUID();
@@ -901,8 +960,8 @@ test('overlapping HTTPS writers defer without poisoning the losing app or worker
  }finally{
   resume.resolve();
   await winnerWrite?.catch(()=>{});
-  remote?.close();
-  await server?.stop();
+  remote?.close();competingRemote?.close();
+  await Promise.all([server?.stop(),competingServer?.stop()]);
   await Promise.all([observer?.close(),runtime.end(),workerPool.end()]);
   await source.close();
  }

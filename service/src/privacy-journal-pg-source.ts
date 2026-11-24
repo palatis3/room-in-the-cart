@@ -12,8 +12,9 @@ const MAX_TIMER=2147483647;
 const hash=z.string().regex(/^[0-9a-f]{64}$/);
 const uuid=z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
 const identifier=z.string().min(1).max(63).regex(/^[^\x00-\x1f\x7f]+$/);
+const login=z.string().min(1).max(84).regex(/^[^\x00-\x1f\x7f]+$/);
 const oid=z.string().regex(/^[1-9][0-9]{0,9}$/).refine(v=>Number(v)<=4294967295);
-const connectionSchema=z.object({host:z.string().min(1).max(300).regex(/^[^\x00-\x1f\x7f]+$/),port:z.number().int().min(1).max(65535),database:identifier,user:identifier,password:z.string().max(16384).optional(),tls:z.object({ca:z.string().min(1).max(262144),servername:identifier}).strict().optional()}).strict();
+const connectionSchema=z.object({host:z.string().min(1).max(300).regex(/^[^\x00-\x1f\x7f]+$/),port:z.number().int().min(1).max(65535),database:identifier,user:login,password:z.string().max(16384).optional(),tls:z.object({ca:z.string().min(1).max(262144),servername:identifier}).strict().optional()}).strict();
 const eventSchema=z.object({eventId:uuid,payloadDigest:hash,payload:z.object({version:z.literal(1),eventId:uuid,lineage:uuid,schemaDigest:hash,configurationId:z.string().min(1).max(100),jobId:uuid,kind:z.enum(['acceptance','target_erased','source_completed','source_pending']),data:z.record(z.string(),z.unknown())}).strict()}).strict();
 const bindingSchema=z.object({sourceIdentity:z.string().min(1).max(300),databaseName:identifier,databaseOid:oid,observerRole:identifier,ownerRole:identifier,lineage:uuid,schemaDigest:hash,configurationId:z.string().min(1).max(100),fenced:z.boolean()}).strict();
 const catalogSchema=z.object({databaseName:identifier,databaseOid:oid,sessionRole:identifier,currentRole:identifier,roleOid:oid,roleCanLogin:z.boolean(),dangerousReachableRole:z.boolean(),ownsUserObject:z.boolean(),databaseCreate:z.boolean(),databaseTemporary:z.boolean(),databaseConnect:z.boolean(),schemaCreate:z.boolean(),sourceSchemaUsage:z.boolean(),rawRelationPrivilege:z.boolean(),extraFunctionExecute:z.boolean(),functionsValid:z.boolean()}).strict();
@@ -24,6 +25,8 @@ export interface PostgresCommittedSourceConfiguration {
  /** Fully specified endpoint. No connection string, PG* fallback, SET ROLE or injected client. */
  readonly connection:{readonly host:string;readonly port:number;readonly database:string;readonly user:string;readonly password?:string;readonly tls?:{readonly ca:string;readonly servername:string}};
  readonly databaseOid:string;
+ /** Expected SQL role when the connection login contains provider routing information. */
+ readonly observerRole?:string;
  readonly observerRoleOid:string;
  readonly ownerRole:string;
  readonly ownerRoleOid:string;
@@ -110,9 +113,11 @@ export function createPostgresCommittedSource(input:PostgresCommittedSourceConfi
  const pins=freeze(structuredClone(input.pins));durableJournalScopeDigest(pins);
  const connection=freeze(connectionSchema.parse(input.connection));
  if(!connection.tls&&!connection.host.startsWith('/')&&!['localhost','127.0.0.1','::1'].includes(connection.host))throw Error('Verified pinned TLS required for a remote committed source');
+ const observerRole=identifier.parse(input.observerRole??connection.user);
  const databaseOid=oid.parse(input.databaseOid),observerRoleOid=oid.parse(input.observerRoleOid),ownerRole=identifier.parse(input.ownerRole),ownerRoleOid=oid.parse(input.ownerRoleOid);
  const applicationName=identifier.parse(input.applicationName),maxConnections=z.number().int().min(1).max(4).parse(input.maxConnections??1);
- if(connection.user===ownerRole||observerRoleOid===ownerRoleOid||['ritc_app','ritc_worker'].includes(connection.user))throw Error('Separate committed observer role required');
+ const excludedRoles=[ownerRole,'ritc_app','ritc_worker'];
+ if(observerRoleOid===ownerRoleOid||excludedRoles.includes(observerRole)||excludedRoles.includes(connection.user))throw Error('Separate committed observer role required');
  let authorityPublicKey:KeyObject;
  if(typeof input.authorityPublicKey==='string'){
   if(!/^-----BEGIN PUBLIC KEY-----\r?\n(?:[A-Za-z0-9+/=]+\r?\n)+-----END PUBLIC KEY-----\r?\n?$/.test(input.authorityPublicKey))throw Error('Public authority SPKI PEM required');
@@ -176,10 +181,10 @@ export function createPostgresCommittedSource(input:PostgresCommittedSourceConfi
    await budget();
    await dispatch("SELECT pg_catalog.set_config('search_path','pg_catalog',true)");
    const catalog=catalogSchema.parse(jsonResult(await dispatch(CATALOG_SQL,[signatures,ownerRoleOid,ownerRole]),8192));
-   if(catalog.databaseName!==connection.database||catalog.databaseOid!==databaseOid||catalog.sessionRole!==connection.user||catalog.currentRole!==connection.user||catalog.roleOid!==observerRoleOid||!catalog.roleCanLogin||catalog.dangerousReachableRole||catalog.ownsUserObject||catalog.databaseCreate||catalog.databaseTemporary||!catalog.databaseConnect||catalog.schemaCreate||!catalog.sourceSchemaUsage||catalog.rawRelationPrivilege||catalog.extraFunctionExecute||!catalog.functionsValid)throw Error('Restricted committed-source role or database capability conflict');
+   if(catalog.databaseName!==connection.database||catalog.databaseOid!==databaseOid||catalog.sessionRole!==observerRole||catalog.currentRole!==observerRole||catalog.roleOid!==observerRoleOid||!catalog.roleCanLogin||catalog.dangerousReachableRole||catalog.ownsUserObject||catalog.databaseCreate||catalog.databaseTemporary||!catalog.databaseConnect||catalog.schemaCreate||!catalog.sourceSchemaUsage||catalog.rawRelationPrivilege||catalog.extraFunctionExecute||!catalog.functionsValid)throw Error('Restricted committed-source role or database capability conflict');
    await budget();
    const binding=bindingSchema.parse(jsonResult(await dispatch('SELECT ritc.privacy_journal_source_binding($1,$2,$3,$4,$5)::text AS value',common),8192));
-   if(binding.sourceIdentity!==pins.sourceIdentity||binding.databaseName!==connection.database||binding.databaseOid!==databaseOid||binding.observerRole!==connection.user||binding.ownerRole!==ownerRole||binding.lineage!==pins.lineage||binding.schemaDigest!==pins.schemaDigest||binding.configurationId!==pins.configurationId||binding.fenced)throw Error('Fixed committed-source origin binding conflict');
+   if(binding.sourceIdentity!==pins.sourceIdentity||binding.databaseName!==connection.database||binding.databaseOid!==databaseOid||binding.observerRole!==observerRole||binding.ownerRole!==ownerRole||binding.lineage!==pins.lineage||binding.schemaDigest!==pins.schemaDigest||binding.configurationId!==pins.configurationId||binding.fenced)throw Error('Fixed committed-source origin binding conflict');
    const session:Session={
     async query(text,values,beforeDispatch){await budget();beforeDispatch?.();return dispatch(text,values);},
     async commit(){await budget();await dispatch('COMMIT',[],true);},

@@ -10,7 +10,7 @@ import {activateIndependentSuccessor,createIndependentRecovery,exportIndependent
 import {journalDatabase,journalDatabaseSchema,readPrivateFile} from './journal-authority-config.mjs';
 import {jsonFile,publicKey,publicPins,readArchives,windowSettings} from './journal-archive-window.mjs';
 
-const endpoint=z.object({connection:journalDatabaseSchema,databaseOid:z.string(),ownerOid:z.string()}).strict();
+const endpoint=z.object({connection:journalDatabaseSchema,databaseOid:z.string(),ownerOid:z.string(),ownerRole:z.string().min(1).max(63).optional()}).strict();
 const settings=z.object({pins:z.unknown(),writerPrivateKey:z.string().min(1).max(8192),authorityPrivateKey:z.string().min(1).max(8192),
  source:endpoint,checkpoint:endpoint,exportDirectory:z.string().min(1)}).strict();
 const exportSettings=z.object({pins:z.unknown(),writerPublicKey:publicKey,authorityPublicKey:publicKey,
@@ -49,7 +49,7 @@ async function run(){
  const connect=endpoint=>{
   const pool=journalDatabase(endpoint.connection,'ritc-journal-recovery');endpoints.push(pool);
   return {pool,identity:{database:endpoint.connection.database,databaseOid:endpoint.databaseOid,
-   owner:endpoint.connection.user,ownerOid:endpoint.ownerOid}};
+   owner:endpoint.ownerRole??endpoint.connection.user,ownerOid:endpoint.ownerOid}};
  };
  const scope=new PrivacyCall(undefined,25000);
  try{
