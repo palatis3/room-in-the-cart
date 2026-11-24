@@ -12,10 +12,19 @@ test('KWS authenticates original UTF-8 bytes, exact scope and rotating secrets',
  for(const [text,header]of [[raw+' ',valid],[raw,signed(raw,'wrong-fixture-secret')],[raw,valid+',t='+Date.now()],[raw,signed(raw,secret,Date.now()+600_000)]])assert.throws(()=>verifier.verify(Buffer.from(text),header),e=>e.code==='provider_signature_invalid');
  const other=body({...configuration,productId:randomUUID()});assert.throws(()=>verifier.verify(Buffer.from(other),signed(other)));
 });
-test('organization webhook scope accepts only null product, product scope only its exact product',()=>{
- const org={...configuration,scope:'organization',productId:null},raw=body(org),verify=new KWSWebhookVerifier(org,[secret]);assert.equal(verify.verify(Buffer.from(raw),signed(raw)).productId,null);
- const product=body();assert.throws(()=>verify.verify(Buffer.from(product),signed(product)));
- const productVerifier=new KWSWebhookVerifier(configuration,[secret]);assert.throws(()=>productVerifier.verify(Buffer.from(raw),signed(raw)));
+test('organization webhooks accept null or an omitted product while product scope still requires its exact product',()=>{
+ const org={...configuration,scope:'organization',productId:null};
+ const orgVerifier=new KWSWebhookVerifier(org,[secret]);
+ const productVerifier=new KWSWebhookVerifier(configuration,[secret]);
+ const omitted=body({...org,productId:undefined});
+ for(const raw of [body(org),omitted]){
+  assert.equal(orgVerifier.verify(Buffer.from(raw),signed(raw)).productId,null);
+  assert.throws(()=>productVerifier.verify(Buffer.from(raw),signed(raw)),e=>e.code==='provider_signature_invalid');
+ }
+ for(const raw of [body(),body({...org,productId:''}),body({...org,organizationId:randomUUID(),productId:undefined})]){
+  assert.throws(()=>orgVerifier.verify(Buffer.from(raw),signed(raw)),e=>e.code==='provider_signature_invalid');
+ }
+ assert.throws(()=>orgVerifier.verify(Buffer.from(omitted),signed(omitted,'wrong-fixture-secret')),e=>e.code==='provider_signature_invalid');
 });
 test('documented OAuth token and PV request use fixed origins, Basic/Bearer and strict accepted response',async()=>{
  const calls=[];const request=async(url,options)=>{calls.push({url,options});return new Response(JSON.stringify(url.includes('/token')?{access_token:'fixture-token',expires_in:3600}:{response:{trustEmailRequestAccepted:true},meta:{timestamp:'fixture-date',requestId:'fixture-request'}}),{status:url.includes('/token')?200:202});};
