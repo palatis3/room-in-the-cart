@@ -104,6 +104,15 @@ test('deployed runtime role gate rejects application, administrator and combined
  }
  await assert.rejects(()=>app.query('SELECT * FROM ritc.operations_health()'),error=>error.code==='42501');
 });
+test('worker credentials with moderator queue access are rejected',async(t)=>{
+ const login='ritc_test_combined_moderation_worker';
+ await admin.query('CREATE ROLE ritc_test_combined_moderation_worker LOGIN NOSUPERUSER NOBYPASSRLS; GRANT ritc_worker,ritc_moderator TO ritc_test_combined_moderation_worker');
+ t.after(()=>admin.query('DROP ROLE ritc_test_combined_moderation_worker'));
+ const connection=new URL(environment.WORKER_DATABASE_URL);connection.username=login;
+ const response=await call(await start({...environment,WORKER_DATABASE_URL:connection.toString()}));
+ assert.equal(response.status,503);
+ assert.deepEqual(response.value,{error:'operations_unavailable'});
+});
 test('only validated scheduled runs signal the independent monitor, without household data', async (t) => {
  const healthyPing = 'https://monitor.fixture.invalid/healthy/secret';
  const failedPing = 'https://monitor.fixture.invalid/problem/secret';
@@ -163,6 +172,80 @@ test('disabled email deployment with public provider metadata still runs houseke
  assert.deepEqual(info.mock.calls.map(call=>JSON.parse(call.arguments[0])),[result.value]);
  assert.equal(result.status,200);assert.equal(result.value.logoutProviderConfigured,false);assert.equal(result.value.privacyJobProcessingEnabled,false);
 });
+
+test('moderation status and cron prune expose counts only, preserve live evidence and raise a content-free alert',async(t)=>{
+ const h=randomUUID(),member=randomUUID();
+ await admin.query('INSERT INTO ritc.household(household_id,label) VALUES($1,$2)',[h,'Synthetic moderation expiry']);
+ await admin.query(`INSERT INTO ritc.member(household_id,member_id,issuer,subject,alias,kind,state,organizer,can_contribute)
+  VALUES($1,$2,'https://operations.fixture.invalid',$3,'Moderator fixture','adult','active',true,true)`,[h,member,randomUUID()]);
+ t.after(async()=>{
+  await admin.query('DELETE FROM ritc.moderation_case WHERE household_id=$1',[h]);
+  await admin.query('DELETE FROM ritc.moderation_receipt WHERE household_id=$1',[h]);
+  await admin.query('DELETE FROM ritc.member WHERE household_id=$1',[h]);
+  await admin.query('DELETE FROM ritc.household WHERE household_id=$1',[h]);
+ });
+ await admin.query(`INSERT INTO ritc.moderation_case(case_id,household_id,reporter_id,source_kind,source_id,source_revision,source_field,reason,excerpt,created_at,expires_at)
+  SELECT gen_random_uuid(),$1,$2,'cookCopy',gen_random_uuid(),1,'text','other','PRIVATE report excerpt',
+    expires-interval '30 days',expires FROM (
+    SELECT now()-interval '1 day' AS expires FROM generate_series(1,501) UNION ALL SELECT now()+interval '1 day'
+  ) fixture`,[h,member]);
+ await admin.query(`INSERT INTO ritc.moderation_receipt(household_id,reporter_id,client_key,fingerprint,receipt_id,status,expires_at)
+  SELECT $1,$2,gen_random_uuid(),repeat('a',64),gen_random_uuid(),'received',expires FROM (
+    SELECT now()-interval '1 day' AS expires FROM generate_series(1,501) UNION ALL SELECT now()+interval '1 day'
+  ) fixture`,[h,member]);
+
+ const runtime=createOperationsRuntime(environment);
+ t.after(()=>runtime.close());
+ for(const sql of ['SELECT * FROM ritc.moderation_queue()',"SELECT ritc.moderation_resolve(gen_random_uuid(),'dismiss')",
+  'SELECT * FROM ritc.moderation_prune()','SELECT excerpt FROM ritc.moderation_case','SELECT reporter_id FROM ritc.moderation_receipt']){
+  await assert.rejects(()=>runtime.pool.query(sql),error=>error.code==='42501');
+ }
+ await assert.rejects(()=>app.query('SELECT * FROM ritc.moderation_maintenance(500,true)'),error=>error.code==='42501');
+ const status=await runtime.run('status');
+ assert.deepEqual(status.moderation,{state:'ready',pending:1,expiredUnreviewed:501,expiredCases:0,expiredReceipts:0,prunedUnreviewed:0,moreExpired:true});
+ assert.equal(status.attentionRequired,true);
+
+ const failURL='https://monitor.fixture.invalid/moderation-problem/secret',pings=[];
+ const previousFetch=globalThis.fetch;
+ t.mock.method(globalThis,'fetch',async(input,init)=>{
+  if(String(input)!==failURL)return previousFetch(input,init);
+  pings.push(init);return new Response(null,{status:204});
+ });
+ const warnings=t.mock.method(console,'warn',()=>{});
+ const scheduled={headers:{Authorization:'Bearer '+secret,'User-Agent':'vercel-cron/1.0'}};
+ const server=await start({...environment,OPERATIONS_HEARTBEAT_FAILURE_URL:failURL});
+ const first=await call(server,'/internal/maintenance',scheduled);
+ assert.equal(first.status,200);
+ assert.deepEqual(first.value.moderation,{state:'ready',pending:1,expiredUnreviewed:1,expiredCases:500,expiredReceipts:500,prunedUnreviewed:500,moreExpired:true});
+ assert.equal(first.value.attentionRequired,true);
+ assert.deepEqual(JSON.parse(warnings.mock.calls[0].arguments[0]).moderation,first.value.moderation);
+ assert.equal(JSON.stringify(first.value).includes('PRIVATE report excerpt'),false);
+ assert.equal(pings.length,1);
+ assert.equal(pings[0].method,'POST');
+ assert.equal(pings[0].body,undefined);
+ const second=await call(server);
+ assert.deepEqual(second.value.moderation,{state:'ready',pending:1,expiredUnreviewed:0,expiredCases:1,expiredReceipts:1,prunedUnreviewed:1,moreExpired:false});
+ assert.equal(pings.length,1);
+ const retained=await admin.query('SELECT expires_at>now() AS unexpired FROM ritc.moderation_case WHERE household_id=$1',[h]);
+ const receipts=await admin.query('SELECT expires_at>now() AS unexpired FROM ritc.moderation_receipt WHERE household_id=$1',[h]);
+ assert.deepEqual(retained.rows,[{unexpired:true}]);
+ assert.deepEqual(receipts.rows,[{unexpired:true}]);
+});
+
+test('a missing moderation migration leaves disabled maintenance healthy and alerts on enabled maintenance',async(t)=>{
+ await admin.query('ALTER FUNCTION ritc.moderation_maintenance(integer,boolean) RENAME TO fixture_moderation_maintenance');
+ t.after(()=>admin.query('ALTER FUNCTION ritc.fixture_moderation_maintenance(integer,boolean) RENAME TO moderation_maintenance'));
+ const legacy=await call(await start());
+ assert.equal(legacy.status,200);
+ assert.equal(legacy.value.moderation,null);
+ assert.equal(legacy.value.attentionRequired,false);
+ const enabled=await call(await start({...environment,SHARED_CONTENT_SAFETY_ENABLED:'true'}));
+ assert.equal(enabled.status,200);
+ assert.deepEqual(enabled.value.moderation,{state:'configuration_required'});
+ assert.equal(enabled.value.attentionRequired,true);
+ assert.notEqual(enabled.value.guardian,null);
+});
+
 test('worker startup applies actual PostgreSQL statement and lock limits without table access',async()=>{
  const runtime=createOperationsRuntime(environment);
  try{
@@ -202,6 +285,33 @@ test('production cleanup honors completed retention dates and leaves every pendi
  const record=(await admin.query('SELECT state,attempts,app_erased_at,provider_erased_at FROM ritc.privacy_job WHERE job_id=$1',[pending])).rows[0];
  assert.deepEqual(record,{state:'pending',attempts:0,app_erased_at:null,provider_erased_at:null});
  assert.equal((await admin.query('SELECT receipt_hash FROM ritc.privacy_job WHERE job_id=$1',[receipt])).rows[0].receipt_hash,'0'.repeat(64));
+});
+test('cleared receipts cannot starve subsequent cleanup batches while their erasure markers remain due later',async()=>{
+ const protectedJobs=Array.from({length:25},()=>randomUUID());
+ const dueReceipts=Array.from({length:27},()=>randomUUID());
+ const dueMarker=randomUUID();
+ jobs.push(...protectedJobs,...dueReceipts,dueMarker);
+ const zero='0'.repeat(64);
+ await admin.query(`INSERT INTO ritc.privacy_job(job_id,identity_hash,receipt_hash,payload_digest,state,
+   receipt_retention_days,marker_retention_days,receipt_until,marker_until)
+  SELECT job,job::text,hash,hash,'complete',30,90,clock_timestamp()-interval '2 days',clock_timestamp()+age
+  FROM (SELECT unnest($1::uuid[]) AS job,$4::text AS hash,interval '1 day' AS age
+   UNION ALL SELECT unnest($2::uuid[]),repeat('1',64),interval '2 days'
+   UNION ALL SELECT $3::uuid,$4::text,interval '-1 day') fixture`,[protectedJobs,dueReceipts,dueMarker,zero]);
+
+ const server=await start();
+ for(const expected of [{receiptsCleared:24,jobsPurged:1},{receiptsCleared:3,jobsPurged:0},{receiptsCleared:0,jobsPurged:0}]){
+  const result=await call(server);
+  assert.equal(result.status,200);
+  assert.equal(result.value.privacyJobProcessingEnabled,false);
+  assert.deepEqual(result.value.privacy,expected);
+ }
+ const {rows:[retained]}=await admin.query(`SELECT
+   count(*) FILTER(WHERE job_id=ANY($1::uuid[]) AND marker_until>clock_timestamp())::int AS protected,
+   count(*) FILTER(WHERE job_id=ANY($2::uuid[]) AND receipt_hash=$4 AND payload_digest=$4)::int AS cleared,
+   count(*) FILTER(WHERE job_id=$3)::int AS expired
+  FROM ritc.privacy_job`,[protectedJobs,dueReceipts,dueMarker,zero]);
+ assert.deepEqual(retained,{protected:25,cleared:27,expired:0});
 });
 test('aggregate deadline leaves an interrupted provider outcome leased rather than falsely completed',async()=>{
  const f=await fixture(),runtime=createOperationsRuntime(environment),controller=new AbortController();
