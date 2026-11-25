@@ -2,6 +2,23 @@ import XCTest
 @testable import HouseholdClient
 
 final class SharedRepeatWeekTests: XCTestCase {
+    func testLiveMenuDistinguishesPendingPresentAndPreviouslyRemovedDinners() {
+        let target = UUID(), source = UUID()
+        let step = SharedRepeatSeries.Step(targetId: target, sourceId: source, sourceRevision: 2, day: "2026-11-12")
+        let meal = SharedMeal(title: "Changed dinner", day: "2026-11-13", kind: "dinner", portions: 4, protected: false)
+        let original = SharedMealOccurrence(occurrenceId: source, revision: 2, meal: meal)
+        let edited = SharedMealOccurrence(occurrenceId: target, revision: 6, meal: meal)
+        let saved = SharedRepeatSeries(planId: UUID(), weekStart: "2026-11-09", stopped: true,
+                                      steps: [step], receipts: [target.uuidString.lowercased(): UUID().uuidString])
+        let pending = SharedRepeatSeries(planId: UUID(), weekStart: saved.weekStart, stopped: false,
+                                        steps: [step], receipts: [:])
+
+        XCTAssertEqual(saved.menuState(for: step, in: [original, edited]), .present(edited))
+        XCTAssertEqual(saved.menuState(for: step, in: [original]), .removed)
+        XCTAssertEqual(pending.menuState(for: step, in: [original]), .pending)
+        XCTAssertEqual(pending.menuState(for: step, in: [edited]), .pending)
+    }
+
     func testSeriesBindsTheExactSourceAndPersistsTheSameTargetThroughBothShoppingEditors() throws {
         let sourceID = UUID(), targetID = UUID(), seriesID = UUID(), operation = UUID()
         let week = "2026-11-09", target = "2026-11-12"
