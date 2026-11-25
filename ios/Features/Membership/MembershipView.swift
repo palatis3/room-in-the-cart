@@ -73,43 +73,35 @@ struct MembershipSampleLink: View {
 
 private struct MembershipDinnerSampleView: View {
     let presentedOffer: MembershipOffer?
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var catalogOffer: MembershipOffer?
     @State private var soup = false
     @State private var currency = Currency.groceryDefault()
     var body: some View {
         WorkingForm {
             Section {
-                Text(mtr("Dinner for two. Four tortillas are on hand. Keep one for each of tomorrow’s two lunches."))
-                Text(mtr("These sample prices and groceries are only for this comparison."))
-                    .foregroundStyle(Theme.secondary)
+                Text(mtr("Sample basket for two. Four tortillas are on hand. Keep one for each of tomorrow’s two lunches."))
+                    .fixedSize(horizontal: false, vertical: true)
                 Picker(mtr("Sample grocery currency"), selection: $currency) {
                     ForEach(Currency.allCases, id: \.self) { Text(verbatim: $0.rawValue).tag($0) }
                 }
             }
             Section {
-                Picker(mtr("Dinner"), selection: $soup) {
-                    Text(mtr("Tacos")).tag(false)
-                    Text(mtr("Tortilla soup")).tag(true)
-                }
-                .pickerStyle(.segmented)
-                .accessibilityIdentifier("membership.sample.dinners")
+                if typeSize.isAccessibilitySize { dinnerPicker.pickerStyle(.menu) }
+                else { dinnerPicker.pickerStyle(.segmented) }
                 if let options = try? DinnerBasketSample.compare(currency: currency) {
                     let basket = soup ? options.soup : options.tacos
+                    VStack(alignment: .leading, spacing: 5) {
+                        resultLine(mtr("Known grocery subtotal"), value: moneyText(basket.result.checkout.total.lowerBound))
+                            .font(.headline).accessibilityIdentifier("membership.sample.subtotal")
+                        resultLine(mtr("Beans"), value: mtr("Price missing"))
+                            .font(.subheadline).foregroundStyle(Theme.secondary)
+                            .accessibilityIdentifier("membership.sample.unpriced")
+                    }
                     Text(soup ? mtr("Soup uses four tortillas and a carton of broth.") : mtr("Tacos use eight tortillas."))
                     LabeledContent(mtr("Tortilla packs of four"),
                         value: String(format: mtr("%lld × %@"), basket.tortillaPacks, moneyText(basket.tortillaPackPrice)))
                     if let price = basket.brothPrice { LabeledContent(mtr("One carton of broth"), value: moneyText(price)) }
-                    LabeledContent(mtr("Beans"), value: mtr("Price missing"))
-                        .accessibilityElement(children: .ignore)
-                        .accessibilityLabel(mtr("Beans"))
-                        .accessibilityValue(mtr("Price missing"))
-                        .accessibilityIdentifier("membership.sample.unpriced")
-                    LabeledContent(mtr("Known grocery subtotal"), value: moneyText(basket.result.checkout.total.lowerBound))
-                        .font(.headline)
-                        .accessibilityElement(children: .ignore)
-                        .accessibilityLabel(mtr("Known grocery subtotal"))
-                        .accessibilityValue(moneyText(basket.result.checkout.total.lowerBound))
-                        .accessibilityIdentifier("membership.sample.subtotal")
                     if let difference = try? options.tacos.result.checkout.total.lowerBound.subtracting(options.soup.result.checkout.total.lowerBound) {
                         Text(String(format: mtr("The soup basket costs %@ less for the priced items. Both baskets still need a price for beans."), moneyText(difference)))
                     }
@@ -134,6 +126,32 @@ private struct MembershipDinnerSampleView: View {
         }
         .navigationTitle(mtr("Dinner comparison example"))
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var dinnerPicker: some View {
+        Picker(mtr("Dinner"), selection: $soup) {
+            Text(mtr("Tacos")).tag(false)
+            Text(mtr("Tortilla soup")).tag(true)
+        }
+        .accessibilityIdentifier("membership.sample.dinners")
+    }
+
+    private func resultLine(_ label: String, value: String) -> some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(label).fixedSize()
+                Spacer(minLength: 12)
+                Text(value).fixedSize()
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(label)
+                Text(value)
+            }.fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(label)
+        .accessibilityValue(value)
     }
 }
 
