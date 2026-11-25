@@ -38,14 +38,15 @@ export class HouseholdLifecycle {
       await db.query('COMMIT');return{householdId,memberId,role:'organizer' as const};
     }catch(e){await db.query('ROLLBACK');throw e;}finally{db.release();}
   }
-  async invite(ctx:Context,input:z.infer<typeof inviteCreateSchema>){
+  async invite(ctx:Context,input:z.infer<typeof inviteCreateSchema>,expiresNoLaterThan?:number){
     this.organizer(ctx);if(input.kind==='child_contributor')throw consentUnavailable();
-    return this.issue(ctx,input.kind,input.expiresInHours,null);
+    return this.issue(ctx,input.kind,input.expiresInHours,null,expiresNoLaterThan);
   }
-  async issue(ctx:Context,kind:'adult_contributor'|'helper_read'|'helper_edit',hours:number,grantId:string|null){
+  async issue(ctx:Context,kind:'adult_contributor'|'helper_read'|'helper_edit',hours:number,grantId:string|null,expiresNoLaterThan=Infinity){
     const active=await ctx.db.query('SELECT count(*)::int AS count FROM ritc.invite WHERE household_id=$1 AND revoked_at IS NULL AND redeemed_at IS NULL AND expires_at>$2',[ctx.householdId,ctx.now]);
     if(active.rows[0].count>=100)throw new ServiceError(429,'invite_limit','Revoke an unused invitation before creating another.');
-    const inviteId=randomUUID(),secret=randomBytes(32).toString('base64url'),expiresAt=new Date(ctx.now.getTime()+hours*3_600_000);
+    const inviteId=randomUUID(),secret=randomBytes(32).toString('base64url'),expiresAt=new Date(Math.min(ctx.now.getTime()+hours*3_600_000,expiresNoLaterThan));
+    if(expiresAt<=ctx.now)throw unavailable();
     await ctx.db.query('INSERT INTO ritc.invite(household_id,invite_id,token_hash,kind,created_by,grant_id,expires_at) VALUES($1,$2,$3,$4,$5,$6,$7)',[ctx.householdId,inviteId,tokenHash(secret),kind,ctx.member.member_id,grantId,expiresAt]);
     return{inviteId,token:ctx.householdId+'.'+secret,expiresAt:expiresAt.toISOString()};
   }
