@@ -2592,7 +2592,9 @@ test('two planners stage a repeat week, resume separate shopping reviews and com
  const start={planId:randomUUID(),weekStart:'2026-11-09',shopRevision:plan.shopRevision,authorityEpoch:plan.authorityEpoch,grantRevision:plan.grantRevision,
   selections:[{sourceId:original.occurrenceId,sourceRevision:original.revision,day:'2026-11-14'},
               {sourceId:second.occurrenceId,sourceRevision:second.revision,day:'2026-11-13'}]};
- const saved=ok(await call(f.planner,route,'POST',start)).series;
+ const [primary,retry]=await Promise.all([call(f.planner,route,'POST',start),call(f.planner,route,'POST',start)]);
+ const saved=ok(primary).series;
+ assert.deepEqual(ok(retry).series,saved);
  assert.deepEqual(ok(await call(f.planner,route,'POST',start)).series,saved);
  const read=async a=>ok(await call(a,route+'?week=2026-11-09')).series;
  assert.deepEqual(await read(f.owner),saved);
