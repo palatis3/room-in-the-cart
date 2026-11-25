@@ -1,6 +1,23 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "A sign-in code could not be sent. Check the email address or continue planning for free.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A sign-in code could not be sent. Check the email address or continue planning for free."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo enviar un código de acceso. Revisa el correo electrónico o sigue planificando gratis."
+          }
+        }
+      }
+    },
     "Changing currency clears the entered prices and amounts.": {
       "extractionState": "manual",
       "localizations": {

@@ -41,6 +41,8 @@ struct HouseholdSettingsView: View {
         .onChange(of: scenePhase) { _, value in if value == .background { model.lock() } }
     }
 
+    private var showsAdultSignIn: Bool { model.configured && !model.locked && model.identity == nil }
+
     private var householdForm: some View {
         WorkingForm {
             if let scope = model.projection, !scope.enrolled {
@@ -87,6 +89,7 @@ struct HouseholdSettingsView: View {
                     } else {
                         Text(ht("Email sign-in is unavailable. You can still use your private shopping tools."))
                     }
+                    if let notice = model.notice { Text(notice).accessibilityIdentifier("household.notice") }
                 }
             } else {
                 if model.workspaceListState == .unavailable {
@@ -262,7 +265,7 @@ struct HouseholdSettingsView: View {
                 }
             }
             HelpSettingsSection().environmentObject(model)
-            if let notice = model.notice { Section { Text(notice).accessibilityIdentifier("household.notice") } }
+            if !showsAdultSignIn, let notice = model.notice { Section { Text(notice).accessibilityIdentifier("household.notice") } }
             if model.busy { ProgressView(ht("Checking service…")) }
         }
         .onAppear { visibleEntry = UUID() }

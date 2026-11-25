@@ -190,6 +190,10 @@ struct DeviceReminderPersona: Equatable {
         do { try await auth.requestEmailCode(email: email.trimmingCharacters(in: .whitespacesAndNewlines))
             guard start == generation else { return }; codeSent = true
             notice = ht("Check your email for a sign-in code.") }
+        catch ClientError.service(let status, _, _, _) where status == 422 {
+            guard start == generation else { return }
+            notice = ht("A sign-in code could not be sent. Check the email address or continue planning for free.")
+        }
         catch { await show(error, start: start) }
     }
     var showingVerifiedHousehold: Bool {

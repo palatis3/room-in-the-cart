@@ -926,6 +926,7 @@ struct RecordsView: View {
 private struct SettingsButton: ViewModifier {
     let presentation: Binding<Bool>?
     @State private var showingSettings = false
+    @State private var settingsPath = NavigationPath()
 
     func body(content: Content) -> some View {
         let presented = presentation ?? $showingSettings
@@ -934,8 +935,8 @@ private struct SettingsButton: ViewModifier {
                 Button { presented.wrappedValue = true } label: { Image(systemName: "gearshape").frame(minWidth: 44, minHeight: 44) }
                     .accessibilityLabel(tr("Settings")).accessibilityIdentifier("settings")
             }
-        }.sheet(isPresented: presented) {
-            NavigationStack { SettingsView() }
+        }.sheet(isPresented: presented, onDismiss: { settingsPath = NavigationPath() }) {
+            NavigationStack(path: $settingsPath) { SettingsView() }
                 .environment(\.returnFromMembershipSettings, { presented.wrappedValue = false })
         }
     }
@@ -969,7 +970,7 @@ struct SettingsView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }.accessibilityIdentifier("guardian.familyGuide")
                 if household.canOpenMembership {
-                    NavigationLink { MembershipEntryView(household: household) } label: {
+                    NavigationLink(value: HouseholdSettingsDestination.membership) {
                         Label(tr("Household membership"), systemImage: "person.2")
                     }
                 }
@@ -1012,7 +1013,13 @@ struct SettingsView: View {
             #if DEBUG
             Section(tr("Development")) { NavigationLink(tr("Component gallery")) { ComponentGallery() } }
             #endif
-        }.navigationTitle(tr("Settings"))
+        }.navigationDestination(for: HouseholdSettingsDestination.self) { route in
+            switch route {
+            case .membership: MembershipEntryView(household: household, usesSettingsPath: true)
+            case .adultSetup: HouseholdSettingsView(model: household, continuesAfterWorkspaceLock: true)
+            }
+        }
+            .navigationTitle(tr("Settings"))
             .navigationBarTitleDisplayMode(typeSize.isAccessibilitySize ? .inline : .automatic)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
