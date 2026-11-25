@@ -962,6 +962,32 @@ final class RecordsAdapterTests: XCTestCase {
         XCTAssertEqual(model.recipeReport?.duplicateCount, 1)
         let saved = try await registry.refreshList()
         XCTAssertEqual(saved.map { $0.record.title }, ["Sopa"])
+
+        // Once the page is available, a changed publication must be compared with the private repair.
+        model.dismissImport(next)
+        let published = Data(#"{"@type":"Recipe","name":"Sopa publicada","url":"https://recipes.example.org/sopa","recipeIngredient":["300 g de frijoles"]}"#.utf8)
+        func readPublishedPage() async throws {
+            let reader = try XCTUnwrap(model.beginImport(.recipePage))
+            try await model.importRecipePage(source, from: reader) { _ in published }
+            model.dismissImport(reader)
+        }
+        try await readPublishedPage()
+        let updated = try XCTUnwrap(model.review?.rows.first)
+        XCTAssertTrue(model.recipeVersionChoices.contains(updated.id))
+        await model.applyReviewedImport()
+        let withoutApproval = try await registry.refreshList()
+        XCTAssertEqual(withoutApproval, saved)
+        await model.skipRecipe(updated)
+        XCTAssertNil(model.review)
+        try await readPublishedPage()
+        let chosen = try XCTUnwrap(model.review?.rows.first)
+        model.confirmRecipeVersion(chosen, selected: true)
+        await model.applyReviewedImport()
+        let versions = try await registry.refreshList()
+        XCTAssertEqual(Set(versions.map { $0.record.title }), ["Sopa", "Sopa publicada"])
+        try await readPublishedPage()
+        XCTAssertNil(model.review)
+        XCTAssertEqual(model.recipeReport?.duplicateCount, 1)
     }
 
     @MainActor func testSelectedPaprikaCollectionReviewsBeforeSaveAndSupportsUndo() async throws {
@@ -1001,12 +1027,12 @@ final class RecordsAdapterTests: XCTestCase {
         await model.importFile(url, recipes: true)
         let initial = try XCTUnwrap(model.review)
         XCTAssertEqual(initial.rows.count, 3)
-        let versions = initial.rows.filter { model.paprikaVersionChoices.contains($0.id) }
+        let versions = initial.rows.filter { model.recipeVersionChoices.contains($0.id) }
         XCTAssertEqual(versions.count, 2)
         let keep = try XCTUnwrap(versions.first)
         let skip = try XCTUnwrap(versions.last)
         let other = try XCTUnwrap(initial.rows.first { $0.record.id != keep.record.id })
-        model.confirmPaprikaVersion(keep, selected: true)
+        model.confirmRecipeVersion(keep, selected: true)
         func correct(_ row: RecoveryReviewRow, title: String) async throws {
             let editor = try XCTUnwrap(model.beginRecipeCorrection(row))
             var recipe = try XCTUnwrap(editor.initialRecipe)
@@ -1015,9 +1041,9 @@ final class RecordsAdapterTests: XCTestCase {
             model.dismissImport(editor)
         }
         try await correct(other, title: "Arroz de la casa")
-        XCTAssertEqual(model.acceptedPaprikaVersions, [keep.id])
+        XCTAssertEqual(model.acceptedRecipeVersions, [keep.id])
         try await correct(keep, title: "Arroz con caldo")
-        XCTAssertTrue(model.acceptedPaprikaVersions.isEmpty)
+        XCTAssertTrue(model.acceptedRecipeVersions.isEmpty)
         await model.skipRecipe(skip)
         let untouched = try await registry.refreshList()
         XCTAssertTrue(untouched.isEmpty)
@@ -1050,7 +1076,7 @@ final class RecordsAdapterTests: XCTestCase {
         await model.importFile(url, recipes: true)
         let changed = try XCTUnwrap(model.review?.rows.first)
         XCTAssertEqual(changed.disposition, .sibling)
-        XCTAssertTrue(model.paprikaVersionChoices.contains(changed.id))
+        XCTAssertTrue(model.recipeVersionChoices.contains(changed.id))
         await model.applyReviewedImport()
         let withoutConsent = try await registry.refreshList()
         XCTAssertEqual(withoutConsent, before)
@@ -1058,7 +1084,7 @@ final class RecordsAdapterTests: XCTestCase {
         XCTAssertNil(model.review)
         await model.importFile(url, recipes: true)
         let reviewed = try XCTUnwrap(model.review?.rows.first)
-        model.confirmPaprikaVersion(reviewed, selected: true)
+        model.confirmRecipeVersion(reviewed, selected: true)
         await model.applyReviewedImport()
         let after = try await registry.refreshList()
         XCTAssertEqual(after.count, 2)

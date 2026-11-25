@@ -39,6 +39,40 @@ public enum RecipePageReader {
         return try ImportedRecipe(title: host, sourceURL: literal).validated()
     }
 
+    private static func source(of record: ArchiveRecord) -> (page: String, title: String, original: String)? {
+        guard record.kind == .recipe, record.origin == "recipe-library-v1", !PaprikaCollection.isTracked(record),
+              let bytes = record.nativePayload, let recipe = try? JSONDecoder().decode(ImportedRecipe.self, from: bytes),
+              let original = recipe.sourceURL, let url = URL(string: original), let page = try? checkedURL(url),
+              let address = page.url?.absoluteString else { return nil }
+        return (address, recipe.title.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(), original)
+    }
+
+    /// A page can contain multiple dishes. Only a retained link or a matching dish title calls for a version decision.
+    static func versionChoices(_ rows: [RecoveryReviewRow], saved: [ArchiveRecord]) -> Set<ArchiveIdentity> {
+        let incoming = rows.filter { $0.disposition == .absent }.compactMap { row in
+            source(of: row.record).map { (id: row.id, page: $0.page, title: $0.title) }
+        }
+        let pages = Set(incoming.map(\.page))
+        guard !pages.isEmpty else { return [] }
+        var retainedLinks = Set<String>()
+        var titles: [String: Set<String>] = [:]
+        for record in saved {
+            guard let prior = source(of: record), pages.contains(prior.page) else { continue }
+            titles[prior.page, default: []].insert(prior.title)
+            if (try? partialRecipe(at: prior.original).id) == record.id {
+                retainedLinks.insert(prior.page)
+            }
+        }
+        var choices = Set<ArchiveIdentity>()
+        for (page, recipes) in Dictionary(grouping: incoming, by: \.page) {
+            for (title, versions) in Dictionary(grouping: recipes, by: \.title)
+                where versions.count > 1 || retainedLinks.contains(page) || titles[page]?.contains(title) == true {
+                choices.formUnion(versions.map(\.id))
+            }
+        }
+        return choices
+    }
+
     static func checkedURL(_ url: URL) throws -> URLComponents {
         guard url.absoluteString.utf8.count <= 4096, var page = URLComponents(url: url, resolvingAgainstBaseURL: true),
               page.scheme?.lowercased() == "https", page.user == nil, page.password == nil,
