@@ -140,8 +140,15 @@ import XCTest
                 control.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
                 return
             }
-            if !frame.isEmpty && frame.midY < top { form.swipeDown() }
-            else { form.swipeUp() }
+            // A full swipe can send the same row from below the tabs to above the title.
+            // Drag within the visible form and pause before lifting to avoid momentum.
+            let middle = (top + bottom) / 2
+            let step = (bottom - top) / 3
+            let distance = !frame.isEmpty && frame.midY < middle ? step : -step
+            let start = form.coordinate(withNormalizedOffset: .zero)
+                .withOffset(CGVector(dx: form.frame.width / 2, dy: middle - form.frame.minY))
+            start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 0, dy: distance)),
+                        withVelocity: .slow, thenHoldForDuration: 0.3)
         }
         XCTFail("Could not reveal the control between the navigation and tab bars on \(screen). " + app.debugDescription)
     }
