@@ -170,22 +170,36 @@ async function recheckPlanningAdult(ctx: Context, shop: Shop, actorId: string, b
   await billing.requirePaidSeat({...ctx, member: author});
 }
 
-/** Runs inside the existing shopper-authorized shop.patch transaction. */
-export async function acceptRepeatStep(repository: HouseholdRepository, billing: BillingService | undefined,
-                                       ctx: Context, shop: Shop, planId: string, targetId: string,
-                                       meal: SharedMealValue | null, operationId: string) {
-  if (!billing || !meal) throw unavailable();
+/** The household transaction serializes reads with seat, grant and shopper changes. */
+async function authorizedSeries(ctx: Context, billing: BillingService | undefined, shop: Shop, planId: string) {
+  if (!billing) throw unavailable();
   await billing.requirePaidSeat(ctx);
   const result = await ctx.db.query<SeriesRow>(`
     SELECT ${columns} FROM ritc.shared_repeat_week w
-    WHERE w.household_id=$1 AND w.shop_id=$2 AND w.plan_id=$3 AND NOT w.stopped AND w.authority_epoch=$4
+    WHERE w.household_id=$1 AND w.shop_id=$2 AND w.plan_id=$3 AND w.authority_epoch=$4
       AND w.grant_revision=coalesce((SELECT revision FROM ritc.meal_planner p
                                      WHERE p.household_id=w.household_id AND p.shop_id=w.shop_id),0)
     FOR UPDATE`, [ctx.householdId, shop.shop_id, planId, shop.authority_epoch]);
   const series = result.rows[0];
-  const step = series?.steps.find(row => row.targetId === targetId);
-  if (!series || !step || series.receipts[targetId]) throw changedWeek();
+  if (!series) throw changedWeek();
   await recheckPlanningAdult(ctx, shop, series.actor_id, billing);
+  return series;
+}
+
+export async function assertRepeatStepReplay(ctx: Context, billing: BillingService | undefined, shop: Shop,
+                                             planId: string, targetId: string, operationId: string) {
+  const series = await authorizedSeries(ctx, billing, shop, planId);
+  if (series.receipts[targetId] !== operationId) throw changedWeek();
+}
+
+/** Runs inside the existing shopper-authorized shop.patch transaction. */
+export async function acceptRepeatStep(repository: HouseholdRepository, billing: BillingService | undefined,
+                                       ctx: Context, shop: Shop, planId: string, targetId: string,
+                                       meal: SharedMealValue | null, operationId: string) {
+  if (!meal) throw unavailable();
+  const series = await authorizedSeries(ctx, billing, shop, planId);
+  const step = series.steps.find(row => row.targetId === targetId);
+  if (series.stopped || !step || series.receipts[targetId]) throw changedWeek();
 
   const meals = await repository.meals(ctx, shop.shop_id);
   const original = meals.find(row => row.occurrenceId === step.sourceId);

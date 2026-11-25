@@ -2616,10 +2616,17 @@ test('two planners stage a repeat week, resume separate shopping reviews and com
  const seats=ok(await call(f.owner,f.base+'/entitlements'));
  ok(await call(f.owner,f.base+'/billing/seats','PUT',{revision:seats.revision,userIDs:[f.owner.id]}));
  assert.equal((await call(f.owner,commandPath,'POST',remaining)).status,403);
+ // The already-saved dinner still exists, but retrying its command must recheck both seats.
+ assert.equal((await call(f.owner,commandPath,'POST',apply)).status,403);
+ const plannerOnly=ok(await call(f.owner,f.base+'/entitlements'));
+ ok(await call(f.owner,f.base+'/billing/seats','PUT',{revision:plannerOnly.revision,userIDs:[f.planner.id]}));
+ assert.equal((await call(f.owner,commandPath,'POST',remaining)).status,403);
+ assert.equal((await call(f.owner,commandPath,'POST',apply)).status,403);
  const refreshed=ok(await call(f.owner,f.base+'/entitlements'));
  ok(await call(f.owner,f.base+'/billing/seats','PUT',{revision:refreshed.revision,userIDs:[f.owner.id,f.planner.id]}));
  const stopped=ok(await call(f.planner,route+'/stop','POST',{planId:saved.planId,weekStart:start.weekStart,grantRevision:plan.grantRevision,authorityEpoch:plan.authorityEpoch})).series;
  assert.equal(stopped.stopped,true);assert.deepEqual(stopped.receipts,(await read(f.owner)).receipts);
+ assert.deepEqual(ok(await call(f.owner,commandPath,'POST',apply)),receipt);
  assert.equal((await call(f.owner,commandPath,'POST',f.patch(receipt.shopRevision,secondEdit))).status,409);
  const final=ok(await call(f.owner,f.path));
  assert.deepEqual(final.meals.find(m=>m.occurrenceId===firstEdit.occurrenceId).meal,firstEdit.meal);
@@ -2630,10 +2637,12 @@ test('two planners stage a repeat week, resume separate shopping reviews and com
  const fresh=ok(await call(f.planner,route,'POST',follow)).series;
  ok(await call(f.owner,f.path+'/meal-plan/planner','PUT',{authorityEpoch:1,grantRevision:1,plannerId:null}));
  assert.equal((await call(f.owner,commandPath,'POST',f.patch(receipt.shopRevision,{...secondEdit,repeatPlanId:fresh.planId}))).status,409);
+ assert.equal((await call(f.owner,commandPath,'POST',apply)).status,409);
  ok(await call(f.owner,f.path+'/meal-plan/planner','PUT',{authorityEpoch:1,grantRevision:2,plannerId:f.planner.id}));
  const renewed={...follow,planId:randomUUID(),grantRevision:3};
  const finalReview=ok(await call(f.planner,route,'POST',renewed)).series;
- const done=ok(await call(f.owner,commandPath,'POST',f.patch(receipt.shopRevision,{...secondEdit,repeatPlanId:finalReview.planId})));
+ const finish=f.patch(receipt.shopRevision,{...secondEdit,repeatPlanId:finalReview.planId});
+ const done=ok(await call(f.owner,commandPath,'POST',finish));
  assert.equal((await read(f.planner)).receipts[secondEdit.occurrenceId],done.operationId);
  const completed=ok(await call(f.owner,f.path)).meals;
  assert.equal(completed.filter(m=>m.occurrenceId===secondEdit.occurrenceId).length,1);
@@ -2641,6 +2650,7 @@ test('two planners stage a repeat week, resume separate shopping reviews and com
  await admin.query('SELECT ritc.privacy_erase_extension($1,$2)',[f.h,f.planner.id]);
  const left=await admin.query('SELECT count(*)::int n FROM ritc.shared_repeat_week WHERE household_id=$1',[f.h]);
  assert.equal(left.rows[0].n,0);
+ assert.equal((await call(f.owner,commandPath,'POST',finish)).status,409);
 });
 
 test('shared week costs pin the accepted basket and recheck finance access without sharing private lines',async()=>{
