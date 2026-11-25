@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
 import {once} from 'node:events';
 import test from 'node:test';
+import {BillingService} from '../dist/billing/service.js';
+import {HouseholdLifecycle} from '../dist/lifecycle.js';
 import {ClosedReview} from '../dist/closed-review.js';
 import {createHTTPServer} from '../dist/http.js';
 
@@ -36,12 +38,12 @@ test('closed HTTP review checks verified subjects, exact household and Sandbox d
     repository:{workspaces:async()=>({workspaces})},
     closedReview:ClosedReview.configured(configuration()),
     verifier:{verify:async token=>({subject:token})},
-    billing:{notification:async(_pool,signature,destination)=>{notifications.push([signature,destination]);return{accepted:true};}},
+    billing:{notification:async(_pool,signature,destination,scope)=>{notifications.push([signature,destination,scope]);return{accepted:true};}},
   });
   app.listen(0,'127.0.0.1');await once(app,'listening');
   const base='http://127.0.0.1:'+app.address().port;
-  async function request(path,{method='GET',token,data}={}){
-    return fetch(base+path,{method,headers:{...(token?{Authorization:'Bearer '+token}:{}),'Content-Type':'application/json'},...(data?{body:JSON.stringify(data)}:{})});
+  async function request(path,{method='GET',token,data,headers}={}){
+    return fetch(base+path,{method,headers:{...(token?{Authorization:'Bearer '+token}:{}),'Content-Type':'application/json',...headers},...(data?{body:JSON.stringify(data)}:{})});
   }
   try{
     assert.equal((await request('/v1/me/workspaces')).status,404);
@@ -59,11 +61,24 @@ test('closed HTTP review checks verified subjects, exact household and Sandbox d
       ['/v1/invites/preview',{token:other+'.'+'a'.repeat(43),adultAttestation:true}],
       ['/v1/invites/redeem',{token:other+'.'+'a'.repeat(43),adultAttestation:true,intent:'join'}],
     ])assert.equal((await request(path,{token,method:'POST',data})).status,404);
+    const helper=await request('/v1/invites/preview',{token,method:'POST',headers:{'x-view-grant-id':randomUUID(),'x-household-id':other},data:{token:householdId+'.'+'a'.repeat(43),adultAttestation:true}});
+    assert.equal(helper.status,404);
     const signedPayload='x'.repeat(32);
     assert.equal((await request('/v1/apple/notifications',{method:'POST',data:{signedPayload}})).status,404);
     assert.equal((await request('/v1/apple/notifications/sandbox',{method:'POST',data:{signedPayload}})).status,200);
-    assert.deepEqual(notifications,[[signedPayload,'reviewSandbox']]);
+    assert.deepEqual(notifications,[[signedPayload,'reviewSandbox',householdId]]);
   }finally{
     const closed=once(app,'close');app.close();await closed;
   }
+});
+
+test('closed review leaves unrelated Apple consent outside the review ledger and expires invitations on time',async()=>{
+  const notification={kind:'RESCIND_CONSENT',environment:'Sandbox',notificationID:randomUUID(),signedAt:Date.now()};
+  const billing=new BillingService(null,undefined,{sandbox:{verifyNotification:async()=>notification}});
+  await assert.rejects(billing.notification({},'signed-fixture','reviewSandbox',householdId),e=>e.code==='unavailable');
+  const now=new Date(),cutoff=now.getTime()+900_000;
+  const ctx={member:{kind:'adult',organizer:true,member_id:subjects[0]},now,householdId,
+    db:{query:async text=>text.startsWith('SELECT count')?{rows:[{count:0}]}:{rows:[]}}};
+  const invite=await new HouseholdLifecycle({}).invite(ctx,{kind:'adult_contributor',expiresInHours:168},cutoff);
+  assert.equal(Date.parse(invite.expiresAt),cutoff);
 });

@@ -122,7 +122,7 @@ export function createHTTPServer(options:HTTPOptions) {
       if(method==='POST' && options.billing && ['/v1/apple/notifications','/v1/apple/notifications/sandbox'].includes(url.pathname)){
         const input = billingNotificationSchema.parse(await body(req,262_144));
         const destination = url.pathname.endsWith('/sandbox') ? 'reviewSandbox' : 'primary';
-        send(200,await options.billing.notification(repository.pool,input.signedPayload,destination));
+        send(200,await options.billing.notification(repository.pool,input.signedPayload,destination,options.closedReview?.householdId));
         return;
       }
       if(url.pathname==='/v1/guardian/availability'&&method==='GET'){
@@ -235,6 +235,7 @@ export function createHTTPServer(options:HTTPOptions) {
         if(!session&&auth.viewGrantId){
           const scope=uuid.safeParse(req.headers['x-household-id']);
           if(!scope.success)throw unavailable();
+          options.closedReview?.checkHousehold(scope.data);
           await repository.authorized(scope.data,auth,async()=>undefined,true);
         }
         send(200,await lifecycle.previewInvite(auth.identity,input.data));return;
@@ -442,7 +443,7 @@ export function createHTTPServer(options:HTTPOptions) {
         if(path==='/members'&&method==='GET')return lifecycle.members(ctx);
         if(path==='/invites'&&method==='GET')return lifecycle.invites(ctx);
         if(path==='/views'&&method==='GET')return lifecycle.views(ctx);
-        if(path==='/invites'&&method==='POST')return lifecycle.invite(ctx,inviteCreateSchema.parse(payload));
+        if(path==='/invites'&&method==='POST')return lifecycle.invite(ctx,inviteCreateSchema.parse(payload),options.closedReview?.endsAt);
         if(path==='/views'&&method==='POST')return lifecycle.createView(ctx,viewCreateSchema.parse(payload));
         if(path==='/revocations'&&method==='POST')return lifecycle.revoke(ctx,revocationSchema.parse(payload));
         if(path==='/guardian/notice'&&method==='GET'){if(ctx.member.kind!=='adult'||ctx.viewGrantId)throw accessEnded();return guardian.notice(z.enum(['en','es']).parse(url.searchParams.get('language')??'en'));}

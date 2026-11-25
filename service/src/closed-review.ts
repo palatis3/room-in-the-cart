@@ -36,7 +36,7 @@ export class ClosedReview {
     readonly householdId: string,
     private readonly subjects: ReadonlySet<string>,
     private readonly startsAt: number,
-    private readonly endsAt: number,
+    readonly endsAt: number,
   ) {}
 
   static configured(env: NodeJS.ProcessEnv): ClosedReview | undefined {
