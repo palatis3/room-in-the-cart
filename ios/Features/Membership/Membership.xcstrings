@@ -2226,40 +2226,6 @@
         }
       }
     },
-    "Dinner for two. Four tortillas are on hand. Keep one for each of tomorrow’s two lunches.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dinner for two. Four tortillas are on hand. Keep one for each of tomorrow’s two lunches."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cena para dos. Hay cuatro tortillas en casa. Aparta una para cada uno de los dos almuerzos de mañana."
-          }
-        }
-      }
-    },
-    "These sample prices and groceries are only for this comparison.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "These sample prices and groceries are only for this comparison."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Estos precios y productos de ejemplo solo se usan en esta comparación."
-          }
-        }
-      }
-    },
     "Sample grocery currency": {
       "extractionState": "manual",
       "localizations": {
@@ -2545,6 +2511,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "El plan anual Hogar incluye hasta dos lugares de planificación para personas adultas."
+          }
+        }
+      }
+    },
+    "Sample basket for two. Four tortillas are on hand. Keep one for each of tomorrow’s two lunches.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sample basket for two. Four tortillas are on hand. Keep one for each of tomorrow’s two lunches."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Canasta de ejemplo para dos. Hay cuatro tortillas en casa. Aparta una para cada uno de los dos almuerzos de mañana."
           }
         }
       }
