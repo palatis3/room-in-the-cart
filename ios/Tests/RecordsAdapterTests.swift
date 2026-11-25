@@ -29,6 +29,89 @@ final class RecordsAdapterTests: XCTestCase {
             kind: .comparison, title: draft.item, savedAtMilliseconds: 1_800_000_000_000,
             helperLines: [HelperLine(label: draft.item, originalAmount: draft.needed, originalUnit: "count")], nativePayload: data)
     }
+    @MainActor func testEncryptedWeeklyEstimateKeepsTwoIndependentRecordVersions() async throws {
+        let now = Date(), workspaceID = UUID()
+        let first = try MealDay(year: 2026, month: 11, day: 2, timeZoneIdentifier: "UTC")
+        let next = try MealDay(year: 2026, month: 11, day: 9, timeZoneIdentifier: "UTC")
+        let recipe = MealTemplate(title: "Beans", ingredients: [.init(name: "Beans", quantity: nil)])
+        var shop = ShoppingLedger(title: "Pickup", basis: .init(branch: "Market", timeZoneIdentifier: "UTC"))
+        _ = try shop.chooseMeal(recipe, on: first.date, at: now)
+        var workspace = LedgerWorkspace(shops: [shop], mealTemplates: [recipe], selectedShopID: shop.id)
+        let access = DinnerAccessContext(scope: .local(workspaceID: workspaceID), actorID: "adult", shopID: shop.id,
+            assignedShopperID: "adult", canPlan: true, canReadBudget: true, hasPaidTools: true, roleRevision: 0,
+            verifiedAt: now, validUntil: now.addingTimeInterval(60))
+        let registry = try RecoveryRegistry(url: temporaryDirectory().appendingPathComponent("registry.json"))
+        let key = EncryptedArchive.generateKey()
+        var copies = Set<String>()
+        for version in [1, 2] {
+            if version == 2 {
+                let candidate = try XCTUnwrap(RepeatWeekEngine.candidates(targetStart: next, workspace: workspace, access: access, at: now).first)
+                let preview = try RepeatWeekEngine.preview(targetStart: next, meals: [.init(candidate)], staples: [], workspace: workspace,
+                                                           access: access, phase: .draft, at: now)
+                _ = try RepeatWeekEngine.apply(preview.proposal, workspace: &workspace, access: access, phase: .draft, at: now)
+            }
+            let scoped = try RecordsNativeCodec.ledgerScope(workspace, shop: workspace.shops[0])
+            XCTAssertEqual(scoped.ledgerDocumentVersion, version)
+            let bytes = try RecordsNativeCodec.canonical(LedgerFixture(formatVersion: version, workspace: scoped))
+            let record = ArchiveRecord(id: shop.id.uuidString, origin: "ledger/fixture", revision: ArchiveCodec.digest(bytes),
+                kind: .ledger, title: shop.title, savedAtMilliseconds: ArchiveCodec.milliseconds(now), nativePayload: bytes)
+            let envelope = try ArchiveCodec.make(records: [record], kind: .personalRecovery, origin: "backup", revision: "accepted")
+            let decoded = try EncryptedArchive.open(EncryptedArchive.seal(envelope, key: key), key: key)
+            let saved = try await registry.apply(registry.review(decoded))
+            let copy = try XCTUnwrap(saved.records.first)
+            copies.insert(copy.id)
+            try RecordsNativeCodec.validate(copy.record)
+            let restored = try RecordsNativeCodec.ledger(XCTUnwrap(copy.record.nativePayload))
+            XCTAssertEqual(restored.dinnerPlanning.applyReceipts, scoped.dinnerPlanning.applyReceipts)
+            if version == 2 {
+                XCTAssertNotNil(restored.dinnerPlanning.applyReceipts.first?.costBaseline)
+                let mislabeled = try RecordsNativeCodec.canonical(LedgerFixture(formatVersion: 1, workspace: scoped))
+                XCTAssertThrowsError(try LedgerModel.validatePayload(mislabeled))
+            }
+        }
+        XCTAssertEqual(copies.count, 2)
+    }
+
+    @MainActor func testEncryptedServeScheduleRestoresItsShopAndKeepsEarlierCopy() async throws {
+        let now = Date(), zone = "America/Mexico_City"
+        var shop = ShoppingLedger(title: "Cena", basis: ShopBasis(timeZoneIdentifier: zone))
+        let other = ShoppingLedger(title: "Other")
+        let template = MealTemplate(title: "Arroz")
+        let meal = try shop.chooseMeal(template, on: now, at: now)
+        var workspace = LedgerWorkspace(shops: [shop, other], mealTemplates: [template], selectedShopID: shop.id)
+        let access = DinnerAccessContext(scope: .local(workspaceID: UUID()), actorID: "cook", shopID: shop.id,
+            assignedShopperID: "cook", canPlan: true, canReadBudget: false, hasPaidTools: true, roleRevision: 0,
+            verifiedAt: now, validUntil: now.addingTimeInterval(60))
+        let day = try MealDay(date: now, timeZoneIdentifier: zone)
+        let plan = DinnerServeSchedule(shopID: shop.id, occurrenceID: meal, dinnerDay: day, serveAt: try XCTUnwrap(day.date),
+            dishes: [.init(name: "Arroz", steps: [.init(instruction: "Cocer", minutes: 20, equipment: .burner)])])
+        let registry = try RecoveryRegistry(url: temporaryDirectory().appendingPathComponent("registry.json"))
+        let key = EncryptedArchive.generateKey()
+        var recoveredIDs = Set<String>()
+        for schedule in [nil, Optional(plan)] {
+            if let schedule {
+                try workspace.dinnerPlanning.setServeSchedule(schedule, replacing: nil, mealID: meal, ledger: shop,
+                    expectedRevision: shop.revisionID, access: access, at: now)
+            }
+            let scoped = try RecordsNativeCodec.ledgerScope(workspace, shop: shop)
+            XCTAssertEqual(scoped.ledgerDocumentVersion, schedule == nil ? 1 : 2)
+            let bytes = try RecordsNativeCodec.canonical(LedgerFixture(formatVersion: scoped.ledgerDocumentVersion, workspace: scoped))
+            let record = ArchiveRecord(id: shop.id.uuidString, origin: "ledger/fixture", revision: ArchiveCodec.digest(bytes),
+                kind: .ledger, title: shop.title, savedAtMilliseconds: ArchiveCodec.milliseconds(now), nativePayload: bytes)
+            let envelope = try ArchiveCodec.make(records: [record], kind: .personalRecovery, origin: "backup", revision: "saved")
+            let opened = try EncryptedArchive.open(EncryptedArchive.seal(envelope, key: key), key: key)
+            let result = try await registry.apply(registry.review(opened))
+            let copy = try XCTUnwrap(result.records.first)
+            recoveredIDs.insert(copy.id)
+            try RecordsNativeCodec.validate(copy.record)
+            let restored = try RecordsNativeCodec.ledger(XCTUnwrap(copy.record.nativePayload))
+            XCTAssertEqual(restored.dinnerPlanning.serveSchedules, schedule.map { [$0] } ?? [])
+            for excluded in ["local-consent", "hasPaidTools"] { XCTAssertFalse(String(decoding: bytes, as: UTF8.self).contains(excluded)) }
+        }
+        XCTAssertEqual(recoveredIDs.count, 2)
+        XCTAssertTrue(try RecordsNativeCodec.ledgerScope(workspace, shop: other).dinnerPlanning.serveSchedules.isEmpty)
+        XCTAssertTrue(try XCTUnwrap(RecordsNativeCodec.ledgerLibrary(workspace)).dinnerPlanning.serveSchedules.isEmpty)
+    }
     @MainActor func testPrepStaysInItsOwnShopArchiveAndRoundTripsWithoutDeviceConsent() throws {
         let now = Date(), zone = "America/New_York"
         var first = ShoppingLedger(title: "Monday", basis: ShopBasis(timeZoneIdentifier: zone))

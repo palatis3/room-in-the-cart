@@ -57,6 +57,21 @@ import XCTest
         XCTAssertEqual(again.lines.last?.quantity?.amount, try Rational(2))
     }
 
+    func testTwoManualRestocksAreIndependentAndReviewedOnceEach() throws {
+        var shop = ShoppingLedger(title: "Friday")
+        for food in ["Tortillas", "Beans"] {
+            let workspace = LedgerWorkspace(shops: [shop], selectedShopID: shop.id)
+            XCTAssertEqual(PantryRestockReview.destination(food: food, workspace: workspace, closed: [], requestNames: []),
+                           .shop(shop.id, shop.title))
+            let draft = try PantryRestockReview.stage(food: food, text: food, source: .typed, id: UUID(), shop: shop)
+            let row = try XCTUnwrap(draft.lines.first)
+            XCTAssertNil(row.quantity)
+            _ = try shop.commitImport(draft, decisions: [row.id: .addNew])
+            _ = try shop.commitImport(draft, decisions: [row.id: .addNew])
+        }
+        XCTAssertEqual(shop.lines.map(\.name), ["Tortillas", "Beans"])
+    }
+
     func testMinimumRestockCarriesAReviewedProductAcrossFirstAndExistingListsPlacementAndDelivery() throws {
         let product = UUID(), originalBatch = UUID(), scope = PantryDigestScope(origin: UUID(),
             identity: .init(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil))

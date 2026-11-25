@@ -227,6 +227,14 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
         await didSave?()
     }
 
+    func weeklyPurchaseReview(_ baseline: WeeklyCostBaseline, pickup: ReceiptAcquisition.SavedPickup,
+                              fragments: Set<ReceiptKey>, expected: InventoryState) async throws -> WeeklyPurchaseReview {
+        let token = generation
+        let result = try await repository.weeklyPurchaseReview(baseline, pickup: pickup, fragments: fragments, expected: expected)
+        guard token == generation, phase != .accessDenied else { throw PantryReceiptError.stale }
+        return result
+    }
+
     func priceHistory(after page: PantryPricePage? = nil) async throws -> PantryPricePage {
         guard phase != .accessDenied else { throw PantryReceiptError.stale }
         let token = generation

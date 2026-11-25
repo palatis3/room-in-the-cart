@@ -29,6 +29,7 @@ struct DinnerRepeatReview {
     let start: MealDay
     let identity: DinnerFeatureModel.EditorIdentity
     let sourceShopIDs: Set<UUID>
+    let hasPaidEvidence: Bool
     let targetRevision: UUID
     let planningRevision: UUID
     let pantryBasis: DinnerPantrySupply.Basis?
@@ -141,7 +142,7 @@ extension DinnerFeatureModel {
             authorizedShopIDs: allowed, targetShopID: shop.id, sourceDays: sourceDays, targetDays: targetDays,
             staples: staples + settled, recoveredMeals: recovered, canonical: canonical, unknownFoodIDs: unknownFoods, asOf: now)
         let sourceShopIDs = mealShops.union((staples + settled).map { $0.source.shopID })
-        return DinnerRepeatReview(start: start, identity: identity, sourceShopIDs: sourceShopIDs, targetRevision: shop.revisionID,
+        return DinnerRepeatReview(start: start, identity: identity, sourceShopIDs: sourceShopIDs, hasPaidEvidence: access.hasPaidTools, targetRevision: shop.revisionID,
             planningRevision: state.revisionID, pantryBasis: canonical?.basis, meals: candidates.map(DinnerRepeatChoice.init),
             staples: staples, evidence: evidence)
     }

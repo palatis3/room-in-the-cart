@@ -207,6 +207,9 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                                 }
                             }
                             DinnerDecisionButton(model: model, title: dinnerText("Price a dinner plan or compare pairings"), identifier: "dinnerPairings") { DinnerScenarioEditor(model: model, shop: shop) }
+                            if model.paid, model.localIdeaWorkspaceID != nil {
+                                NavigationLink(dinnerText("Weekly costs and outcomes")) { WeeklyCostReviewView(model: model) }
+                            }
                             NavigationLink(dinnerText("Compare two store trips")) { DinnerQuotesView(model: model) }
                         }
                     }.disabled(!model.editable)
@@ -348,6 +351,20 @@ struct DinnerWeekView<SaveStatus: View>: View {
         List {
             Section {
                 if let shop = model.shop { Text(shop.title).font(.headline) }
+                if model.phaseProvider(shopID) == .draft {
+                    DinnerDecisionButton(model: model, title: dinnerText("Repeat last week"), identifier: "week.repeat") {
+                        DinnerRepeatWeekView(model: model, initialDate: weekStart, useSelectedStart: true)
+                    }.disabled(!model.editable)
+                }
+                if pickup.selectedID == shopID, pickup.journey?.basket?.phase == .reportedPlaced {
+                    NavigationLink(pTr("Record what came home")) {
+                        if model.shop?.id == shopID, model.accessAvailable, pickup.selectedID == shopID,
+                           pickup.journey?.basket?.phase == .reportedPlaced {
+                            PickupArrivalView(model: pickup)
+                        } else { pickupChanged }
+                    }
+                        .accessibilityIdentifier("week.arrival")
+                }
                 Button(dinnerText("Protect a lunch or side")) { destination = .reservation }
                     .disabled(!model.editable)
             }
@@ -572,6 +589,20 @@ struct DinnerPreviewView: View {
                                     Text(dinnerFormat("Protected: %@ · %@", group.name, group.servings.description))
                                 }
                             }.accessibilityElement(children: .combine).accessibilityIdentifier("dinnerPreviewMeal-\(meal.id)")
+                        }
+                    }
+                    if let plan = preview.proposal.repeatWeek, !plan.staples.isEmpty {
+                        Section(dinnerText("Staples for this pickup")) {
+                            ForEach(plan.staples, id: \.review.source) { row in
+                                VStack(alignment: .leading) {
+                                    Text(verbatim: row.review.line.name).font(.headline)
+                                    switch row.choice {
+                                    case .skip: Text(dinnerText("Skipped"))
+                                    case .alreadyHandled: Text(dinnerText("Already handled"))
+                                    case .needed: LabeledContent(dinnerText("Needed"), value: dinnerQuantity(row.quantity))
+                                    }
+                                }.accessibilityElement(children: .combine)
+                            }
                         }
                     }
                     let allocations = preview.proposal.changes.compactMap { change -> DinnerAdjustment? in

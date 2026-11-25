@@ -1,6 +1,230 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "I checked both dated prices and offer terms for these pack counts.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I checked both dated prices and offer terms for these pack counts."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé la fecha de ambos precios y las condiciones de las ofertas para estas cantidades de paquetes."
+          }
+        }
+      }
+    },
+    "Compare the same basket": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare the same basket"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparar la misma canasta"
+          }
+        }
+      }
+    },
+    "Choose the first store’s items and match each to the same product at the second store. Prices are dated household observations.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the first store’s items and match each to the same product at the second store. Prices are dated household observations."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige artículos de la primera tienda y vincúlalos al mismo producto en la segunda. Los precios tienen fecha y los registró el hogar."
+          }
+        }
+      }
+    },
+    "Currency": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Currency"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moneda"
+          }
+        }
+      }
+    },
+    "First store": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "First store"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Primera tienda"
+          }
+        }
+      }
+    },
+    "Second store": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Second store"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segunda tienda"
+          }
+        }
+      }
+    },
+    "Selected basket": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected basket"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Canasta seleccionada"
+          }
+        }
+      }
+    },
+    "First-store packs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "First-store packs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paquetes en la primera tienda"
+          }
+        }
+      }
+    },
+    "Matching product at the second store": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Matching product at the second store"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Producto equivalente en la segunda tienda"
+          }
+        }
+      }
+    },
+    "Unresolved": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unresolved"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin resolver"
+          }
+        }
+      }
+    },
+    "Second-store packs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Second-store packs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paquetes en la segunda tienda"
+          }
+        }
+      }
+    },
+    "Comparable items only": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparable items only"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo artículos comparables"
+          }
+        }
+      }
+    },
+    "Items compared": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Items compared"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artículos comparados"
+          }
+        }
+      }
+    },
+    "Choose a store": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a store"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una tienda"
+          }
+        }
+      }
+    },
     "A mass ounce and a fluid ounce are different units. Enter the quantity shown; no density conversion is inferred.": {
       "localizations": {
         "en": {

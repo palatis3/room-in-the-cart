@@ -1,6 +1,630 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Split receipt quantity: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Split receipt quantity: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad repartida del ticket: %@"
+          }
+        }
+      }
+    },
+    "Receipt quantity split across items. The paid amount is counted once.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt quantity split across items. The paid amount is counted once."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cantidad del ticket se repartió entre varios artículos. El importe pagado se cuenta una sola vez."
+          }
+        }
+      }
+    },
+    "Receipt lines with an amount in %@: %d of %d": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt lines with an amount in %@: %d of %d"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Líneas del ticket con importe en %@: %d de %d"
+          }
+        }
+      }
+    },
+    "Items priced for the same quantity at both stores": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Items priced for the same quantity at both stores"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artículos con precio para la misma cantidad en ambas tiendas"
+          }
+        }
+      }
+    },
+    "Cooked food still waiting": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cooked food still waiting"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comida preparada pendiente"
+          }
+        }
+      }
+    },
+    "No confirmed portions waiting for these dinners.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No confirmed portions waiting for these dinners."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay porciones confirmadas pendientes para estas cenas."
+          }
+        }
+      }
+    },
+    "Review for %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review for %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar para el %@"
+          }
+        }
+      }
+    },
+    "Reviewed pack choice": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed pack choice"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Presentación revisada"
+          }
+        }
+      }
+    },
+    "Recorded shelf price": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recorded shelf price"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio de anaquel registrado"
+          }
+        }
+      }
+    },
+    "The receipt or plan changed. Review the product link in Receipt differences or clear it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The receipt or plan changed. Review the product link in Receipt differences or clear it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambió el ticket o el plan. Revisa el vínculo del producto en Diferencias del ticket o quítalo."
+          }
+        }
+      }
+    },
+    "Accepted plan": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accepted plan"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan confirmado"
+          }
+        }
+      }
+    },
+    "Original shopping estimate": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original shopping estimate"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estimación original de la compra"
+          }
+        }
+      }
+    },
+    "Priced items": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Priced items"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artículos con precio"
+          }
+        }
+      }
+    },
+    "Known estimated subtotal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Known estimated subtotal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subtotal estimado con precios conocidos"
+          }
+        }
+      }
+    },
+    "Confirmed private purchases": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed private purchases"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compras privadas confirmadas"
+          }
+        }
+      }
+    },
+    "Known paid subtotal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Known paid subtotal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subtotal pagado con importes conocidos"
+          }
+        }
+      }
+    },
+    "Planned items without a linked receipt line: %d": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planned items without a linked receipt line: %d"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artículos planeados sin línea de ticket vinculada: %d"
+          }
+        }
+      }
+    },
+    "Receipt saved for this shop. Basket line unresolved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt saved for this shop. Basket line unresolved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ticket guardado para esta compra. Falta vincular el artículo."
+          }
+        }
+      }
+    },
+    "Private purchase evidence is unavailable.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private purchase evidence is unavailable."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los datos de compras privadas no están disponibles."
+          }
+        }
+      }
+    },
+    "Planned items": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planned items"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artículos planeados"
+          }
+        }
+      }
+    },
+    "Packages: %@ × %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Packages: %@ × %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paquetes: %@ × %@"
+          }
+        }
+      }
+    },
+    "Reviewed containers: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed containers: %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envases revisados: %lld"
+          }
+        }
+      }
+    },
+    "Original estimate": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original estimate"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estimación original"
+          }
+        }
+      }
+    },
+    "No matched receipt line": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No matched receipt line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin línea de ticket vinculada"
+          }
+        }
+      }
+    },
+    "Received quantity differs from the plan.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Received quantity differs from the plan."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cantidad recibida difiere de la planeada."
+          }
+        }
+      }
+    },
+    "Quantity units need review.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quantity units need review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa las unidades de la cantidad."
+          }
+        }
+      }
+    },
+    "Paid minus estimate": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paid minus estimate"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importe pagado menos estimación"
+          }
+        }
+      }
+    },
+    "Confirmed cooked dinners": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed cooked dinners"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cenas preparadas confirmadas"
+          }
+        }
+      }
+    },
+    "No cooking recorded for these dinners.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No cooking recorded for these dinners."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se ha registrado la preparación de estas cenas."
+          }
+        }
+      }
+    },
+    "Review items for next week": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review items for next week"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar artículos para la próxima semana"
+          }
+        }
+      }
+    },
+    "No saved estimate for this shop.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No saved estimate for this shop."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay una estimación guardada para esta compra."
+          }
+        }
+      }
+    },
+    "Weekly costs and outcomes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weekly costs and outcomes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Costos y resultados de la semana"
+          }
+        }
+      }
+    },
+    "Receipt revision %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt revision %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisión del ticket %lld"
+          }
+        }
+      }
+    },
+    "Receipt line total": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt line total"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total de la línea del ticket"
+          }
+        }
+      }
+    },
+    "Confirmed discounts and refunds": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed discounts and refunds"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descuentos y reembolsos confirmados"
+          }
+        }
+      }
+    },
+    "Different item received": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Different item received"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se recibió otro artículo"
+          }
+        }
+      }
+    },
+    "Price coverage by item is unknown for an inclusive total.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price coverage by item is unknown for an inclusive total."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un total global no indica qué artículos tienen precio."
+          }
+        }
+      }
+    },
+    "Item prices recorded": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item prices recorded"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artículos con precio registrado"
+          }
+        }
+      }
+    },
+    "Unresolved quantities or packages": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unresolved quantities or packages"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidades o paquetes sin resolver"
+          }
+        }
+      }
+    },
     "Servings changed. Keep using these pantry amounts to leave these ingredients off your shopping list.": {
       "extractionState": "manual",
       "localizations": {

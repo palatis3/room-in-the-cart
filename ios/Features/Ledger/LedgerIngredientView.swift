@@ -247,13 +247,13 @@ struct LedgerLineEditor: View {
                     TextField(quickGroceryText("Department"), text: $aisle, prompt: Text(verbatim: ""), axis: .vertical)
                         .textFieldStyle(.roundedBorder)
                 }
-                if !shop.basis.branch.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                if !shop.currentStop.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     Picker(ledgerText("Department assignment"), selection: $remember) {
                         Text(ledgerText("This row")).tag(false)
                         Text(ledgerText("Remember at this store")).tag(true)
                     }
                     if remember {
-                        Text(verbatim: shop.basis.branch).font(.footnote)
+                        Text(verbatim: shop.currentStop.name).font(.footnote)
                     }
                 }
             }.disabled(model.saving || model.hasPendingSave)

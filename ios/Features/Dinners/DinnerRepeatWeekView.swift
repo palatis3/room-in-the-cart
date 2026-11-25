@@ -4,6 +4,7 @@ import CoreDomain
 struct DinnerRepeatWeekView: View {
     @ObservedObject var model: DinnerFeatureModel
     let initialDate: Date
+    var useSelectedStart = false
     @EnvironmentObject private var pickup: PickupModel
     @Environment(\.closeDinnerDecision) private var close
     @Environment(\.advanceToDinnerApply) private var advance
@@ -51,7 +52,7 @@ struct DinnerRepeatWeekView: View {
                         LabeledContent(dinnerText("Previous week"), value: range)
                     }
                 }
-                if let review, model.canReadRepeatSources(review.sourceShopIDs, identity: review.identity) {
+                if let review, review.hasPaidEvidence == model.paid, model.canReadRepeatSources(review.sourceShopIDs, identity: review.identity) {
                     meals
                     calendarNotes(review)
                     if !selected.isEmpty { shoppingEstimate(review) }
@@ -73,7 +74,7 @@ struct DinnerRepeatWeekView: View {
                     }
                     Button(dinnerText("Preview repeated week")) { prepare(review) }
                         .accessibilityIdentifier("repeatWeek.preview")
-                        .disabled(!model.editable || (selected.isEmpty && staples.values.allSatisfy { $0 == .skip }))
+                        .disabled(!model.editable || (selected.isEmpty && staples.isEmpty))
                 }
                 Button(dinnerText("Reload week and current evidence")) { load(start) }
                     .accessibilityIdentifier("repeatWeek.reload")
@@ -91,7 +92,10 @@ struct DinnerRepeatWeekView: View {
             var calendar = Calendar(identifier: .gregorian)
             calendar.locale = .current
             calendar.timeZone = zone
-            load(calendar.dateInterval(of: .weekOfYear, for: initialDate)?.start ?? initialDate)
+            load(useSelectedStart ? initialDate : calendar.dateInterval(of: .weekOfYear, for: initialDate)?.start ?? initialDate)
+        }
+        .onChange(of: model.paid) { _, _ in
+            if let start, review != nil { refreshMembership(for: start) }
         }
         .onChange(of: model.editorIdentity) { _, current in
             if owner != current { review = nil; close?() }
@@ -204,19 +208,20 @@ struct DinnerRepeatWeekView: View {
     private func stapleSection(_ review: DinnerRepeatReview) -> some View {
         Section(dinnerText("Staples for this pickup")) {
             ForEach(review.staples) { staple in
-                Picker(selection: Binding(get: { staples[staple.id] ?? .skip }, set: { value in
-                    if value == .skip { staples.removeValue(forKey: staple.id) }
-                    else { staples[staple.id] = value }
-                })) {
-                    Text(dinnerText("Skip")).tag(StapleChoice.skip)
-                    Text(dinnerText("Needed")).tag(StapleChoice.needed)
-                    Text(dinnerText("Already handled")).tag(StapleChoice.alreadyHandled)
+                Picker(selection: Binding(get: { staples[staple.id] }, set: { staples[staple.id] = $0 })) {
+                    Text(weekReviewText("Decide later")).tag(Optional<StapleChoice>.none)
+                    Text(dinnerText("Skip")).tag(Optional(StapleChoice.skip))
+                    Text(dinnerText("Needed")).tag(Optional(StapleChoice.needed))
+                    Text(dinnerText("Already handled")).tag(Optional(StapleChoice.alreadyHandled))
                 } label: {
                     VStack(alignment: .leading) {
                         Text(staple.line.name)
                         Text(staple.approval.purpose).font(.caption)
                     }
                 }.accessibilityIdentifier("repeatWeek.staple." + staple.source.lineID.uuidString)
+                if let next = review.evidence.firstDinner(using: staple.source, among: choices.filter { selected.contains($0.id) }) {
+                    LabeledContent(weekReviewText("Next planned use"), value: next.title + " · " + dinnerDay(next.day))
+                }
                 if staples[staple.id] == .needed {
                     let amount = Binding<Amount>(get: { stapleAmounts[staple.id] ?? Amount() },
                                                  set: { stapleAmounts[staple.id] = $0 })
@@ -242,7 +247,7 @@ struct DinnerRepeatWeekView: View {
                         if !row.free.isEmpty {
                             LabeledContent(dinnerText("Available in the pantry"), value: row.free.map { dinnerQuantity($0) }.joined(separator: ", "))
                         }
-                        if !row.toObtain.isEmpty {
+                        if row.toObtain.contains(where: { $0.amount > .zero }) {
                             LabeledContent(dinnerText("Still to obtain"), value: row.toObtain.map { dinnerQuantity($0) }.joined(separator: ", "))
                         } else if !row.unresolved {
                             Text(dinnerText("Current available stock covers the selected dinners."))
@@ -315,6 +320,23 @@ struct DinnerRepeatWeekView: View {
         } catch { model.report(error) }
     }
 
+    private func refreshMembership(for date: Date) {
+        let previous = Dictionary(uniqueKeysWithValues: choices.map { ($0.id, $0) })
+        let previouslySelected = selected
+        let previousPortions = portions
+        let previousAmounts = ingredientAmounts
+        let previousConfirmations = confirmedAmounts
+        load(date)
+        let retained = Set(choices.compactMap { fresh in
+            previous[fresh.id]?.candidate == fresh.candidate ? fresh.id : nil
+        })
+        choices = choices.map { retained.contains($0.id) ? previous[$0.id] ?? $0 : $0 }
+        selected = previouslySelected.intersection(retained)
+        portions = previousPortions.filter { retained.contains($0.key) }
+        ingredientAmounts = previousAmounts.filter { retained.contains($0.key) }
+        confirmedAmounts = previousConfirmations.intersection(retained)
+    }
+
     private func needsIngredientReview(_ meal: DinnerRepeatChoice) -> Bool {
         guard let entered = portions[meal.id], let count = try? DinnerEntry.rational(entered) else { return false }
         return count != meal.candidate.template.servings && meal.candidate.template.servingGroups.contains(where: \.isProtected)
@@ -347,4 +369,8 @@ struct DinnerRepeatWeekView: View {
             if model.prepareRepeatWeek(review, choices: rows, staples: staples, stapleQuantities: quantities, pickup: pickup) { advance?() }
         } catch { model.report(error) }
     }
+}
+
+func weekReviewText(_ key: String) -> String {
+    String(localized: String.LocalizationValue(key), table: "DinnerRepeatEvidence")
 }

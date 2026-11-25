@@ -641,18 +641,18 @@
         }
       }
     },
-    "The recipient can keep this copy and read it without the app. The assigned shopper records what arrived.": {
+    "The recipient can read this copy without the app. Later changes stay on your list.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The recipient can keep this copy and read it without the app. The assigned shopper records what arrived."
+            "value": "The recipient can read this copy without the app. Later changes stay on your list."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quien reciba esta copia podrá guardarla y leerla sin la app. La persona encargada de comprar registra lo que llegó."
+            "value": "Quien reciba esta copia podrá leerla sin la app. Los cambios posteriores se quedan en tu lista."
           }
         }
       }
@@ -749,6 +749,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Vista previa de la lista"
+          }
+        }
+      }
+    },
+    "Shopping list copy · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shopping list copy · %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copia de la lista de compras · %@"
           }
         }
       }

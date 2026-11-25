@@ -106,4 +106,119 @@ final class StoreDepartmentTests: XCTestCase {
         XCTAssertEqual(shop.lines[0].aisle, "")
         try memory.validate(shops: [shop])
     }
+    func testResetRemovesLegacyAliasOrderAndOnlyChangesCurrentDatedList() throws {
+        let north = try list("Mercado Norte", ["Rice", "Milk"])
+        var memory = LedgerListLayout()
+        let dairy = GroceryDepartment.dairy.label(spanish: GroceryDepartment.usesSpanish)
+        let pantry = GroceryDepartment.pantry.label(spanish: GroceryDepartment.usesSpanish)
+        memory.storeAisles["Mercado Norte"] = [dairy, pantry]
+        let id = try memory.matchStore(in: north, to: nil)
+        let old = try list("Mercado Norte", ["Rice", "Milk"])
+        memory.applyDepartmentMemory(to: [old], previous: [])
+        var visiting = try list("Mercado Sur", ["Rice", "Milk"])
+        try memory.setStoreOrder([pantry, dairy], in: visiting)
+        let beforeStop = visiting
+        try visiting.startShoppingStop(named: "Mercado Norte", expectedRevision: visiting.revisionID)
+        memory.applyDepartmentMemory(to: [visiting], previous: [beforeStop])
+        XCTAssertEqual(memory.matchedStore(in: visiting), id)
+        XCTAssertEqual(memory.aisleNames(in: visiting), [dairy, pantry])
+        try memory.resetStoreOrder(in: visiting)
+        let again = try list("Mercado Norte", ["Rice", "Milk"])
+        memory.applyDepartmentMemory(to: [again], previous: [])
+        XCTAssertEqual(memory.aisleNames(in: again), [pantry, dairy])
+        XCTAssertEqual(memory.aisleNames(in: old), [dairy, pantry])
+        XCTAssertNil(memory.storeAisles["Mercado Norte"])
+        try memory.validate(shops: [north, old, visiting, again])
+    }
+
+    func testTwoEarlierOptedInListsMustAgreeBeforeSuggestingAnEditableRoute() throws {
+        let ids = ["Panadería", "Frutería"]
+        let target = try list("Centro", ids)
+        var memory = LedgerListLayout()
+        let store = try memory.matchStore(in: target, to: nil)
+        var tick = Date(timeIntervalSince1970: 1_800_000_000)
+        func picked(_ branch: String, order: [Int]) throws -> ShoppingLedger {
+            var trip = try list(branch, ids)
+            memory.applyDepartmentMemory(to: [trip], previous: [])
+            for (index, label) in ids.enumerated() {
+                try memory.setDepartment(label, for: trip.lines[index], in: trip, remember: false)
+            }
+            for index in order {
+                tick.addTimeInterval(1)
+                let row = trip.lines[index].id
+                try trip.setChecked(lineID: row, checked: true, at: tick)
+                memory.recordAislePick(for: row, in: trip)
+            }
+            return trip
+        }
+        func suggestion(_ visits: [ShoppingLedger]) -> [String]? {
+            memory.suggestedStoreOrder(storeID: store, for: target, aisles: ids, history: visits)
+        }
+        let preConsent = try picked("Centro", order: [1, 0])
+        try memory.setAisleLearning(true, in: target)
+        let first = try picked("Centro", order: [1, 0])
+        let elsewhere = try picked("Other store", order: [1, 0])
+        XCTAssertNil(suggestion([preConsent, first, elsewhere]))
+        XCTAssertNil(suggestion([first, first]))
+        let second = try picked("Centro", order: [1, 0])
+        XCTAssertEqual(suggestion([first, second]), Array(ids.reversed()))
+        let encoded = try JSONEncoder().encode(memory)
+        let restored = try JSONDecoder().decode(LedgerListLayout.self, from: encoded)
+        XCTAssertEqual(restored.suggestedStoreOrder(storeID: store, for: target, aisles: ids, history: [first, second]), Array(ids.reversed()))
+        XCTAssertTrue(memory.departmentDirectory!.stores[store.uuidString.lowercased()]!.order.isEmpty)
+        let shared = String(decoding: try JSONEncoder().encode(memory.scoped(to: first)), as: UTF8.self)
+        XCTAssertFalse(shared.contains("aislePicks"))
+        XCTAssertFalse(shared.contains("learnsAisles"))
+        var undone = second
+        try undone.setChecked(lineID: second.lines[0].id, checked: false)
+        XCTAssertNil(suggestion([first, undone]))
+        let reverse = try picked("Centro", order: [0, 1])
+        XCTAssertNil(suggestion([first, second, reverse]))
+        try memory.setAisleLearning(false, in: target)
+        try memory.setAisleLearning(true, in: target)
+        XCTAssertNil(suggestion([first, second]))
+        try memory.validate(shops: [target, preConsent, first, elsewhere, second, reverse])
+    }
+
+    func testSavedBuiltInOrderFollowsLanguageAndPreservesLiteralCustomLabels() throws {
+        var memory = LedgerListLayout()
+        let shop = try list("Market", ["Rice", "Milk"])
+        let spanish = GroceryDepartment.usesSpanish
+        try memory.setStoreOrder([GroceryDepartment.dairy.label(spanish: !spanish), GroceryDepartment.pantry.label(spanish: !spanish)], in: shop)
+        XCTAssertEqual(memory.aisleNames(in: shop), [GroceryDepartment.dairy.label(spanish: spanish), GroceryDepartment.pantry.label(spanish: spanish)])
+        try memory.setDepartment("Dairy", for: shop.lines[0], in: shop, remember: false)
+        try memory.setDepartment("Lácteos", for: shop.lines[1], in: shop, remember: false)
+        try memory.setStoreOrder(["Lácteos", "Dairy"], in: shop)
+        XCTAssertEqual(memory.aisleNames(in: shop), ["Lácteos", "Dairy"])
+    }
+
+    func testFormatProtectsLocalConsentAndDiscountsIncludingUndoWhilePlainScopedCopiesStayCompatible() throws {
+        var shop = try list("Mercado", ["Milpa"])
+        var workspace = LedgerWorkspace(shops: [shop], selectedShopID: shop.id)
+        let line = shop.lines[0].id
+        try workspace.listLayout.setStoreOrder(["A"], in: shop)
+        XCTAssertEqual(workspace.ledgerDocumentVersion, 1)
+        try workspace.listLayout.setAisleLearning(true, in: shop)
+        XCTAssertEqual(workspace.ledgerDocumentVersion, 2)
+        var scoped = workspace
+        scoped.listLayout = workspace.listLayout.scoped(to: shop)
+        XCTAssertEqual(scoped.ledgerDocumentVersion, 1)
+        try workspace.listLayout.setAisleLearning(false, in: shop)
+        XCTAssertEqual(workspace.ledgerDocumentVersion, 1)
+        try shop.setChecked(lineID: line, checked: true)
+        try shop.recordPickedPrice(lineID: line, expectedRevision: shop.revisionID,
+            total: Money(minorUnits: 300), membership: false, weighted: false, conditionsConfirmed: true,
+            discount: Money(minorUnits: 50))
+        workspace.shops = [shop]
+        XCTAssertEqual(workspace.ledgerDocumentVersion, 2)
+        try shop.setBudgetFlexible(lineID: line, expectedRevision: shop.revisionID, flexible: true)
+        try shop.leaveForNextTrip(lineID: line, expectedRevision: shop.revisionID)
+        XCTAssertNil(shop.lines[0].pickedPrice)
+        XCTAssertNotNil(shop.lines[0].tripUndo?.price?.discount)
+        workspace.shops = [shop]
+        XCTAssertEqual(workspace.ledgerDocumentVersion, 2)
+        let restored = try JSONDecoder().decode(LedgerWorkspace.self, from: JSONEncoder().encode(workspace))
+        XCTAssertEqual(restored.ledgerDocumentVersion, 2)
+    }
+
 }

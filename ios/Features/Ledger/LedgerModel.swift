@@ -188,13 +188,13 @@ private enum LedgerDeletionJournal {
         if let committedPayload { return committedPayload }
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys]
-        return try encoder.encode(LedgerDocument(formatVersion: 1, workspace: workspace))
+        return try encoder.encode(LedgerDocument(formatVersion: workspace.ledgerDocumentVersion, workspace: workspace))
     }
 
     nonisolated static func validatePayload(_ payload: Data) throws -> LedgerWorkspace {
         guard payload.count <= LedgerStore.maximumPayloadBytes else { throw LedgerModelError.unsupportedDocument }
         let document = try JSONDecoder().decode(LedgerDocument.self, from: payload)
-        guard document.formatVersion == 1 else { throw LedgerModelError.unsupportedDocument }
+        guard document.formatVersion == document.workspace.ledgerDocumentVersion else { throw LedgerModelError.unsupportedDocument }
         // LedgerWorkspace.init(from:) validates all decoded domain evidence.
         return document.workspace
     }
@@ -425,7 +425,7 @@ private enum LedgerDeletionJournal {
     @concurrent private static func encodeForSave(_ workspace: LedgerWorkspace) async throws -> Data {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys]
-        return try encoder.encode(LedgerDocument(formatVersion: 1, workspace: workspace))
+        return try encoder.encode(LedgerDocument(formatVersion: workspace.ledgerDocumentVersion, workspace: workspace))
     }
 
     private func verifyPantryBasis(_ basis: LedgerCanonicalPackStockEvidence.Basis) async throws {

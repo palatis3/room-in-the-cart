@@ -76,6 +76,16 @@ import LocalStore
         XCTAssertEqual(rows.first?.reserved.first?.protected, true)
         XCTAssertEqual(rows.first?.unresolved, false)
         let mealRows = try candidates(workspace)
+        try source.approveStaple(lineID: food, purpose: "Lunch", at: now)
+        var approved = workspace
+        approved.shops[0] = source
+        let staple = try XCTUnwrap(approved.priorStaples(for: approved.shops[1].id).first)
+        var choices = try candidates(approved).map(DinnerRepeatChoice.init)
+        let reviewed = try evidence(approved, staples: [staple])
+        choices[0].day = try day(20)
+        XCTAssertEqual(reviewed.firstDinner(using: staple.source, among: choices)?.id, choices[1].id)
+        XCTAssertEqual(reviewed.firstDinner(using: staple.source, among: [choices[0]])?.id, choices[0].id)
+        XCTAssertNil(reviewed.firstDinner(using: staple.source, among: []))
         let selected = mealRows.map(RepeatWeek.Selection.init)
         let needs = try evidence(workspace, canonical: supply).shoppingNeeds(for: selected, candidates: mealRows)
         XCTAssertEqual(needs.count, 1)

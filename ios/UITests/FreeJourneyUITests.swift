@@ -4230,6 +4230,34 @@ import XCTest
         XCTAssertTrue(app.collectionViews.firstMatch.frame.contains(empty.frame))
     }
 
+    func testCheckingAcrossAislesKeepsNextCheckboxUnderThumb() {
+        launch(reset: true)
+        openShoppingList()
+        tap(element("ledgerImport"))
+        fill("Apples\nMilk\nBread", into: "ledgerImportText")
+        tap(element("ledgerReviewImport"))
+        tap(element("ledgerCommitImport"))
+
+        let menu = app.buttons.matching(identifier: "ledgerListOptions").firstMatch
+        menu.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        tap(app.buttons["List order and aisles"])
+        choose("List order", value: "Group by aisle")
+        tap(element("saveListOrder"))
+        tap(element("ledgerInStore"))
+
+        let check = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "inStoreCheck-"))
+        let apples = check.matching(NSPredicate(format: "label == %@", "Check Apples")).firstMatch
+        let milk = check.matching(NSPredicate(format: "label == %@", "Check Milk")).firstMatch
+        XCTAssertTrue(apples.wait(for: \.isHittable, toEqual: true, timeout: 8))
+        let thumb = CGPoint(x: apples.frame.midX, y: apples.frame.midY)
+        apples.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        XCTAssertTrue(apples.waitForNonExistence(timeout: 8))
+        let underThumb = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            milk.exists && milk.isHittable && milk.frame.width >= 44 && milk.frame.height >= 44 && milk.frame.contains(thumb)
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [underThumb], timeout: 8), .completed)
+    }
+
     func testManualListOrderSurvivesRestartAndOpensLargePrint() throws {
         func chooseListOption(_ label: String) {
             let menu = app.buttons.matching(identifier: "ledgerListOptions").firstMatch

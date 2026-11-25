@@ -60,6 +60,50 @@ import CoreDomain
         let undone = await next.editShop(key: "undo-first", shopID: candidate.id) { try $0.undoImport(batchID: review.id) }
         XCTAssertTrue(undone); XCTAssertNotNil(next.shop?.importBatches.first?.undoneAt)
     }
+    func testFirstPastedListKeepsTheDuplicateDecisionAndUndonePickAfterOfflineReopen() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let cleanup = SQLiteFixtureDirectory(directory, test: self)
+        let url = directory.appendingPathComponent("ledger.sqlite")
+        let ledger = LedgerModel(databaseURL: url)
+        cleanup.track(ledger)
+        await ledger.open()
+        let store = try XCTUnwrap(ledger.firstListStore)
+        let editor = try FirstListEditor(store: store, owner: Data(repeating: 1, count: 32), base: ledger.revision,
+                                         saved: nil, authorize: { true })
+        var draft = editor.content
+        draft.original = "Eggs\nRice\nMilk\nRice"
+        draft.source = .paste
+        let shop = ShoppingLedger(id: draft.shopID)
+        let preview = try shop.stageImport(text: draft.original, source: .paste, importID: draft.importID,
+                                           reviewPackageCounts: true)
+        let duplicate = try XCTUnwrap(preview.lines.last)
+        draft.preview = preview
+        draft.choices = LedgerImportReview.initialChoices(preview)
+        XCTAssertNil(draft.choices[duplicate.id])
+        draft.choices[duplicate.id] = .skip
+        let flushed = await editor.flush(draft)
+        let saved = await ledger.commitFirstList(preview, decisions: draft.choices, draft: try XCTUnwrap(flushed),
+                                                 title: "Groceries", authorize: { true })
+        XCTAssertTrue(saved)
+        let list = try XCTUnwrap(ledger.shop)
+        let rice = try XCTUnwrap(list.lines.first { $0.name == "Rice" })
+        let picked = await ledger.changeGroceryCheck(rice, in: list, checked: true)
+        XCTAssertTrue(picked)
+        let updated = try XCTUnwrap(ledger.shop)
+        let checked = try XCTUnwrap(updated.lines.first { $0.id == rice.id })
+        let undone = await ledger.changeGroceryCheck(checked, in: updated, checked: false)
+        XCTAssertTrue(undone)
+
+        let reopened = LedgerModel(databaseURL: url)
+        cleanup.track(reopened)
+        await reopened.open()
+        let groceries = try XCTUnwrap(reopened.shop)
+        XCTAssertEqual(groceries.id, draft.shopID)
+        XCTAssertEqual(groceries.lines.map(\.name), ["Eggs", "Rice", "Milk"])
+        XCTAssertTrue(groceries.recentlyChecked.isEmpty)
+        XCTAssertEqual(groceries.importBatches.first?.decisions[duplicate.id], .skip)
+    }
+
     func testQuickGroceryTypingAndExplicitAddUseOnlyTheCurrentDraft() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }

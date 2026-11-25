@@ -707,6 +707,39 @@ final class PantryRepository {
         return try rows.map(PantryAcquisitionCodec.record)
     }
 
+    func weeklyPurchaseReview(_ baseline: WeeklyCostBaseline, pickup: ReceiptAcquisition.SavedPickup,
+                              fragments: Set<ReceiptKey>, expected: InventoryState) async throws -> WeeklyPurchaseReview {
+        try requireAccess()
+        guard pickup.originID == originID, expected.workspaceID == originID,
+              try await store.inventoryState() == expected else { throw Failure.inconsistentSnapshot }
+        var purchases: [ReceiptAcquisition] = []
+        var credits: [PrivatePriceEvidence] = []
+        var cursor: UUID?
+        var bytes = 0
+        repeat {
+            try Task.checkCancellation()
+            let page = try await store.acquisitionRows(after: cursor, limit: 100)
+            try requireAccess()
+            for row in page {
+                let acquisition = try PantryAcquisitionCodec.record(row)
+                guard acquisition.savedPickup == pickup, acquisition.documentLine?.stage != .order else { continue }
+                bytes += row.payload.count
+                guard bytes <= limits.payloadBytes, purchases.count < limits.observations else { throw InventoryError.capacity }
+                purchases.append(acquisition)
+
+            }
+            cursor = page.count == 100 ? page.last?.id : nil
+        } while cursor != nil
+        guard try await store.inventoryState() == expected else { throw Failure.inconsistentSnapshot }
+        try requireAccess()
+        for lineID in Set(purchases.map(\.lineID)) {
+            try Task.checkCancellation()
+            credits += try await priceAdjustments(for: lineID, expected: expected)
+            guard credits.count <= limits.observations else { throw InventoryError.capacity }
+        }
+        return try WeeklyPurchaseReview(baseline: baseline, pickup: pickup, fragments: fragments, receipts: purchases, adjustments: credits)
+    }
+
     func acquisitionHistory(receiptID: UUID? = nil, after: UUID? = nil, limit: Int = 30) async throws -> [ReceiptAcquisition] {
         try requireAccess()
         let rows = try await store.acquisitionRows(receiptID: receiptID, after: after, limit: limit)
@@ -787,6 +820,7 @@ final class PantryRepository {
                 guard line.appliedAlias == nil || old.foodID == fact.foodID,
                       old.name == fact.name || preservedName,
                       old.originalLine == fact.originalLine || (mapped != nil && ReceiptRecognition.normalize(old.originalLine) == ReceiptRecognition.normalize(fact.originalLine)),
+                      fact.orderMatch == nil || (old.orderMatch == fact.orderMatch && old.savedPickup == fact.savedPickup),
                       old.received == fact.received,
                       old.usable == fact.usable, old.currency == fact.currency, old.paidLineTotal == fact.paidLineTotal, old.stock == fact.stock,
                       old.purchaseDate == fact.purchaseDate, old.purchaseDay == fact.purchaseDay, old.merchant == fact.merchant else { throw PantryReceiptError.changedEvidence }

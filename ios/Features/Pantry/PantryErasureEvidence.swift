@@ -14,7 +14,7 @@ extension PantryErasureCoordinator {
         let allFiles: [FileMark]
         let blockers: Set<Blocker>
     }
-    private struct LedgerDocument: Encodable { let formatVersion = 1; let workspace: LedgerWorkspace }
+    private struct LedgerDocument: Encodable { let formatVersion: Int; let workspace: LedgerWorkspace }
 
     func external(rules: PantryArchivePrivacyValidator.LocalRules, links: [PantryLegacyMigration.SourceLink],
                   expectedLedgers: Set<UUID>, at date: Date) async throws -> External {
@@ -33,7 +33,7 @@ extension PantryErasureCoordinator {
                 do {
                     try ArchiveCodec.preflight(record.payload, maximum: LedgerStore.maximumPayloadBytes)
                     let workspace = try LedgerModel.validatePayload(record.payload)
-                    try PantryErasureDependencies.knownFields(LedgerDocument(workspace: workspace), bytes: record.payload)
+                    try PantryErasureDependencies.knownFields(LedgerDocument(formatVersion: workspace.ledgerDocumentVersion, workspace: workspace), bytes: record.payload)
                     try checkLedger(workspace, rules: rules, links: links)
                 } catch PantryArchivePrivacyValidator.Failure.retired { blockers.insert(.ledgerHistory) }
                 catch { blockers.insert(.unknownContent) }

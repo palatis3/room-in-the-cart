@@ -32,6 +32,34 @@ public struct ReceiptAcquisition: Codable, Equatable, Sendable, Identifiable {
                   self.ordinal == ordinal else { throw InventoryError.invalid("receiptPage") }
         }
     }
+    /// Privately confirmed at receipt review. A split has quantity evidence for
+    /// each order line but no allocated per-line cash amounts.
+    public struct OrderMatch: Codable, Equatable, Sendable {
+        public struct Portion: Codable, Equatable, Sendable {
+            public let lineID: UUID
+            public let quantity: Quantity
+            public init(lineID: UUID, quantity: Quantity) { self.lineID = lineID; self.quantity = quantity }
+        }
+        public let revisionID: UUID
+        public let portions: [Portion]
+        public init(revisionID: UUID, portions: [Portion]) {
+            self.revisionID = revisionID
+            self.portions = portions.sorted { $0.lineID.uuidString < $1.lineID.uuidString }
+        }
+        func validate(received: Quantity) throws {
+            guard !portions.isEmpty, portions.count <= 50, Set(portions.map(\.lineID)).count == portions.count
+            else { throw InventoryError.invalid("receiptOrderMatch") }
+            let total = try portions.reduce(Rational.zero) { previous, part in
+                try part.quantity.validate()
+                guard let amount = try part.quantity.converted(to: received.unit), amount > .zero else {
+                    throw InventoryError.invalid("receiptOrderMatch")
+                }
+                return try previous.adding(amount)
+            }
+            guard total == received.amount else { throw InventoryError.invalid("receiptOrderMatch") }
+        }
+    }
+    public let orderMatch: OrderMatch?
     public let lineDocumentID: UUID?
     public let documentLine: DocumentLine?
     public let savedPickup: SavedPickup?
@@ -60,7 +88,8 @@ public struct ReceiptAcquisition: Codable, Equatable, Sendable, Identifiable {
     public init(receiptID: UUID, ordinal: Int, lotID: UUID, foodID: UUID, merchant: String, purchaseDate: Date,
                 transactionReference: String?, imageDigest: Data?, originalLine: String, name: String,
                 received: Quantity, usable: Quantity, paidLineTotal: Money?, stock: Stock,
-                revision: Int64 = 1, supersedesID: UUID? = nil, savedPickup: SavedPickup? = nil, documentLine: DocumentLine? = nil, lineDocumentID: UUID? = nil, purchaseDay: MealDay? = nil, currency: Currency? = nil) {
+                revision: Int64 = 1, supersedesID: UUID? = nil, savedPickup: SavedPickup? = nil, documentLine: DocumentLine? = nil, lineDocumentID: UUID? = nil, purchaseDay: MealDay? = nil, currency: Currency? = nil, orderMatch: OrderMatch? = nil) {
+        self.orderMatch = orderMatch
         self.lineDocumentID = lineDocumentID
         self.documentLine = documentLine
         self.savedPickup = savedPickup
@@ -132,7 +161,7 @@ public struct ReceiptAcquisition: Codable, Equatable, Sendable, Identifiable {
         let corrected = Self(receiptID: receiptID, ordinal: ordinal, lotID: lotID, foodID: foodID, merchant: merchant,
             purchaseDate: purchaseDate, transactionReference: transactionReference, imageDigest: imageDigest, originalLine: originalLine,
             name: name, received: received, usable: usable, paidLineTotal: total, stock: stock,
-            revision: revision + 1, supersedesID: id, savedPickup: savedPickup, documentLine: documentLine, lineDocumentID: lineDocumentID, purchaseDay: purchaseDay, currency: currency)
+            revision: revision + 1, supersedesID: id, savedPickup: savedPickup, documentLine: documentLine, lineDocumentID: lineDocumentID, purchaseDay: purchaseDay, currency: currency, orderMatch: orderMatch)
         try corrected.validate()
         return corrected
     }
@@ -141,6 +170,10 @@ public struct ReceiptAcquisition: Codable, Equatable, Sendable, Identifiable {
         for (text, limit) in [(merchant, 256), (originalLine, 2_048), (name, 512)] {
             guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, text.utf8.count <= limit,
                   !text.contains("\0") else { throw InventoryError.invalid("receiptText") }
+        }
+        if let orderMatch {
+            guard savedPickup != nil, documentLine?.stage != .order else { throw InventoryError.invalid("receiptOrderMatch") }
+            try orderMatch.validate(received: received)
         }
         if let purchaseDay {
             guard purchaseDay == (try MealDay(date: purchaseDate, timeZoneIdentifier: purchaseDay.timeZoneIdentifier)) else {

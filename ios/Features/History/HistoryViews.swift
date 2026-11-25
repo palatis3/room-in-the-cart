@@ -6,6 +6,7 @@ import CoreDomain
 struct HistoryEntryView: View {
     @ObservedObject var model: HistoryFeatureModel
     var chooseShop: (() -> Void)? = nil
+    @EnvironmentObject private var membership: MembershipCoordinator
     @Environment(\.scenePhase) private var scenePhase
     @State private var section = "prices"
     @State private var editingObservation = false
@@ -140,6 +141,13 @@ struct HistoryEntryView: View {
                               defaultDate: Date(), date: $model.filter.through, lastSelection: $model.filter.lastEndDate)
             Text(HistoryCopy.text("Filters apply only to loaded, authorized records. Load more to continue searching."))
                 .font(.footnote)
+            if !model.filteredObservations.isEmpty {
+                TimelineView(.periodic(from: .now, by: 1)) { tick in
+                    if model.canCompareBasket(context: membership.model?.context, snapshot: membership.model?.state.snapshot, at: tick.date) {
+                        NavigationLink(HistoryCopy.text("Compare the same basket")) { HistoryBasketComparisonGate(model: model) }
+                    }
+                }
+            }
             ForEach(model.filteredObservations, id: \.id) { observation in
                 DisclosureGroup {
                     HistoryObservationDetails(observation: observation)
@@ -580,6 +588,114 @@ private struct HistorySubtotalDetails: View {
                     Text(shop.reconciledEntered ? HistoryCopy.text("Current entered evidence reconciled") : HistoryCopy.text("Shop evidence remains incomplete"))
                 } label: { Text(shop.shopId).font(.caption) }
             }
+        }
+    }
+}
+
+private struct HistoryBasketComparisonGate: View {
+    @ObservedObject var model: HistoryFeatureModel
+    @EnvironmentObject private var membership: MembershipCoordinator
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { tick in
+            if model.canCompareBasket(context: membership.model?.context, snapshot: membership.model?.state.snapshot, at: tick.date) {
+                HistoryBasketComparisonView(model: model)
+            } else { Text(dinnerText("Planning access changed or expired. Reconnect and review again.")) }
+        }
+    }
+}
+
+private struct HistoryBasketComparisonView: View {
+    @ObservedObject var model: HistoryFeatureModel
+    @State private var first: HistoryBasketComparison.Store?
+    @State private var second: HistoryBasketComparison.Store?
+    @State private var counts: [String: Int] = [:]
+    @State private var matched: [String: String] = [:]
+    @State private var confirmed = Set<String>()
+    @State private var currency = "USD"
+
+    private var rows: [HistoryPriceObservation] {
+        guard model.authorized else { return [] }
+        return model.filteredObservations.filter { $0.currency == currency && (HistoryDate.date($0.observedAt) ?? .distantFuture) <= Date() }
+    }
+    private var stores: [HistoryBasketComparison.Store] { Set(rows.map(HistoryBasketComparison.Store.init)).sorted() }
+    private var firstRows: [HistoryPriceObservation] { rows.filter { HistoryBasketComparison.Store($0) == first } }
+    private var secondRows: [HistoryPriceObservation] { rows.filter { HistoryBasketComparison.Store($0) == second } }
+    private var selected: [HistoryPriceObservation] { firstRows.filter { counts[$0.id] != nil } }
+    private func comparison(_ row: HistoryPriceObservation) -> HistoryBasketComparison.Cost? {
+        guard let count = counts[row.id], let other = secondRows.first(where: { $0.id == matched[row.id] }) else { return nil }
+        return HistoryBasketComparison.cost(row, other, count: count)
+    }
+    private func label(_ row: HistoryPriceObservation) -> String {
+        [row.itemName, row.variant, row.packLabel, HistoryCopy.observedAmount(row.price, currency: row.currency),
+         HistoryDate.date(row.observedAt)?.formatted(date: .abbreviated, time: .omitted), row.eligibility.isEmpty ? nil : row.eligibility]
+            .compactMap { $0 }.joined(separator: " · ")
+    }
+    var body: some View {
+        WorkingForm {
+            if model.authorized {
+                Section {
+                    Text(HistoryCopy.text("Choose the first store’s items and match each to the same product at the second store. Prices are dated household observations."))
+                    Picker(HistoryCopy.text("Currency"), selection: $currency) {
+                        ForEach(Array(Set(model.filteredObservations.map(\.currency))).sorted(), id: \.self) { code in Text(verbatim: code).tag(code) }
+                    }
+                    storePicker("First store", selection: $first, excluding: second)
+                    storePicker("Second store", selection: $second, excluding: first)
+                }
+                if first != nil && second != nil {
+                    Section(HistoryCopy.text("Selected basket")) {
+                        ForEach(firstRows) { row in
+                            Toggle(isOn: Binding(get: { counts[row.id] != nil }, set: { chosen in
+                                counts[row.id] = chosen ? 1 : nil
+                                matched[row.id] = nil
+                                confirmed.remove(row.id)
+                            })) { Text(verbatim: label(row)) }
+                            if counts[row.id] != nil {
+                                Stepper(value: Binding(get: { counts[row.id] ?? 1 }, set: { counts[row.id] = $0; confirmed.remove(row.id) }), in: 1...100) {
+                                    Text(HistoryCopy.text("First-store packs") + " · " + String(counts[row.id] ?? 1))
+                                }
+                                Picker(HistoryCopy.text("Matching product at the second store"), selection: Binding(get: { matched[row.id] ?? "" }, set: { matched[row.id] = $0; confirmed.remove(row.id) })) {
+                                    Text(HistoryCopy.text("Unresolved")).tag("")
+                                    ForEach(secondRows.filter { HistoryBasketComparison.cost(row, $0, count: counts[row.id] ?? 1) != nil }) { other in
+                                        Text(verbatim: label(other)).tag(other.id)
+                                    }
+                                }
+                                if let value = comparison(row) {
+                                    Text(HistoryCopy.text("Second-store packs") + " · " + String(value.packs))
+                                    Toggle(HistoryCopy.text("I checked both dated prices and offer terms for these pack counts."), isOn: Binding(get: {
+                                        confirmed.contains(row.id)
+                                    }, set: { checked in
+                                        if checked { confirmed.insert(row.id) } else { confirmed.remove(row.id) }
+                                    }))
+                                }
+                            }
+                        }
+                    }
+                    if !selected.isEmpty {
+                        let compared = selected.filter { confirmed.contains($0.id) }.compactMap(comparison)
+                        Section(HistoryCopy.text("Comparable items only")) {
+                            LabeledContent(HistoryCopy.text("Items compared"), value: "\(compared.count) / \(selected.count)")
+                            LabeledContent(first?.label ?? "", value: dinnerMoney(try? WeeklyPurchaseReview.total(compared.map(\.first))))
+                            LabeledContent(second?.label ?? "", value: dinnerMoney(try? WeeklyPurchaseReview.total(compared.map(\.second))))
+                            ForEach(selected.filter { !confirmed.contains($0.id) || comparison($0) == nil }) { row in Text(verbatim: row.itemName + " · " + HistoryCopy.text("Unresolved")) }
+                        }
+                    }
+                }
+            }
+        }.privacySensitive()
+        .navigationTitle(HistoryCopy.text("Compare the same basket"))
+        .onAppear {
+            if !model.filteredObservations.contains(where: { $0.currency == currency }), let code = model.filteredObservations.first?.currency { currency = code }
+        }
+        .onChange(of: first) { _, _ in counts.removeAll(); matched.removeAll(); confirmed.removeAll() }
+        .onChange(of: second) { _, _ in matched.removeAll(); confirmed.removeAll() }
+        .onChange(of: currency) { _, _ in first = nil; second = nil }
+    }
+
+    private func storePicker(_ title: String, selection: Binding<HistoryBasketComparison.Store?>,
+                             excluding: HistoryBasketComparison.Store?) -> some View {
+        Picker(HistoryCopy.text(title), selection: selection) {
+            Text(HistoryCopy.text("Choose a store")).tag(Optional<HistoryBasketComparison.Store>.none)
+            ForEach(stores.filter { $0 != excluding }, id: \.self) { store in Text(verbatim: store.label).tag(Optional(store)) }
         }
     }
 }

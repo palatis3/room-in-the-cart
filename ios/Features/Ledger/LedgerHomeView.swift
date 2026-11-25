@@ -19,7 +19,8 @@ struct LedgerHomeView: View {
     @State private var showingShopPicker = false
     @State private var showingListOptions = false
     @State private var stapleRecallShopID: UUID?
-    private enum Focus: Hashable { case result, error, undo, line(UUID) }
+    private enum Focus: Hashable { case result, error, undo, line(UUID), amount(UUID) }
+    @State private var editedAmountID: UUID?
     private enum SearchAnchor { case empty }
     @State private var submittedSearch = false
     @State private var returnToLine: UUID?
@@ -40,7 +41,10 @@ struct LedgerHomeView: View {
             .navigationDestination(item: $stapleRecallShopID) { shopID in
                 StapleRecallView(ledger: model, targetID: shopID)
             }
-            .sheet(item: $sheet) { destination in
+            .sheet(item: $sheet, onDismiss: {
+                if let id = editedAmountID, UIAccessibility.isVoiceOverRunning { focus = .amount(id) }
+                editedAmountID = nil
+            }) { destination in
                 switch destination {
                 case .shareItems(let id):
                     PrivateShoppingSheet(model: model) {
@@ -61,6 +65,8 @@ struct LedgerHomeView: View {
                     }
                 case .kits(let id):
                     PrivateShoppingSheet(model: model) { ShoppingKitsView(model: model, shopID: id) }
+                case .layout:
+                    PrivateShoppingSheet(model: model) { existingSheet(destination) }
                 case .standing:
                     PrivateShoppingSheet(model: model) { StandingListView(model: model) }
                 default:
@@ -478,8 +484,10 @@ struct LedgerHomeView: View {
 
                 if let source, let workspace = model.sourceWorkspaceID {
                     GroceryAmountEditButton(amount: quantity, name: line.name, spokenAmount: spokenAmount) {
+                        editedAmountID = line.id
                         sheet = .editAmount(workspace: workspace, shop: shop.id, line: line.id, source: source.id)
                     }
+                    .accessibilityFocused($focus, equals: .amount(line.id))
                     .accessibilityIdentifier("ledgerEditAmount-\(line.id)")
                     .disabled(model.saving || model.hasPendingSave)
                 }
@@ -576,6 +584,8 @@ struct ShopGroceryPreview: View {
         var id: Self { self }
     }
     @State private var destination: Destination?
+    @State private var editedAmountID: UUID?
+    @AccessibilityFocusState private var focusedAmountID: UUID?
     @Environment(\.scenePhase) private var scene
     @State private var retainedIDs: [UUID] = []
     @State private var measuredHeights: [UUID: CGFloat] = [:]
@@ -665,10 +675,12 @@ struct ShopGroceryPreview: View {
                         .accessibilityLabel(ledgerFormat("Inspect %@", line.name))
                         .accessibilityValue(shop.tripAmountLabel(line, measure: measure) ?? "")
                         .accessibilityIdentifier("shop.inspect-\(line.id)")
-                        if let source, let amount {
+                        if let source {
                             GroceryAmountEditButton(amount: amount, name: line.name, spokenAmount: shop.tripAmountLabel(line, measure: measure)) {
+                                editedAmountID = line.id
                                 destination = .amount(line: line.id, source: source.id)
                             }
+                            .accessibilityFocused($focusedAmountID, equals: line.id)
                             .accessibilityIdentifier("shop.editAmount-\(line.id)")
                         }
                     }
@@ -715,7 +727,10 @@ struct ShopGroceryPreview: View {
         .onChange(of: scene) { _, phase in if phase == .background { releaseRows() } }
         .onChange(of: shop.importBatches.last?.id) { _, _ in releaseRows() }
         .onChange(of: typeSize) { _, _ in releaseRows() }
-        .sheet(item: $destination) { target in
+        .sheet(item: $destination, onDismiss: {
+            if let id = editedAmountID, authorize(), UIAccessibility.isVoiceOverRunning { focusedAmountID = id }
+            editedAmountID = nil
+        }) { target in
             PrivateShoppingSheet(model: model) {
                 if let current = model.shop, current.id == shop.id {
                     switch target {

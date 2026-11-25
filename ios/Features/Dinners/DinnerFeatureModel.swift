@@ -335,6 +335,25 @@ extension DinnerWorkspaceStore {
             try workspace.dinnerPlanning.recordWeekNote(note, replacing: original, access: access, at: now)
         }
     }
+    @discardableResult func saveServeSchedule(_ value: DinnerServeSchedule?, previous: DinnerServeSchedule?, mealID: UUID,
+                                              revision: UUID, editor: EditorIdentity, pickup: PickupModel) async -> Bool {
+        let authorized = { @MainActor [weak self, weak pickup] in
+            guard let self, let pickup, self.basketPrepAccess(), self.editorIdentity == editor,
+                  self.localIdeaWorkspaceID != nil, value == nil || self.paid,
+                  case .original = try? self.currentMealDestination(mealID, pickup: pickup) else { return false }
+            let journey = pickup.journeys.first { $0.id == editor.shopID }
+            return value == nil || (journey?.closedAt == nil && journey?.cookedMeals?.contains {
+                $0.isActive && $0.draft.meal.id == mealID
+            } != true)
+        }
+        guard authorized() else { fail(DinnerPlanningError.forbidden); return false }
+        return await mutate(key: "serve-schedule-\(UUID())", shopID: editor.shopID, reauthorize: authorized) { workspace, index, access, now in
+            guard workspace.selectedShopID == editor.shopID, editor.scope == access.scope, editor.actorID == access.actorID
+            else { throw DinnerPlanningError.forbidden }
+            try workspace.dinnerPlanning.setServeSchedule(value, replacing: previous, mealID: mealID,
+                ledger: workspace.shops[index], expectedRevision: revision, access: access, at: now)
+        }
+    }
     @discardableResult func savePrep(_ task: DinnerPrepTask?, previous: DinnerPrepTask?, mealID: UUID, revision: UUID,
                                      editor: EditorIdentity, completing: Bool = false) async -> Bool {
         let authorized = { @MainActor [weak self] in

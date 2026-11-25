@@ -687,7 +687,9 @@ final class RoomInTheCartUITests: XCTestCase {
         tap(app.buttons["Preview message"])
         let preview = app.staticTexts["tripShareBody"]
         XCTAssertTrue(preview.waitForExistence(timeout: 8))
+        XCTAssertTrue(preview.label.hasPrefix("Shopping list copy · "))
         XCTAssertTrue(preview.label.contains(name))
+        XCTAssertTrue(app.staticTexts["The recipient can read this copy without the app. Later changes stay on your list."].exists)
         XCTAssertFalse(preview.label.contains("Quantity unresolved"))
         tap(app.buttons["tripShare.close"])
         XCTAssertTrue(preview.waitForNonExistence(timeout: 8))

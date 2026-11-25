@@ -49,6 +49,8 @@ struct ReceiptImportDraft {
         var unit: UnitOfMeasure = .count
         var location: InventoryLocation = .cupboard
         var selectedIntact = false
+        var comparedOrderLine: ReceiptAcquisition.OrderMatch?
+        var comparedPickup: ReceiptAcquisition.SavedPickup?
         var checkedPack = false
         var paid: String = ""
         func permitsPayment(in currency: Currency) -> Bool {
@@ -202,7 +204,7 @@ struct ReceiptImportDraft {
                 foodID: foodID, merchant: cleaned(merchant), purchaseDate: purchaseDate,
                 transactionReference: cleaned(reference).isEmpty ? nil : cleaned(reference), imageDigest: imageDigest,
                 originalLine: row.original, name: cleaned(row.name), received: received, usable: usable,
-                paidLineTotal: row.paidTotal(in: currency), stock: stock, savedPickup: savedPickup, documentLine: row.documentLine, lineDocumentID: lineDocumentID, purchaseDay: purchaseDay, currency: currency)
+                paidLineTotal: row.paidTotal(in: currency), stock: stock, savedPickup: row.comparedPickup ?? savedPickup, documentLine: row.documentLine, lineDocumentID: lineDocumentID, purchaseDay: purchaseDay, currency: currency, orderMatch: row.comparedOrderLine)
             try fact.validate()
             return fact
         }
