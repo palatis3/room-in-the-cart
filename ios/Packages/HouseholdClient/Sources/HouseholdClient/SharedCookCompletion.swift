@@ -37,6 +37,14 @@ public struct SharedCookReview: Codable, Equatable, Sendable {
     public let v: Int
     public let base: Base
     public let title: String
+    public struct PortionTarget: Codable, Equatable, Identifiable, Sendable {
+        public let needId: UUID
+        public let group, title, ingredient: String
+        public let day: String?
+        public let limit: Int
+        public var id: UUID { needId }
+    }
+    public let portionTargets: [PortionTarget]?
     public let plannedPortions: Int
     public let needs: [Need]
     public let completion: Completion?
@@ -46,6 +54,11 @@ public struct SharedCookReview: Codable, Equatable, Sendable {
               [base.grantEpoch, base.pantryRevision, base.supplyRevision, base.recoveryRevision, base.contextRevision].allSatisfy({ $0 >= 0 }),
               base.shopRevision > 0, base.authorityEpoch > 0, base.mealRevision > 0, needs.count <= 200,
               Set(needs.map(\.id)).count == needs.count else { throw ClientError.invalidResponse }
+        let targets = portionTargets ?? []
+        guard Set(targets.map(\.id)).count == targets.count, targets.allSatisfy({ target in
+            (1...1000).contains(target.limit) && target.day.map(householdReceiptDay) != false &&
+                [target.title, target.group, target.ingredient].allSatisfy { sharedMealText($0, 512) }
+        }) else { throw ClientError.invalidResponse }
         for need in needs {
             guard !need.name.isEmpty, Set(need.lots.map(\.id)).count == need.lots.count else { throw ClientError.invalidResponse }
             for lot in need.lots {
@@ -62,12 +75,12 @@ public struct SharedCookReview: Codable, Equatable, Sendable {
     }
 }
 extension HouseholdService {
-    public func sharedCookReview(shopID: String, occurrence: UUID) async throws -> SharedCookReview {
+    public func sharedCookReview(shopID: String, occurrence: UUID, includePortions: Bool = false) async throws -> SharedCookReview {
         let start = generation
         _ = try await authorizeShopper(shopID: shopID, capability: "cook_completion")
         guard start == generation else { throw ClientError.cancelled }
         let result: SharedCookReview = try await perform("shops/\(shopID)/cook-completion", method: "GET",
-            query: [.init(name: "occurrenceId", value: occurrence.uuidString.lowercased())])
+            query: [.init(name: "occurrenceId", value: occurrence.uuidString.lowercased())] + (includePortions ? [.init(name: "portions", value: "1")] : []))
         try result.validate(occurrence: occurrence)
         return result
     }

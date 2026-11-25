@@ -754,6 +754,9 @@ public actor HouseholdService {
         guard operation.memberID == memberID else { throw ClientError.accessEnded }
         let receipt: ShopperReceipt = try await perform("commands", method: "POST", body: operation.bytes, omitSelectedShop: envelope.kind == "shop.create")
         if envelope.kind == "meal.chooseTonight" {
+            if case .object(let second) = envelope.body["second"] {
+                guard let occurrence = receipt.secondOccurrenceId, second["occurrenceId"] == .string(occurrence.uuidString.lowercased()) else { throw ClientError.invalidResponse }
+            } else if receipt.secondOccurrenceId != nil { throw ClientError.invalidResponse }
             guard UUID(uuidString: receipt.operationId) != nil, receipt.shopId == envelope.shopId, receipt.kind == envelope.kind,
                   receipt.disposition == "meal_chosen", receipt.authorityEpoch == envelope.base.authorityEpoch,
                   envelope.base.shopRevision < Int.max, receipt.shopRevision == envelope.base.shopRevision + 1,

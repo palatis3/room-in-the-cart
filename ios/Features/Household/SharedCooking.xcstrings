@@ -1055,6 +1055,312 @@
           }
         }
       }
+    },
+    "Counted leftovers exceed the actual servings.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Counted leftovers exceed the actual servings."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las porciones sobrantes superan las que se prepararon."
+          }
+        }
+      }
+    },
+    "Servings outside these batches": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servings outside these batches"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porciones fuera de estos lotes"
+          }
+        }
+      }
+    },
+    "Reserve portions for people and days": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reserve portions for people and days"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apartar porciones por persona y día"
+          }
+        }
+      }
+    },
+    "Unassigned portions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unassigned portions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porciones sin asignar"
+          }
+        }
+      }
+    },
+    "Remove portion reservations": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove portion reservations"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar las reservas de porciones"
+          }
+        }
+      }
+    },
+    "Use soon across two dinners": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use soon across two dinners"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar pronto en dos cenas"
+          }
+        }
+      }
+    },
+    "Current unreserved food does not cover two reviewed dinners.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current unreserved food does not cover two reviewed dinners."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los alimentos disponibles sin reservar no alcanzan para dos cenas revisadas."
+          }
+        }
+      }
+    },
+    "First dinner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "First dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Primera cena"
+          }
+        }
+      }
+    },
+    "Second dinner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Second dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segunda cena"
+          }
+        }
+      }
+    },
+    "Find two dinners using available food": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find two dinners using available food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar dos cenas con los alimentos disponibles"
+          }
+        }
+      }
+    },
+    "Refresh recipes and pantry before reviewing two dinners again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh recipes and pantry before reviewing two dinners again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualiza las recetas y la despensa antes de volver a revisar las dos cenas."
+          }
+        }
+      }
+    },
+    "Review both dinners": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review both dinners"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar ambas cenas"
+          }
+        }
+      }
+    },
+    "Second dinner day": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Second dinner day"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Día de la segunda cena"
+          }
+        }
+      }
+    },
+    "These amounts would remain after both dinners.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These amounts would remain after both dinners."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estas cantidades quedarían después de ambas cenas."
+          }
+        }
+      }
+    },
+    "Both dinners will be added to this shop. Food quantities change when you record cooking.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Both dinners will be added to this shop. Food quantities change when you record cooking."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las dos cenas se agregarán a esta compra. Las cantidades de alimentos cambian cuando registras lo que cocinaste."
+          }
+        }
+      }
+    },
+    "Confirm both dinners": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm both dinners"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar ambas cenas"
+          }
+        }
+      }
+    },
+    "Both dinners were added to the shared shop.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Both dinners were added to the shared shop."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se agregaron ambas cenas a la compra compartida."
+          }
+        }
+      }
+    },
+    "Set a use-first date": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set a use-first date"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir una fecha para usar primero"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

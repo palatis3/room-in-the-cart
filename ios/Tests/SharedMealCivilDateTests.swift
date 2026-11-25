@@ -3,6 +3,33 @@ import HouseholdClient
 @testable import RoomInTheCart
 
 final class SharedMealCivilDateTests: XCTestCase {
+    func testTwoDinnerDestinationOnlyResumesItsOrderedPairWithCurrentAccess() throws {
+        let household = UUID(), member = UUID(), device = UUID()
+        func session(_ device: UUID) throws -> HouseholdPantrySession {
+            let data = try JSONSerialization.data(withJSONObject: ["householdID": household.uuidString,
+                "memberID": member.uuidString, "deviceID": device.uuidString])
+            return try JSONDecoder().decode(HouseholdPantrySession.self, from: data)
+        }
+        let current = try session(device), now = Date(), first = UUID(), second = UUID(), lot = UUID()
+        let scope = HouseholdPantryRuntime(generation: UUID(), enrollmentRevision: UUID(), subject: "fictional",
+            householdID: household.uuidString, memberID: member.uuidString, managesGrants: false)
+        let nextDay = try XCTUnwrap(Calendar(identifier: .gregorian).date(byAdding: .day, value: 1, to: now))
+        let saved = HouseholdTonightReturn(recipeID: first, day: now,
+            pair: .init(secondRecipeID: second, secondDay: nextDay, lots: [lot]), session: current,
+            subject: scope.subject, generation: scope.generation, grantEpoch: 4, expires: now.addingTimeInterval(600))
+        XCTAssertTrue(saved.canResume(in: current, scope: scope, grant: 4, now: now))
+        XCTAssertEqual(saved.day, now)
+        XCTAssertEqual(saved.pair?.secondDay, nextDay)
+        XCTAssertEqual(saved.pair?.lots, [lot])
+        XCTAssertFalse(saved.canResume(in: try session(UUID()), scope: scope, grant: 4, now: now))
+        XCTAssertFalse(saved.canResume(in: current, scope: scope, grant: 5, now: now))
+        XCTAssertTrue(saved.matchesPair([first, second], hasPaidSeat: true, now: now))
+        XCTAssertFalse(saved.matchesPair([second, first], hasPaidSeat: true, now: now))
+        XCTAssertFalse(saved.matchesPair([first], hasPaidSeat: true, now: now))
+        XCTAssertFalse(saved.matchesPair([first, second], hasPaidSeat: false, now: now))
+        XCTAssertFalse(saved.matchesPair([first, second], hasPaidSeat: true, now: saved.expires))
+    }
+
     func testDefaultProposalDayFollowsLocalMidnightAtTheDSTBoundary() throws {
         let now = try XCTUnwrap(ISO8601DateFormatter().date(from: "2026-11-02T02:30:00Z"))
         for (zone, expected) in [("America/New_York", "2026-11-01"),

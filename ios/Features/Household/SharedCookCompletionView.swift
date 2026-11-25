@@ -17,11 +17,15 @@ private struct CookedOutput: Identifiable {
     var name = ""
     var portions = 1
     var location = "fridge"
+    var allocations: [UUID: Int] = [:]
+    var includeUseFirst = false
+    var useFirstAt = Date()
 }
 
 struct SharedCookCompletionView: View {
     @ObservedObject var model: HouseholdShopModel
     @ObservedObject var household: HouseholdModel
+    @EnvironmentObject private var membership: MembershipCoordinator
     let shopID, occurrence: UUID
     @State private var review: SharedCookReview?
     @State private var rows: [ActualUse] = []
@@ -34,6 +38,12 @@ struct SharedCookCompletionView: View {
     @State private var included = false
     @State private var confirmUndo = false
 
+    private var paid: Bool {
+        guard let seat = membership.model, seat.context?.householdID == model.householdID,
+              seat.context?.purchaserID == model.memberID else { return false }
+        return seat.hasPaidAccess
+    }
+    private var outputPortions: Int { outputs.reduce(0) { $0 + $1.portions } }
     private var allowed: Bool {
         !household.locked && household.sharedShop === model && model.canCompleteCook &&
             model.scope.shopId.flatMap(UUID.init(uuidString:)) == shopID
@@ -58,6 +68,11 @@ struct SharedCookCompletionView: View {
                                 }
                             }
                         }
+                        if model.canReadPantry {
+                            NavigationLink(ht("Pantry and freezer")) {
+                                SharedPantryView(model: model, household: household, shopID: shopID)
+                            }
+                        }
                         if model.canShareMealFeedback {
                             NavigationLink(cookingText("Household meal feedback")) {
                                 SharedCookFeedbackView(model: model, occurrence: occurrence, cook: completion.cookId)
@@ -79,12 +94,26 @@ struct SharedCookCompletionView: View {
                             Picker(cookingText("Location"), selection: $output.location) {
                                 ForEach(["fridge","freezer","pantry"], id: \.self) { Text(cookingText($0)).tag($0) }
                             }
+                            Toggle(cookingText("Set a use-first date"), isOn: $output.includeUseFirst)
+                            if output.includeUseFirst {
+                                DatePicker(ht("Use first by"), selection: $output.useFirstAt, displayedComponents: .date)
+                            }
+                            if paid, let targets = review.portionTargets, !targets.isEmpty {
+                                allocationControls($output, targets: targets)
+                            } else if !output.allocations.isEmpty {
+                                Button(cookingText("Remove portion reservations")) { output.allocations = [:] }
+                            }
                             Button(cookingText("Remove output"), role: .destructive) { outputs.removeAll { $0.id == output.id } }
+                        }
+                        if outputPortions > servings {
+                            Text(cookingText("Counted leftovers exceed the actual servings.")).foregroundStyle(Theme.error)
+                        } else if !outputs.isEmpty {
+                            LabeledContent(cookingText("Servings outside these batches"), value: (servings - outputPortions).formatted())
                         }
                         Button(cookingText("Add counted leftovers")) { outputs.append(CookedOutput()) }.disabled(outputs.count >= 12)
                     }
                     Button(cookingText("Save actual cooking")) { Task { await save(review) } }
-                        .disabled(commandUses(review) == nil || !outputs.allSatisfy { !$0.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty })
+                        .disabled(commandUses(review) == nil || !validAllocations(review) || !outputs.allSatisfy { !$0.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty })
                 }
             } else if failed || !allowed {
                 Text(cookingText("Refresh the meal and stock to continue."))
@@ -133,6 +162,42 @@ struct SharedCookCompletionView: View {
             }
         }
     }
+    private func validAllocations(_ review: SharedCookReview) -> Bool {
+        guard outputPortions <= servings else { return false }
+        var totals: [UUID: Int] = [:]
+        for out in outputs {
+            guard out.allocations.values.reduce(0, +) <= out.portions else { return false }
+            for (id, portions) in out.allocations {
+                totals[id, default: 0] += portions
+                guard paid, portions > 0, let target = review.portionTargets?.first(where: { $0.id == id }),
+                      totals[id, default: 0] <= target.limit else { return false }
+            }
+        }
+        return true
+    }
+
+    private func allocationControls(_ batch: Binding<CookedOutput>, targets: [SharedCookReview.PortionTarget]) -> some View {
+        let output = batch.wrappedValue
+        let unassigned = output.portions - output.allocations.values.reduce(0, +)
+        return DisclosureGroup(cookingText("Reserve portions for people and days")) {
+            LabeledContent(cookingText("Unassigned portions"), value: unassigned.formatted())
+            ForEach(targets) { target in
+                let assigned = output.allocations[target.id] ?? 0
+                let inOtherBatches = outputs.filter { $0.id != output.id }.reduce(0) { $0 + ($1.allocations[target.id] ?? 0) }
+                let limit = max(assigned, min(assigned + unassigned, target.limit - inOtherBatches))
+                let amount = Binding<Int>(get: { batch.wrappedValue.allocations[target.id] ?? 0 }, set: { value in
+                    batch.wrappedValue.allocations[target.id] = value > 0 ? value : nil
+                })
+                Stepper(value: amount, in: 0...max(0, limit)) {
+                    VStack(alignment: .leading) {
+                        Text(verbatim: target.title + " · " + sharedMealScheduleText(target.day))
+                        Text(verbatim: [target.group, target.ingredient, assigned.formatted()].joined(separator: " · "))
+                    }
+                }
+            }
+        }
+    }
+
     @ViewBuilder private func ingredient(_ need: SharedCookReview.Need) -> some View {
         Section {
             ForEach($rows) { $row in
@@ -174,7 +239,12 @@ struct SharedCookCompletionView: View {
         failed = false
         guard allowed else { review = nil; resolution = nil; return }
         do {
-            let next = try await model.sharedCookReview(occurrence: occurrence)
+            let next: SharedCookReview
+            do {
+                next = try await model.sharedCookReview(occurrence: occurrence, includePortions: paid)
+            } catch ClientError.service(let status, _, _, _) where paid && [403, 503].contains(status) {
+                next = try await model.sharedCookReview(occurrence: occurrence)
+            }
             guard allowed, !Task.isCancelled else { return }
             if next != review {
                 review = next; servings = min(1000, max(1, next.plannedPortions)); outputs = []
@@ -228,9 +298,18 @@ struct SharedCookCompletionView: View {
         return uses
     }
     private func save(_ review: SharedCookReview) async {
-        guard let uses = commandUses(review) else { return }
-        let values = outputs.map { out in JSONValue.object(["lotId": idValue(out.id), "name": .string(out.name),
-            "portions": .integer(out.portions), "location": .string(out.location)]) }
+        guard let uses = commandUses(review), validAllocations(review) else { return }
+        let values = outputs.map { out -> JSONValue in
+            var fields: [String: JSONValue] = ["lotId": idValue(out.id), "name": .string(out.name),
+                "portions": .integer(out.portions), "location": .string(out.location)]
+            if out.includeUseFirst { fields["useFirstAt"] = .string(out.useFirstAt.ISO8601Format()) }
+            if !out.allocations.isEmpty {
+                fields["allocations"] = .array(out.allocations.sorted { $0.key.uuidString < $1.key.uuidString }.map { id, portions in
+                    .object(["needId": idValue(id), "portions": .integer(portions)])
+                })
+            }
+            return .object(fields)
+        }
         await submit("cook.complete", ["uses": .array(uses), "outputs": .array(values), "servings": .integer(servings)], review)
     }
     private func submit(_ kind: String, _ fields: [String: JSONValue], _ page: SharedCookReview) async {
