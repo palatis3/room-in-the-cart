@@ -4,7 +4,7 @@ import {checkPublishingMember,reviewSharedWording} from './shared-content-filter
 import {applyPair,checkPairReplay,inboxPairs,rememberPair,reviewPair} from './request-pair.js';
 import {proveSameItem,rememberSameItem,sameItemUndo,applySameItem,checkSameItemReplay} from './request-same-item.js';
 import {recordTonight,checkTonightReplay} from './household-tonight.js';
-import {acceptRepeatStep} from './shared-repeat-week.js';
+import {acceptRepeatStep,assertRepeatStepReplay} from './shared-repeat-week.js';
 import {checkDraftDinnerSwap} from './shared-dinner-swap.js';
 import {checkIngredientChange} from './meal-preferences.js';
 import {isCookCommand} from './cook-completion-contracts.js';
@@ -438,6 +438,13 @@ export class HouseholdRepository {
         const shop=await this.shop(ctx,prior.shop_id);this.requireShopper(ctx,shop);
         await assertDemandReplay(this,ctx,shop,prior.operation_id);
         await assertRequestAcceptanceReplay(this,ctx,shop,prior,command);
+        if (prior.kind === 'shop.patch' && command.kind === 'shop.patch' && command.body.mealEdit &&
+            prior.payload_digest === payloadDigest && prior.device_id === ctx.deviceId) {
+          const edit = bodySchemas['shop.patch'].parse(command.body).mealEdit;
+          if (edit?.repeatPlanId) {
+            await assertRepeatStepReplay(ctx, billing, shop, edit.repeatPlanId, edit.occurrenceId, prior.operation_id);
+          }
+        }
         if(prior.kind==='request.apply'){
           await checkSameItemReplay(this,ctx,shop,prior.operation_id,prior.response?.authorityEpoch);
           await checkPairReplay(this,ctx,shop,prior.operation_id,prior.response?.authorityEpoch);
