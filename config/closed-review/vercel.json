@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "installCommand": "npm --prefix service ci --ignore-scripts",
-  "buildCommand": "npm --prefix service run build && mkdir -p review-output",
+  "buildCommand": "npm --prefix service run build && mkdir -p review-output && printf 'Not found' > review-output/404.html",
   "outputDirectory": "review-output",
   "regions": ["pdx1"],
   "functions": {
