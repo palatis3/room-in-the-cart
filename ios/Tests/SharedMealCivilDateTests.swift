@@ -40,6 +40,18 @@ final class SharedMealCivilDateTests: XCTestCase {
         }
     }
 
+    func testSharedWeekIncludesMovedNightAndProtectedLunchAcrossDstWithoutIncludingAdjacentDays() throws {
+        func occurrence(_ day: String?, kind: String = "dinner") throws -> SharedMealOccurrence {
+            let row: [String: Any] = ["occurrenceId": UUID().uuidString, "revision": 1,
+                "meal": ["title": kind, "day": day as Any? ?? NSNull(), "kind": kind, "portions": 2, "protected": kind == "lunch"]]
+            return try JSONDecoder().decode(SharedMealOccurrence.self, from: JSONSerialization.data(withJSONObject: row))
+        }
+        let start = try XCTUnwrap(sharedMealDate("2026-10-30"))
+        let lunch = try occurrence("2026-11-01", kind: "lunch"), dinner = try occurrence("2026-11-05")
+        let rows = try [occurrence("2026-10-29"), dinner, occurrence(nil), occurrence("2026-11-06"), lunch]
+        XCTAssertEqual(sharedWeekMeals(rows, starting: start), [lunch, dinner])
+    }
+
     func testLocalizedCivilDayKeepsTheExactGregorianWireDayAcrossUSDSTBoundaries() throws {
         let examples = [
             ("2026-03-07", "March 7, 2026", "7 de marzo de 2026"),

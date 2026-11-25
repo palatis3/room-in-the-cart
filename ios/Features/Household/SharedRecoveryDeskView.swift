@@ -23,6 +23,8 @@ struct SharedRecoveryDeskView: View {
     @ObservedObject var household: HouseholdModel
     let shopID: UUID
     var dinnerID: UUID? = nil
+    var shortfallMealID: UUID? = nil
+    private var selectedMealID: UUID? { dinnerID ?? shortfallMealID }
     @State private var undoDecision: RecoveryDecision?
     private struct Selection: Identifiable {
         let id = UUID()
@@ -52,18 +54,18 @@ struct SharedRecoveryDeskView: View {
                     }
                 }
                 if applied { Text(sharedRecoveryText("Meal replacement saved")).accessibilityIdentifier("recovery.saved") }
-                if let delivery = model.deliveryRecord, delivery.recoveryRevision == page.base.recoveryRevision {
+                if shortfallMealID == nil, let delivery = model.deliveryRecord, delivery.recoveryRevision == page.base.recoveryRevision {
                     NavigationLink(sharedRecoveryText("Current meals and cook instructions")) {
                         SharedRecoveryCoverageView(model: model, household: household, delivery: delivery)
                     }.accessibilityIdentifier("recovery.currentCoverage")
                 }
-                if dinnerID == nil, model.scope.capabilities.contains("accepted_fallbacks") {
+                if selectedMealID == nil, model.scope.capabilities.contains("accepted_fallbacks") {
                     Button(fallbackText("Household fallback recipes")) {
                         applied = false
                         fallbackSession = FallbackSession(page: page)
                     }.accessibilityIdentifier("recovery.fallbackLibrary")
                 }
-                ForEach(page.meals.filter { dinnerID == nil || $0.id == dinnerID }) { meal in
+                ForEach(page.meals.filter { selectedMealID == nil || $0.id == selectedMealID }) { meal in
                     Button { selection = Selection(meal: meal, page: page); applied = false } label: {
                         VStack(alignment: .leading) {
                             Text(verbatim: meal.title).font(.headline)

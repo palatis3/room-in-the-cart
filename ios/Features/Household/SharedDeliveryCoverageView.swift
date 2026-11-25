@@ -13,7 +13,8 @@ struct SharedDeliveryCoverageView: View {
     var body: some View {
         NavigationStack {
             JournalList {
-                if let result, result.shopId == page.shopId, result.placedRevision == page.placedRevision,
+                if !household.locked, household.sharedShop === model, model.canReadDelivery, model.deliveryRecord == page,
+                   let result, result.shopId == page.shopId, result.placedRevision == page.placedRevision,
                    result.supplyRevision == page.supplyRevision, result.authorityEpoch == page.authorityEpoch, result.shopRevision == page.shopRevision {
                     Section {
                         if let date = serviceDate(result.asOf) {
@@ -30,6 +31,13 @@ struct SharedDeliveryCoverageView: View {
                             }
                             ForEach(Array(result.needs.filter { $0.occurrenceId == occurrence.id }.enumerated()), id: \.offset) { _, need in
                                 requirement(need, occurrence: occurrence)
+                            }
+                            if model.canReadMealRecovery, model.shop?.phase == "placed", (page.recoveryRevision ?? 0) == 0,
+                               occurrence.meal.kind == "dinner",
+                               result.needs.contains(where: { $0.occurrenceId == occurrence.id && $0.missing.map { $0.numerator != "0" } == true }) {
+                                NavigationLink(weekReviewText("Review food still needed")) {
+                                    SharedRecoveryCoverageView(model: model, household: household, delivery: page)
+                                }.accessibilityIdentifier("week.shortfall." + occurrence.id.uuidString)
                             }
                             if (page.recoveryRevision ?? 0) > 0 {
                                 Text(sharedRecoveryText("Use the current meal plan for new cook instructions."))

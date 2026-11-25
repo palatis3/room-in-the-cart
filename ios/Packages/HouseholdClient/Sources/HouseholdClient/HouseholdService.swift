@@ -344,8 +344,9 @@ public actor HouseholdService {
                                  reportingShopID: shopID.uuidString.lowercased())
     }
 
-    public func mealPlan(shopID: UUID) async throws -> SharedMealPlan {
-        let plan: SharedMealPlan = try await perform("shops/\(shopID.uuidString.lowercased())/meal-plan", method: "GET")
+    public func mealPlan(shopID: UUID, currentWeek: Bool = false) async throws -> SharedMealPlan {
+        let plan: SharedMealPlan = try await perform("shops/\(shopID.uuidString.lowercased())/meal-plan", method: "GET",
+            query: currentWeek ? [.init(name: "view", value: "week")] : [])
         guard plan.shopId == shopID, plan.meals.count <= 100, plan.proposals.count <= 100 else { throw ClientError.invalidResponse }
         return plan
     }

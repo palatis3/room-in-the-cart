@@ -1,6 +1,118 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Shared week costs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared week costs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Costos de la semana compartida"
+          }
+        }
+      }
+    },
+    "Original weekly basket": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original weekly basket"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lista de compras original de la semana"
+          }
+        }
+      }
+    },
+    "Accepted basket revision": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accepted basket revision"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisión aceptada de la lista"
+          }
+        }
+      }
+    },
+    "Reported shop charges after posted credits": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reported shop charges after posted credits"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargos registrados de la compra después de los abonos aplicados"
+          }
+        }
+      }
+    },
+    "Shared week costs are unavailable.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared week costs are unavailable."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los costos de la semana compartida no están disponibles."
+          }
+        }
+      }
+    },
+    "Adopted quote item subtotal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adopted quote item subtotal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subtotal de los artículos en la cotización aceptada"
+          }
+        }
+      }
+    },
+    "Adopted quote checkout": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adopted quote checkout"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total de la cotización aceptada"
+          }
+        }
+      }
+    },
     "A sign-in code could not be sent. Check the email address or continue planning for free.": {
       "extractionState": "manual",
       "localizations": {

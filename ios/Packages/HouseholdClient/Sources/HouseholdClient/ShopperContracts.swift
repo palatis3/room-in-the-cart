@@ -139,6 +139,7 @@ public struct SharedMealEdit: Equatable, Sendable {
     public let meal: SharedMeal?
     public let proposalID: UUID?
     public var preferenceReview: SharedRecipeReview?
+    public var repeatPlanID: UUID?
     public var dinnerSwap: Bool?
     public let changeProposalID: UUID?
     public var baseMealRevision: Int?
@@ -151,6 +152,7 @@ public struct SharedMealEdit: Equatable, Sendable {
         var fields: [String: JSONValue] = ["occurrenceId": .string(occurrenceID.uuidString.lowercased()), "meal": value]
         fields["baseMealRevision"] = baseMealRevision.map(JSONValue.integer) ?? .null
         if let proposalID { fields["proposalId"] = .string(proposalID.uuidString.lowercased()) }
+        if let repeatPlanID { fields["repeatPlanId"] = .string(repeatPlanID.uuidString.lowercased()) }
         if dinnerSwap == true { fields["dinnerSwap"] = .bool(true) }
         if let preferenceReview { fields["preferenceReview"] = try JSONDecoder().decode(JSONValue.self, from: encoded(preferenceReview)) }
         if let changeProposalID { fields["changeProposalId"] = .string(changeProposalID.uuidString.lowercased()) }
@@ -279,6 +281,7 @@ public struct ShopperReceipt: Codable, Equatable, Sendable {
 }
 
 public struct SharedMealPlan: Decodable, Sendable {
+    public let phase: String?
     public struct Adult: Decodable, Identifiable, Sendable {
         public let id: UUID
         public let label: String

@@ -29,6 +29,10 @@ struct DinnerSharedPlanningEntry: View {
                         .accessibilityIdentifier("dinner.sharedIdeas")
                     Button(ht("Guest, ingredient, and serving-group proposals")) { showingChanges = true }
                     Button(ht("Shared meal dates")) { showingDates = true }
+                    if let shopModel = household.sharedShop {
+                        SharedWeekDeliveryLink(model: shopModel, household: household)
+                    }
+                    HouseholdPantryLink(household: household)
                 }
             } else {
                 Text(ht("Refresh the household and check meal planning access."))
@@ -45,6 +49,20 @@ struct DinnerSharedPlanningEntry: View {
         .navigationDestination(isPresented: $reviewingShop) { HouseholdShopView(model: household) }
         .onChange(of: household.sharedMealChangeScope) { _, _ in
             showingChanges = false; showingDates = false; pendingShopReview = false; reviewingShop = false
+        }
+    }
+}
+
+private struct SharedWeekDeliveryLink: View {
+    @ObservedObject var model: HouseholdShopModel
+    @ObservedObject var household: HouseholdModel
+
+    var body: some View {
+        if household.sharedShop === model, model.canReadDelivery, let shop = model.shop,
+           model.scope.shopId == shop.shopId, shop.placedRevision != nil, ["placed", "closed"].contains(shop.phase) {
+            NavigationLink(ht("What came home")) {
+                SharedDeliveryView(model: model, household: household, shopID: shop.shopId)
+            }.accessibilityIdentifier("week.sharedDelivery")
         }
     }
 }
