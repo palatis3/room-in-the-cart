@@ -2,6 +2,7 @@ import {checkPublishingMember,reviewInstruction,reviewSharedWording} from './sha
 import {randomBytes,randomUUID} from 'node:crypto';
 import {proposalDTO} from './helper-review.js';
 import type {z} from 'zod';
+import type {MealMoves} from './meal-moves.js';
 import type {VerifiedIdentity} from './auth.js';
 import {HouseholdRepository,type Context} from './repository.js';
 import {digest,tokenHash,type Transaction} from './database.js';
@@ -40,7 +41,17 @@ export class HouseholdLifecycle {
   }
   async invite(ctx:Context,input:z.infer<typeof inviteCreateSchema>,expiresNoLaterThan?:number){
     this.organizer(ctx);if(input.kind==='child_contributor')throw consentUnavailable();
-    return this.issue(ctx,input.kind,input.expiresInHours,null,expiresNoLaterThan);
+    if(!input.dinner)return this.issue(ctx,input.kind,input.expiresInHours,null,expiresNoLaterThan);
+    // The closed-review deployment has no shared-dinner surface.
+    if(expiresNoLaterThan!==undefined)throw unavailable();
+    const shopId=input.dinner.shopId.toLowerCase(), occurrenceId=input.dinner.occurrenceId.toLowerCase();
+    const shop=await this.repo.shop(ctx,shopId);
+    this.repo.requireShopper(ctx,shop);
+    if(shop.phase==='closed'||!(await this.repo.meals(ctx,shopId)).some(meal=>meal.occurrenceId===occurrenceId))throw unavailable();
+    const invite=await this.issue(ctx,input.kind,input.expiresInHours,null);
+    await ctx.db.query(`UPDATE ritc.invite SET dinner_shop_id=$3,dinner_occurrence_id=$4,dinner_authority_epoch=$5
+      WHERE household_id=$1 AND invite_id=$2`,[ctx.householdId,invite.inviteId,shopId,occurrenceId,shop.authority_epoch]);
+    return invite;
   }
   async issue(ctx:Context,kind:'adult_contributor'|'helper_read'|'helper_edit',hours:number,grantId:string|null,expiresNoLaterThan=Infinity){
     const active=await ctx.db.query('SELECT count(*)::int AS count FROM ritc.invite WHERE household_id=$1 AND revoked_at IS NULL AND redeemed_at IS NULL AND expires_at>$2',[ctx.householdId,ctx.now]);
@@ -50,13 +61,28 @@ export class HouseholdLifecycle {
     await ctx.db.query('INSERT INTO ritc.invite(household_id,invite_id,token_hash,kind,created_by,grant_id,expires_at) VALUES($1,$2,$3,$4,$5,$6,$7)',[ctx.householdId,inviteId,tokenHash(secret),kind,ctx.member.member_id,grantId,expiresAt]);
     return{inviteId,token:ctx.householdId+'.'+secret,expiresAt:expiresAt.toISOString()};
   }
+  async invitedDinner(ctx:Context,inviteId:string,moves:MealMoves){
+    if(ctx.ownRequestsOnly||ctx.viewGrantId||ctx.member.kind!=='adult')throw unavailable();
+    const target=(await ctx.db.query(`SELECT i.dinner_shop_id,i.dinner_occurrence_id,i.expires_at,i.created_by,i.dinner_authority_epoch
+      FROM ritc.invite i JOIN ritc.member creator ON creator.household_id=i.household_id AND creator.member_id=i.created_by
+      WHERE i.household_id=$1 AND i.invite_id=$2 AND i.redeemed_by=$3 AND i.redeemed_at IS NOT NULL
+        AND i.kind='adult_contributor' AND i.dinner_shop_id IS NOT NULL AND i.revoked_at IS NULL
+        AND i.expires_at>clock_timestamp() AND creator.kind='adult' AND creator.state='active' AND creator.organizer`,
+      [ctx.householdId,inviteId,ctx.member.member_id])).rows[0];
+    if(!target)throw unavailable();
+    const {shop,shopper}=await moves.context(ctx,target.dinner_shop_id,true);
+    if(shopper||shop.shopper_id!==target.created_by||shop.authority_epoch!==target.dinner_authority_epoch)throw unavailable();
+    const occurrence=(await this.repo.meals(ctx,shop.shop_id)).find(row=>row.occurrenceId===target.dinner_occurrence_id);
+    if(!occurrence)throw unavailable();
+    return {inviteId,shopId:shop.shop_id,occurrence,expiresAt:target.expires_at.toISOString()};
+  }
   private async ordinaryInvite(db:Transaction,householdId:string,secret:string,identity:VerifiedIdentity,preview:boolean){
     await db.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[identity.issuer+'|'+identity.subject]);
     const now=(await db.query<{now:Date}>('SELECT clock_timestamp() AS now')).rows[0]!.now;
     await this.repo.assertSession(db,identity,now);
     const child=await db.query('SELECT ritc.identity_has_child_profile($1,$2) AS child',[identity.issuer,identity.subject]);
     if(child.rows[0].child)throw preview?unavailable():consentUnavailable();
-    const invite=(await db.query(`SELECT h.label,i.kind,i.invite_id,i.grant_id,i.redeemed_at,i.redeemed_by
+    const invite=(await db.query(`SELECT h.label,i.kind,i.invite_id,i.grant_id,i.redeemed_at,i.redeemed_by,(i.dinner_shop_id IS NOT NULL) AS has_dinner
       FROM ritc.invite i JOIN ritc.household h USING(household_id)
       JOIN ritc.member m ON m.household_id=i.household_id AND m.member_id=i.created_by
       LEFT JOIN ritc.view_grant g ON g.household_id=i.household_id AND g.grant_id=i.grant_id
@@ -100,7 +126,7 @@ export class HouseholdLifecycle {
         if(invite.grant_id)await db.query('UPDATE ritc.view_grant SET recipient_id=$3 WHERE household_id=$1 AND grant_id=$2 AND recipient_id IS NULL',[householdId,invite.grant_id,memberId]);
       }
       if(invite.grant_id){const grant=await db.query('SELECT 1 FROM ritc.view_grant WHERE household_id=$1 AND grant_id=$2 AND recipient_id=$3 AND revoked_at IS NULL AND expires_at>$4',[householdId,invite.grant_id,member.member_id,now]);if(!grant.rowCount)throw accessEnded();}
-      return{householdId:householdId!,memberId:member.member_id as string,role:invite.kind==='adult_contributor'?'contributor':invite.kind==='helper_edit'?'editor':'helper',...(invite.grant_id?{grantId:invite.grant_id as string}:{})};
+      return{householdId:householdId!,memberId:member.member_id as string,role:invite.kind==='adult_contributor'?'contributor':invite.kind==='helper_edit'?'editor':'helper',...(invite.grant_id?{grantId:invite.grant_id as string}:{}),...(invite.has_dinner?{dinnerInviteId:invite.invite_id as string}:{})};
     });
   }
   async members(ctx:Context){

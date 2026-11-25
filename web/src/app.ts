@@ -51,7 +51,7 @@ function isRequestRevisionConflict(error:unknown):boolean {
 
 export class WebApp {
   private session:Session|null = null;
-  private joinedSession: Session | null = null;
+  private joinedSession: {session:Session; dinnerInviteId?:string} | null = null;
   private browserAuth:BrowserAuthState|null=null;
   private loginEmail='';
   private loginCode='';
@@ -563,12 +563,17 @@ export class WebApp {
     if(this.invitation!==null || !this.session) {this.renderInvite(main,status);return;}
     const context=this.el('section');
     const session=this.session;
-    if (this.joinedSession===session && session.enrolled && !this.busy && !this.notice) {
+    if (this.joinedSession?.session===session && session.enrolled && !this.busy && !this.notice) {
       const joined=this.t('You joined {household}.').replace('{household}',()=>session.household.label);
       const access=isContributorSession(session) ? this.t('You can track your own grocery requests here.')
         : this.view?.canPropose ? this.t('You can read the instructions shared with you for this pickup and suggest changes for the shopper to review.')
         : this.t('You can read the instructions shared with you for this pickup.');
       status.textContent=joined+' '+access;
+      if(this.joinedSession.dinnerInviteId){
+        const open=this.el('a',this.t('Open the invited dinner on iPhone'));
+        open.href='roominthecart://invitation-dinner/'+this.joinedSession.dinnerInviteId;
+        context.append(open);
+      }
     } else {
       context.append(this.el('p',session.household.label));
     }
@@ -714,6 +719,9 @@ export class WebApp {
         }
         review.append(this.el('p',this.t('Household inviting you')),household);
         if(!this.invitationChanged)review.append(this.el('p',this.t(access)));
+        review.append(this.el('p',this.t(offer.role==='adult_contributor'
+          ?'Joining is free. The purchaser manages billing and can assign two named adult planning seats. Joining does not use a seat.'
+          :'You can use this helper invitation for free.')));
         form.append(review);
       }
       this.renderJoinControls(form,offer??this.uncertainJoin?.offer??null);
@@ -780,7 +788,7 @@ export class WebApp {
     if (this.session.role!==accepted.role || this.session.grantId!==accepted.grantId) {
       throw new ApiError('grant_context_changed',409);
     }
-    this.joinedSession=this.session;
+    this.joinedSession={session:this.session,...(accepted.dinnerInviteId?{dinnerInviteId:accepted.dinnerInviteId}:{})};
     this.clearInvitationDraft();
   }
   private field(form:HTMLElement,key:string,id:string,value:string,update:(value:string)=>void,multiline=false):void {

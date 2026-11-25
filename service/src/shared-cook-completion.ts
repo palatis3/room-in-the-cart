@@ -1,3 +1,5 @@
+import type {BillingService} from './billing/service.js';
+import {requireAssistance} from './shared-fallback-options.js';
 import {randomUUID} from 'node:crypto';
 import {z} from 'zod';
 import {cookBodies,type CookKind} from './cook-completion-contracts.js';
@@ -38,13 +40,30 @@ async function current(ctx:Context,shop:Shop,occurrenceId:string){
 }
 type Review=Awaited<ReturnType<typeof current>>;
 type Lot=Review['lots'][number];
-export async function cookReview(ctx:Context,shop:Shop,id:string){
+function portionTargets(r:Review){
+  return r.state.local.flatMap(({current,original,sealed,shopId})=>{
+    if(!current || sealed.completed || current.occurrenceId===r.meal.occurrenceId) return [];
+    return current.needs.flatMap(need=>{
+      const group=current.groups.find(g=>g.id===need.groupId);
+      if(!group || need.quantity?.unit!=='count' || !original.needs.some(n=>n.id===need.id)) return [];
+      const promised=r.state.graph.pins.filter(p=>p.shopId===shopId && p.needId===need.id).reduce((sum,p)=>add(sum,amount(p.quantity)),zero);
+      const free=sub(amount(need.quantity),promised);
+      const limit=Number(free.n/free.d);
+      return limit>0?[{needId:need.id,occurrenceId:current.occurrenceId,mealRevision:current.sourceMealRevision,
+        ingredientId:need.ingredientId,groupId:group.id,group:group.name,day:current.day,title:current.title,
+        ingredient:need.name,limit:Math.min(1000,limit)}]:[];
+    });
+  });
+}
+
+export async function cookReview(ctx:Context,shop:Shop,id:string,includePortions=false){
   const r=await current(ctx,shop,id);
   const unresolved=r.active?(await ctx.db.query(`SELECT u.row_id AS "rowId",u.need_id AS "needId",u.lot_id AS "lotId"
     FROM ritc.cook_use u LEFT JOIN ritc.cook_resolution x ON (x.household_id,x.row_id)=(u.household_id,u.row_id)
     WHERE u.household_id=$1 AND u.cook_id=$2 AND u.kind='unknown' AND x.row_id IS NULL ORDER BY u.row_id`,
     [ctx.householdId,r.active.operation_id])).rows:[];
   return {v:1,base:r.base,title:r.meal.title,plannedPortions:r.meal.portions,
+    ...(includePortions && !r.active && shop.phase==='placed'?{portionTargets:portionTargets(r)}:{}),
     needs:r.meal.needs.map(n=>({id:n.id,name:n.name,quantity:n.quantity,
       groupNames:r.meal.groups.filter(g=>n.groupId===g.id || n.groupIds?.includes(g.id)).map(g=>g.name),
       lots:r.lots.filter(l=>n.matchedSourceIds?.includes(l.lotId)).map(({usableId,...l})=>l)})),
@@ -97,6 +116,20 @@ async function complete(ctx:Context,shop:Shop,r:Review,body:Complete,operationId
   const {uses,outputs}=body,needIds=new Set(uses.map(u=>u.needId));
   if(needIds.size!==r.meal.needs.length || r.meal.needs.some(n=>!needIds.has(n.id)) ||
      new Set(uses.map(u=>u.rowId)).size!==uses.length || new Set(outputs.map(o=>o.lotId)).size!==outputs.length) throw invalid();
+  if(outputs.reduce((sum,out)=>sum+out.portions,0)>body.servings) throw invalid();
+  const targets=new Map(portionTargets(r).map(target=>[target.needId,target]));
+  const reserved=new Map<string,number>();
+  for(const out of outputs){
+    const entries=out.allocations??[];
+    if(new Set(entries.map(a=>a.needId)).size!==entries.length ||
+      entries.reduce((sum,a)=>sum+a.portions,0)>out.portions) throw short();
+    for(const entry of entries){
+      const target=targets.get(entry.needId);
+      const total=(reserved.get(entry.needId)??0)+entry.portions;
+      if(shop.phase!=='placed' || !target || total>target.limit) throw short();
+      reserved.set(entry.needId,total);
+    }
+  }
   const changes=new Map<string,{lot:Lot;known:Rat;unknown:boolean}>(),fulfilled=new Map<string,Quantity>();
   const pairs=new Set<string>();
   for(const use of uses){
@@ -124,13 +157,50 @@ async function complete(ctx:Context,shop:Shop,r:Review,body:Complete,operationId
     VALUES($1,$2,$3,$4,$5,$6,$7)`,[ctx.householdId,operationId,use.rowId,use.needId,use.kind,'lotId' in use?use.lotId:null,'quantity' in use?use.quantity:null]);
   for(const [id,q] of fulfilled) await ctx.db.query('INSERT INTO ritc.cook_fulfillment VALUES($1,$2,$3,$4,$2)',[ctx.householdId,operationId,id,q]);
   for(const {lot,after} of updates) await writeCount(ctx,shop,operationId,operationId,next,lot.lotId,lot.quantity,after,lot.usableId);
+  const tags=[...new Set(r.state.stock.sources.filter(s=>changes.has(s.sourceId)).flatMap(s=>s.exclusionTags))];
+  const allocationIds=new Set<string>();
   for(const out of outputs){
     const exists=await ctx.db.query('SELECT 1 FROM ritc.pantry_lot WHERE household_id=$1 AND lot_id=$2 UNION ALL SELECT 1 FROM ritc.delivery_source WHERE household_id=$1 AND source_id=$2',[ctx.householdId,out.lotId]);
     if(exists.rowCount) throw stale();
-    await ctx.db.query(`INSERT INTO ritc.pantry_lot(household_id,lot_id,origin_shop_id,location,stored_at,food_name,exclusion_tags,actor_id,operation_id,cook_output)
-      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,true)`,[ctx.householdId,out.lotId,shop.shop_id,out.location,ctx.now,out.name,
-        [...new Set(r.state.stock.sources.filter(s=>changes.has(s.sourceId)).flatMap(s=>s.exclusionTags))],ctx.member.member_id,operationId]);
+    await ctx.db.query(`INSERT INTO ritc.pantry_lot(household_id,lot_id,origin_shop_id,location,stored_at,food_name,exclusion_tags,actor_id,operation_id,cook_output,use_first_at)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,true,$10)`,[ctx.householdId,out.lotId,shop.shop_id,out.location,ctx.now,out.name,
+        tags,ctx.member.member_id,operationId,out.useFirstAt??null]);
     await writeCount(ctx,shop,operationId,operationId,next,out.lotId,null,counted({n:BigInt(out.portions),d:1n},'count'),null,true);
+    if(!out.allocations?.length) continue;
+    const addEvent=async(kind:'select'|'match'|'reserve',target?:ReturnType<typeof portionTargets>[number],portions?:number)=>{
+      const eventId=randomUUID();
+      await ctx.db.query(`INSERT INTO ritc.pantry_event(household_id,lot_id,shop_id,operation_id,event_id,actor_id,
+        kind,pantry_revision,occurrence_id,meal_revision,ingredient_id,group_id,enabled,quantity)
+        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+        [ctx.householdId,out.lotId,shop.shop_id,operationId,eventId,ctx.member.member_id,kind,next,
+         target?.occurrenceId,target?.mealRevision,target?.ingredientId,kind==='reserve'?target!.groupId:null,
+         kind==='reserve'?null:true,portions?counted({n:BigInt(portions),d:1n},'count'):null]);
+      return eventId;
+    };
+    await addEvent('select');
+    const matched=new Set<string>();
+    for(const allocation of out.allocations){
+      const target=targets.get(allocation.needId)!;
+      const key=target.occurrenceId+'/'+target.ingredientId;
+      if(!matched.has(key)){
+        const meal=r.state.local.find(m=>m.current?.occurrenceId===target.occurrenceId)!;
+        for(const need of meal.current!.needs.filter(n=>n.ingredientId===target.ingredientId)){
+          requireCompatibleMatch(need,{foodName:out.name,exclusionTags:tags});
+        }
+        await addEvent('match',target);
+        matched.add(key);
+      }
+      allocationIds.add(await addEvent('reserve',target,allocation.portions));
+    }
+  }
+  if(allocationIds.size){
+    const after=await loadGraph(ctx,shop,loadRecoveryPublication);
+    for(const need of after.graph.report.needs){
+      for(const pin of need.reservations){
+        if(allocationIds.delete(pin.reservationId) && cmp(exactAmount(pin.backed,'count'),exactAmount(pin.requested,'count'))!==0n) throw short();
+      }
+    }
+    if(allocationIds.size) throw short();
   }
   return operationId;
 }
@@ -200,8 +270,9 @@ async function undo(ctx:Context,shop:Shop,r:Review,cookId:string,op:string,next:
   await ctx.db.query('UPDATE ritc.shared_cook SET undone_by=$3 WHERE household_id=$1 AND operation_id=$2',[ctx.householdId,cookId,op]);
   return cookId;
 }
-export async function recordCook(ctx:Context,shop:Shop,kind:CookKind,input:unknown,op:string){
+export async function recordCook(ctx:Context,shop:Shop,kind:CookKind,input:unknown,op:string,billing?:BillingService){
   const body=cookBodies[kind].parse(input);
+  if('outputs' in body && body.outputs.some(out=>out.allocations?.length)) await requireAssistance(ctx,billing);
   const r=await current(ctx,shop,body.occurrenceId);
   if(body.grantEpoch!==r.base.grantEpoch) throw refresh();
   for(const key of ['pantryRevision','supplyRevision','contextRevision','recoveryRevision','mealRevision','recipeRevisionId'] as const)

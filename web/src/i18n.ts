@@ -1,5 +1,8 @@
 /** US Spanish draft; human language review remains a release gate. */
 const es: Record<string, string> = {
+  'Open the invited dinner on iPhone':'Abrir la cena de la invitación en el iPhone',
+  'Joining is free. The purchaser manages billing and can assign two named adult planning seats. Joining does not use a seat.':'Unirte es gratis. Quien compra la suscripción gestiona los cobros y puede asignar dos lugares de planificación a personas adultas. Unirte no ocupa un lugar.',
+  'You can use this helper invitation for free.':'Puedes usar esta invitación de ayudante gratis.',
   'Shared posting is unavailable for this account. You can still view your household information.':'Esta cuenta no puede publicar mensajes compartidos. Aún puedes consultar la información de tu hogar a la que tienes acceso.',
   "Choose a reason":"Elige un motivo",
   "Edit this request":"Editar esta solicitud",

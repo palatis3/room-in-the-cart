@@ -12,7 +12,9 @@ const use=z.discriminatedUnion('kind',[
   z.object({...row,kind:z.literal('notUsed')}).strict(),
 ]);
 const output=z.object({lotId:id,name:z.string().trim().min(1).max(120).regex(/^[^\u0000-\u001F\u007F]+$/u),
-  portions:z.number().int().min(1).max(1000),location:z.enum(['fridge','freezer','pantry'])}).strict();
+  portions:z.number().int().min(1).max(1000),location:z.enum(['fridge','freezer','pantry']),
+  useFirstAt:z.iso.datetime({offset:true}).optional(),
+  allocations:z.array(z.object({needId:id,portions:z.number().int().min(1).max(1000)}).strict()).max(30).optional()}).strict();
 export const cookBodies={
   'cook.complete':z.object({...base,servings:z.number().int().min(1).max(1000),uses:z.array(use).max(200),
     outputs:z.array(output).max(12)}).strict(),

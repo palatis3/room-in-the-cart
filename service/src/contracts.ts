@@ -38,7 +38,9 @@ export const decisionSchema = z.discriminatedUnion('choice', [
   if(decision.choice==='add'&&decision.reviewedPackEvidence&&!matchesReviewedPack(decision.line,decision.reviewedPackEvidence))ctx.addIssue({code:'custom',message:'Reviewed pack evidence must match the chosen sufficient available whole packs',path:['reviewedPackEvidence']});
 });
 export const previewSchema = z.object({ requestId: uuid, base: z.object({ shopRevision: z.number().int().positive(), authorityEpoch: z.number().int().positive(), requestRevision: z.number().int().positive() }).strict(), decision: decisionSchema }).strict();
-export const chooseTonight=z.object({v:z.literal(1),recipeId:uuid.toLowerCase(),recipeRevision:z.number().int().positive().max(2147483647),grantEpoch:z.number().int().nonnegative().max(2147483647),reviewToken:z.string().regex(/^[a-f0-9]{64}$/),day:z.iso.date().nullable(),occurrenceId:uuid.toLowerCase()}).strict();
+const tonightSelection=z.object({recipeId:uuid.toLowerCase(),recipeRevision:z.number().int().positive().max(2147483647),grantEpoch:z.number().int().nonnegative().max(2147483647),reviewToken:z.string().regex(/^[a-f0-9]{64}$/),day:z.iso.date().nullable(),occurrenceId:uuid.toLowerCase()}).strict();
+export const chooseTonight=tonightSelection.extend({v:z.literal(1),second:tonightSelection.omit({grantEpoch:true}).optional(),
+  selectedLotIds:z.array(uuid.toLowerCase()).max(12).optional()}).strict();
 export const envelopeSchema = z.object({
   v: z.literal(1), replayWindow: uuid, clientKey: uuid, shopId: uuid,
   kind: z.enum(['meal.chooseTonight','cook.complete','cook.resolve','cook.undo','amendment.recordResponse','mealRecovery.apply','pantry.create','pantry.storeDelivery','pantry.observe','pantry.select','pantry.match','pantry.reserve','cookCopy.save','cookCopy.markSent','delivery.reserve','delivery.match','delivery.register','delivery.arrival','delivery.usable','shop.create','shop.patch','shop.freeze','shop.reopen','shop.reportPlaced','shop.reconcileReport','shop.transferAuthority','request.send','request.edit','request.withdraw','request.clarify','request.apply','request.undoAcceptance','request.confirmPurchase','request.carry']),
@@ -136,7 +138,11 @@ export function parseCommand(value: unknown): Envelope {
 
 const alias=z.string().trim().min(1).max(80);
 export const householdCreateSchema=z.object({clientKey:uuid,label:alias,alias,adultAttestation:z.literal(true)}).strict();
-export const inviteCreateSchema=z.object({kind:z.enum(['adult_contributor','child_contributor']),expiresInHours:z.number().int().min(1).max(168).default(24)}).strict();
+export const inviteCreateSchema=z.object({
+  kind:z.enum(['adult_contributor','child_contributor']),
+  expiresInHours:z.number().int().min(1).max(168).default(24),
+  dinner:z.object({shopId:uuid,occurrenceId:uuid}).strict().optional(),
+}).strict();
 const inviteToken=z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.[A-Za-z0-9_-]{43}$/);
 export const invitePreviewSchema=z.object({token:inviteToken,adultAttestation:z.literal(true)}).strict();
 const inviteOfferSchema=z.object({householdLabel:z.string().min(1).max(80),role:z.enum(['adult_contributor','helper_read','helper_edit'])}).strict();
