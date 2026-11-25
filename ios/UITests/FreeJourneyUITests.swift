@@ -2108,7 +2108,7 @@ import XCTest
         let picker = app.groceryCurrencyPicker("receipt.currency")
         reveal(picker)
         assertGroceryCurrency("MXN", in: picker)
-        picker.tap()
+        tapVisibleFormRow(picker, marker: "RECEIPT_CURRENCY_TAP")
         app.selectGroceryCurrency(code: "USD", label: "US dollars (USD)")
 
         receiptTap(app.buttons["receipt.action.0"])
@@ -2119,7 +2119,7 @@ import XCTest
         assertText("The printed currency differs from USD.")
         XCTAssertFalse(confirmPrice.exists)
 
-        receiptTap(picker, initiallyUpward: false)
+        tapVisibleFormRow(picker, marker: "RECEIPT_CURRENCY_TAP")
         app.selectGroceryCurrency(code: "MXN", label: "Mexican pesos (MXN)")
         reveal(confirmPrice)
         XCTAssertEqual(confirmPrice.label, "I paid this line total in MXN")
