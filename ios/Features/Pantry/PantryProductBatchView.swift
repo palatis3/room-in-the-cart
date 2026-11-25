@@ -557,6 +557,8 @@ private struct PantryProductCandidateEditor: View {
     let authorized: () -> Bool
     @Environment(\.locale) private var locale
     @State private var editingBarcode = false
+    @State private var labelPhotoConsent = false
+    @State private var labelProposal: PantryProductBatch.LabelReading?
     @State private var lookupRequest: UUID?
     @State private var message: String?
     @FocusState private var field: String?
@@ -670,6 +672,31 @@ private struct PantryProductCandidateEditor: View {
                             }
                         }
                     }
+                    if row.barcode != nil && row.existingReceipt == nil && row.remembered == nil && row.appliedCatalog == nil {
+                        DisclosureGroup(pantryText("Read a label for this barcode")) {
+                            PantryProductPhotoInput(workspaceID: model.snapshot?.state.workspaceID, consent: $labelPhotoConsent,
+                                authorized: { authorized() && row.included }, add: { source in
+                                    labelProposal = nil
+                                    labelProposal = try row.labelProposal(from: source)
+                                }, revoke: { labelProposal = nil })
+                                .id(row.barcode?.value)
+                            if let proposal = labelProposal {
+                                Text(verbatim: proposal.original)
+                                if !proposal.name.isEmpty {
+                                    Button(pantryFormat("Use label name: %@", proposal.name)) {
+                                        row.name = proposal.name
+                                    }
+                                }
+                                if !proposal.perPack.isEmpty {
+                                    Button(pantryFormat("Use label size: %@", pantryPrintedQuantity(proposal.perPack, unit: proposal.unit))) {
+                                        row.perPack = proposal.perPack
+                                        row.unit = proposal.unit
+                                        row.onePackageUnknown = false
+                                    }
+                                }
+                            }
+                        }
+                    }
                     if row.barcode?.catalogGTIN != nil {
                         Section(pantryText("Public product lookup")) {
                             Text(pantryText("Open Food Facts receives the barcode, the app version and your IP address. You can also enter the package details yourself."))
@@ -730,7 +757,10 @@ private struct PantryProductCandidateEditor: View {
         .task(id: lookupRequest) { [request = lookupRequest] in
             if let request, let code = row.barcode { await lookup(code, request: request) }
         }
-        .onChange(of: row.included) { _, included in if !included { lookupRequest = nil } }
+        .onChange(of: row.barcode) { _, _ in labelPhotoConsent = false; labelProposal = nil }
+        .onChange(of: row.included) { _, included in
+            if !included { lookupRequest = nil; labelPhotoConsent = false; labelProposal = nil }
+        }
         .onChange(of: authorized()) { _, allowed in if !allowed { lookupRequest = nil } }
         .onDisappear { lookupRequest = nil }
     }
@@ -859,7 +889,11 @@ struct PantryProductPhotoInput: View {
                 try finish(source)
             } catch {
                 if generation == token, consent, authorized(), !Task.isCancelled {
-                    message = pantryText("The photo could not be added. Try a smaller image or type the product.")
+                    if case ProductBatchError.differentLabelBarcode = error {
+                        message = pantryText("Check that the photo shows only this package. You can also type the name and size.")
+                    } else {
+                        message = pantryText("The photo could not be added. Try a smaller image or type the product.")
+                    }
                 }
             }
         }

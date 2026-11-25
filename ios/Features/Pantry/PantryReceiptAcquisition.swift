@@ -226,6 +226,14 @@ struct PantryReceiptReview: Identifiable {
     let existing: Set<UUID>
     let batch: InventoryBatch?
     var putaway: ReviewedPutawayReceipt? = nil
+
+    var newStockLineCount: Int {
+        facts.filter { fact in
+            guard !existing.contains(fact.lineID) else { return false }
+            if case .added = fact.stock { return true }
+            return false
+        }.count
+    }
 }
 
 struct ReceiptPutawayRequest: Encodable {

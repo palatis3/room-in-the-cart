@@ -479,6 +479,15 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
         try await stageRecipeDocument(data, authorize: presentation.authorize)
     }
 
+    func stagePartialRecipeLink(_ address: String, from presentation: ImportPresentation) async throws {
+        guard !busy, presentation.entry == .recipePage, accepts(presentation) else { throw ArchiveError.unavailable }
+        let recipe = try RecipePageReader.partialRecipe(at: address)
+        busy = true
+        defer { busy = false }
+        let json = try JSONSerialization.data(withJSONObject: ["@type": "Recipe", "name": recipe.title, "url": address.trimmingCharacters(in: .whitespacesAndNewlines)])
+        try await stageRecipeDocument(json, authorize: presentation.authorize)
+    }
+
     private func stageRecipeDocument(_ data: Data, paprika: Bool = false, authorize: @escaping Authorization) async throws {
         let saved = try await registry.refreshList()
         try Task.checkCancellation()
@@ -545,7 +554,7 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
         }) else { throw ArchiveError.conflict }
         report.recipes[index] = recipe
         let records = review.rows.map { $0.id == row.id ? updated : $0.record }
-        try await stageRecipeReview(report, records: records, authorize: authorize)
+        try await restageRecipeBatch(report, records: records, previous: review, authorize: authorize)
     }
 
     func skipRecipe(_ row: RecoveryReviewRow) async {
@@ -563,8 +572,16 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
             }
             report.recipes.remove(at: index)
             report.skippedRows += 1
-            try await stageRecipeReview(report, records: review.rows.filter { $0.id != row.id }.map(\.record), authorize: authorize)
+            try await restageRecipeBatch(report, records: review.rows.filter { $0.id != row.id }.map(\.record), previous: review, authorize: authorize)
         } catch { fail(error) }
+    }
+
+    private func restageRecipeBatch(_ report: RecipeImportReport, records: [ArchiveRecord], previous: RecoveryReview,
+                                   authorize: @escaping Authorization) async throws {
+        let selected = previous.rows.filter { acceptedPaprikaVersions.contains($0.id) }
+        try await stageRecipeReview(report, records: records, authorize: authorize)
+        guard let review, review.registryGeneration == previous.registryGeneration else { return }
+        acceptedPaprikaVersions = Set(selected.filter { review.rows.contains($0) }.map(\.id)).intersection(paprikaVersionChoices)
     }
 
     private func stageRecipeReview(_ report: RecipeImportReport, records: [ArchiveRecord],

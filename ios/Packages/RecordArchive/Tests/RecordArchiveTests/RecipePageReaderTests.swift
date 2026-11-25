@@ -25,6 +25,21 @@ final class RecipePageReaderTests: XCTestCase {
         XCTAssertEqual(report.recipes.first?.missingFields, [.instructions])
     }
 
+    func testOfflineSourceKeepsItsAddressAndPartialHTMLPreservesThePageTitle() throws {
+        let address = "https://recipes.example.org/frijoles#ingredients"
+        let offline = try RecipePageReader.partialRecipe(at: address)
+        XCTAssertEqual(offline.sourceURL, address)
+        XCTAssertEqual(offline.missingFields, [.servings, .ingredients, .instructions])
+        XCTAssertThrowsError(try RecipePageReader.partialRecipe(at: "https://name:secret@example.org/"))
+        let source = try XCTUnwrap(URL(string: address))
+        let html = Data("<html><head><title>Frijoles &amp; arroz</title></head><body></body></html>".utf8)
+        let report = try RecipeImporter.stage(RecipePageReader.document(body: html, contentType: "text/html", source: source))
+        XCTAssertEqual(report.recipes, [ImportedRecipe(title: "Frijoles & arroz", sourceURL: address)])
+        let partial = Data(#"<html><head><title>Sopa</title><script type="application/ld+json">{"@type":"Recipe","recipeIngredient":["1 kg de papa"]}</script></head></html>"#.utf8)
+        let partialReport = try RecipeImporter.stage(RecipePageReader.document(body: partial, contentType: "text/html", source: source))
+        XCTAssertEqual(partialReport.recipes, [ImportedRecipe(title: "Sopa", ingredients: ["1 kg de papa"], sourceURL: address)])
+    }
+
     func testRedirectValidationPrecedesAnotherRequestAndStopsAtThreeHops() async throws {
         for (target, expectedRequests) in [("http://recipes.example.org/soup", 1), ("/next", 4)] {
             var requests = 0

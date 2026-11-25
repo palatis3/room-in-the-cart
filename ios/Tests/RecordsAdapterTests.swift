@@ -931,6 +931,39 @@ final class RecordsAdapterTests: XCTestCase {
         XCTAssertTrue(saved.isEmpty)
     }
 
+    @MainActor func testUnreachableRecipeCanKeepItsLinkOfflineAndResumeWithoutDuplicatingTheCorrectedSource() async throws {
+        let directory = try temporaryDirectory()
+        let registry = try RecoveryRegistry(url: directory.appendingPathComponent("library.json"))
+        let model = RecordsToolsModel(registry: registry, snapshot: { .init() },
+            validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        let source = "https://recipes.example.org/sopa"
+        let entry = try XCTUnwrap(model.beginImport(.recipePage))
+        do {
+            try await model.importRecipePage(source, from: entry) { _ in throw URLError(.notConnectedToInternet) }
+            XCTFail("The unreachable page must not fabricate a recipe")
+        } catch let failure as URLError { XCTAssertEqual(failure.code, .notConnectedToInternet) }
+        try await model.stagePartialRecipeLink(source, from: entry)
+        model.dismissImport(entry)
+        let row = try XCTUnwrap(model.review?.rows.first)
+        let editor = try XCTUnwrap(model.beginRecipeCorrection(row))
+        var recipe = try XCTUnwrap(editor.initialRecipe)
+        XCTAssertEqual(recipe.sourceURL, source)
+        recipe.title = "Sopa"
+        recipe.ingredients = ["250 g de frijoles"]
+        recipe.steps = ["Cocer."]
+        try await model.stageManualRecipe(recipe, from: editor)
+        model.dismissImport(editor)
+        let unsaved = try await registry.refreshList()
+        XCTAssertTrue(unsaved.isEmpty)
+        await model.applyReviewedImport()
+        let next = try XCTUnwrap(model.beginImport(.recipePage))
+        try await model.stagePartialRecipeLink(source, from: next)
+        XCTAssertNil(model.review)
+        XCTAssertEqual(model.recipeReport?.duplicateCount, 1)
+        let saved = try await registry.refreshList()
+        XCTAssertEqual(saved.map { $0.record.title }, ["Sopa"])
+    }
+
     @MainActor func testSelectedPaprikaCollectionReviewsBeforeSaveAndSupportsUndo() async throws {
         let directory = try temporaryDirectory()
         let registry = try RecoveryRegistry(url: directory.appendingPathComponent("manifest.json"))
@@ -954,6 +987,48 @@ final class RecordsAdapterTests: XCTestCase {
         let afterUndo = try await registry.refreshList()
         XCTAssertTrue(afterUndo.isEmpty)
         XCTAssertEqual(try Data(contentsOf: url), bytes)
+    }
+
+    @MainActor func testPrivatePaprikaBatchKeepsUnchangedVersionChoiceWhileRepairingSeveralRows() async throws {
+        let directory = try temporaryDirectory()
+        let registry = try RecoveryRegistry(url: directory.appendingPathComponent("library.json"))
+        let model = RecordsToolsModel(registry: registry, snapshot: { .init() },
+            validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        // The identified Paprika fixture contains two revisions of one UID and a second UID with matching text.
+        let collection = try XCTUnwrap(Data(base64Encoded: "UEsDBBQAAAAAAAAAIVDInsugWwAAAFsAAAASAAAAYmFzZS5wYXByaWthcmVjaXBlH4sIAAAAAAAC/6tWKs1MUbJSUEqEAl0DINA1AREWIMIAAQyVdBSU8hJzU0HqgzKTU0H8zLz0otSUzNS8kmJk4ZTMotTkksz8PLCoc35+tp5SLQDTfGerbQAAAFBLAwQUAAAAAAAAACFQh2UJnVsAAABbAAAAEwAAAG90aGVyLnBhcHJpa2FyZWNpcGUfiwgAAAAAAAL/q1YqzUxRslJQSoQCXQMg0DUBERYgwgABjJR0FJTyEnNTQeqDMpNTQfzMvPSi1JTM1LySYmThlMyi1OSSzPw8sKhzfn62nlItALiNKPFtAAAAUEsDBBQAAAAAAAAAIVDkLAR3ZwAAAGcAAAAWAAAAcmV2aXNpb24ucGFwcmlrYXJlY2lwZR+LCAAAAAAAAv+rVirNTFGyUlByhAJdAyDQNQERFiDCAAEMlXQUlPISc1NB6oMyk1NB/My89KLUlMzUvJJimLBCYl6KQlJRfkkGSEFKZlFqcklmfh5Y3jk/P1tPqRYAzstbJ3cAAABQSwMEFAAAAAAAAAAhUMiey6BbAAAAWwAAABQAAAByZXBlYXQucGFwcmlrYXJlY2lwZR+LCAAAAAAAAv+rVirNTFGyUlBKhAJdAyDQNQERFiDCAAEMlXQUlPISc1NB6oMyk1NB/My89KLUlMzUvJJiZOGUzKLU5JLM/DywqHN+fraeUi0A03xnq20AAABQSwECFAMUAAAAAAAAACFQyJ7LoFsAAABbAAAAEgAAAAAAAAAAAAAAgAEAAAAAYmFzZS5wYXByaWthcmVjaXBlUEsBAhQDFAAAAAAAAAAhUIdlCZ1bAAAAWwAAABMAAAAAAAAAAAAAAIABiwAAAG90aGVyLnBhcHJpa2FyZWNpcGVQSwECFAMUAAAAAAAAACFQ5CwEd2cAAABnAAAAFgAAAAAAAAAAAAAAgAEXAQAAcmV2aXNpb24ucGFwcmlrYXJlY2lwZVBLAQIUAxQAAAAAAAAAIVDInsugWwAAAFsAAAAUAAAAAAAAAAAAAACAAbIBAAByZXBlYXQucGFwcmlrYXJlY2lwZVBLBQYAAAAABAAEAAcBAAA/AgAAAAA="))
+        let url = directory.appendingPathComponent("Rice.paprikarecipes")
+        try collection.write(to: url)
+        await model.importFile(url, recipes: true)
+        let initial = try XCTUnwrap(model.review)
+        XCTAssertEqual(initial.rows.count, 3)
+        let versions = initial.rows.filter { model.paprikaVersionChoices.contains($0.id) }
+        XCTAssertEqual(versions.count, 2)
+        let keep = try XCTUnwrap(versions.first)
+        let skip = try XCTUnwrap(versions.last)
+        let other = try XCTUnwrap(initial.rows.first { $0.record.id != keep.record.id })
+        model.confirmPaprikaVersion(keep, selected: true)
+        func correct(_ row: RecoveryReviewRow, title: String) async throws {
+            let editor = try XCTUnwrap(model.beginRecipeCorrection(row))
+            var recipe = try XCTUnwrap(editor.initialRecipe)
+            recipe.title = title
+            try await model.stageManualRecipe(recipe, from: editor)
+            model.dismissImport(editor)
+        }
+        try await correct(other, title: "Arroz de la casa")
+        XCTAssertEqual(model.acceptedPaprikaVersions, [keep.id])
+        try await correct(keep, title: "Arroz con caldo")
+        XCTAssertTrue(model.acceptedPaprikaVersions.isEmpty)
+        await model.skipRecipe(skip)
+        let untouched = try await registry.refreshList()
+        XCTAssertTrue(untouched.isEmpty)
+        await model.applyReviewedImport()
+        let saved = try await registry.refreshList()
+        XCTAssertEqual(Set(saved.map { $0.record.title }), ["Arroz de la casa", "Arroz con caldo"])
+        await model.importFile(url, recipes: true)
+        XCTAssertEqual(model.review?.rows.map(\.record.revision), [skip.record.revision])
+        model.cancelReview()
+        let afterRetry = try await registry.refreshList()
+        XCTAssertEqual(afterRetry, saved)
     }
 
     @MainActor func testChangedPaprikaUIDRequiresSeparateCopyApprovalAndSupportsSkipping() async throws {
