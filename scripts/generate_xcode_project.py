@@ -99,9 +99,10 @@ def target(key, name, source_paths, product_type, bundle, dependencies=(), packa
         for p in sorted(extension_folder.glob("*.xcprivacy")):
             resources.append(build_file(str(p.relative_to(IOS)), "text.xml"))
     elif key == "unit":
-        storekit = IOS / "Features/Membership/HouseholdLocalTesting.storekit"
-        if storekit.exists():
-            resources.append(build_file(str(storekit.relative_to(IOS)), "text.json"))
+        for catalog in ("HouseholdLocalTesting", "HouseholdMexicoTesting"):
+            storekit = IOS / f"Features/Membership/{catalog}.storekit"
+            if storekit.exists():
+                resources.append(build_file(str(storekit.relative_to(IOS)), "text.json"))
     elif key == "ui":
         snapshot = IOS / "UITests/Fixtures/SharedFallbackShop.json"
         if snapshot.exists():

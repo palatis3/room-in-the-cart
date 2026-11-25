@@ -96,16 +96,21 @@ import StoreKitTest
         XCTAssertEqual(Locale.current.language.languageCode?.identifier, String(appLanguage.prefix(2)))
 
         let spanishOffer = "Household (prueba local)"
-        let usName = session.locale.language.languageCode?.identifier == "es" ? spanishOffer : "Household (local test)"
-        try await assertAnnualOffer(country: "USA", currency: "USD", name: usName)
+        let offerName = session.locale.language.languageCode?.identifier == "es" ? spanishOffer : "Household (local test)"
+        try await assertAnnualOffer(country: "USA", currency: "USD", amount: 49.99, name: offerName)
 
+        let offerLocale = session.locale
+        let mexico = try XCTUnwrap(Bundle(for: Self.self).url(forResource: "HouseholdMexicoTesting", withExtension: "storekit"))
+        session = try SKTestSession(contentsOf: mexico)
+        session.resetToDefaultState()
+        session.disableDialogs = true
         session.storefront = "MEX"
-        session.locale = Locale(identifier: "es_MX")
+        session.locale = offerLocale
         try await AppStore.sync()
-        try await assertAnnualOffer(country: "MEX", currency: "MXN", name: spanishOffer)
+        try await assertAnnualOffer(country: "MEX", currency: "MXN", amount: 699, name: offerName)
     }
 
-    private func assertAnnualOffer(country: String, currency: String, name: String) async throws {
+    private func assertAnnualOffer(country: String, currency: String, amount: Decimal, name: String) async throws {
         try await eventually("StoreKit reports the \(country) storefront") {
             await Storefront.current?.countryCode == country
         }
@@ -120,9 +125,7 @@ import StoreKitTest
         XCTAssertEqual(product.priceFormatStyle.currencyCode, currency)
         XCTAssertFalse(offer.displayPrice.isEmpty)
         XCTAssertEqual(offer.displayPrice, product.displayPrice)
-        if country == "USA" {
-            XCTAssertEqual(product.price, Decimal(string: "49.99")) // Local fixture price.
-        }
+        XCTAssertEqual(product.price, amount)
     }
 
     func testPurchaseDoesNotFinishOrGrantAccessWithoutDurableServiceDelivery() async throws {
