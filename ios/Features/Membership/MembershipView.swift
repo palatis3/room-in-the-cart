@@ -119,6 +119,7 @@ private struct MembershipDinnerSampleView: View {
                 }
             }
             .font(.footnote).frame(maxWidth: .infinity).padding().background(.bar)
+            .accessibilityIdentifier("membership.sample.annualTerms")
         }
         .task {
             guard let productID = MembershipConfiguration.fromBundle().productID else { return }
