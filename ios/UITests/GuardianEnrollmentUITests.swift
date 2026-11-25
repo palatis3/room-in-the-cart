@@ -181,6 +181,45 @@ import XCTest
         }
     }
 
+    func testEnglishMembershipKeepsRejectedEmailAndRetriesWithoutLeavingSetup() {
+        checkMembershipEmailRetry(spanish: false)
+    }
+
+    func testMexicanSpanishMembershipKeepsRejectedEmailAndRetriesWithoutLeavingSetup() {
+        checkMembershipEmailRetry(spanish: true)
+    }
+
+    private func checkMembershipEmailRetry(spanish: Bool) {
+        app.launchArguments = ["--ui-testing", "--guardian-enrollment-fixture", "--guardian-fixture-root",
+                               "--reset-guardian-root-fixture", "--household-first-sign-in", "--reject-first-email-code",
+                               "-AppleLanguages", spanish ? "(es-MX)" : "(en-US)", "-AppleLocale", spanish ? "es_MX" : "en_US"]
+        app.launch()
+        tap("settings")
+        tap(spanish ? "Membresía del hogar" : "Household membership")
+        tap("membership.accountOptions")
+        let email = spanish ? "Correo electrónico" : "Email"
+        let send = spanish ? "Enviarme un código por correo" : "Email me a code"
+        let address = "shopper@example.invalid"
+        let field = app.textFields[email]
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+        field.tap()
+        field.typeText(address)
+        tap(send)
+        let notice = app.staticTexts["household.notice"]
+        XCTAssertTrue(notice.waitForExistence(timeout: 10))
+        XCTAssertTrue(notice.isHittable)
+        XCTAssertEqual(notice.label, spanish
+            ? "No se pudo enviar un código de acceso. Revisa el correo electrónico o sigue planificando gratis."
+            : "A sign-in code could not be sent. Check the email address or continue planning for free.")
+        XCTAssertEqual(field.value as? String, address)
+        tap(send)
+        let code = spanish ? "Código de acceso del correo" : "Email sign-in code"
+        XCTAssertTrue(app.secureTextFields[code].waitForExistence(timeout: 10))
+        type(code, "123456")
+        tap(spanish ? "Verificar código" : "Verify code")
+        XCTAssertTrue(app.buttons["Fixture family"].waitForExistence(timeout: 10))
+    }
+
     func testMembershipListRetriesAfterVerifiedSignInWithoutAnotherCode() {
         signInFromPrivateSettings(hasHousehold: true, loseFirstWorkspaceList: true)
         let retry = app.buttons["household.workspaces.retry"]

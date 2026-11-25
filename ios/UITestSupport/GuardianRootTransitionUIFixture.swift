@@ -14,6 +14,7 @@ private final class GuardianRootMemoryVault: RefreshTokenVault, @unchecked Senda
     func clear() throws { lock.lock(); defer { lock.unlock() }; value = nil }
 }
 private final class GuardianRootFixtureProtocol: URLProtocol {
+    private static let firstEmailRequest = OSAllocatedUnfairLock(initialState: true)
     private static let firstWorkspaceRead = OSAllocatedUnfairLock(initialState: true)
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
@@ -32,7 +33,15 @@ private final class GuardianRootFixtureProtocol: URLProtocol {
             let user = ["id":"fixture-first-shopper","email_confirmed_at":"date"]
             let home = "10000000-0000-4000-8000-000000000001"
             switch url.path {
-            case "/auth/v1/otp": body = [:]
+            case "/auth/v1/otp":
+                if ProcessInfo.processInfo.arguments.contains("--reject-first-email-code"),
+                   Self.firstEmailRequest.withLock({ first in
+                       defer { first = false }
+                       return first
+                   }) {
+                    status = 422
+                    body = ["error_code":"email_provider_disabled", "msg":"Email logins are disabled"]
+                } else { body = [:] }
             case "/auth/v1/verify": body = ["access_token":"fictional-access","refresh_token":"fictional-refresh","expires_in":3600,"user":user]
             case "/auth/v1/user": body = user
             case "/v1/me/workspaces":
@@ -71,7 +80,7 @@ private final class GuardianRootFixtureProtocol: URLProtocol {
                     "verifiedBackupRetentionDays":30]
             default: break
             }
-            if body["error"] == nil { status = 200 }
+            if body["error"] == nil && body["error_code"] == nil { status = 200 }
         }
         let data = try! JSONSerialization.data(withJSONObject:body,options:[.sortedKeys])
         let response = HTTPURLResponse(url:url,statusCode:status,httpVersion:nil,headerFields:["Content-Type":"application/json"])!

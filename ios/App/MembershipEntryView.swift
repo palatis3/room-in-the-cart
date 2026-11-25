@@ -13,9 +13,12 @@ extension EnvironmentValues {
     }
 }
 
+enum HouseholdSettingsDestination: Hashable { case membership, adultSetup }
+
 /// The app owns the coordinator; navigating away leaves transaction observation running.
 struct MembershipEntryView: View {
     @ObservedObject var household: HouseholdModel
+    var usesSettingsPath = false
     @Environment(\.returnFromMembershipSettings) private var returnFromSettings
     @EnvironmentObject private var membership: MembershipCoordinator
     @Environment(\.dismiss) private var dismiss
@@ -85,8 +88,12 @@ struct MembershipEntryView: View {
     }
 
     private func householdSetup(_ title: String) -> some View {
-        NavigationLink(title) {
-            HouseholdSettingsView(model: household, continuesAfterWorkspaceLock: true)
+        Group {
+            if usesSettingsPath {
+                NavigationLink(title, value: HouseholdSettingsDestination.adultSetup)
+            } else {
+                NavigationLink(title) { HouseholdSettingsView(model: household, continuesAfterWorkspaceLock: true) }
+            }
         }.accessibilityIdentifier("membership.accountOptions")
     }
 
