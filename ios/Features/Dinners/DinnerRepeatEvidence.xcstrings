@@ -1,6 +1,12 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Previously saved and now off the menu." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Previously saved and now off the menu." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Esta cena se guardó antes y ya no está en el menú." } }
+      }
+    },
     "Saved dinners stay in the shop. Review Saved changes to undo an eligible dinner." : {
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Saved dinners stay in the shop. Review Saved changes to undo an eligible dinner." } },

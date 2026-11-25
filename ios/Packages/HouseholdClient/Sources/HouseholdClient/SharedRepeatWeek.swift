@@ -43,6 +43,18 @@ public struct SharedRepeatSeries: Decodable, Equatable, Sendable {
     // The wire dictionary has UUID strings as JSON keys.
     public let receipts: [String:String]
     public func saved(_ step: Step) -> Bool { receipts[step.targetId.uuidString.lowercased()] != nil }
+
+    public enum MenuState: Equatable, Sendable {
+        case pending
+        case present(SharedMealOccurrence)
+        case removed
+    }
+
+    public func menuState(for step: Step, in meals: [SharedMealOccurrence]) -> MenuState {
+        guard saved(step) else { return .pending }
+        guard let dinner = meals.first(where: { $0.id == step.targetId }) else { return .removed }
+        return .present(dinner)
+    }
 }
 
 extension HouseholdService {

@@ -459,6 +459,7 @@ private struct SharedWeekRepeatSection: View {
     let start: Date
     let openShop: () -> Void
     @State private var series: SharedRepeatSeries?
+    @State private var receiptMenu: SharedMealPlan?
     @State private var selections: [UUID:Date] = [:]
     @State private var requestID = UUID()
     @State private var initialLoad = true
@@ -488,6 +489,7 @@ private struct SharedWeekRepeatSection: View {
                 }
             }
             if current, loaded, let series {
+                let currentPlan = receiptMenu ?? plan
                 Section(weekReviewText("Shared repeat week")) {
                     Text(weekReviewText("Each dinner has its own grocery review. Both planners can return to this list to see what was saved."))
                     if household.storeQuoteScope != nil {
@@ -496,27 +498,42 @@ private struct SharedWeekRepeatSection: View {
                         }
                     }
                     ForEach(series.steps) { step in
-                        let source = plan.meals.first { $0.id == step.sourceId }
+                        let source = currentPlan.meals.first { $0.id == step.sourceId }
                         VStack(alignment: .leading) {
-                            Text(verbatim: source?.meal.title ?? weekReviewText("Dinner unavailable")).font(.headline)
-                            Text(verbatim: sharedMealScheduleText(step.day))
-                            if series.saved(step) {
+                            switch series.menuState(for: step, in: currentPlan.meals) {
+                            case .present(let dinner):
+                                Text(verbatim: dinner.meal.title).font(.headline)
+                                Text(verbatim: sharedMealScheduleText(dinner.meal.day))
                                 Label(weekReviewText("Saved to the shared shop"), systemImage: "checkmark.circle")
-                            } else if series.stopped || plan.phase == "placed" { Text(weekReviewText("Stopped before saving")) }
-                            else if source?.revision != step.sourceRevision { Text(weekReviewText("Source dinner changed. Start a fresh review.")) }
-                            else if plan.phase == "draft", plan.shopper, let source {
-                                Button(weekReviewText("Review this dinner and its groceries")) { Task { await open(step, source: source, series: series) } }
-                                    .accessibilityIdentifier("week.series.review." + step.id.uuidString)
-                            } else { Text(weekReviewText("Waiting for shopper review")) }
+                                if currentPlan.phase == "draft", currentPlan.shopper, !dinner.meal.protected,
+                                   dinner.meal.planning?.groups.contains(where: { $0.protected }) != true {
+                                    Button(ht("Review removing this meal")) {
+                                        Task { await reviewRemoval(of: dinner, in: currentPlan) }
+                                    }
+                                    .accessibilityIdentifier("week.series.remove." + step.id.uuidString)
+                                }
+                            case .removed:
+                                Text(verbatim: source?.meal.title ?? weekReviewText("Dinner unavailable")).font(.headline)
+                                Text(weekReviewText("Previously saved and now off the menu."))
+                            case .pending:
+                                Text(verbatim: source?.meal.title ?? weekReviewText("Dinner unavailable")).font(.headline)
+                                Text(verbatim: sharedMealScheduleText(step.day))
+                                if series.stopped || currentPlan.phase == "placed" { Text(weekReviewText("Stopped before saving")) }
+                                else if source?.revision != step.sourceRevision { Text(weekReviewText("Source dinner changed. Start a fresh review.")) }
+                                else if currentPlan.phase == "draft", currentPlan.shopper, let source {
+                                    Button(weekReviewText("Review this dinner and its groceries")) { Task { await open(step, source: source, series: series, menu: currentPlan) } }
+                                        .accessibilityIdentifier("week.series.review." + step.id.uuidString)
+                                } else { Text(weekReviewText("Waiting for shopper review")) }
+                            }
                         }
                     }
-                    if plan.phase == "draft", plan.shopper, let shop = household.sharedShop, shop.canManage, !series.receipts.isEmpty {
+                    if currentPlan.phase == "draft", currentPlan.shopper, let shop = household.sharedShop, shop.canManage, !series.receipts.isEmpty {
                         NavigationLink(SharedOperationUndoCopy.text("Saved changes")) { SharedOperationUndoView(shopModel: shop) }
                     }
-                    if plan.phase == "draft" && !series.stopped && series.steps.contains(where: { !series.saved($0) }) {
+                    if currentPlan.phase == "draft" && !series.stopped && series.steps.contains(where: { !series.saved($0) }) {
                         Button(weekReviewText("Stop remaining dinners"), role: .destructive) { confirmStop = true }
                     }
-                    if plan.phase == "draft" && series.stopped && !candidates.isEmpty {
+                    if currentPlan.phase == "draft" && series.stopped && !candidates.isEmpty {
                         Button(weekReviewText("Start a fresh review")) { self.series = nil; selections = [:]; requestID = UUID() }
                     }
                     Button(ht("Refresh")) { Task { await load() } }
@@ -560,11 +577,10 @@ private struct SharedWeekRepeatSection: View {
         working = true; defer { working = false }
         do {
             let fresh = try await service.sharedRepeatWeek(shopID: scope.shopID, week: week)
-            guard current else { return }
-            series = fresh; failed = false; loaded = true
+            try await display(fresh, using: service)
         } catch {
             guard current else { return }
-            series = nil; loaded = false
+            receiptMenu = nil; series = nil; loaded = false
             if case ClientError.service(let status, _, _, _) = error, [403,404].contains(status) { failed = false }
             else { failed = true }
         }
@@ -577,8 +593,7 @@ private struct SharedWeekRepeatSection: View {
         working = true; defer { working = false }
         do {
             let fresh = try await service.stageRepeatWeek(id: requestID, week: week, plan: plan, selections: choices)
-            guard current else { return }
-            series = fresh; failed = false
+            try await display(fresh, using: service)
         } catch { if current { failed = true; loaded = false } }
     }
     @MainActor private func stop() async {
@@ -586,21 +601,56 @@ private struct SharedWeekRepeatSection: View {
         working = true; defer { working = false }
         do {
             let stopped = try await service.stopRepeatWeek(series, plan: plan)
-            guard current else { return }
-            self.series = stopped; failed = false
+            try await display(stopped, using: service)
         } catch { if current { failed = true; loaded = false } }
     }
-    @MainActor private func open(_ step: SharedRepeatSeries.Step, source: SharedMealOccurrence, series: SharedRepeatSeries) async {
-        guard current, !working, !series.stopped, !series.saved(step), let model = household.sharedShop,
-              model.canManage, !model.editing, !model.busy, model.pending == nil else { failed = true; return }
+    @MainActor private func display(_ fresh: SharedRepeatSeries?, using service: HouseholdService) async throws {
+        var menu: SharedMealPlan?
+        if let fresh, !fresh.receipts.isEmpty {
+            // Read the menu after the receipt so another adult's removal or later edit is visible.
+            let latest = try await service.mealPlan(shopID: scope.shopID, currentWeek: true)
+            guard latest.shopId == scope.shopID, latest.authorityEpoch == plan.authorityEpoch,
+                  latest.grantRevision == plan.grantRevision, latest.shopper == plan.shopper else {
+                throw ClientError.configuration
+            }
+            menu = latest
+        }
+        guard current else { return }
+        receiptMenu = menu; series = fresh; failed = false; loaded = true
+    }
+
+    @MainActor private func open(_ step: SharedRepeatSeries.Step, source: SharedMealOccurrence,
+                                 series: SharedRepeatSeries, menu: SharedMealPlan) async {
+        guard !working, !series.stopped, !series.saved(step) else { return }
         working = true; defer { working = false }
-        if model.shop?.shopRevision != plan.shopRevision { await model.load() }
-        guard current, household.sharedShop === model, model.canManage, !model.editing, !model.busy,
-              model.pending == nil, let shop = model.shop,
-              shop.phase == "draft", UUID(uuidString: shop.shopId) == scope.shopID,
-              shop.shopRevision == plan.shopRevision, shop.authorityEpoch == plan.authorityEpoch,
-              shop.meals?.contains(source) == true, shop.meals?.contains(where: { $0.id == step.id }) == false,
+        guard let model = await reviewableShop(matching: menu), let meals = model.shop?.meals,
+              meals.contains(source), !meals.contains(where: { $0.id == step.id }),
               let edit = try? step.reviewedEdit(source: source, planID: series.planId) else { failed = true; return }
+        show(edit, in: model)
+    }
+
+    @MainActor private func reviewRemoval(of dinner: SharedMealOccurrence, in menu: SharedMealPlan) async {
+        guard !working else { return }
+        working = true; defer { working = false }
+        guard let model = await reviewableShop(matching: menu), model.shop?.meals?.contains(dinner) == true else {
+            failed = true; return
+        }
+        // The shopper reviews the current packs, quote and any food commitments in the normal editor.
+        show(SharedMealEdit(occurrenceID: dinner.id, meal: nil), in: model)
+    }
+
+    @MainActor private func reviewableShop(matching menu: SharedMealPlan) async -> HouseholdShopModel? {
+        guard current, menu.shopper, let model = household.sharedShop, model.canManage,
+              !model.editing, !model.busy, model.pending == nil else { return nil }
+        if model.shop?.shopRevision != menu.shopRevision { await model.load() }
+        guard current, household.sharedShop === model, model.canManage, !model.editing, !model.busy,
+              model.pending == nil, let shop = model.shop, shop.phase == "draft",
+              UUID(uuidString: shop.shopId) == scope.shopID, shop.shopRevision == menu.shopRevision,
+              shop.authorityEpoch == menu.authorityEpoch else { return nil }
+        return model
+    }
+
+    @MainActor private func show(_ edit: SharedMealEdit, in model: HouseholdShopModel) {
         model.beginEditing()
         guard model.editing else { failed = true; return }
         model.draft.mealEdit = edit
