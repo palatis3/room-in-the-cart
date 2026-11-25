@@ -283,7 +283,7 @@ import XCTest
     }
 
     private func addTypedProduct(_ value: String, using field: XCUIElement) {
-        tap(field)
+        tapVisibleFormRow(field, marker: "PRODUCT_INPUT_TAP")
         field.typeText(value)
         XCTAssertEqual(field.value as? String, value)
         tap(app.buttons["productBatch.keyboardDone"])
