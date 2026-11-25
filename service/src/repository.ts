@@ -4,6 +4,7 @@ import {checkPublishingMember,reviewSharedWording} from './shared-content-filter
 import {applyPair,checkPairReplay,inboxPairs,rememberPair,reviewPair} from './request-pair.js';
 import {proveSameItem,rememberSameItem,sameItemUndo,applySameItem,checkSameItemReplay} from './request-same-item.js';
 import {recordTonight,checkTonightReplay} from './household-tonight.js';
+import {acceptRepeatStep} from './shared-repeat-week.js';
 import {checkDraftDinnerSwap} from './shared-dinner-swap.js';
 import {checkIngredientChange} from './meal-preferences.js';
 import {isCookCommand} from './cook-completion-contracts.js';
@@ -642,6 +643,7 @@ export class HouseholdRepository {
         else preserveProtectedMeal(original ? sharedMealSchema.parse(original.meal) : undefined, meal);
         if((original?.revision ?? null)!==b.mealEdit.baseMealRevision)
           throw new ServiceError(409,'stale_meal','Review this occurrence again before applying a change.');
+        if(b.mealEdit.repeatPlanId) await acceptRepeatStep(this,billing,ctx,shop,b.mealEdit.repeatPlanId,occurrenceId,meal,operationId);
         if(b.mealEdit.dinnerSwap) await checkDraftDinnerSwap(ctx,original?sharedMealSchema.parse(original.meal):undefined,meal,b.mealEdit.preferenceReview);
         if(b.mealEdit.changeProposalId) await consumeSharedMealChange(ctx,shop,b.mealEdit.changeProposalId,occurrenceId,b.mealEdit.baseMealRevision,meal);
         else if(!b.demandReview)await checkIngredientChange(ctx,original?sharedMealSchema.parse(original.meal):undefined,meal,b.mealEdit.preferenceReview);

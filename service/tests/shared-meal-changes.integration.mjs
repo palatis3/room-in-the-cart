@@ -2581,3 +2581,135 @@ test('a dinner invitation resolves its original meal only for the current named 
  await admin.query("UPDATE ritc.invite SET expires_at=clock_timestamp()-interval '1 second' WHERE household_id=$1 AND invite_id=$2",[f.h,invitation.inviteId]);
  assert.equal((await call(reader,path)).status,404);
 });
+
+test('two planners stage a repeat week, resume separate shopping reviews and compensate unfinished work',async()=>{
+ const f=await mealFixture(), commandPath=f.base+'/commands', route=f.path+'/meal-plan/repeat-week';
+ const secondMeal={...structuredClone(f.meal),title:'Other dinner',day:'2026-11-06'};
+ ok(await call(f.owner,commandPath,'POST',f.patch(2,{occurrenceId:randomUUID(),baseMealRevision:null,meal:secondMeal})));
+ const plan=ok(await call(f.planner,f.path+'/meal-plan'));
+ const original=plan.meals.find(row=>row.meal.title===f.meal.title);
+ const second=plan.meals.find(row=>row.meal.title===secondMeal.title);
+ const start={planId:randomUUID(),weekStart:'2026-11-09',shopRevision:plan.shopRevision,authorityEpoch:plan.authorityEpoch,grantRevision:plan.grantRevision,
+  selections:[{sourceId:original.occurrenceId,sourceRevision:original.revision,day:'2026-11-14'},
+              {sourceId:second.occurrenceId,sourceRevision:second.revision,day:'2026-11-13'}]};
+ const saved=ok(await call(f.planner,route,'POST',start)).series;
+ assert.deepEqual(ok(await call(f.planner,route,'POST',start)).series,saved);
+ const read=async a=>ok(await call(a,route+'?week=2026-11-09')).series;
+ assert.deepEqual(await read(f.owner),saved);
+ assert.equal((await call(f.owner,route,'POST',{...start,planId:randomUUID()})).status,409);
+ const edit=(row,source)=>{
+   const meal=structuredClone(source.meal);meal.day=row.day;
+   delete meal.planning.deadline;delete meal.planning.completedSteps;
+   return {occurrenceId:row.targetId,baseMealRevision:null,meal,repeatPlanId:saved.planId};
+ };
+ const firstEdit=edit(saved.steps[0],original);
+ const altered=structuredClone(firstEdit);altered.meal.portions+=1;
+ assert.equal((await call(f.owner,commandPath,'POST',f.patch(plan.shopRevision,altered))).status,409);
+ assert.deepEqual((await read(f.owner)).receipts,{});
+ const apply=f.patch(plan.shopRevision,firstEdit);
+ const receipt=ok(await call(f.owner,commandPath,'POST',apply));
+ assert.deepEqual(ok(await call(f.owner,commandPath,'POST',apply)),receipt);
+ assert.deepEqual((await read(f.planner)).receipts,{[saved.steps[0].targetId]:receipt.operationId});
+ const secondEdit=edit(saved.steps[1],second),remaining=f.patch(receipt.shopRevision,secondEdit);
+ const seats=ok(await call(f.owner,f.base+'/entitlements'));
+ ok(await call(f.owner,f.base+'/billing/seats','PUT',{revision:seats.revision,userIDs:[f.owner.id]}));
+ assert.equal((await call(f.owner,commandPath,'POST',remaining)).status,403);
+ const refreshed=ok(await call(f.owner,f.base+'/entitlements'));
+ ok(await call(f.owner,f.base+'/billing/seats','PUT',{revision:refreshed.revision,userIDs:[f.owner.id,f.planner.id]}));
+ const stopped=ok(await call(f.planner,route+'/stop','POST',{planId:saved.planId,weekStart:start.weekStart,grantRevision:plan.grantRevision,authorityEpoch:plan.authorityEpoch})).series;
+ assert.equal(stopped.stopped,true);assert.deepEqual(stopped.receipts,(await read(f.owner)).receipts);
+ assert.equal((await call(f.owner,commandPath,'POST',f.patch(receipt.shopRevision,secondEdit))).status,409);
+ const final=ok(await call(f.owner,f.path));
+ assert.deepEqual(final.meals.find(m=>m.occurrenceId===firstEdit.occurrenceId).meal,firstEdit.meal);
+ assert.equal(final.meals.some(m=>m.occurrenceId===secondEdit.occurrenceId),false);
+ assert.deepEqual(final.meals.find(m=>m.occurrenceId===original.occurrenceId),original);
+ assert.deepEqual(final.lines,f.initial.lines);
+ const follow={...start,shopRevision:receipt.shopRevision,planId:randomUUID(),selections:[start.selections[1]]};
+ const fresh=ok(await call(f.planner,route,'POST',follow)).series;
+ ok(await call(f.owner,f.path+'/meal-plan/planner','PUT',{authorityEpoch:1,grantRevision:1,plannerId:null}));
+ assert.equal((await call(f.owner,commandPath,'POST',f.patch(receipt.shopRevision,{...secondEdit,repeatPlanId:fresh.planId}))).status,409);
+ ok(await call(f.owner,f.path+'/meal-plan/planner','PUT',{authorityEpoch:1,grantRevision:2,plannerId:f.planner.id}));
+ const renewed={...follow,planId:randomUUID(),grantRevision:3};
+ const finalReview=ok(await call(f.planner,route,'POST',renewed)).series;
+ const done=ok(await call(f.owner,commandPath,'POST',f.patch(receipt.shopRevision,{...secondEdit,repeatPlanId:finalReview.planId})));
+ assert.equal((await read(f.planner)).receipts[secondEdit.occurrenceId],done.operationId);
+ const completed=ok(await call(f.owner,f.path)).meals;
+ assert.equal(completed.filter(m=>m.occurrenceId===secondEdit.occurrenceId).length,1);
+ assert.equal(completed.filter(m=>m.occurrenceId===firstEdit.occurrenceId).length,1);
+ await admin.query('SELECT ritc.privacy_erase_extension($1,$2)',[f.h,f.planner.id]);
+ const left=await admin.query('SELECT count(*)::int n FROM ritc.shared_repeat_week WHERE household_id=$1',[f.h]);
+ assert.equal(left.rows[0].n,0);
+});
+
+test('shared week costs pin the accepted basket and recheck finance access without sharing private lines',async()=>{
+ const f=await mealFixture(), route=f.path+'/meal-plan/repeat-week', prices=f.path+'/store-quotes';
+ const menu=ok(await call(f.owner,f.path+'/meal-plan?week=2026-11-09'));
+ const original=menu.meals.find(row=>row.meal.title===f.meal.title), planId=randomUUID();
+ const start={planId,weekStart:'2026-11-09',shopRevision:menu.shopRevision,authorityEpoch:menu.authorityEpoch,grantRevision:menu.grantRevision,
+  selections:[{sourceId:original.occurrenceId,sourceRevision:original.revision,day:'2026-11-14'}]};
+ const saved=ok(await call(f.planner,route,'POST',start)).series;
+ const read=a=>call(a,route+'/costs?planId='+planId);
+ const initial=ok(await read(f.owner));
+ assert.equal(initial.original.knownItemSubtotalMinor,f.initial.lines[0].unitPriceMinor*f.initial.lines[0].packs);
+ assert.equal(initial.original.pricedLines,1);assert.equal(initial.reportedNetMinor,null);
+ assert.equal((await read(f.planner)).status,404);
+ const grant=(enabled,targetRevision,shopRevision)=>call(f.owner,prices+'/grants','POST',{operationId:randomUUID(),shopRevision,authorityEpoch:1,grantRevision:0,
+   adultId:f.planner.id,enabled,targetRevision});
+ ok(await grant(true,0,menu.shopRevision));
+ const limited=ok(await read(f.planner));assert.equal(limited.original,null);
+ assert.ok(!JSON.stringify(limited).includes('Private basket source'));
+ const step=saved.steps[0], meal=structuredClone(original.meal);meal.day=step.day;delete meal.planning.deadline;delete meal.planning.completedSteps;
+ const extra={lines:f.initial.lines.map(row=>({...row,packs:2,unitPriceMinor:123})),quote:f.initial.quote};
+ const edit={occurrenceId:step.targetId,baseMealRevision:null,meal,repeatPlanId:planId};
+ const receipt=ok(await call(f.owner,f.base+'/commands','POST',f.patch(menu.shopRevision,edit,extra)));
+ const updated=ok(await read(f.owner));assert.deepEqual(updated.original,initial.original);
+ assert.deepEqual(updated.revisions.map(row=>[row.revision,row.pricedLines,row.knownItemSubtotalMinor]),[[receipt.shopRevision,1,246]]);
+ assert.deepEqual(ok(await read(f.planner)).revisions,[]);
+ ok(await grant(false,1,receipt.shopRevision));assert.equal((await read(f.planner)).status,404);
+ const financial=f.path+'/financial-evidence';
+ const version=async()=>ok(await call(f.owner,financial)).sourceVersion;
+ const charge={id:randomUUID(),evidenceKey:randomUUID(),kind:'postedCharge',amountMinor:700,currency:'USD',occurredAt:new Date().toISOString(),
+   creditId:null,chargeEvidenceKey:null,holdEvidenceKey:null,sourceText:'Private evidence wording'};
+ const append=async entry=>ok(await call(f.owner,financial,'POST',{clientKey:randomUUID(),sourceVersion:await version(),entry}));
+ await append(charge);
+ await append({...charge,id:randomUUID(),evidenceKey:randomUUID(),kind:'postedCredit',creditId:randomUUID(),chargeEvidenceKey:charge.evidenceKey,amountMinor:125});
+ const actual=ok(await read(f.owner));assert.equal(actual.reportedNetMinor,575);assert.deepEqual(actual.original,initial.original);
+ assert.ok(!JSON.stringify(actual).includes('Private evidence wording'));
+ await admin.query('UPDATE ritc.shared_repeat_week SET basket_revision=null,store_revision=null WHERE household_id=$1 AND shop_id=$2 AND plan_id=$3',[f.h,f.shopId,planId]);
+ assert.deepEqual(ok(await read(f.owner)),{original:null,revisions:[],reportedNetMinor:null,currency:'USD'});
+ ok(await call(f.owner,f.path+'/history-retire','POST',{clientKey:randomUUID(),sourceVersion:await version(),confirm:true}));
+ assert.equal((await read(f.owner)).status,404);
+});
+
+test('shared week costs resolve an adopted proposal only while its original budget permission survives',async()=>{
+ const f=await mealFixture(), prices=f.path+'/store-quotes', route=f.path+'/meal-plan/repeat-week';
+ const input=(shopRevision,grantRevision,fields)=>({operationId:randomUUID(),authorityEpoch:1,shopRevision,grantRevision,...fields});
+ const grant=(enabled,targetRevision,rev)=>call(f.owner,prices+'/grants','POST',input(rev,0,{adultId:f.planner.id,enabled,targetRevision}));
+ ok(await grant(true,0,2));
+ const first={label:'Observed market',store:'Market',branch:'North',mode:'pickup',slot:new Date(Date.now()+3600000).toISOString(),observedAt:new Date(Date.now()-60000).toISOString(),
+  source:'Private quote note',currency:'USD',terms:'',itemsMinor:4100,checkoutMinor:4225,allChargesIncluded:true,available:true,quantitiesMatched:true,singleStore:true,
+  tripAlreadyPlanned:true,tripMinor:0,extraMinutes:0,orderMinimum:{kind:'noneRequired'},eligibilityConfirmed:true};
+ const pair=input(2,1,{options:{first,second:{...first,label:'Alternate',store:'Store B',branch:'West'}}});
+ ok(await call(f.planner,prices+'/pairs','POST',pair));
+ const proposal=input(2,1,{pairId:pair.operationId,choice:'first'});
+ ok(await call(f.planner,prices+'/proposals','POST',proposal));
+ const adopt=ok(await call(f.owner,prices+'/adoptions','POST',input(2,0,{pairId:pair.operationId,choice:'first',proposalId:proposal.operationId})));
+ const menu=ok(await call(f.owner,f.path+'/meal-plan')), source=menu.meals[0], planId=randomUUID();
+ ok(await call(f.planner,route,'POST',{planId,weekStart:'2026-11-09',shopRevision:adopt.shopRevision,authorityEpoch:1,grantRevision:menu.grantRevision,
+  selections:[{sourceId:source.occurrenceId,sourceRevision:source.revision,day:'2026-11-14'}]}));
+ const read=who=>call(who,route+'/costs?planId='+planId);
+ for(const person of [f.owner,f.planner]){
+  const review=ok(await read(person));
+  assert.equal(review.original.adoptedQuote.checkoutMinor,4225);
+  assert.equal(review.original.adoptedQuote.itemsMinor,4100);
+  assert.equal(review.original.adoptedQuote.id,pair.operationId);
+  assert.equal(review.original.pricedLines,0);assert.equal(review.original.knownItemSubtotalMinor,null);
+  assert.ok(!JSON.stringify(review).includes('Private quote note'));
+ }
+ ok(await grant(false,1,adopt.shopRevision));
+ assert.equal(ok(await read(f.owner)).original.adoptedQuote,null);
+ assert.equal((await read(f.planner)).status,404);
+ ok(await grant(true,2,adopt.shopRevision));
+ assert.equal(ok(await read(f.planner)).original,null);
+ assert.equal(ok(await read(f.owner)).original.adoptedQuote,null);
+});
