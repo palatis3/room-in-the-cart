@@ -3,11 +3,37 @@ import CryptoKit
 import Foundation
 import LocalStore
 
-enum ProductBatchError: Error { case full, invalid, lookupUnavailable, rateLimited, chooseStockAction, changedDelivery, duplicateBarcode, pendingPackSave }
+enum ProductBatchError: Error { case full, invalid, lookupUnavailable, rateLimited, chooseStockAction, changedDelivery, duplicateBarcode, differentLabelBarcode, pendingPackSave }
 
 struct PantryProductBatch {
     static func homeOperationID(for candidate: UUID) -> UUID {
         ReceiptAcquisition.identity(["home-pack", candidate.uuidString])
+    }
+
+    struct LabelReading {
+        let original: String
+        let name: String
+        let perPack: String
+        let unit: UnitOfMeasure
+
+        init(original: String, code: CapturedBarcode?) {
+            let truncated = original.utf8.count > 512
+            let marker = truncated ? "…" : ""
+            var remainingBytes = 512 - marker.utf8.count
+            let excerpt = original.prefix { character in
+                remainingBytes -= character.utf8.count
+                return remainingBytes >= 0
+            }
+            // A clipped "1 gallon" can look like a complete "1 g" package size.
+            let endsAtLineBoundary = excerpt.endIndex == original.endIndex || original[excerpt.endIndex].isNewline
+            let completeLines = endsAtLineBoundary ? excerpt : excerpt.prefix(upTo: excerpt.lastIndex(where: \.isNewline) ?? excerpt.startIndex)
+            let lines = completeLines.split(whereSeparator: \.isNewline).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+            let proposal = lines.compactMap(Candidate.pack).first
+            name = lines.first { Candidate.pack($0) == nil && $0 != code?.value } ?? ""
+            self.original = String(excerpt) + marker
+            perPack = proposal?.0 ?? ""
+            unit = proposal?.1 ?? .count
+        }
     }
 
     struct Candidate: Identifiable, Equatable {
@@ -81,6 +107,19 @@ struct PantryProductBatch {
         }
         var catalog: ProductCatalogProposal?
         var appliedCatalog: ProductCatalogProposal?
+
+        /// A label photographed for an existing row proposes fields without adding stock or a second product.
+        func labelProposal(from source: ScannedSource) throws -> LabelReading {
+            guard let barcode, source.barcodes.count <= 1,
+                  source.barcodes.allSatisfy({ incoming in
+                      if let gtin = barcode.canonicalGTIN { return incoming.canonicalGTIN == gtin }
+                      return incoming.value == barcode.value
+                  }) else { throw ProductBatchError.differentLabelBarcode }
+            try ScanLimits.text(source.originalText)
+            let proposal = LabelReading(original: source.originalText, code: barcode)
+            guard !proposal.name.isEmpty || !proposal.perPack.isEmpty else { throw ProductBatchError.invalid }
+            return proposal
+        }
 
         func treatment(deliveries: [PantryReceiptDelivery], workspaceID: UUID) throws -> ReceiptImportDraft.Treatment {
             switch stockAction {
@@ -243,21 +282,9 @@ struct PantryProductBatch {
         if let code, candidate(matching: code) != nil { return false }
         if code == nil, let photo, candidates.contains(where: { $0.photoID == photo && $0.barcode == nil }) { return false }
         guard candidates.count < 12, nextOrdinal < 200 else { throw ProductBatchError.full }
-        let truncated = original.utf8.count > 512
-        let marker = truncated ? "…" : ""
-        var remainingBytes = 512 - marker.utf8.count
-        let excerpt = original.prefix { character in
-            remainingBytes -= character.utf8.count
-            return remainingBytes >= 0
-        }
-        // A clipped "1 gallon" can look like a complete "1 g" package size.
-        let endsAtLineBoundary = excerpt.endIndex == original.endIndex || original[excerpt.endIndex].isNewline
-        let completeLines = endsAtLineBoundary ? excerpt : excerpt.prefix(upTo: excerpt.lastIndex(where: \.isNewline) ?? excerpt.startIndex)
-        let lines = completeLines.split(whereSeparator: \.isNewline).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
-        let proposal = lines.compactMap(Candidate.pack).first
-        let name = lines.first { Candidate.pack($0) == nil && $0 != code?.value } ?? ""
-        candidates.append(.init(ordinal: nextOrdinal, barcode: code, photoID: photo, original: String(excerpt) + marker, name: name,
-                                perPack: proposal?.0 ?? "", unit: proposal?.1 ?? .count))
+        let label = LabelReading(original: original, code: code)
+        candidates.append(.init(ordinal: nextOrdinal, barcode: code, photoID: photo, original: label.original, name: label.name,
+                                perPack: label.perPack, unit: label.unit))
         nextOrdinal += 1
         return true
     }

@@ -97,6 +97,8 @@ struct PantryReceiptEntry: View {
                 Section(pantryText("Confirm receipt lines")) {
                     if let putaway = review.putaway {
                         ReviewedReceiptHeading(header: putaway.header)
+                        LabeledContent(putawayText("Lines adding pantry stock"), value: review.newStockLineCount.formatted())
+                        LabeledContent(putawayText("Lines keeping stock unchanged"), value: (putaway.decisions.count - review.newStockLineCount).formatted())
                         let facts = Dictionary(uniqueKeysWithValues: review.facts.map { ($0.lineID, $0) })
                         ForEach(putaway.decisions.sorted { $0.ordinal < $1.ordinal }) { decision in
                             if let fact = facts[decision.id] {
@@ -117,7 +119,7 @@ struct PantryReceiptEntry: View {
                     }
                     Text(pantryText("Saving receipt evidence does not post a payment."))
                         .font(.footnote).foregroundStyle(Theme.secondary)
-                    Button(review.putaway.map { putawayActionTitle($0.decisions.filter { $0.kind == .stored || $0.kind == .keptSome }.filter { !review.existing.contains($0.id) }.count) } ?? pantryText("Confirm pantry changes")) { commit(review) }.buttonStyle(PrimaryAction()).disabled(working || !model.canEdit)
+                    Button(review.putaway.map { _ in putawayActionTitle(review.newStockLineCount) } ?? pantryText("Confirm pantry changes")) { commit(review) }.buttonStyle(PrimaryAction()).disabled(working || !model.canEdit)
                         .accessibilityIdentifier("receipt.commit")
                     Button(pantryText("Edit receipt lines")) { self.review = nil; message = nil }.disabled(working)
                 }

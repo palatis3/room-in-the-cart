@@ -14,6 +14,26 @@ private actor CatalogTestTransport {
 }
 
 final class PantryProductCatalogTests: XCTestCase {
+    func testSecondLabelPhotoProposesDetailsForTheScannedRowWithoutStashingStockOrADate() throws {
+        let barcode = CapturedBarcode(symbology: "EAN-13", value: "3017620422003")
+        var batch = PantryProductBatch(workspaceID: UUID())
+        XCTAssertTrue(try batch.addScan(barcode))
+        let row = try XCTUnwrap(batch.candidates.first)
+        func photo(_ codes: [CapturedBarcode]) -> ScannedSource {
+            .init(originalText: "Frijol negro\n450 g\nConsumo preferente ??", uncertainLines: [], originalImageData: Data([1]),
+                  referenceJPEG: Data(), barcodes: codes)
+        }
+        let proposal = try row.labelProposal(from: photo([]))
+        XCTAssertEqual(proposal.name, "Frijol negro")
+        XCTAssertEqual(proposal.perPack, "450")
+        XCTAssertEqual(proposal.unit, .gram)
+        XCTAssertNil(row.reviewedDateWording)
+        XCTAssertNoThrow(try row.labelProposal(from: photo([barcode])))
+        XCTAssertThrowsError(try row.labelProposal(from: photo([.init(symbology: "EAN-13", value: "4006381333931")])))
+        XCTAssertEqual(batch.candidates, [row])
+        XCTAssertTrue(row.name.isEmpty)
+    }
+
     func testReviewedLabelWordingStaysWithOnePhysicalPackageAndRequiresDateConfirmation() throws {
         var batch = PantryProductBatch(workspaceID: UUID())
         XCTAssertTrue(try batch.addManual(name: "Butter beans\nBEST BEFORE DEC 2026", code: nil))

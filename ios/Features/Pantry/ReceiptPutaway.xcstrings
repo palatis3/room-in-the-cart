@@ -1,6 +1,40 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Lines adding pantry stock": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lines adding pantry stock"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renglones que agregan alimentos a la despensa"
+          }
+        }
+      }
+    },
+    "Lines keeping stock unchanged": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lines keeping stock unchanged"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renglones que mantienen las existencias sin cambios"
+          }
+        }
+      }
+    },
     "Check the text read from this image against your receipt before selecting lines.": {
       "extractionState": "manual",
       "localizations": {

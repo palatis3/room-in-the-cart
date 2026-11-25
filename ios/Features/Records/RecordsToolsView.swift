@@ -1,4 +1,5 @@
 import SwiftUI
+import PhotosUI
 import DeviceSurfaces
 import CoreDomain
 import UniformTypeIdentifiers
@@ -170,7 +171,8 @@ struct RecordsToolsView: View {
                       })
         .sheet(item: recipePresentation(.recipePage)) { presentation in
             RecipePageEntryView(sharedLinks: { try await model.sharedRecipeLinks(from: presentation) },
-                                removeLink: { try await model.removeSharedRecipeLink($0, from: presentation) }) { address in
+                                removeLink: { try await model.removeSharedRecipeLink($0, from: presentation) },
+                                keepLink: { try await model.stagePartialRecipeLink($0, from: presentation) }) { address in
                 #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
                 if let read = uiTestFiles?.recipePage {
                     try await model.importRecipePage(address, from: presentation, read: read)
@@ -392,6 +394,7 @@ struct RecordsToolsView: View {
                 Text(RecordsDatePresentation.exportedAt(review.envelope.exportedAtMilliseconds)).accessibilityIdentifier("records.importExportDate")
             }
             if let report = model.recipeReport {
+                LabeledContent(recordsText("Destination"), value: recordsText("Private recipe library on this iPhone"))
                 Text(report.localizedSummary)
                 if let fields = report.localizedUnsupportedFields { Text(fields).font(.caption) }
             }
@@ -734,6 +737,7 @@ private struct RecipePageEntryView: View {
     @State private var inboxError: String?
     let sharedLinks: () async throws -> [SharedCaptureEntry]
     let removeLink: (SharedCaptureEntry) async throws -> Void
+    let keepLink: (String) async throws -> Void
     let submit: (String) async throws -> Void
 
     var body: some View {
@@ -757,10 +761,25 @@ private struct RecipePageEntryView: View {
                             dismiss()
                         } catch {
                             guard !Task.isCancelled else { return }
-                            message = recordsText("Could not read recipe data from this public HTTPS page. Check the link, choose a recipe file, or use a recipe photo.")
+                            message = recordsText("Could not read this recipe. Keep the link in a draft and add the missing details.")
                         }
                     }
                 }.disabled(task != nil || address.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                if (try? RecipePageReader.partialRecipe(at: address)) != nil {
+                    Button(recordsText("Review a draft with this link")) {
+                        guard task == nil else { return }
+                        task = Task {
+                            defer { task = nil }
+                            do {
+                                try await keepLink(address)
+                                try Task.checkCancellation()
+                                dismiss()
+                            } catch {
+                                if !Task.isCancelled { message = recordsText("Reopen the recipe link to review it again.") }
+                            }
+                        }
+                    }.disabled(task != nil).accessibilityIdentifier("records.keepPartialLink")
+                }
                 Section {
                     Button(recordsText("Choose a shared recipe link")) {
                         task = Task {
@@ -847,10 +866,13 @@ private struct ManualRecipeEntryView: View {
         _source = State(initialValue: initial?.sourceURL ?? "")
         _notes = State(initialValue: initial?.notes ?? "")
     }
+    @State private var supplementPhoto: PhotosPickerItem?
+    @State private var supplement = ""
+    @State private var photoError = false
     @State private var submitting = false
     @State private var submissionError: String?
     @AccessibilityFocusState private var errorFocused: Bool
-    private enum Field { case title, servings, ingredients, steps, source, notes }
+    private enum Field { case title, servings, ingredients, steps, source, notes, supplement }
     @FocusState private var editing: Field?
     @State private var title = ""
     @State private var servings = ""
@@ -868,6 +890,48 @@ private struct ManualRecipeEntryView: View {
         if let original, original.joined(separator: separator) == text { return original }
         return text.components(separatedBy: separator).filter { !$0.isEmpty }
     }
+    private var hasSupplement: Bool {
+        !supplement.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private var supplementSection: some View {
+        DisclosureGroup(recordsText("Add missing text from a screenshot or paste")) {
+            PhotosPicker(selection: $supplementPhoto, matching: .images, preferredItemEncoding: .current) {
+                Text(recordsText("Read a recipe screenshot on this iPhone"))
+            }.disabled(supplementPhoto != nil || !supplement.isEmpty)
+            if supplementPhoto != nil { ProgressView(recordsText("Reading recipe…")) }
+            if photoError { Text(recordsText("Could not read the screenshot. Paste or type its text below.")) }
+            TextField(recordsText("Review or paste the missing text"), text: $supplement, axis: .vertical)
+                .lineLimit(2...12).focused($editing, equals: .supplement).disabled(supplementPhoto != nil)
+            if hasSupplement {
+                Button(recordsText("Append to ingredients")) { appendSupplement(to: &ingredients, separator: "\n") }
+                Button(recordsText("Append to steps")) { appendSupplement(to: &steps, separator: stepSeparator) }
+                Button(recordsText("Append to notes")) { appendSupplement(to: &notes, separator: "\n") }
+                Button(recordsText("Discard this extra text"), role: .destructive) { supplement = "" }
+            }
+        }
+        .task(id: supplementPhoto) {
+            guard let item = supplementPhoto else { return }
+            photoError = false
+            defer { if !Task.isCancelled { supplementPhoto = nil } }
+            do {
+                guard let photo = try await item.loadTransferable(type: SelectedPhotoTransfer.self) else { throw ScanFailure.invalidImage }
+                let evidence = try await OnDeviceTextCapture().recognize(photo.data)
+                try Task.checkCancellation()
+                supplement = evidence.text
+            } catch {
+                if !Task.isCancelled { photoError = true }
+            }
+        }
+    }
+
+    private func appendSupplement(to field: inout String, separator: String) {
+        let text = supplement.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+        field += field.isEmpty ? text : separator + text
+        supplement = ""
+    }
+
     var body: some View {
         NavigationStack {
             WorkingForm {
@@ -890,8 +954,13 @@ private struct ManualRecipeEntryView: View {
                     .focused($editing, equals: .source)
                 TextField(recordsText("Your notes"), text: $notes, axis: .vertical).lineLimit(3...12)
                     .focused($editing, equals: .notes)
+                supplementSection
                 Text(recordsText("Your meal remains editable even if its source website disappears. The URL does not fetch or import a web page."))
                     .font(.footnote)
+                if hasSupplement {
+                    Text(recordsText("Choose where to append the extra text or discard it before reviewing."))
+                        .font(.footnote)
+                }
                 Button(recordsText("Review recipe")) {
                     guard !submitting else { return }
                     editing = nil
@@ -908,7 +977,7 @@ private struct ManualRecipeEntryView: View {
                             errorFocused = true
                         }
                     }
-                }.disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }.disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || supplementPhoto != nil || hasSupplement)
             }
             .scrollDismissesKeyboard(.interactively)
             .keyboardDoneAction(visible: editing != nil, title: ledgerText("Done"), identifier: "records.recipeEditorDone") { editing = nil }
