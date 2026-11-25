@@ -565,6 +565,20 @@ public actor RecoveryRegistry {
         let staged = try review(envelope)
         return (staged, PaprikaCollection.legacyMatches(envelope.payload.records, saved: manifest.records.map(\.record)))
     }
+
+    /// Decide versions against the same manifest generation that apply() will check.
+    public func reviewRecipeVersions(_ envelope: ArchiveEnvelope) throws -> (RecoveryReview, Set<ArchiveIdentity>) {
+        let (staged, legacy) = try reviewPaprikaRecipes(envelope)
+        let tracked = staged.rows.filter { PaprikaCollection.isTracked($0.record) }
+        let byUID = Dictionary(grouping: tracked, by: { $0.record.id })
+        let paprikaChoices = byUID.values.flatMap { versions in
+            versions.filter { row in
+                row.disposition == .sibling || (row.disposition == .absent && (versions.count > 1 || legacy.contains(row.record.id)))
+            }.map(\.id)
+        }
+        return (staged, RecipePageReader.versionChoices(staged.rows, saved: manifest.records.map(\.record)).union(paprikaChoices))
+    }
+
     private func makeReview(_ envelope: ArchiveEnvelope, includePriorCopies: Bool = true) throws -> RecoveryReview {
         try ArchiveCodec.validate(envelope)
         let incoming = envelope.payload.records
