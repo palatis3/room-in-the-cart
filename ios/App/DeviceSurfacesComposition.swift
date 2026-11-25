@@ -79,9 +79,8 @@ import DeviceSurfaces
     }
     var privateAuthorized: Bool { active && hasAdultAuthority }
     private var hasAdultAuthority: Bool {
-        guard let access, access.unlocked, let household else { return false }
-        if let role = household.projection?.role, !["shopper", "organizer"].contains(role) { return false }
-        return !household.locked
+        guard let access, let household, household.projection?.grantId == nil else { return false }
+        return CapturePrivateIdentity.current(access: access, household: household) != nil
     }
     private var currentOwnRequestPersona: DeviceReminderPersona? {
         guard let household, household.projection?.role == "contributor", !household.locked else { return nil }
