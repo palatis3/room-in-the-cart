@@ -1,3 +1,5 @@
+import {readSharedWeekCosts} from './shared-week-costs.js';
+import {readRepeatWeek,startRepeatWeek,stopRepeatWeek,repeatWeekStart,repeatWeekStop} from './shared-repeat-week.js';
 import type {ClosedReview} from './closed-review.js';
 import {tripSubstitution} from './trip-substitutions.js';
 import {sharedPickingRoute} from './shared-picking.js';
@@ -629,6 +631,12 @@ export function createHTTPServer(options:HTTPOptions) {
           if(tail==='/meal-plan/changes'&&method==='POST')return mealChanges.propose(ctx,shopId,sharedMealChangeSchema.parse(payload));
           if(tail==='/meal-plan/changes/dismissals'&&method==='POST')return mealChanges.dismiss(ctx,shopId,sharedMealDismissSchema.parse(payload));
           if(tail==='/meal-plan'&&method==='GET')return mealMoves.read(ctx,shopId,url.searchParams.get('view')==='week');
+          if(tail==='/meal-plan/repeat-week/costs' && method==='GET'){
+            return readSharedWeekCosts(mealMoves,options.billing,ctx,shopId,uuid.parse(url.searchParams.get('planId')).toLowerCase());
+          }
+          if(tail==='/meal-plan/repeat-week'&&method==='GET')return readRepeatWeek(mealMoves,options.billing,ctx,shopId,url.searchParams.get('week')??'');
+          if(tail==='/meal-plan/repeat-week'&&method==='POST')return startRepeatWeek(repository,mealMoves,options.billing,ctx,shopId,repeatWeekStart.parse(payload));
+          if(tail==='/meal-plan/repeat-week/stop'&&method==='POST')return stopRepeatWeek(mealMoves,options.billing,ctx,shopId,repeatWeekStop.parse(payload));
           if(tail==='/meal-plan/planner'&&method==='PUT')return mealMoves.grant(ctx,shopId,grantChange.parse(payload));
           if(tail==='/meal-plan/dismissals'&&method==='POST')return mealMoves.dismiss(ctx,shopId,dismissMove.parse(payload));
           if(tail==='/meal-plan/proposals'&&method==='POST')return mealMoves.propose(ctx,shopId,moveRequest.parse(payload));
