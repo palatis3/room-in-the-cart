@@ -1171,6 +1171,22 @@ final class RoomInTheCartUITests: XCTestCase {
         assertSavedStatus("Saved on this iPhone")
     }
 
+    func testCurrencyMenuAcceptsEitherEdgeAtLargestSpanishText() {
+        launch(language: "es", contentSize: .accessibilityExtraExtraExtraLarge)
+        openEmptyComparison()
+        let picker = app.groceryCurrencyPicker("comparison.currency")
+        reveal(picker)
+        XCTAssertEqual(picker.label, "Moneda")
+        XCTAssertEqual(picker.value as? String, "Dólares estadounidenses (USD)")
+        XCTAssertGreaterThanOrEqual(picker.frame.height, 44)
+        picker.coordinate(withNormalizedOffset: CGVector(dx: 0.08, dy: 0.5)).tap()
+        app.selectGroceryCurrency(code: "MXN", label: "Pesos mexicanos (MXN)")
+        XCTAssertEqual(picker.value as? String, "Pesos mexicanos (MXN)")
+        picker.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        app.selectGroceryCurrency(code: "USD", label: "Dólares estadounidenses (USD)")
+        XCTAssertEqual(picker.value as? String, "Dólares estadounidenses (USD)")
+    }
+
     func testPesoComparisonReopensInEnglishAfterSpanishUSSelection() {
         launch(language: "es")
         openEmptyComparison()
