@@ -188,7 +188,9 @@ import LocalStore
         var basis = shop.basis; basis.branch = "Different store"
         try workspace.shops[0].updateBasis(basis, at: now)
         let stale = try evidence(workspace).priceChecks.joined()
-        XCTAssertFalse(stale.contains("Reviewed shelf")); XCTAssertTrue(stale.contains("stale"))
+        let expected = String(localized: "%@: previous package evidence is stale or conflicting; review the price again.", table: "DinnerRepeatEvidence")
+        XCTAssertFalse(stale.contains("Reviewed shelf"))
+        XCTAssertEqual(stale, String(format: expected, "Wraps"))
     }
 
     func testRecoveredNeedMapsExactFoodInsteadOfOriginalContributionOrMatchingName() throws {
@@ -203,7 +205,8 @@ import LocalStore
         let recovered = [meal.id: RepeatWeek.Recovery(meal: replacement, template: template)]
         let result = try evidence(workspace, recovered: recovered)
         XCTAssertEqual(result.stock.map(\.id), [foodID]); XCTAssertEqual(result.stock.first?.name, "Replacement rice")
-        XCTAssertTrue(result.priceChecks.first?.contains("confirmed food identity") == true)
+        let expected = String(localized: "%@: no price is linked to the confirmed food identity.", table: "DinnerRepeatEvidence")
+        XCTAssertEqual(result.priceChecks, [String(format: expected, "Replacement rice")])
         let rows = try candidates(workspace, recovered: recovered)
         XCTAssertThrowsError(try DinnerRepeatEvidence.build(candidates: rows, workspace: workspace, workspaceID: workspaceID,
             authorizedShopIDs: Set(workspace.shops.map(\.id)), targetShopID: XCTUnwrap(workspace.selectedShopID),

@@ -443,7 +443,7 @@ import HouseholdClient
         XCTAssertNil(model.pending); XCTAssertFalse(model.hasUnresolvedWrite); XCTAssertNil(model.selectedObservation)
         XCTAssertEqual(service.observationSends.count, 1)
         let state = await store.read(); XCTAssertTrue(state.pending.isEmpty); XCTAssertTrue(state.observations.isEmpty)
-        XCTAssertTrue(model.notice?.contains("does not undo") == true)
+        XCTAssertEqual(model.notice, HistoryCopy.text("The local retry was cleared after checking current access and record status. This does not undo a saved record or confirm the original result."))
     }
     func testStatusClearNeedsFreshAuthorityAndPreservesPrivateRetryOnDenial() async throws {
         let (model, service, store, _) = try await setup(); enterObservation(model); model.approved = true
