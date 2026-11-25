@@ -71,11 +71,14 @@ import XCTest
         let used = app.buttons["Used"]
         XCTAssertTrue(used.waitForExistence(timeout: 4) && used.isHittable, app.debugDescription)
         used.tap()
-        tap(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'cook.part.'")).firstMatch)
+        let partPicker = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'cook.part.'")).element
+        tapVisibleFormControl(partPicker.staticTexts["Choose a record type"], in: "Record cooking")
         tap(app.buttons["Food not tracked in this pantry"])
-        tap(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'cook.relation.'")).firstMatch)
+        let relationPicker = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'cook.relation.'")).element
+        tapVisibleFormControl(relationPicker.staticTexts["Review the food used"], in: "Record cooking")
         tap(app.buttons["The planned ingredient"])
-        tap(app.buttons["cook.leftoverChoice"]); tap(app.buttons["No leftovers"])
+        tapVisibleFormControl(app.buttons["cook.leftoverChoice"].staticTexts["Choose what remains"], in: "Record cooking")
+        tap(app.buttons["No leftovers"])
         tap(app.buttons["cook.review"])
         XCTAssertTrue(app.navigationBars["Confirm cooking"].waitForExistence(timeout: 10), app.debugDescription)
         tap(app.buttons["cook.confirm"])
