@@ -261,6 +261,7 @@ import XCTest
         XCTAssertEqual(household.label, "Fixture family")
         reveal(role, hitTarget: false)
         XCTAssertEqual(role.label, "Adult contributor")
+        XCTAssertEqual(element("household.invite.access").label, "You can send and track your own grocery requests for free.")
         let join = app.buttons["household.invite.join"]
         reveal(join, hitTarget: false)
         XCTAssertFalse(join.isEnabled)

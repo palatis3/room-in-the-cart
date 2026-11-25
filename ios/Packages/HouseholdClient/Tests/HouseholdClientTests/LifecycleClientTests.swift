@@ -92,6 +92,7 @@ extension HouseholdClientTests {
             valid.merging(["householdId": UUID().uuidString]) { _, new in new },
             valid.merging(["role": "editor"]) { _, new in new },
             valid.filter { $0.key != "grantId" },
+            valid.merging(["dinnerInviteId": UUID().uuidString]) { _, new in new },
             valid
         ]
         let stateLock = MockURLProtocol.installHandlerWithStateLock { request in
@@ -101,7 +102,7 @@ extension HouseholdClientTests {
             return (200, try JSONSerialization.data(withJSONObject: replies.removeFirst()))
         }
         _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456")
-        for _ in 0..<3 {
+        for _ in 0..<4 {
             do { _ = try await service.executeMembership(intent); XCTFail("Accepted a different invitation destination or access") }
             catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
         }

@@ -183,6 +183,7 @@ struct HouseholdSettingsView: View {
                             }
                         }
                     }
+                    if let lifecycle = model.lifecycle { HouseholdInvitedDinnerEntry(model: lifecycle, scope: projection) }
                     Section(ht("Connected household")) {
                         HouseholdPantryLink(household: model)
                         HouseholdMealPreferencesLink(household: model)

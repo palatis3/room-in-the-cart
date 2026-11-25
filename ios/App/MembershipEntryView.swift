@@ -19,6 +19,7 @@ enum HouseholdSettingsDestination: Hashable { case membership, adultSetup }
 struct MembershipEntryView: View {
     @ObservedObject var household: HouseholdModel
     var usesSettingsPath = false
+    var returnsToDinnerComparison = false
     @Environment(\.returnFromMembershipSettings) private var returnFromSettings
     @EnvironmentObject private var membership: MembershipCoordinator
     @Environment(\.dismiss) private var dismiss
@@ -30,7 +31,12 @@ struct MembershipEntryView: View {
             if !household.canOpenMembership || child?.presented == true {
                 Text(mtr("This view is unavailable.")).navigationTitle("")
             } else if let model = membership.model(for: household.membershipSession) {
-                MembershipView(model: model, household: household, onContinuePlanning: continuePlanning)
+                MembershipView(model: model, household: household, returnsToDinnerComparison: returnsToDinnerComparison,
+                               onContinuePlanning: continuePlanning)
+                    .onChange(of: model.hasPaidAccess) { before, after in
+                        if returnsToDinnerComparison, !before, after,
+                           membership.model(for: household.membershipSession) === model { dismiss() }
+                    }
                     .id(ObjectIdentifier(model))
             } else {
                 MembershipPage {
@@ -50,6 +56,7 @@ struct MembershipEntryView: View {
                     Divider()
                     MembershipFreeTools()
                     MembershipBenefits()
+                    MembershipSampleLink()
                     if household.membershipSession == nil {
                         Divider()
                         PrivateListSharingGuide()
@@ -98,12 +105,13 @@ struct MembershipEntryView: View {
     }
 
     private var freeButton: some View {
-        Button(mtr("Continue planning for free"), action: continuePlanning)
+        Button(returnsToDinnerComparison ? mtr("Return to dinner comparison") : mtr("Continue planning for free"), action: continuePlanning)
             .accessibilityIdentifier("membership.free")
     }
 
     private func continuePlanning() {
-        if let returnFromSettings { returnFromSettings() } else { dismiss() }
+        if returnsToDinnerComparison { dismiss() }
+        else if let returnFromSettings { returnFromSettings() } else { dismiss() }
     }
 }
 

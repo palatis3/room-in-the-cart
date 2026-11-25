@@ -2,6 +2,18 @@ import Foundation
 
 public struct MembershipReceipt: Codable, Equatable, Sendable {
     public let householdId: String; public let memberId: String; public let role: String; public let grantId: String?
+    public private(set) var dinnerInviteId: UUID? = nil
+}
+public struct InvitationDinnerTarget: Codable, Equatable, Sendable {
+    public let shopId: UUID
+    public let occurrenceId: UUID
+    public init(shopId: UUID, occurrenceId: UUID) { self.shopId = shopId; self.occurrenceId = occurrenceId }
+}
+public struct InvitedDinner: Decodable, Equatable, Sendable {
+    public let inviteId: UUID
+    public let shopId: UUID
+    public let occurrence: SharedMealOccurrence
+    public let expiresAt: String
 }
 public struct InvitationOffer: Codable, Equatable, Sendable {
     public enum Role: String, Codable, Sendable {
@@ -62,6 +74,7 @@ public struct MembershipIntent: Codable, Equatable, Identifiable, Sendable {
         case let ("editor", grant?) where UUID(uuidString: grant) != nil: offeredRole = .helperEdit
         default: throw ClientError.invalidResponse
         }
+        if receipt.dinnerInviteId != nil && offeredRole != .adultContributor { throw ClientError.invalidResponse }
         if let reviewed = draft.reviewedOffer, reviewed.role != offeredRole { throw ClientError.invalidResponse }
     }
     private static func validAlias(_ value: String) -> Bool { !value.isEmpty && value.count <= 80 }
@@ -180,6 +193,7 @@ public struct LifecyclePendingState: Codable, Equatable, Sendable {
     }
     public var membership: MembershipIntent?
     public var activation: Activation?
+    public fileprivate(set) var dinnerInvitation: Activation? = nil
     public var proposals: [HelperProposalIntent]
     public var reviewActions: [HelperReviewIntent]?
     public init(membership: MembershipIntent? = nil, activation: Activation? = nil, proposals: [HelperProposalIntent] = [], reviewActions: [HelperReviewIntent]? = nil) {
@@ -194,11 +208,20 @@ public actor LifecycleIntentStore {
         guard FileManager.default.fileExists(atPath: url.path) else { return .init() }
         return try JSONDecoder().decode(LifecyclePendingState.self, from: Data(contentsOf: url))
     }
+    public func completeActivation(_ activation: LifecyclePendingState.Activation) throws {
+        var state = try read()
+        guard state.activation == activation else { throw ClientError.cancelled }
+        state.activation = nil
+        state.dinnerInvitation = activation.receipt.dinnerInviteId == nil ? nil : activation
+        try write(state)
+    }
     /// Legacy lifecycle updates cannot replace review actions from an older snapshot.
     /// Review actions are changed only through the atomic, epoch-checked operations below.
     public func save(_ state: LifecyclePendingState) throws {
         var merged = state
-        merged.reviewActions = try read().reviewActions
+        let live = try read()
+        merged.reviewActions = live.reviewActions
+        merged.dinnerInvitation = live.dinnerInvitation
         try write(merged)
     }
     public func discardRejectedInvitation(_ intent: MembershipIntent) throws {
@@ -242,6 +265,8 @@ public actor LifecycleIntentStore {
         reviewGeneration = UUID()
         var state = try read()
         if state.activation?.subject == subject, state.activation?.receipt.householdId == householdID { state.activation = nil }
+        if state.dinnerInvitation?.subject == subject, state.dinnerInvitation?.receipt.householdId == householdID,
+           state.dinnerInvitation?.receipt.memberId == memberID { state.dinnerInvitation = nil }
         state.proposals.removeAll { $0.householdID == householdID && $0.memberID == memberID }
         state.reviewActions?.removeAll { $0.householdID == householdID && $0.memberID == memberID && $0.subject == subject }
         try write(state)
