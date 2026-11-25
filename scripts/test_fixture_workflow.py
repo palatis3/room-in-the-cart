@@ -12,6 +12,8 @@ class FixtureDependencyTests(unittest.TestCase):
         workflow, _, _ = parse_workflow(Path(__file__).resolve().parents[1] /
                                        ".github/workflows/ios-fixtures.yml")
         jobs = workflow["jobs"]
+        plan = next(step for step in jobs["fixture-plan"]["steps"] if step.get("id") == "plan")
+        self.assertEqual(plan["env"]["RITC_BITRISE_A3_ENABLED"], "${{ vars.RITC_BITRISE_A3_ENABLED }}")
         for profile in ("contributor", "dinner"):
             build_identity = ("ios-fixtures.yml", f"build-{profile}")
             test_identity = ("ios-fixtures.yml", f"{profile}-tests")

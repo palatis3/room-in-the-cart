@@ -164,7 +164,7 @@ def shard_members(profile, inventory):
     return groups
 
 
-def matrix(inventory=None, *, github_mac_only=False):
+def matrix(inventory=None, *, github_mac_only=False, a3_enabled=False):
     inventory = source_inventory(UI_SOURCES) if inventory is None else inventory
     groups = [(profile, shard, members) for profile in PROFILES
               for shard, (_, members) in shard_members(profile, inventory).items()]
@@ -174,7 +174,7 @@ def matrix(inventory=None, *, github_mac_only=False):
         return {"include": [{**row, "provider": "github"} for row in rows]}
     durations = json.loads(DURATIONS_PATH.read_text(encoding="utf-8"))
     seconds = [sum(estimated_test_seconds(members, durations).values()) for _, _, members in groups]
-    return {"include": with_bitrise_slots(rows, ("profile", "shard"), seconds)}
+    return {"include": with_bitrise_slots(rows, ("profile", "shard"), seconds, a3_enabled=a3_enabled)}
 
 
 def read_enabled_identifiers(configuration, profile, seen):

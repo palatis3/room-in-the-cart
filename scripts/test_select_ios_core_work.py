@@ -93,6 +93,7 @@ class SelectCoreWorkTests(unittest.TestCase):
         self.assertEqual(manual['options'], ['full', 'dinner'])
         self.assertNotIn('ios_scope', workflow['on']['workflow_call']['inputs'])
         step = next(s for s in workflow['jobs']['ios-build']['steps'] if s.get('id') == 'plan')
+        self.assertEqual(step['env']['RITC_BITRISE_A3_ENABLED'], '${{ vars.RITC_BITRISE_A3_ENABLED }}')
         self.assertEqual(step['env']['REQUESTED_IOS_SCOPE'],
                          "${{ github.event_name == 'workflow_dispatch' && inputs.ios_scope || 'full' }}")
         self.assertLess(step['run'].index('scripts/discover_ios_tests.py'), step['run'].index('scripts/select_ios_core_work.py'))
@@ -112,7 +113,7 @@ class SelectCoreWorkTests(unittest.TestCase):
             result = subprocess.run([sys.executable, str(ROOT / 'scripts/select_ios_core_work.py'),
                                      '--plan-dir', str(plan_dir), '--github-output', str(output)],
                                     env={**os.environ, 'GITHUB_EVENT_NAME': 'pull_request',
-                                         'REQUESTED_IOS_SCOPE': 'full'}, capture_output=True, text=True)
+                                         'REQUESTED_IOS_SCOPE': 'full', 'RITC_BITRISE_A3_ENABLED': ''}, capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
             outputs = dict(line.split('=', 1) for line in output.read_text().splitlines())
             self.assertEqual(outputs['model_count'], str(len(MODELS)))
@@ -132,13 +133,23 @@ class SelectCoreWorkTests(unittest.TestCase):
             result = subprocess.run([sys.executable, str(ROOT / 'scripts/select_ios_core_work.py'),
                                      '--plan-dir', str(plan_dir), '--github-output', str(output)],
                                     env={**os.environ, 'GITHUB_EVENT_NAME': 'pull_request',
-                                         'REQUESTED_IOS_SCOPE': 'full', 'IOS_PROVIDER': 'circleci'},
+                                         'REQUESTED_IOS_SCOPE': 'full', 'IOS_PROVIDER': 'circleci',
+                                         'RITC_BITRISE_A3_ENABLED': ''},
                                     capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
             outputs = dict(line.split('=', 1) for line in output.read_text().splitlines())
             self.assertEqual(json.loads(outputs['matrix'])['include'],
                              [row for row in consumers if row['shard'] not in ('ui-01', 'ui-02', 'ui-03')])
             self.assertEqual(outputs['model_count'], str(len(MODELS)))
+            enabled = subprocess.run([sys.executable, str(ROOT / 'scripts/select_ios_core_work.py'),
+                                      '--plan-dir', str(plan_dir), '--github-output', str(output)],
+                                     env={**os.environ, 'GITHUB_EVENT_NAME': 'pull_request', 'REQUESTED_IOS_SCOPE': 'full',
+                                          'RITC_BITRISE_A3_ENABLED': 'true'}, capture_output=True, text=True)
+            self.assertEqual(enabled.returncode, 0, enabled.stderr)
+            outputs = dict(line.split('=', 1) for line in output.read_text().splitlines())
+            a3_consumers = json.loads(outputs['matrix'])['include']
+            self.assertEqual([test_selection(row) for row in a3_consumers], [test_selection(row) for row in consumers])
+            self.assertEqual(sum(row['provider'] == 'bitrise-A3' for row in a3_consumers), 5)
             self.assertEqual({p.name: p.read_bytes() for p in plan_dir.iterdir()}, original)
 
     def test_circleci_consumer_checks_full_shard_membership_before_running_its_selection(self):

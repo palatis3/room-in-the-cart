@@ -70,6 +70,27 @@ class MacSlotMetadataTests(unittest.TestCase):
             with self.assertRaises(ValueError): with_bitrise_slots(bad, ('shard',), [1]*len(bad))
         with self.assertRaises(ValueError): with_bitrise_slots(rows, ('shard',), weights, first_pool='retired')
 
+    def test_optional_a3_uses_six_m2_and_six_shared_m4_lanes_without_changing_inventory(self):
+        enabled = fixture_matrix(a3_enabled=True)['include']
+        default = fixture_matrix()['include']
+        fields = ('profile', 'shard', 'macos_slot')
+        self.assertEqual([[row[k] for k in fields] for row in enabled],
+                         [[row[k] for k in fields] for row in default])
+        self.assertEqual({(r['provider'], r['pool_slot']) for r in enabled},
+                         {(f'bitrise-{p}', n) for p in ('A1', 'A2', 'A3')
+                          for n in range(6 if p == 'A3' else 3)})
+        self.assertEqual(fixture_matrix(github_mac_only=True, a3_enabled=True),
+                         fixture_matrix(github_mac_only=True))
+        # Longest first: each M4 assignment is followed by an M2 assignment
+        # until all twelve lanes have work, regardless of which M4 pool starts.
+        rows = [{'shard': str(index)} for index in range(12)]
+        for first in ('A1', 'A2'):
+            routed = with_bitrise_slots(rows, ('shard',), list(range(12, 0, -1)),
+                                        first_pool=first, a3_enabled=True)
+            self.assertEqual(routed[0]['provider'], 'bitrise-' + first)
+            self.assertEqual([(r['provider'], r['pool_slot']) for r in routed[1::2]],
+                             [('bitrise-A3', slot) for slot in range(6)])
+
     def test_all_three_planners_keep_complete_cases_and_emit_valid_slots(self):
         methods = [f'{UI_TARGET}/JourneyTests/test{i:02d}()' for i in range(10)]
         plan = make_plan(enumeration([MODEL, *methods]), DURATIONS, 10)

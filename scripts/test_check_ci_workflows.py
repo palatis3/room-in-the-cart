@@ -4,7 +4,7 @@ import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
-from check_ci_workflows import (A1_LABEL, A2_LABEL, A2_RUNNER, CORE_BUILD_JOB, RELEASE_BUILD_JOB,
+from check_ci_workflows import (A1_LABEL, A2_LABEL, A3_LABEL, A2_RUNNER, CORE_BUILD_JOB, RELEASE_BUILD_JOB,
                                 STOREKIT_JOB, PRODUCER_JOBS, FIXTURE_CONSUMER_RUNNER, FIXTURE_RUNNER, ROUTED_NATIVE_JOBS,
                                 POLICY, QUEUE_ERROR, bitrise_group, lint_workflows, parse_workflow, validate_workflows)
 
@@ -79,10 +79,14 @@ class WorkflowGuardTests(unittest.TestCase):
                   (canonical, 'pull_request', canonical, 'true')]
         cases += [(canonical, event, canonical, '') for event in ('pull_request_target', 'repository_dispatch', '')]
         for i, (repository, event, head, github_only) in enumerate(cases):
-            for provider in ('github', 'bitrise-A1', 'bitrise-A2', 'bitrise', 'bitrise-m4', 'unknown', 'bitrise-runner-more ci'):
+            provider_cases = [(provider, '') for provider in
+                              ('github', 'bitrise-A1', 'bitrise-A2', 'bitrise', 'bitrise-m4', 'unknown', 'bitrise-runner-more ci')]
+            provider_cases += [('bitrise-A3', value) for value in ('', 'false', 'true')]
+            for provider, a3 in provider_cases:
                 with self.subTest(repository=repository, event=event, head=head, github_only=github_only, provider=provider):
                     context = {'github.event.pull_request.head.repo.full_name': head, 'github.event_name': event,
-                               'vars.RITC_GITHUB_MAC_ONLY': github_only, 'github.repository': repository,
+                               'vars.RITC_GITHUB_MAC_ONLY': github_only, 'vars.RITC_BITRISE_A3_ENABLED': a3,
+                               'github.repository': repository,
                                'github.run_id': 1635, 'github.run_attempt': 2, 'matrix.locale': 'es',
                                'matrix.provider': provider, 'matrix.macos_slot': 2, 'matrix.pool_slot': 0,
                                'matrix.profile': 'contributor', 'matrix.shard': 'ui-03'}
@@ -90,6 +94,8 @@ class WorkflowGuardTests(unittest.TestCase):
                     self.assertEqual(evaluate(FIXTURE_RUNNER, context), A1_LABEL if trusted else 'xcode-27')
                     self.assertEqual(evaluate(A2_RUNNER, context), A2_LABEL if trusted else 'xcode-27')
                     runner = {'bitrise-A1': A1_LABEL, 'bitrise-A2': A2_LABEL}.get(provider, 'xcode-27')
+                    if provider == 'bitrise-A3' and a3 == 'true':
+                        runner = A3_LABEL
                     self.assertEqual(evaluate(FIXTURE_CONSUMER_RUNNER, context), runner if trusted else 'xcode-27')
                     groups = {}
                     for identity in ROUTED_NATIVE_JOBS:
@@ -99,6 +105,8 @@ class WorkflowGuardTests(unittest.TestCase):
                         native = fixed_groups.get(identity)
                         if not native and identity != core:
                             native = {'bitrise-A1': 'ritc-bitrise-a1-slot-0', 'bitrise-A2': 'ritc-bitrise-a2-slot-0'}.get(provider)
+                            if provider == 'bitrise-A3' and a3 == 'true':
+                                native = 'ritc-bitrise-a3-slot-0'
                         if trusted and native:
                             self.assertEqual(group, native)
                             continue
@@ -153,13 +161,13 @@ class WorkflowGuardTests(unittest.TestCase):
         # The StoreKit fixture still shares its assigned lane.
         self.assertEqual(POLICY[STOREKIT_JOB], 2)
 
-    def test_twelve_fixture_lanes_are_shared_and_disjoint_between_pools(self):
+    def test_fixture_lanes_are_shared_between_profiles_and_disjoint_between_pools(self):
         context = {'github.event.pull_request.head.repo.full_name': 'palatis3/room-in-the-cart',
                    'github.event_name': 'push', 'vars.RITC_GITHUB_MAC_ONLY': '',
                    'github.repository': 'palatis3/room-in-the-cart', 'github.run_id': 1,
-                   'github.run_attempt': 1, 'matrix.profile': 'contributor', 'matrix.shard': 'ui-01'}
+                   'github.run_attempt': 1, 'vars.RITC_BITRISE_A3_ENABLED': 'true', 'matrix.profile': 'contributor', 'matrix.shard': 'ui-01'}
         lanes = set()
-        for pool in ('A1', 'A2'):
+        for pool in ('A1', 'A2', 'A3'):
             for slot in range(6):
                 evaluated = set()
                 for identity in (('ios-fixtures.yml', 'contributor-tests'),
@@ -172,9 +180,9 @@ class WorkflowGuardTests(unittest.TestCase):
                     evaluated.add(eval(expression, {'__builtins__': {}}, {'format': str.format}))
                 self.assertEqual(evaluated, {f'ritc-bitrise-{pool.lower()}-slot-{slot}'})
                 lanes.update(evaluated)
-        self.assertEqual(len(lanes), 12)
-        self.assertEqual({p: sum(f'bitrise-{p}-' in lane for lane in lanes) for p in ('a1', 'a2')},
-                         {'a1': 6, 'a2': 6})
+        self.assertEqual(len(lanes), 18)
+        self.assertEqual({p: sum(f'bitrise-{p}-' in lane for lane in lanes) for p in ('a1', 'a2', 'a3')},
+                         {'a1': 6, 'a2': 6, 'a3': 6})
 
     def test_provider_and_admission_route_cannot_escape_inventory(self):
         self.path = Path(self.temp.name) / FIXTURE_JOB[0]
@@ -203,6 +211,7 @@ class WorkflowGuardTests(unittest.TestCase):
                         consumer.replace(core_group, 'ritc-macos-slot-${{ matrix.macos_slot }}'),
                         consumer.replace(core_group, 'ritc-bitrise-a2-slot-2'),
                         consumer.replace("matrix.provider == 'bitrise-A2'", 'true'),
+                        consumer.replace("vars.RITC_BITRISE_A3_ENABLED == 'true'", 'true'),
                         consumer.replace(core_group, bitrise_group(FIXTURE_JOB, POLICY[FIXTURE_JOB])),
                         consumer.replace('github.run_attempt', 'github.run_id'),
                         consumer.replace('matrix.shard', 'matrix.macos_slot'),

@@ -59,11 +59,13 @@ def main():
                 path.unlink()
             write_plan(selected, args.plan_dir)
         # The producer keeps its model work. Preserve all UI rows and balance
-        # their existing estimates across A1/A2; GitHub routing remains in YAML.
+        # their existing estimates across enabled pools; GitHub routing remains in YAML.
         consumers = [dict(row) for row in selected['include'] if row['shard'] != 'models']
         seconds = [selected['shards'][row['shard']].get('estimated_seconds',
                    len(selected['shards'][row['shard']]['test_identifiers']) * 300) for row in consumers]
-        consumers = with_bitrise_slots(consumers, ('shard',), seconds, first_pool='A2')
+        consumers = with_bitrise_slots(
+            consumers, ('shard',), seconds, first_pool='A2',
+            a3_enabled=os.environ.get('RITC_BITRISE_A3_ENABLED') == 'true')
         provider = os.environ.get('IOS_PROVIDER', 'github')
         if provider == 'circleci':
             delegated = {'ui-01', 'ui-02', 'ui-03'}
