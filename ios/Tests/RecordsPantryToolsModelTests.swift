@@ -189,6 +189,57 @@ import RecordArchive
         try await f.worker.discardExport(package)
     }
 
+    func testEncryptedRecordsAndPantryRestoreAsSeparateCopies() async throws {
+        let f = try await fixture()
+        let ledger = try LedgerStore(url: f.directory.appendingPathComponent("ledger.sqlite"), inventoryProjectionsEnabled: true)
+        f.cleanup.track(ledger)
+        struct LedgerDocument: Encodable { let formatVersion = 1; let workspace: LedgerWorkspace }
+        let shop = ShoppingLedger(title: "Records-only grocery marker")
+        let payload = try RecordsNativeCodec.canonical(LedgerDocument(workspace: .init(shops: [shop], selectedShopID: shop.id)))
+        let original = try await ledger.save(payload: payload, expectedRevision: 0, operationID: UUID(), savedAt: now)
+        let record = ArchiveRecord(id: shop.id.uuidString, origin: "ledger/" + ledger.workspaceID.uuidString,
+            revision: ArchiveCodec.digest(payload), kind: .ledger, title: shop.title,
+            savedAtMilliseconds: ArchiveCodec.milliseconds(now), nativePayload: payload)
+        let archive = try ArchiveCodec.make(records: [record], kind: .personalRecovery, origin: "local", revision: record.revision)
+        let encrypted = try EncryptedArchive.seal(archive, key: key)
+        let reopened = try EncryptedArchive.open(encrypted, key: key)
+        let imported = try await f.registry.apply(f.registry.review(reopened))
+        let saved = try XCTUnwrap(imported.records.first)
+        let recordsFolder = f.directory.appendingPathComponent("record-copies").appendingPathComponent(saved.id)
+        let independent = try await RecordsRecoveryCapture.openLedger(copy: saved, directory: recordsFolder, authorize: { true })
+        f.cleanup.track(independent.store)
+        let copy = try await independent.store.save(payload: XCTUnwrap(saved.record.nativePayload), expectedRevision: 0,
+                                                   operationID: UUID(), savedAt: now)
+        XCTAssertEqual(try RecordsNativeCodec.ledger(copy.payload).shops.map(\.title), [shop.title])
+        XCTAssertNotEqual(independent.scope.workspaceID, ledger.workspaceID)
+        let pantryBefore = try await f.registry.listPantry()
+        XCTAssertTrue(pantryBefore.isEmpty)
+
+        let package = try await f.worker.encryptedExport(f.handle, key: key)
+        let reader = try PantryArchiveWorker(root: f.directory.appendingPathComponent("pantry-import"))
+        let prepared = try await reader.prepareImport(url: package.url, key: key)
+        let review = try await f.registry.reviewPantry(prepared.reference)
+        let pantryCopy = try await reader.applyImport(prepared, review: review, registry: f.registry, now: now)
+        let start = try await f.registry.beginPantryMaterialization(pantryCopy)
+        let coordinator = try PantryRecoveryCoordinator(root: f.directory.appendingPathComponent("pantry-copies"),
+            worker: reader, gate: PantryMutationGate(), protectedWorkspaceIDs: { [f.store.workspaceID] },
+            authorize: { _, _ in true })
+        let opened = try await coordinator.create(copyID: pantryCopy.id, reference: prepared.handle.reference, at: now)
+        f.cleanup.track(opened.store)
+        _ = try await f.registry.finishPantryMaterialization(start.copy, workspaceID: opened.store.workspaceID)
+        XCTAssertEqual(opened.current.lots.map(\.name), ["Milk"])
+        XCTAssertEqual(Set([ledger.workspaceID, f.store.workspaceID, independent.scope.workspaceID, opened.store.workspaceID]).count, 4)
+        let records = try await f.registry.refreshList()
+        let pantry = try await f.registry.listPantry()
+        XCTAssertEqual(records.map(\.id), [saved.id])
+        XCTAssertEqual(pantry.map(\.id), [pantryCopy.id])
+        let liveLedger = try await ledger.load(), livePantry = try await f.store.inventoryState()
+        XCTAssertEqual(liveLedger, original)
+        XCTAssertEqual(livePantry.revision, f.handle.descriptor.inventoryRevision)
+        try await reader.discardImport(prepared, registry: f.registry)
+        try await f.worker.discardExport(package)
+    }
+
     func testInvalidationDuringDependencyAwaitCannotPublishOrApplyAnImport() async throws {
         let f = try await fixture(), package = try await f.worker.encryptedExport(f.handle, key: key)
         let started = expectation(description: "Dependency validation suspended")
