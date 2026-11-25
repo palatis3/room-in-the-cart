@@ -62,6 +62,13 @@ import XCTest
             tap(app.buttons[spanish ? "Membresía del hogar" : "Household membership"])
             tap(app.buttons["membership.sample"])
             let subtotal = element("membership.sample.subtotal")
+            let annualTerms = element("membership.sample.annualTerms")
+            XCTAssertTrue(subtotal.waitForExistence(timeout: 8))
+            XCTAssertTrue(annualTerms.waitForExistence(timeout: 8))
+            XCTAssertFalse(subtotal.frame.isEmpty)
+            XCTAssertTrue(app.windows.firstMatch.frame.contains(subtotal.frame))
+            XCTAssertLessThanOrEqual(subtotal.frame.maxY, annualTerms.frame.minY,
+                "Show the whole known subtotal above the annual offer before the shopper scrolls.")
             reveal(subtotal)
             let tacos = subtotal.label + (subtotal.value as? String ?? "")
             tap(app.buttons[spanish ? "Sopa de tortilla" : "Tortilla soup"])
