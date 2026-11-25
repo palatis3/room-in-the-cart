@@ -1,7 +1,7 @@
 import { randomUUID, createHash } from 'node:crypto';
 import { z } from 'zod';
 import { digest, type Database, type Transaction } from '../database.js';
-import { ServiceError, accessEnded, invalid, refresh } from '../errors.js';
+import { ServiceError, accessEnded, invalid, refresh, unavailable } from '../errors.js';
 import type { AppleBillingGateway, NotificationDestinations, ReviewBilling, VerifiedAppleTransaction } from './apple.js';
 import {
   billingUnavailable, bindingConflict, effectiveStatus, hasPaidSeat, supersedes, validityEnd,
@@ -172,13 +172,14 @@ export class BillingService {
     const snapshot = await this.snapshot(ctx);
     if (!hasPaidSeat(snapshot,ctx.member.member_id,ctx.now)) throw new ServiceError(403,'membership_inactive','Use the Free manual path or manage named adult seats.');
   }
-  async notification(pool: Database, signedPayload: string, destination: 'primary' | 'reviewSandbox' = 'primary'): Promise<{ accepted: true }> {
+  async notification(pool: Database, signedPayload: string, destination: 'primary' | 'reviewSandbox' = 'primary', reviewHousehold?: string): Promise<{ accepted: true }> {
     const gateway = destination === 'reviewSandbox' ? this.review?.sandbox : this.apple;
     const verifier = (destination === 'reviewSandbox' ? this.notifications?.sandbox : this.notifications?.primary) ?? gateway;
     if (!verifier) throw billingUnavailable();
     const notification = await verifier.verifyNotification(signedPayload);
     if (notification.kind === 'TEST') return { accepted: true };
     if (notification.kind === 'RESCIND_CONSENT') {
+      if (reviewHousehold) throw unavailable();
       await pool.query(`INSERT INTO ritc.apple_consent_notification(environment, notification_id, signed_at)
         VALUES ($1,$2,$3) ON CONFLICT DO NOTHING`, [notification.environment, notification.notificationID, new Date(notification.signedAt)]);
       return { accepted: true };
@@ -195,6 +196,7 @@ export class BillingService {
       if (!account) throw new ServiceError(503,'billing_context_pending','Retry notification delivery.');
       // The verified token identifies the household. Only that household's configured
       // Apple environment may reconcile a purchase, even before its first delivery.
+      if (reviewHousehold && account.household_id !== reviewHousehold) throw unavailable();
       if (this.gateway(account.household_id) !== gateway) throw bindingConflict();
       const current = await gateway.current(transaction.originalTransactionID);
       if (current.originalTransactionID !== transaction.originalTransactionID || current.appAccountToken !== transaction.appAccountToken) throw bindingConflict();

@@ -1,3 +1,4 @@
+import {ClosedReview} from './closed-review.js';
 import {tripConfiguration} from './trip-substitutions.js';
 import {adultPickupConfiguration} from './adult-pickup.js';
 import {moderationConfiguration} from './moderation.js';
@@ -101,7 +102,8 @@ export async function createRuntime(environment: NodeJS.ProcessEnv = process.env
     const receiptAssistance = ReceiptAssistance.configured(environment);
     const voiceAssistance = VoiceAssistance.configured(environment, receiptAssistance?.budget);
     const { primary, review, notifications } = appleGatewaysFromEnvironment(environment);
-    const server = createHTTPServer({ ...(voiceAssistance ? {voiceAssistance} : {}), repository, verifier, billing: new BillingService(primary, review, notifications),
+    const closedReview = ClosedReview.configured(environment);
+    const server = createHTTPServer({ ...(closedReview ? {closedReview} : {}), ...(voiceAssistance ? {voiceAssistance} : {}), repository, verifier, billing: new BillingService(primary, review, notifications),
       privacy,guardian:guardian.service, ...(receiptAssistance ? { receiptAssistance } : {}),
       ...(webOrigin ? { webOrigin } : {}), ...(browserAuth ? { browserAuth } : {}), ...(clientAddress ? { clientAddress } : {}) });
     server.requestTimeout = 15_000;

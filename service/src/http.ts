@@ -1,3 +1,4 @@
+import type {ClosedReview} from './closed-review.js';
 import {tripSubstitution} from './trip-substitutions.js';
 import {sharedPickingRoute} from './shared-picking.js';
 import {lastCallRoute,productReferenceRoute} from './adult-pickup.js';
@@ -51,7 +52,7 @@ import {privacyHTTPCall,type PrivacyCall} from './privacy-call.js';
 import {GuardianEnrollmentService,guardianCreateSchema,childDeletionReviewSchema,manualChildDeletionSchema,guardianActionSchema,guardianConsentSchema,guardianInvitationSchema,guardianConfirmSchema,childClaimSchema,childFinishSchema,childAuthStartSchema,childNativeStartSchema,childNativeAdmitSchema} from './guardian.js';
 import {viewReplacementSchema,proposalResolutionSchema,householdCreateSchema,inviteCreateSchema,invitePreviewSchema,inviteRedeemSchema,viewCreateSchema,viewUpdateSchema,proposalSchema,revocationSchema, parseCommand,previewSchema,uuid } from './contracts.js';
 import { SharedFallbackRegistry } from './shared-fallback-registry.js';
-export interface HTTPOptions { repository:HouseholdRepository; receiptAssistance?:ReceiptAssistance; voiceAssistance?:VoiceAssistance; verifier?:IdentityVerifier; webOrigin?:string; maxRequestsPerMinute?:number; billing?:BillingService; browserAuth?:BrowserAuthService; privacy?:PrivacyService; guardian?:GuardianEnrollmentService; clientAddress?:(request:IncomingMessage)=>string|undefined }
+export interface HTTPOptions { closedReview?:ClosedReview; repository:HouseholdRepository; receiptAssistance?:ReceiptAssistance; voiceAssistance?:VoiceAssistance; verifier?:IdentityVerifier; webOrigin?:string; maxRequestsPerMinute?:number; billing?:BillingService; browserAuth?:BrowserAuthService; privacy?:PrivacyService; guardian?:GuardianEnrollmentService; clientAddress?:(request:IncomingMessage)=>string|undefined }
 async function rawBody(req:IncomingMessage,maxBytes=65_536):Promise<Buffer> {
   if(!/^application\/json(?:\s*;|$)/i.test(req.headers['content-type']??''))throw new ServiceError(415,'json_required','Send a JSON command.');
   const chunks:Buffer[]=[];let size=0;
@@ -107,6 +108,7 @@ export function createHTTPServer(options:HTTPOptions) {
     const withinCall=<T>(work:()=>Promise<T>):Promise<T>=>privacyCall?privacyCall.run(work):work();
     try {
       const method=req.method??'GET',url=new URL(req.url??'/','https://service.invalid');
+      options.closedReview?.checkRequest(method,url.pathname,Boolean(req.headers.authorization));
       if(url.pathname.startsWith('/v1/privacy/')||/^\/v1\/households\/[^/]+\/guardian\/child-account-deletions(?:\/(?:review|manual-reviews))?$/.test(url.pathname)||method==='POST'&&/^\/v1\/households\/[^/]+\/exit$/.test(url.pathname))privacyCall=privacyHTTPCall(req,res,correlationId);
       if(req.headers.origin&&req.headers.origin!==options.webOrigin)throw new ServiceError(403,'origin_denied','Use the configured application origin.');
       if(url.pathname==='/health'&&method==='GET'){send(200,{service:'room-in-the-cart',status:'running'});return;}
@@ -120,7 +122,7 @@ export function createHTTPServer(options:HTTPOptions) {
       if(method==='POST' && options.billing && ['/v1/apple/notifications','/v1/apple/notifications/sandbox'].includes(url.pathname)){
         const input = billingNotificationSchema.parse(await body(req,262_144));
         const destination = url.pathname.endsWith('/sandbox') ? 'reviewSandbox' : 'primary';
-        send(200,await options.billing.notification(repository.pool,input.signedPayload,destination));
+        send(200,await options.billing.notification(repository.pool,input.signedPayload,destination,options.closedReview?.householdId));
         return;
       }
       if(url.pathname==='/v1/guardian/availability'&&method==='GET'){
@@ -168,6 +170,7 @@ export function createHTTPServer(options:HTTPOptions) {
         const match=/^Bearer ([A-Za-z0-9_.-]+)$/.exec(authorization);
         if(!match)throw new ServiceError(401,'session_needed','Authenticate again.');
         const identity=await withinCall(()=>verifier.verify(match[1]!));
+        options.closedReview?.checkSubject(identity.subject);
         auth={identity,...(typeof req.headers['x-device-token']==='string'?{deviceToken:req.headers['x-device-token']}:{}),...(req.headers['x-view-grant-id']!==undefined?{viewGrantId:uuid.parse(req.headers['x-view-grant-id'])}:{}),...(req.headers['x-shop-id']!==undefined?{selectedShopId:uuid.parse(req.headers['x-shop-id'])}:{})};
       }else {
         if(browserCookie&&options.browserAuth){try{browserIdentity=await withinCall(()=>options.browserAuth!.authenticate(browserCookie,invitationPreview?'preview':'current'));auth={identity:browserIdentity.identity};}catch(error){if(!(error instanceof ServiceError)||error.code!=='session_needed')throw error; if(url.pathname!=='/v1/session'||method!=='GET')throw error;}}
@@ -228,15 +231,18 @@ export function createHTTPServer(options:HTTPOptions) {
       if(invitationPreview){
         const input=invitePreviewSchema.safeParse(await body(req));
         if(!input.success)throw unavailable();
+        options.closedReview?.checkHousehold(input.data.token.split('.')[0]!);
         if(!session&&auth.viewGrantId){
           const scope=uuid.safeParse(req.headers['x-household-id']);
           if(!scope.success)throw unavailable();
+          options.closedReview?.checkHousehold(scope.data);
           await repository.authorized(scope.data,auth,async()=>undefined,true);
         }
         send(200,await lifecycle.previewInvite(auth.identity,input.data));return;
       }
       if(url.pathname==='/v1/invites/redeem'&&method==='POST'){
         const review=inviteRedeemSchema.parse(await body(req));
+        options.closedReview?.checkHousehold(review.token.split('.')[0]!);
         const language=req.headers['accept-language']?.toLowerCase()==='es'?'es':'en';
         send(200,await lifecycle.redeem(auth.identity,review,language));return;
       }
@@ -269,8 +275,12 @@ export function createHTTPServer(options:HTTPOptions) {
           throw new ServiceError(404,'unavailable','Return to your current workspace.');
         }));return;
       }
-      if(url.pathname==='/v1/me/workspaces'&&method==='GET'){send(200,await repository.workspaces(auth.identity));return;}
-      if(url.pathname==='/v1/billing/verify'&&method==='POST'&&options.billing){const input=billingVerifySchema.parse(await body(req,262_144));if(session&&session.householdId!==input.householdId)throw accessEnded();send(200,await repository.authorized(input.householdId,auth,ctx=>options.billing!.verify(ctx,input.signedTransactionInfo)));return;}
+      if(url.pathname==='/v1/me/workspaces'&&method==='GET'){
+        const {workspaces}=await repository.workspaces(auth.identity);
+        const reviewHousehold=options.closedReview?.householdId;
+        send(200,{workspaces:reviewHousehold ? workspaces.filter(w=>w.householdId===reviewHousehold) : workspaces});return;
+      }
+      if(url.pathname==='/v1/billing/verify'&&method==='POST'&&options.billing){const input=billingVerifySchema.parse(await body(req,262_144));options.closedReview?.checkHousehold(input.householdId);if(session&&session.householdId!==input.householdId)throw accessEnded();send(200,await repository.authorized(input.householdId,auth,ctx=>options.billing!.verify(ctx,input.signedTransactionInfo)));return;}
       const match=/^\/v1\/households\/([^/]+)(.*)$/.exec(url.pathname);
       if(!match)throw new ServiceError(404,'unavailable','Return to your current workspace.');
       const householdId=uuid.parse(match[1]),path=match[2]!;
@@ -433,7 +443,7 @@ export function createHTTPServer(options:HTTPOptions) {
         if(path==='/members'&&method==='GET')return lifecycle.members(ctx);
         if(path==='/invites'&&method==='GET')return lifecycle.invites(ctx);
         if(path==='/views'&&method==='GET')return lifecycle.views(ctx);
-        if(path==='/invites'&&method==='POST')return lifecycle.invite(ctx,inviteCreateSchema.parse(payload));
+        if(path==='/invites'&&method==='POST')return lifecycle.invite(ctx,inviteCreateSchema.parse(payload),options.closedReview?.endsAt);
         if(path==='/views'&&method==='POST')return lifecycle.createView(ctx,viewCreateSchema.parse(payload));
         if(path==='/revocations'&&method==='POST')return lifecycle.revoke(ctx,revocationSchema.parse(payload));
         if(path==='/guardian/notice'&&method==='GET'){if(ctx.member.kind!=='adult'||ctx.viewGrantId)throw accessEnded();return guardian.notice(z.enum(['en','es']).parse(url.searchParams.get('language')??'en'));}
