@@ -89,6 +89,7 @@ struct GroceryWindow: View {
     @StateObject private var pickup = PickupModel(mutationGate: PrivatePantryRuntime.mutationGate, usesLivePantry: true)
     @StateObject private var household: HouseholdModel
 
+    @State private var invitedDinner: InvitedDinnerLink?
     private let approvedURL: Binding<URL?>?
     init(notificationDelegate: SurfaceNotificationDelegate, household: HouseholdModel? = nil, approvedURL: Binding<URL?>? = nil) {
         self.approvedURL = approvedURL
@@ -140,6 +141,18 @@ struct GroceryWindow: View {
             .environment(\.pickupLedger, ledger)
             .environment(\.offersDuplicateAssistance, true)
             .environment(\.privatePantryRetry, pantryRetry)
+            .sheet(item: $invitedDinner) { link in
+                if !guardianChild.presented {
+                    NavigationStack {
+                        InvitedDinnerLanding(household: household, link: link)
+                            .toolbar {
+                                ToolbarItem(placement: .cancellationAction) {
+                                    Button(ht("Close")) { invitedDinner = nil }
+                                }
+                            }
+                    }
+                }
+            }
             .environmentObject(model)
             .environmentObject(ledger).environmentObject(pickup)
             .environmentObject(household).environmentObject(access)
@@ -168,7 +181,9 @@ struct GroceryWindow: View {
             }
             .modifier(GroceryURLDelivery(approvedURL: approvedURL) { url in
                 guard !guardianChild.presented else { return }
-                navigation.preferIncomingLink(); surfaces.handle(url: url)
+                if let link = InvitedDinnerLink(url: url, scheme: Bundle.main.object(forInfoDictionaryKey: SurfaceInfo.schemeKey) as? String) {
+                    invitedDinner = link
+                } else { navigation.preferIncomingLink(); surfaces.handle(url: url) }
             })
             .sheet(item: Binding(get: { scenePhase == .active && !guardianChild.presented ? surfaces.destination : nil },
                                  set: { surfaces.destination = $0 })) { destination in
@@ -195,9 +210,13 @@ struct GroceryWindow: View {
                 await model.renewWhileActive(renewal)
             }
             .task(id: pantryOpenScope) { await openPrivatePantry(pantryOpenScope) }
+            .onChange(of: household.joinedDinnerDestination) { _, invite in
+                if !guardianChild.presented, let invite { invitedDinner = InvitedDinnerLink(id: invite) }
+            }
             .onChange(of: household.deviceReminderPersona) { _, _ in surfaces.scopeChanged() }
             .onChange(of: guardianChild.presented) { _, childActive in
                 if childActive {
+                    invitedDinner = nil
                     navigation.suspend()
                     guardianChild.enforcePrivacyBoundary(adult: household, access: access, surfaces: surfaces)
                 }

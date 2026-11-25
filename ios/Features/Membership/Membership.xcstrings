@@ -1699,23 +1699,6 @@
         }
       }
     },
-    "Plan repeat weeks and compare dinner combinations using your own prices. Up to two named adults can plan.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Plan repeat weeks and compare dinner combinations using your own prices. Up to two named adults can plan."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Repite planes semanales y compara combinaciones de cenas con los precios que ingreses. Pueden planificar hasta dos adultos designados."
-          }
-        }
-      }
-    },
     "Purchase canceled.": {
       "extractionState": "manual",
       "localizations": {
@@ -1916,23 +1899,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Puedes seguir enviando tus propias solicitudes autorizadas y planificando por tu cuenta."
-          }
-        }
-      }
-    },
-    "You entered %@ for rice. Beans still need a price. The comparison shows the rice cost and leaves the full dinner total open.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You entered %@ for rice. Beans still need a price. The comparison shows the rice cost and leaves the full dinner total open."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ingresaste %@ para el arroz. Aún falta el precio de los frijoles. La comparación muestra el costo del arroz y deja pendiente el total de la cena."
           }
         }
       }
@@ -2222,6 +2188,363 @@
           "stringUnit": {
             "state": "translated",
             "value": "El inicio de sesión por correo no está disponible. Para restaurar una compra, usa la cuenta de la persona adulta que la hizo si ya está guardada en este iPhone."
+          }
+        }
+      }
+    },
+    "Save dinner rotations and compare what two plans put on your shopping list. Household includes up to two named adult planners.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save dinner rotations and compare what two plans put on your shopping list. Household includes up to two named adult planners."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guarda rotaciones de cenas y compara lo que cada plan agrega a tu lista de compras. Hogar incluye hasta dos lugares de planificación para personas adultas."
+          }
+        }
+      }
+    },
+    "Compare two sample dinners": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare two sample dinners"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparar dos cenas de ejemplo"
+          }
+        }
+      }
+    },
+    "Dinner for two. Four tortillas are on hand. Keep one for each of tomorrow’s two lunches.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dinner for two. Four tortillas are on hand. Keep one for each of tomorrow’s two lunches."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cena para dos. Hay cuatro tortillas en casa. Aparta una para cada uno de los dos almuerzos de mañana."
+          }
+        }
+      }
+    },
+    "These sample prices and groceries are only for this comparison.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These sample prices and groceries are only for this comparison."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estos precios y productos de ejemplo solo se usan en esta comparación."
+          }
+        }
+      }
+    },
+    "Sample grocery currency": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sample grocery currency"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moneda de los productos de ejemplo"
+          }
+        }
+      }
+    },
+    "Dinner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cena"
+          }
+        }
+      }
+    },
+    "Tacos": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tacos"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tacos"
+          }
+        }
+      }
+    },
+    "Tortilla soup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tortilla soup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sopa de tortilla"
+          }
+        }
+      }
+    },
+    "Soup uses four tortillas and a carton of broth.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Soup uses four tortillas and a carton of broth."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La sopa lleva cuatro tortillas y un envase de caldo."
+          }
+        }
+      }
+    },
+    "Tacos use eight tortillas.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tacos use eight tortillas."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los tacos llevan ocho tortillas."
+          }
+        }
+      }
+    },
+    "Tortilla packs of four": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tortilla packs of four"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paquetes de cuatro tortillas"
+          }
+        }
+      }
+    },
+    "%lld × %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld × %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld × %@"
+          }
+        }
+      }
+    },
+    "One carton of broth": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One carton of broth"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un envase de caldo"
+          }
+        }
+      }
+    },
+    "Beans": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beans"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frijoles"
+          }
+        }
+      }
+    },
+    "Price missing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price missing"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falta el precio"
+          }
+        }
+      }
+    },
+    "Known grocery subtotal": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Known grocery subtotal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subtotal con precios conocidos"
+          }
+        }
+      }
+    },
+    "The soup basket costs %@ less for the priced items. Both baskets still need a price for beans.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The soup basket costs %@ less for the priced items. Both baskets still need a price for beans."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los productos con precio de la canasta para la sopa cuestan %@ menos. En ambas canastas falta el precio de los frijoles."
+          }
+        }
+      }
+    },
+    "The sample could not be calculated.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The sample could not be calculated."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo calcular el ejemplo."
+          }
+        }
+      }
+    },
+    "Return to dinner comparison": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Return to dinner comparison"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a la comparación de cenas"
+          }
+        }
+      }
+    },
+    "Household · %@ per year for up to two named adult planners": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household · %@ per year for up to two named adult planners"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hogar · %@ al año para hasta dos personas adultas con un lugar de planificación asignado"
+          }
+        }
+      }
+    },
+    "Household Annual includes up to two named adult planners.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household Annual includes up to two named adult planners."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El plan anual Hogar incluye hasta dos lugares de planificación para personas adultas."
           }
         }
       }

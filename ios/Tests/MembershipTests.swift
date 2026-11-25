@@ -7,6 +7,15 @@ import StoreKit
     let now = Date(timeIntervalSince1970: 1_800_000_000)
     let context = MembershipContext(purchaserID: "adult-one", purchaserName: "Mia", householdID: "household-one", householdName: "Home", appAccountToken: UUID(uuidString: "33333333-3333-4333-8333-333333333333")!)
 
+    func testDinnerHandoffAcceptsOnlyAnOpaqueInvitationIDForThisApp() throws {
+        let id = UUID().uuidString.lowercased()
+        let route = "roominthecart://invitation-dinner/" + id
+        XCTAssertEqual(InvitedDinnerLink(url: try XCTUnwrap(URL(string: route)), scheme: "roominthecart")?.id.uuidString.lowercased(), id)
+        for altered in [route + "?dinner=tacos", route + "#detail", route + "/", route.replacingOccurrences(of: "roominthecart:", with: "https:")] {
+            XCTAssertNil(InvitedDinnerLink(url: try XCTUnwrap(URL(string: altered)), scheme: "roominthecart"))
+        }
+    }
+
     func snapshot(status: MembershipStatus = .active, revision: Int = 1, household: String = "household-one", seats: [MembershipSeat]? = nil) -> MembershipSnapshot {
         MembershipSnapshot(householdID: household, purchaserID: context.purchaserID, revision: revision, status: status,
             expiresAt: status == .grace ? now.addingTimeInterval(-60) : now.addingTimeInterval(3600),

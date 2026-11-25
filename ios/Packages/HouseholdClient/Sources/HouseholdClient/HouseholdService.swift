@@ -858,11 +858,24 @@ public actor HouseholdService {
         let start = generation; try await authorizeAdmin(); guard start == generation else { throw ClientError.cancelled }
         return try await perform("members", method: "GET")
     }
-    public func createAdultInvitation(expiresInHours: Int) async throws -> IssuedInvitation {
+    public func createAdultInvitation(expiresInHours: Int, dinner: InvitationDinnerTarget? = nil) async throws -> IssuedInvitation {
         guard (1...168).contains(expiresInHours) else { throw ClientError.configuration }
         let start = generation; try await authorizeAdmin(); guard start == generation else { throw ClientError.cancelled }
-        struct Input: Encodable { let kind = "adult_contributor"; let expiresInHours: Int }
-        return try await perform("invites", method: "POST", body: encoded(Input(expiresInHours: expiresInHours)))
+        struct Input: Encodable { let kind = "adult_contributor"; let expiresInHours: Int; let dinner: InvitationDinnerTarget? }
+        return try await perform("invites", method: "POST", body: encoded(Input(expiresInHours: expiresInHours, dinner: dinner)))
+    }
+    public func invitedDinner(_ invite: UUID, scope: HouseholdBootstrap) async throws -> InvitedDinner {
+        let start = generation
+        let live = try await bootstrap()
+        guard generation == start, scope == live, live.enrolled, live.grantId == nil,
+              live.capabilities.contains("meal_proposals"), let shop = live.shopId.flatMap(UUID.init(uuidString:))
+        else { throw ClientError.accessEnded }
+        let value: InvitedDinner = try await perform("invites/\(invite.uuidString.lowercased())/dinner", method: "GET")
+        guard generation == start, value.inviteId == invite, value.shopId == shop,
+              value.occurrence.revision > 0, let expiry = HistoryValidation.date(value.expiresAt), expiry > Date()
+        else { throw ClientError.invalidResponse }
+        try value.occurrence.meal.validatePlanning()
+        return value
     }
     public func managedInvitations() async throws -> ManagedInvitations {
         let start = generation; try await authorizeAdmin(); guard start == generation else { throw ClientError.cancelled }

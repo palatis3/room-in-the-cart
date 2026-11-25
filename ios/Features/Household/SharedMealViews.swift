@@ -288,6 +288,19 @@ struct SharedMealMovesView: View {
                 if plan.shopper {
                     Section(ht("Meal planning access")) {
                         Text(ht("Choose an adult who can use a named planning seat to see these meals and suggest a different day. Only the shopper can apply changes."))
+                        if let lifecycle = household.lifecycle, let scope = lifecycle.scope, scope == context,
+                           lifecycle.canAdminister, !plan.meals.isEmpty {
+                            DisclosureGroup(ht("Invite an adult to this dinner")) {
+                                ForEach(plan.meals) { row in
+                                    NavigationLink {
+                                        HouseholdDinnerInvitationView(model: lifecycle, scope: scope,
+                                            target: .init(shopId: plan.shopId, occurrenceId: row.id), title: row.meal.title)
+                                    } label: {
+                                        Text(verbatim: "\(row.meal.title) · \(sharedMealScheduleText(row.meal.day))")
+                                    }
+                                }
+                            }
+                        }
                         Picker(ht("Planning adult"), selection: $selectedAdult) {
                             Text(ht("No planning adult")).tag(nil as UUID?)
                             ForEach(plan.adults) { Text($0.label).tag(Optional($0.id)) }

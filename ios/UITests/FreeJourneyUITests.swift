@@ -52,6 +52,27 @@ import XCTest
         XCTAssertTrue(app.buttons["settings"].isHittable)
     }
 
+    func testSampleDinnersShowProtectedLunchAndAnIncompleteBasketInBothLanguages() {
+        for spanish in [false, true] {
+            app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", spanish ? "(es)" : "(en)",
+                                   "-AppleLocale", spanish ? "es_MX" : "en_US"]
+            app.launch()
+            tap(app.tabBars.buttons[spanish ? "Historial" : "Records"])
+            tap(app.buttons["settings"])
+            tap(app.buttons[spanish ? "Membresía del hogar" : "Household membership"])
+            tap(app.buttons["membership.sample"])
+            let subtotal = element("membership.sample.subtotal")
+            reveal(subtotal)
+            let tacos = subtotal.label + (subtotal.value as? String ?? "")
+            tap(app.buttons[spanish ? "Sopa de tortilla" : "Tortilla soup"])
+            reveal(subtotal)
+            XCTAssertNotEqual(subtotal.label + (subtotal.value as? String ?? ""), tacos)
+            XCTAssertEqual(element("membership.sample.unpriced").value as? String, spanish ? "Falta el precio" : "Price missing")
+            capture(spanish ? "Comparación de cenas de ejemplo" : "Sample dinner comparison")
+            app.terminate()
+        }
+    }
+
     func testLunchHoldShowsBackingAndShortfallAfterRestartAndPartialRelease() throws {
         launch(reset: true)
         tap(app.shopToolButton("shop.myPantry"))

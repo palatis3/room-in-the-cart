@@ -13,6 +13,8 @@ import HouseholdClient
     @Published private(set) var managedViews: [ManagedHelperView] = []
     @Published private(set) var managementReviewed = false
     @Published private(set) var proposalsGrantID: String?
+    @Published private(set) var joinedDinnerInvite: UUID?
+    @Published private(set) var issuedDinner: InvitationDinnerTarget?
     @Published private(set) var issued: IssuedInvitation?
     @Published private(set) var issuanceUncertain = false
     @Published private(set) var consents: [GuardianConsent] = []
@@ -87,9 +89,13 @@ import HouseholdClient
             await self.handle(ClientError.accessEnded)
         })
     }
-    func setScope(_ value: HouseholdBootstrap) { clearScope(); scope = value }
+    func setScope(_ value: HouseholdBootstrap) {
+        clearScope(); scope = value
+        Task { await restoreDinnerInvitation() }
+    }
     func clearScope() {
         invalidateInvitationPreview()
+        joinedDinnerInvite = nil; issuedDinner = nil
         safetyReviews.clear()
         scopeGeneration = UUID(); scope = nil; members = []; invitations = []; managedViews = []; managementReviewed = false
         proposalsGrantID = nil; proposalCursor = nil; consents = []; issued = nil; helperView = nil
@@ -226,12 +232,30 @@ import HouseholdClient
         do {
             try await onEnrolled(receipt)
             guard start == generation else { return }
-            var saved = try await store.read(); saved.activation = nil; try await store.save(saved)
+            try await store.completeActivation(.init(subject: subject, receipt: receipt))
             guard start == generation else { return }
-            activation = nil; notice = ht("Household access is connected. Your existing private work was not uploaded.")
+            activation = nil; joinedDinnerInvite = matchingDinner(receipt); notice = ht("Household access is connected. Your existing private work was not uploaded.")
         } catch {
             if start == generation { notice = ht("Membership was confirmed. Connect again to finish opening this household.") }
         }
+    }
+    private func matchingDinner(_ receipt: MembershipReceipt) -> UUID? {
+        guard receipt.role == "contributor", receipt.grantId == nil, let scope, scope.enrolled,
+              scope.grantId == nil, scope.household.id == receipt.householdId, scope.memberId == receipt.memberId else { return nil }
+        return receipt.dinnerInviteId
+    }
+    func restoreDinnerInvitation() async {
+        let start = scopeGeneration
+        guard let stored = try? await store.read().dinnerInvitation, stored.subject == subject,
+              scopeGeneration == start else { return }
+        joinedDinnerInvite = matchingDinner(stored.receipt)
+    }
+    func resolveInvitedDinner(_ invite: UUID, expected: HouseholdBootstrap) async throws -> InvitedDinner {
+        guard scope == expected else { throw ClientError.accessEnded }
+        let start = scopeGeneration
+        let value = try await service.invitedDinner(invite, scope: expected)
+        guard scope == expected, scopeGeneration == start else { throw ClientError.cancelled }
+        return value
     }
     func clearPendingMembership() async {
         guard !busy else { return }
@@ -251,11 +275,12 @@ import HouseholdClient
         }
         catch { if start == scopeGeneration { await handle(error) } }
     }
-    func createAdultInvitation() async {
+    func createAdultInvitation(dinner: InvitationDinnerTarget? = nil) async {
         guard canAdminister, !busy, !issuanceUncertain else { return }
         busy = true; notice = nil; issued = nil; managementReviewed = false; defer { busy = false }; let start = scopeGeneration
-        do { let result = try await service.createAdultInvitation(expiresInHours: expiryHours)
-            guard start == scopeGeneration else { return }; issued = result }
+        issuedDinner = nil
+        do { let result = try await service.createAdultInvitation(expiresInHours: expiryHours, dinner: dinner)
+            guard start == scopeGeneration else { return }; issuedDinner = dinner; issued = result }
         catch { if start == scopeGeneration { issuanceUncertain = isUncertain(error); await handle(error) } }
     }
     func acknowledgeUncertainCreation() { guard !busy, managementReviewed else { return }; issuanceUncertain = false; notice = nil }
