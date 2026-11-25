@@ -14,8 +14,9 @@ import XCTest
         if testRun?.failureCount ?? 0 > 0 { capture("S17-shared-meal-failure") }
         app.terminate()
     }
-    private func launch(shopperSeed: Bool = false, deadline: Bool = false, ingredientRemoval: Bool = false) {
+    private func launch(shopperSeed: Bool = false, deadline: Bool = false, ingredientRemoval: Bool = false, repeatWeek: Bool = false) {
         app.launchArguments = ["--ui-testing", "--shared-meal-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"] + (shopperSeed ? ["--shopper-meal-seed"] : []) + (deadline ? ["--shared-meal-deadline-fixture"] : [])
+        if repeatWeek { app.launchArguments.append("--shared-repeat-week-fixture") }
         if ingredientRemoval { app.launchArguments += ["--shared-meal-group-amount-fixture", "--shared-meal-removal-fixture"] }
         app.launch()
         let ready = deadline ? app.navigationBars["Shared household shop"] : app.buttons["meal-change-occurrence"]
@@ -58,6 +59,16 @@ import XCTest
         XCTAssertEqual(XCTWaiter.wait(for: [confirmed], timeout: 10), .completed)
         XCTAssertTrue(app.buttons["sharedFood.apply"].waitForNonExistence(timeout: 10))
         capture("S17-actual-shared-apply-confirmed-once")
+    }
+    func testSharedRepeatReviewLoadsWhenOpenedForTheFirstTime() {
+        launch(repeatWeek: true)
+        tap(element("fixture.s17.switch"))
+        tap(app.buttons["Shared meal dates"])
+        tap(app.buttons["Repeat last week"])
+        enableSwitch("Fixture shared soup")
+        let save = app.buttons["week.series.stage"]
+        reveal(save)
+        XCTAssertTrue(save.isEnabled)
     }
     func testPlannerCancelThenSendAndSeparateShopperCancelThenApplyExactlyOnce() {
         launch(); chooseOccurrence()

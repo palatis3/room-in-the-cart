@@ -461,6 +461,7 @@ private struct SharedWeekRepeatSection: View {
     @State private var series: SharedRepeatSeries?
     @State private var selections: [UUID:Date] = [:]
     @State private var requestID = UUID()
+    @State private var initialLoad = true
     @State private var loaded = false
     @State private var working = false
     @State private var failed = false
@@ -480,6 +481,12 @@ private struct SharedWeekRepeatSection: View {
 
     var body: some View {
         Group {
+            if current, initialLoad {
+                ProgressView().task {
+                    await load()
+                    if !Task.isCancelled { initialLoad = false }
+                }
+            }
             if current, loaded, let series {
                 Section(weekReviewText("Shared repeat week")) {
                     Text(weekReviewText("Each dinner has its own grocery review. Both planners can return to this list to see what was saved."))
@@ -543,7 +550,6 @@ private struct SharedWeekRepeatSection: View {
             }
         }
         .disabled(working)
-        .task { await load() }
         .confirmationDialog(weekReviewText("Stop remaining dinners?"), isPresented: $confirmStop) {
             Button(weekReviewText("Stop remaining dinners"), role: .destructive) { Task { await stop() } }
         } message: { Text(weekReviewText("Saved dinners stay in the shop. Review Saved changes to undo an eligible dinner.")) }

@@ -42,6 +42,7 @@ private final class S17FixtureServer: @unchecked Sendable {
     private let fallbacks = SharedFallbackUIFixture()
     private let financial = ProcessInfo.processInfo.arguments.contains("--financial-closeout-fixture") ? SharedFinancialFixture() : nil
     private let confirmedOrder = ProcessInfo.processInfo.arguments.contains("--confirmed-order-fixture") ? SharedConfirmedOrderUIFixture() : nil
+    private let repeatWeekFixture = ProcessInfo.processInfo.arguments.contains("--shared-repeat-week-fixture")
     private var revision = 2
     private let quoteObservedAt = Date().addingTimeInterval(-60)
     private let quoteExpiresAt = Date().addingTimeInterval(3600)
@@ -73,6 +74,9 @@ private final class S17FixtureServer: @unchecked Sendable {
     private func wire<T: Encodable>(_ value: T) throws -> Any { try JSONSerialization.jsonObject(with: JSONEncoder().encode(value)) }
     var changed: (@Sendable (Int,Int) -> Void)?
     init() {
+        if repeatWeekFixture {
+            meal["day"] = sharedMealDay(sharedMealPickerToday().addingTimeInterval(-7 * 86_400))
+        }
         if ProcessInfo.processInfo.arguments.contains("--shared-meal-group-amount-fixture"),
            let bytes = try? JSONEncoder().encode(S17GroupAmountFixture.planning),
            let planning = try? JSONSerialization.jsonObject(with: bytes) {
@@ -294,7 +298,14 @@ private final class S17FixtureServer: @unchecked Sendable {
             return try json(["saved":true,"proposalId":id])
         }
         if path.hasSuffix("/meal-plan/changes") { return try json(["shopId":Self.shop,"shopRevision":revision,"authorityEpoch":1,"grantRevision":1,"phase":"draft","shopper":shopper,"meals":[occurrence],"proposals":proposals]) }
-        if path.hasSuffix("/meal-plan") { return try json(["shopId":Self.shop,"shopRevision":revision,"authorityEpoch":1,"grantRevision":1,"shopper":shopper,"plannerId":Self.planner,"adults":[["id":Self.planner,"label":"Fixture planner"]],"meals":[occurrence],"proposals":[]]) }
+        if repeatWeekFixture, path.hasSuffix("/meal-plan/repeat-week"), request.httpMethod == "GET" {
+            return try json(["series": NSNull()])
+        }
+        if path.hasSuffix("/meal-plan") {
+            var page: [String: Any] = ["shopId":Self.shop,"shopRevision":revision,"authorityEpoch":1,"grantRevision":1,"shopper":shopper,"plannerId":Self.planner,"adults":[["id":Self.planner,"label":"Fixture planner"]],"meals":[occurrence],"proposals":[]]
+            if repeatWeekFixture { page["phase"] = "draft" }
+            return try json(page)
+        }
         if path.hasSuffix("/shops/"+Self.shop) {
             guard shopper else { return try denied() }
             let quote = try ShopperQuote(scope:"wholeCheckout",complete:true,capMinor:1000,capScope:"wholeCheckout",fee:.fixed(0),taxesMinor:0,depositsMinor:0,discountsMinor:0,observedAt:quoteObservedAt,expiresAt:quoteExpiresAt)
