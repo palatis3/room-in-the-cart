@@ -1,0 +1,21 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "npm --prefix service ci --ignore-scripts",
+  "buildCommand": "npm --prefix service run build && mkdir -p review-output",
+  "outputDirectory": "review-output",
+  "regions": ["pdx1"],
+  "functions": {
+    "api/index.js": {
+      "maxDuration": 30,
+      "includeFiles": "service/src/billing/certificates/*.cer"
+    },
+    "api/maintenance.js": {"maxDuration": 60}
+  },
+  "crons": [{"path": "/internal/maintenance", "schedule": "0 8 * * *"}],
+  "routes": [
+    {"src": "/internal/maintenance", "methods": ["GET"], "dest": "/api/maintenance"},
+    {"src": "/v1/(.*)", "dest": "/api"},
+    {"src": "/(.*)", "status": 404, "headers": {"Cache-Control": "no-store"}}
+  ]
+}
