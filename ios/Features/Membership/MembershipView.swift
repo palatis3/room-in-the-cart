@@ -109,6 +109,21 @@ private struct MembershipDinnerSampleView: View {
                     Text(mtr("The sample could not be calculated."))
                 }
             }
+            Section {
+                NavigationLink {
+                    MembershipWeekSample(currency: currency)
+                } label: {
+                    Label(mtr("Change a sample week"), systemImage: "calendar")
+                }
+                .accessibilityIdentifier("membership.sample.changeWeek")
+                NavigationLink(dinnerText("First shop with a whole bottle")) { WholePackTripExample(currency: currency) }
+                NavigationLink(dinnerText("Compare a chosen two-store split")) {
+                    WorkingForm {
+                        Text(dinnerText("Fictional sample prices"))
+                        GrocerySplitPreview(sample: currency).id(currency)
+                    }.navigationTitle(dinnerText("Compare a chosen two-store split"))
+                }
+            }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             Group {

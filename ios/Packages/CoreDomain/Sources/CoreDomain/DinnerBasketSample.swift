@@ -49,3 +49,26 @@ public enum DinnerBasketSample {
                 try basket(title: "Tortilla soup", tortillaCount: 4, broth: brothPrice))
     }
 }
+
+extension DinnerBasketSample {
+    /// The planning preview uses fictional prices, confirmed stock and a protected lunch.
+    public static func changedWeek(currency: Currency, keepTuesday: Bool, keepThursday: Bool) throws
+        -> (packs: Int64, riceCost: Money) {
+        func grams(_ weight: Int64) throws -> Quantity {
+            Quantity(amount: try Rational(weight), unit: .gram, originalLiteral: String(weight))
+        }
+        let rice = UUID()
+        let stock = ConfirmedStockLot(id: UUID(), foodID: rice, name: "Rice", usable: try grams(500),
+                                     confirmedAt: Date(timeIntervalSince1970: 1_795_564_800), source: .pantry)
+        let lunch = StockNeed(id: UUID(), foodID: rice, name: "Lunch", amount: try grams(200), priority: .protected)
+        let dinnerGrams: Int64 = 400 + (keepTuesday ? 300 : 0) + (keepThursday ? 300 : 0)
+        let dinners = StockNeed(id: UUID(), foodID: rice, name: "Dinners", amount: try grams(dinnerGrams), priority: .required)
+        let allocation = try ConfirmedStockAllocator.allocate(lots: [stock], needs: [lunch, dinners])
+        guard let required = allocation.demands.first(where: { $0.id == dinners.id })?.shortfall else {
+            throw DinnerPlanningError.reviewRequired("sampleRice")
+        }
+        let packs = try required.divided(by: Rational(500)).roundedUp()
+        let price = Money(minorUnits: currency == .mxn ? 3_200 : 200, currency: currency)
+        return (packs, try price.multiplied(by: packs))
+    }
+}
