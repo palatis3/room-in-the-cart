@@ -306,6 +306,34 @@ import XCTest
         element.tap()
     }
 
+    func testPackageCueKeyboardDoneReturnsToSaveAndInStoreRow() {
+        continueAfterFailure = false
+        app.launchArguments = ["--ui-testing", "--staple-recall-fixture", "--package-row-photo-fixture",
+                               "--reset-test-workspace", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        let inStore = app.buttons["ledgerInStore"]
+        XCTAssertTrue(inStore.waitForExistence(timeout: 15)); show(inStore); inStore.tap()
+        let detail = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "tripDetails-")).firstMatch
+        show(detail)
+        let rowID = detail.identifier.replacingOccurrences(of: "tripDetails-", with: "")
+        detail.tap()
+        let references = app.buttons["ledger.scanReferences"]; show(references); references.tap()
+        let edit = app.buttons["privatePackagePhoto.edit"]; show(edit); edit.tap()
+        let cue = app.textFields["privatePackagePhoto.cue"]; show(cue); cue.tap(); cue.typeText("Blue lid")
+        let dismissKeyboard = app.buttons["privatePackagePhoto.keyboardDone"]
+        XCTAssertTrue(dismissKeyboard.waitForExistence(timeout: 5))
+        XCTAssertTrue(dismissKeyboard.isHittable); dismissKeyboard.tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+        let save = app.buttons["privatePackagePhoto.save"]; show(save)
+        XCTAssertGreaterThanOrEqual(save.frame.height, 44); save.tap()
+        let saved = app.staticTexts["Blue lid"]
+        XCTAssertTrue(saved.waitForExistence(timeout: 6))
+        app.navigationBars["Source references"].buttons.firstMatch.tap()
+        app.navigationBars["Item details"].buttons["Done"].tap()
+        let check = app.buttons["inStoreCheck-" + rowID]; show(check)
+        XCTAssertTrue((check.value as? String)?.contains("Blue lid") == true)
+    }
+
     func testSpanishTripReasonAndPackedJugStaySeparateAcrossRelaunch() {
         continueAfterFailure = false
         let args = ["--ui-testing", "--staple-recall-fixture", "--trip-reminders-fixture",

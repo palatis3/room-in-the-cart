@@ -103,6 +103,7 @@ struct PrivatePackagePhotoLink: View {
 struct PackagePhotoChoice: View {
     let entry: SourceMediaRecord
     let owner: PackageRowPhoto.Owner
+    let focus: FocusState<UUID?>.Binding
     let authorize: @MainActor @Sendable () -> Bool
     @State private var saved: PackageRowPhoto?
     @State private var wording = ""
@@ -119,22 +120,27 @@ struct PackagePhotoChoice: View {
                     Text(verbatim: saved.cue)
                 }
                 if editor {
-                    TextField(packagePhotoText("Distinguishing detail"), text: $wording, axis: .vertical)
+                    Text(packagePhotoText("Distinguishing detail")).font(.subheadline)
+                    TextField(packagePhotoText("Distinguishing detail"), text: $wording)
+                        .focused(focus, equals: entry.id).submitLabel(.done)
+                        .onSubmit { focus.wrappedValue = nil }
                         .accessibilityIdentifier("privatePackagePhoto.cue")
                     Text(packagePhotoText("Use a short detail, such as blue cap or unsweetened.")).font(.footnote)
-                    Button(packagePhotoText("Save photo and cue")) { update(show: true) }
+                    Button { update(show: true) } label: { actionLabel(packagePhotoText("Save photo and cue")) }
+                        .accessibilityIdentifier("privatePackagePhoto.save")
                         .disabled((try? PackageRowPhoto.normalizedCue(wording)) == nil)
-                    Button(ledgerText("Cancel")) { editor = false }
+                    Button { focus.wrappedValue = nil; editor = false } label: { actionLabel(ledgerText("Cancel")) }
                 } else {
-                    Button(packagePhotoText(saved == nil ? "Show photo on my in-store list" : "Edit package cue")) {
+                    Button {
                         wording = saved?.cue ?? ""; failed = false; editor = true
-                    }.accessibilityIdentifier("privatePackagePhoto.edit")
+                    } label: { actionLabel(packagePhotoText(saved == nil ? "Show photo on my in-store list" : "Edit package cue")) }
+                    .accessibilityIdentifier("privatePackagePhoto.edit")
                     if saved != nil {
-                        Button(packagePhotoText("Hide photo from my in-store list")) { update(show: false) }
+                        Button { update(show: false) } label: { actionLabel(packagePhotoText("Hide photo from my in-store list")) }
                     }
                 }
                 if failed { Text(packagePhotoText("Could not update this photo. Reopen the reference and try again.")) }
-            }.disabled(busy)
+            }.buttonStyle(.borderless).disabled(busy)
              .task(id: refresh) {
                  do {
                      let rows = try await CaptureMediaStore.shared.packagePhotos(target: entry.target, owner: owner, authorize: authorize)
@@ -143,6 +149,10 @@ struct PackagePhotoChoice: View {
                  } catch { if !Task.isCancelled && authorize() { saved = nil; failed = true } }
              }.onReceive(NotificationCenter.default.publisher(for: PackageRowPhoto.changed)) { _ in refresh = UUID() }
         }
+    }
+
+    private func actionLabel(_ title: String) -> some View {
+        Text(title).frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
     }
 
     private func update(show: Bool) {
@@ -154,7 +164,7 @@ struct PackagePhotoChoice: View {
                 try await CaptureMediaStore.shared.setPackagePhoto(entry.reference, target: entry.target, owner: owner,
                                                                   cue: show ? wording : nil, authorize: authorize)
                 guard authorize() else { return }
-                editor = false; failed = false
+                focus.wrappedValue = nil; editor = false; failed = false
             } catch { if authorize() { failed = true } }
         }
     }
