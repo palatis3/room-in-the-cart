@@ -26,7 +26,27 @@ private enum DeliveryForm: Identifiable {
 func deliveryQuantityText(_ value: SharedMealQuantity?) -> String {
     guard let value, let unit = UnitOfMeasure(rawValue: value.unit),
           let amount = try? Rational(Int64(value.amount.numerator), Int64(value.amount.denominator)) else { return dinnerText("Quantity unresolved") }
+    if unit == .count { return deliveryCountText(amount) }
     return dinnerQuantity(.init(amount: amount, unit: unit, originalLiteral: value.originalLiteral))
+}
+
+func deliveryCountText(_ amount: Rational, language: String? = nil) -> String {
+    pQuantity(amount.description, unit: .count, singular: amount == .one, language: language,
+              properFraction: amount > .zero && amount < .one)
+}
+
+extension SharedDeliveryCoverage.Fraction {
+    /// The service validates these as unsigned decimal integers with no leading zeros.
+    /// Length and lexical order preserve exact comparisons beyond Int64 and Decimal.
+    var isPositiveProperFraction: Bool {
+        let n = numerator.utf8, d = denominator.utf8
+        return numerator != "0" && (n.count < d.count || (n.count == d.count && n.lexicographicallyPrecedes(d)))
+    }
+
+    func quantityText(unit: UnitOfMeasure, language: String? = nil) -> String {
+        pQuantity(formatted, unit: unit, singular: numerator == denominator, language: language,
+                  properFraction: isPositiveProperFraction)
+    }
 }
 
 struct SharedDeliveryView: View {

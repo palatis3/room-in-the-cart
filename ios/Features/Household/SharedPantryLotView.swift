@@ -190,7 +190,7 @@ private struct SharedPantryObservationView: View {
 
     private func impact(_ label: String, _ fraction: SharedDeliveryCoverage.Fraction?, _ requirement: SharedMealQuantity?) -> some View {
         let u = requirement.flatMap { UnitOfMeasure(rawValue: $0.unit) }
-        let amount = fraction.flatMap { f in u.map { pQuantity(f.formatted, unit: $0, singular: f.numerator == f.denominator, language: nil) } }
+        let amount = fraction.flatMap { f in u.map { f.quantityText(unit: $0) } }
         return LabeledContent(label, value: amount ?? ht("Unknown"))
     }
 

@@ -120,6 +120,7 @@ struct SharedDeliveryCoverageView: View {
     }
 
     private func quantity(_ fraction: SharedDeliveryCoverage.Fraction, unit: UnitOfMeasure) -> String {
+        if unit == .count, fraction.isPositiveProperFraction { return fraction.quantityText(unit: unit) }
         let single = fraction.numerator == "1" && fraction.denominator == "1"
         let label = unit == .count && !single ? dinnerText("units") : dinnerUnit(unit, singular: single)
         return fraction.formatted + " " + label

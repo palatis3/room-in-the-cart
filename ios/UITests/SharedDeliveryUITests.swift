@@ -900,7 +900,7 @@ import XCTest
         tap(record)
         enter("0,5", in: amount)
         tap(save)
-        XCTAssertTrue(hasUsable("1/2 unidades"))
+        XCTAssertTrue(hasUsable("1/2 de unidad"))
         let matches = app.buttons["Correspondencias con ingredientes de las comidas"]
         let ingredient = app.buttons.containing(.staticText, identifier: "Tortillas").firstMatch
         tap(matches); tap(ingredient); tap(app.buttons["Vincular este ingrediente"])
@@ -915,9 +915,9 @@ import XCTest
         tap(save)
         XCTAssertTrue(hasUsable("0 unidades"))
         tap(app.buttons["Alimentos entregados por comida"])
-        assertFact("Cantidad apartada", "1/4 unidades")
+        assertFact("Cantidad apartada", "1/4 de unidad")
         assertFact("Cantidad que aún cubre esta entrega", "0 unidades")
-        checkCookCopy(in: "Avisar a quien cocina", fragments: ["Lunch wraps", "School lunch", "Tortillas de maíz", "Cantidad apartada: 1/4 unidades",
+        checkCookCopy(in: "Avisar a quien cocina", fragments: ["Lunch wraps", "School lunch", "Tortillas de maíz", "Cantidad apartada: 1/4 de unidad",
                        "Cantidad que aún cubre esta entrega: 0 unidades", "peanuts", "sesame"])
         tap(app.buttons["Listo"])
         tap(record)

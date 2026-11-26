@@ -1,3 +1,4 @@
+import CoreDomain
 import HouseholdClient
 import XCTest
 @testable import RoomInTheCart
@@ -156,6 +157,26 @@ final class SharedDeliveryCookDraftTests: XCTestCase {
             XCTAssertEqual(try changed.correction(current: second, previous: translated, currentIndex: secondIndex,
                                                   previousIndex: firstIndex, destinationConfirmed: true), .full(second.text))
         }
+    }
+
+    func testHouseholdCountFractionsFollowTheRecipientLanguageAndKeepExactCoverage() throws {
+        XCTAssertEqual(deliveryCountText(try Rational(1, 2), language: "es-MX"), "1/2 de unidad")
+        XCTAssertEqual(deliveryCountText(try Rational(1, 2), language: "en-US"), "1/2 units")
+        XCTAssertEqual(deliveryCountText(.zero, language: "es"), "0 unidades")
+        XCTAssertEqual(deliveryCountText(.one, language: "es"), "1 unidad")
+        XCTAssertEqual(deliveryCountText(try Rational(3, 2), language: "es"), "3/2 unidades")
+        let fraction = try decode(SharedDeliveryCoverage.Fraction.self, f("1", "4"))
+        XCTAssertEqual(fraction.quantityText(unit: .count, language: "es"), "1/4 de unidad")
+        XCTAssertEqual(fraction.quantityText(unit: .count, language: "en"), "1/4 units")
+        XCTAssertEqual(fraction.quantityText(unit: .cup, language: "es"), "1/4 tazas")
+
+        let digits = String(repeating: "9", count: 60)
+        let next = "1" + String(repeating: "0", count: 60)
+        let almostOne = try decode(SharedDeliveryCoverage.Fraction.self, f(digits, next))
+        let aboveOne = try decode(SharedDeliveryCoverage.Fraction.self, f(next, digits))
+        XCTAssertEqual(almostOne.quantityText(unit: .count, language: "es"), "\(digits)/\(next) de unidad")
+        XCTAssertEqual(aboveOne.quantityText(unit: .count, language: "es"), "\(next)/\(digits) unidades")
+        XCTAssertEqual(pQuantity("1 1/2", unit: .count, singular: false, language: "es"), "1 1/2 unidades")
     }
 
     func testCoverageFractionsSurviveBeyondIntegerAndDecimalPrecision() throws {
