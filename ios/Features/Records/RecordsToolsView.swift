@@ -22,6 +22,7 @@ struct RecordsToolsView: View {
     @State private var deletion: RecordsToolsModel.DeletionReview?
     @AccessibilityFocusState private var actionResultFocused: Bool
     @AccessibilityFocusState private var importReviewFocused: Bool
+    @State private var libraryCategory: String?
     @State private var recoveryExpanded = false
     @State private var recoveredExpandedIDs: Set<String> = []
     #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
@@ -99,7 +100,33 @@ struct RecordsToolsView: View {
                 Section(recordsText("Saved recipes")) {
                     let recipes = model.recoveredRecords.filter { $0.record.kind == .recipe && $0.record.nativePayload != nil }
                     if recipes.isEmpty { Text(recordsText("No saved recipes yet.")) }
-                    ForEach(recipes) { saved in
+                    let categories = Set(recipes.flatMap { recipe($0.record)?.categories ?? [] }).sorted()
+                    if !categories.isEmpty {
+                        Picker(recordsText("Cookbook category"), selection: $libraryCategory) {
+                            Text(recordsText("All categories")).tag(nil as String?)
+                            ForEach(categories, id: \.self) { Text(verbatim: $0).tag(Optional($0)) }
+                            Text(recordsText("Uncategorized")).tag(Optional(""))
+                        }
+                        .onChange(of: categories) { _, values in
+                            if let libraryCategory, !libraryCategory.isEmpty, !values.contains(libraryCategory) { self.libraryCategory = nil }
+                        }
+                    }
+                    if let category = libraryCategory, categories.contains(category), model.review == nil {
+                        let selected = recipes.filter { recipe($0.record)?.categories.contains(category) == true }
+                        NavigationLink(recordsText("Rename this category")) {
+                            CookbookCategoryEditor(source: category, current: category, known: categories,
+                                                   count: selected.count) { name in
+                                let changed = await model.renameCookbookCategory(category, to: name, reviewed: selected)
+                                if changed { libraryCategory = nil }
+                                return changed
+                            }
+                        }
+                    }
+                    ForEach(recipes.filter { saved in
+                        guard !categories.isEmpty, let libraryCategory else { return true }
+                        let names = recipe(saved.record)?.categories ?? []
+                        return libraryCategory.isEmpty ? names.isEmpty : names.contains(libraryCategory)
+                    }) { saved in
                         Button(recordsTitle(saved.record)) { Task { await model.openRecovered(saved) } }
                             .accessibilityIdentifier("dinner.savedRecipe." + saved.id)
                         editSavedRecipeButton(saved)
@@ -397,6 +424,9 @@ struct RecordsToolsView: View {
                 LabeledContent(recordsText("Destination"), value: recordsText("Private recipe library on this iPhone"))
                 Text(report.localizedSummary)
                 if let fields = report.localizedUnsupportedFields { Text(fields).font(.caption) }
+                if review.canApply {
+                    CookbookCategoryReview(review: review, model: model)
+                }
             }
             ForEach(review.rows) { row in
                 Group {
@@ -449,6 +479,7 @@ struct RecordsToolsView: View {
     }
     private func recipeReviewActions(_ recipe: ImportedRecipe, row: RecoveryReviewRow, review: RecoveryReview) -> some View {
         VStack(alignment: .leading, spacing: 8) {
+            if !recipe.categories.isEmpty { Text(verbatim: recipe.categories.joined(separator: " · ")).font(.caption) }
             ForEach(recipe.missingFields, id: \.self) { field in
                 Label(missingRecipeField(field), systemImage: "exclamationmark.circle").font(.subheadline)
             }
@@ -838,6 +869,87 @@ private struct RecipePageEntryView: View {
     }
 }
 
+private struct CookbookCategoryReview: View {
+    let review: RecoveryReview
+    @ObservedObject var model: RecordsToolsModel
+
+    var body: some View {
+        let recipes = review.rows.filter { [.absent, .sibling].contains($0.disposition) }
+            .compactMap { row in row.record.nativePayload.flatMap { try? JSONDecoder().decode(ImportedRecipe.self, from: $0) } }
+        let grouped = Dictionary(grouping: recipes.flatMap { recipe in
+            (recipe.filing ?? []).map { (filing: $0, title: recipe.title) }
+        }, by: { $0.filing.source })
+        let sources = grouped.keys.sorted()
+        let known = Set(model.recoveredRecords.filter { $0.record.kind == .recipe }
+            .compactMap { $0.record.nativePayload }.compactMap { try? JSONDecoder().decode(ImportedRecipe.self, from: $0) }
+            .flatMap(\.categories)).sorted()
+        if !sources.isEmpty {
+            DisclosureGroup(recordsText("Map cookbook categories")) {
+                ForEach(sources, id: \.self) { source in
+                    let matches = grouped[source] ?? []
+                    let current = matches.first?.filing.category ?? ""
+                    NavigationLink {
+                        CookbookCategoryEditor(source: source, current: current, known: known, count: matches.count) { destination in
+                            await model.mapCookbookCategory(source, to: destination, reviewed: review)
+                        }
+                    } label: {
+                        VStack(alignment: .leading) {
+                            Text(verbatim: source).font(.headline)
+                            LabeledContent(recordsText("Private category name"), value: current.isEmpty ? recordsText("Uncategorized") : current)
+                            LabeledContent(recordsText("Recipes"), value: matches.count.formatted())
+                            if let sample = matches.first { Text(verbatim: sample.title).font(.caption) }
+                        }
+                    }
+                }
+                LabeledContent(recordsText("Uncategorized"), value: recipes.filter { $0.categories.isEmpty }.count.formatted())
+            }
+        }
+    }
+}
+
+private struct CookbookCategoryEditor: View {
+    @Environment(\.dismiss) private var dismiss
+    let source: String
+    let known: [String]
+    let count: Int
+    let apply: (String) async -> Bool
+    @State private var destination: String
+    @State private var saving = false
+    @State private var failed = false
+
+    init(source: String, current: String, known: [String], count: Int, apply: @escaping (String) async -> Bool) {
+        self.source = source
+        self.known = known
+        self.count = count
+        self.apply = apply
+        _destination = State(initialValue: current)
+    }
+
+    var body: some View {
+        WorkingForm {
+            Text(verbatim: source).font(.headline)
+            LabeledContent(recordsText("Recipes"), value: count.formatted())
+            TextField(recordsText("Private category name"), text: $destination)
+            if !known.isEmpty {
+                Menu(recordsText("Use a saved category")) {
+                    ForEach(known, id: \.self) { name in Button(name) { destination = name } }
+                }
+            }
+            Text(recordsText("Leave the name blank to remove that category. The original label stays with the private recipe."))
+            Button(recordsText("Apply to reviewed recipes")) {
+                saving = true
+                Task {
+                    let applied = await apply(destination)
+                    saving = false
+                    if applied { dismiss() } else { failed = true }
+                }
+            }.disabled(!destination.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+                       !ImportedRecipe.Filing.valid(destination.trimmingCharacters(in: .whitespacesAndNewlines)))
+            if failed { Text(recordsText("Your local copies changed during review. Select the file again before importing.")) }
+        }.navigationTitle(recordsText("Cookbook category")).disabled(saving)
+    }
+}
+
 private func missingRecipeField(_ field: ImportedRecipe.MissingField) -> String {
     switch field {
     case .servings: return recordsText("Missing servings or yield")
@@ -965,9 +1077,10 @@ private struct ManualRecipeEntryView: View {
                     guard !submitting else { return }
                     editing = nil
                     submitting = true
-                    let recipe = ImportedRecipe(title: title, yieldText: servings,
+                    var recipe = ImportedRecipe(title: title, yieldText: servings,
                         ingredients: ingredientLines, steps: instructionLines,
                         sourceURL: source.isEmpty ? nil : source, notes: notes, reviewedSteps: currentSteps)
+                    recipe.filing = initial?.filing
                     Task {
                         submissionError = await submit(recipe)
                         submitting = false

@@ -19,7 +19,8 @@ final class PaprikaCollectionTests: XCTestCase {
         XCTAssertEqual(soup.notes, "Family cookbook\n\nAl gusto.")
         XCTAssertEqual(report.duplicateCount, 1)
         XCTAssertEqual(report.skippedRows, 1)
-        XCTAssertEqual(report.unsupportedFields, ["categories"])
+        XCTAssertTrue(report.unsupportedFields.isEmpty)
+        XCTAssertEqual(soup.categories, ["Sopas"])
     }
 
     func testRepeatImportPreservesEditedSourceAndSkipsExistingLibrary() throws {
@@ -99,6 +100,80 @@ final class PaprikaCollectionTests: XCTestCase {
         try await registry.registerErasedSources([ArchiveSourceIdentity(origin: original.origin, recordID: original.revision)])
         let erased = try await registry.review(envelope([original]))
         XCTAssertEqual(erased.rows.first?.disposition, .erased)
+    }
+
+    func testHundredRecipeMappingSurvivesDraftReimportAndPrivateExport() async throws {
+        let file = try XCTUnwrap(Bundle.module.url(forResource: "fictional-cookbook-categories", withExtension: "paprikarecipes", subdirectory: "Fixtures"))
+        let data = try Data(contentsOf: file)
+        let first = try PaprikaCollection.stageRecords(data, saved: [])
+        XCTAssertEqual(first.records.count, 100)
+        XCTAssertEqual(first.report.unsupportedFields, ["categories"]) // A malformed label kept its valid sibling.
+        let mapped = try first.records.map { record in
+            let changed = try PaprikaCollection.mapCategory("Weeknights", to: "Menú rápido", in: record)
+            return try PaprikaCollection.mapCategory("Sin carne", to: "Menú rápido", in: changed)
+        }
+        XCTAssertEqual(mapped.map(\.id), first.records.map(\.id))
+        let draft = try XCTUnwrap(RecipeDraftFile.readIfPresent(try RecipeDraftFile.encode(mapped)))
+        XCTAssertEqual(Set(draft.1.map(\.id)), Set(mapped.map(\.id)))
+        XCTAssertEqual(draft.0.recipes.filter { $0.categories == ["Menú rápido"] }.count, 51)
+        let sample = try XCTUnwrap(draft.0.recipes.first { $0.title == "Fixture 0" })
+        XCTAssertEqual(sample.sourceURL, "https://example.org/recipes/0")
+        XCTAssertEqual(sample.filing?.map(\.source), ["Sin carne", "Weeknights"])
+        let repeated = try PaprikaCollection.stageRecords(data, saved: draft.1)
+        XCTAssertEqual(repeated.report.duplicateCount, 100)
+        XCTAssertTrue(repeated.records.isEmpty)
+        var edited = sample
+        edited.filing = nil
+        edited.notes = "Reviewed"
+        let previous = try XCTUnwrap(mapped.first { $0.title == sample.title })
+        let corrected = try PaprikaCollection.correctedRecord(edited, previous: previous)
+        XCTAssertEqual(corrected.id, previous.id)
+        XCTAssertEqual(corrected.parentRevision, previous.parentRevision)
+        let restored = try JSONDecoder().decode(ImportedRecipe.self, from: XCTUnwrap(corrected.nativePayload))
+        XCTAssertEqual(restored.categories, ["Menú rápido"])
+        XCTAssertTrue(ReadableArchive.text([corrected], owner: true, locale: Locale(identifier: "es_MX")).contains("Categorías: Menú rápido"))
+        XCTAssertFalse(ReadableArchive.text([corrected], owner: false).contains("Menú rápido"))
+        XCTAssertThrowsError(try PaprikaCollection.mapCategory("Weeknights", to: "bad\nlabel", in: previous))
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let registry = try RecoveryRegistry(url: directory.appendingPathComponent("cookbook.json"))
+        let document = try ArchiveCodec.make(records: draft.1, kind: .personalRecovery, origin: "recipe-library-v1", revision: "fixture")
+        let review = try await registry.review(document)
+        let saved = try await registry.apply(review)
+        let classified = try saved.records.filter { copy in
+            let recipe = try JSONDecoder().decode(ImportedRecipe.self, from: XCTUnwrap(copy.record.nativePayload))
+            return recipe.categories.contains("Menú rápido")
+        }
+        XCTAssertEqual(classified.count, 51)
+        try await registry.renameCookbookCategory("Menú rápido", to: "Todavía más fácil", reviewed: classified, authorize: { true })
+        let afterRename = try await registry.refreshList()
+        XCTAssertEqual(Set(afterRename.map(\.id)), Set(saved.records.map(\.id)))
+        XCTAssertEqual(Set(afterRename.map(\.record.id)), Set(saved.records.map(\.record.id)))
+        XCTAssertEqual(try PaprikaCollection.stageRecords(data, saved: afterRename.map(\.record)).report.duplicateCount, 100)
+
+    }
+
+    func testOldContentIdentityAndErasureRemainEffectiveForCategorizedSource() async throws {
+        let original = try PaprikaCollection.stageRecords(collection(), saved: []).records[0]
+        var legacy = try JSONDecoder().decode(ImportedRecipe.self, from: XCTUnwrap(original.nativePayload))
+        legacy.filing = nil
+        legacy.paprikaLegacyRevision = nil
+        XCTAssertEqual(original.id, legacy.id)
+        XCTAssertNotEqual(original.revision, legacy.id)
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let registry = try RecoveryRegistry(url: directory.appendingPathComponent("registry.json"))
+        try await registry.registerErasedSources([.init(origin: original.origin, recordID: legacy.id)])
+        var tracked = try PaprikaCollection.mapCategory("Sopas", to: nil, in: original)
+        tracked.id = "paprika-v1/" + ArchiveCodec.digest(Data("upstream UID".utf8))
+        var renamed = try JSONDecoder().decode(ImportedRecipe.self, from: XCTUnwrap(tracked.nativePayload))
+        renamed.title = "Edited after filing"
+        let corrected = try PaprikaCollection.correctedRecord(renamed, previous: tracked)
+        let envelope = try ArchiveCodec.make(records: [corrected], kind: .personalRecovery, origin: original.origin, revision: "fixture")
+        let review = try await registry.review(envelope)
+        XCTAssertEqual(review.rows.first?.disposition, .erased)
     }
 
     func testRejectsIncompleteAndDamagedCollectionBeforeAnyRecipeIsSaved() throws {
