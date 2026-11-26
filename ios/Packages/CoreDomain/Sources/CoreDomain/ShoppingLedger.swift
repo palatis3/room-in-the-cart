@@ -362,6 +362,7 @@ public struct ShoppingLine: Codable, Equatable, Sendable, Identifiable {
     public internal(set) var stopObservation: ShoppingStopObservation?
     public internal(set) var tripUndo: GroceryTripUndo?
     public internal(set) var preferredStores: [String]?
+    public internal(set) var emptyJug: EmptyJugReminder?
     public var stapleApproval: StapleApproval?
     public var isChecked: Bool { checkedAt != nil }
     public var isHandled: Bool { handledAt != nil }
@@ -579,6 +580,7 @@ public struct LedgerWorkspace: Codable, Equatable, Sendable {
             listLayout.departmentDirectory?.stores.values.contains(where: { $0.learnsAisles != nil }) == true {
             return 2
         }
+        if shops.contains(where: { $0.mainTripReasonID != nil || $0.lines.contains(where: { $0.emptyJug != nil }) }) { return 2 }
         if shops.contains(where: { $0.importBatches.contains(where: { $0.source == .csv }) }) { return 2 }
         let discounted = shops.contains { shop in
             shop.lines.contains { $0.pickedPrice?.discount != nil || $0.tripUndo?.price?.discount != nil }
@@ -631,6 +633,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     public private(set) var allocations: [AllocationEdge]
     public private(set) var mealOccurrences: [MealOccurrence]
     public private(set) var shoppingStop: ShoppingStop?
+    public private(set) var mainTripReasonID: UUID?
     public private(set) var importBatches: [LedgerImportBatch]
 
     public init(id: UUID = UUID(), title: String = "Pickup", basis: ShopBasis = ShopBasis(currency: .groceryDefault()), initialCheckoutChange: LedgerCheckoutChange? = nil) {
@@ -1139,6 +1142,26 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         }
     }
 
+    /// Reminder edits use the saved trip revision and the exact reviewed value.
+    /// They do not change priced ingredients or invalidate a current checkout quote.
+    public mutating func setMainTripReason(_ lineID: UUID?, replacing reviewed: UUID?, expectedRevision: UUID) throws {
+        guard revisionID == expectedRevision, reviewed == mainTripReasonID else { throw LedgerError.stalePreview }
+        if let lineID {
+            let line = lines[try lineIndex(lineID)]
+            guard !line.isTrashed, !line.isChecked, !line.isHandled else { throw LedgerError.stalePreview }
+        }
+        mainTripReasonID = lineID
+    }
+
+    public mutating func setEmptyJug(_ status: EmptyJugReminder?, replacing reviewed: EmptyJugReminder?,
+                                     for lineID: UUID, expectedRevision: UUID) throws {
+        guard expectedRevision == revisionID else { throw LedgerError.stalePreview }
+        let index = try lineIndex(lineID)
+        guard lines[index].emptyJug == reviewed, !lines[index].isTrashed, !lines[index].isHandled
+        else { throw LedgerError.stalePreview }
+        lines[index].emptyJug = status
+    }
+
     mutating func editTripLine(lineID: UUID, operation: String, at: Date, _ edit: (inout ShoppingLine) throws -> Void) throws {
         try mutate(operation, at: at) { next in
             let index = try next.lineIndex(lineID)
@@ -1418,6 +1441,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
                 try quantity.validate()
             }
         }
+        if let reason = mainTripReasonID, !lineIDs.contains(reason) { throw LedgerError.notFound(reason) }
         for line in lines {
             try line.validateTrip(currency: basis.currency)
             try line.pickedPrice?.validate(currency: basis.currency)

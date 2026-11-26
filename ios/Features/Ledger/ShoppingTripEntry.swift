@@ -131,6 +131,8 @@ struct TripItemDetail: View {
                 NavigationLink(tripText("Preferred stores")) {
                     TripStorePreferences(model: model, shop: shop, line: line)
                 }
+                TripItemSettingsLink(model: model, shop: shop, line: line)
+                PrivatePackagePhotoLink(model: model, shop: shop, line: line)
                 InStoreBudgetItemLink(model: model, shop: shop, line: line)
             }
             if model.hasPendingSave || model.error != nil {

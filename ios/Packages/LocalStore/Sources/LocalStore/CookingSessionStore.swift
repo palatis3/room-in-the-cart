@@ -2,14 +2,15 @@ import CoreDomain
 import CryptoKit
 import Foundation
 
-public enum CookingSourceKind: String, Sendable { case recipe, dinner }
+public enum CookingSourceKind: String, Sendable { case recipe, dinner, reusableDinner }
 
-public struct CookingSessionKey: Equatable, Sendable {
+public struct CookingSessionKey: Hashable, Sendable {
     public let workspace: UUID
     public let kind: CookingSourceKind
     public let source: UUID
     public let revision: String
     fileprivate let digest: String
+    let privateAudienceFilename: String
 
     public init(workspace: UUID, actor: UUID, audience: [String?], kind: CookingSourceKind, source: UUID, revision: String) throws {
         guard !revision.isEmpty, revision.utf8.count <= 256, audience.count <= 8,
@@ -18,6 +19,7 @@ public struct CookingSessionKey: Equatable, Sendable {
         self.kind = kind
         self.source = source
         self.revision = revision
+        privateAudienceFilename = SHA256.hash(data: try JSONEncoder().encode([actor.uuidString] + audience)).map { String(format: "%02x", $0) }.joined()
         let identity = [actor.uuidString, revision] + audience
         digest = SHA256.hash(data: try JSONEncoder().encode(identity)).map { String(format: "%02x", $0) }.joined()
     }
@@ -90,7 +92,7 @@ public struct CookingSession: Codable, Equatable, Sendable {
 @MainActor public final class CookingSessionStore {
     private let root: URL
     public init(directory: URL) { root = directory }
-    private func file(_ key: CookingSessionKey) -> URL {
+    func file(_ key: CookingSessionKey) -> URL {
         root.appendingPathComponent(key.workspace.uuidString, isDirectory: true)
             .appendingPathComponent(key.kind.rawValue, isDirectory: true)
             .appendingPathComponent(key.source.uuidString, isDirectory: true).appendingPathComponent(key.digest + ".json")

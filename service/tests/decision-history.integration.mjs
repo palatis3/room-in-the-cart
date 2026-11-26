@@ -1,3 +1,4 @@
+import {adultCheckTests} from './adult-checks.wire.mjs';
 import test, {before,after} from 'node:test';
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
@@ -293,3 +294,5 @@ test('structured promotion binds an explicitly reviewed note version, organizer,
   assert.deepEqual(erased.settings.dislikes,[]);
   assert.deepEqual(erased.settings.preferredBrands,['Casa']);
 });
+
+adultCheckTests({fixture,request,ok,admin,runtime,subscriptions});

@@ -578,9 +578,12 @@ private struct RecordsRecoveredPantryView: View {
               let key = try? CookingSessionKey(workspace: workspace, actor: scope.identity.actorID,
                 audience: [scope.identity.subject, scope.identity.householdID, scope.identity.memberID, scope.identity.role, scope.shopID, scope.grantID],
                 kind: .recipe, source: source, revision: recipe.id) else { return nil }
+        let privateNotes = try? CookingSessionKey(workspace: workspace, actor: scope.identity.actorID,
+            audience: [scope.identity.subject, scope.identity.householdID, scope.identity.memberID, scope.identity.role],
+            kind: .recipe, source: source, revision: recipe.id)
         return CookingSessionContext(key: key, authorize: { [weak self] in
             authorized() && self?.destination?.id == copy
-        })
+        }, allowStepNotes: scope.grantID == nil && privateNotes != nil, sourceNoteKey: privateNotes)
     }
     private let recipeLibraryOnly: Bool
     init(app: AppModel, ledger: LedgerModel, pickup: PickupModel, erasureCleanup: RecordsErasureCleanup, recipeLibraryOnly: Bool) {
@@ -1243,7 +1246,7 @@ private struct RecordsRecipeAdoptionView: View {
                         legacyNotes: recipe.notes, yieldText: recipe.yieldText, context: cooking,
                         finishTitle: ledger.shop == nil ? nil : recordsText("Choose a dinner for this pickup")) {
                             dinnerEditor
-                        }
+                        }.id(cooking.key)
                 }.accessibilityIdentifier("cooking.openRecipe")
             }
             if !recipe.ingredients.isEmpty {

@@ -4,6 +4,7 @@ import SwiftUI
 @MainActor struct CaptureReferenceShelf: View {
     let target: CaptureTarget
     let initialLabel: String
+    var photoOwner: PackageRowPhoto.Owner? = nil
     let authorize: @MainActor @Sendable () -> Bool
     var makePantry: (@MainActor () -> PantryModel?)? = nil
     private struct ReceiptReview: Identifiable {
@@ -58,6 +59,9 @@ import SwiftUI
                     if let data = entry.imageJPEG, let image = UIImage(data: data) {
                         Image(uiImage: image).resizable().scaledToFit().frame(maxHeight: 260)
                             .accessibilityLabel(captureText("Saved reduced-size source reference"))
+                    }
+                    if target.kind == .packageReference, entry.imageJPEG != nil, let photoOwner {
+                        PackagePhotoChoice(entry: entry, owner: photoOwner, authorize: authorize)
                     }
                     SourceReferenceWording(source: entry)
                     if target.kind == .receiptEvidence, !entry.receiptLines.isEmpty, let makePantry {

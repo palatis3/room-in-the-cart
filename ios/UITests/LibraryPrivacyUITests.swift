@@ -93,6 +93,30 @@ import XCTest
 }
 
 @MainActor final class RecipeLibraryAcceptanceUITests: LibraryPrivacyUITestCase {
+    func testPrivateStepNoteReopensOnNextCookAndCanBeDeleted() {
+        launch("--recipe-library-fixture", arguments: ["--recipe-full-screen"])
+        tap(button("records.recovered.Existing family soup"))
+        tap(button("records.openSavedRecipe"))
+        tap(button("cooking.openRecipe"))
+        tap(button("cooking.stepNote.add"))
+        let field = element("cooking.stepNote.text")
+        tap(field)
+        field.typeText("Use half the lime.")
+        let save = button("cooking.stepNote.save")
+        XCTAssertTrue(save.isHittable)
+        save.tap()
+        assertText("Use half the lime.")
+        tap(button("cooking.end"))
+        tap(button("cooking.confirmEnd"))
+        tap(button("cooking.openRecipe"))
+        assertText("Keep the existing instructions.")
+        assertText("Use half the lime.")
+        tap(app.buttons["Edit note"])
+        tap(app.buttons["Delete note"])
+        reveal(button("cooking.stepNote.add"))
+        XCTAssertFalse(app.staticTexts["Use half the lime."].exists)
+    }
+
     func testNotesOnlyRecipeReviewsOnlySelectedWordsBeforePlayback() {
         launch("--recipe-library-fixture", arguments: ["--recipe-notes-only", "--recipe-full-screen"])
         tap(button("records.recovered.Notes-only soup"))

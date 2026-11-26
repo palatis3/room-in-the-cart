@@ -63,15 +63,21 @@ extension EnvironmentValues {
     @EnvironmentObject private var access: WorkspaceAccess
     @EnvironmentObject private var household: HouseholdModel
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.guardianChildCoordinator) private var child
     @State private var identity: CapturePrivateIdentity?
     var body: some View {
         Group {
-            if identity != nil { CaptureReferenceShelf(target: target, initialLabel: initialLabel, authorize: { authorized() }, makePantry: makePantry) }
+            if let identity {
+                CaptureReferenceShelf(target: target, initialLabel: initialLabel, photoOwner: .init(identity),
+                                      authorize: { authorized() }, makePantry: makePantry)
+            }
             else { WorkingForm { Text(captureText("Unlock your private workspace to review this source.")) } }
         }.task(id: target) { identity = CapturePrivateIdentity.current(access: access, household: household) }
     }
     private func authorized() -> Bool {
         scenePhase == .active && identity != nil &&
+        (target.kind != .packageReference || (UIApplication.shared.isProtectedDataAvailable &&
+            household.projection?.grantId == nil && child?.presented != true)) &&
         identity == CapturePrivateIdentity.current(access: access, household: household) && sourceCurrent()
     }
 }

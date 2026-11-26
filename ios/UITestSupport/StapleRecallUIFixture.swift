@@ -36,7 +36,9 @@ struct StapleRecallUIFixture: View {
                         let tea = try west.addManualLine(name: "Tea", quantity: nil, at: past)
                         try west.approveStaple(lineID: tea, purpose: "School lunches", at: past)
                         var current = ShoppingLedger(title: "This trip", basis: .init(branch: "North market"))
-                        if ProcessInfo.processInfo.arguments.contains("--shelf-budget-fixture") {
+                        if ProcessInfo.processInfo.arguments.contains("--trip-reminders-fixture") {
+                            try current.addManualLine(name: "Agua", quantity: nil)
+                        } else if ProcessInfo.processInfo.arguments.contains("--shelf-budget-fixture") {
                             current = ShoppingLedger(title: "This trip", basis: .init(branch: "North market", mode: .inStore))
                             for (label, count) in [("Apples", 4), ("Coffee", 1), ("Bread", 1)] {
                                 let unit = Quantity(amount: try Rational(Int64(count)), unit: .count, originalLiteral: String(count))

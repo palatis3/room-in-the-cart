@@ -86,18 +86,8 @@ struct LedgerIngredientView: View {
                             .disabled(model.saving || model.hasPendingSave).accessibilityIdentifier("ledgerPackChoice")
                     }
                 }
-                if let workspaceID = model.sourceWorkspaceID, !line.isTrashed {
-                    NavigationLink(captureText("Package photos and barcode references")) {
-                        PrivateSourceReferenceEntry(target: CaptureTarget(workspaceID: workspaceID,
-                            containerID: shopID, objectID: lineID, revision: Int64(shop.revision), kind: .packageReference),
-                            initialLabel: line.name, sourceCurrent: {
-                                model.ready && !model.saving && !model.hasPendingSave && !model.hasPendingLedgerDeletion &&
-                                model.sourceWorkspaceID == workspaceID && model.workspace.selectedShopID == shopID &&
-                                model.workspace.shops.first(where: { $0.id == shopID })?.revision == shop.revision &&
-                                model.workspace.shops.first(where: { $0.id == shopID })?.lines.contains(where: { $0.id == lineID && !$0.isTrashed }) == true
-                            })
-                    }.accessibilityIdentifier("ledger.scanReferences")
-                }
+                PrivatePackagePhotoLink(model: model, shop: shop, line: line)
+                TripItemSettingsLink(model: model, shop: shop, line: line)
                 Section(ledgerText("Where this need came from")) {
                     if contributions.contains(where: { $0.source.isProtected }) {
                         Toggle(ledgerText("Show protected needs"), isOn: $showProtectedNeeds)

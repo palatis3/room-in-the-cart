@@ -74,6 +74,8 @@ import SwiftUI
                             }
                         }
                     }
+                    CookingStepNoteView(model: model, steps: steps, index: index)
+                        .id(index)
                     if let amounts = model.session?.stepAmounts {
                         let rows = amounts.allocations.filter { $0.byStep[index] != nil && ingredients.indices.contains($0.ingredient) }
                         if !rows.isEmpty {

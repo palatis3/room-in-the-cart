@@ -27,7 +27,12 @@ import HouseholdClient
         #endif
     }
     @ViewBuilder private var standardFixtureContent: some View {
-        if ProcessInfo.processInfo.arguments.contains("--import-recovery-fixture") { ImportRecoveryUIFixtureRoot() }
+        if ProcessInfo.processInfo.arguments.contains("--adult-checks-fixture") {
+            #if targetEnvironment(simulator)
+            AdultChecksFixtureRoot()
+            #endif
+        }
+        else if ProcessInfo.processInfo.arguments.contains("--import-recovery-fixture") { ImportRecoveryUIFixtureRoot() }
         else if ProcessInfo.processInfo.arguments.contains("--staple-recall-fixture") {
             #if targetEnvironment(simulator)
             StapleRecallUIFixture()
@@ -174,7 +179,7 @@ struct ContributorRequestUIFixtureRoot: View {
         }.task { await fixture.start() }
     }
 }
-private final class ContributorRequestUIFixtureVault: RefreshTokenVault, @unchecked Sendable {
+final class ContributorRequestUIFixtureVault: RefreshTokenVault, @unchecked Sendable {
     private var value: String?
     func read() throws -> String? { value }; func write(_ value: String) throws { self.value = value }; func clear() throws { value = nil }
 }
@@ -655,7 +660,7 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
         throw URLError(.unsupportedURL)
     }
 }
-private final class ContributorRequestUIFixtureProtocol: URLProtocol {
+final class ContributorRequestUIFixtureProtocol: URLProtocol {
     static var handler: ((URLRequest) throws -> (Int, Data))!
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }

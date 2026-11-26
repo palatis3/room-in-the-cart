@@ -16,6 +16,7 @@ import {applyDemand,demandOperation,demandSnapshotRef,assertDemandReplay,assertP
 import { recordOrderAmendment } from './order-amendments.js';
 import { carryRequest, deferredRequests, reauthorizeCarry } from './deferred-requests.js';
 import type {BillingService} from './billing/service.js';
+import {adultCheckCapability} from './adult-checks.js';
 import {recordCurrentDelivery,recordCurrentPantry} from './shared-recovery-basis.js';
 import {loadRecoveryPublication,recordSharedRecovery} from './shared-recovery-publication.js';
 import { sharedMealSchema, moveSharedMeal, preserveProtectedMeal } from './shared-meal-planning.js';
@@ -170,7 +171,7 @@ export class HouseholdRepository {
     }
     return this.bootstrap(ctx);
   }
-  async bootstrap(ctx:Context,includeSharedContentSafety=ctx.sharedContentSafety) {
+  async bootstrap(ctx:Context,includeSharedContentSafety=ctx.sharedContentSafety,billing?:BillingService) {
     const house=(await ctx.db.query('SELECT label FROM ritc.household WHERE household_id=$1',[ctx.householdId])).rows[0];
     const candidates = (await ctx.db.query<{shop_id:string;shopper_id:string;phase:string;placed_revision:number|null;budget_access:boolean}>(`
       SELECT s.shop_id,s.shopper_id,s.phase,s.placed_revision,
@@ -217,7 +218,9 @@ export class HouseholdRepository {
       selectionRequired:!helperRole&&!ctx.viewGrantId&&!ctx.selectedShopId&&candidates.length>1,role:isShopper?'shopper':ctx.member.organizer?'organizer':helperRole?(helper.mode==='edit'?'editor':'helper'):'contributor',shopId:helperRole?helper.shop_id:shop?.shop_id??null,...(helperRole?{grantId:helper.grant_id}:{}),enrolled:true,canSetRequestQueue:Boolean(queueEligible),queueConsent:false,
       ...(shop && !helperRole && ctx.member.can_contribute ? {nextShopOnly:shop.phase!=='draft'||Boolean(lateCutoff)} : {}),
       ...(grant ? {requestQueueGrant:grant.request_queue_grant,requestQueueUntil:grant.request_queue_until.toISOString()} : {}),
-      capabilities:[...(adultPickup&&shop&&['draft','frozen'].includes(shop.phase)&&this.options.sharedContentSafety&&this.options.moderationRetentionDays
+      capabilities:[...(!ctx.ownRequestsOnly&&!ctx.viewGrantId&&!helperRole&&ctx.member.kind==='adult'&&shop?.phase==='draft'&&
+        (isShopper||ctx.member.organizer||ctx.member.can_contribute)&&await adultCheckCapability(ctx,billing)?['adult_checks']:[]),
+        ...(adultPickup&&shop&&['draft','frozen'].includes(shop.phase)&&this.options.sharedContentSafety&&this.options.moderationRetentionDays
         ?[...(this.options.tripSubstitutions?['trip_substitutions']:[]),...(this.options.sharedPicking?['shared_picking']:[])]:[]),
         ...(adultPickup&&this.options.adultLastCall?['adult_last_call']:[]),
         ...(adultPickup&&this.options.sharedContentSafety&&this.options.adultProductReferenceDays?['adult_product_reference',...(this.options.adultProductReferenceMedia?['adult_product_reference_media']:[])]:[]),

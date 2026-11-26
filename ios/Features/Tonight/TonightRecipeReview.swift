@@ -64,6 +64,11 @@ struct TonightRecipeReview: View {
     private var authorized: Bool {
         identity != nil && currentIdentity() == identity && ledger.sourceWorkspaceID == origin
     }
+    // Preserve imported links and timers on structured steps. Plain native instructions can be entered or revised here.
+    private var editsPlainSteps: Bool {
+        source == nil && template?.recipeSteps?.contains(where: \.hasReviewedDetails) != true
+    }
+
     private var replacedRecipe: MealTemplate? {
         guard let original, template.map(original.mealTemplates.contains) != true else { return nil }
         return original.mealTemplates.first
@@ -122,7 +127,7 @@ struct TonightRecipeReview: View {
                                 reviewedFact(ingredient.name, ingredient.reviewedAmountLabel, field: field)
                             }
                         }
-                        if let familySource {
+                        if familySource != nil || (editsPlainSteps && !sourceInstructions.isEmpty) {
                             Section {
                                 if !sourceInstructions.isEmpty {
                                     editableFact(dinnerText("Cooking instructions"), value: sourceInstructions, field: "instructions") {
@@ -133,7 +138,7 @@ struct TonightRecipeReview: View {
                                     }
                                 }
                                 if !unclassified.isEmpty { unclassifiedLines }
-                                RecipeSourceDisclosure(evidence: familySource)
+                                if let familySource { RecipeSourceDisclosure(evidence: familySource) }
                             }
                         }
                         Section {
@@ -256,7 +261,7 @@ struct TonightRecipeReview: View {
                             .onDelete { ingredients.remove(atOffsets: $0) }
                             Button(tonightText("Add ingredient")) { ingredients.append(Ingredient()) }
                         }
-                        if pasteEntry {
+                        if pasteEntry || editsPlainSteps {
                             Section(dinnerText("Cooking instructions")) {
                                 TextField(dinnerText("Cooking instructions"), text: $sourceInstructions, axis: .vertical)
                                     .focused($focusedInput, equals: "instructions").id("instructions")
@@ -343,6 +348,7 @@ struct TonightRecipeReview: View {
                 identity = currentIdentity(); origin = ledger.sourceWorkspaceID; original = ledger.workspace
                 title = template?.title ?? source?.recipe.title ?? ""
                 if let template {
+                    sourceInstructions = template.recipeSteps?.map(\.instruction).joined(separator: "\n") ?? ""
                     servings = ledgerAmountInput(template.servings)
                     minutes = template.leadTimeMinutes.map(String.init) ?? ""
                     ingredients = template.ingredients.map(Ingredient.init)
@@ -531,6 +537,8 @@ struct TonightRecipeReview: View {
                 leadTimeMinutes: Int(amount), completedSteps: template?.completedSteps ?? [], sourceEvidence: template?.sourceEvidence ?? familySource)
             if familySource != nil {
                 result.notes = sourceInstructions
+                result.recipeSteps = lines(sourceInstructions).map { RecipeStep($0) }
+            } else if editsPlainSteps, sourceInstructions != (template?.recipeSteps?.map(\.instruction).joined(separator: "\n") ?? "") {
                 result.recipeSteps = lines(sourceInstructions).map { RecipeStep($0) }
             } else if let template, let steps = template.recipeSteps {
                 result.recipeSteps = RecipeStep.rebinding(steps, from: template.ingredients, to: rows)
