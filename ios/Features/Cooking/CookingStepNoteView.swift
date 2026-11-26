@@ -9,6 +9,7 @@ struct CookingStepNoteView: View {
     @ObservedObject var model: CookingSessionModel
     let steps: [RecipeStep]
     let index: Int
+    let noteFocus: FocusState<Bool>.Binding
     @State private var editor: Editor?
     @State private var showHidden = false
     @State private var exporting = false
@@ -39,7 +40,7 @@ struct CookingStepNoteView: View {
             Section(cookCompletionText("My note for this step")) {
                 if let editor {
                     CookingNoteEditor(model: model, previous: editor.previous, index: editor.step, instruction: editor.instruction,
-                        finish: { self.editor = nil })
+                        focus: noteFocus, finish: { self.editor = nil })
                         .id(editor.id)
                 } else if let instruction {
                     ForEach(attached.filter { !$0.hidden || showHidden }) { note in
@@ -103,9 +104,11 @@ private struct CookingNoteEditor: View {
     let instruction: String
     let finish: () -> Void
     @State private var text: String
-    @FocusState private var focused: Bool
+    let focus: FocusState<Bool>.Binding
 
-    init(model: CookingSessionModel, previous: CookingStepNote?, index: Int, instruction: String, finish: @escaping () -> Void) {
+    init(model: CookingSessionModel, previous: CookingStepNote?, index: Int, instruction: String, focus: FocusState<Bool>.Binding,
+         finish: @escaping () -> Void) {
+        self.focus = focus
         self.model = model; self.previous = previous; self.index = index; self.instruction = instruction; self.finish = finish
         _text = State(initialValue: previous?.text ?? "")
     }
@@ -119,7 +122,7 @@ private struct CookingNoteEditor: View {
                 let prompt = cookCompletionText("What would you change next time?")
                 Text(prompt).font(.subheadline).accessibilityHidden(true)
                 TextEditor(text: $text)
-                    .focused($focused)
+                    .focused(focus)
                     .accessibilityLabel(prompt)
                     .accessibilityIdentifier("cooking.stepNote.text")
                     .font(.body).frame(minHeight: 76)
@@ -132,13 +135,13 @@ private struct CookingNoteEditor: View {
             Button(cookCompletionText("Save note")) {
                 let next = CookingStepNote(id: previous?.id ?? UUID(), revision: model.context.noteKey.revision, step: index,
                     instruction: instruction, text: text, hidden: false)
-                if model.setStepNote(previous, with: next) { focused = false; finish() }
+                if model.setStepNote(previous, with: next) { focus.wrappedValue = false; finish() }
             }.disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || text.utf8.count > 2048)
             .accessibilityIdentifier("cooking.stepNote.save")
-            Button(recordsText("Cancel")) { focused = false; finish() }
+            Button(recordsText("Cancel")) { focus.wrappedValue = false; finish() }
             if let previous {
                 Button(cookCompletionText("Delete note"), role: .destructive) {
-                    if model.setStepNote(previous, with: nil) { focused = false; finish() }
+                    if model.setStepNote(previous, with: nil) { focus.wrappedValue = false; finish() }
                 }
             }
             if let message = model.message { Text(message) }

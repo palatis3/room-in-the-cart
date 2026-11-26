@@ -103,6 +103,12 @@ import XCTest
         XCTAssertTrue(field.waitForExistence(timeout: 8))
         tap(field)
         field.typeText("Use half the lime.")
+        let done = button("cooking.stepNote.done")
+        XCTAssertTrue(done.waitForExistence(timeout: 8))
+        XCTAssertTrue(done.isHittable)
+        done.tap()
+        XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"),
+            object: app.keyboards.firstMatch)], timeout: 8) == .completed)
         let save = button("cooking.stepNote.save")
         tap(save)
         assertText("Use half the lime.")

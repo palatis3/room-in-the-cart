@@ -21,6 +21,7 @@ import SwiftUI
     @State private var noteExcerpt: String?
     private enum Input { case minutes, noteExcerpt }
     @FocusState private var focusedInput: Input?
+    @FocusState private var editingStepNote: Bool
     @AccessibilityFocusState private var instructionFocused: Bool
 
     init(title: String, steps: [RecipeStep], ingredients: [String], legacyNotes: String, yieldText: String = "",
@@ -74,7 +75,7 @@ import SwiftUI
                             }
                         }
                     }
-                    CookingStepNoteView(model: model, steps: steps, index: index)
+                    CookingStepNoteView(model: model, steps: steps, index: index, noteFocus: $editingStepNote)
                         .id(index)
                     if let amounts = model.session?.stepAmounts {
                         let rows = amounts.allocations.filter { $0.byStep[index] != nil && ingredients.indices.contains($0.ingredient) }
@@ -154,8 +155,11 @@ import SwiftUI
         .navigationBarTitleDisplayMode(.inline)
         .privacySensitive()
         .scrollDismissesKeyboard(.interactively)
-        .keyboardDoneAction(visible: focusedInput != nil, title: ledgerText("Done"),
-                            identifier: focusedInput == .minutes ? "cooking.timerDone" : "cooking.noteDone") { focusedInput = nil }
+        .keyboardDoneAction(visible: focusedInput != nil || editingStepNote, title: ledgerText("Done"),
+                            identifier: editingStepNote ? "cooking.stepNote.done" : focusedInput == .minutes ? "cooking.timerDone" : "cooking.noteDone") {
+            focusedInput = nil
+            editingStepNote = false
+        }
         .task {
             model.load(); suggestedMinutes()
             await model.reconcileAlerts()
