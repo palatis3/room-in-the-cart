@@ -75,11 +75,13 @@ extension ShoppingLedger {
     }
 }
 
-struct TripItemDetail: View {
+struct TripItemDetail<SourceContent: View>: View {
     @ObservedObject var model: LedgerModel
     let shopID: UUID
     let lineID: UUID
     let onSaved: (UUID) -> Void
+    var placeActions: InStorePlaceActions? = nil
+    @ViewBuilder var sourceContent: (ShoppingLedger, ShoppingLine) -> SourceContent
     @Environment(\.shoppingListAuthorization) private var authorize
     @Environment(\.dismiss) private var dismiss
     @FocusState private var editing: Bool
@@ -96,6 +98,7 @@ struct TripItemDetail: View {
                     Text(verbatim: line.name).font(.headline)
                     if let value = shop.tripAmountLabel(line, measure: measure) { Text(value) }
                     if let note = measure?.packNote { Text(note) }
+                    sourceContent(shop, line)
                     ForEach(affectedDinners(in: shop)) { meal in
                         Text(tripFormat("For %@", meal.title)).foregroundStyle(Theme.secondary)
                     }
@@ -134,6 +137,7 @@ struct TripItemDetail: View {
                 TripItemSettingsLink(model: model, shop: shop, line: line)
                 PrivatePackagePhotoLink(model: model, shop: shop, line: line)
                 InStoreBudgetItemLink(model: model, shop: shop, line: line)
+                placeActions
             }
             if model.hasPendingSave || model.error != nil {
                 LedgerSaveStatus(model: model, showsLastSave: false, onRetried: finish)

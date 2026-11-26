@@ -138,11 +138,44 @@ struct InStoreShoppingView: View {
         return PhotoScope(owner: .init(identity), workspace: workspace, shop: shopID, generation: photoAccess.generation)
     }
 
+    private struct PlaceSession: Equatable {
+        let scope: InStorePlaceScope
+        let accessGeneration, householdGeneration: UUID
+    }
+    private struct PlaceLoad: Equatable {
+        let session: PlaceSession?
+        let revision: UUID?
+        let refresh: UUID
+        let photoRequest: PhotoRequest
+        let photoReady: Bool
+    }
+    @State private var placeSlot: InStorePlaceSlot?
+    @State private var loadedPlaceSession: PlaceSession?
+    @State private var placeRefresh = UUID()
+    @State private var placeWrite: UUID?
+    @State private var placeFailed = false
+    @State private var unavailablePlace = false
+
+    private var placeSession: PlaceSession? {
+        guard let photoScope, let shop = model.shop, shop.id == shopID,
+              let identity = CapturePrivateIdentity.current(access: photoAccess, household: photoHousehold) else { return nil }
+        guard identity.subject == nil || photoHousehold.shoppingPlaceDeviceID != nil else { return nil }
+        return PlaceSession(scope: InStorePlaceScope(identity: identity, workspace: photoScope.workspace, shop: shop,
+                                                    enrollment: identity.subject == nil ? nil : photoHousehold.shoppingPlaceDeviceID),
+                            accessGeneration: photoAccess.generation, householdGeneration: photoHousehold.generation)
+    }
+
+    private var placeLoad: PlaceLoad {
+        PlaceLoad(session: placeSession, revision: model.shop?.revisionID, refresh: placeRefresh,
+                  photoRequest: PhotoRequest(scope: photoScope, refresh: photoRefresh),
+                  photoReady: loadedPhotoScope != nil && loadedPhotoScope == photoScope)
+    }
+
     @State private var displayOwner = UUID()
     @State private var editingPrice: ShoppingLine?
     private typealias Focus = InStoreFocus
     private enum Destination: Hashable, Identifiable {
-        case details(UUID), options, find, nextStore
+        case details(UUID), savedDetails(UUID, UUID), options, find, nextStore
         var id: Self { self }
     }
     @State private var destination: Destination?
@@ -216,6 +249,21 @@ struct InStoreShoppingView: View {
             .onReceive(NotificationCenter.default.publisher(for: PackageRowPhoto.changed)) { _ in
                 packagePhotos = [:]; loadedPhotoScope = nil; photoRefresh = UUID()
             }
+            .alert(savedPlaceText("This saved place is no longer available."), isPresented: $unavailablePlace) {
+                Button(ledgerText("Done"), role: .cancel) {}
+            }
+            .task(id: placeLoad) { await loadPlace(placeLoad) }
+            .task(id: placeSlot?.revision) {
+                guard let place = placeSlot?.place else { return }
+                let remaining = place.saved.addingTimeInterval(InStoreSavedPlace.lifetime).timeIntervalSinceNow
+                if remaining > 0 {
+                    do { try await Task.sleep(for: .seconds(remaining)) } catch { return }
+                }
+                placeRefresh = UUID()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: CaptureMediaStore.savedPlaceChanged)) { notice in
+                if notice.object as? UUID == model.sourceWorkspaceID { placeRefresh = UUID() }
+            }
             .modifier(InStoreDisplayPreference(trip: shopID, owner: displayOwner, available: model.shop?.id == shopID && authorize()))
     }
 
@@ -257,7 +305,7 @@ struct InStoreShoppingView: View {
         let matches = filtering ? searchMatches(in: shop) : nil
         func included(_ line: ShoppingLine) -> Bool {
             guard filtering else { return true }
-            return line.eligibleForStop(named: shop.currentStop.name) && (matches?.contains(line.id) ?? true)
+            return line.eligibleForStop(named: shop.currentStop.name) && (matches == nil || matches?[line.id] != nil)
         }
         let matched = groups.flatMap(\.lines).filter(included)
         let visible = matched.filter { available($0, shop: shop) }
@@ -272,15 +320,16 @@ struct InStoreShoppingView: View {
                 if !filtering {
                     DinnerPantryReviewSection(shopID: shop.id, reviews: dinner.pending)
                     listAndStop(shop)
+                    savedPlaceEntry(in: shop)
                     TripDepartureSection(model: model, shop: shop)
                 }
                 ForEach(groups) { group in
-                    let rows = group.lines.filter { available($0, shop: shop) && (matches?.contains($0.id) ?? true) }
+                    let rows = group.lines.filter { available($0, shop: shop) && (matches == nil || matches?[$0.id] != nil) }
                     if !rows.isEmpty {
                         Section(group.aisle.isEmpty ? shoppingText("To pick") : group.aisle) {
                             ForEach(rows) { line in
                                 outstandingRow(line, shop: shop, visible: visible, exclusions: exclusions[line.id],
-                                               packages: packages[line.id] ?? [])
+                                               packages: packages[line.id] ?? [], hit: matches?[line.id])
                             }
                         }
                     }
@@ -293,14 +342,14 @@ struct InStoreShoppingView: View {
                 if !outstanding.isEmpty {
                     Section(tripText("Still needed")) {
                         ForEach(outstanding) { line in
-                            stillNeededRow(line, in: shop, filtering: filtering, packages: packages[line.id] ?? [])
+                            stillNeededRow(line, in: shop, filtering: filtering, packages: packages[line.id] ?? [], hit: matches?[line.id])
                         }
                     }
                 }
                 if !picked.isEmpty {
                     Section(filtering ? shelfText("In your basket") : shoppingText("Picked items")) {
                         ForEach(picked) { line in
-                            pickedRow(line, in: shop, filtering: filtering, packages: packages[line.id] ?? [])
+                            pickedRow(line, in: shop, filtering: filtering, packages: packages[line.id] ?? [], hit: matches?[line.id])
                         }
                     }
                 }
@@ -375,14 +424,14 @@ struct InStoreShoppingView: View {
         return photo
     }
 
-    private func searchMatches(in shop: ShoppingLedger) -> Set<UUID>? {
+    private func searchMatches(in shop: ShoppingLedger) -> [UUID: CurrentStopSearchHit]? {
         let term = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard searching, !term.isEmpty else { return nil }
-        let lines = shop.search(term, department: { model.workspace.listLayout.department(for: $0, in: shop) })
-        var matches = Set(lines.map(\.id))
-        if loadedPhotoScope != nil, loadedPhotoScope == photoScope {
-            for (id, photo) in packagePhotos where photo.cue.localizedStandardContains(term) && photo.matchesCurrentGroceries(in: model.workspace) {
-                matches.insert(id)
+        let lines = shop.searchResults(term, department: { model.workspace.listLayout.department(for: $0, in: shop) })
+        var matches = Dictionary(uniqueKeysWithValues: lines.map { ($0.line.id, CurrentStopSearchHit(fields: $0.evidence)) })
+        for (id, photo) in packagePhotos where photo.cue.localizedStandardContains(term) {
+            if currentPhoto(for: id) != nil {
+                matches[id, default: CurrentStopSearchHit()].photoCue = true
             }
         }
         return matches
@@ -449,8 +498,15 @@ struct InStoreShoppingView: View {
     @ViewBuilder private func destinationContent(_ value: Destination, in shop: ShoppingLedger) -> some View {
         switch value {
         case let .details(id):
-            TripItemDetail(model: model, shopID: shopID, lineID: id, onSaved: { completedDetailRow = $0 })
-                .toolbar { closeSheet }
+            itemDetails(id)
+        case let .savedDetails(id, revision):
+            if let slot = placeSlot, slot.revision == revision, let place = slot.place, place.line == id,
+               resolvedPlace(place) != nil {
+                itemDetails(id)
+            } else {
+                Text(savedPlaceText("This saved place is no longer available."))
+                    .toolbar { closeSheet }
+            }
         case .find:
             TripFindEntry(model: model, shop: shop, onSaved: { completedDetailRow = $0 }).toolbar { closeSheet }
         case .nextStore:
@@ -467,6 +523,117 @@ struct InStoreShoppingView: View {
                 PantryShelfPhotoLink()
                 InStoreDisplayToggle(owner: displayOwner)
             }.workingSurface().navigationTitle(ledgerText("List options")).toolbar { closeSheet }
+        }
+    }
+
+    private func itemDetails(_ id: UUID) -> some View {
+        TripItemDetail(model: model, shopID: shopID, lineID: id, onSaved: { completedDetailRow = $0 },
+                       placeActions: placeActions(for: id)) { shop, line in
+            if authorize() {
+                let hit = searching ? searchMatches(in: shop)?[line.id] : nil
+                searchDetails(line, in: shop, hit: hit, showAisle: searching, fullText: true)
+            }
+        }
+        .toolbar { closeSheet }
+    }
+
+    private func reviewedPlace(_ id: UUID, in session: PlaceSession) -> InStoreSavedPlace? {
+        guard placeSession == session, loadedPhotoScope != nil, loadedPhotoScope == photoScope,
+              let shop = model.shop, !dinnerPantry.status(in: shop, ledger: model).covered.contains(id) else { return nil }
+        return InStoreSavedPlace.make(scope: session.scope, lineID: id, workspace: model.workspace, photo: currentPhoto(for: id))
+    }
+
+    private func resolvedPlace(_ place: InStoreSavedPlace) -> ShoppingLine? {
+        guard let session = placeSession, loadedPlaceSession == session, place.isLive(at: .now),
+              place.matches(reviewedPlace(place.line, in: session)) else { return nil }
+        return model.shop?.lines.first { $0.id == place.line }
+    }
+
+    @ViewBuilder private func savedPlaceEntry(in shop: ShoppingLedger) -> some View {
+        if let slot = placeSlot, let place = slot.place, let line = resolvedPlace(place), let session = placeSession {
+            Button {
+                Task { @MainActor in
+                    do {
+                        guard let owner = photoScope?.owner else { return }
+                        let current = try await CaptureMediaStore.shared.savedPlace(in: session.scope, photoOwner: owner,
+                            authorize: { placeSession == session && resolvedPlace(place) != nil })
+                        guard current?.revision == slot.revision, resolvedPlace(place) != nil,
+                              destination == nil, !searching else {
+                            if placeSession == session { unavailablePlace = true }
+                            placeRefresh = UUID()
+                            return
+                        }
+                        completedDetailRow = line.id
+                        destination = .savedDetails(line.id, slot.revision)
+                    } catch {
+                        if placeSession == session { unavailablePlace = true }
+                        placeRefresh = UUID()
+                    }
+                }
+            } label: {
+                VStack(alignment: .leading, spacing: 3) {
+                    Label(String(format: savedPlaceText("Return to %@"), locale: .current, line.name), systemImage: "bookmark")
+                    let measure = TripMeasure(shop, line: line, packages: shop.itemPackages[line.id] ?? [])
+                    if let amount = shop.tripAmountLabel(line, measure: measure) { Text(verbatim: amount).font(.subheadline) }
+                    if let pack = measure?.packNote { Text(verbatim: pack).font(.subheadline) }
+                    if !line.notes.isEmpty { Text(verbatim: line.notes).font(.subheadline) }
+                    if let cue = currentPhoto(for: line.id)?.cue, !cue.isEmpty { Text(verbatim: cue).font(.subheadline) }
+                    if let outcome = shop.outcomeAtCurrentStop(line) {
+                        Text(tripText(outcome == .unavailable ? "Couldn’t find it at this stop" : "Left for next time"))
+                    }
+                }.frame(minHeight: 44).fixedSize(horizontal: false, vertical: true)
+            }.accessibilityIdentifier("inStorePlace.return")
+        }
+    }
+
+    private func placeActions(for id: UUID) -> InStorePlaceActions? {
+        guard let session = placeSession, loadedPlaceSession == session,
+              let candidate = reviewedPlace(id, in: session) else { return nil }
+        let slot = placeSlot
+        let marked = slot?.place?.line == id && slot?.place?.matches(candidate) == true
+        return InStorePlaceActions(marked: marked, replacing: !marked && slot?.place != nil,
+                                   busy: placeWrite != nil || model.saving || model.hasPendingSave, failed: placeFailed,
+                                   save: { changePlace(to: candidate.atSaveTime(), expected: slot?.revision, in: session) },
+                                   clear: { changePlace(to: nil, expected: slot?.revision, in: session) })
+    }
+
+    @MainActor private func changePlace(to value: InStoreSavedPlace?, expected: UUID?, in session: PlaceSession) {
+        guard placeWrite == nil, loadedPlaceSession == session, placeSession == session, placeSlot?.revision == expected,
+              !model.saving, !model.hasPendingSave else { return }
+        let operation = UUID()
+        placeWrite = operation
+        placeFailed = false
+        Task { @MainActor in
+            defer { if placeWrite == operation { placeWrite = nil } }
+            do {
+                try await CaptureMediaStore.shared.updateSavedPlace(in: session.scope, expected: expected, place: value) {
+                    guard placeSession == session, !model.saving, !model.hasPendingSave else { return false }
+                    guard let value else { return true }
+                    return value.matches(reviewedPlace(value.line, in: session))
+                }
+                if value == nil, case .savedDetails = destination { destination = nil }
+            } catch { if placeSession == session { placeFailed = true } }
+            placeRefresh = UUID()
+        }
+    }
+
+    @MainActor private func loadPlace(_ request: PlaceLoad) async {
+        if loadedPlaceSession != request.session { placeSlot = nil; loadedPlaceSession = nil; placeFailed = false }
+        guard let session = request.session, request.photoReady else { return }
+        do {
+            let slot = try await CaptureMediaStore.shared.savedPlace(in: session.scope, authorize: { placeSession == session })
+            guard !Task.isCancelled, placeLoad == request else { return }
+            if let slot, let place = slot.place,
+               !place.isLive(at: .now) || !place.matches(reviewedPlace(place.line, in: session)) {
+                placeSlot = nil
+                try await CaptureMediaStore.shared.updateSavedPlace(in: session.scope, expected: slot.revision, place: nil,
+                                                                  authorize: { placeLoad == request })
+                return
+            }
+            placeSlot = slot
+            loadedPlaceSession = session
+        } catch {
+            if !Task.isCancelled && placeLoad == request { loadedPlaceSession = nil; placeSlot = nil }
         }
     }
 
@@ -519,12 +686,13 @@ struct InStoreShoppingView: View {
         shop.outcomeAtCurrentStop(line) == nil && line.eligibleForStop(named: shop.currentStop.name)
     }
 
-    private func stillNeededRow(_ line: ShoppingLine, in shop: ShoppingLedger, filtering: Bool, packages: [BasketPackage]) -> some View {
+    private func stillNeededRow(_ line: ShoppingLine, in shop: ShoppingLedger, filtering: Bool, packages: [BasketPackage], hit: CurrentStopSearchHit?) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Button { destination = .details(line.id) } label: {
                 VStack(alignment: .leading) {
+                    nameSource(hit)
                     Text(line.name).font(.headline)
-                    if filtering { searchDetails(line, in: shop) }
+                    if filtering { searchDetails(line, in: shop, hit: hit) }
                     let measure = TripMeasure(shop, line: line, packages: packages)
                     if let quantity = shop.tripAmountLabel(line, measure: measure) { Text(quantity) }
                     Text(tripText(shop.isLeftForNextTrip(line) ? "Left for next time" : "Couldn’t find it at this stop"))
@@ -539,11 +707,13 @@ struct InStoreShoppingView: View {
     }
 
     private func outstandingRow(_ line: ShoppingLine, shop: ShoppingLedger, visible: [ShoppingLine], exclusions: String?,
-                                packages: [BasketPackage]) -> some View {
+                                packages: [BasketPackage], hit: CurrentStopSearchHit?) -> some View {
         let measure = TripMeasure(shop, line: line, packages: packages)
         let amount = shop.tripAmountLabel(line, measure: measure)
         let department = model.workspace.listLayout.department(for: line, in: shop)
         let showDepartment = !department.isEmpty && model.workspace.listLayout.layout(for: shop).mode != .aisle
+        let photo = currentPhoto(for: line.id)
+        let noteCaption: CurrentStopSourceCaption = hit?.contains(.lineNote) == true ? .matchedNote : .note
         return HStack(alignment: .top, spacing: 8) {
             Button {
                 let index = visible.firstIndex(where: { $0.id == line.id }) ?? 0
@@ -555,22 +725,31 @@ struct InStoreShoppingView: View {
                     .frame(width: 44, height: 44).contentShape(Rectangle())
             }
             .accessibilityLabel(ledgerFormat("Check %@", line.name))
-            .accessibilityValue([amount ?? "", showDepartment ? department : "", line.notes, exclusions ?? "",
-                                 currentPhoto(for: line.id)?.cue ?? ""].filter { !$0.isEmpty }.joined(separator: ", "))
+            .accessibilityValue(rowSourceValue(line, department: showDepartment ? department : "",
+                                               amount: amount, exclusions: exclusions, photo: photo, hit: hit))
             .accessibilityFocused($focus, equals: .line(line.id))
             .accessibilityIdentifier("inStoreCheck-\(line.id)")
             Button { destination = .details(line.id) } label: {
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 4) {
+                        nameSource(hit)
                         GroceryNameAndAmount(name: line.name, amount: shop.groceryRowAmount(line, measure: measure))
                             .accessibilityElement(children: .ignore)
                             .accessibilityLabel([line.name, amount].compactMap { $0 }.joined(separator: ", "))
-                        if showDepartment { Text(verbatim: department).font(.subheadline).foregroundStyle(Theme.secondary) }
+                        if hit?.contains(.department) == true {
+                            CurrentStopSourceText(caption: .department, literal: department)
+                        } else if showDepartment {
+                            Text(verbatim: department).font(.subheadline).foregroundStyle(Theme.secondary)
+                        }
                         if let coupon = line.pinnedCoupon { InStoreCouponPickLabel(coupon: coupon, line: line) }
-                        if !line.notes.isEmpty { Text(verbatim: line.notes) }
+                        if !line.notes.isEmpty {
+                            CurrentStopSourceText(caption: noteCaption, literal: line.notes)
+                        }
+                        originalSources(hit)
                         if let exclusions { Text(exclusions) }
                         TripRequestSummary(shop: shop, line: line)
-                        if let photo = currentPhoto(for: line.id) {
+                        if let photo {
+                            Text(verbatim: CurrentStopSourceCaption.photoCue(for: photo, matched: hit?.photoCue == true).title).font(.caption).foregroundStyle(Theme.secondary)
                             PackagePhotoRowLabel(photo: photo)
                         }
                     }.foregroundStyle(Theme.ink)
@@ -610,18 +789,67 @@ struct InStoreShoppingView: View {
         pendingFocus = line.isChecked ? .picked(id) : .line(id)
     }
 
-    @ViewBuilder private func searchDetails(_ line: ShoppingLine, in shop: ShoppingLedger) -> some View {
-        if searching {
-            let aisle = model.workspace.listLayout.department(for: line, in: shop)
-            if !aisle.isEmpty { Text(verbatim: aisle).foregroundStyle(Theme.secondary) }
-            if !line.notes.isEmpty { Text(verbatim: line.notes) }
-            if let cue = currentPhoto(for: line.id)?.cue, !cue.isEmpty {
-                Text(verbatim: cue)
+    private func rowSourceValue(_ line: ShoppingLine, department: String, amount: String? = nil,
+                                exclusions: String? = nil, photo: PackageRowPhoto?, hit: CurrentStopSearchHit?) -> String {
+        let note: CurrentStopSourceCaption = hit?.contains(.lineNote) == true ? .matchedNote : .note
+        var words = [amount, hit?.contains(.name) == true ? CurrentStopSourceCaption.name.title : nil]
+        if let field = hit?.fields.first(where: { $0.field == .department }) {
+            words.append(CurrentStopSourceCaption.department.spoken(field.text))
+        } else if !department.isEmpty {
+            words.append(department)
+        }
+        if !line.notes.isEmpty { words.append(note.spoken(line.notes)) }
+        let originals = hit?.originalFields ?? []
+        for field in originals.prefix(CurrentStopSearchHit.rowEntryLimit) {
+            let caption: CurrentStopSourceCaption = field.field == .originalEntry ? .entry : .entryNote
+            words.append(caption.spoken(field.text))
+        }
+        if originals.count > CurrentStopSearchHit.rowEntryLimit { words.append(currentStopSourceText("More matching entries in Item details.")) }
+        words.append(exclusions)
+        if let photo { words.append(CurrentStopSourceCaption.photoCue(for: photo, matched: hit?.photoCue == true).spoken(photo.cue)) }
+        return words.compactMap { $0 }.joined(separator: ", ")
+    }
+
+    @ViewBuilder private func nameSource(_ hit: CurrentStopSearchHit?) -> some View {
+        if hit?.contains(.name) == true {
+            Text(verbatim: CurrentStopSourceCaption.name.title).font(.caption).foregroundStyle(Theme.secondary)
+        }
+    }
+
+    @ViewBuilder private func originalSources(_ hit: CurrentStopSearchHit?, fullText: Bool = false) -> some View {
+        if let hit {
+            let originals = hit.originalFields
+            let count = fullText ? originals.count : CurrentStopSearchHit.rowEntryLimit
+            ForEach(originals.prefix(count), id: \.self) { source in
+                CurrentStopSourceText(caption: source.field == .originalEntry ? .entry : .entryNote,
+                                      literal: source.text, fullText: fullText)
+            }
+            if originals.count > count {
+                Text(verbatim: currentStopSourceText("More matching entries in Item details."))
+                    .font(.subheadline).foregroundStyle(Theme.secondary)
             }
         }
     }
 
-    private func pickedRow(_ line: ShoppingLine, in shop: ShoppingLedger, filtering: Bool, packages: [BasketPackage]) -> some View {
+    @ViewBuilder private func searchDetails(_ line: ShoppingLine, in shop: ShoppingLedger, hit: CurrentStopSearchHit?, showAisle: Bool = true, fullText: Bool = false) -> some View {
+        let aisle = model.workspace.listLayout.department(for: line, in: shop)
+        if showAisle && !aisle.isEmpty {
+            if hit?.contains(.department) == true {
+                CurrentStopSourceText(caption: .department, literal: aisle, fullText: fullText)
+            } else {
+                Text(verbatim: aisle).foregroundStyle(Theme.secondary)
+            }
+        }
+        if !line.notes.isEmpty {
+            CurrentStopSourceText(caption: hit?.contains(.lineNote) == true ? .matchedNote : .note, literal: line.notes, fullText: fullText)
+        }
+        originalSources(hit, fullText: fullText)
+        if let photo = currentPhoto(for: line.id) {
+            CurrentStopSourceText(caption: .photoCue(for: photo, matched: hit?.photoCue == true), literal: photo.cue, fullText: fullText)
+        }
+    }
+
+    private func pickedRow(_ line: ShoppingLine, in shop: ShoppingLedger, filtering: Bool, packages: [BasketPackage], hit: CurrentStopSearchHit?) -> some View {
         let undoLabel = shoppingFormat("Undo pick of %@", line.name)
         return HStack(alignment: .firstTextBaseline, spacing: 8) {
             Button {
@@ -633,6 +861,7 @@ struct InStoreShoppingView: View {
                     .frame(width: 44, height: 44).contentShape(Rectangle())
             }
             .accessibilityLabel(shoppingFormat("Uncheck %@", line.name))
+            .accessibilityValue(filtering ? rowSourceValue(line, department: "", photo: currentPhoto(for: line.id), hit: hit) : "")
             .accessibilityIdentifier("inStoreUncheck-\(line.id)")
             .accessibilityFocused($focus, equals: .picked(line.id))
             .disabled(model.hasPendingSave)
@@ -640,8 +869,9 @@ struct InStoreShoppingView: View {
             Button { editingPrice = line } label: {
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 4) {
+                        nameSource(hit)
                         Text(line.name).font(.headline).foregroundStyle(Theme.ink)
-                        if filtering { searchDetails(line, in: shop) }
+                        if filtering { searchDetails(line, in: shop, hit: hit) }
                         TripRequestSummary(shop: shop, line: line)
                         if let pick = line.packagePick {
                             Text(pick.packages.shoppingLabel).foregroundStyle(Theme.secondary)

@@ -110,6 +110,9 @@ final class PackageRowPhotoTests: XCTestCase {
         XCTAssertEqual(rows.map(\.target.objectID), [wanted])
         XCTAssertNotEqual(reused.target.objectID, other)
         XCTAssertEqual(reused.source, photo.source)
+        XCTAssertEqual(CurrentStopSourceCaption.photoCue(for: photo, matched: false), .photo)
+        XCTAssertEqual(CurrentStopSourceCaption.photoCue(for: reused, matched: false), .earlierPhoto)
+        XCTAssertEqual(CurrentStopSourceCaption.photoCue(for: reused, matched: true), .matchedEarlierPhoto)
         XCTAssertTrue(reused.matchesCurrentGroceries(in: workspace))
         var changed = workspace
         try changed.shops[1].updateLine(lineID: wanted, name: "Milk", notes: "Red cap", aisle: "")

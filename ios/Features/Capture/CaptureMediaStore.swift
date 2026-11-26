@@ -278,6 +278,8 @@ actor CaptureMediaStore {
         try withLock {
             try write(Data(), to: workspaceMarker(workspaceID))
             try savePackagePhotos([], in: workspaceID)
+            let places = try savedPlacesURL(workspaceID)
+            if FileManager.default.fileExists(atPath: places.path) { try FileManager.default.removeItem(at: places) }
             let directory = try workspaceDirectory(workspaceID)
             if FileManager.default.fileExists(atPath: directory.path) { try ensureNotLink(directory); try FileManager.default.removeItem(at: directory) }
         }
@@ -397,4 +399,78 @@ actor CaptureMediaStore {
         try data.write(to: url, options: .atomic)
         #endif
     }
+}
+
+extension CaptureMediaStore {
+    private func savedPlacesURL(_ workspace: UUID) throws -> URL {
+        try root().appendingPathComponent("shopping-places-" + hash(workspace.uuidString))
+    }
+
+    private func placeSlots(_ workspace: UUID, at now: Date) throws -> [InStorePlaceSlot] {
+        guard !FileManager.default.fileExists(atPath: try workspaceMarker(workspace).path) else { throw ScanFailure.retired }
+        let url = try savedPlacesURL(workspace)
+        guard FileManager.default.fileExists(atPath: url.path) else { return [] }
+        try ensureNotLink(url)
+        let info = try url.resourceValues(forKeys: [.isRegularFileKey, .fileSizeKey])
+        guard info.isRegularFile == true, (info.fileSize ?? .max) <= 256_000 else { throw ScanFailure.storage }
+        let slots = try JSONDecoder().decode([InStorePlaceSlot].self, from: Data(contentsOf: url))
+        guard slots.count <= 256, slots.allSatisfy({ $0.scope.workspace == workspace }) else { throw ScanFailure.storage }
+        let live = slots.filter { $0.changed <= now && now.timeIntervalSince($0.changed) < InStoreSavedPlace.lifetime }
+        if live.count != slots.count { try write(JSONEncoder().encode(live), to: url) }
+        return live
+    }
+
+    func savedPlace(in scope: InStorePlaceScope, at now: Date = .now, photoOwner: PackageRowPhoto.Owner? = nil,
+                    authorize: @MainActor @Sendable () -> Bool) async throws -> InStorePlaceSlot? {
+        guard await authorize() else { throw ScanFailure.stale }
+        let slot: InStorePlaceSlot? = try withLock {
+            let slot = try placeSlots(scope.workspace, at: now).first { $0.scope == scope }
+            if let place = slot?.place, let photo = place.photo, let photoOwner {
+                // Resolve the live opt-in again at the tap; another window can withdraw its
+                // source before SwiftUI receives the row-photo notification.
+                let hasSource = try livePackagePhotos(in: scope.workspace, owner: photoOwner).contains { row in
+                    guard row.revision == photo else { return false }
+                    if let association = place.association {
+                        return row.destinations?.contains { $0.id == association && $0.target.containerID == scope.shop &&
+                            $0.target.objectID == place.line } == true
+                    }
+                    return row.target.containerID == scope.shop && row.target.objectID == place.line
+                }
+                guard hasSource else { return nil }
+            }
+            return slot
+        }
+        guard await authorize() else { throw ScanFailure.stale }
+        return slot
+    }
+
+    func updateSavedPlace(in scope: InStorePlaceScope, expected: UUID?, place: InStoreSavedPlace?, at now: Date = .now,
+                          authorize: @MainActor @Sendable () -> Bool) async throws {
+        guard await authorize(), place?.isLive(at: now) != false else { throw ScanFailure.stale }
+        let change = InStorePlaceSlot(scope: scope, changed: now, place: place)
+        let previous: InStorePlaceSlot? = try withLock {
+            var slots = try placeSlots(scope.workspace, at: now)
+            let prior = slots.first { $0.scope == scope }
+            guard prior?.revision == expected else { throw ScanFailure.stale }
+            slots.removeAll { $0.scope == scope }
+            slots.append(change)
+            guard slots.count <= 256 else { throw ScanFailure.tooLarge }
+            try write(JSONEncoder().encode(slots), to: savedPlacesURL(scope.workspace))
+            return prior
+        }
+        guard await authorize() else {
+            // Restore only our write, preserving a newer choice or an erased workspace.
+            try withLock {
+                var slots = try placeSlots(scope.workspace, at: now)
+                guard slots.contains(where: { $0.revision == change.revision }) else { return }
+                slots.removeAll { $0.revision == change.revision }
+                if let previous { slots.append(previous) }
+                try write(JSONEncoder().encode(slots), to: savedPlacesURL(scope.workspace))
+            }
+            throw ScanFailure.stale
+        }
+        await MainActor.run { NotificationCenter.default.post(name: Self.savedPlaceChanged, object: scope.workspace) }
+    }
+
+    static let savedPlaceChanged = Notification.Name("RoomInTheCart.privateShoppingPlaceChanged")
 }

@@ -51,6 +51,15 @@ public actor HouseholdService {
         enrollment = device; self.householdID = householdID; subject = access.identity.subject
         return try await bootstrap()
     }
+    /// Nonsecret identity of the server-verified adult enrollment. Reopening the
+    /// same Keychain enrollment retains it; a replacement enrollment gets a new ID.
+    public func privateShoppingDeviceID(bootstrap: HouseholdBootstrap) throws -> String {
+        guard let enrollment, bootstrap.enrolled, bootstrap.grantId == nil, selectedGrantID == nil,
+              ["shopper", "organizer"].contains(bootstrap.role),
+              bootstrap.household.id == householdID, bootstrap.memberId == memberID else { throw ClientError.accessEnded }
+        return enrollment.deviceId
+    }
+
     /// Nonsecret enrollment identity for an explicit own-request review lease.
     public func requestReviewDeviceID(bootstrap: HouseholdBootstrap) throws -> String {
         guard let enrollment, bootstrap.enrolled, bootstrap.capabilities.contains("own_requests"),
