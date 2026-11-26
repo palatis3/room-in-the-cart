@@ -4316,6 +4316,40 @@
         }
       }
     },
+    "Review count": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review count"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar conteo"
+          }
+        }
+      }
+    },
+    "Review delivery": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review delivery"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar entrega"
+          }
+        }
+      }
+    },
     "Review pantry change": {
       "extractionState": "manual",
       "localizations": {

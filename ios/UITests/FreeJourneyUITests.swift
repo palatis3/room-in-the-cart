@@ -5537,6 +5537,7 @@ import XCTest
         let bounds = snapshot?.frame ?? app.frame
         var keyboardTop = bounds.maxY
         var tabBarTop = bounds.maxY
+        var productReviewTop = bounds.maxY
         var barBottom = bounds.minY + 88
         var elements = snapshot.map { [$0] } ?? []
         while let element = elements.popLast() {
@@ -5545,11 +5546,14 @@ import XCTest
                 if element.elementType == .keyboard { keyboardTop = min(keyboardTop, frame.minY) }
                 if element.elementType == .tabBar { tabBarTop = min(tabBarTop, frame.minY) }
                 if element.elementType == .navigationBar { barBottom = max(barBottom, frame.maxY) }
+                if element.identifier == "productBatch.review" || element.identifier == "productBatch.reviewPending" {
+                    productReviewTop = min(productReviewTop, frame.minY)
+                }
             }
             elements.append(contentsOf: element.children)
         }
         let top = max(bounds.minY + 88, min(barBottom + 12, keyboardTop - 140))
-        let bottom = min(usingTabBarFrame ? tabBarTop : bounds.maxY - 100, keyboardTop - 16)
+        let bottom = min(usingTabBarFrame ? tabBarTop : bounds.maxY - 100, keyboardTop - 16, productReviewTop - 8)
         return CGRect(x: bounds.minX + 24, y: top, width: bounds.width - 48, height: max(80, bottom - top))
     }
     private func scrollContent(upward: Bool, area measuredArea: CGRect? = nil, bounds measuredBounds: CGRect? = nil,

@@ -27,6 +27,7 @@ struct PantryProductBatchView: View {
     @State private var restoreReviewFocus = false
     private enum ReviewFocus: Hashable { case opener, product(Int) }
     @AccessibilityFocusState private var reviewFocus: ReviewFocus?
+    @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var result: String?
     @State private var inputMessage: String?
@@ -293,7 +294,7 @@ struct PantryProductBatchView: View {
                     }
                     VStack(alignment: .leading) {
                         let title = pantryText("Product name or label text")
-                        Text(title).font(.caption)
+                        Text(title).font(.caption).lineLimit(nil).fixedSize(horizontal: false, vertical: true)
                         TextEditor(text: $name)
                             .frame(minHeight: 58)
                             .focused($focus, equals: "name")
@@ -390,9 +391,13 @@ struct PantryProductBatchView: View {
 
     private var reviewTitle: String { pantryText(atHome ? "Review pantry count" : "Review received products") }
 
+    private var visibleReviewTitle: String {
+        typeSize.isAccessibilitySize ? pantryText(atHome ? "Review count" : "Review delivery") : reviewTitle
+    }
+
     private var showsReviewFooter: Bool {
         let canReviewDraft = inspectedDraft || (lookupAccess == nil && initialAccess == nil && access == nil)
-        guard canPresent, canReviewDraft, !draftChangedElsewhere, !recoveryReadFailed,
+        guard focus == nil, canPresent, canReviewDraft, !draftChangedElsewhere, !recoveryReadFailed,
               recovery == nil, offeredDraft == nil, !saved, !batch.candidates.isEmpty else { return false }
         return review != nil || batch.candidates.contains(where: \.included) ||
             !batch.candidates.contains { $0.receiptLinkSaved && $0.existingReceipt != nil }
@@ -402,7 +407,7 @@ struct PantryProductBatchView: View {
         VStack(spacing: 8) {
             Divider()
             if review == nil {
-                Button(reviewTitle, action: prepare)
+                Button(visibleReviewTitle, action: prepare)
                     .buttonStyle(PrimaryAction())
                     .disabled(!confirmed || working || !model.canEdit || (!atHome && merchant.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
                     .accessibilityLabel(reviewActionLabel)
@@ -416,7 +421,7 @@ struct PantryProductBatchView: View {
             } else {
                 // Reserve the exact original control footprint outside the scrolling form.
                 // A repeated tap here cannot reach either the commit or the cancel control.
-                PrimaryActionLabel(label: Text(reviewTitle)).hidden()
+                PrimaryActionLabel(label: Text(visibleReviewTitle)).hidden()
                     .overlay { Text(pantryText("Not recorded yet")).font(.headline).foregroundStyle(Theme.ink) }
                     .accessibilityElement(children: .ignore)
                     .accessibilityLabel(pantryText("Not recorded yet"))
@@ -871,7 +876,7 @@ private struct PantryProductCandidateEditor: View {
                         if row.onePackageUnknown {
                             let title = pantryText("Printed wording to review")
                             VStack(alignment: .leading) {
-                                Text(title).font(.caption)
+                                Text(title).font(.caption).lineLimit(nil).fixedSize(horizontal: false, vertical: true)
                                 TextField(pantryText("Optional"), text: Binding(
                                     get: { row.dateWordingDraft ?? row.reviewedDateWording ?? "" },
                                     set: { row.dateWordingDraft = $0 }
