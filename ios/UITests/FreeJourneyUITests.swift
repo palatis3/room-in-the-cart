@@ -4380,7 +4380,7 @@ import XCTest
         tap(app.buttons["dinnerLibrary"])
         tap(app.buttons["ledgerNewTemplate"])
         fillDinner("Rice bowls", ingredient: "Rice")
-        tap(app.buttons["ledgerReviewDinner"])
+        tapVisibleFormRow(app.buttons["ledgerReviewDinner"], marker: "SWAP_LIBRARY_REVIEW")
         tap(app.buttons["ledgerSaveDinner"])
         XCTAssertTrue(app.staticTexts["dinner.firstSaveConfirmation"].waitForExistence(timeout: 8),
                       "The private Dinners library must carry first-save access through both navigation links.")

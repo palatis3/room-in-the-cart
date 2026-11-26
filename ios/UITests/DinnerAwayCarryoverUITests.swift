@@ -26,13 +26,6 @@ import XCTest
         fill("6", into: "awayCarryover.counted")
         fill("2", into: "awayCarryover.reserved")
         fill("1", into: "awayCarryover.servings")
-        // The focused single-line field has the observed Return key; submit it
-        // before moving back to the physical-evidence confirmation above this field.
-        if app.keyboards.firstMatch.exists {
-            app.typeText(XCUIKeyboardKey.return.rawValue)
-            let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.keyboards.firstMatch)
-            XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
-        }
         confirm("awayCarryover.checked")
         tap(element("awayCarryover.review"))
         assertText("Reserved for carryover: 2")
@@ -42,7 +35,7 @@ import XCTest
         tap(element("awayCarryover.cancel")); assertCounts(targets: 0)
         XCTAssertFalse(element("awayCarryover.retry").exists)
         tap(element("awayCarryover.review")); confirm("awayCarryover.approve")
-        tap(element("awayCarryover.apply"))
+        tap(app.buttons["awayCarryover.apply"], requireContentFrame: true)
         let saved = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
             self.element("fixture.away.targets").label == "Carryover targets: 1"
         }, object: nil)
@@ -74,21 +67,27 @@ import XCTest
     private func element(_ id: String) -> XCUIElement { app.descendants(matching: .any).matching(identifier: id).firstMatch }
     private func tap(_ target: XCUIElement, requireContentFrame: Bool = false) {
         reveal(target, requireContentFrame: requireContentFrame)
-        XCTAssertTrue(target.isHittable, target.debugDescription); target.tap()
+        XCTAssertTrue(target.isHittable, target.debugDescription)
+        if requireContentFrame {
+            target.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        } else {
+            target.tap()
+        }
     }
     private func confirm(_ identifier: String) {
         let button = app.buttons[identifier]
-        reveal(button)
+        reveal(button, requireContentFrame: true)
         XCTAssertFalse(button.isSelected)
-        button.tap()
-        XCTAssertTrue(button.isSelected, identifier)
+        button.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        XCTAssertTrue(button.wait(for: \.isSelected, toEqual: true, timeout: 5), identifier)
     }
-    private func fill(_ text: String, into id: String, replacing: Bool = false) {
-        let field = app.textFields[id]; tap(field, requireContentFrame: true)
-        if replacing, let old = field.value as? String, old != field.placeholderValue { app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
+    private func fill(_ text: String, into id: String) {
+        let field = app.textFields[id]
+        tap(field, requireContentFrame: true)
         app.typeText(text)
-        let done = app.buttons.matching(NSPredicate(format: "label == %@", "Done")).firstMatch
-        if done.exists && done.isHittable { done.tap() }
+        XCTAssertEqual(field.value as? String, text)
+        app.typeText(XCUIKeyboardKey.return.rawValue)
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
     }
     private func reveal(_ target: XCUIElement, requireContentFrame: Bool = false) {
         for attempt in 0..<24 {
@@ -101,11 +100,9 @@ import XCTest
                 let frame = target.frame
                 if !frame.isEmpty && area.contains(frame) { return }
             }
-            let upward: Bool
-            if target.exists && !target.frame.isEmpty {
-                upward = target.frame.midY > area.midY
-            } else { upward = attempt < 16 }
-            scrollContent(upward: upward)
+            let frame = target.exists ? target.frame : .zero
+            let offset = frame.isEmpty ? (attempt < 16 ? area.height : -area.height) : frame.midY - area.midY
+            scrollContent(by: offset, in: area)
         }
         XCTAssertTrue(target.exists && target.isHittable &&
                       (!requireContentFrame || (!target.frame.isEmpty && scrollableArea().contains(target.frame))),
@@ -116,18 +113,18 @@ import XCTest
         let keyboardTop = app.keyboards.allElementsBoundByIndex.filter { $0.exists }.map { $0.frame.minY }.min() ?? bounds.maxY
         let barBottom = app.navigationBars.allElementsBoundByIndex.filter { $0.exists && $0.isHittable }.map { $0.frame.maxY }.max() ?? bounds.minY + 88
         let top = max(bounds.minY + 88, min(barBottom + 12, keyboardTop - 140))
-        let bottom = min(bounds.maxY - 100, keyboardTop - 16)
-        return CGRect(x: bounds.minX + 24, y: top, width: bounds.width - 48, height: max(80, bottom - top))
+        let bottom = min(bounds.maxY - 34, keyboardTop - 16)
+        return CGRect(x: bounds.minX, y: top, width: bounds.width, height: max(80, bottom - top))
     }
-    private func scrollContent(upward: Bool) {
-        // Whole-app swipes can start on the software keyboard. Drag only in
-        // the observed unobscured content, and still require real hittability.
-        let area = scrollableArea(), bounds = app.frame
-        let high = area.minY + area.height * 0.2, low = area.minY + area.height * 0.8
+    private func scrollContent(by offset: CGFloat, in area: CGRect) {
+        let distance = min(abs(offset), area.height * 0.6)
+        let half = offset > 0 ? distance / 2 : -distance / 2
+        let bounds = app.frame
         let origin = app.coordinate(withNormalizedOffset: .zero)
-        let start = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: (upward ? low : high) - bounds.minY))
-        let end = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: (upward ? high : low) - bounds.minY))
-        start.press(forDuration: 0.05, thenDragTo: end)
+        let start = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: area.midY + half - bounds.minY))
+        let end = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: area.midY - half - bounds.minY))
+        // Release after the form stops moving so the next tap lands on the observed row.
+        start.press(forDuration: 0.05, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.3)
     }
     private func assertText(_ text: String) {
         let target = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
