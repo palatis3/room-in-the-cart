@@ -455,12 +455,17 @@ import XCTest
         let name = undo.label
         XCTAssertTrue(name.contains("Pasillo"), name)
         undo.tap()
-        let alert = app.alerts.firstMatch
-        XCTAssertTrue(alert.staticTexts[name].waitForExistence(timeout: 5))
-        alert.buttons["Deshacer"].tap()
+        let alert = app.alerts.containing(.staticText, identifier: name).firstMatch
+        XCTAssertTrue(alert.waitForExistence(timeout: 5))
+        // iOS 27 exposes the confirmation as nested buttons with the same identifier.
+        let confirm = alert.buttons.matching(identifier: "inStoreConfirmUndo").firstMatch
+        XCTAssertEqual(confirm.label, "Deshacer")
+        XCTAssertTrue(confirm.isHittable)
+        confirm.tap()
+        XCTAssertTrue(alert.waitForNonExistence(timeout: 5))
         let restored = app.buttons[id]
-        XCTAssertTrue(restored.waitForExistence(timeout: 8))
-        XCTAssertTrue(restored.isHittable)
+        let visibleAgain = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"), object: restored)
+        XCTAssertEqual(XCTWaiter.wait(for: [visibleAgain], timeout: 8), .completed, restored.debugDescription)
     }
 
     func testSimpleLineTotalSavesFromKeyboardAndUnknownHasNoShortcut() {

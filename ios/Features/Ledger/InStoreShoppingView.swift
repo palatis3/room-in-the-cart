@@ -350,8 +350,9 @@ struct InStoreShoppingView: View {
                 if UIAccessibility.isVoiceOverRunning || scrollToReturn {
                     switch target {
                     case .line, .picked:
-                        // Keep an already visible grocery in place when a shopper undoes a pick.
-                        let anchor: UnitPoint? = UIAccessibility.isVoiceOverRunning ? .center : nil
+                        // At large type the pinned aisle heading can cover a checkbox that List considers visible.
+                        let centerRow = UIAccessibility.isVoiceOverRunning || (typeSize.isAccessibilitySize && scrollToReturn)
+                        let anchor: UnitPoint? = centerRow ? .center : nil
                         reader.scrollTo(target, anchor: anchor)
                     case .subtotal:
                         if typeSize.isAccessibilitySize { reader.scrollTo(Focus.subtotal, anchor: .top) }

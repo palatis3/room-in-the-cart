@@ -120,7 +120,9 @@ import XCTest
         display.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
         XCTAssertEqual(display.value as? String, "1")
         tap(app.buttons["cooking.end"])
-        tap(app.buttons["cooking.confirmEnd"])
+        // iOS 27 exposes a native action and its nested button with the same identifier.
+        let confirmation = app.sheets.buttons.matching(identifier: "cooking.confirmEnd").firstMatch
+        tap(confirmation)
         tap(app.buttons["cooking.openRecipe"])
         reveal(saved, requiresHitTarget: false)
         capture("Private photo and description on a later cook")

@@ -235,6 +235,12 @@ private struct SkippedStoreView: View {
     @FocusState private var editing: Bool
     private var pantry = ShoppingDinnerPantry()
 
+    init(model: LedgerModel, shopID: UUID, suggested: String) {
+        self.model = model
+        self.shopID = shopID
+        self.suggested = suggested
+    }
+
     var body: some View {
         WorkingForm {
             if authorize(), let shop = model.shop, shop.id == shopID {

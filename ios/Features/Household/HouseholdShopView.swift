@@ -32,6 +32,10 @@ private struct SharedShopContent: View {
                     SharedPickingLink(household: household)
                     if model.scope.shopId == nil { HouseholdPantryLink(household: household) }
                     Button(ht("Refresh shared shop")) { Task { await model.load() } }
+                    if model.canManage, model.pending == nil, model.shop?.phase == "draft" {
+                        NavigationLink(SharedDemandCopy.text("Food quantities and sources")) { SharedTrackingShopView(owner: model) }
+                            .accessibilityIdentifier("sharedShop.foodQuantities")
+                    }
                     if household.storeQuoteScope != nil {
                         NavigationLink(StoreQuoteCopy.text("Two entered store quotes")) { SharedStoreQuotesView(household: household) }
                             .accessibilityIdentifier("sharedShop.storeQuotes")
@@ -99,8 +103,6 @@ private struct SharedShopContent: View {
                             }
                             if household.canReviewHouseholdRequests { NavigationLink(ht("Review family requests")) { HouseholdInboxView(model: household) } }
                             if shop.phase == "draft", model.canManage {
-                                NavigationLink(SharedDemandCopy.text("Food quantities and sources")) { SharedTrackingShopView(owner: model) }
-                                    .accessibilityIdentifier("sharedShop.foodQuantities")
                                 NavigationLink(SharedOperationUndoCopy.text("Saved changes")) { SharedOperationUndoView(shopModel: model) }
                                     .accessibilityIdentifier("sharedShop.savedChanges")
                                 Button(ht("Edit shared items and quote")) { model.beginEditing() }.accessibilityIdentifier("sharedShop.edit")
