@@ -10,26 +10,49 @@ struct SavedWeekEntry: View {
     @ObservedObject var household: HouseholdModel
     let scope: SharedMealChangeScope
     let start: Date
-    @State private var available = false
-    @State private var checking = true
+    private enum Lookup { case checking, available, retry, hidden }
+    @State private var lookup: Lookup = .checking
 
     var body: some View {
-        Group {
-            if checking && household.sharedMealChangeScope == scope {
-                ProgressView().accessibilityHidden(true).task {
-                    defer { if !Task.isCancelled { checking = false } }
-                    guard let service = household.service else { return }
-                    do {
-                        _ = try await service.savedWeekProgress(shop: scope.shopID, week: sharedMealDay(start))
-                        available = !Task.isCancelled && household.sharedMealChangeScope == scope
-                    } catch { available = false }
-                }
-            } else if available && household.sharedMealChangeScope == scope {
+        if household.sharedMealChangeScope == scope {
+            switch lookup {
+            case .checking:
+                ProgressView().accessibilityHidden(true).task { await checkAccess() }
+            case .available:
                 NavigationLink(savedWeekText("Change saved nights")) {
                     SavedWeekChangesView(household: household, scope: scope, start: start)
                 }.accessibilityIdentifier("savedWeek.open")
+            case .retry:
+                Button(savedWeekText("Retry connection")) { lookup = .checking }
+                    .accessibilityIdentifier("savedWeek.retryConnection")
+            case .hidden:
+                EmptyView()
             }
         }
+    }
+
+    @MainActor private func checkAccess() async {
+        guard !Task.isCancelled, household.sharedMealChangeScope == scope else { return }
+        guard let service = household.service else { lookup = .hidden; return }
+        let result: Lookup
+        do {
+            _ = try await service.savedWeekProgress(shop: scope.shopID, week: sharedMealDay(start))
+            result = .available
+        } catch ClientError.transport {
+            result = .retry
+        } catch ClientError.service(let status, let code, _, let retryAfter)
+            where (code == "rate_limited" && status == 429) ||
+                  (code == "service_unavailable" && [408, 502, 503, 504].contains(status)) {
+            if let retryAfter, retryAfter > 0 {
+                // Respect the server's delay. Only a button tap starts another lookup.
+                do { try await Task.sleep(for: .seconds(retryAfter)) } catch { return }
+            }
+            result = .retry
+        } catch {
+            result = .hidden
+        }
+        guard !Task.isCancelled, household.sharedMealChangeScope == scope else { return }
+        lookup = result
     }
 }
 

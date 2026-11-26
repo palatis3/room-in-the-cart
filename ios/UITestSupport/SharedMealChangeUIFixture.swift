@@ -30,7 +30,7 @@ private enum S17GroupAmountFixture {
         return planning
     }
 }
-/// HTTP contract fixture for a lost reply after the first committed night.
+/// HTTP contract fixture for an offline initial lookup and a lost reply after the first committed night.
 /// The production service tests own the demand graph and pack arithmetic.
 private final class SavedWeekUIFixture {
     let ids = ["55555555-5555-4555-8555-555555555555", "88888888-8888-4888-8888-888888888888"]
@@ -38,6 +38,7 @@ private final class SavedWeekUIFixture {
     private let start = sharedMealPickerToday()
     private let digest = String(repeating: "c", count: 64)
     private var planID: String?
+    private var firstLookup = true
     private(set) var completed = 0
     private func day(_ offset: Int) -> String {
         // The shared-week picker represents each civil date at UTC midnight.
@@ -64,7 +65,13 @@ private final class SavedWeekUIFixture {
         return ["series": series]
     }
     func respond(_ route: String, method: String?, input: [String: Any]) throws -> [String: Any] {
-        if route.isEmpty && method == "GET" { return progress }
+        if route.isEmpty && method == "GET" {
+            if firstLookup {
+                firstLookup = false
+                throw URLError(.notConnectedToInternet)
+            }
+            return progress
+        }
         guard method == "POST" else { throw URLError(.badServerResponse) }
         if route == "/preview" || route == "/confirm" {
             guard input["ids"] as? [String] == ids, input["week"] as? String == day(0),

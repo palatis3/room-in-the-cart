@@ -74,6 +74,12 @@ import XCTest
         app.launch()
         tap(element("fixture.s17.switch"))
         tap(app.buttons[spanish ? "Fechas de comidas compartidas" : "Shared meal dates"])
+        let retry = app.buttons["savedWeek.retryConnection"]
+        reveal(retry)
+        XCTAssertEqual(retry.label, spanish ? "Volver a intentar la conexión" : "Retry connection")
+        XCTAssertFalse(app.buttons["savedWeek.open"].exists)
+        XCTAssertEqual(element("fixture.s17.applications").label, "Fixture shared applications: 0")
+        tap(retry)
         tap(app.buttons["savedWeek.open"])
         let preview = app.buttons["savedWeek.preview"]
         reveal(preview)
