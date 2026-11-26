@@ -1546,6 +1546,27 @@ one grouped candidate batch. Keep the same 26 fixture jobs, 89 selected tests, f
 macOS slots, per-case assertions, strict execution checks and job deadlines.
 The existing planner and workflow checks verify coverage and dispatch structure.
 
+## Contributor fixture balance — November 26
+
+Group 04 reached its 40-minute test-step limit after 14 passing cases. The eight
+recipe-library cases used 29m06s. A civil-date case was still running when the
+step timed out. Group 03 finished its 12 cases in 15m21s on the same head.
+[Group 04 job](https://github.com/palatis3/room-in-the-cart/actions/runs/45860248060/job/140051395286) · [Group 03 job](https://github.com/palatis3/room-in-the-cart/actions/runs/45860248060/job/140051395088)
+
+Group 03 now runs all three history-grant cases and the paid pickup recovery.
+These four cases took 8m06s in the timed-out run. Group 04 keeps the recipe-library
+and civil-date suites. Two civil-date cases finished, a third was interrupted, and
+five never started. All eight took 4m12s in each of two earlier successful group
+04 runs. The two completed cases ran 20% slower on the timed-out runner. Applying
+that ratio to all eight gives an estimated 5m02s for civil-date coverage.
+Completed groups took 31–47 seconds inside the test step beyond individual
+case durations. With 47 seconds of overhead, group 04 would take roughly 34m55s
+at the observed M2 Pro pace. Its new runner is M4. Group 03 moves to M2 Pro.
+Even if its existing 15m21s of M4 cases take 50% longer, the estimated step is
+31m54s. The other 24 jobs keep their runner providers. Setup and teardown outside
+the test step took another 52–87 seconds in the successful samples.
+[Previous group 04](https://github.com/palatis3/room-in-the-cart/actions/runs/45851224131/job/140022446155) · [Earlier green suite](https://github.com/palatis3/room-in-the-cart/actions/runs/45802766432/job/139854756137)
+
 ## Shared delivery fixture timing
 
 In the November 13 full run at `113c6e92`, the six stock and purchase cases took 816.9 seconds of XCTest time. The five recovery, cook and closeout cases took 401.9 seconds. The English and Spanish confirmed-order retry journeys together accounted for 251.8 seconds in the stock job. [Stock and purchase log](https://github.com/palatis3/room-in-the-cart/actions/runs/43390234553/job/131770559712) · [Recovery, cook and closeout log](https://github.com/palatis3/room-in-the-cart/actions/runs/43390234553/job/131770559737)

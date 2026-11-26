@@ -156,8 +156,7 @@ class PlanIOSFixtureTests(unittest.TestCase):
         fallbacks = plans["contributor"]["shards"]["SharedFallbackUITests"]
         self.assertEqual(fallbacks["suite"], "SharedFallbackUITests")
         paid_case = f"{UI_TARGET}/PaidPickupRecoveryUITests/testNamedSeatCanApplyAcceptedRecipeAndExpiredSeatCanReadSavedCookCopy"
-        group = plans["contributor"]["shards"]["contributor-balanced-04"]
-        self.assertIn(paid_case, [identifier.removesuffix("()") for identifier in group["test_identifiers"]])
+        self.assertIn(paid_case, [identifier.removesuffix("()") for identifier in decision_shard])
         for name, shard in plans["contributor"]["shards"].items():
             if name != "RecordsMediaUITests":
                 self.assertFalse(any("/RecordsMediaUITests/" in identifier for identifier in shard["test_identifiers"]))

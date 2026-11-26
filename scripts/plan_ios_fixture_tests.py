@@ -69,17 +69,14 @@ DELIVERY_SHARDS = {
     ),
 }
 # Whole suites share a contributor runner; every method still runs exactly once.
-# Initial grouping used23a73a8/run42021894739. At49b/run42953140722,
-# group03 exhausted40minutes before its civil-date suite could finish.
-# Move devices to02 and civil dates to04, retaining the same five groups.
-# Current evidence and remaining timing uncertainty: docs/CI-VALIDATION.md.
+# Measured suite durations and routing history are recorded in docs/CI-VALIDATION.md.
 BALANCED_SUITES = {
     # The nine guardian cases took 7–10 minutes in recent GitHub runs.
     # Group 01 finished in 14 minutes while group 05 approached its 40-minute limit.
     "contributor-balanced-01": ("DinnerAwayCarryoverUITests", "GuardianEnrollmentUITests", "RequestDuplicateComparisonUITests"),
     "contributor-balanced-02": ("ContributorRequestUITests", "ImportRecoveryUITests", "HouseholdDevicesUITests"),
-    "contributor-balanced-03": ("HouseholdRequestPackUITests", "HouseholdCheckUITests"),
-    "contributor-balanced-04": ("HistoryGrantReadUITests", "RecipeLibraryAcceptanceUITests", "PaidPickupRecoveryUITests", "SharedMealCivilDateUITests"),
+    "contributor-balanced-03": ("HouseholdRequestPackUITests", "HouseholdCheckUITests", "HistoryGrantReadUITests", "PaidPickupRecoveryUITests"),
+    "contributor-balanced-04": ("RecipeLibraryAcceptanceUITests", "SharedMealCivilDateUITests"),
     # On the two preceding PR 76 runs, measurement and stock took 8–9 minutes in group 02.
     "contributor-balanced-05": ("CorrectionPrivacyAcceptanceUITests", "MeasurementUITests", "SharedMealChangeUITests", "StapleRecallUITests", "StockReviewUITests"),
 }
