@@ -81,7 +81,7 @@ import SwiftUI
                                 Text(String(format: recordsText("Cooking for %@ servings"), cookingAmount(amounts.cookingServings)))
                                 ForEach(rows, id: \.ingredient) { row in
                                     if let base = row.byStep[index], let scaled = try? amounts.scaled(base) {
-                                        LabeledContent(ingredients[row.ingredient], value: cookingAmount(scaled) + " " + cookingUnit(row.unit))
+                                        LabeledContent(ingredients[row.ingredient], value: cookingAmount(scaled) + " " + cookingUnit(row.unit, singular: scaled <= .one))
                                             .accessibilityIdentifier("cooking.scaledAmount." + String(row.ingredient))
                                     }
                                 }
@@ -257,18 +257,18 @@ import SwiftUI
     }
 }
 
-private func cookingUnit(_ unit: CookingStepAmounts.Unit) -> String {
+private func cookingUnit(_ unit: CookingStepAmounts.Unit, singular: Bool = false) -> String {
     switch unit {
     case .tablespoons: recordsText("tbsp")
     case .teaspoons: recordsText("tsp")
-    case .cups: dinnerUnit(.cup)
-    case .milliliters: dinnerUnit(.milliliter)
-    case .liters: dinnerUnit(.liter)
-    case .grams: dinnerUnit(.gram)
-    case .kilograms: dinnerUnit(.kilogram)
-    case .ounces: dinnerUnit(.ounce)
-    case .pounds: dinnerUnit(.pound)
-    case .pieces: dinnerUnit(.count)
+    case .cups: dinnerUnit(.cup, singular: singular)
+    case .milliliters: dinnerUnit(.milliliter, singular: singular)
+    case .liters: dinnerUnit(.liter, singular: singular)
+    case .grams: dinnerUnit(.gram, singular: singular)
+    case .kilograms: dinnerUnit(.kilogram, singular: singular)
+    case .ounces: dinnerUnit(.ounce, singular: singular)
+    case .pounds: dinnerUnit(.pound, singular: singular)
+    case .pieces: dinnerText(singular ? "unit" : "units")
     }
 }
 

@@ -190,8 +190,11 @@ struct SavedDinnerHandoffView: View {
                     receiptRows(review.receipt)
                     if review.plansDinner {
                         Button(dinnerText("Plan another night")) {
-                            let calendar = Calendar(identifier: .gregorian)
+                            var calendar = Calendar(identifier: .gregorian)
+                            calendar.timeZone = planZone
                             plannedDate = calendar.date(byAdding: .day, value: 1, to: plannedDate ?? Date())
+                            productChoice = nil
+                            restoreOptionalChoices()
                             prepare(.planTonight)
                             editingPlan = true
                         }.accessibilityIdentifier("dinner.handoff.anotherNight")

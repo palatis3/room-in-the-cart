@@ -194,19 +194,23 @@ import XCTest
         let rows = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "dinner.handoff.amount."))
         let stapleRows = rows.matching(NSPredicate(format: "label CONTAINS %@", staple))
         let pairingRows = rows.matching(NSPredicate(format: "label CONTAINS %@", pairing))
-        func assertQuantities(_ expected: [Int], file: StaticString = #filePath, line: UInt = #line) {
+        func assertQuantities(_ expected: [Int], includesPairing: Bool = false, file: StaticString = #filePath, line: UInt = #line) {
             let item = stapleRows.firstMatch
             reveal(item)
             let numbers = item.label.components(separatedBy: CharacterSet.decimalDigits.inverted).compactMap(Int.init)
             XCTAssertEqual(numbers, expected, item.label, file: file, line: line)
-            XCTAssertFalse(pairingRows.firstMatch.exists, "Optional food must stay out of grocery demand", file: file, line: line)
+            XCTAssertEqual(pairingRows.firstMatch.exists, includesPairing, "Grocery demand must use this night's choice", file: file, line: line)
         }
         assertQuantities([0, 2, 2])
+        let wine = app.switches.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
+                                                     "dinner.handoff.planIngredient.", pairing)).firstMatch
+        tap(wine, at: CGVector(dx: 0.92, dy: 0.5))
+        assertQuantities([0, 2, 2], includesPairing: true)
         let confirm = app.buttons["dinner.handoff.confirm"]
         tap(confirm)
         let saved = app.descendants(matching: .any).matching(identifier: "dinner.handoff.saved").firstMatch
         XCTAssertTrue(saved.waitForExistence(timeout: 10))
-        assertQuantities([0, 2, 2])
+        assertQuantities([0, 2, 2], includesPairing: true)
         tap(app.buttons["dinner.handoff.anotherNight"])
         tap(app.buttons["dinner.plan.reviewFacts"])
         assertQuantities([2, 2, 4])
