@@ -766,8 +766,12 @@ import XCTest
         reveal(quantity, requiredHit: input)
         quantity.coordinate(withNormalizedOffset: input).tap()
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
-        app.typeText("2 paquetes")
-        XCTAssertEqual(quantity.value as? String, "2 paquetes")
+        let expectedQuantity = "2 paquetes"
+        app.typeText(expectedQuantity)
+        let completeQuantity = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "value == %@", expectedQuantity), object: quantity)
+        XCTAssertEqual(XCTWaiter.wait(for: [completeQuantity], timeout: 3), .completed,
+                       "The printed quantity must contain the complete entry.")
         receiptTap(app.buttons["scan.sourceDone"])
         XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
 
@@ -5255,13 +5259,13 @@ import XCTest
     }
 
     private func closeReviewedProduct() {
-        let close = app.navigationBars["Review product"].buttons.firstMatch
-        // Let the native stock menu dismiss before interacting with the sheet's toolbar.
-        guard close.wait(for: \.isHittable, toEqual: true, timeout: 5) else {
-            XCTFail("The reviewed product must be closable")
-            return
+        let review = app.navigationBars["Review product"]
+        let keep = review.buttons["productBatch.finishEditing"]
+        guard keep.wait(for: \.isHittable, toEqual: true, timeout: 5) else {
+            return XCTFail("Keep edits must be available on the reviewed product.")
         }
-        close.tap()
+        keep.tap()
+        XCTAssertTrue(review.waitForNonExistence(timeout: 8), "Keep edits must return to the batch.")
     }
     private func tap(_ target: XCUIElement) { reveal(target); target.tap() }
     private func enableSwitch(_ label: String, diagnosticName: String? = nil, position: ((XCUIElement) -> Void)? = nil) {
