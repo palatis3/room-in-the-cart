@@ -4219,13 +4219,19 @@ import XCTest
         tap(app.buttons["List order and aisles"])
         choose("List order", value: "Group by aisle")
         tap(element("saveListOrder"))
-        tap(element("ledgerInStore"))
+        // Saving dismisses the order editor asynchronously. A drag while the
+        // sheet is leaving scrolls past the already-visible in-store button.
+        XCTAssertTrue(app.navigationBars["List order and aisles"].waitForNonExistence(timeout: 8))
+        let inStore = app.buttons["ledgerInStore"]
+        XCTAssertTrue(inStore.wait(for: \.isHittable, toEqual: true, timeout: 8))
+        inStore.tap()
 
         let check = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "inStoreCheck-"))
         let apples = check.matching(NSPredicate(format: "label == %@", "Check Apples")).firstMatch
         let milk = check.matching(NSPredicate(format: "label == %@", "Check Milk")).firstMatch
         XCTAssertTrue(apples.wait(for: \.isHittable, toEqual: true, timeout: 8))
         let thumb = CGPoint(x: apples.frame.midX, y: apples.frame.midY)
+        XCTAssertFalse(milk.exists && milk.frame.contains(thumb))
         apples.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         XCTAssertTrue(apples.waitForNonExistence(timeout: 8))
         let underThumb = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in

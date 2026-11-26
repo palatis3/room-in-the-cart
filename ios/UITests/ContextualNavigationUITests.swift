@@ -277,20 +277,23 @@ import UIKit
         let paste = app.buttons["Paste list"]
         revealContent(paste)
         XCTAssertTrue(paste.isEnabled)
-        // On compact phones revealing Paste scrolls part of the editor behind
-        // the navigation bar; XCTest reports the clipped accessibility frame.
-        let heightAtPaste = editor.frame.height
-        XCTAssertGreaterThan(heightAtPaste, 0)
+        // At the largest text size the Form can remove the editor from its
+        // accessibility tree while Paste is visible. Measure the visible row.
+        let pasteY = paste.frame.midY
+        let review = app.buttons["ledgerReviewImport"]
+        XCTAssertFalse(review.isEnabled)
         paste.coordinate(withNormalizedOffset: CGVector(dx: 0.14, dy: 0.5)).tap()
+        let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == YES"), object: review)
+        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 10), .completed)
+        XCTAssertEqual(paste.frame.midY, pasteY, accuracy: 1, "Native Paste must preserve the scroll position")
 
-        let pasted = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", fixture), object: editor)
-        XCTAssertEqual(XCTWaiter.wait(for: [pasted], timeout: 10), .completed, "Native Paste must preserve all 500 lines")
-        XCTAssertEqual(editor.frame.height, heightAtPaste, accuracy: 1, "Native Paste must preserve the viewport at the same scroll position")
-        // Restore the original fully exposed viewport before editing the text.
+        // Bring the editor back to its original height before reading its contents.
         for _ in 0..<4 {
-            if abs(editor.frame.height - initialHeight) <= 1 { break }
+            if editor.exists && abs(editor.frame.height - initialHeight) <= 1 { break }
             app.scrollForm(in: scrollableArea(), upward: false, besideFields: true)
         }
+        XCTAssertTrue(editor.waitForExistence(timeout: 5))
+        XCTAssertEqual(editor.value as? String, fixture, "Native Paste must preserve all 500 lines")
         XCTAssertEqual(editor.frame.height, initialHeight, accuracy: 1, "The populated editor must retain its full height")
         XCTAssertLessThan(editor.frame.height, app.windows.firstMatch.frame.height / 2)
 
@@ -303,7 +306,6 @@ import UIKit
                     return
                 }
                 let viewport = form.frame.intersection(app.windows.firstMatch.frame)
-                let review = app.buttons["ledgerReviewImport"]
                 let top = max(viewport.minY, navigation.frame.maxY, review.frame.maxY)
                 let bottom = keyboard.exists ? min(viewport.maxY, keyboard.frame.minY) : viewport.maxY
                 let content = CGRect(x: viewport.minX, y: top, width: viewport.width, height: max(0, bottom - top))
@@ -332,7 +334,6 @@ import UIKit
         app.typeText("x")
         XCTAssertEqual((editor.value as? String)?.count, fixture.count + 1, "The pasted list must remain editable")
         app.typeText(XCUIKeyboardKey.delete.rawValue)
-        let review = app.buttons["ledgerReviewImport"]
         XCTAssertTrue(review.isEnabled && review.isHittable, "Review must be available while editing the pasted list")
         XCTAssertGreaterThanOrEqual(review.frame.minY, navigation.frame.maxY)
         XCTAssertLessThanOrEqual(review.frame.maxY, keyboard.frame.minY)

@@ -694,11 +694,20 @@ final class RoomInTheCartUITests: XCTestCase {
                 screenshot("Spanish largest text compact review and reachable confirmation")
             }
             tap(confirm)
+            // The first-list sheet returns through Shop before the new list
+            // mounts. Wait for its selected pickup before scrolling for Undo.
+            let listTitle = language == "en" ? "Shopping list" : "Lista de compras"
+            XCTAssertTrue(app.navigationBars[listTitle].waitForExistence(timeout: 10))
+            let pickup = app.buttons["ledgerShopPicker"]
+            XCTAssertTrue(pickup.wait(for: \.isHittable, toEqual: true, timeout: 8))
+            XCTAssertEqual(pickup.label, destination)
             let undo = app.buttons["ledgerUndoImport"]
             reveal(undo)
             XCTAssertEqual(undo.label, language == "en" ? "Undo last import · 2 entries" : "Deshacer la última importación · 2 entradas")
             tap(undo)
             XCTAssertTrue(undo.waitForNonExistence(timeout: 10))
+            reveal(app.staticTexts[language == "en" ? "Add the groceries you need for this pickup." :
+                "Añade los alimentos que necesitas para esta compra."])
             app.terminate()
         }
     }
