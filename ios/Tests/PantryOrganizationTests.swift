@@ -7,15 +7,17 @@ import XCTest
 final class PantryOrganizationTests: XCTestCase {
     private let now = Date(timeIntervalSince1970: 1_800_000_000)
 
-    private func database() async throws -> (URL, ComparisonStore) {
+    private func database() async throws -> ComparisonStore {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let cleanup = SQLiteFixtureDirectory(directory, test: self)
         let store = try ComparisonStore(url: directory.appendingPathComponent("inventory.sqlite"), inventoryEnabled: true)
+        cleanup.track(store)
         let token = try await store.inventorySourceToken()
         let state = try await store.inventoryState()
         _ = try await store.commitInventory(.init(workspaceID: store.workspaceID, operationID: UUID(),
             expectedRevision: state.revision, request: Data("activate".utf8), mode: .activate, sourceToken: token), at: now)
-        return (directory, store)
+        return store
     }
 
     private func preview(_ csv: String, _ snapshot: PantryRepository.Snapshot) throws -> PantryCSVPreview {
@@ -30,8 +32,7 @@ final class PantryOrganizationTests: XCTestCase {
     }
 
     func testCSVInterruptedReimportAndChangedSourceRemainSeparateFromStock() async throws {
-        let (directory, store) = try await database()
-        defer { try? FileManager.default.removeItem(at: directory) }
+        let store = try await database()
         var allowed = true
         let repo = PantryRepository(store: store, authorize: { allowed })
         let initial = try await repo.load(at: now)
@@ -75,8 +76,7 @@ final class PantryOrganizationTests: XCTestCase {
     }
 
     func testOrdinalOnlyReorderAndRepeatedLotKeysCannotIntroduceExtraStock() async throws {
-        let (directory, store) = try await database()
-        defer { try? FileManager.default.removeItem(at: directory) }
+        let store = try await database()
         let repo = PantryRepository(store: store, authorize: { true })
         let empty = try await repo.load(at: now)
         let original = "Nombre;Fecha;Ubicación\nChícharos;04/05/26;Canasta azul\nChícharos;18/05/26;Congelador"
@@ -91,8 +91,7 @@ final class PantryOrganizationTests: XCTestCase {
     }
 
     func testPutAwayTwelveLotsPreservesClaimsDatesAndDetectsInterveningUndoConflict() async throws {
-        let (directory, store) = try await database()
-        defer { try? FileManager.default.removeItem(at: directory) }
+        let store = try await database()
         let repo = PantryRepository(store: store, authorize: { true })
         let initial = try await repo.load(at: now)
         let csv = (["Lote;Nombre;Ubicación"] + (1...12).map { "\($0);Chícharos;Congelador" }).joined(separator: "\n")
