@@ -37,7 +37,11 @@ struct CookingStepNoteView: View {
     var body: some View {
         if model.permitsStepNotes, instruction != nil || !unresolved.isEmpty {
             Section(cookCompletionText("My note for this step")) {
-                if let instruction {
+                if let editor {
+                    CookingNoteEditor(model: model, previous: editor.previous, index: editor.step, instruction: editor.instruction,
+                        finish: { self.editor = nil })
+                        .id(editor.id)
+                } else if let instruction {
                     ForEach(attached.filter { !$0.hidden || showHidden }) { note in
                         Text(verbatim: note.text).textSelection(.enabled)
                         Button(cookCompletionText("Edit note")) { editor = .init(previous: note, step: index, instruction: instruction) }
@@ -55,7 +59,7 @@ struct CookingStepNoteView: View {
                             .accessibilityIdentifier("cooking.stepNote.add")
                     }
                 }
-                if !unresolved.isEmpty {
+                if editor == nil && !unresolved.isEmpty {
                     DisclosureGroup(cookCompletionText("Notes from earlier instructions")) {
                         ForEach(unresolved) { note in
                             VStack(alignment: .leading, spacing: 6) {
@@ -78,12 +82,7 @@ struct CookingStepNoteView: View {
             .fileExporter(isPresented: $exporting, document: document, contentType: .plainText,
                           defaultFilename: cookCompletionText("My cooking note")) { _ in document = nil }
             .onChange(of: phase) { _, phase in if phase == .background { exporting = false; document = nil; editor = nil } }
-            .onDisappear { exporting = false; document = nil; editor = nil }
-            .sheet(item: $editor) { draft in
-                NavigationStack {
-                    CookingNoteEditor(model: model, previous: draft.previous, index: draft.step, instruction: draft.instruction)
-                }
-            }
+            .onDisappear { exporting = false; document = nil }
         }
     }
 
@@ -102,46 +101,36 @@ private struct CookingNoteEditor: View {
     let previous: CookingStepNote?
     let index: Int
     let instruction: String
+    let finish: () -> Void
     @State private var text: String
-    @Environment(\.dismiss) private var dismiss
-    @Environment(\.scenePhase) private var phase
+    @FocusState private var focused: Bool
 
-    init(model: CookingSessionModel, previous: CookingStepNote?, index: Int, instruction: String) {
-        self.model = model; self.previous = previous; self.index = index; self.instruction = instruction
+    init(model: CookingSessionModel, previous: CookingStepNote?, index: Int, instruction: String, finish: @escaping () -> Void) {
+        self.model = model; self.previous = previous; self.index = index; self.instruction = instruction; self.finish = finish
         _text = State(initialValue: previous?.text ?? "")
     }
 
     var body: some View {
-        WorkingForm {
-            if model.permitsStepNotes {
-                Section(String(format: recordsText("Step %lld"), Int64(index + 1))) {
-                    Text(verbatim: instruction)
-                }
-                Section(cookCompletionText("My note for this step")) {
-                    TextField(cookCompletionText("What would you change next time?"), text: $text, axis: .vertical)
-                        .accessibilityIdentifier("cooking.stepNote.text")
-                    if let previous {
-                        Button(cookCompletionText("Delete note"), role: .destructive) {
-                            if model.setStepNote(previous, with: nil) { dismiss() }
-                        }
-                    }
-                }
-                if let message = model.message { Text(message) }
+        if model.permitsStepNotes {
+            if let previous, !previous.belongs(to: model.context.noteKey, step: index, instruction: instruction) {
+                Text(String(format: recordsText("Step %lld"), Int64(index + 1)) + " · " + instruction)
             }
-        }
-        .privacySensitive()
-        .navigationTitle(cookCompletionText("My note for this step"))
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) { Button(recordsText("Cancel")) { dismiss() } }
-            ToolbarItem(placement: .confirmationAction) {
-                Button(cookCompletionText("Save note")) {
-                    let next = CookingStepNote(id: previous?.id ?? UUID(), revision: model.context.noteKey.revision, step: index,
-                        instruction: instruction, text: text, hidden: false)
-                    if model.setStepNote(previous, with: next) { dismiss() }
-                }.disabled(!model.permitsStepNotes || text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || text.utf8.count > 2048)
-                .accessibilityIdentifier("cooking.stepNote.save")
+            TextField(cookCompletionText("What would you change next time?"), text: $text, axis: .vertical)
+                .textFieldStyle(WorkingInputStyle()).focused($focused)
+                .accessibilityIdentifier("cooking.stepNote.text")
+            Button(cookCompletionText("Save note")) {
+                let next = CookingStepNote(id: previous?.id ?? UUID(), revision: model.context.noteKey.revision, step: index,
+                    instruction: instruction, text: text, hidden: false)
+                if model.setStepNote(previous, with: next) { focused = false; finish() }
+            }.disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || text.utf8.count > 2048)
+            .accessibilityIdentifier("cooking.stepNote.save")
+            Button(recordsText("Cancel")) { focused = false; finish() }
+            if let previous {
+                Button(cookCompletionText("Delete note"), role: .destructive) {
+                    if model.setStepNote(previous, with: nil) { focused = false; finish() }
+                }
             }
+            if let message = model.message { Text(message) }
         }
-        .onChange(of: phase) { _, phase in if phase != .active { text = ""; dismiss() } }
     }
 }
