@@ -11,21 +11,24 @@ struct SavedWeekEntry: View {
     let scope: SharedMealChangeScope
     let start: Date
     @State private var available = false
+    @State private var checking = true
 
     var body: some View {
         Group {
-            if available && household.sharedMealChangeScope == scope {
+            if checking && household.sharedMealChangeScope == scope {
+                ProgressView().accessibilityHidden(true).task {
+                    defer { if !Task.isCancelled { checking = false } }
+                    guard let service = household.service else { return }
+                    do {
+                        _ = try await service.savedWeekProgress(shop: scope.shopID, week: sharedMealDay(start))
+                        available = !Task.isCancelled && household.sharedMealChangeScope == scope
+                    } catch { available = false }
+                }
+            } else if available && household.sharedMealChangeScope == scope {
                 NavigationLink(savedWeekText("Change saved nights")) {
                     SavedWeekChangesView(household: household, scope: scope, start: start)
                 }.accessibilityIdentifier("savedWeek.open")
             }
-        }
-        .task {
-            guard let service = household.service, household.sharedMealChangeScope == scope else { return }
-            do {
-                _ = try await service.savedWeekProgress(shop: scope.shopID, week: sharedMealDay(start))
-                available = !Task.isCancelled && household.sharedMealChangeScope == scope
-            } catch { available = false }
         }
     }
 }
@@ -42,7 +45,7 @@ struct SavedWeekChangesView: View {
     @State private var series: SavedWeekProgress?
     @State private var planID = UUID()
     @State private var working = false
-    @State private var failure = false
+    @State private var recoveryMessage: String?
     @State private var generation = UUID()
     private var active: Bool { household.sharedMealChangeScope == scope && scene == .active }
     private var week: String { sharedMealDay(start) }
@@ -70,7 +73,7 @@ struct SavedWeekChangesView: View {
                     }
                     if self.series?.next == nil { selection(menu) }
                 }
-                if failure { Text(savedWeekText("Refresh to check your access, saved progress and current food sources.")).accessibilityIdentifier("savedWeek.error") }
+                if let message = recoveryMessage { Text(verbatim: message).accessibilityIdentifier("savedWeek.error") }
                 Button(savedWeekText("Refresh week")) { run(.load) }.accessibilityIdentifier("savedWeek.reload")
             } else { Text(ht("Planning access changed or expired. Reconnect and review again.")) }
         }
@@ -152,13 +155,13 @@ struct SavedWeekChangesView: View {
     private enum Action { case load, preview, confirm, resume, stop }
     private func run(_ action: Action) { Task { await perform(action) } }
     @MainActor private func clear() {
-        generation = UUID(); plan = nil; series = nil; reviewed = nil; selected = []; failure = false; working = false
+        generation = UUID(); plan = nil; series = nil; reviewed = nil; selected = []; recoveryMessage = nil; working = false
     }
     @MainActor private func perform(_ action: Action) async {
         guard active, !working, let service = household.service else { return }
         let token = generation
         func current() -> Bool { active && token == generation && !Task.isCancelled }
-        working = true; failure = false
+        working = true; recoveryMessage = nil
         defer { if current() { working = false } }
         do {
             switch action {
@@ -198,7 +201,15 @@ struct SavedWeekChangesView: View {
         } catch {
             guard current() else { return }
             // Clear any cached budget-free meal/basket details after a failed grant check.
-            plan = nil; reviewed = nil; series = nil; selected = []; failure = true
+            plan = nil; reviewed = nil; series = nil; selected = []
+            recoveryMessage = savedWeekText("Refresh to check your access, saved progress and current food sources.")
+            if case ClientError.service(_, let code, _, _) = error {
+                if ["review_week_sources", "tracking_v2_required", "demand_review_required", "protected_meal"].contains(code) {
+                    recoveryMessage = savedWeekText("Open the shared shop to review protected food, unlinked quantities or pack sizes. Then refresh this week.")
+                } else if code == "membership_inactive" {
+                    recoveryMessage = savedWeekText("An active Household planning seat is required. Check membership and refresh the week.")
+                }
+            }
         }
     }
     @MainActor private func refreshMenu(_ service: HouseholdService, current: () -> Bool) async throws {

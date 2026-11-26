@@ -400,6 +400,38 @@
           }
         }
       }
+    },
+    "Open the shared shop to review protected food, unlinked quantities or pack sizes. Then refresh this week.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the shared shop to review protected food, unlinked quantities or pack sizes. Then refresh this week."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre la compra compartida para revisar los alimentos apartados, las cantidades sin vincular o el tamaño de los paquetes. Luego actualiza la semana."
+          }
+        }
+      }
+    },
+    "An active Household planning seat is required. Check membership and refresh the week.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An active Household planning seat is required. Check membership and refresh the week."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Necesitas un lugar activo de planificación en Household. Revisa la membresía y actualiza la semana."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

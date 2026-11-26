@@ -277,10 +277,10 @@ struct PantryHomeView: View {
                             }
                             NavigationLink(pantryText("Named pantry places")) {
                                 PantryNamedPlacesView(model: model, origin: snapshot.state.workspaceID)
-                            }
+                            }.accessibilityIdentifier("pantry.namedPlaces")
                             NavigationLink(pantryText("Import pantry CSV")) {
                                 PantryCSVImportView(model: model, origin: snapshot.state.workspaceID)
-                            }.disabled(!model.canEdit)
+                            }.disabled(!model.canEdit).accessibilityIdentifier("pantry.importCSV")
                             Button { sheet = .products } label: {
                                 Label(pantryText("Scan products"), systemImage: "barcode.viewfinder")
                             }

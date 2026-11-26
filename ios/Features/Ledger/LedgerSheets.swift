@@ -1,6 +1,7 @@
 import SwiftUI
 import CoreDomain
 import DeviceSurfaces
+import LocalStore
 
 struct InvalidImportAmount: Codable, Equatable {
     let text: String

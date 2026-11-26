@@ -342,7 +342,7 @@ enum PantryArchiveCodec {
                                     unit: original.unit, count: original.count, observationID: baselineID,
                                     confirmedAt: original.confirmedAt, updatedAt: original.updatedAt, useFirst: original.useFirst, countWording: original.countWording,
                                     splitFromLotID: original.splitFromLotID, discardedTimes: original.discardedTimes,
-                        namedPlace: original.namedPlace, spreadsheetRow: original.spreadsheetRow))
+                                    namedPlace: original.namedPlace, spreadsheetRow: original.spreadsheetRow))
                             }
                         default: break
                         }

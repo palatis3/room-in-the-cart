@@ -22,7 +22,7 @@ struct PantryNamedPlacesView: View {
 
     var body: some View {
         JournalList {
-            if model.phase == .ready, let snapshot = model.snapshot, snapshot.state.workspaceID == origin {
+            if model.permitsOrganization(in: origin), let snapshot = model.snapshot {
                 if let message { Text(message) }
                 if let review {
                     Section(pantryText("Review named location")) {
@@ -99,9 +99,17 @@ struct PantryNamedPlacesView: View {
                             }
                             Button(pantryText("Review named location")) { stage(snapshot) }
                                 .disabled(!model.canEdit || (storage.isEmpty && !drawer.isEmpty))
-                            if selection.count == 1, let lotID = selection.first {
-                                NavigationLink(pantryText("Move to another storage type")) {
-                                    PantryLotEntryView(model: model, lotID: lotID, accessAllowed: true)
+                            DisclosureGroup(pantryText("Move to another storage type")) {
+                                ForEach(snapshot.lots.filter { selection.contains($0.id) }) { lot in
+                                    NavigationLink {
+                                        PantryLotEntryView(model: model, lotID: lot.id,
+                                            accessAllowed: model.permitsOrganization(in: origin))
+                                    } label: {
+                                        VStack(alignment: .leading) {
+                                            Text(verbatim: lot.name)
+                                            Text(verbatim: pantryPlacePath(lot.location, lot.namedPlace)).font(.caption)
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -110,6 +118,10 @@ struct PantryNamedPlacesView: View {
             }
         }
         .navigationTitle(pantryText("Named pantry places")).privacySensitive()
+        .onChange(of: model.snapshot?.state.revision) { _, _ in
+            guard let physical, let snapshot = model.snapshot, snapshot.state.workspaceID == origin else { return }
+            selection.formIntersection(snapshot.lots.filter { $0.location == physical }.map(\.id))
+        }
         .onChange(of: model.generation) { _, _ in
             review = nil; undo = nil; selection.removeAll(); message = nil; query = ""; storage = ""; drawer = ""
         }
@@ -190,7 +202,7 @@ struct PantryCSVImportView: View {
 
     var body: some View {
         JournalList {
-            if model.phase == .ready, let snapshot = model.snapshot, snapshot.state.workspaceID == origin {
+            if model.permitsOrganization(in: origin), let snapshot = model.snapshot {
                 if let message { Text(message) }
                 if let preview { reviewSection(preview) }
                 else {
@@ -226,14 +238,19 @@ struct PantryCSVImportView: View {
         }
         .navigationTitle(pantryText("Import pantry CSV")).privacySensitive()
         .fileImporter(isPresented: $choosingFile, allowedContentTypes: [.commaSeparatedText, .tabSeparatedText, .plainText]) { result in
-            guard model.canEdit, model.snapshot?.state.workspaceID == origin else { clear(); return }
+            guard model.canEdit, model.permitsOrganization(in: origin) else { clear(); return }
             guard case .success(let url) = result else { return }
             do {
                 let access = url.startAccessingSecurityScopedResource()
                 defer { if access { url.stopAccessingSecurityScopedResource() } }
                 let handle = try FileHandle(forReadingFrom: url)
                 defer { try? handle.close() }
-                let data = try handle.read(upToCount: GroceryCSVTable.maximumBytes + 1) ?? Data()
+                var data = Data()
+                while let bytes = try handle.read(upToCount: min(65_536, GroceryCSVTable.maximumBytes + 1 - data.count)),
+                      !bytes.isEmpty {
+                    data.append(bytes)
+                    if data.count > GroceryCSVTable.maximumBytes { throw GroceryCSVTable.ReadError.tooLarge }
+                }
                 let value = try GroceryCSVTable(data: data)
                 table = value; mapping = PantryCSVField.suggest(value.headers)
                 sourceName = url.deletingPathExtension().lastPathComponent; preview = nil; message = nil
