@@ -28,7 +28,7 @@ struct PantryPriceHistoryView: View {
                         VStack(alignment: .leading, spacing: 5) {
                             Text(verbatim: row.name).font(.headline)
                             Text(verbatim: priceAmount(row)).font(.title3.weight(.semibold)).monospacedDigit()
-                            Text(verbatim: priceSource(row)).font(.subheadline).foregroundStyle(Theme.secondary)
+                            priceSourceLabel(row).font(.subheadline).foregroundStyle(Theme.secondary)
                             Text(verbatim: row.store + " · " + dates.purchaseDay(row))
                                 .font(.footnote).foregroundStyle(Theme.secondary)
                         }.padding(.vertical, 3)
@@ -101,7 +101,7 @@ private struct PantryPriceDetail: View {
             if model.phase != .accessDenied {
                 Section {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(verbatim: priceSource(row)).font(.subheadline.weight(.semibold))
+                        priceSourceLabel(row).font(.subheadline.weight(.semibold))
                             .foregroundStyle(Theme.secondary)
                         Text(verbatim: priceAmount(row)).font(.largeTitle.bold()).monospacedDigit()
                         if let pack = row.pack { Text(verbatim: packageLabel(pack)) }
@@ -314,6 +314,12 @@ private func shelfBasisName(_ basis: ReviewedShelfImage.PriceBasis) -> String {
     case .unit: pantryText("Displayed unit price")
     case .unknown: pantryText("Price basis unclear")
     }
+}
+
+private func priceSourceLabel(_ row: PrivatePriceEvidence) -> JournalSourceLabel {
+    let title = priceSource(row)
+    if case .paidReceipt = row.source { return JournalSourceLabel(kind: .receipt, title: title) }
+    return JournalSourceLabel(kind: nil, title: title)
 }
 
 private func priceSource(_ row: PrivatePriceEvidence) -> String {

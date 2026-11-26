@@ -19,10 +19,12 @@ struct ReceiptPaperLine: View {
     let wording: String
     var provenance: String? = nil
     var title = pantryText("Printed line")
+    var sourceKind: JournalSourceKind? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(title).font(.caption.weight(.semibold)).foregroundStyle(Theme.secondary)
+            JournalSourceLabel(kind: sourceKind, title: title)
+                .font(.caption.weight(.semibold)).foregroundStyle(Theme.secondary)
             Text(verbatim: wording)
                 .font(.system(.headline, design: .monospaced))
                 .foregroundStyle(Theme.ink)

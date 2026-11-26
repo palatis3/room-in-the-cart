@@ -18,6 +18,77 @@ enum Theme {
     static let warningSurface = Color("warning_surface")
 }
 
+/// The mark is supplementary. The localized source text remains the only accessibility element.
+enum JournalSourceKind {
+    case shoppingList, pantryCount, receipt
+}
+
+struct JournalSourceLabel: View {
+    let kind: JournalSourceKind?
+    let title: String
+    @Environment(\.colorSchemeContrast) private var contrast
+
+    var body: some View {
+        if let kind {
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .firstTextBaseline, spacing: 7) {
+                    JournalSourceMark(kind: kind)
+                        .stroke(contrast == .increased ? Theme.ink : Theme.action, lineWidth: 2)
+                        .frame(width: 18, height: 17)
+                        .alignmentGuide(.firstTextBaseline) { $0.height - 3 }
+                        .accessibilityHidden(true)
+                        .allowsHitTesting(false)
+                    Text(verbatim: title)
+                }
+                .fixedSize(horizontal: true, vertical: true)
+                textOnly
+            }
+            .accessibilityRepresentation { Text(verbatim: title) }
+        } else {
+            textOnly
+        }
+    }
+
+    private var textOnly: some View {
+        Text(verbatim: title).fixedSize(horizontal: false, vertical: true)
+    }
+}
+
+private struct JournalSourceMark: Shape {
+    let kind: JournalSourceKind
+
+    func path(in rect: CGRect) -> Path {
+        // Coordinates follow the same 18 × 17 grid as the printed source specimens.
+        var mark = Path()
+        func point(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
+            CGPoint(x: rect.minX + x * rect.width / 18, y: rect.minY + y * rect.height / 17)
+        }
+        func rule(_ points: CGPoint...) {
+            if let first = points.first {
+                mark.move(to: first)
+                for next in points.dropFirst() { mark.addLine(to: next) }
+            }
+        }
+        switch kind {
+        case .shoppingList:
+            rule(point(3, 2), point(3, 15))
+            rule(point(3, 4), point(15, 4))
+            rule(point(3, 8), point(15, 8))
+            rule(point(3, 12), point(10, 12))
+        case .pantryCount:
+            rule(point(3, 2), point(3, 14), point(15, 14), point(15, 2))
+            rule(point(3, 5), point(9, 5))
+            rule(point(3, 9), point(8, 9))
+        case .receipt:
+            rule(point(3, 2), point(15, 2), point(15, 14), point(12, 12),
+                 point(9, 14), point(6, 12), point(3, 14))
+            mark.closeSubpath()
+            rule(point(6, 6), point(12, 6))
+        }
+        return mark
+    }
+}
+
 /// A compact scope or selected-choice label. The supplied words carry the meaning in every appearance.
 struct BrandScopeLabel: View {
     let title: String

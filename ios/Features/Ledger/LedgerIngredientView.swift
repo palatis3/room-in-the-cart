@@ -1,6 +1,15 @@
 import SwiftUI
 import CoreDomain
 
+private extension ContributionSource {
+    var journalMark: JournalSourceKind? {
+        switch self {
+        case .manual, .imported: .shoppingList
+        case .meal, .protectedNeed: nil
+        }
+    }
+}
+
 private enum IngredientSheet: Identifiable {
     case line, contribution(UUID), link(UUID), protectedNeed, handle, trash, packs
     var id: String {
@@ -100,7 +109,7 @@ struct LedgerIngredientView: View {
                     ForEach(contributions.filter { showProtectedNeeds || !$0.source.isProtected }, id: \.id) { contribution in
                         let source = ledgerSourceLabel(contribution, shop: shop, typedItemBatches: typedItemBatches)
                         VStack(alignment: .leading, spacing: 8) {
-                            Text(source).font(.headline)
+                            JournalSourceLabel(kind: contribution.source.journalMark, title: source).font(.headline)
                             Text(contribution.sourceQuantityLabel)
                             Text(contribution.originalText).font(.footnote).foregroundStyle(Theme.secondary)
                             if let pack = contribution.originalPack { LedgerPackLabelFacts(pack: pack) }

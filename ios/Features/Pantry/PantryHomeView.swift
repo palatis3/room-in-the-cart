@@ -627,9 +627,13 @@ private struct PantryLotView: View {
                     if let wording = lot.countWording, lot.count == .someLeft {
                         DisclosureGroup(pantryText("Last reported estimate")) {
                             Text(verbatim: wording).font(.body.weight(.medium)).textSelection(.enabled)
-                            LabeledContent(pantryText("Last count update"), value: lot.confirmedAt.formatted(date: .abbreviated, time: .shortened))
                         }
                         .accessibilityIdentifier("pantry.estimateEvidence")
+                    }
+                    LabeledContent {
+                        Text(lot.confirmedAt.formatted(date: .abbreviated, time: .shortened))
+                    } label: {
+                        JournalSourceLabel(kind: .pantryCount, title: pantryText("Last count update"))
                     }
                     LabeledContent(pantryText("Storage location"), value: pantryPlacePath(lot.location, lot.namedPlace))
                     if let source = lot.spreadsheetRow { PantrySpreadsheetEvidenceView(evidence: source) }
