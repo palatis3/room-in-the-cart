@@ -20,6 +20,8 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
     private enum StagingIssue { case guest, timing, invalid }
     @State private var stagingIssue: StagingIssue?
     let destination: String
+    let startsDictation: Bool
+    @State private var usedDirectStart = false
     let requestMode: Bool
     let dismissOnReview: Bool
     let correctionScope: CaptureCorrectionScope?
@@ -36,7 +38,7 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
     @FocusState private var structuredFieldFocus: StructuredCaptureField?
 
     init(initialText: String = "", initialSource: CaptureSource = .typed, localeIdentifier: String = CaptureCorrectionScope.appLanguage(),
-         destination: String = captureText("This pickup"), requestMode: Bool = false, dismissOnReview: Bool = true, existingCapture: ReviewedCapture? = nil, correctionScope: CaptureCorrectionScope? = nil,
+         destination: String = captureText("This pickup"), requestMode: Bool = false, dismissOnReview: Bool = true, startsDictation: Bool = false, existingCapture: ReviewedCapture? = nil, correctionScope: CaptureCorrectionScope? = nil,
          currentPickup: CapturePickup? = nil, availablePickups: [CapturePickup] = [],
          authorizePickup: @escaping (CapturePickup) -> Bool = { _ in false }, authorize: @escaping () -> Bool, onReviewed: @escaping (ReviewedCapture) -> Void) {
         let evidence = existingCapture.map { CaptureEvidence(text: $0.originalText, source: $0.source,
@@ -57,6 +59,7 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
         self.currentPickup = currentPickup
         self.availablePickups = availablePickups
         self.authorizePickup = authorizePickup
+        self.startsDictation = startsDictation
         self.onReviewed = onReviewed
         self.destination = destination; self.requestMode = requestMode; self.dismissOnReview = dismissOnReview; self.correctionScope = correctionScope; self.authorize = authorize
     }
@@ -68,6 +71,11 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
                 if sourceTextFocused || structuredFieldFocus != nil {
                     keyboardDoneBar
                 }
+            }
+            .task {
+                guard startsDictation, !usedDirectStart, authorize(), !model.closed else { return }
+                usedDirectStart = true
+                model.startSpeech()
             }
             .task(id: reviewingFields) {
                 guard reviewingFields else { return }
@@ -136,6 +144,15 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
                             .accessibilityIdentifier("capture.useText")
                             .id("capture.useText").accessibilityFocused($capturedTextFocused)
                         Button(captureText("Keep my typed draft")) { model.discardCandidate() }
+                    }
+                }
+            }
+            if !model.wordRepairs.isEmpty && model.candidate == nil && !model.busy {
+                Section(captureText("Words to check")) {
+                    ForEach(model.wordRepairs) { repair in
+                        SpeechRepairEditor(repair: repair, text: model.text) { replacement in
+                            if authorize() { model.resolveWord(repair, as: replacement) }
+                        }
                     }
                 }
             }
@@ -347,5 +364,38 @@ extension TextEditor {
                     .accessibilityHidden(true)
                     .allowsHitTesting(false)
             }
+    }
+}
+
+
+private struct SpeechRepairEditor: View {
+    let repair: SpeechWordRepair
+    let text: String
+    let replace: (String) -> Void
+    @State private var correction = ""
+
+    var body: some View {
+        DisclosureGroup {
+            ForEach(repair.alternatives, id: \.self) { value in
+                Button(String(format: captureText("Use “%@”"), value)) { replace(value) }
+                    .frame(minHeight: 44)
+            }
+            TextField(captureText("Type a replacement"), text: $correction)
+                .textFieldStyle(.roundedBorder).onSubmit { replace(correction) }
+            Button(captureText("Replace this word")) { replace(correction) }
+                .disabled(correction.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            Button(captureText("Keep the original word")) { replace(repair.word) }
+        } label: {
+            VStack(alignment: .leading) {
+                Text(String(format: captureText("Check “%@”"), repair.word))
+                if let span = Range(repair.range, in: text) {
+                    let before = text[..<span.lowerBound].split(whereSeparator: \.isWhitespace).suffix(2)
+                    let after = text[span.upperBound...].split(whereSeparator: \.isWhitespace).prefix(2)
+                    Text(verbatim: (before.map(String.init) + [repair.word] + after.map(String.init)).joined(separator: " "))
+                        .font(.footnote).foregroundStyle(Theme.secondary)
+                }
+            }
+        }
+        .accessibilityIdentifier("capture.wordRepair-\(repair.id)")
     }
 }

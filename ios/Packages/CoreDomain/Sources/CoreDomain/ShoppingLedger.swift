@@ -823,8 +823,8 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     }
 
     /// Applying a reviewed kit is one edit, including when it contains dozens of rows.
-    mutating func appendKitRows(_ rows: [ShoppingKitRow]) throws {
-        try mutate("applyShoppingKit", at: Date()) { next in
+    mutating func appendKitRows(_ rows: [ShoppingKitRow], operation: String = "applyShoppingKit") throws {
+        try mutate(operation, at: Date()) { next in
             for row in rows {
                 _ = next.appendManualFields(id: UUID(), contributionID: UUID(), name: row.name,
                     quantity: row.quantity, notes: row.notes, exclusions: row.exclusions)
@@ -2008,6 +2008,9 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     private static func parseLine(_ original: String) -> (name: String, quantity: Quantity?, reason: String?, pack: ListQuantityParser.PackLabel?) {
         var text = original.trimmingCharacters(in: .whitespaces)
         if text.hasPrefix("- ") || text.hasPrefix("• ") || text.hasPrefix("* ") { text.removeFirst(2) }
+        guard !ListQuantityParser.containsGroceryMoney(text), !ListQuantityParser.isNumberLedGroceryName(text) else {
+            return (text, nil, "Review the quantity and unit.", nil)
+        }
         var tokens = ListQuantityParser.itemTokens(text)
         guard tokens.count >= 2 else { return (text, nil, "Review the quantity and unit.", nil) }
         let ranged = ListQuantityParser.takeRange(from: &tokens)

@@ -152,3 +152,46 @@ import XCTest
         XCTAssertEqual(try store.document(scope), saved)
     }
 }
+
+extension PantryRestockActionsTests {
+    @MainActor func testStandingCheckMissedFridaysTravelAndConcurrentAnswersWithoutInventoryHistory() throws {
+        let zone = "America/Mexico_City"
+        let friday = try MealDay(year: 2026, month: 11, day: 6, timeZoneIdentifier: zone)
+        let check = try PantryStandingCheck(name: "  Café   molido  ", weeks: 2, first: friday)
+        // The device is already on Saturday in Tokyo. The schedule still belongs to Friday in Mexico.
+        let travel = try XCTUnwrap(ISO8601DateFormatter().date(from: "2026-11-21T04:00:00Z"))
+        XCTAssertEqual(check.name, "Café molido")
+        XCTAssertTrue(check.due(at: travel))
+        XCTAssertFalse(check.due(at: friday.date!.addingTimeInterval(-86_400)))
+        XCTAssertEqual(try check.answering(.skipped, at: travel).next.iso8601, "2026-12-04")
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let store = PantryDigestStore(folder: folder, scheduler: PantryDigestNotifications(isolated: true))
+        let scope = PantryDigestScope(origin: UUID(), identity: .init(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil))
+        let access = PantryDigestAccess(scope: scope) { true }
+        try store.updateStandingCheck(nil, next: check, access: access)
+        var pending = check
+        var shop = ShoppingLedger(title: "Friday")
+        pending.adding = .init(workspace: UUID(), shop: shop.id, createFirst: false)
+        try store.updateStandingCheck(check, next: pending, access: access)
+        XCTAssertThrowsError(try store.updateStandingCheck(check, next: check.answering(.have, at: travel), access: access))
+        try pending.addToTrip(&shop)
+        try pending.addToTrip(&shop)
+        XCTAssertEqual(shop.lines.map(\.name), ["Café molido"])
+        XCTAssertNil(shop.contributions(forLineID: shop.lines[0].id).first?.quantity)
+        XCTAssertEqual(shop.importBatches.map(\.id), [check.occurrence])
+        let reopened = PantryDigestStore(folder: folder, scheduler: PantryDigestNotifications(isolated: true))
+        XCTAssertEqual(try reopened.document(scope).standingChecks, [pending])
+        let next = try pending.answering(.shopping, at: travel)
+        try reopened.updateStandingCheck(pending, next: next, access: access)
+        XCTAssertThrowsError(try reopened.updateStandingCheck(pending, next: next, access: access))
+        var sameItem = try PantryStandingCheck(name: "CAFÉ MOLIDO", weeks: 1, first: friday)
+        try sameItem.addToTrip(&shop)
+        XCTAssertEqual(shop.lines.count, 1)
+        sameItem = try sameItem.answering(.have, at: travel)
+        XCTAssertFalse(sameItem.due(at: travel))
+        let saved = try reopened.document(scope)
+        XCTAssertFalse(saved.enabled)
+        XCTAssertTrue(saved.rules.isEmpty)
+    }
+}

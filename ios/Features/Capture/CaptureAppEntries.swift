@@ -60,6 +60,7 @@ extension EnvironmentValues {
     let initialLabel: String
     let sourceCurrent: @MainActor @Sendable () -> Bool
     var makePantry: (@MainActor () -> PantryModel?)? = nil
+    var packageLedger: LedgerModel? = nil
     @EnvironmentObject private var access: WorkspaceAccess
     @EnvironmentObject private var household: HouseholdModel
     @Environment(\.scenePhase) private var scenePhase
@@ -69,7 +70,7 @@ extension EnvironmentValues {
         Group {
             if let identity {
                 CaptureReferenceShelf(target: target, initialLabel: initialLabel, photoOwner: .init(identity),
-                                      authorize: { authorized() }, makePantry: makePantry)
+                                      authorize: { authorized() }, makePantry: makePantry, packageLedger: packageLedger)
             }
             else { WorkingForm { Text(captureText("Unlock your private workspace to review this source.")) } }
         }.task(id: target) { identity = CapturePrivateIdentity.current(access: access, household: household) }

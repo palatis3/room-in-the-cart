@@ -126,6 +126,10 @@ import UserNotifications
             guard notesLoaded else { return false }
             message = nil
             return true
+        } catch CookingSessionError.capacity {
+            refreshNotes()
+            message = cookCompletionText("This recipe’s private notes are full. Remove a photo or shorten a note and try again.")
+            return false
         } catch {
             refreshNotes()
             message = cookCompletionText("The note changed or could not be saved. Reopen it to review your edit.")

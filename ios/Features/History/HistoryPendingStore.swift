@@ -24,6 +24,7 @@ struct HistoryStoredState: Codable, Equatable, Sendable {
     var pending: [HistoryPendingWrite] = []
     var observations: [HistoryStoredReference] = []
     var familyDecisions: FamilyDecisionCache?
+    var observedShopPacks: [ShopPackObservation]?
     var financialChanges: [ShopperFinancialIntent]?
     var sharedMealChanges: [SharedMealChangeIntent]?
 }
@@ -139,9 +140,40 @@ actor HistoryPendingStore: HistoryPersisting {
         guard state.sharedMealChanges?.contains(intent) == true else { throw ClientError.cancelled }
         state.sharedMealChanges?.removeAll { $0 == intent }; try write(state)
     }
+    func observePacks(scope: ShopPackScope, shop: ShopperShop, expectedEpoch: UUID) throws -> ShopPackObservation {
+        guard generation == expectedEpoch, shop.nextCursor == nil, UUID(uuidString: shop.shopId) == scope.shop,
+              shop.authorityEpoch == scope.authorityEpoch else { throw ClientError.cancelled }
+        var state = try read()
+        var observations = state.observedShopPacks ?? []
+        let index = observations.firstIndex { $0.scope.subject == scope.subject && $0.scope.device == scope.device && $0.scope.shop == scope.shop }
+        let last = index.map { observations[$0] }
+        let next = try ShopPackObservation(scope: scope, revision: shop.shopRevision, lines: shop.lines, after: last)
+        if next != last {
+            if let index { observations[index] = next } else { observations.append(next) }
+            state.observedShopPacks = observations
+            try write(state)
+        }
+        return next
+    }
+
+    func dismissPackChange(_ id: UUID, observed: ShopPackObservation, expectedEpoch: UUID) throws -> ShopPackObservation {
+        guard generation == expectedEpoch else { throw ClientError.cancelled }
+        var state = try read()
+        guard let index = state.observedShopPacks?.firstIndex(where: { $0.scope == observed.scope }),
+              var current = state.observedShopPacks?[index], current.revision == observed.revision,
+              current.counts[id] == observed.counts[id], current.previous[id] == observed.previous[id] else { throw ClientError.cancelled }
+        current.previous.removeValue(forKey: id)
+        state.observedShopPacks?[index] = current
+        try write(state)
+        return current
+    }
+
     func purge(householdID: String, subject: String) throws {
         generation = UUID()
         var state = try read()
+        state.observedShopPacks?.removeAll {
+            $0.scope.subject == subject && $0.scope.device.householdID == UUID(uuidString: householdID)
+        }
         state.pending.removeAll { $0.householdID == householdID && $0.subject == subject }
         state.financialChanges?.removeAll { $0.householdID == householdID && $0.subject == subject }
         state.sharedMealChanges?.removeAll { $0.householdID == householdID && $0.subject == subject }

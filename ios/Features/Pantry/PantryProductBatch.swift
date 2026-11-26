@@ -5,7 +5,7 @@ import LocalStore
 
 enum ProductBatchError: Error { case full, invalid, lookupUnavailable, rateLimited, chooseStockAction, changedDelivery, duplicateBarcode, differentLabelBarcode, pendingPackSave }
 
-struct PantryProductBatch {
+struct PantryProductBatch: Codable, Equatable {
     static func homeOperationID(for candidate: UUID) -> UUID {
         ReceiptAcquisition.identity(["home-pack", candidate.uuidString])
     }
@@ -36,8 +36,8 @@ struct PantryProductBatch {
         }
     }
 
-    struct Candidate: Identifiable, Equatable {
-        let id = UUID()
+    struct Candidate: Identifiable, Equatable, Codable {
+        private(set) var id = UUID()
         let ordinal: Int
         fileprivate(set) var barcode: CapturedBarcode?
         let photoID: String?
@@ -72,7 +72,7 @@ struct PantryProductBatch {
             return quantity
         }
         var location = InventoryLocation.cupboard
-        enum StockAction: Equatable {
+        enum StockAction: Equatable, Codable {
             case separate
             case link(PantryReceiptDelivery)
         }
@@ -190,7 +190,7 @@ struct PantryProductBatch {
         }
     }
 
-    let id = UUID()
+    private(set) var id = UUID()
     let workspaceID: UUID
     private(set) var nextOrdinal = 0
     var candidates: [Candidate] = []

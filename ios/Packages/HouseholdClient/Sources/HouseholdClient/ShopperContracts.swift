@@ -160,6 +160,7 @@ public struct SharedMealEdit: Equatable, Sendable {
     }
 }
 public struct ShopperShop: Codable, Equatable, Sendable {
+    public private(set) var nextCursor: String? = nil
     public var storeBasisRevision: Int? = nil
     public var storeReviewRequired: Bool? = nil
     public let shopId: String; public let shopRevision: Int; public let authorityEpoch: Int; public let phase: String

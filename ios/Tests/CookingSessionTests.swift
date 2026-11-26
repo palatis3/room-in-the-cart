@@ -1,4 +1,7 @@
 import XCTest
+import ImageIO
+import UIKit
+import UniformTypeIdentifiers
 import LocalStore
 import CoreDomain
 @testable import RoomInTheCart
@@ -18,6 +21,39 @@ import CoreDomain
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         addTeardownBlock { try? FileManager.default.removeItem(at: directory) }
         return CookingSessionStore(directory: directory)
+    }
+
+    func testSelectedPhotoIsDownsampledAndStrippedBeforePrivateStepSave() throws {
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 900, height: 600))
+        let image = renderer.image { context in
+            UIColor.brown.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 900, height: 600))
+        }
+        let original = NSMutableData()
+        let output = try XCTUnwrap(CGImageDestinationCreateWithData(original, UTType.jpeg.identifier as CFString, 1, nil))
+        let metadata = [kCGImagePropertyGPSDictionary: [kCGImagePropertyGPSLatitude: 10.0,
+            kCGImagePropertyGPSLatitudeRef: "N"] as [CFString: Any]]
+        CGImageDestinationAddImage(output, try XCTUnwrap(image.cgImage), metadata as CFDictionary)
+        XCTAssertTrue(CGImageDestinationFinalize(output))
+        let thumbnail = try PackageRowPhoto.makeThumbnail(original as Data, dimension: CookingStepPhoto.maximumDimension,
+            byteLimit: CookingStepPhoto.maximumBytes)
+        let cue = CookingStepPhoto(jpeg: thumbnail, description: "Golden edges")
+        XCTAssertTrue(cue.valid)
+        let input = try XCTUnwrap(CGImageSourceCreateWithData(thumbnail as CFData, nil))
+        let properties = try XCTUnwrap(CGImageSourceCopyPropertiesAtIndex(input, 0, nil) as? [CFString: Any])
+        XCTAssertNil(properties[kCGImagePropertyGPSDictionary])
+        XCTAssertEqual(properties[kCGImagePropertyPixelWidth] as? Int, CookingStepPhoto.maximumDimension)
+
+        var allowed = true
+        let model = CookingSessionModel(context: .init(key: try key(), authorize: { allowed }), count: 2, store: store(),
+            schedule: { _, _, _ in false }, removeAlerts: { _ in })
+        model.load()
+        let note = CookingStepNote(revision: model.context.noteKey.revision, step: 0, instruction: "Stir", text: "", photo: cue)
+        XCTAssertTrue(model.setStepNote(nil, with: note))
+        XCTAssertEqual(model.currentStepNote(note)?.photo, cue)
+        allowed = false
+        XCTAssertNil(model.currentStepNote(note))
+        XCTAssertFalse(model.setStepNote(note, with: nil))
     }
 
     func testPrivateStepNoteFollowsExactStepAndNeedsExplicitReattachmentAfterRevision() throws {

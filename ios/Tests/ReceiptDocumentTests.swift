@@ -9,6 +9,40 @@ import XCTest
 @testable import RoomInTheCart
 
 @MainActor final class ReceiptDocumentTests: XCTestCase {
+    func testWordReadingsPreserveSpaceUnitsCurrencyAndOnlyRepairOneToken() {
+        let original = "Leche   MXN 019,9O"
+        let choices = ReceiptWordReading.choices(original: original, candidates: [
+            "Leche MXN 019,90", "Leche MXN 019,90", "Leche USD 018,90", "TOTAL 019,90", "Leche MXN 019,99",
+            "Leche MXN 019,98"
+        ])
+        XCTAssertEqual(choices.map(\.wording), ["Leche   MXN 019,90", "Leche   MXN 019,99"])
+        XCTAssertEqual(choices.map(\.wordIndex), [2, 2])
+        XCTAssertTrue(ReceiptWordReading.choices(original: original, candidates: [original, "Leche MXN\nTOTAL"]).isEmpty)
+        let crop = ReceiptWordReading.pixels(for: .init(x: 0.25, y: 0.25, width: 0.5, height: 0.25), width: 200, height: 400)
+        XCTAssertEqual(crop, .init(x: 50, y: 200, width: 100, height: 100))
+        XCTAssertNil(ReceiptWordReading.pixels(for: .init(x: -0.3, y: 0, width: 1, height: 1), width: 200, height: 400))
+    }
+
+    func testReviewedReceiptWordPreservesPrintAndInvalidatesAnExistingPricePair() throws {
+        let item = ExtractedReceiptDocument.Selection(page: 1, line: 1)
+        let amount = ExtractedReceiptDocument.Selection(page: 1, line: 2)
+        let document = ExtractedReceiptDocument(digest: Data(repeating: 7, count: 32),
+            pages: [.init(id: 1, method: .imageOCR, lines: [
+                .init(id: 1, text: "BLACK BEANS", bounds: .init(x: 0.1, y: 0.6, width: 0.3, height: 0.05)),
+                .init(id: 2, text: "$2.40", bounds: .init(x: 0.7, y: 0.6, width: 0.2, height: 0.05))
+            ])])
+        let target = CaptureTarget(workspaceID: UUID(), containerID: UUID(), objectID: UUID(), revision: 1, kind: .receiptEvidence)
+        let updated = try document.source(target: target, merchant: "Market", stage: .receipt,
+            selection: [item], reviewedWording: [item: "BLUE BEANS"], at: Date())
+        XCTAssertEqual(updated.receiptLines.first?.originalText, "BLACK BEANS")
+        XCTAssertEqual(updated.receiptLines.first?.reviewedText, "BLUE BEANS")
+        XCTAssertEqual(updated.receiptLines.first?.priceNote, "")
+        for edit in [[item: "BLUE BEANS"], [amount: "$9.40"]] {
+            XCTAssertThrowsError(try document.source(target: target, merchant: "Market", stage: .receipt,
+                selection: [item], linkedAmountItems: [item], reviewedWording: edit, at: Date()))
+        }
+    }
+
     func testPrintedPesoAndDollarEvidenceCannotBeRelabeledByManualNotes() throws {
         for wording in ["Maíz 2 kg MXN $4.82", "Maíz 2 kg MX$4,82", "Maíz 2 kg 4.82 MXN", "Maíz 2 kg $4.82 M.N.", "Maíz 2 kg 4.82 pesos mexicanos"] {
             let printed = ReceiptPrintedEvidence(.init(originalText: wording), knownStorage: [:])
@@ -467,7 +501,9 @@ import XCTest
         for selection: Set<Selection> in [[], [label], [amount]] {
             XCTAssertNil(document.printedPaidTotal(selected: selection))
         }
-        let total = try XCTUnwrap(document.printedPaidTotal(selected: [label, amount]))
+        XCTAssertNil(document.printedPaidTotal(selected: [label, amount], revised: [amount]))
+        XCTAssertNil(document.printedPaidTotal(selected: [label, amount], revised: [label]))
+        let total = try XCTUnwrap(document.printedPaidTotal(selected: [label, amount], revised: [.init(page: 2, line: 10)]))
         XCTAssertEqual(total.wording, "$12.35")
         XCTAssertEqual(total.amount, "12.35")
 

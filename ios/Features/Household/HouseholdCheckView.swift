@@ -1,11 +1,11 @@
 import HouseholdClient
 import SwiftUI
 
-private func checkText(_ key: String) -> String {
+func checkText(_ key: String) -> String {
     String(localized: String.LocalizationValue(key), table: "AdultChecks")
 }
 
-private extension AdultCheckAnswer {
+extension AdultCheckAnswer {
     var reviewPrompt: String {
         switch self {
         case .home: "Include this adult when you review dinner portions."
@@ -42,6 +42,7 @@ struct HouseholdCheckLink: View {
                 Label(checkText("Dinner and cupboard questions"), systemImage: "bubble.left.and.bubble.right")
             }.accessibilityIdentifier("household.adultChecks")
         }
+        CookingStepHandoffLink(household: household)
     }
 }
 
@@ -56,9 +57,11 @@ private struct HouseholdCheckView: View {
     @State private var selected: UUID?
     @State private var pendingAsk: Ask?
     @State private var pendingReply: Reply?
+    @State private var grocery: SharedGroceryTarget?
     @State private var dinnerReview: AdultCheckPage.Check?
     @State private var preparedShopReview = false
     @State private var showingShopReview = false
+    @State private var reviewPacks = false
     @State private var amount = ""
     @State private var unit = "count"
     private let units = ["count", "gram", "kilogram", "milliliter", "liter"]
@@ -127,7 +130,21 @@ private struct HouseholdCheckView: View {
                 }
             }
         }
-        .navigationDestination(isPresented: $showingShopReview) { HouseholdShopView(model: household) }
+        .navigationDestination(isPresented: $showingShopReview) { HouseholdShopView(model: household, reviewPreparedPacks: reviewPacks) }
+        .sheet(item: $grocery, onDismiss: {
+            if preparedShopReview {
+                preparedShopReview = false
+                showingShopReview = true
+            }
+        }) { target in
+            NavigationStack {
+                SharedGroceryLineView(household: household, target: target) {
+                    reviewPacks = true
+                    preparedShopReview = true
+                    grocery = nil
+                }
+            }
+        }
         .sheet(item: $dinnerReview, onDismiss: {
             if preparedShopReview {
                 preparedShopReview = false
@@ -136,6 +153,7 @@ private struct HouseholdCheckView: View {
         }) { dinner in
             NavigationStack {
                 SharedMealChangesView(household: household, selectedDinner: .attendance(dinner.sourceId)) {
+                    reviewPacks = false
                     preparedShopReview = true
                     dinnerReview = nil
                 }.toolbar {
@@ -227,7 +245,13 @@ private struct HouseholdCheckView: View {
                     if check.kind == .attendance, household.sharedMealChangeScope != nil {
                         Button(checkText("Review this dinner")) { dinnerReview = check }
                             .buttonStyle(.bordered)
-                    } else if household.sharedShop?.canManage == true {
+                    } else if check.kind == .cupboard, household.sharedShop?.canManage == true, let answered = check.answeredAt {
+                        Button(checkText("Review this grocery")) {
+                            grocery = SharedGroceryTarget(shopID: page.shopId, rowID: check.sourceId,
+                                revision: page.shopRevision, authorityEpoch: page.authorityEpoch,
+                                reply: .init(id: check.id, pairRevision: page.pairRevision, answeredAt: answered))
+                        }.buttonStyle(.bordered).accessibilityIdentifier("adultChecks.openGrocery")
+                    } else if check.kind == .attendance, household.sharedShop?.canManage == true {
                         NavigationLink(checkText("Review shared groceries")) { HouseholdShopView(model: household) }
                     }
                     if check.reviewed { Label(checkText("Reply reviewed"), systemImage: "checkmark.circle") }

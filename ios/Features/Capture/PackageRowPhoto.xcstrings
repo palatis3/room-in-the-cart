@@ -160,6 +160,166 @@
           }
         }
       }
+    },
+    "Choose the exact previous package": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the exact previous package"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige el envase exacto de una compra anterior"
+          }
+        }
+      }
+    },
+    "No earlier trips have a saved package cue.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No earlier trips have a saved package cue."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay referencias de envases guardadas en compras anteriores."
+          }
+        }
+      }
+    },
+    "Previous package": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous package"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envase anterior"
+          }
+        }
+      }
+    },
+    "Previous package cue": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous package cue"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referencia de un envase anterior"
+          }
+        }
+      }
+    },
+    "Remove cue from this trip": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove cue from this trip"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar la referencia de esta compra"
+          }
+        }
+      }
+    },
+    "Same product and pack · Use this cue": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Same product and pack · Use this cue"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es el mismo producto y envase · Usar esta referencia"
+          }
+        }
+      }
+    },
+    "The grocery changed. Choose its package again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The grocery changed. Choose its package again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El producto cambió. Vuelve a elegir su envase."
+          }
+        }
+      }
+    },
+    "This grocery": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This grocery"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este producto"
+          }
+        }
+      }
+    },
+    "This grocery already has its own photo. Hide it in source references to use another cue.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This grocery already has its own photo. Hide it in source references to use another cue."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este producto ya tiene foto. Ocúltala en las referencias para usar otra."
+          }
+        }
+      }
+    },
+    "Use a package cue from another trip": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use a package cue from another trip"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar una referencia del envase de otra compra"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -7,6 +7,7 @@ import SwiftUI
     var photoOwner: PackageRowPhoto.Owner? = nil
     let authorize: @MainActor @Sendable () -> Bool
     var makePantry: (@MainActor () -> PantryModel?)? = nil
+    var packageLedger: LedgerModel? = nil
     private struct ReceiptReview: Identifiable {
         let source: SourceMediaRecord
         let pantry: PantryModel
@@ -38,6 +39,11 @@ import SwiftUI
                     Button(captureText("Scan a code and match it manually")) { mode = Mode(kind: .barcode) }
                         .disabled(!authorize() || saving || pending != nil)
                 }
+            }
+            if target.kind == .packageReference, let photoOwner, let packageLedger, authorize() {
+                NavigationLink(packagePhotoText("Use a package cue from another trip")) {
+                    EarlierPackageCueView(ledger: packageLedger, target: target, owner: photoOwner, authorize: authorize)
+                }.accessibilityIdentifier("privatePackagePhoto.previous")
             }
             if let pending {
                 Section {

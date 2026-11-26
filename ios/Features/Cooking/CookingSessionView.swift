@@ -3,6 +3,7 @@ import LocalStore
 import SwiftUI
 
 @MainActor struct CookingSessionView<Finish: View>: View {
+    @Environment(\.cookingHandoffHousehold) private var handoffHousehold
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.locale) private var locale
@@ -15,6 +16,7 @@ import SwiftUI
     let finish: () -> Finish
     @StateObject private var model: CookingSessionModel
     @State private var minutes = ""
+    @State private var displayOwner = UUID()
     @State private var alerts = false
     @State private var confirmEnd = false
     @State private var readback: CookReadbackInstruction?
@@ -73,6 +75,11 @@ import SwiftUI
                                 Label(recordsText("Previous step"), systemImage: "arrow.backward")
                                     .frame(minHeight: 44)
                             }
+                        }
+                    }
+                    if let household = handoffHousehold, let current = step {
+                        CookingStepHandoffLink(household: household, instruction: current.instruction) {
+                            model.context.authorize() && step == current
                         }
                     }
                     CookingStepNoteView(model: model, steps: steps, index: index, noteFocus: $editingStepNote)
@@ -136,6 +143,9 @@ import SwiftUI
                         }
                     }
                     timers
+                    ScreenAwakeToggle(owner: displayOwner, identifier: "cooking.keepAwake", authorize: model.context.authorize) { deadline in
+                        String(format: cookCompletionText("Screen stays awake until %@"), deadline.formatted(date: .omitted, time: .shortened))
+                    }
                     if let message = model.message { Text(message).accessibilityAddTraits(.updatesFrequently) }
                     if let finishTitle {
                         NavigationLink { finish() } label: { Text(verbatim: finishTitle) }
@@ -153,6 +163,7 @@ import SwiftUI
         }
         .navigationTitle(recordsText("Cooking mode"))
         .navigationBarTitleDisplayMode(.inline)
+        .modifier(InStoreDisplayPreference(trip: model.context.key, owner: displayOwner, available: model.ready && model.context.authorize()))
         .privacySensitive()
         .scrollDismissesKeyboard(.interactively)
         .keyboardDoneAction(visible: focusedInput != nil || editingStepNote, title: ledgerText("Done"),

@@ -53,8 +53,18 @@ private final class CheckFixtureServer: @unchecked Sendable {
             }
             if path.hasSuffix("/bootstrap") {
                 let capabilities = ["own_requests"] + (actor == .contributor ? [] : ["adult_checks"])
+                    + (actor == .shopper ? ["shopper_inbox", "request_preview", "shopper_commands"] : [])
                 return try json(["household": ["id": household, "label": "Rivera"], "memberId": actor.member,
                                  "role": actor.role, "shopId": shop, "enrolled": true, "queueConsent": false, "capabilities": capabilities])
+            }
+            if path == householdPath + "/shops/" + shop, request.httpMethod == "GET", actor == .shopper {
+                let quote: [String: Any] = ["currency": "MXN", "scope": "wholeCheckout", "capScope": "wholeCheckout", "complete": false,
+                    "fee": ["kind": "fixed"], "observedAt": "2026-01-01T00:00:00Z", "expiresAt": "2099-01-01T00:00:00Z"]
+                let lines: [[String: Any]] = [
+                    ["lineId": "77777777-7777-4777-8777-777777777777", "originalItem": "Arroz blanco", "packs": 5, "feeEligible": true],
+                    ["lineId": item, "originalItem": "Arroz integral", "packs": 2, "feeEligible": true]
+                ]
+                return try json(["shopId": shop, "shopRevision": 3, "authorityEpoch": 2, "phase": "draft", "lines": lines, "quote": quote])
             }
             if path.hasSuffix("/requests/mine") || path.hasSuffix("/inbox") { return try json(["requests": [], "nextCursor": NSNull()]) }
             if path == householdPath + "/shops/" + shop + "/meal-plan/changes", actor == .shopper, request.httpMethod == "GET" {

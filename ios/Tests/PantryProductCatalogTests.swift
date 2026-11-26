@@ -594,3 +594,41 @@ extension PantryProductCatalogTests {
         }
     }
 }
+
+extension PantryProductCatalogTests {
+    @MainActor func testUnfinishedScansReopenWithExactLotsEditsAndOwnerAndCanBeDiscarded() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let owner = CapturePrivateIdentity(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil)
+        let scope = PantryDigestScope(origin: UUID(), identity: owner)
+        let access = PantryDigestAccess(scope: scope) { true }
+        let original = PantryPackMemory(folder: folder)
+        var batch = PantryProductBatch(workspaceID: scope.origin)
+        XCTAssertTrue(try batch.addManual(name: "Beans", code: "012345678905"))
+        batch.candidates[0].packages = "1"; batch.candidates[0].perPack = "3/4"
+        batch.candidates[0].unit = .kilogram
+        try batch.separate(batch.candidates[0].id)
+        batch.candidates[1].onePackageUnknown = true
+        batch.candidates[1].dateWordingDraft = "Preferentemente antes del 03/12"
+        for name in ["Corn", "Rice", "Oil", "Café"] { XCTAssertTrue(try batch.addManual(name: name, code: nil)) }
+        batch.candidates[2].included = false
+        batch.candidates[3].name = "Long grain rice"
+        let now = Date()
+        let draft = PantryScanDraft(batch: batch, atHome: true, merchant: "", retailer: "Centro", purchaseDate: now, purchaseZone: .gmt)
+        let record = try XCTUnwrap(original.updateDraft(draft, replacing: nil, access: access, now: now))
+        let reopened = PantryPackMemory(folder: folder)
+        XCTAssertEqual(try reopened.scanDraft(scope, now: now)?.value, draft)
+        XCTAssertNil(try reopened.pending(scope))
+        XCTAssertNil(try reopened.scanDraft(.init(origin: UUID(), identity: owner)))
+        let other = PantryDigestScope(origin: scope.origin, identity: .init(actorID: UUID(), subject: nil, householdID: nil, memberID: nil, role: nil))
+        XCTAssertNil(try reopened.scanDraft(other))
+        XCTAssertThrowsError(try reopened.updateDraft(nil, replacing: record.version, access: .init(scope: scope) { false }))
+        XCTAssertThrowsError(try reopened.updateDraft(draft, replacing: nil, access: access))
+        try reopened.updateDraft(nil, replacing: record.version, access: access)
+        XCTAssertNil(try original.scanDraft(scope))
+        XCTAssertThrowsError(try original.updateDraft(draft, replacing: record.version, access: access))
+        XCTAssertNil(try original.scanDraft(scope), "A stale scene cannot recreate a discarded draft")
+        try original.updateDraft(draft, replacing: nil, access: access, now: now)
+        XCTAssertNil(try reopened.scanDraft(scope, now: now.addingTimeInterval(7 * 86_400)))
+    }
+}

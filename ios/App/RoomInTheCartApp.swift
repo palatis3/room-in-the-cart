@@ -106,6 +106,7 @@ struct GroceryWindow: View {
     private enum PermissionScope: Equatable {
         case pantry(PantryVoicePromptScope)
         case recipeCamera(RecipeCameraPromptScope)
+        case grocerySpeech(GrocerySpeechPermissionScope)
     }
     @StateObject private var permissionWindow = SystemPermissionWindow<PermissionScope>()
     @State private var pantryOpenAttempt = UUID()
@@ -138,6 +139,7 @@ struct GroceryWindow: View {
                                       retainedScope: { retainedPantryDigestScope }))
             .environment(\.pantryDigestPermissionPrompt, digestPermissionPrompt)
             .environment(\.recipeCameraPermissionPrompt, recipeCameraPermissionPrompt)
+            .environment(\.grocerySpeechPermission, grocerySpeechPermission)
             .environment(\.pickupLedger, ledger)
             .environment(\.offersDuplicateAssistance, true)
             .environment(\.privatePantryRetry, pantryRetry)
@@ -155,7 +157,7 @@ struct GroceryWindow: View {
             }
             .environmentObject(model)
             .environmentObject(ledger).environmentObject(pickup)
-            .environmentObject(household).environmentObject(access)
+            .environmentObject(household).environment(\.cookingHandoffHousehold, household).environmentObject(access)
             .environmentObject(membership).environmentObject(surfaces).environmentObject(navigation)
             .environmentObject(guardianChild)
             .environment(\.guardianChildCoordinator, guardianChild)
@@ -194,7 +196,7 @@ struct GroceryWindow: View {
                     .environment(\.guardianChildCoordinator, guardianChild)
                     .environmentObject(model)
                     .environmentObject(ledger).environmentObject(pickup)
-                    .environmentObject(household).environmentObject(access)
+                    .environmentObject(household).environment(\.cookingHandoffHousehold, household).environmentObject(access)
                     .environmentObject(membership).environmentObject(surfaces).environmentObject(navigation)
             }
             .modifier(HouseholdWorkspaceProtection(household: household, access: access))
@@ -262,6 +264,22 @@ struct GroceryWindow: View {
         return PantryVoicePromptScope(adult: adult, origin: origin, ledger: ledgerOrigin, generation: pickup.privatePantryGeneration)
     }
 
+    private var grocerySpeechScope: GrocerySpeechPermissionScope? {
+        guard UIApplication.shared.isProtectedDataAvailable, !guardianChild.presented, household.projection?.grantId == nil,
+              let adult = CapturePrivateIdentity.current(access: access, household: household), ledger.ready,
+              let workspace = ledger.sourceWorkspaceID, !ledger.hasPendingLedgerDeletion else { return nil }
+        return GrocerySpeechPermissionScope(adult: adult, workspace: workspace, shop: ledger.shop?.id, generation: access.generation)
+    }
+
+    private var grocerySpeechPermission: PantryNotificationPresenter? {
+        guard let original = grocerySpeechScope else { return nil }
+        return { request in
+            try await permissionWindow.request(in: .grocerySpeech(original), phase: scenePhase,
+                currentScope: { grocerySpeechScope.map(PermissionScope.grocerySpeech) },
+                appActive: { UIApplication.shared.applicationState == .active }, request: request)
+        }
+    }
+
     private var digestPermissionPrompt: PantryDigestPermissionPrompt? {
         guard let original = voicePromptScope else { return nil }
         return PantryDigestPermissionPrompt(scope: .init(origin: original.origin, identity: original.adult)) { request in
@@ -289,7 +307,8 @@ struct GroceryWindow: View {
 
     private var retainsPermissionPrompt: Bool {
         guard permissionWindow.token != nil, scenePhase == .inactive else { return false }
-        return permissionWindow.retains(voicePromptScope.map(PermissionScope.pantry), phase: scenePhase) ||
+        return permissionWindow.retains(grocerySpeechScope.map(PermissionScope.grocerySpeech), phase: scenePhase) ||
+            permissionWindow.retains(voicePromptScope.map(PermissionScope.pantry), phase: scenePhase) ||
             permissionWindow.retains(recipeCameraScope.map(PermissionScope.recipeCamera), phase: scenePhase)
     }
 
@@ -460,6 +479,7 @@ struct AdultPantryTab: View {
 }
 
 struct ShopView: View {
+    @Environment(\.guardianChildCoordinator) private var child
     @Environment(\.privatePantryRetry) private var retryPrivatePantry
     @EnvironmentObject private var household: HouseholdModel
     @EnvironmentObject private var surfaces: DeviceSurfacesComposition
@@ -475,6 +495,12 @@ struct ShopView: View {
     @State private var showingMoreTools = false
     @State private var showingStandingList = false
     @State private var showingFirstList = false
+    private struct ExistingBatch: Identifiable {
+        let id: UUID
+        let workspace: UUID
+        let identity: CapturePrivateIdentity
+    }
+    @State private var existingBatch: ExistingBatch?
     @State private var showingPantry = false
     @Environment(\.pantryVoicePrompt) private var pantryVoicePrompt
     @EnvironmentObject private var pickup: PickupModel
@@ -519,6 +545,21 @@ struct ShopView: View {
             .sheet(isPresented: $showingStandingList) {
                 PrivateShoppingSheet(model: ledger) { StandingListView(model: ledger) }
             }
+            .sheet(item: $existingBatch) { target in
+                PrivateShoppingSheet(model: ledger) {
+                    if batchIsCurrent(target) {
+                        LedgerImportView(model: ledger, shopID: target.id, opensListAfterSave: true,
+                            authorizeEntry: { batchIsCurrent(target) }) { savedID in
+                            guard batchIsCurrent(target), savedID == target.id else { return }
+                            existingBatch = nil
+                            navigation.setPath([.shoppingList(actorID: access.localActorID, workspaceID: target.workspace, shopID: savedID)], for: .shop)
+                        }
+                    } else {
+                        ContentUnavailableView(ledgerText("Draft unavailable"), systemImage: "lock",
+                            description: Text(ledgerText("Reopen the private shopping list to check the current workspace.")))
+                    }
+                }
+            }
             .sheet(isPresented: $showingFirstList) {
                 NavigationStack {
                     FirstListEntry(model: ledger, opensListAfterSave: true) { id in
@@ -537,6 +578,20 @@ struct ShopView: View {
         .onAppear { pickup.selectedID = id }
     }
 
+    private func openBatch() {
+        if let id = ledger.shop?.id, let workspace = ledger.sourceWorkspaceID,
+           let identity = CapturePrivateIdentity.current(access: access, household: household) {
+            existingBatch = ExistingBatch(id: id, workspace: workspace, identity: identity)
+        } else if ledger.shop == nil { showingFirstList = true }
+    }
+
+    private func batchIsCurrent(_ target: ExistingBatch) -> Bool {
+        UIApplication.shared.isProtectedDataAvailable && UIApplication.shared.applicationState == .active &&
+            ledger.firstListStore != nil && ledger.sourceWorkspaceID == target.workspace && ledger.shop?.id == target.id &&
+            child?.presented != true && household.projection?.grantId == nil &&
+            CapturePrivateIdentity.current(access: access, household: household) == target.identity
+    }
+
     private var canReviewCheckout: Bool {
         guard ledger.ready, !ledger.hasPendingLedgerDeletion else { return false }
         guard let shop = ledger.shop,
@@ -548,7 +603,7 @@ struct ShopView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 VStack(alignment: .leading, spacing: 12) {
-                    LedgerQuickGroceryEntry(model: ledger, prominent: true)
+                    LedgerQuickGroceryEntry(model: ledger, prominent: true, openBatch: openBatch)
                         .onPreferenceChange(ShopListLinkProvided.self) { shopWithListLink = $0 }
                     if let shop = ledger.shop, shopWithListLink != shop.id {
                         RestorableShoppingListLink {
@@ -661,10 +716,6 @@ struct ShopView: View {
         VStack(alignment: .leading, spacing: 8) {
             if ledger.shop == nil {
                 VStack(alignment: .leading, spacing: 0) {
-                    Button { showingFirstList = true } label: { ShopToolLabel(ledgerText("Add several items"), "text.badge.plus", chevron: true) }
-                        .disabled(ledger.firstListStore == nil || ledger.saving || ledger.hasPendingSave)
-                        .accessibilityIdentifier("shop.addFirstList")
-                    Divider()
                     NavigationLink { NewComparisonDestination() } label: { ShopToolLabel(tr("Compare packs"), "arrow.left.arrow.right", chevron: true) }
                         .accessibilityIdentifier("newComparison")
                     Divider()

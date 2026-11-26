@@ -55,6 +55,7 @@ struct PantryReceiptDocuments: View {
     @State private var generation = UUID()
     @State private var document: ExtractedReceiptDocument?
     @State private var documentDateWording: String?
+    @State private var reviewedWording: [ExtractedReceiptDocument.Selection: String] = [:]
     @State private var inspectedLine: ExtractedReceiptDocument.Selection?
     @State private var savedFileReceipt: ReviewedReceiptHeader?
     @State private var savedFileGeneration: UUID?
@@ -209,9 +210,9 @@ struct PantryReceiptDocuments: View {
                         guard authorize(), storeIssue == nil, reviewsEvidenceOnly || confirmed else { return }
                         do {
                             let source = try document.source(target: target, merchant: merchant.trimmingCharacters(in: .whitespacesAndNewlines),
-                                stage: stage, selection: selection, linkedAmountItems: linkedAmountItems, at: Date())
+                                stage: stage, selection: selection, linkedAmountItems: linkedAmountItems, reviewedWording: reviewedWording, at: Date())
                             let printedTotal = reviewsEvidenceOnly && stage == .receipt
-                                ? document.printedPaidTotal(selected: selection) : nil
+                                ? document.printedPaidTotal(selected: selection, revised: Set(reviewedWording.keys)) : nil
                             onReview(source, openedShare, printedTotal)
                             dismiss()
                         } catch { show(error) }
@@ -259,7 +260,7 @@ struct PantryReceiptDocuments: View {
         .keyboardDoneAction(visible: merchantFocused, title: pantryText("Done"), identifier: "receipt.document.keyboardDone") { merchantFocused = false }
         .sheet(item: $inspectedLine) { position in
             if authorize(), scenePhase != .background,
-               let page = document?.pages.first(where: { $0.id == position.page }),
+               let document, let page = document.pages.first(where: { $0.id == position.page }),
                let index = page.lines.firstIndex(where: { $0.id == position.line }) {
                 NavigationStack {
                     ReceiptPrintedLineInspector(lines: page.lines, pageNumber: page.id, index: index, originalPage: {
@@ -268,6 +269,19 @@ struct PantryReceiptDocuments: View {
                         guard let fileBytes else { return nil }
                         let image = await ReceiptDocumentReader.originalPage(fileBytes, pageNumber: page.id)
                         return authorize() && inspectedLine == position ? image : nil
+                    }, reviewed: reviewedWording[position] ?? page.lines[index].text, apply: { wording in
+                        guard authorize(), scenePhase != .background, inspectedLine == position,
+                              self.document?.digest == document.digest else { return }
+                        let original = page.lines[index].text
+                        // A corrected row cannot continue to serve as the original printed amount for another item.
+                        let pairs = document.amountAssociations
+                        let split = document.splitAmountAssociations(excluding: pairs)
+                        linkedAmountItems = linkedAmountItems.filter {
+                            $0 != position && pairs[$0] != position && split[$0] != position
+                        }
+                        reviewedWording[position] = wording == original ? nil : wording
+                        confirmed = false
+                        inspectedLine = nil
                     })
                 }
             }
@@ -317,7 +331,10 @@ struct PantryReceiptDocuments: View {
     private func availableAmounts(_ pairs: [ExtractedReceiptDocument.Selection: ExtractedReceiptDocument.Selection])
         -> [ExtractedReceiptDocument.Selection: ExtractedReceiptDocument.Selection] {
         guard stage != .order else { return [:] }
-        return pairs.filter { !omittedLines.contains($0.key) && !omittedLines.contains($0.value) }
+        return pairs.filter {
+            !omittedLines.contains($0.key) && !omittedLines.contains($0.value)
+                && reviewedWording[$0.key] == nil && reviewedWording[$0.value] == nil
+        }
     }
 
     private func printedReceiptName(_ document: ExtractedReceiptDocument) -> String? {
@@ -368,6 +385,9 @@ struct PantryReceiptDocuments: View {
                         ? captureText("Select to keep this amount separate, or link it from the item.") : "")
                     .disabled(!canInclude)
                 }
+            }
+            if let reviewed = reviewedWording[position] {
+                LabeledContent(captureText("Reviewed line wording"), value: reviewed)
             }
             if line.uncertain {
                 Label(pantryText("Unclear printed line. Check the original wording before using it."), systemImage: "exclamationmark.circle")
@@ -470,7 +490,7 @@ struct PantryReceiptDocuments: View {
         generation = UUID()
         job?.cancel(); job = nil
         storeFocusRequest = nil
-        inspectedLine = nil; fileBytes = nil
+        inspectedLine = nil; fileBytes = nil; reviewedWording = [:]
         savedFileReceipt = nil; savedFileGeneration = nil; openedSavedReceipt = nil
         openedShare = nil; selection = []; linkedAmountItems = []; document = nil; photo = nil; merchant = ""; confirmed = false; error = nil; stage = .receipt
     }
@@ -498,9 +518,12 @@ struct ReceiptPrintedLineInspector: View {
     let pageNumber: Int?
     let index: Int
     let originalPage: () async -> Data?
+    var reviewed: String? = nil
+    var apply: ((String) -> Void)? = nil
     @Environment(\.dismiss) private var dismiss
     @State private var pageImage: UIImage?
     @State private var showSource = false
+    @State private var printedCrop: CGImage?
 
     private var selected: ReceiptDocumentPage.Line { lines[index] }
     private var coordinates: String {
@@ -535,7 +558,12 @@ struct ReceiptPrintedLineInspector: View {
         .privacySensitive()
         .task {
             let bytes = await originalPage()
-            if !Task.isCancelled { pageImage = bytes.flatMap { UIImage(data: $0) } }
+            guard !Task.isCancelled else { return }
+            pageImage = bytes.flatMap { UIImage(data: $0) }
+            if let source = pageImage?.cgImage, let bounds = selected.bounds,
+               let pixels = ReceiptWordReading.pixels(for: bounds, width: source.width, height: source.height) {
+                printedCrop = source.cropping(to: pixels)
+            }
         }
     }
 
@@ -547,6 +575,9 @@ struct ReceiptPrintedLineInspector: View {
                     Label(pantryText("Unclear printed line. Check the original wording before using it."), systemImage: "exclamationmark.circle")
                         .foregroundStyle(Theme.warning)
                 }
+            }
+            if let printedCrop, let original = pageImage?.cgImage, let reviewed, let apply {
+                ReceiptReadingEditor(line: selected, image: printedCrop, pageImage: original, reviewed: reviewed, apply: apply)
             }
             Section(pantryText("Original lines")) {
                 VStack(alignment: .leading, spacing: 4) {

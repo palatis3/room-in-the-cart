@@ -101,6 +101,8 @@ struct SharedShopTransfer: Equatable {
     private let financialStore: HistoryPendingStore?
     private let financialSubject: String?
     var financialEntries: [ShopperFinancialEntry]? { financialRecord?.entries }
+    @Published private(set) var packObservation: ShopPackObservation?
+    @Published private(set) var packComparisonUnavailable = false
     @Published private(set) var lastShopSync: Date?
     @Published private(set) var shop: ShopperShop?
     @Published private(set) var busy = false
@@ -180,9 +182,12 @@ struct SharedShopTransfer: Equatable {
             editing = false; creatingAnother = false
             shop = nil
             lastShopSync = nil
+            packObservation = nil
+            packComparisonUnavailable = false
         }
         scope = value
     }
+    private var completedLoad = UUID()
     func load() async {
         guard authorized, !busy else { return }
         busy = true; defer { busy = false }; let start = generation
@@ -231,10 +236,15 @@ struct SharedShopTransfer: Equatable {
                 if pendingDelivery && !canReadDelivery { delivery = .needsReview }
                 reviewedCurrentFacts = pending != nil && (!pendingDelivery || !canReadDelivery)
             }
+            completedLoad = UUID()
         } catch { await handle(error, start: start) }
     }
     private func refreshFacts(start: UUID) async throws {
         let refreshScope = scope
+        let storeEpoch = await financialStore?.epoch()
+        // Hide the previous material-change projection while authority and the full basket are unknown.
+        packObservation = nil
+        packComparisonUnavailable = true
         let fresh = try await service.bootstrap(); guard start == generation, scope == refreshScope else { throw ClientError.cancelled }
         guard fresh.household.id == householdID, fresh.memberId == memberID, fresh.grantId == nil,
               fresh.capabilities.contains("household_admin") || fresh.role == "shopper" else { throw ClientError.accessEnded }
@@ -254,9 +264,53 @@ struct SharedShopTransfer: Equatable {
             }
             shop = value
             lastShopSync = Date()
+            if let store = financialStore, let subject = financialSubject, let storeEpoch,
+               let device = try? await service.shopperDevice(for: fresh), let shopID = UUID(uuidString: id) {
+                guard start == generation, scope == fresh, shop == value else { throw ClientError.cancelled }
+                let key = ShopPackScope(subject: subject, device: device, shop: shopID,
+                                        authorityEpoch: value.authorityEpoch, capabilities: Array(Set(fresh.capabilities)).sorted())
+                let observed = try? await store.observePacks(scope: key, shop: value, expectedEpoch: storeEpoch)
+                guard start == generation, scope == fresh, shop == value else { throw ClientError.cancelled }
+                packObservation = observed
+                packComparisonUnavailable = observed?.hasEarlierVisit != true
+            }
         } else { shop = nil; deliveryRecord = nil; lastShopSync = nil }
         requiresRefresh = false
     }
+    func dismissPackChange(_ id: UUID, observed: ShopPackObservation) async {
+        guard canManage, !busy, pending == nil, packObservation == observed, let store = financialStore else { return }
+        let start = generation
+        let epoch = await store.epoch()
+        guard start == generation, packObservation == observed else { return }
+        let next = try? await store.dismissPackChange(id, observed: observed, expectedEpoch: epoch)
+        guard start == generation, packObservation == observed else { return }
+        packObservation = next
+        packComparisonUnavailable = next == nil
+    }
+
+    /// An exact-row destination always needs a fresh shop read, even when the main form has cached fields.
+    func currentGrocery(shopID: UUID, rowID: UUID, revision: Int, authority: Int) async throws -> ShopperBasketLine {
+        guard authorized, !busy, pending == nil, canManage, UUID(uuidString: scope.shopId ?? "") == shopID else { throw ClientError.accessEnded }
+        let previousLoad = completedLoad
+        await load()
+        guard completedLoad != previousLoad, pending == nil, canManage, let shop, UUID(uuidString: shop.shopId) == shopID,
+              shop.shopRevision == revision, shop.authorityEpoch == authority,
+              let row = shop.lines.first(where: { UUID(uuidString: $0.id) == rowID }),
+              (1...10_000).contains(row.packs), shop.lines.filter({ UUID(uuidString: $0.id) == rowID }).count == 1
+        else { throw ClientError.invalidResponse }
+        return row
+    }
+
+    func preparePackEdit(rowID: UUID, original: ShopperBasketLine, count: Int, revision: Int, authority: Int) -> Bool {
+        guard !editing, !busy, canManage, pending == nil, let shop, shop.phase == "draft",
+              shop.shopRevision == revision, shop.authorityEpoch == authority, (1...10_000).contains(count),
+              shop.lines.first(where: { UUID(uuidString: $0.id) == rowID }) == original else { return false }
+        beginEditing()
+        guard editing, let index = draft.lines.firstIndex(where: { $0.id == rowID }) else { return false }
+        draft.lines[index].packs = count
+        return true
+    }
+
     func confirmedOrder() async throws -> SharedConfirmedOrder {
         guard canReadConfirmedOrder, let shop, let id = UUID(uuidString: shop.shopId),
               ["placed", "closed"].contains(shop.phase) else { throw ClientError.accessEnded }
@@ -1093,6 +1147,7 @@ struct SharedShopTransfer: Equatable {
         reviewedAmendmentOperation = nil; reviewedCurrentFacts = false
         reviewedCookRecipient = nil; pendingMarkOccurrence = nil; reviewedCookOperation = nil
         recoveryRecord = nil; reviewedRecovery = nil; reviewedRecoveryOperation = nil
+        packObservation = nil; packComparisonUnavailable = false
         generation = UUID(); lastShopSync = nil; financialRecord = nil; financialRetry = nil; deliveryRecord = nil
         authorized = false; shop = nil; review = nil; pending = nil; draft = .init()
         notice = nil; editing = false; acknowledged = false; delivery = .none

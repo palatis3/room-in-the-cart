@@ -1,4 +1,5 @@
 import CoreDomain
+import CryptoKit
 import ImageIO
 import SwiftUI
 import UniformTypeIdentifiers
@@ -33,6 +34,41 @@ struct PackageRowPhoto: Codable, Equatable, Sendable {
     let cue: String
     let thumbnail: Data
 
+    struct Destination: Codable, Equatable, Sendable {
+        let id: UUID
+        let target: CaptureTarget
+        let originalProduct: String
+        let destinationProduct: String
+    }
+    /// Persist only reviewed destinations beside the original thumbnail. The two
+    /// projection fields are populated only when resolving a later trip for display.
+    var destinations: [Destination]? = nil
+    var originalTarget: CaptureTarget? = nil
+    var association: Destination? = nil
+
+    func projected(to destination: Destination) -> Self {
+        Self(revision: revision, owner: owner, target: destination.target, source: source, cue: cue,
+             thumbnail: thumbnail, originalTarget: target, association: destination)
+    }
+
+    func matchesCurrentGroceries(in workspace: LedgerWorkspace) -> Bool {
+        guard let originalTarget, let association else { return true }
+        return Self.productSignature(originalTarget, in: workspace) == association.originalProduct &&
+            Self.productSignature(target, in: workspace) == association.destinationProduct
+    }
+
+    static func productSignature(_ target: CaptureTarget, in workspace: LedgerWorkspace) -> String? {
+        guard let shop = workspace.shops.first(where: { $0.id == target.containerID }),
+              let line = shop.lines.first(where: { $0.id == target.objectID && !$0.isTrashed }) else { return nil }
+        // Picking the item or pricing it leaves this identity intact. Changes to the
+        // request, package or its exclusions require the shopper to confirm it again.
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        guard let wording = try? encoder.encode([line.name, line.notes]),
+              let ingredients = try? encoder.encode(shop.contributions(forLineID: line.id)) else { return nil }
+        return SHA256.hash(data: wording + ingredients).map { String(format: "%02x", $0) }.joined()
+    }
+
     static func normalizedCue(_ text: String) throws -> String {
         let cue = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !cue.isEmpty, cue.count <= 100, !cue.unicodeScalars.contains(where: CharacterSet.controlCharacters.contains)
@@ -49,17 +85,17 @@ struct PackageRowPhoto: Codable, Equatable, Sendable {
         return (1...maximumDimension).contains(width) && (1...maximumDimension).contains(height)
     }
 
-    static func makeThumbnail(_ data: Data) throws -> Data {
+    static func makeThumbnail(_ data: Data, dimension: Int = maximumDimension, byteLimit: Int = maximumBytes) throws -> Data {
         guard let source = CGImageSourceCreateWithData(data as CFData, nil),
               let image = CGImageSourceCreateThumbnailAtIndex(source, 0, [
                 kCGImageSourceCreateThumbnailFromImageAlways: true, kCGImageSourceCreateThumbnailWithTransform: true,
-                kCGImageSourceThumbnailMaxPixelSize: maximumDimension
+                kCGImageSourceThumbnailMaxPixelSize: dimension
               ] as CFDictionary) else { throw ScanFailure.invalidImage }
         let bytes = NSMutableData()
         guard let destination = CGImageDestinationCreateWithData(bytes, UTType.jpeg.identifier as CFString, 1, nil)
         else { throw ScanFailure.invalidImage }
         CGImageDestinationAddImage(destination, image, [kCGImageDestinationLossyCompressionQuality: 0.70] as CFDictionary)
-        guard CGImageDestinationFinalize(destination), bytes.length <= maximumBytes else { throw ScanFailure.invalidImage }
+        guard CGImageDestinationFinalize(destination), bytes.length <= byteLimit else { throw ScanFailure.invalidImage }
         return bytes as Data
     }
 }
@@ -94,7 +130,7 @@ struct PrivatePackagePhotoLink: View {
                         model.sourceWorkspaceID == workspaceID && model.workspace.selectedShopID == shop.id &&
                         model.shop?.revision == shop.revision &&
                         model.shop?.lines.contains(where: { $0.id == line.id && !$0.isTrashed }) == true
-                    })
+                    }, packageLedger: model)
             }.accessibilityIdentifier("ledger.scanReferences")
         }
     }
@@ -166,6 +202,131 @@ struct PackagePhotoChoice: View {
                 guard authorize() else { return }
                 focus.wrappedValue = nil; editor = false; failed = false
             } catch { if authorize() { failed = true } }
+        }
+    }
+}
+
+struct EarlierPackageCueView: View {
+    @ObservedObject var ledger: LedgerModel
+    let target: CaptureTarget
+    let owner: PackageRowPhoto.Owner
+    let authorize: @MainActor @Sendable () -> Bool
+    @State private var earlier: [PackageRowPhoto] = []
+    @State private var existing: PackageRowPhoto?
+    @State private var selected: PackageRowPhoto?
+    @State private var selectedMatch: PackageRowPhoto.Destination?
+    @State private var refresh = UUID()
+    @State private var loaded = false
+    @State private var busy = false
+    @State private var failed = false
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        WorkingForm {
+            if authorize(), let destination = grocery(target) {
+                Section(packagePhotoText("This grocery")) { Text(verbatim: destination.name) }
+                if !loaded && !failed { ProgressView() }
+                else if let existing {
+                    if existing.association != nil {
+                        if existing.matchesCurrentGroceries(in: ledger.workspace) { PackagePhotoRowLabel(photo: existing) }
+                        else { Text(packagePhotoText("The grocery changed. Choose its package again.")) }
+                        Button(packagePhotoText("Remove cue from this trip"), role: .destructive) { remove(existing) }
+                    } else {
+                        Text(packagePhotoText("This grocery already has its own photo. Hide it in source references to use another cue."))
+                    }
+                } else if let selected, let selectedMatch {
+                    Section(packagePhotoText("Previous package")) {
+                        sourceLabel(selected)
+                        Button(packagePhotoText("Same product and pack · Use this cue")) { confirm(selected, match: selectedMatch) }
+                            .accessibilityIdentifier("privatePackagePhoto.confirmReuse")
+                        Button(ledgerText("Cancel")) { clearSelection() }
+                    }
+                } else if loaded {
+                    let choices = earlier.filter { grocery($0.target) != nil }
+                    if choices.isEmpty { Text(packagePhotoText("No earlier trips have a saved package cue.")) }
+                    else {
+                        Section(packagePhotoText("Choose the exact previous package")) {
+                            ForEach(choices, id: \.revision) { photo in
+                                Button {
+                                    guard let original = PackageRowPhoto.productSignature(photo.target, in: ledger.workspace),
+                                          let destination = PackageRowPhoto.productSignature(target, in: ledger.workspace) else { failed = true; return }
+                                    selected = photo
+                                    selectedMatch = .init(id: UUID(), target: target, originalProduct: original, destinationProduct: destination)
+                                } label: { sourceLabel(photo) }
+                            }
+                        }
+                    }
+                }
+                if failed {
+                    Text(packagePhotoText("Could not update this photo. Reopen the reference and try again."))
+                    Button(ledgerText("Retry")) { reload() }
+                }
+            } else { Text(captureText("Unlock your private workspace to review this source.")) }
+        }
+        .disabled(busy)
+        .privacySensitive()
+        .navigationTitle(packagePhotoText("Previous package cue"))
+        .task(id: refresh) {
+            guard authorize() else { return }
+            do {
+                let active = try await CaptureMediaStore.shared.packagePhotos(target: target, owner: owner, authorize: authorize)
+                let choices = try await CaptureMediaStore.shared.earlierPackagePhotos(for: target, owner: owner, authorize: authorize)
+                guard authorize(), !Task.isCancelled else { return }
+                existing = active.first { $0.target.sameObject(as: target) }
+                earlier = choices
+                loaded = true
+            } catch { if authorize(), !Task.isCancelled { failed = true } }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: PackageRowPhoto.changed)) { _ in reload() }
+    }
+
+    private func grocery(_ address: CaptureTarget) -> ShoppingLine? {
+        guard ledger.sourceWorkspaceID == address.workspaceID,
+              let trip = ledger.workspace.shops.first(where: { $0.id == address.containerID }) else { return nil }
+        return trip.lines.first { $0.id == address.objectID && !$0.isTrashed }
+    }
+
+    @ViewBuilder private func sourceLabel(_ photo: PackageRowPhoto) -> some View {
+        if let line = grocery(photo.target), let trip = ledger.workspace.shops.first(where: { $0.id == photo.target.containerID }) {
+            VStack(alignment: .leading, spacing: 5) {
+                Text(verbatim: line.name).font(.headline)
+                Text(verbatim: [trip.title, trip.basis.branch].filter { !$0.isEmpty }.joined(separator: " · ")).font(.footnote)
+                if let date = trip.basis.slot ?? trip.revisions.last?.createdAt { Text(date, style: .date).font(.footnote) }
+                PackagePhotoRowLabel(photo: photo)
+            }.accessibilityElement(children: .combine)
+        }
+    }
+
+    private func clearSelection() { selected = nil; selectedMatch = nil }
+    private func reload() {
+        earlier = []; existing = nil; loaded = false; failed = false
+        clearSelection()
+        refresh = UUID()
+    }
+
+    private func confirm(_ original: PackageRowPhoto, match: PackageRowPhoto.Destination) {
+        guard !busy else { return }
+        busy = true
+        Task {
+            defer { busy = false }
+            do {
+                try await CaptureMediaStore.shared.reusePackagePhoto(original, destination: match, owner: owner, authorize: {
+                    authorize() && ledger.sourceWorkspaceID == target.workspaceID && ledger.shop?.id == target.containerID &&
+                        PackageRowPhoto.productSignature(original.target, in: ledger.workspace) == match.originalProduct &&
+                        PackageRowPhoto.productSignature(target, in: ledger.workspace) == match.destinationProduct
+                })
+                if authorize() { dismiss() }
+            } catch { if authorize() { failed = true } }
+        }
+    }
+
+    private func remove(_ photo: PackageRowPhoto) {
+        guard !busy else { return }
+        busy = true
+        Task {
+            defer { busy = false }
+            do { try await CaptureMediaStore.shared.removeReusedPackagePhoto(photo, target: target, owner: owner, authorize: authorize) }
+            catch { if authorize() { failed = true } }
         }
     }
 }

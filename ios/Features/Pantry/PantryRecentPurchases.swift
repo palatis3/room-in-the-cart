@@ -5,7 +5,7 @@ import HouseholdClient
 
 /// A receipt can be carried by several pickup histories. The option identifies
 /// one existing physical pantry lot and the inventory revision shown to its owner.
-struct PantryRecentPurchase: Identifiable, Equatable {
+struct PantryRecentPurchase: Identifiable, Equatable, Codable {
     let id: UUID
     let receiptKey: ReceiptKey
     let reviewedFood: PantryReviewedFood
@@ -16,7 +16,7 @@ struct PantryRecentPurchase: Identifiable, Equatable {
 }
 
 /// The exact private delivery and optional pickup details displayed when a shopper links a package.
-struct PantryReceiptDelivery: Identifiable, Equatable {
+struct PantryReceiptDelivery: Identifiable, Equatable, Codable {
     let lot: InventoryLot
     let state: InventoryState
     let purchase: PantryRecentPurchase?

@@ -49,15 +49,16 @@ struct OnDeviceScanService: LocalScanService {
             }
             var seen = Set<String>()
             let unique = Array(codes.filter { seen.insert($0.id).inserted }.prefix(16))
-            let evidence: CaptureEvidence?
-            do { evidence = try await OnDeviceTextCapture().recognize(jpeg) }
+            let reading: OnDeviceTextCapture.Reading?
+            do { reading = try await OnDeviceTextCapture().recognizeWithLayout(jpeg, receiptReadings: true) }
             catch is CancellationError { throw CancellationError() }
-            catch { evidence = nil } // The image/code remains reviewable, with typing always available.
+            catch { reading = nil } // The image/code remains reviewable, with typing always available.
             try Task.checkCancellation()
+            let evidence = reading?.evidence
             let text = evidence?.text ?? ""
             try ScanLimits.text(text)
             return ScannedSource(originalText: text, uncertainLines: evidence?.uncertainLines ?? [], originalImageData: data,
-                referenceJPEG: jpeg, barcodes: unique)
+                referenceJPEG: jpeg, barcodes: unique, lineBounds: reading?.lineBounds ?? [], wordReadings: reading?.wordReadings ?? [])
         }
         return try await withTaskCancellationHandler(operation: { try await task.value }, onCancel: { cancellation.cancel(); task.cancel() })
     }

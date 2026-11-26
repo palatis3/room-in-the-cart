@@ -130,3 +130,73 @@ struct PantryPlacedProductLinks {
         }
     }
 }
+
+/// Calendar dates stay in the zone where the shopper scheduled the check.
+struct PantryStandingCheck: Codable, Equatable, Identifiable {
+    enum Answer: String, Codable { case have, skipped, shopping }
+    struct Destination: Codable, Equatable {
+        let workspace: UUID
+        let shop: UUID
+        let createFirst: Bool
+    }
+
+    let id: UUID
+    let name: String
+    let weeks: Int
+    var next: MealDay
+    var lastAnswer: Answer?
+    var adding: Destination?
+
+    init(name: String, weeks: Int, first: MealDay) throws {
+        id = UUID()
+        self.name = PantryRestockReview.foodName(name)
+        self.weeks = weeks
+        next = first
+        try validate()
+    }
+
+    func validate() throws {
+        guard !name.isEmpty, name.utf8.count <= 160, !name.contains("\0"), (1...12).contains(weeks)
+        else { throw PantryDigestFailure.invalid }
+        try next.validate()
+    }
+
+    var occurrence: UUID { ReceiptAcquisition.identity(["standing-check", id.uuidString, next.iso8601]) }
+
+    func due(at now: Date) -> Bool {
+        guard let today = try? MealDay(date: now, timeZoneIdentifier: next.timeZoneIdentifier) else { return false }
+        return today.iso8601 >= next.iso8601
+    }
+
+    func answering(_ answer: Answer, at now: Date) throws -> Self {
+        guard due(at: now), let start = next.date, let zone = TimeZone(identifier: next.timeZoneIdentifier),
+              let today = try MealDay(date: now, timeZoneIdentifier: next.timeZoneIdentifier).date else {
+            throw PantryDigestFailure.changed
+        }
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = zone
+        let elapsed = calendar.dateComponents([.day], from: start, to: today).day ?? 0
+        let interval = 7 * weeks
+        guard let future = calendar.date(byAdding: .day, value: (elapsed / interval + 1) * interval, to: start) else {
+            throw PantryDigestFailure.invalid
+        }
+        var resolved = self
+        resolved.next = try MealDay(date: future, timeZoneIdentifier: zone.identifier)
+        resolved.lastAnswer = answer
+        resolved.adding = nil
+        return resolved
+    }
+    func shoppingPreview(for shop: ShoppingLedger) throws -> StagedListImport {
+        try PantryRestockReview.stage(food: name, text: name, source: .typed, id: occurrence, shop: shop)
+    }
+
+    func addToTrip(_ shop: inout ShoppingLedger) throws {
+        guard !shop.importBatches.contains(where: { $0.id == occurrence }) else { return }
+        let existing = PantryRestockReview.destination(food: name, workspace: .init(shops: [shop], selectedShopID: shop.id),
+                                                       closed: [], requestNames: [])
+        let decision: ImportResolution = existing == .onList ? .skip : .addNew
+        let preview = try shoppingPreview(for: shop)
+        try shop.commitImport(preview, decisions: Dictionary(uniqueKeysWithValues: preview.lines.map { ($0.id, decision) }))
+    }
+
+}

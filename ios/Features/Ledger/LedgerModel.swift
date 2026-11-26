@@ -125,6 +125,7 @@ private enum LedgerDeletionJournal {
     private var deletionJournalURL: URL? { resolvedDatabaseURL?.appendingPathExtension("erase-intent.json") }
     private struct PendingSave {
         var firstListDraft: FirstListDraftVersion? = nil
+        var firstShopForQuickDraft: UUID? = nil
         var quickDraft: FirstListDraftVersion? = nil
         let onShopSelected: ((UUID) -> Void)?
         let key: String
@@ -335,7 +336,9 @@ private enum LedgerDeletionJournal {
             }
             if let basis = reviewedPantryBasis { try await verifyPantryBasis(basis) }
             guard actionAccess?() != false else { throw LedgerModelError.notReady }
-            let change = PendingSave(firstListDraft: firstListDraft, quickDraft: quickDraft, onShopSelected: onShopSelected, key: key, workspace: candidate, payload: payload, base: revision,
+            let firstShop = firstListDraft != nil && workspace.shops.isEmpty ? candidate.selectedShopID : nil
+            let change = PendingSave(firstListDraft: firstListDraft, firstShopForQuickDraft: firstShop, quickDraft: quickDraft,
+                                     onShopSelected: onShopSelected, key: key, workspace: candidate, payload: payload, base: revision,
                                      operationID: firstListDraft?.token ?? UUID(), savedAt: clock(), reviewedPantryBasis: reviewedPantryBasis, authorize: actionAccess)
             pending = change
             hasPendingSave = true
@@ -453,7 +456,8 @@ private enum LedgerDeletionJournal {
             guard privatePantryWritable else { throw LedgerModelError.notReady }
             try AdultHomeSummaryStore.shared.invalidateLedger(store.workspaceID, forget: false)
             let record = try await store.save(payload: pending.payload, expectedRevision: pending.base,
-                                              operationID: pending.operationID, savedAt: pending.savedAt, consuming: pending.firstListDraft, clearingQuickDraft: pending.quickDraft)
+                                              operationID: pending.operationID, savedAt: pending.savedAt, consuming: pending.firstListDraft,
+                                              clearingQuickDraft: pending.quickDraft, firstShopForQuickDraft: pending.firstShopForQuickDraft)
             // No other mutation can start while saving, including during actor suspension.
             // Another store instance may have advanced after this operation's receipt.
             let current = try await store.load() ?? record

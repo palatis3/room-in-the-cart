@@ -3,6 +3,34 @@ import XCTest
 @testable import CoreDomain
 
 final class QuickGroceryTests: XCTestCase {
+    func testMoneyAndNumberLedNamesNeverBecomePhysicalCountsAcrossReopen() throws {
+        let wording = ["30 pesos de tortillas", "30 MXN de tortillas", "MX$30 de tortillas",
+                       "5 dollars of apples", "1 dólar de pan", "$5 worth of apples",
+                       "2 bolsas a 30 pesos", "2 limes USD 5", "7 Up", "7 Up Zero Sugar", "3 Musketeers"]
+        for source: ImportSource in [.typed, .paste] {
+            var shop = ShoppingLedger()
+            for line in wording { XCTAssertNil(try QuickGrocery.stage(line, in: shop), line) }
+            let batch = try shop.stageImport(text: wording.joined(separator: "\n"), source: source, reviewPackageCounts: true)
+            XCTAssertEqual(batch.lines.map(\.name), wording)
+            XCTAssertTrue(batch.lines.allSatisfy { $0.quantity == nil && $0.reviewedPackages == nil })
+            try shop.commitImport(batch)
+            let reopened = try JSONDecoder().decode(ShoppingLedger.self, from: JSONEncoder().encode(shop))
+            XCTAssertEqual(reopened.contributions.map(\.originalText), wording)
+            for row in batch.lines { XCTAssertNil(try reopened.quantity(forLineID: row.proposedLineID)) }
+        }
+        let shop = ShoppingLedger()
+        for text in ["30 tortillas", "30 apples"] {
+            let result = try XCTUnwrap(QuickGrocery.stage(text, in: shop))
+            XCTAssertEqual(result.lines.first?.quantity?.amount, try Rational(30))
+        }
+        for text in ["2 bottles of 7 Up", "2 botellas de 7 Up"] {
+            let row = try XCTUnwrap(shop.stageImport(text: text, reviewPackageCounts: true).lines.first)
+            XCTAssertEqual(row.name, "7 Up")
+            XCTAssertEqual(row.reviewedPackages, .init(count: 2, kind: .bottle))
+            XCTAssertNil(row.quantity)
+        }
+    }
+
     func testPrivateListReviewKeepsContainerCountSeparateFromContentsAcrossReopenAndDuplicateReview() throws {
         for (wording, name) in [("2 cartons of oat milk", "oat milk"), ("2 cartones de leche de avena", "leche de avena")] {
             var shop = ShoppingLedger()

@@ -1615,6 +1615,49 @@ import XCTest
         capture("Checkout review preserves original OCR, accepted crop and shopper amount")
     }
 
+    #if CONTRIBUTOR_CAPTURE_UI_FIXTURE
+    func testPrivateCookingPhotoSurvivesNextCookAndDisplayOptInEndsWithSession() throws {
+        app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        saveSourcePhoto()
+        app.terminate()
+
+        app.launchArguments = ["--ui-testing", "--recipe-library-fixture", "--recipe-full-screen", "--reset-library-privacy-fixture",
+                               "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        tap(app.buttons["records.recovered.Existing family soup"])
+        tap(app.buttons["records.openSavedRecipe"])
+        tap(app.buttons["cooking.openRecipe"])
+        tap(app.buttons["cooking.stepPhoto.add"])
+        tap(element("cooking.stepPhoto.pick"))
+        try chooseNewestSourcePhoto()
+
+        let cue = app.textFields["cooking.stepPhoto.description"]
+        tap(cue)
+        cue.typeText("Golden at the edges")
+        tap(app.buttons["cooking.stepNote.done"])
+        tap(app.buttons["cooking.stepPhoto.save"])
+        let saved = app.staticTexts["Step photo, Golden at the edges"]
+        reveal(saved)
+        let display = app.switches["cooking.keepAwake"].firstMatch
+        reveal(display)
+        XCTAssertEqual(display.value as? String, "0")
+        display.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        XCTAssertEqual(display.value as? String, "1")
+        tap(app.buttons["cooking.end"])
+        tap(app.buttons["cooking.confirmEnd"])
+        tap(app.buttons["cooking.openRecipe"])
+        reveal(saved)
+        capture("Private photo and description on a later cook")
+        reveal(display)
+        XCTAssertEqual(display.value as? String, "0")
+        tap(app.buttons["Edit step photo"])
+        tap(app.buttons["Remove step photo"])
+        reveal(app.buttons["cooking.stepPhoto.add"])
+        XCTAssertFalse(saved.exists)
+    }
+    #endif
+
     private func systemPhotoPicker() throws -> XCUIElement {
         let identifiedGrid = app.scrollViews["photosView_content_scroll_view"]
         // iOS 17 presents an unlabelled grid beneath the native Photos navigation bar.
@@ -1749,6 +1792,33 @@ import XCTest
         receiptTap(app.buttons["Done"])
         let lots = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS[c] %@", "pantry.lot.", "SERVICE FEE"))
         XCTAssertEqual(lots.count, 0)
+    }
+
+    func testReceiptReadingCorrectionKeepsOriginalAndSelection() throws {
+        try openReceiptScreenshotFromPhotos()
+        let inspect = app.buttons["receipt.document.inspect.1.1"]
+        XCTAssertTrue(inspect.waitForExistence(timeout: 25))
+        let original = inspect.label
+        tap(inspect)
+        let contrast = app.switches["Increase print contrast"]
+        reveal(contrast)
+        contrast.tap()
+        let field = element("receipt.reading.edit")
+        reveal(field)
+        field.tap()
+        field.typeText(" organic")
+        let apply = app.buttons["receipt.reading.apply"]
+        tap(apply)
+        XCTAssertTrue(inspect.waitForExistence(timeout: 5))
+        XCTAssertEqual(inspect.label, original)
+        XCTAssertEqual(app.switches["receipt.document.line.1.1"].value as? String, "0")
+        tap(inspect)
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        XCTAssertTrue((field.value as? String)?.contains("organic") == true)
+        tap(app.buttons["Restore original wording"])
+        tap(apply)
+        XCTAssertTrue(inspect.waitForExistence(timeout: 5))
+        XCTAssertEqual(inspect.label, original)
     }
 
     func testSystemPhotosReceiptKeepsRecognizedLinesUnselected() throws {
@@ -5656,5 +5726,49 @@ import XCTest
         attachment.name = name
         attachment.lifetime = .keepAlways
         add(attachment)
+    }
+}
+
+extension FreeJourneyUITests {
+    func testInterruptedProductScanResumesAfterTerminationAndCanBeDiscarded() {
+        launch(reset: true)
+        tap(app.tabBars.buttons["Pantry"])
+        tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.productBatch"])
+        addTypedProduct("012345000058", using: app.textFields["productBatch.code"])
+        reveal(app.buttons["productBatch.row.0"])
+        app.terminate()
+        launch(reset: false)
+        tap(app.tabBars.buttons["Pantry"])
+        tap(app.buttons["pantry.productBatch"])
+        tap(app.buttons["productBatch.resume"])
+        let row = app.buttons["productBatch.row.0"]
+        reveal(row)
+        XCTAssertTrue(row.label.contains("012345000058"), row.debugDescription)
+        tap(app.navigationBars["Scan products"].buttons["Cancel"])
+        tap(app.buttons["pantry.productBatch"])
+        tap(app.buttons["productBatch.discardDraft"])
+        XCTAssertFalse(row.exists)
+        tap(app.navigationBars["Scan products"].buttons["Cancel"])
+        XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "pantry.lot.")).count, 0)
+    }
+
+    func testStandingStockCheckStartsWithEmptyPantryAndAddsOneGrocery() {
+        launch(reset: true)
+        tap(app.tabBars.buttons["Pantry"])
+        tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.standingChecks"])
+        let name = app.textFields["pantry.standing.name"]
+        tap(name)
+        name.typeText("Coffee")
+        tap(app.buttons["Save stock check"])
+        tap(app.buttons["pantry.standing.add"])
+        XCTAssertTrue(app.buttons["pantry.standing.add"].waitForNonExistence(timeout: 12), app.debugDescription)
+        app.terminate()
+        launch(reset: false)
+        tap(app.tabBars.buttons["Pantry"])
+        tap(app.buttons["pantry.standingChecks"])
+        XCTAssertFalse(app.buttons["pantry.standing.add"].exists)
+        XCTAssertTrue(app.staticTexts["Next check"].exists)
     }
 }

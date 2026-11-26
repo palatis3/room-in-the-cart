@@ -1,6 +1,25 @@
 import Foundation
 import AVFoundation
 import Speech
+import SwiftUI
+
+struct GrocerySpeechPermissionScope: Equatable {
+    let adult: CapturePrivateIdentity
+    let workspace: UUID
+    let shop: UUID?
+    let generation: UUID
+}
+
+private struct GrocerySpeechPermissionKey: EnvironmentKey {
+    static let defaultValue: PantryNotificationPresenter? = nil
+}
+
+extension EnvironmentValues {
+    var grocerySpeechPermission: PantryNotificationPresenter? {
+        get { self[GrocerySpeechPermissionKey.self] }
+        set { self[GrocerySpeechPermissionKey.self] = newValue }
+    }
+}
 
 /// In-memory buffers go only to Apple's explicitly on-device recognizer. No file, HTTP or analytics path exists.
 @MainActor final class OnDeviceSpeechCapture: CaptureSpeechService {
@@ -26,17 +45,43 @@ import Speech
         self.punctuatesList = punctuatesList
     }
 
+    private static func configured(_ bundle: Bundle) -> Bool {
+        ["NSSpeechRecognitionUsageDescription", "NSMicrophoneUsageDescription"].allSatisfy {
+            guard let value = bundle.object(forInfoDictionaryKey: $0) as? String else { return false }
+            return !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+    }
+
+    private static func localRecognizer(_ language: String?) -> SFSpeechRecognizer? {
+        guard language == "en" || language == "es" else { return nil }
+        let locales = language == "es" ? ["es-MX", "es-US"] : ["en-US"]
+        return locales.compactMap { SFSpeechRecognizer(locale: Locale(identifier: $0)) }
+            .first { $0.supportsOnDeviceRecognition && $0.isAvailable }
+    }
+
+    /// Ask while the private Shop is still mounted, before presenting the nested list editor.
+    /// The root permission window resumes only in the same unlocked adult workspace.
+    static func prepareGroceryPermissions(_ present: PantryNotificationPresenter) async throws {
+        let language = Locale(identifier: CaptureCorrectionScope.appLanguage()).language.languageCode?.identifier
+        guard configured(.main), localRecognizer(language) != nil else { return }
+        if SFSpeechRecognizer.authorizationStatus() == .notDetermined {
+            let granted = try await present {
+                await withCheckedContinuation { reply in SFSpeechRecognizer.requestAuthorization { reply.resume(returning: $0 == .authorized) } }
+            }
+            guard granted else { return }
+        }
+        if SFSpeechRecognizer.authorizationStatus() == .authorized, AVAudioApplication.shared.recordPermission == .undetermined {
+            _ = try await present {
+                await withCheckedContinuation { reply in AVAudioApplication.requestRecordPermission { reply.resume(returning: $0) } }
+            }
+        }
+    }
+
     func begin(localeIdentifier: String) async throws -> AsyncThrowingStream<SpeechCaptureUpdate, Error> {
         stop(); let run = runID
-        for key in ["NSSpeechRecognitionUsageDescription", "NSMicrophoneUsageDescription"] {
-            guard let description = bundle.object(forInfoDictionaryKey: key) as? String,
-                  !description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw CaptureFailure.notConfigured }
-        }
+        guard Self.configured(bundle) else { throw CaptureFailure.notConfigured }
         let language = Locale(identifier: localeIdentifier).language.languageCode?.identifier
-        guard language == "en" || language == "es" else { throw CaptureFailure.onDeviceUnavailable }
-        let locale = language == "es" ? "es-US" : "en-US"
-        guard let recognizer = SFSpeechRecognizer(locale: Locale(identifier: locale)),
-              recognizer.supportsOnDeviceRecognition else { throw CaptureFailure.onDeviceUnavailable }
+        guard let recognizer = Self.localRecognizer(language) else { throw CaptureFailure.onDeviceUnavailable }
         if SFSpeechRecognizer.authorizationStatus() == .notDetermined && !willRequestPermission() {
             throw CaptureFailure.permissionDenied
         }
@@ -91,8 +136,16 @@ import Speech
                 }
             }
             recognition = recognizer.recognitionTask(with: request) { [weak self] result, error in
-                let update = result.map { SpeechCaptureUpdate(text: $0.bestTranscription.formattedString,
-                    isFinal: $0.isFinal, uncertain: $0.bestTranscription.segments.contains { $0.confidence < 0.7 }) }
+                let update = result.map { result in
+                    let transcript = result.bestTranscription
+                    let uncertain = transcript.segments.filter { $0.confidence < 0.7 }
+                    let repairs = uncertain.prefix(64).compactMap { segment in
+                        SpeechWordRepair(text: transcript.formattedString, range: segment.substringRange,
+                            word: segment.substring, alternatives: segment.alternativeSubstrings)
+                    }
+                    return SpeechCaptureUpdate(text: transcript.formattedString, isFinal: result.isFinal,
+                        uncertain: !uncertain.isEmpty, repairs: repairs)
+                }
                 let failed = error != nil
                 Task { @MainActor [weak self] in
                     guard let self, self.runID == run else { return }

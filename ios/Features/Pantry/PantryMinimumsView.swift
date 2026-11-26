@@ -119,3 +119,130 @@ struct PantryMinimumsView: View {
         .navigationTitle(pantryText("Staple minimums")).privacySensitive()
     }
 }
+
+struct PantryStandingChecksView: View {
+    let scope: PantryDigestScope
+    @Environment(\.pantryDigestAccess) private var currentAccess
+    @Environment(\.scenePhase) private var scene
+    @EnvironmentObject private var ledger: LedgerModel
+    @EnvironmentObject private var pickup: PickupModel
+    @ObservedObject private var store = PantryDigestStore.shared
+    @State private var name = ""
+    @State private var weeks = 1
+    @State private var first = Date()
+    @State private var busy = false
+    @State private var error = false
+
+    private var access: PantryDigestAccess? {
+        guard scene == .active, let currentAccess, currentAccess.scope == scope, currentAccess.authorized() else { return nil }
+        return currentAccess
+    }
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 60)) { clock in
+            WorkingForm {
+                if let access, let doc = try? store.document(scope) {
+                    Section(pantryText("Schedule a stock check")) {
+                        TextField(pantryText("Food name"), text: $name)
+                            .accessibilityIdentifier("pantry.standing.name")
+                        DatePicker(pantryText("First check"), selection: $first, displayedComponents: .date)
+                        Stepper(weeks == 1 ? pantryText("Every week") : pantryFormat("Every %lld weeks", Int64(weeks)), value: $weeks, in: 1...12)
+                        Button(pantryText("Save stock check")) {
+                            do {
+                                let day = try MealDay(date: first, timeZoneIdentifier: TimeZone.current.identifier)
+                                let check = try PantryStandingCheck(name: name, weeks: weeks, first: day)
+                                try store.updateStandingCheck(nil, next: check, access: access)
+                                name = ""; error = false
+                            } catch { self.error = true }
+                        }.disabled(PantryRestockReview.foodName(name).isEmpty)
+                    }
+                    ForEach((doc.standingChecks ?? []).sorted { ($0.next.iso8601, $0.name) < ($1.next.iso8601, $1.name) }) { check in
+                        Section(check.name) {
+                            LabeledContent(pantryText("Next check"), value: check.next.iso8601 + " · " + check.next.timeZoneIdentifier)
+                            if check.due(at: clock.date) {
+                                if check.adding == nil {
+                                    Button(pantryText("Already have it")) { answer(check, .have, access) }
+                                    Button(pantryText("Skip this time")) { answer(check, .skipped, access) }
+                                }
+                                if let destination = destination(for: check) {
+                                    let title = ledger.workspace.shops.first { $0.id == destination.shop }?.title ?? ledgerText("Pickup")
+                                    Button(pantryFormat("Add to this trip: %@", title)) { add(check, to: destination, access: access) }
+                                        .accessibilityIdentifier("pantry.standing.add")
+                                } else {
+                                    Text(pantryText("Choose an open shopping list to review this item."))
+                                }
+                            }
+                            Button(pantryText("Remove stock check"), role: .destructive) {
+                                do { try store.updateStandingCheck(check, next: nil, access: access); error = false }
+                                catch { self.error = true }
+                            }.disabled(busy || ledger.hasPendingSave || ledger.saving)
+                        }
+                    }
+                    if error { Text(pantryText("The stock check changed. Review it and try again.")) }
+                } else { Text(pantryText("Unlock the authorized private workspace to view pantry food.")) }
+            }.disabled(busy)
+        }.navigationTitle(pantryText("Standing stock checks")).privacySensitive()
+    }
+
+    private func answer(_ check: PantryStandingCheck, _ value: PantryStandingCheck.Answer, _ access: PantryDigestAccess) {
+        do { try store.updateStandingCheck(check, next: check.answering(value, at: Date()), access: access); error = false }
+        catch { self.error = true }
+    }
+
+    private func destination(for check: PantryStandingCheck) -> PantryStandingCheck.Destination? {
+        guard access != nil, ledger.ready, pickup.ready, !ledger.hasPendingLedgerDeletion,
+              let workspace = ledger.sourceWorkspaceID else { return nil }
+        if let pending = check.adding { return pending.workspace == workspace ? pending : nil }
+        if let id = ledger.workspace.selectedShopID,
+           ledger.workspace.shops.contains(where: { $0.id == id }),
+           !pickup.journeys.contains(where: { $0.id == id && $0.closedAt != nil }) {
+            return .init(workspace: workspace, shop: id, createFirst: false)
+        }
+        guard ledger.workspace.shops.isEmpty else { return nil }
+        return .init(workspace: workspace, shop: ReceiptAcquisition.identity(["first-stock-check-shop", check.occurrence.uuidString]), createFirst: true)
+    }
+
+    private func add(_ check: PantryStandingCheck, to target: PantryStandingCheck.Destination, access: PantryDigestAccess) {
+        guard !busy, access.authorized(), destination(for: check) == target, check.due(at: Date()) else { return }
+        busy = true
+        Task { @MainActor in
+            defer { busy = false }
+            do {
+                var staged = check
+                staged.adding = target
+                if check.adding == nil { try store.updateStandingCheck(check, next: staged, access: access) }
+                let expected = staged
+                func stillCurrent() -> Bool {
+                    access.authorized() && ledger.sourceWorkspaceID == target.workspace &&
+                        (try? store.document(scope).standingChecks?.contains(expected)) == true
+                }
+                guard stillCurrent() else { throw PantryDigestFailure.changed }
+                let existing = ledger.workspace.shops.first { $0.id == target.shop }
+                let alreadyCommitted = existing?.importBatches.contains { $0.id == check.occurrence } == true
+                if !alreadyCommitted {
+                    func destinationCurrent() -> Bool {
+                        stillCurrent() && !pickup.journeys.contains { $0.id == target.shop && $0.closedAt != nil }
+                    }
+                    guard destinationCurrent() else { throw PantryDigestFailure.changed }
+                    if let existing {
+                        guard ledger.workspace.selectedShopID == existing.id else { throw PantryDigestFailure.changed }
+                        let saved = await ledger.editShop(key: "standing-check-" + check.occurrence.uuidString, shopID: existing.id,
+                            authorize: { destinationCurrent() && ledger.workspace.selectedShopID == existing.id }) { shop in
+                                try check.addToTrip(&shop)
+                            }
+                        guard saved else { throw PantryDigestFailure.changed }
+                    } else {
+                        guard target.createFirst, ledger.workspace.shops.isEmpty else { throw PantryDigestFailure.changed }
+                        let shop = ShoppingLedger(id: target.shop, title: ledgerText("Pickup"))
+                        let preview = try check.shoppingPreview(for: shop)
+                        guard await ledger.addQuickGrocery(preview, selectedShopID: nil, workspaceID: target.workspace,
+                                                          authorize: { destinationCurrent() }) else { throw PantryDigestFailure.changed }
+                    }
+                }
+                guard stillCurrent() else { throw PantryDigestFailure.changed }
+                try store.updateStandingCheck(expected, next: expected.answering(.shopping, at: Date()), access: access)
+                error = false
+            } catch { self.error = true }
+        }
+    }
+}

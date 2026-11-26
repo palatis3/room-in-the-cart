@@ -1,4 +1,34 @@
 import Foundation
+import ImageIO
+import UniformTypeIdentifiers
+
+/// A private, metadata-free JPEG and the cook's description of the visual cue.
+public struct CookingStepPhoto: Codable, Equatable, Sendable {
+    public static let maximumBytes = 98_304
+    public static let maximumDimension = 512
+    public let jpeg: Data
+    public let description: String
+
+    public init(jpeg: Data, description: String) {
+        self.jpeg = jpeg
+        self.description = description.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    public static func validDescription(_ description: String) -> Bool {
+        !description.isEmpty && description.count <= 160 &&
+            !description.unicodeScalars.contains(where: CharacterSet.controlCharacters.contains)
+    }
+
+    public var valid: Bool {
+        guard Self.validDescription(description), jpeg.count <= Self.maximumBytes, let source = CGImageSourceCreateWithData(jpeg as CFData, nil),
+              CGImageSourceGetType(source) as String? == UTType.jpeg.identifier, CGImageSourceGetCount(source) == 1,
+              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+              let width = properties[kCGImagePropertyPixelWidth] as? Int,
+              let height = properties[kCGImagePropertyPixelHeight] as? Int else { return false }
+        return (1...Self.maximumDimension).contains(width) && (1...Self.maximumDimension).contains(height) &&
+            properties[kCGImagePropertyGPSDictionary] == nil
+    }
+}
 
 public struct CookingStepNote: Codable, Equatable, Identifiable, Sendable {
     public let id: UUID
@@ -7,14 +37,17 @@ public struct CookingStepNote: Codable, Equatable, Identifiable, Sendable {
     public let instruction: String
     public let text: String
     public let hidden: Bool
+    public let photo: CookingStepPhoto?
 
-    public init(id: UUID = UUID(), revision: String, step: Int, instruction: String, text: String, hidden: Bool = false) {
+    public init(id: UUID = UUID(), revision: String, step: Int, instruction: String, text: String, hidden: Bool = false,
+                photo: CookingStepPhoto? = nil) {
         self.id = id
         self.revision = revision
         self.step = step
         self.instruction = instruction
         self.text = text.trimmingCharacters(in: .whitespacesAndNewlines)
         self.hidden = hidden
+        self.photo = photo
     }
 
     public func belongs(to key: CookingSessionKey, step index: Int, instruction current: String) -> Bool {
@@ -24,7 +57,7 @@ public struct CookingStepNote: Codable, Equatable, Identifiable, Sendable {
     fileprivate var valid: Bool {
         !revision.isEmpty && revision.utf8.count <= 256 && (0..<1000).contains(step) &&
         instruction.utf8.count <= 32768 && !instruction.contains("\0") &&
-        !text.isEmpty && text.utf8.count <= 2048 && !text.contains("\0")
+        (photo?.valid ?? true) && (!text.isEmpty || photo != nil) && text.utf8.count <= 2048 && !text.contains("\0")
     }
 }
 

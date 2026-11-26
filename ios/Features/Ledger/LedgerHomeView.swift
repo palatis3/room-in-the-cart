@@ -3,7 +3,7 @@ import CoreDomain
 
 private enum LedgerHomeSheet: Hashable, Identifiable {
     case newShop, entry, facts, history, layout, printList, familyGuide
-    case inStore(UUID), shareItems(UUID), shoppingCSV(UUID), kits(UUID?), standing
+    case inStore(UUID), shareItems(UUID), shoppingCSV(UUID), kits(UUID?), pastTrip(UUID), standing
     case renameShop(id: UUID, title: String)
     case editLine(workspace: UUID, shop: UUID, line: UUID)
     case editAmount(workspace: UUID, shop: UUID, line: UUID, source: UUID)
@@ -65,6 +65,8 @@ struct LedgerHomeView: View {
                             onShopSelected?(selected)
                         }
                     }
+                case .pastTrip(let id):
+                    PrivateShoppingSheet(model: model) { PreviousGroceryTrips(model: model, destinationID: id) }
                 case .kits(let id):
                     PrivateShoppingSheet(model: model) { ShoppingKitsView(model: model, shopID: id) }
                 case .layout:
@@ -243,7 +245,7 @@ struct LedgerHomeView: View {
 
     @ViewBuilder private func existingSheet(_ destination: LedgerHomeSheet) -> some View {
         switch destination {
-        case .inStore, .shareItems, .shoppingCSV, .kits, .standing: EmptyView()
+        case .inStore, .shareItems, .shoppingCSV, .kits, .pastTrip, .standing: EmptyView()
         case .newShop: LedgerNewShopView(model: model, onShopSelected: onShopSelected)
         case let .renameShop(id, title):
             LedgerNewShopView(model: model, shopID: id, title: title)
@@ -331,6 +333,9 @@ struct LedgerHomeView: View {
             Button(tripText("Preview list copy")) { sheet = .shareItems(shop.id) }
                 .accessibilityIdentifier("tripShare.previewCopy")
             Button(GuardianCopy.text("Child permissions")) { sheet = .familyGuide }
+            if model.workspace.shops.contains(where: { $0.id != shop.id }) {
+                Button(shoppingText("Choose groceries from a previous trip")) { sheet = .pastTrip(shop.id) }
+            }
             Button(shoppingText("Shopping kits")) { sheet = .kits(shop.id) }
             Button(shoppingText("Standing list")) { sheet = .standing }
             Button(ledgerText("List order and aisles")) { sheet = .layout }

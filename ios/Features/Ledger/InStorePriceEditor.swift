@@ -40,7 +40,8 @@ struct InStorePriceEditor: View {
     private let originalShelf: PickedShelfPrice?
     @Environment(\.shoppingListAuthorization) private var authorize
     @Environment(\.dismiss) private var dismiss
-    @FocusState private var editingAmount: Bool
+    private enum Field: Hashable { case amount, measurement, discount }
+    @FocusState private var field: Field?
     @State private var mode: PickPriceMode
     @State private var amount: String
     @State private var discount: String
@@ -108,13 +109,13 @@ struct InStorePriceEditor: View {
                 }
                 WorkingField(amountLabel) {
                     workingTextField(amountLabel, text: $amount).keyboardType(.decimalPad)
-                        .focused($editingAmount).accessibilityIdentifier("inStoreAmount")
+                        .focused($field, equals: .amount).accessibilityIdentifier("inStoreAmount")
                 }
                 if mode != .total {
                     let label = mode == .pack ? shelfText("Packs picked") : shelfFormat("Measured weight (%@)", unit.displayName)
                     WorkingField(label) {
                         workingTextField(label, text: $measurement).keyboardType(mode == .pack ? .numberPad : .decimalPad)
-                            .focused($editingAmount).accessibilityIdentifier("inStoreMeasuredAmount")
+                            .focused($field, equals: .measurement).accessibilityIdentifier("inStoreMeasuredAmount")
                     }
                     if measurement.isEmpty { Text(shelfText("This pick stays unpriced until you enter the measured amount.")).font(.footnote) }
                 } else {
@@ -123,7 +124,7 @@ struct InStorePriceEditor: View {
                 let discountLabel = shelfFormat("Confirmed discount to subtract (%@, optional)", shop.basis.currency.rawValue)
                 WorkingField(discountLabel) {
                     workingTextField(discountLabel, text: $discount).keyboardType(.decimalPad)
-                        .focused($editingAmount).accessibilityIdentifier("inStoreDiscount")
+                        .focused($field, equals: .discount).accessibilityIdentifier("inStoreDiscount")
                 }
                 if mode != .total || !discount.isEmpty, let net = (try? entry())?.net {
                     Text(shelfFormat("Picked line total · %@", moneyText(net))).monospacedDigit()
@@ -143,21 +144,11 @@ struct InStorePriceEditor: View {
             if model.hasPendingSave || model.error != nil {
                 LedgerSaveStatus(model: model, showsLastSave: false, onRetried: { dismiss() })
             }
-            Button(shoppingText("Save price")) {
-                guard let value = try? entry() else { return }
-                Task {
-                    if await model.editShop(key: "picked-price-\(line.id)", shopID: shop.id, authorize: authorize, { current in
-                        guard model.workspace.selectedShopID == shop.id else { throw LedgerError.stalePreview }
-                        let isWeighted = mode == .weight || mode == .total && weighted
-                        try current.recordPickedPrice(lineID: line.id, expectedRevision: revision, total: value.total,
-                            membership: membership, weighted: isWeighted,
-                            conditionsConfirmed: confirmed || mode == .weight && !membership && value.total != nil, shelf: value.shelf, discount: value.discount)
-                    }) { dismiss() }
-                }
-            }.disabled((try? entry()) == nil || model.hasPendingSave || model.saving)
+            Button(shoppingText("Save price"), action: savePrice)
+                .disabled((try? entry()) == nil || model.hasPendingSave || model.saving)
         }
         .navigationTitle(shoppingText("Picked item price")).navigationBarTitleDisplayMode(.inline)
-        .keyboardDoneAction(visible: editingAmount, title: ledgerText("Done"), identifier: "inStoreAmountDone") { editingAmount = false }
+        .safeAreaInset(edge: .bottom, spacing: 0) { keyboardActions }
         .onChange(of: mode) { _, _ in amount = ""; measurement = ""; discount = ""; confirmed = false }
         .onChange(of: discount) { _, _ in confirmed = false }
         .onChange(of: membership) { _, _ in confirmed = false }
@@ -166,6 +157,38 @@ struct InStorePriceEditor: View {
         .onChange(of: measurement) { _, _ in confirmed = false }
         .onChange(of: unit) { _, _ in amount = ""; measurement = ""; confirmed = false }
         .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() } } }
+    }
+
+    @ViewBuilder private var keyboardActions: some View {
+        if field != nil {
+            HStack {
+                if field == .amount, mode == .total, !membership, !weighted,
+                   discount.isEmpty, line.pinnedCoupon == nil, let total = try? entry().total {
+                    Button(shelfFormat("Save total %@", moneyText(total)), action: savePrice)
+                        .frame(minHeight: 44).disabled(model.hasPendingSave || model.saving)
+                        .accessibilityIdentifier("inStoreSaveLineTotal")
+                }
+                Spacer(minLength: 4)
+                Button(ledgerText("Done")) { field = nil }
+                    .frame(minWidth: 44, minHeight: 44)
+                    .accessibilityIdentifier("inStoreAmountDone")
+            }
+            .font(.body.weight(.semibold)).padding(.horizontal).background(.bar)
+        }
+    }
+
+    private func savePrice() {
+        guard authorize(), !model.saving, !model.hasPendingSave, let value = try? entry() else { return }
+        let isWeighted = mode == .weight || mode == .total && weighted
+        let conditionsConfirmed = confirmed || mode == .weight && !membership && value.total != nil
+        Task {
+            if await model.editShop(key: "picked-price-\(line.id)", shopID: shop.id, authorize: authorize, { current in
+                guard model.workspace.selectedShopID == shop.id else { throw LedgerError.stalePreview }
+                try current.recordPickedPrice(lineID: line.id, expectedRevision: revision, total: value.total,
+                    membership: membership, weighted: isWeighted, conditionsConfirmed: conditionsConfirmed,
+                    shelf: value.shelf, discount: value.discount)
+            }) { dismiss() }
+        }
     }
 
     private var amountLabel: String {

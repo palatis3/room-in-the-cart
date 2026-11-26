@@ -3,6 +3,24 @@ import Foundation
 /// The two list entry paths share these exact quantities and US customary units.
 /// A count remains available for ordinary item names with no measure.
 public enum ListQuantityParser {
+    // Currency beside a number can describe a limit, quote or request. Preserve
+    // its wording for review before any leading number is read as physical units.
+    private static let moneyWords = try! NSRegularExpression(pattern:
+        #"(?i)(?<!\p{L})(?:mxn|usd|cad|eur|pesos?|d[oó]lar(?:es)?|dollars?|centavos?|cents?|bucks?)(?!\p{L})"#)
+
+    public static func containsGroceryMoney(_ wording: String) -> Bool {
+        if wording.unicodeScalars.contains(where: { $0.properties.generalCategory == .currencySymbol }) { return true }
+        return moneyWords.firstMatch(in: wording, range: NSRange(wording.startIndex..., in: wording)) != nil
+    }
+
+    /// These names have a numeric first word in their ordinary printed spelling.
+    /// Match whole words so ordinary requests such as "7 apples" keep their count.
+    public static func isNumberLedGroceryName(_ wording: String) -> Bool {
+        let words = wording.lowercased().split(whereSeparator: \.isWhitespace)
+        return words.starts(with: ["7", "up"]) || words.starts(with: ["3", "musketeers"]) ||
+            words.starts(with: ["5", "hour", "energy"])
+    }
+
     public static func itemTokens(_ text: String) -> ArraySlice<String> {
         var tokens = text.split(whereSeparator: \.isWhitespace).map(String.init)[...]
         // Only expand a leading printed multiplier. Keep identifiers such as X15 in the product name.

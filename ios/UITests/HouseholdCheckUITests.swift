@@ -86,6 +86,18 @@ import XCTest
         openPage()
         XCTAssertTrue(contains("Queda poco").exists)
         XCTAssertTrue(contains("Revisa si los paquetes de la lista alcanzan para lo que necesitas.").exists)
+        tap(app.buttons["adultChecks.openGrocery"])
+        let name = app.staticTexts["sharedGrocery.name"]
+        XCTAssertTrue(name.waitForExistence(timeout: 12), app.debugDescription)
+        XCTAssertEqual(name.label, "Arroz integral")
+        XCTAssertFalse(contains("Arroz blanco").exists)
+        XCTAssertTrue(contains("Queda poco").exists)
+        let current = app.descendants(matching: .any).matching(identifier: "sharedGrocery.currentPacks").firstMatch
+        XCTAssertTrue(current.label.contains("2") || (current.value as? String)?.contains("2") == true, app.debugDescription)
+        XCTAssertFalse(app.buttons["sharedGrocery.review"].exists)
+        counts("1/1/2/0")
+        tap(app.buttons["sharedGrocery.keep"])
+        counts("1/1/2/0")
         tap(app.buttons["Marcar como revisada"])
         counts("1/1/3/0")
         XCTAssertTrue(contains("Respuesta revisada").exists)

@@ -79,7 +79,7 @@ public struct InventoryCutoverSnapshot: Sendable {
     public let tombstones: [ComparisonTombstone]
 }
 
-public struct InventoryState: Equatable, Sendable {
+public struct InventoryState: Equatable, Sendable, Codable {
     public let workspaceID: UUID
     public let revision: Int64
     public let active: Bool

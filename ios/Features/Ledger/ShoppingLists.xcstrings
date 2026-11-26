@@ -1248,6 +1248,118 @@
           }
         }
       }
+    },
+    "Already on this list. Select to add a separate row.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already on this list. Select to add a separate row."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya está en esta lista. Selecciónalo para agregar un renglón aparte."
+          }
+        }
+      }
+    },
+    "Choose an open shopping list to add groceries.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose an open shopping list to add groceries."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una lista de compras abierta para agregar productos."
+          }
+        }
+      }
+    },
+    "Choose groceries from a previous trip": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose groceries from a previous trip"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir productos de una compra anterior"
+          }
+        }
+      }
+    },
+    "Choose names and exclusions. Set this trip’s quantities on your list.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose names and exclusions. Set this trip’s quantities on your list."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige los nombres y las exclusiones. Indica en tu lista las cantidades para esta compra."
+          }
+        }
+      }
+    },
+    "No other trips contain groceries.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No other trips contain groceries."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay productos en otras compras."
+          }
+        }
+      }
+    },
+    "Previous note: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous note: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nota anterior: %@"
+          }
+        }
+      }
+    },
+    "Previous trips": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous trips"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compras anteriores"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

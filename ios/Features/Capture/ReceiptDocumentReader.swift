@@ -81,6 +81,7 @@ struct ReceiptDocumentPage: Identifiable, Sendable {
         let text: String
         var uncertain = false
         var bounds: CGRect?
+        var wordReadings: [ReceiptWordReading] = []
     }
     let lines: [Line]
     var skipped: ReceiptDocumentFailure? = nil
@@ -106,7 +107,7 @@ struct ExtractedReceiptDocument: Sendable {
 
     /// Require readable source pages and one explicit paid-total row.
     /// Selection preserves evidence, with payment confirmed later.
-    func printedPaidTotal(selected: Set<Selection>) -> PrintedPaidTotal? {
+    func printedPaidTotal(selected: Set<Selection>, revised: Set<Selection> = []) -> PrintedPaidTotal? {
         guard !pages.isEmpty, pages.allSatisfy({
             $0.skipped == nil && !$0.lines.isEmpty && ($0.method == .imageOCR || $0.method == .pdfOCR)
         }) else { return nil }
@@ -126,6 +127,7 @@ struct ExtractedReceiptDocument: Sendable {
             }
         }
         guard let (page, label) = source, !label.uncertain, let labelBox = label.bounds,
+              !revised.contains(.init(page: page.id, line: label.id)),
               selected.contains(.init(page: page.id, line: label.id)) else { return nil }
         let neighbors = page.lines.filter { line in
             guard line.id != label.id, let box = line.bounds else { return false }
@@ -134,6 +136,7 @@ struct ExtractedReceiptDocument: Sendable {
         guard neighbors.count == 1, let amount = neighbors.first,
               abs(amount.id - label.id) == 1, !amount.uncertain,
               let box = amount.bounds, labelBox.maxX <= box.minX,
+              !revised.contains(.init(page: page.id, line: amount.id)),
               selected.contains(.init(page: page.id, line: amount.id)),
               let value = ReceiptPrintedEvidence.standaloneAmount(amount.text) else { return nil }
         return PrintedPaidTotal(wording: amount.text, amount: value)
@@ -199,7 +202,7 @@ struct ExtractedReceiptDocument: Sendable {
     }
 
     func source(target: CaptureTarget, merchant: String, stage: ReceiptAcquisition.DocumentLine.Stage,
-                selection: Set<Selection>, linkedAmountItems: Set<Selection> = [], at date: Date) throws -> SourceMediaRecord {
+                selection: Set<Selection>, linkedAmountItems: Set<Selection> = [], reviewedWording: [Selection: String] = [:], at date: Date) throws -> SourceMediaRecord {
         var associations: [Selection: Selection] = [:]
         if !linkedAmountItems.isEmpty {
             let suggested = amountAssociations
@@ -220,6 +223,12 @@ struct ExtractedReceiptDocument: Sendable {
                 if line.uncertain { row.uncertainOCR = true }
                 row.documentLine = place
                 let position = Selection(page: page.id, line: line.id)
+                if let correction = reviewedWording[position] {
+                    guard !correction.trimmingCharacters(in: .whitespaces).isEmpty,
+                          !correction.contains(where: \.isNewline), !linkedAmountItems.contains(position),
+                          !amounts.contains(position) else { throw ReceiptDocumentFailure.selection }
+                    row.reviewedText = correction
+                }
                 if linkedAmountItems.contains(position), let amount = associations[position], let printed = pageLines[amount.line] {
                     let amountPlace = ReceiptAcquisition.DocumentLine(method: page.method, stage: stage, page: page.id, line: amount.line)
                     row.linkedAmountLineID = ReceiptAcquisition.lineID(receiptID: id, ordinal: amountPlace.ordinal)
@@ -253,10 +262,11 @@ struct ReceiptDocumentReader: Sendable {
         let text: String
         var uncertain: Set<String> = []
         var bounds: [CGRect] = []
+        var wordReadings: [[ReceiptWordReading]] = []
     }
     private var recognize: @Sendable (Data) async throws -> Reading = { data in
-        let reading = try await OnDeviceTextCapture().recognizeWithLayout(data)
-        return Reading(text: reading.evidence.text, uncertain: Set(reading.evidence.uncertainLines), bounds: reading.lineBounds)
+        let reading = try await OnDeviceTextCapture().recognizeWithLayout(data, receiptReadings: true)
+        return Reading(text: reading.evidence.text, uncertain: Set(reading.evidence.uncertainLines), bounds: reading.lineBounds, wordReadings: reading.wordReadings)
     }
     init() {}
     init(recognize: @escaping Recognize) {
@@ -304,7 +314,8 @@ struct ReceiptDocumentReader: Sendable {
                 guard !row.trimmingCharacters(in: .whitespaces).isEmpty else { continue }
                 guard index < 200 else { throw ReceiptDocumentFailure.lineLimit }
                 let bounds = reading.bounds.indices.contains(index) ? reading.bounds[index] : nil
-                lines.append(.init(id: index + 1, text: String(row), uncertain: reading.uncertain.contains(String(row)), bounds: bounds))
+                lines.append(.init(id: index + 1, text: String(row), uncertain: reading.uncertain.contains(String(row)), bounds: bounds,
+                                   wordReadings: reading.wordReadings.indices.contains(index) ? reading.wordReadings[index] : []))
             }
             return .init(id: number, method: method, lines: lines)
         }

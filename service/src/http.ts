@@ -1,4 +1,5 @@
 import {readSharedWeekCosts} from './shared-week-costs.js';
+import {cookingStepRoute} from './cooking-step.js';
 import {adultChecksRoute} from './adult-checks.js';
 import {savedWeekRoute} from './saved-week-changes.js';
 import {readRepeatWeek,startRepeatWeek,stopRepeatWeek,repeatWeekStart,repeatWeekStop} from './shared-repeat-week.js';
@@ -324,7 +325,7 @@ export function createHTTPServer(options:HTTPOptions) {
       }
       if(path==='/moderation/actions'&&method==='POST'){
         const input=moderationAction.parse(await body(req,8192));
-        send(200,await repository.authorized(householdId,auth,ctx=>recordModerationAction(repository,ctx,input)));return;
+        send(200,await repository.authorized(householdId,auth,ctx=>recordModerationAction(repository,ctx,input,options.billing)));return;
       }
       if(path==='/devices'&&method==='POST') {
         z.object({}).strict().parse(await body(req));
@@ -627,6 +628,8 @@ export function createHTTPServer(options:HTTPOptions) {
             return readDelivery(ctx,shop,cursor===null?null:uuid.parse(cursor));
           }
           if(tail==='/shopper-assignment'&&method==='GET')return repository.shopperAssignment(ctx,shopId);
+          if(tail==='/cooking-step' && (method==='GET' || method==='POST'))
+            return cookingStepRoute(repository,options.billing,ctx,shopId.toLowerCase(),method,payload);
           if(tail==='/adult-checks' && (method==='GET' || method==='POST'))
             return adultChecksRoute(repository,options.billing,ctx,shopId.toLowerCase(),method,payload);
           if(tail==='/meal-plan/ideas'&&method==='GET')return mealIdeas.read(ctx,shopId);

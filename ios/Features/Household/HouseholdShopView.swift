@@ -5,9 +5,10 @@ import CoreDomain
 
 struct HouseholdShopView: View {
     @ObservedObject var model: HouseholdModel
+    var reviewPreparedPacks = false
     var body: some View {
         Group {
-            if let shop = model.sharedShop, !model.locked { SharedShopContent(model: shop, household: model) }
+            if let shop = model.sharedShop, !model.locked { SharedShopContent(model: shop, household: model, reviewPreparedPacks: reviewPreparedPacks) }
             else { ContentUnavailableView(ht("Shared shop access required"), systemImage: "lock", description: Text(ht("The organizer can start the first shared shop. Only its assigned shopper can change it."))) }
         }.navigationTitle(ht("Shared household shop"))
     }
@@ -15,6 +16,10 @@ struct HouseholdShopView: View {
 private struct SharedShopContent: View {
     @ObservedObject var model: HouseholdShopModel
     @ObservedObject var household: HouseholdModel
+    let reviewPreparedPacks: Bool
+    @State private var openedPreparedReview = false
+    @State private var preparedGrocery = false
+    @State private var selectedGrocery: SharedGroceryTarget?
     @State private var clearingRetry = false
     @State private var mealDaySelection: SharedMealDaySelection?
     var body: some View {
@@ -34,6 +39,9 @@ private struct SharedShopContent: View {
                         .accessibilityIdentifier("sharedShop.placementReports")
                 }
                 delivery
+                if model.canManage, model.pending == nil, !model.busy, let shop = model.shop {
+                    changedPacks(shop)
+                }
                 if model.canReadConfirmedOrder, let shop = model.shop, shop.placedRevision != nil {
                     NavigationLink(OrderAmendmentCopy.text("Confirmed order and amendments")) {
                         SharedOrderAmendmentView(model: model, shopID: shop.shopId)
@@ -152,17 +160,61 @@ private struct SharedShopContent: View {
                 if let notice = model.notice { Section { Text(notice).accessibilityIdentifier("household.shop.notice") } }
                 if model.busy { ProgressView(ht("Checking service…")) }
             } else { Text(ht("Shared shop access has ended. Return to household settings.")) }
+        }.sheet(item: $selectedGrocery, onDismiss: {
+            if preparedGrocery {
+                preparedGrocery = false
+                Task { await model.reviewEditor() }
+            }
+        }) { target in
+            NavigationStack {
+                SharedGroceryLineView(household: household, target: target) {
+                    preparedGrocery = true
+                    selectedGrocery = nil
+                }
+            }
         }.sheet(item: $mealDaySelection) { selected in
             SharedMealDaySheet(model: model, selection: selected)
         }.sheet(item: Binding(get: { model.foodEditor }, set: { if $0 == nil { model.cancelFoodEditor() } })) { context in
             NavigationStack { SharedDemandFlowView(shopModel: model, editor: context) }
         }.sheet(item: Binding(get: { model.trackingEditor }, set: { if $0 == nil { model.cancelFoodEditor() } })) { context in
             NavigationStack { SharedTrackingShopView(owner: model, editor: context) }
-        }.disabled(model.busy).task { await model.load() }
+        }.disabled(model.busy).task {
+            await model.load()
+            if reviewPreparedPacks, !openedPreparedReview, model.editing {
+                openedPreparedReview = true
+                await model.reviewEditor()
+            }
+        }
         .confirmationDialog(ht("Clear this local shared-shop retry?"), isPresented: $clearingRetry, titleVisibility: .visible) {
             Button(ht("I reviewed the current shop; clear retry"), role: .destructive) { Task { await model.clearPendingAfterReview() } }
         } message: { Text(ht("Clearing a retry does not undo a shop change already received by the service.")) }
     }
+    @ViewBuilder private func changedPacks(_ shop: ShopperShop) -> some View {
+        if let seen = model.packObservation, !seen.previous.isEmpty {
+            Section(checkText("Changed pack counts")) {
+                Text(checkText("Compared with the last complete shop loaded on this device.")).font(.footnote)
+                ForEach(shop.lines) { line in
+                    if let id = UUID(uuidString: line.id), let old = seen.previous[id] {
+                        Button {
+                            selectedGrocery = SharedGroceryTarget(shopID: seen.scope.shop, rowID: id, revision: seen.revision,
+                                                                  authorityEpoch: seen.scope.authorityEpoch, reply: nil)
+                        } label: {
+                            VStack(alignment: .leading) {
+                                Text(verbatim: line.originalItem)
+                                Text(String(format: checkText("Previously %1$ld packs · now %2$ld"), old, line.packs))
+                            }
+                        }.accessibilityIdentifier("sharedGrocery.change." + line.id)
+                        Button(checkText("Dismiss change on this device")) {
+                            Task { await model.dismissPackChange(id, observed: seen) }
+                        }
+                    }
+                }
+            }
+        } else if model.packComparisonUnavailable {
+            Text(checkText("Earlier pack counts are unknown for this visit.")).font(.footnote)
+        }
+    }
+
     @ViewBuilder private var delivery: some View {
         switch model.delivery {
         case .none: EmptyView()
