@@ -181,6 +181,8 @@ private final class S27Protocol: URLProtocol {
 }
 struct S27StoreQuotesFixtureRoot: View {
     @StateObject private var state = S27FixtureState()
+    // This quote fixture provides budget grants without a verified paid membership.
+    @StateObject private var membership = MembershipCoordinator()
     @State private var shopperMode = false
     @State private var showsControls = false
     var body: some View {
@@ -202,6 +204,7 @@ struct S27StoreQuotesFixtureRoot: View {
             }
             if let adult = state.adult, let shopper = state.shopper {
                 NavigationStack { HouseholdSettingsView(model:shopperMode ? shopper:adult) }.id(shopperMode)
+                    .environmentObject(membership)
             } else if let failure = state.failure { Text(failure).accessibilityIdentifier("fixture.failure") }
             else { ProgressView("Opening isolated store quote fixture") }
         }.tint(Theme.action).task { await state.start() }
