@@ -556,6 +556,21 @@ import XCTest
         XCTAssertFalse(app.staticTexts["productBatch.saved"].exists, file: file, line: line)
         reveal(cancel)
         capture(attachment + " - confirmation and Cancel")
+        func rect(_ frame: CGRect) -> [String: CGFloat] {
+            ["x": frame.minX, "y": frame.minY, "width": frame.width, "height": frame.height]
+        }
+        let geometry: [String: Any] = [
+            "viewport": rect(app.frame), "openerBeforeReview": rect(old), "cancel": rect(cancel.frame),
+            "commit": commit.exists ? rect(commit.frame) : [:],
+            "pending": rect(element("productBatch.reviewPending").frame),
+            "repeatedTaps": [old.minY + 2, old.midY, old.maxY - 2].map { ["x": old.midX, "y": $0] }
+        ]
+        if let data = try? JSONSerialization.data(withJSONObject: geometry, options: [.prettyPrinted, .sortedKeys]) {
+            let item = XCTAttachment(data: data, uniformTypeIdentifier: "public.json")
+            item.name = attachment + " - geometry.json"
+            item.lifetime = .keepAlways
+            add(item)
+        }
         XCTAssertFalse(app.keyboards.firstMatch.exists, file: file, line: line)
         XCTAssertGreaterThanOrEqual(cancel.frame.height, 44, file: file, line: line)
         XCTAssertFalse(old.intersects(cancel.frame), file: file, line: line)

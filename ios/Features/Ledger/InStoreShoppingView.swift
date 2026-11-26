@@ -188,6 +188,7 @@ struct InStoreShoppingView: View {
     @State private var searching = false
     @State private var query = ""
     @State private var searchReturnTargets: [Focus] = []
+    @StateObject private var listAccessibility = InStoreListAccessibility()
     @State private var viewportAnchor: Focus?
     @FocusState private var editingSearch: Bool
     @SceneStorage("inStoreScrollRow") private var previousSavedRow = ""
@@ -303,6 +304,8 @@ struct InStoreShoppingView: View {
         let dinner = dinnerPantry.status(in: shop, ledger: model)
         let groups = model.workspace.listLayout.groups(shop: shop, excluding: dinner.covered)
         let matches = filtering ? searchMatches(in: shop) : nil
+        let hideList = (!filtering && searching) || destination != nil || editingPrice != nil
+        let accessibilityAnchor = InStoreCollectionAnchor(owner: listAccessibility, isSearch: filtering)
         func included(_ line: ShoppingLine) -> Bool {
             guard filtering else { return true }
             return line.eligibleForStop(named: shop.currentStop.name) && (matches == nil || matches?[line.id] != nil)
@@ -312,6 +315,8 @@ struct InStoreShoppingView: View {
         let outstanding = matched.filter { shop.outcomeAtCurrentStop($0) != nil }
         let basket = shop.inStorePickedLines
         let picked = basket.filter(included)
+        let firstRow = (visible.first ?? outstanding.first).map { Focus.line($0.id) } ?? picked.first.map { Focus.picked($0.id) }
+        let anchor = filtering ? firstRow : (viewportAnchor ?? firstRow)
         let exclusions = shop.listExclusions
         let packages = shop.itemPackages
         return ScrollViewReader { reader in
@@ -319,7 +324,7 @@ struct InStoreShoppingView: View {
                 if model.error != nil || model.hasPendingSave { LedgerSaveStatus(model: model) }
                 if !filtering {
                     DinnerPantryReviewSection(shopID: shop.id, reviews: dinner.pending)
-                    listAndStop(shop)
+                    listAndStop(shop).background(accessibilityAnchor)
                     savedPlaceEntry(in: shop)
                     TripDepartureSection(model: model, shop: shop)
                 }
@@ -330,19 +335,24 @@ struct InStoreShoppingView: View {
                             ForEach(rows) { line in
                                 outstandingRow(line, shop: shop, visible: visible, exclusions: exclusions[line.id],
                                                packages: packages[line.id] ?? [], hit: matches?[line.id])
+                                .background { if anchor == .line(line.id) { accessibilityAnchor } }
+                                .accessibilityHidden(hideList)
                             }
                         }
                     }
                 }
                 if matches != nil && visible.isEmpty && outstanding.isEmpty && picked.isEmpty {
-                    Text(shelfText("No matching groceries at this stop."))
+                    Text(shelfText("No matching groceries at this stop.")).background(accessibilityAnchor)
                 } else if matches == nil && visible.isEmpty {
                     Text(groups.allSatisfy { $0.lines.isEmpty } ? shoppingText("No items left to pick.") : tripText("Nothing else to pick at this stop."))
+                        .background(accessibilityAnchor)
                 }
                 if !outstanding.isEmpty {
                     Section(tripText("Still needed")) {
                         ForEach(outstanding) { line in
                             stillNeededRow(line, in: shop, filtering: filtering, packages: packages[line.id] ?? [], hit: matches?[line.id])
+                                .background { if anchor == .line(line.id) { accessibilityAnchor } }
+                                .accessibilityHidden(hideList)
                         }
                     }
                 }
@@ -350,6 +360,8 @@ struct InStoreShoppingView: View {
                     Section(filtering ? shelfText("In your basket") : shoppingText("Picked items")) {
                         ForEach(picked) { line in
                             pickedRow(line, in: shop, filtering: filtering, packages: packages[line.id] ?? [], hit: matches?[line.id])
+                                .background { if anchor == .picked(line.id) { accessibilityAnchor } }
+                                .accessibilityHidden(hideList)
                         }
                     }
                 }
@@ -357,6 +369,7 @@ struct InStoreShoppingView: View {
                     Section {
                         Button { destination = .nextStore } label: { Label(tripText("Next store"), systemImage: "storefront") }
                             .accessibilityIdentifier("tripNextStore")
+                            .background(accessibilityAnchor)
                     }.frame(minHeight: 44)
                     if typeSize.isAccessibilitySize {
                         Section { subtotalSummary(shop, last: basket.first).id(Focus.subtotal) }
@@ -364,6 +377,7 @@ struct InStoreShoppingView: View {
                 }
             }
             .listStyle(.plain)
+            .onChange(of: hideList, initial: true) { _, hidden in listAccessibility.setHidden(hidden, search: filtering) }
             .safeAreaInset(edge: .top, spacing: 0) { if filtering { searchField } }
             .coordinateSpace(name: "shoppingAisles")
             .onAppear {
@@ -572,17 +586,24 @@ struct InStoreShoppingView: View {
                     }
                 }
             } label: {
-                VStack(alignment: .leading, spacing: 3) {
-                    Label(String(format: savedPlaceText("Return to %@"), locale: .current, line.name), systemImage: "bookmark")
-                    let measure = TripMeasure(shop, line: line, packages: shop.itemPackages[line.id] ?? [])
-                    if let amount = shop.tripAmountLabel(line, measure: measure) { Text(verbatim: amount).font(.subheadline) }
-                    if let pack = measure?.packNote { Text(verbatim: pack).font(.subheadline) }
-                    if !line.notes.isEmpty { Text(verbatim: line.notes).font(.subheadline) }
-                    if let cue = currentPhoto(for: line.id)?.cue, !cue.isEmpty { Text(verbatim: cue).font(.subheadline) }
-                    if let outcome = shop.outcomeAtCurrentStop(line) {
-                        Text(tripText(outcome == .unavailable ? "Couldn’t find it at this stop" : "Left for next time"))
-                    }
-                }.frame(minHeight: 44).fixedSize(horizontal: false, vertical: true)
+                Label {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(verbatim: String(format: savedPlaceText("Return to %@"), locale: .current, line.name))
+                            .font(.body.weight(.medium))
+                        let measure = TripMeasure(shop, line: line, packages: shop.itemPackages[line.id] ?? [])
+                        if let amount = shop.tripAmountLabel(line, measure: measure) { Text(verbatim: amount) }
+                        if let pack = measure?.packNote { Text(verbatim: pack) }
+                        if !line.notes.isEmpty { Text(verbatim: CurrentStopSourceCaption.note.rowLiteral(line.notes)) }
+                        if let cue = currentPhoto(for: line.id)?.cue, !cue.isEmpty { Text(verbatim: cue) }
+                        if let outcome = shop.outcomeAtCurrentStop(line) {
+                            Text(tripText(outcome == .unavailable ? "Couldn’t find it at this stop" : "Left for next time"))
+                        }
+                    }.font(.subheadline)
+                } icon: {
+                    Image(systemName: "bookmark").foregroundStyle(Theme.action).accessibilityHidden(true)
+                }
+                .frame(minHeight: 44)
+                .fixedSize(horizontal: false, vertical: true)
             }.accessibilityIdentifier("inStorePlace.return")
         }
     }

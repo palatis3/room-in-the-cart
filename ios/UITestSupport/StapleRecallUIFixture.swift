@@ -36,7 +36,9 @@ struct StapleRecallUIFixture: View {
                         let tea = try west.addManualLine(name: "Tea", quantity: nil, at: past)
                         try west.approveStaple(lineID: tea, purpose: "School lunches", at: past)
                         var current = ShoppingLedger(title: "This trip", basis: .init(branch: "North market"))
-                        if ProcessInfo.processInfo.arguments.contains("--search-source-fixture") {
+                        if ProcessInfo.processInfo.arguments.contains("--empty-current-stop-fixture") {
+                            current = ShoppingLedger(title: "This trip", basis: .init(branch: "North market", mode: .inStore))
+                        } else if ProcessInfo.processInfo.arguments.contains("--search-source-fixture") {
                             current = ShoppingLedger(title: "This trip", basis: .init(branch: "North market", mode: .inStore))
                             try current.addManualLine(name: "Oat drink", quantity: nil,
                                                       notes: "The sugar-free carton sold out. I bought the sweetened one.")

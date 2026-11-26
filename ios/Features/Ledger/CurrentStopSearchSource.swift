@@ -1,5 +1,6 @@
 import CoreDomain
 import SwiftUI
+import UIKit
 
 func currentStopSourceText(_ key: String) -> String {
     String(localized: String.LocalizationValue(key), table: "CurrentStopSearch")
@@ -85,5 +86,69 @@ struct CurrentStopSourceText: View {
         .multilineTextAlignment(.leading)
         .fixedSize(horizontal: false, vertical: true)
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// SwiftUI keeps the native aisle collection mounted to preserve the shopper's scroll position.
+/// Its accessibility state must follow the visible list even after the identifying cell scrolls away.
+@MainActor final class InStoreListAccessibility: ObservableObject {
+    private weak var aisle: UIView?
+    private weak var results: UIView?
+    private var aisleHidden = false
+    private var resultsHidden = false
+
+    func setHidden(_ hidden: Bool, search: Bool) {
+        if search {
+            resultsHidden = hidden
+            results?.accessibilityElementsHidden = hidden
+        } else {
+            aisleHidden = hidden
+            aisle?.accessibilityElementsHidden = hidden
+        }
+    }
+
+    fileprivate func found(_ view: UIView, search: Bool) {
+        if search { results = view } else { aisle = view }
+        view.accessibilityIdentifier = search ? "inStoreSearchResults" : "inStoreAisle"
+        view.accessibilityElementsHidden = search ? resultsHidden : aisleHidden
+    }
+}
+
+struct InStoreCollectionAnchor: UIViewRepresentable {
+    let owner: InStoreListAccessibility
+    let isSearch: Bool
+
+    final class Anchor: UIView {
+        weak var owner: InStoreListAccessibility?
+        var isSearch = false
+
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            findList()
+        }
+
+        func findList() {
+            var ancestor = superview
+            while let view = ancestor {
+                if view is UICollectionView || view is UITableView {
+                    owner?.found(view, search: isSearch)
+                    return
+                }
+                ancestor = view.superview
+            }
+        }
+    }
+
+    func makeUIView(context: Context) -> Anchor {
+        let view = Anchor()
+        view.isUserInteractionEnabled = false
+        view.isAccessibilityElement = false
+        return view
+    }
+
+    func updateUIView(_ view: Anchor, context: Context) {
+        view.owner = owner
+        view.isSearch = isSearch
+        view.findList()
     }
 }
