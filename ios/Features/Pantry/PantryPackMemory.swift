@@ -258,14 +258,13 @@ extension PantryPackMemory {
     func updateDraft(_ value: PantryScanDraft?, replacing expected: UUID?, access: PantryDigestAccess,
                      now: Date = Date()) throws -> StoredPantryScanDraft? {
         let scope = access.scope
-        guard access.authorized(), try scanDraft(scope, now: now)?.version == expected else { throw PantryDigestFailure.changed }
+        guard access.authorized(), try pending(scope) == nil, try scanDraft(scope, now: now)?.version == expected else { throw PantryDigestFailure.changed }
         let file = scanURL(scope)
         guard let value else {
             if expected != nil { try FileManager.default.removeItem(at: file) }
             return nil
         }
-        guard value.batch.workspaceID == scope.origin, (1...12).contains(value.batch.candidates.count),
-              try pending(scope) == nil else { throw PantryDigestFailure.changed }
+        guard value.batch.workspaceID == scope.origin, (1...12).contains(value.batch.candidates.count) else { throw PantryDigestFailure.changed }
         let record = StoredPantryScanDraft(version: UUID(), owner: scope.owner, modified: now, value: value)
         let bytes = try JSONEncoder().encode(record)
         guard bytes.count <= 262_144 else { throw PantryDigestFailure.capacity }
@@ -276,9 +275,9 @@ extension PantryPackMemory {
     }
 
     func clearDraft(for entry: ReviewedPackSave, access: PantryDigestAccess) throws {
-        guard access.authorized() else { throw PantryDigestFailure.changed }
+        guard access.authorized(), try pending(access.scope) == entry else { throw PantryDigestFailure.changed }
         if let current = try scanDraft(access.scope), current.value.batch.id == entry.intakeID {
-            try updateDraft(nil, replacing: current.version, access: access)
+            try FileManager.default.removeItem(at: scanURL(access.scope))
         }
     }
 }

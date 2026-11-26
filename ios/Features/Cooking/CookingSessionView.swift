@@ -78,8 +78,9 @@ import SwiftUI
                         }
                     }
                     if let household = handoffHousehold, let current = step {
+                        let sourceIndex = index
                         CookingStepHandoffLink(household: household, instruction: current.instruction) {
-                            model.context.authorize() && step == current
+                            model.context.authorize() && index == sourceIndex && step == current
                         }
                     }
                     CookingStepNoteView(model: model, steps: steps, index: index, noteFocus: $editingStepNote)

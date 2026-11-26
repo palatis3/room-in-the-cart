@@ -164,14 +164,24 @@ struct InStorePriceEditor: View {
             HStack {
                 if field == .amount, mode == .total, !membership, !weighted,
                    discount.isEmpty, line.pinnedCoupon == nil, let total = try? entry().total {
-                    Button(shelfFormat("Save total %@", moneyText(total)), action: savePrice)
-                        .frame(minHeight: 44).disabled(model.hasPendingSave || model.saving)
-                        .accessibilityIdentifier("inStoreSaveLineTotal")
+                    let title = shelfFormat("Save total %@", moneyText(total))
+                    Button(action: savePrice) {
+                        ViewThatFits(in: .horizontal) {
+                            Text(title).fixedSize()
+                            Text(shelfText("Save total"))
+                        }
+                        .frame(minHeight: 44)
+                    }
+                    .accessibilityLabel(title)
+                    .disabled(model.hasPendingSave || model.saving)
+                    .accessibilityIdentifier("inStoreSaveLineTotal")
                 }
                 Spacer(minLength: 4)
-                Button(ledgerText("Done")) { field = nil }
-                    .frame(minWidth: 44, minHeight: 44)
-                    .accessibilityIdentifier("inStoreAmountDone")
+                Button { field = nil } label: {
+                    Image(systemName: "keyboard.chevron.compact.down").frame(minWidth: 44, minHeight: 44)
+                }
+                .accessibilityLabel(quickGroceryText("Dismiss keyboard"))
+                .accessibilityIdentifier("inStoreAmountDone")
             }
             .font(.body.weight(.semibold)).padding(.horizontal).background(.bar)
         }

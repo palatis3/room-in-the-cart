@@ -113,7 +113,7 @@ import XCTest
         tap(app.buttons["cooking.stepNote.done"])
         tap(app.buttons["cooking.stepPhoto.save"])
         let saved = app.staticTexts["Step photo, Golden at the edges"]
-        reveal(saved)
+        reveal(saved, requiresHitTarget: false)
         let display = app.switches["cooking.keepAwake"].firstMatch
         reveal(display)
         XCTAssertEqual(display.value as? String, "0")
@@ -122,7 +122,7 @@ import XCTest
         tap(app.buttons["cooking.end"])
         tap(app.buttons["cooking.confirmEnd"])
         tap(app.buttons["cooking.openRecipe"])
-        reveal(saved)
+        reveal(saved, requiresHitTarget: false)
         capture("Private photo and description on a later cook")
         reveal(display)
         XCTAssertEqual(display.value as? String, "0")

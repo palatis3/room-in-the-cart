@@ -10,7 +10,7 @@ struct ReceiptWordReading: Equatable, Sendable {
     var bounds: CGRect?
 
     static func choices(original: String, candidates: [String]) -> [Self] {
-        guard !original.contains(where: \.isNewline), original.utf8.count <= 2048 else { return [] }
+        guard !candidates.isEmpty, !original.contains(where: \.isNewline), original.utf8.count <= 2048 else { return [] }
         let words = original.split(whereSeparator: \.isWhitespace)
         var choices: [Self] = []
         for candidate in candidates {

@@ -545,14 +545,11 @@ struct PantryProductBatchView: View {
         guard initialAccess?.scope == access.scope else { return }
         do {
             recovery = try memory.pending(access.scope)
-            if let recovery { try memory.clearDraft(for: recovery, access: access) }
-            else if let current = try memory.scanDraft(access.scope), current.version != draftVersion {
+            if recovery == nil, let current = try memory.scanDraft(access.scope), current.version != draftVersion {
                 offeredDraft = current
             } else { offeredDraft = nil }
             inspectedDraft = true
-
-        }
-        catch { recoveryReadFailed = true }
+        } catch { recoveryReadFailed = true }
     }
 
     private func recover(_ entry: ReviewedPackSave, discardIfStale: Bool = false) {
@@ -569,12 +566,16 @@ struct PantryProductBatchView: View {
                           try await !model.packSaveAlreadyApplied(entry) else { throw PantryReceiptError.stale }
                     try memory.clear(entry, scope: access.scope, authorized: access.authorized)
                     recovery = nil; review = nil; confirmed = false; result = nil
+                    offeredDraft = try memory.scanDraft(access.scope)
+                    draftVersion = nil
                     return
                 }
                 if !applied { try await model.saveReceipt(entry.review) }
                 else { await model.load() }
                 guard authorized, access.authorized() else { throw PantryReceiptError.stale }
+                try memory.clearDraft(for: entry, access: access)
                 try memory.clear(entry, scope: access.scope, authorized: access.authorized)
+                draftVersion = nil
                 restoredRows = entry.rows
                 savedLotID = entry.rows.first?.lotID
                 savedRows = Dictionary(uniqueKeysWithValues: entry.rows.map { ($0.id, $0.lotID) })
@@ -603,14 +604,14 @@ struct PantryProductBatchView: View {
                    let exact = try ReviewedPackSave(review: proposal, intake: batch, scope: access.scope, atHome: atHome) {
                     try memory.stage(exact, scope: access.scope, authorized: access.authorized)
                     recovery = exact
-                    try memory.clearDraft(for: exact, access: access)
-                    draftVersion = nil
                 }
                 if atHome { try await model.saveReceipt(proposal) }
                 else { try await model.saveProducts(batch, review: proposal) }
                 if authorized {
                     if let recovery, let access {
+                        try memory.clearDraft(for: recovery, access: access)
                         try memory.clear(recovery, scope: access.scope, authorized: access.authorized)
+                        draftVersion = nil
                         self.recovery = nil
                     }
                     if let draftVersion, let access {

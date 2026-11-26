@@ -237,7 +237,13 @@ struct SharedShopTransfer: Equatable {
                 reviewedCurrentFacts = pending != nil && (!pendingDelivery || !canReadDelivery)
             }
             completedLoad = UUID()
-        } catch { await handle(error, start: start) }
+        } catch {
+            if start == generation {
+                packObservation = nil
+                packComparisonUnavailable = true
+            }
+            await handle(error, start: start)
+        }
     }
     private func refreshFacts(start: UUID) async throws {
         let refreshScope = scope

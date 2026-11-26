@@ -221,7 +221,7 @@ struct PantryStandingChecksView: View {
                 staged.adding = target
                 if check.adding == nil { try store.updateStandingCheck(check, next: staged, access: access) }
                 let expected = staged
-                func stillCurrent() -> Bool {
+                @MainActor func stillCurrent() -> Bool {
                     access.authorized() && ledger.sourceWorkspaceID == target.workspace &&
                         (try? store.document(scope).standingChecks?.contains(expected)) == true
                 }
@@ -229,7 +229,7 @@ struct PantryStandingChecksView: View {
                 let existing = ledger.workspace.shops.first { $0.id == target.shop }
                 let alreadyCommitted = existing?.importBatches.contains { $0.id == check.occurrence } == true
                 if !alreadyCommitted {
-                    func destinationCurrent() -> Bool {
+                    @MainActor func destinationCurrent() -> Bool {
                         stillCurrent() && !pickup.journeys.contains { $0.id == target.shop && $0.closedAt != nil }
                     }
                     guard destinationCurrent() else { throw PantryDigestFailure.changed }

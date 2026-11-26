@@ -1504,6 +1504,22 @@
           }
         }
       }
+    },
+    "Save total": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save total"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar total"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

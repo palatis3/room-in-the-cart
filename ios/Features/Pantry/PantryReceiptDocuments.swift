@@ -518,12 +518,14 @@ struct ReceiptPrintedLineInspector: View {
     let pageNumber: Int?
     let index: Int
     let originalPage: () async -> Data?
+    var uprightPreview: Data? = nil
     var reviewed: String? = nil
     var apply: ((String) -> Void)? = nil
     @Environment(\.dismiss) private var dismiss
     @State private var pageImage: UIImage?
     @State private var showSource = false
     @State private var printedCrop: CGImage?
+    @State private var cropPage: CGImage?
 
     private var selected: ReceiptDocumentPage.Line { lines[index] }
     private var coordinates: String {
@@ -560,8 +562,10 @@ struct ReceiptPrintedLineInspector: View {
             let bytes = await originalPage()
             guard !Task.isCancelled else { return }
             pageImage = bytes.flatMap { UIImage(data: $0) }
-            if let source = pageImage?.cgImage, let bounds = selected.bounds,
+            let upright = uprightPreview.flatMap { UIImage(data: $0)?.cgImage } ?? pageImage?.cgImage
+            if let source = upright, let bounds = selected.bounds,
                let pixels = ReceiptWordReading.pixels(for: bounds, width: source.width, height: source.height) {
+                cropPage = source
                 printedCrop = source.cropping(to: pixels)
             }
         }
@@ -576,7 +580,7 @@ struct ReceiptPrintedLineInspector: View {
                         .foregroundStyle(Theme.warning)
                 }
             }
-            if let printedCrop, let original = pageImage?.cgImage, let reviewed, let apply {
+            if let printedCrop, let original = cropPage, let reviewed, let apply {
                 ReceiptReadingEditor(line: selected, image: printedCrop, pageImage: original, reviewed: reviewed, apply: apply)
             }
             Section(pantryText("Original lines")) {

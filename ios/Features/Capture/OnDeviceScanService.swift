@@ -4,6 +4,8 @@ import ImageIO
 import CoreML
 
 struct OnDeviceScanService: LocalScanService {
+    var receiptReadings = false
+
     func scan(_ data: Data) async throws -> ScannedSource {
         let cancellation = ScanVisionCancellation()
         let task = Task.detached(priority: .userInitiated) {
@@ -50,7 +52,7 @@ struct OnDeviceScanService: LocalScanService {
             var seen = Set<String>()
             let unique = Array(codes.filter { seen.insert($0.id).inserted }.prefix(16))
             let reading: OnDeviceTextCapture.Reading?
-            do { reading = try await OnDeviceTextCapture().recognizeWithLayout(jpeg, receiptReadings: true) }
+            do { reading = try await OnDeviceTextCapture().recognizeWithLayout(jpeg, receiptReadings: receiptReadings) }
             catch is CancellationError { throw CancellationError() }
             catch { reading = nil } // The image/code remains reviewable, with typing always available.
             try Task.checkCancellation()

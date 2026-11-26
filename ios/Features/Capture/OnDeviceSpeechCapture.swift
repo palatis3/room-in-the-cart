@@ -52,9 +52,13 @@ extension EnvironmentValues {
         }
     }
 
-    private static func localRecognizer(_ language: String?) -> SFSpeechRecognizer? {
+    private static func localRecognizer(_ identifier: String) -> SFSpeechRecognizer? {
+        let locale = Locale(identifier: identifier)
+        let language = locale.language.languageCode?.identifier
         guard language == "en" || language == "es" else { return nil }
-        let locales = language == "es" ? ["es-MX", "es-US"] : ["en-US"]
+        let prefersMexico = locale.region?.identifier == "MX" || Locale.current.region?.identifier == "MX"
+        let spanish = prefersMexico ? ["es-MX", "es-US"] : ["es-US", "es-MX"]
+        let locales = language == "es" ? spanish : ["en-US"]
         return locales.compactMap { SFSpeechRecognizer(locale: Locale(identifier: $0)) }
             .first { $0.supportsOnDeviceRecognition && $0.isAvailable }
     }
@@ -62,8 +66,7 @@ extension EnvironmentValues {
     /// Ask while the private Shop is still mounted, before presenting the nested list editor.
     /// The root permission window resumes only in the same unlocked adult workspace.
     static func prepareGroceryPermissions(_ present: PantryNotificationPresenter) async throws {
-        let language = Locale(identifier: CaptureCorrectionScope.appLanguage()).language.languageCode?.identifier
-        guard configured(.main), localRecognizer(language) != nil else { return }
+        guard configured(.main), localRecognizer(CaptureCorrectionScope.appLanguage()) != nil else { return }
         if SFSpeechRecognizer.authorizationStatus() == .notDetermined {
             let granted = try await present {
                 await withCheckedContinuation { reply in SFSpeechRecognizer.requestAuthorization { reply.resume(returning: $0 == .authorized) } }
@@ -80,8 +83,7 @@ extension EnvironmentValues {
     func begin(localeIdentifier: String) async throws -> AsyncThrowingStream<SpeechCaptureUpdate, Error> {
         stop(); let run = runID
         guard Self.configured(bundle) else { throw CaptureFailure.notConfigured }
-        let language = Locale(identifier: localeIdentifier).language.languageCode?.identifier
-        guard let recognizer = Self.localRecognizer(language) else { throw CaptureFailure.onDeviceUnavailable }
+        guard let recognizer = Self.localRecognizer(localeIdentifier) else { throw CaptureFailure.onDeviceUnavailable }
         if SFSpeechRecognizer.authorizationStatus() == .notDetermined && !willRequestPermission() {
             throw CaptureFailure.permissionDenied
         }
