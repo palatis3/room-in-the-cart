@@ -111,6 +111,8 @@ struct InStorePriceEditor: View {
                     workingTextField(amountLabel, text: $amount).keyboardType(.decimalPad)
                         .focused($field, equals: .amount).accessibilityIdentifier("inStoreAmount")
                 }
+                .contentShape(Rectangle())
+                .simultaneousGesture(TapGesture().onEnded { field = .amount })
                 if mode != .total {
                     let label = mode == .pack ? shelfText("Packs picked") : shelfFormat("Measured weight (%@)", unit.displayName)
                     WorkingField(label) {

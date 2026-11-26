@@ -5,19 +5,8 @@ struct ReceiptReadingEditor: View {
     let line: ReceiptDocumentPage.Line
     let image: CGImage
     let pageImage: CGImage
-    let reviewed: String
-    let apply: (String) -> Void
-    @State private var draft: String
+    @Binding var draft: String
     @State private var strongerContrast = false
-
-    init(line: ReceiptDocumentPage.Line, image: CGImage, pageImage: CGImage, reviewed: String, apply: @escaping (String) -> Void) {
-        self.line = line
-        self.image = image
-        self.pageImage = pageImage
-        self.reviewed = reviewed
-        self.apply = apply
-        _draft = State(initialValue: reviewed)
-    }
 
     var body: some View {
         Section(captureText("Check the print")) {
@@ -41,17 +30,14 @@ struct ReceiptReadingEditor: View {
                 }
             }
             WorkingField(captureText("Reviewed line wording")) {
-                TextField(captureText("Reviewed line wording"), text: $draft, axis: .vertical)
-                    .textFieldStyle(WorkingInputStyle())
+                TextField(captureText("Reviewed line wording"), text: $draft)
+                    .textFieldStyle(.roundedBorder)
+                    .submitLabel(.done)
                     .accessibilityIdentifier("receipt.reading.edit")
             }
             if draft != line.text {
                 Button(captureText("Restore original wording")) { draft = line.text }
             }
-            Button(captureText("Use reviewed wording")) { apply(draft) }
-                .disabled(draft == reviewed || draft.trimmingCharacters(in: .whitespaces).isEmpty
-                    || draft.contains(where: \.isNewline) || draft.utf8.count > 2048)
-                .accessibilityIdentifier("receipt.reading.apply")
         }
     }
 }

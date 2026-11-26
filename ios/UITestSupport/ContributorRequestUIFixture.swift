@@ -32,6 +32,11 @@ import HouseholdClient
             AdultChecksFixtureRoot()
             #endif
         }
+        else if ProcessInfo.processInfo.arguments.contains("--receipt-file-source-fixture") {
+            #if targetEnvironment(simulator)
+            ReceiptFileSourceFixture()
+            #endif
+        }
         else if ProcessInfo.processInfo.arguments.contains("--import-recovery-fixture") { ImportRecoveryUIFixtureRoot() }
         else if ProcessInfo.processInfo.arguments.contains("--staple-recall-fixture") {
             #if targetEnvironment(simulator)

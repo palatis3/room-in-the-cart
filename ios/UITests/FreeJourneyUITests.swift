@@ -344,8 +344,13 @@ import XCTest
         tapVisibleFormRow(field, marker: "PRODUCT_INPUT_TAP")
         field.typeText(value)
         XCTAssertEqual(field.value as? String, value)
-        tap(app.buttons["productBatch.keyboardDone"])
-        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+        let doneID = "productBatch.keyboardDone"
+        guard app.waitForDoneAboveKeyboard(identifier: doneID) else {
+            XCTFail("The product scan Done button did not settle above the keyboard.")
+            return
+        }
+        app.buttons[doneID].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: doneID))
         XCTAssertEqual(field.value as? String, value)
         tap(app.buttons["productBatch.add"])
     }
@@ -1667,7 +1672,7 @@ import XCTest
         let contrast = app.switches["Increase print contrast"]
         reveal(contrast)
         contrast.tap()
-        let field = element("receipt.reading.edit")
+        let field = app.textFields["receipt.reading.edit"]
         reveal(field)
         field.tap()
         field.typeText(" organic")

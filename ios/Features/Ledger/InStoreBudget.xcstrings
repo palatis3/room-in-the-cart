@@ -1520,6 +1520,22 @@
           }
         }
       }
+    },
+    "In your basket": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In your basket"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En tu carrito"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

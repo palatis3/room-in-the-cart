@@ -147,6 +147,11 @@ struct InStoreShoppingView: View {
     }
     @State private var destination: Destination?
     @State private var choosingList = false
+    private struct UndoReview {
+        let line: ShoppingLine
+        let revision: UUID
+    }
+    @State private var undoReview: UndoReview?
     @State private var searching = false
     @State private var query = ""
     @State private var searchReturnTargets: [Focus] = []
@@ -157,7 +162,6 @@ struct InStoreShoppingView: View {
     @State private var trackingAisle = false
     @State private var completedDetailRow: UUID?
     @State private var scrollToReturn = false
-    @State private var restoringAisle = false
     @AccessibilityFocusState private var focus: Focus?
     @State private var pendingFocus: Focus?
 
@@ -218,7 +222,18 @@ struct InStoreShoppingView: View {
     private var currentShopContent: some View {
         Group {
             if let shop = model.shop, shop.id == shopID {
-                shoppingList(in: shop)
+                VStack(spacing: 0) {
+                    ZStack {
+                        // Keep the aisle list mounted while filtering so clearing search restores the actual viewport.
+                        shoppingList(in: shop, filtering: false)
+                            .ignoresSafeArea(.keyboard, edges: .bottom)
+                            .opacity(searching ? 0 : 1).allowsHitTesting(!searching).accessibilityHidden(searching)
+                        if searching { shoppingList(in: shop, filtering: true) }
+                    }
+                    if typeSize.isAccessibilitySize, !editingSearch, let last = shop.inStorePickedLines.first, last.canUndoInStore {
+                        reachableUndo(last, in: shop)
+                    }
+                }
                     .sheet(item: $editingPrice) { line in
                         NavigationStack { InStorePriceEditor(model: model, shop: shop, line: line) }
                     }
@@ -236,21 +251,25 @@ struct InStoreShoppingView: View {
         }
     }
 
-    private func shoppingList(in shop: ShoppingLedger) -> some View {
+    private func shoppingList(in shop: ShoppingLedger, filtering: Bool) -> some View {
         let dinner = dinnerPantry.status(in: shop, ledger: model)
         let groups = model.workspace.listLayout.groups(shop: shop, excluding: dinner.covered)
-        let matches = searchMatches(in: shop)
-        let matched = groups.flatMap(\.lines).filter { matches?.contains($0.id) ?? true }
+        let matches = filtering ? searchMatches(in: shop) : nil
+        func included(_ line: ShoppingLine) -> Bool {
+            guard filtering else { return true }
+            return line.eligibleForStop(named: shop.currentStop.name) && (matches?.contains(line.id) ?? true)
+        }
+        let matched = groups.flatMap(\.lines).filter(included)
         let visible = matched.filter { available($0, shop: shop) }
         let outstanding = matched.filter { shop.outcomeAtCurrentStop($0) != nil }
         let basket = shop.inStorePickedLines
-        let picked = basket.filter { matches?.contains($0.id) ?? true }
+        let picked = basket.filter(included)
         let exclusions = shop.listExclusions
         let packages = shop.itemPackages
         return ScrollViewReader { reader in
             JournalList {
                 if model.error != nil || model.hasPendingSave { LedgerSaveStatus(model: model) }
-                if !searching {
+                if !filtering {
                     DinnerPantryReviewSection(shopID: shop.id, reviews: dinner.pending)
                     listAndStop(shop)
                     TripDepartureSection(model: model, shop: shop)
@@ -274,18 +293,18 @@ struct InStoreShoppingView: View {
                 if !outstanding.isEmpty {
                     Section(tripText("Still needed")) {
                         ForEach(outstanding) { line in
-                            stillNeededRow(line, in: shop, packages: packages[line.id] ?? [])
+                            stillNeededRow(line, in: shop, filtering: filtering, packages: packages[line.id] ?? [])
                         }
                     }
                 }
                 if !picked.isEmpty {
-                    Section(shoppingText("Picked items")) {
+                    Section(filtering ? shelfText("In your basket") : shoppingText("Picked items")) {
                         ForEach(picked) { line in
-                            pickedRow(line, in: shop, packages: packages[line.id] ?? [])
+                            pickedRow(line, in: shop, filtering: filtering, packages: packages[line.id] ?? [])
                         }
                     }
                 }
-                if !searching {
+                if !filtering {
                     Section {
                         Button { destination = .nextStore } label: { Label(tripText("Next store"), systemImage: "storefront") }
                             .accessibilityIdentifier("tripNextStore")
@@ -296,10 +315,10 @@ struct InStoreShoppingView: View {
                 }
             }
             .listStyle(.plain)
-            .safeAreaInset(edge: .top, spacing: 0) { searchField }
+            .safeAreaInset(edge: .top, spacing: 0) { if filtering { searchField } }
             .coordinateSpace(name: "shoppingAisles")
             .onAppear {
-                if let id = restoredRow(), id != visible.first?.id {
+                if !filtering, let id = restoredRow(), id != visible.first?.id {
                     if visible.contains(where: { $0.id == id }) || outstanding.contains(where: { $0.id == id }) {
                         reader.scrollTo(Focus.line(id), anchor: .top)
                     } else if basket.contains(where: { $0.id == id }) {
@@ -320,30 +339,19 @@ struct InStoreShoppingView: View {
             }
             .disabled(model.saving)
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                if typeSize.isAccessibilitySize, let last = basket.first, last.canUndoInStore, !editingSearch {
-                    Menu {
-                        lastPickUndo(last, shop: shop)
-                    } label: {
-                        Label(quickGroceryText("Undo"), systemImage: "arrow.uturn.backward")
-                            .frame(maxWidth: .infinity, minHeight: 44)
-                    }
-                    .accessibilityLabel(undoLabel(for: last))
-                    .accessibilityIdentifier("inStoreReachableUndo")
-                    .disabled(model.saving || model.hasPendingSave)
-                    .background(.bar)
-                } else if !typeSize.isAccessibilitySize && !editingSearch {
+                if !typeSize.isAccessibilitySize && (!filtering || !editingSearch) {
                     subtotalSummary(shop, last: basket.first)
                         .padding(.horizontal).padding(.vertical, 6).background(Theme.surface)
                         .overlay(alignment: .top) { Divider() }
                 }
             }
             .onChange(of: pendingFocus) { _, target in
-                guard let target else { return }
+                guard let target, filtering == searching else { return }
                 if UIAccessibility.isVoiceOverRunning || scrollToReturn {
                     switch target {
                     case .line, .picked:
                         // Keep an already visible grocery in place when a shopper undoes a pick.
-                        let anchor: UnitPoint? = restoringAisle ? .top : (UIAccessibility.isVoiceOverRunning ? .center : nil)
+                        let anchor: UnitPoint? = UIAccessibility.isVoiceOverRunning ? .center : nil
                         reader.scrollTo(target, anchor: anchor)
                     case .subtotal:
                         if typeSize.isAccessibilitySize { reader.scrollTo(Focus.subtotal, anchor: .top) }
@@ -353,7 +361,6 @@ struct InStoreShoppingView: View {
                     await Task.yield()
                     guard pendingFocus == target else { return }
                     focus = target
-                    restoringAisle = false
                     scrollToReturn = false
                     pendingFocus = nil
                 }
@@ -415,7 +422,7 @@ struct InStoreShoppingView: View {
         guard let shop = model.shop, shop.id == shopID else { return }
         let order = aisleFocusOrder(in: shop)
         let anchor = (UIAccessibility.isVoiceOverRunning ? focus : nil) ?? viewportAnchor
-        if let anchor, let index = order.firstIndex(of: anchor) {
+        if UIAccessibility.isVoiceOverRunning, let anchor, let index = order.firstIndex(of: anchor) {
             // If the anchor itself is picked or removed during search, restore its closest surviving neighbor.
             let following = order[index...].filter { $0 != .subtotal }
             let preceding = order.prefix(index).reversed()
@@ -431,7 +438,6 @@ struct InStoreShoppingView: View {
         if let shop = model.shop, shop.id == shopID {
             let remaining = Set(aisleFocusOrder(in: shop))
             if let target = searchReturnTargets.first(where: remaining.contains) {
-                restoringAisle = true
                 scrollToReturn = true
                 pendingFocus = target
             }
@@ -512,12 +518,12 @@ struct InStoreShoppingView: View {
         shop.outcomeAtCurrentStop(line) == nil && line.eligibleForStop(named: shop.currentStop.name)
     }
 
-    private func stillNeededRow(_ line: ShoppingLine, in shop: ShoppingLedger, packages: [BasketPackage]) -> some View {
+    private func stillNeededRow(_ line: ShoppingLine, in shop: ShoppingLedger, filtering: Bool, packages: [BasketPackage]) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Button { destination = .details(line.id) } label: {
                 VStack(alignment: .leading) {
                     Text(line.name).font(.headline)
-                    searchDetails(line, in: shop)
+                    if filtering { searchDetails(line, in: shop) }
                     let measure = TripMeasure(shop, line: line, packages: packages)
                     if let quantity = shop.tripAmountLabel(line, measure: measure) { Text(quantity) }
                     Text(tripText(shop.isLeftForNextTrip(line) ? "Left for next time" : "Couldn’t find it at this stop"))
@@ -614,7 +620,7 @@ struct InStoreShoppingView: View {
         }
     }
 
-    private func pickedRow(_ line: ShoppingLine, in shop: ShoppingLedger, packages: [BasketPackage]) -> some View {
+    private func pickedRow(_ line: ShoppingLine, in shop: ShoppingLedger, filtering: Bool, packages: [BasketPackage]) -> some View {
         let undoLabel = shoppingFormat("Undo pick of %@", line.name)
         return HStack(alignment: .firstTextBaseline, spacing: 8) {
             Button {
@@ -634,7 +640,7 @@ struct InStoreShoppingView: View {
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(line.name).font(.headline).foregroundStyle(Theme.ink)
-                        searchDetails(line, in: shop)
+                        if filtering { searchDetails(line, in: shop) }
                         TripRequestSummary(shop: shop, line: line)
                         if let pick = line.packagePick {
                             Text(pick.packages.shoppingLabel).foregroundStyle(Theme.secondary)
@@ -696,6 +702,30 @@ struct InStoreShoppingView: View {
             .accessibilityIdentifier("inStoreLastPrice")
         if last.canUndoInStore && !typeSize.isAccessibilitySize {
             lastPickUndo(last, shop: shop)
+        }
+    }
+
+    private func reachableUndo(_ last: ShoppingLine, in shop: ShoppingLedger) -> some View {
+        Button {
+            undoReview = UndoReview(line: last, revision: shop.revisionID)
+        } label: {
+            Label(quickGroceryText("Undo"), systemImage: "arrow.uturn.backward")
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .contentShape(Rectangle())
+        }
+        .accessibilityLabel(undoLabel(for: last))
+        .accessibilityIdentifier("inStoreReachableUndo")
+        .disabled(model.saving || model.hasPendingSave)
+        .background(.bar)
+        .alert(undoReview.map { undoLabel(for: $0.line) } ?? quickGroceryText("Undo"),
+               isPresented: Binding(get: { undoReview != nil }, set: { if !$0 { undoReview = nil } }),
+               presenting: undoReview) { reviewed in
+            Button(quickGroceryText("Undo")) {
+                guard let current = model.shop, current.id == shopID, current.revisionID == reviewed.revision,
+                      current.inStorePickedLines.first?.id == reviewed.line.id else { return }
+                undo(reviewed.line, in: current)
+            }.accessibilityIdentifier("inStoreConfirmUndo")
+            Button(ledgerText("Cancel"), role: .cancel) {}
         }
     }
 

@@ -283,16 +283,27 @@ private struct PreviousGroceriesReview: View {
                 Section(shoppingFormat("Add to %@", destination.title)) {
                     Text(shoppingText("Choose names and exclusions. Set this trip’s quantities on your list."))
                     ForEach(rows) { row in
-                        Toggle(isOn: Binding(get: { selected.contains(row.id) }, set: { value in
-                            if value { selected.insert(row.id) } else { selected.remove(row.id) }
-                        })) {
-                            VStack(alignment: .leading) {
-                                Text(verbatim: row.name)
-                                if let note = priorNotes[row.id] { Text(shoppingFormat("Previous note: %@", note)).font(.footnote) }
-                                if !row.exclusions.isEmpty { Text(ledgerFormat("Exclusions: %@", row.exclusions.joined(separator: ", "))) }
-                                if overlaps.contains(row.id) { Text(shoppingText("Already on this list. Select to add a separate row.")).font(.footnote) }
+                        Button {
+                            if !selected.insert(row.id).inserted { selected.remove(row.id) }
+                        } label: {
+                            HStack(alignment: .firstTextBaseline, spacing: 12) {
+                                Image(systemName: selected.contains(row.id) ? "checkmark.circle.fill" : "circle")
+                                    .accessibilityHidden(true)
+                                VStack(alignment: .leading) {
+                                    Text(verbatim: row.name)
+                                    if let note = priorNotes[row.id] { Text(shoppingFormat("Previous note: %@", note)).font(.footnote) }
+                                    if !row.exclusions.isEmpty { Text(ledgerFormat("Exclusions: %@", row.exclusions.joined(separator: ", "))) }
+                                    if overlaps.contains(row.id) {
+                                        Text(shoppingText("Already on this list. Select to add a separate row.")).font(.footnote)
+                                    }
+                                }
                             }
-                        }.accessibilityIdentifier("previousGroceries.row-\(row.id)")
+                            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityAddTraits(selected.contains(row.id) ? .isSelected : [])
+                        .accessibilityIdentifier("previousGroceries.row-\(row.id)")
                     }
                 }
                 Button(shoppingText("Add selected items")) {

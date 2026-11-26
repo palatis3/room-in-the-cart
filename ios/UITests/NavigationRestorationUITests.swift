@@ -390,10 +390,12 @@ import XCTest
         let add = app.buttons["previousGroceries.add"]
         XCTAssertTrue(add.waitForExistence(timeout: 8))
         XCTAssertFalse(add.isEnabled)
-        let milk = app.switches.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS[c] %@",
-                                                    "previousGroceries.row-", "milk")).firstMatch
+        let milk = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS[c] %@",
+                                                   "previousGroceries.row-", "milk")).firstMatch
         tap(milk)
+        XCTAssertTrue(add.isEnabled)
         tap(add)
+        XCTAssertTrue(add.waitForNonExistence(timeout: 8))
         app.assertSelectedShoppingList(named: "Friday market")
         let added = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS[c] %@", "ledgerCheck-", "milk")).firstMatch
         XCTAssertTrue(added.waitForExistence(timeout: 8))

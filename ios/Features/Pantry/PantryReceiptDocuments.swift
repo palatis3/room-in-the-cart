@@ -524,10 +524,16 @@ struct ReceiptPrintedLineInspector: View {
     @Environment(\.dismiss) private var dismiss
     @State private var pageImage: UIImage?
     @State private var showSource = false
+    @State private var edited: String?
     @State private var printedCrop: CGImage?
     @State private var cropPage: CGImage?
 
     private var selected: ReceiptDocumentPage.Line { lines[index] }
+    private var hasEdit: Bool { edited != nil && edited != reviewed }
+    private var wording: Binding<String> {
+        Binding(get: { edited ?? reviewed ?? selected.text }, set: { edited = $0 })
+    }
+
     private var coordinates: String {
         if let pageNumber {
             return String(format: putawayText("Page %@, line %@"), pageNumber.formatted(), selected.id.formatted())
@@ -551,9 +557,22 @@ struct ReceiptPrintedLineInspector: View {
         .navigationTitle(showSource ? pantryText("Original page") : pantryText("Printed line"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            if hasEdit && !showSource {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(pantryText("Cancel")) { dismiss() }
+                }
+            }
             ToolbarItem(placement: .confirmationAction) {
-                Button(pantryText("Done")) {
-                    if showSource { showSource = false } else { dismiss() }
+                if hasEdit, !showSource, let edited, let apply {
+                    Button(pantryText("Done")) { apply(edited) }
+                        .accessibilityLabel(captureText("Use reviewed wording"))
+                        .accessibilityIdentifier("receipt.reading.apply")
+                        .disabled(edited.trimmingCharacters(in: .whitespaces).isEmpty
+                            || edited.contains(where: \.isNewline) || edited.utf8.count > 2048)
+                } else {
+                    Button(pantryText("Done")) {
+                        if showSource { showSource = false } else { dismiss() }
+                    }
                 }
             }
         }
@@ -580,8 +599,8 @@ struct ReceiptPrintedLineInspector: View {
                         .foregroundStyle(Theme.warning)
                 }
             }
-            if let printedCrop, let original = cropPage, let reviewed, let apply {
-                ReceiptReadingEditor(line: selected, image: printedCrop, pageImage: original, reviewed: reviewed, apply: apply)
+            if let printedCrop, let original = cropPage, reviewed != nil, apply != nil {
+                ReceiptReadingEditor(line: selected, image: printedCrop, pageImage: original, draft: wording)
             }
             Section(pantryText("Original lines")) {
                 VStack(alignment: .leading, spacing: 4) {

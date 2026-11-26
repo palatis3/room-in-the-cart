@@ -109,7 +109,7 @@ import XCTest
         tap(app.buttons["cookHandoff.currentStep"])
         XCTAssertTrue(contains("Dani Rivera").waitForExistence(timeout: 5))
         tap(app.buttons["cookHandoff.offer"])
-        XCTAssertTrue(contains("En espera de una respuesta").waitForExistence(timeout: 5))
+        XCTAssertTrue(contains("En espera de respuesta").waitForExistence(timeout: 5))
         switchTo("contributor")
         XCTAssertFalse(app.buttons["cookHandoff.inbox"].exists)
         switchTo("dani")
