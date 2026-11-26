@@ -52,13 +52,20 @@ import XCTest
         XCTAssertTrue(app.buttons["settings"].isHittable)
     }
 
+    private func openMembershipSample() {
+        let sample = app.buttons["membership.sample"]
+        let center = CGVector(dx: 0.5, dy: 0.5)
+        reveal(sample, requiredHit: center)
+        sample.coordinate(withNormalizedOffset: center).tap()
+    }
+
     func testFirstTripPricesAWholeBottleThenKeepsUnknownStockVisible() {
         app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
         tap(app.tabBars.buttons["Records"])
         tap(app.buttons["settings"])
         tap(app.buttons["Household membership"])
-        tap(app.buttons["membership.sample"])
+        openMembershipSample()
         tap(app.buttons["membership.sample.firstTrip"])
         func checkSubtotal(_ digits: String) {
             let value = element("wholePack.example.subtotal")
@@ -83,7 +90,7 @@ import XCTest
             tap(app.tabBars.buttons[spanish ? "Historial" : "Records"])
             tap(app.buttons["settings"])
             tap(app.buttons[spanish ? "Membresía del hogar" : "Household membership"])
-            tap(app.buttons["membership.sample"])
+            openMembershipSample()
             let subtotal = element("membership.sample.subtotal")
             let annualTerms = element("membership.sample.annualTerms")
             XCTAssertTrue(subtotal.waitForExistence(timeout: 8))
