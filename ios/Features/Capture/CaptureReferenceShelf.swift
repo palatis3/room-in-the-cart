@@ -4,6 +4,7 @@ import SwiftUI
 @MainActor struct CaptureReferenceShelf: View {
     let target: CaptureTarget
     let initialLabel: String
+    var photoOwner: PackageRowPhoto.Owner? = nil
     let authorize: @MainActor @Sendable () -> Bool
     var makePantry: (@MainActor () -> PantryModel?)? = nil
     private struct ReceiptReview: Identifiable {
@@ -11,6 +12,7 @@ import SwiftUI
         let pantry: PantryModel
         var id: UUID { source.id }
     }
+    @FocusState private var focusedPackageCue: UUID?
     @State private var receiptReview: ReceiptReview?
     @State private var entries: [SourceMediaRecord] = []
     @State private var mode: Mode?
@@ -59,6 +61,9 @@ import SwiftUI
                         Image(uiImage: image).resizable().scaledToFit().frame(maxHeight: 260)
                             .accessibilityLabel(captureText("Saved reduced-size source reference"))
                     }
+                    if target.kind == .packageReference, entry.imageJPEG != nil, let photoOwner {
+                        PackagePhotoChoice(entry: entry, owner: photoOwner, focus: $focusedPackageCue, authorize: authorize)
+                    }
                     SourceReferenceWording(source: entry)
                     if target.kind == .receiptEvidence, !entry.receiptLines.isEmpty, let makePantry {
                         Button(pantryText("Review received food in My Pantry")) {
@@ -89,6 +94,8 @@ import SwiftUI
             }
         }
         .navigationTitle(captureText("Source references"))
+        .keyboardDoneAction(visible: focusedPackageCue != nil, title: ledgerText("Done"),
+                            identifier: "privatePackagePhoto.keyboardDone") { focusedPackageCue = nil }
         .sheet(item: $receiptReview) { review in
             if authorize() {
                 NavigationStack {

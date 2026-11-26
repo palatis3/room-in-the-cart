@@ -143,7 +143,7 @@ struct DinnerCookingPage: Equatable, Encodable {
                         } else if pickup.pantryRouteAvailable {
                             PantrySetupView(pickup: pickup, ledger: ledger)
                         }
-                    }
+                    }.id(context.key)
             } else {
                 Text(recordsText("Open this recipe from your current private workspace."))
             }
@@ -173,8 +173,14 @@ struct DinnerCookingPage: Equatable, Encodable {
             page = nil; context = nil; return
         }
         page = source
+        var noteKey: CookingSessionKey?
+        if source.replacement == nil, let meal = ledger.shop?.mealOccurrences.first(where: { $0.id == mealID }),
+           let template = meal.templateID, let revision = meal.templateRevision {
+            noteKey = try? CookingSessionContext.recipeNotesKey(workspace: workspace, actor: actor, templateID: template,
+                revision: revision, steps: meal.recipeSteps ?? [])
+        }
         context = CookingSessionContext(key: key, authorize: {
             identity == actor && ledger.sourceWorkspaceID == workspace && (try? current()) == source
-        })
+        }, sourceNoteKey: noteKey)
     }
 }

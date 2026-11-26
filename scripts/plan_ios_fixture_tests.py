@@ -16,6 +16,7 @@ PROFILES = {
     "contributor": {
         "CONTRIBUTOR_CAPTURE_UI_FIXTURE": (
             "ContributorRequestUITests",
+            "HouseholdCheckUITests",
             "CorrectionPrivacyAcceptanceUITests",
             "GuardianEnrollmentUITests",
             "HistoryGrantReadUITests",
@@ -77,7 +78,7 @@ BALANCED_SUITES = {
     # Group 01 finished in 14 minutes while group 05 approached its 40-minute limit.
     "contributor-balanced-01": ("DinnerAwayCarryoverUITests", "GuardianEnrollmentUITests", "RequestDuplicateComparisonUITests"),
     "contributor-balanced-02": ("ContributorRequestUITests", "ImportRecoveryUITests", "HouseholdDevicesUITests"),
-    "contributor-balanced-03": ("HouseholdRequestPackUITests",),
+    "contributor-balanced-03": ("HouseholdRequestPackUITests", "HouseholdCheckUITests"),
     "contributor-balanced-04": ("HistoryGrantReadUITests", "RecipeLibraryAcceptanceUITests", "PaidPickupRecoveryUITests", "SharedMealCivilDateUITests"),
     # On the two preceding PR 76 runs, measurement and stock took 8–9 minutes in group 02.
     "contributor-balanced-05": ("CorrectionPrivacyAcceptanceUITests", "MeasurementUITests", "SharedMealChangeUITests", "StapleRecallUITests", "StockReviewUITests"),

@@ -20,6 +20,7 @@ private struct SharedShopContent: View {
     var body: some View {
         WorkingForm {
             if model.authorized {
+                HouseholdCheckLink(household: household)
                 Section {
                     HouseholdScopeHeading(scope: model.scope)
                     SharedPickingLink(household: household)
@@ -70,7 +71,7 @@ private struct SharedShopContent: View {
                                     if occurrence.meal.kind == "dinner", !occurrence.meal.protected, model.canManage, !model.editing, model.review == nil {
                                         if shop.phase == "draft", household.sharedMealChangeScope != nil {
                                             NavigationLink(sharedRecoveryText("Swap this dinner")) {
-                                                SharedMealChangesView(household: household, dinnerID: occurrence.id)
+                                                SharedMealChangesView(household: household, selectedDinner: .swap(occurrence.id))
                                             }.accessibilityIdentifier("sharedShop.swap." + occurrence.id.uuidString)
                                         } else if shop.phase == "placed", model.canReadMealRecovery, let shopID = UUID(uuidString: shop.shopId) {
                                             NavigationLink(sharedRecoveryText("Swap this dinner")) {

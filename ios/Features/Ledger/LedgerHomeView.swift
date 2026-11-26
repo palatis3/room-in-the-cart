@@ -105,6 +105,7 @@ struct LedgerHomeView: View {
                         }
                         Section { LedgerQuickGroceryEntry(model: model) }
                         Section {
+                            TripDepartureLink(model: model, shop: shop)
                             Button { sheet = .inStore(shop.id) } label: {
                                 Label(shoppingText("Shop in store"), systemImage: "cart")
                                     .font(.headline).frame(minHeight: 44)
@@ -436,7 +437,8 @@ struct LedgerHomeView: View {
         let source = shop.ordinaryQuantitySource(for: line, contributions: shop.contributions(forLineID: line.id), typedItemBatches: typedBatches)
         let quantity = shop.groceryRowAmount(line, measure: measure)
         let spokenAmount = shop.tripAmountLabel(line, measure: measure)
-        let details = [spokenAmount ?? "", exclusions ?? "", line.notes, line.aisle].filter { !$0.isEmpty }.joined(separator: ", ")
+        let tripReason = shop.mainTripReasonID == line.id ? tripReminderText("Main reason for this trip") : ""
+        let details = [spokenAmount ?? "", exclusions ?? "", line.notes, line.aisle, tripReason].filter { !$0.isEmpty }.joined(separator: ", ")
         let editItem = {
             guard !model.saving, !model.hasPendingSave, model.shop?.id == shop.id,
                   let workspace = model.sourceWorkspaceID else { return }
@@ -473,6 +475,7 @@ struct LedgerHomeView: View {
                     } label: {
                         VStack(alignment: .leading, spacing: 5) {
                             GroceryNameAndAmount(name: line.name, amount: source == nil || model.sourceWorkspaceID == nil ? quantity : nil)
+                            TripRequestSummary(shop: shop, line: line)
                             if let exclusions { Text(verbatim: exclusions) }
                             if !line.notes.isEmpty { Text(line.notes) }
                         }.padding(.vertical, 6).fixedSize(horizontal: false, vertical: true)

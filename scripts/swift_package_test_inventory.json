@@ -65,6 +65,10 @@
     "sameStoreOperationUndoAddition": {
       "added": 3,
       "basis": "Prepared same-store candidate/preview identity, protected meal parity, no-store/placement decoder compatibility and invalid evidence controls. Source reviewed only; compiled discovery and execution pending root qualification. Existing selectors and three ordinary wire skips retained."
+    },
+    "householdChecksAndPrivateNotesAddition": {
+      "added": 6,
+      "basis": "Three CoreDomain trip reminder tests, two HouseholdClient adult question tests, and one LocalStore private cooking note test passed in focused local package runs."
     }
   },
   "packages": {
@@ -279,7 +283,10 @@
       "CoreDomainTests.StapleRecallTests/testChangedOrForgottenApprovalInvalidatesOpenReviewAndStoreIsRequired",
       "CoreDomainTests.StapleRecallTests/testExistingCheckedOrHandledItemIsNeverReopenedAndHandledChoiceCreatesNoPurchase",
       "CoreDomainTests.StapleRecallTests/testRecallCopiesOnlyReviewedNeedAndRetainsOldCheckAcrossSaveAndReplay",
-      "CoreDomainTests.StapleRecallTests/testReopeningEarlierDraftDoesNotSuggestItemsFromAFutureShop"
+      "CoreDomainTests.StapleRecallTests/testReopeningEarlierDraftDoesNotSuggestItemsFromAFutureShop",
+      "CoreDomainTests.TripReminderTests/testLegacyListAndRecordedPickPriceRemainIndependentOfJug",
+      "CoreDomainTests.TripReminderTests/testOneMainReasonSurvivesRestartAndCanBeLeftUnpurchased",
+      "CoreDomainTests.TripReminderTests/testPackingOneOfTwoIdenticalWaterLinesPersistsWithoutEvidenceOfPurchase"
     ],
     "DeviceSurfaces": [
       "DeviceSurfacesTests.DeviceSurfacesTests/testAdultHomeProjectionExpiresAtCivilMidnightAndRejectsPrivateExtras",
@@ -331,6 +338,7 @@
       "HouseholdClientTests.HouseholdClientTests/testDeviceInventoryUsesEnrolledHeadersAndValidatesCurrentReferenceAndGuardianScope",
       "HouseholdClientTests.HouseholdClientTests/testDeviceRevocationRejectsCurrentDeviceRevokedTargetAndTamperedStoredIntent",
       "HouseholdClientTests.HouseholdClientTests/testDeviceRevocationRetainsExactTargetBytesAndRejectsReceiptSubstitution",
+      "HouseholdClientTests.HouseholdClientTests/testDinnerQuestionAsksAboutOnlyTheSelectedDinnerAndRecipient",
       "HouseholdClientTests.HouseholdClientTests/testDurableRetryPreservesExactEnvelopeAndRejectsChangedKey",
       "HouseholdClientTests.HouseholdClientTests/testEnrollmentResumesSameDeviceAfterClientRecreation",
       "HouseholdClientTests.HouseholdClientTests/testFallbackFreeCatalogWithdrawAndPaidNamedSeatGateAcrossRelaunch",
@@ -400,6 +408,7 @@
       "HouseholdClientTests.HouseholdClientTests/testPreviewUsesReviewedBaseAndDecisionRetryKeepsExactBytes",
       "HouseholdClientTests.HouseholdClientTests/testPurchaseMatchRequiresTheReviewedPlacedLineAndCurrentAuthorityEvenAfterClose",
       "HouseholdClientTests.HouseholdClientTests/testPurchaseRetryValidatesDeviceScopeCapabilityAndExactReceipt",
+      "HouseholdClientTests.HouseholdClientTests/testQuestionRecipientRejectsUnrequestedGroceryChoicesAndUnrelatedAnswers",
       "HouseholdClientTests.HouseholdClientTests/testReadableHistoryShopDiscoveryUsesContributorSessionAndValidatesSeparateCursor",
       "HouseholdClientTests.HouseholdClientTests/testRejectsInsecureOrPrivilegedAuthConfiguration",
       "HouseholdClientTests.HouseholdClientTests/testRequestingEmailCodeDoesNotSignIn",
@@ -499,6 +508,7 @@
       "LocalStoreTests.ComparisonStoreTests/testUnknownUnversionedSchemaRejectedWithoutChangingFile",
       "LocalStoreTests.ComparisonStoreTests/testUnsupportedVersionOneEnvelopeRejectsMigrationWithoutRewriting",
       "LocalStoreTests.ComparisonStoreTests/testVersionOneMigrationPreservesWorkspaceHistoryAndRetry",
+      "LocalStoreTests.CookingNoteStorageTests/testReopensPrivateNotesWithoutSessionAndRejectsInvalidAndConcurrentReplacements",
       "LocalStoreTests.LedgerStoreTests/testBrokenHeadIsRejectedWithoutRewriting",
       "LocalStoreTests.LedgerStoreTests/testChangedErasureIntentAndStaleRevisionLeaveWorkspaceIntact",
       "LocalStoreTests.LedgerStoreTests/testClosedStoreFailsExplicitlyAndDoubleCloseIsSafe",

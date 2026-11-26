@@ -306,6 +306,75 @@ import XCTest
         element.tap()
     }
 
+    func testPackageCueKeyboardDoneReturnsToSaveAndInStoreRow() {
+        continueAfterFailure = false
+        app.launchArguments = ["--ui-testing", "--staple-recall-fixture", "--package-row-photo-fixture",
+                               "--reset-test-workspace", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        let inStore = app.buttons["ledgerInStore"]
+        XCTAssertTrue(inStore.waitForExistence(timeout: 15)); show(inStore); inStore.tap()
+        let detail = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "tripDetails-")).firstMatch
+        show(detail)
+        let rowID = detail.identifier.replacingOccurrences(of: "tripDetails-", with: "")
+        detail.tap()
+        let references = app.buttons["ledger.scanReferences"]; show(references); references.tap()
+        let edit = app.buttons["privatePackagePhoto.edit"]; show(edit); edit.tap()
+        let cue = app.textFields["privatePackagePhoto.cue"]; show(cue); cue.tap(); cue.typeText("Blue lid")
+        let dismissKeyboard = app.buttons["privatePackagePhoto.keyboardDone"]
+        XCTAssertTrue(dismissKeyboard.waitForExistence(timeout: 5))
+        XCTAssertTrue(dismissKeyboard.isHittable); dismissKeyboard.tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+        let save = app.buttons["privatePackagePhoto.save"]; show(save)
+        XCTAssertGreaterThanOrEqual(save.frame.height, 44); save.tap()
+        let saved = app.staticTexts["Blue lid"]
+        XCTAssertTrue(saved.waitForExistence(timeout: 6))
+        app.navigationBars["Source references"].buttons.firstMatch.tap()
+        app.navigationBars["Item details"].buttons["Done"].tap()
+        let check = app.buttons["inStoreCheck-" + rowID]; show(check)
+        XCTAssertTrue((check.value as? String)?.contains("Blue lid") == true)
+    }
+
+    func testSpanishTripReasonAndPackedJugStaySeparateAcrossRelaunch() {
+        continueAfterFailure = false
+        let args = ["--ui-testing", "--staple-recall-fixture", "--trip-reminders-fixture",
+                    "-AppleLanguages", "(es-MX)", "-AppleLocale", "es_MX"]
+        app.launchArguments = args + ["--reset-test-workspace"]
+        app.launch()
+        XCTAssertTrue(app.buttons["ledgerListOptions"].waitForExistence(timeout: 25))
+        let inspect = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "ledgerInspect-")).firstMatch
+        tapTrip(inspect)
+        tapTrip(app.buttons["tripReminders.edit"])
+        let reason = app.buttons["tripReminders.mainReason"]
+        tapTrip(reason)
+        XCTAssertTrue(reason.wait(for: \.label, toEqual: "Quitar como motivo principal", timeout: 8))
+        let jug = app.buttons["tripReminders.emptyJug"]
+        tapTrip(jug)
+        XCTAssertTrue(jug.wait(for: \.label, toEqual: "Quitar el recordatorio del garrafón", timeout: 8))
+        tapTrip(app.buttons["tripReminders.closeEditor"])
+        app.terminate()
+        app.launchArguments = args
+        app.launch()
+        XCTAssertTrue(app.buttons["ledgerListOptions"].waitForExistence(timeout: 25))
+        tapTrip(app.buttons["tripReminders.departure"])
+        let pack = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "tripReminders.pack-")).firstMatch
+        tapTrip(pack)
+        let packed = NSPredicate(format: "label CONTAINS %@", "Ya lo llevo")
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: packed, object: pack)], timeout: 8), .completed)
+        tapTrip(app.buttons["tripReminders.closeDeparture"])
+        tapTrip(app.buttons["ledgerInStore"])
+        XCTAssertTrue(packed.evaluate(with: pack))
+        let finish = app.buttons["tripReminders.finish"]
+        tapTrip(finish)
+        XCTAssertTrue(app.alerts.staticTexts["Agua sigue en tu lista."].waitForExistence(timeout: 5))
+        app.alerts.buttons["Dejar en la lista y terminar"].tap()
+        XCTAssertTrue(app.buttons["ledgerInStore"].waitForExistence(timeout: 8))
+        tapTrip(app.buttons["ledgerInStore"])
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "inStoreCheck-")).firstMatch.exists)
+        tapTrip(finish)
+        XCTAssertTrue(app.buttons["ledgerInStore"].waitForExistence(timeout: 8))
+        XCTAssertFalse(app.alerts.firstMatch.exists)
+    }
+
     private func waitForBudgetSubtotal(_ text: String) {
         let expected = NSPredicate(format: "label CONTAINS %@", text)
         let result = XCTNSPredicateExpectation(predicate: expected, object: app.staticTexts["inStoreSubtotal"])

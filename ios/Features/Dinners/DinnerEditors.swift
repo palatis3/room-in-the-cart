@@ -545,6 +545,14 @@ struct DinnerLibraryView: View {
                             if !isFreeReusable {
                                 Button(dinnerText("Use as Free reusable dinner")) { Task { _ = await model.selectFree(dinner.id) } }
                             }
+                            if let liveLedger, identity != nil, isFreeReusable || model.paid {
+                                NavigationLink(recordsText("Cook this recipe")) {
+                                    ReusableDinnerCookingEntry(ledger: liveLedger, recipe: dinner.template, acceptedID: dinner.id) {
+                                        model.store === liveLedger && model.basketPrepAccess() &&
+                                            (model.state.freeReusableDinnerID == dinner.id || model.paid)
+                                    }
+                                }
+                            }
                             if identity != nil {
                                 SavedDinnerHandoffLink(recipe: dinner.template)
                                     .disabled(!model.paid && !isFreeReusable)

@@ -1,4 +1,5 @@
 import {readSharedWeekCosts} from './shared-week-costs.js';
+import {adultChecksRoute} from './adult-checks.js';
 import {savedWeekRoute} from './saved-week-changes.js';
 import {readRepeatWeek,startRepeatWeek,stopRepeatWeek,repeatWeekStart,repeatWeekStop} from './shared-repeat-week.js';
 import type {ClosedReview} from './closed-review.js';
@@ -218,7 +219,7 @@ export function createHTTPServer(options:HTTPOptions) {
         send(200,result.session);return;
       }
       if(url.pathname==='/v1/session'&&session) {
-        if(method==='GET'){send(200,await repository.authorized(session.householdId,auth,async ctx=>({authenticated:true,...await repository.bootstrap(ctx,req.headers['x-shared-content-safety']==='1'),replayWindow:await repository.window(ctx),csrf:session!.csrf})));return;}
+        if(method==='GET'){send(200,await repository.authorized(session.householdId,auth,async ctx=>({authenticated:true,...await repository.bootstrap(ctx,req.headers['x-shared-content-safety']==='1',options.billing),replayWindow:await repository.window(ctx),csrf:session!.csrf})));return;}
         if(method==='DELETE'){let result:unknown=await repository.authorized(session.householdId,auth,ctx=>repository.logout(ctx));if(browserCookie&&browserIdentity&&options.browserAuth)result=await options.browserAuth.logout(browserCookie,browserIdentity.csrf);res.setHeader('Set-Cookie',[clearScope,...(browserCookie?[setAuthCookie('',0)]:[])]);send(200,result);return;}
       }
       if(url.pathname.startsWith('/v1/privacy/')){
@@ -512,7 +513,7 @@ export function createHTTPServer(options:HTTPOptions) {
           if (cursor) uuid.parse(cursor);
           return history.readableShops(ctx, cursor);
         }
-        if(path==='/bootstrap'&&method==='GET')return repository.bootstrap(ctx,req.headers['x-shared-content-safety']==='1');
+        if(path==='/bootstrap'&&method==='GET')return repository.bootstrap(ctx,req.headers['x-shared-content-safety']==='1',options.billing);
         if(path==='/replay-windows'&&method==='POST'){z.object({}).strict().parse(payload);return repository.window(ctx);}
         if(path==='/requests/mine'&&method==='GET') {
           // A browsing context can switch accounts between pages. Bind newer clients'
@@ -626,6 +627,8 @@ export function createHTTPServer(options:HTTPOptions) {
             return readDelivery(ctx,shop,cursor===null?null:uuid.parse(cursor));
           }
           if(tail==='/shopper-assignment'&&method==='GET')return repository.shopperAssignment(ctx,shopId);
+          if(tail==='/adult-checks' && (method==='GET' || method==='POST'))
+            return adultChecksRoute(repository,options.billing,ctx,shopId.toLowerCase(),method,payload);
           if(tail==='/meal-plan/ideas'&&method==='GET')return mealIdeas.read(ctx,shopId);
           if(tail==='/meal-plan/ideas'&&method==='POST')return mealIdeas.write(ctx,shopId,sharedIdeaWriteSchema.parse(payload));
           if(tail==='/meal-plan/changes'&&method==='GET')return mealChanges.read(ctx,shopId);

@@ -4,6 +4,7 @@ public struct AdultShopRequestSession: Equatable, Sendable {
     public let device: HouseholdDeviceSession
     public let shopID: UUID
     let generation: UUID
+    let adultChecks: Bool
     let lastCall: Bool
     let reference: Bool
     let substitutions: Bool
@@ -93,7 +94,7 @@ extension HouseholdService {
               bootstrap.shopId.flatMap(UUID.init(uuidString:)).map({ $0 == shopID }) ?? true, ["organizer","shopper","contributor"].contains(bootstrap.role),
               UUID(uuidString: bootstrap.household.id) == device.householdID,
               UUID(uuidString: bootstrap.memberId) == device.memberID else { throw ClientError.accessEnded }
-        return .init(device: device, shopID: shopID, generation: generation, lastCall: bootstrap.capabilities.contains("adult_last_call"),
+        return .init(device: device, shopID: shopID, generation: generation, adultChecks: bootstrap.capabilities.contains("adult_checks"), lastCall: bootstrap.capabilities.contains("adult_last_call"),
                      reference: bootstrap.capabilities.contains("adult_product_reference"),
                      substitutions: bootstrap.capabilities.contains("trip_substitutions"), picking: bootstrap.capabilities.contains("shared_picking"),
                      shopper: bootstrap.role == "shopper",

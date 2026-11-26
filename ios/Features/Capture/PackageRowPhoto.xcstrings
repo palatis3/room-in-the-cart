@@ -1,0 +1,166 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Could not update this photo. Reopen the reference and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not update this photo. Reopen the reference and try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo actualizar la foto. Abre la referencia e inténtalo de nuevo."
+          }
+        }
+      }
+    },
+    "Distinguishing detail": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Distinguishing detail"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detalle para reconocerlo"
+          }
+        }
+      }
+    },
+    "Edit package cue": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit package cue"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar el detalle del empaque"
+          }
+        }
+      }
+    },
+    "Hide photo from my in-store list": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide photo from my in-store list"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ocultar la foto en mi lista al comprar"
+          }
+        }
+      }
+    },
+    "Package cue": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Package cue"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detalle del empaque"
+          }
+        }
+      }
+    },
+    "Package photos and barcode references": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Package photos and barcode references"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotos del empaque y referencias de códigos de barras"
+          }
+        }
+      }
+    },
+    "Save photo and cue": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save photo and cue"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar foto y detalle"
+          }
+        }
+      }
+    },
+    "Show photo on my in-store list": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show photo on my in-store list"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar la foto en mi lista al comprar"
+          }
+        }
+      }
+    },
+    "Shown on my in-store list": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shown on my in-store list"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visible en mi lista al comprar"
+          }
+        }
+      }
+    },
+    "Use a short detail, such as blue cap or unsweetened.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use a short detail, such as blue cap or unsweetened."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe un detalle breve, como tapa azul o sin azúcar."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

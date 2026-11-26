@@ -7,6 +7,9 @@ import UserNotifications
 @MainActor struct CookingSessionContext {
     let key: CookingSessionKey
     let authorize: () -> Bool
+    var allowStepNotes: Bool = true
+    var sourceNoteKey: CookingSessionKey?
+    var noteKey: CookingSessionKey { sourceNoteKey ?? key }
 }
 
 @MainActor enum CookingSessionResources {
@@ -64,6 +67,8 @@ import UserNotifications
 
 @MainActor final class CookingSessionModel: ObservableObject {
     @Published private(set) var session: CookingSession?
+    @Published private(set) var stepNotes: [CookingStepNote] = []
+    @Published private(set) var notesLoaded = false
     @Published private(set) var ready = false
     @Published var message: String?
     let context: CookingSessionContext
@@ -92,12 +97,43 @@ import UserNotifications
         do {
             session = try store.load(context.key, stepCount: count)
             ready = true
+            refreshNotes()
         } catch {
-            ready = false; session = nil
+            ready = false; session = nil; notesLoaded = false; stepNotes = []
             message = recordsText("Could not reopen this cooking session. Try again.")
         }
     }
-    func retire() { ready = false; session = nil; message = nil }
+    var permitsStepNotes: Bool { ready && notesLoaded && context.allowStepNotes && context.authorize() }
+
+    private func refreshNotes() {
+        notesLoaded = false; stepNotes = []
+        guard context.allowStepNotes, context.authorize() else { return }
+        do { stepNotes = try store.stepNotes(for: context.noteKey); notesLoaded = true }
+        catch { message = cookCompletionText("Your private notes could not be opened.") }
+    }
+
+    func currentStepNote(_ note: CookingStepNote) -> CookingStepNote? {
+        guard permitsStepNotes else { return nil }
+        refreshNotes()
+        return stepNotes.first { $0 == note }
+    }
+
+    @discardableResult func setStepNote(_ previous: CookingStepNote?, with next: CookingStepNote?) -> Bool {
+        guard permitsStepNotes else { return false }
+        do {
+            try store.replaceStepNote(previous, with: next, for: context.noteKey)
+            refreshNotes()
+            guard notesLoaded else { return false }
+            message = nil
+            return true
+        } catch {
+            refreshNotes()
+            message = cookCompletionText("The note changed or could not be saved. Reopen it to review your edit.")
+            return false
+        }
+    }
+
+    func retire() { ready = false; session = nil; stepNotes = []; notesLoaded = false; message = nil }
     @discardableResult private func edit(_ change: (inout CookingSession) throws -> Void) -> Bool {
         guard ready, context.authorize() else { retire(); return false }
         do {

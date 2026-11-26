@@ -20,6 +20,60 @@ import CoreDomain
         return CookingSessionStore(directory: directory)
     }
 
+    func testPrivateStepNoteFollowsExactStepAndNeedsExplicitReattachmentAfterRevision() throws {
+        let disk = store(), original = try key(revision: "first"), revised = try key(revision: "second")
+        let first = CookingStepNote(revision: original.revision, step: 1, instruction: "Fold", text: "  Half the lime  ")
+        try disk.replaceStepNote(nil, with: first, for: original)
+        XCTAssertEqual(try disk.stepNotes(for: revised), [first])
+        XCTAssertEqual(first.text, "Half the lime")
+        XCTAssertTrue(first.belongs(to: original, step: 1, instruction: "Fold"))
+        XCTAssertFalse(first.belongs(to: original, step: 0, instruction: "Fold"))
+        XCTAssertFalse(first.belongs(to: revised, step: 1, instruction: "Fold"))
+        XCTAssertFalse(first.belongs(to: original, step: 1, instruction: "Chill"))
+        XCTAssertTrue(try disk.stepNotes(for: key(actor: UUID())).isEmpty)
+        XCTAssertTrue(try disk.stepNotes(for: key(source: UUID())).isEmpty)
+        XCTAssertTrue(try disk.stepNotes(for: key(kind: .dinner)).isEmpty)
+        let moved = CookingStepNote(id: first.id, revision: revised.revision, step: 0, instruction: "Mix", text: first.text)
+        try disk.replaceStepNote(first, with: moved, for: revised)
+        XCTAssertThrowsError(try disk.replaceStepNote(first, with: nil, for: original))
+        let dupe = CookingStepNote(revision: revised.revision, step: 0, instruction: "Mix", text: "Other scene")
+        XCTAssertThrowsError(try disk.replaceStepNote(nil, with: dupe, for: revised))
+        let hidden = CookingStepNote(id: moved.id, revision: moved.revision, step: moved.step, instruction: moved.instruction,
+                                     text: moved.text, hidden: true)
+        try disk.replaceStepNote(moved, with: hidden, for: revised)
+        XCTAssertTrue(try XCTUnwrap(disk.stepNotes(for: revised).first).hidden)
+        try disk.replaceStepNote(hidden, with: nil, for: revised)
+        XCTAssertTrue(try disk.stepNotes(for: original).isEmpty)
+    }
+
+    func testReusableAndChosenDinnerShareOnlyNotesWhileEndingAndErasureRespectOwner() throws {
+        let disk = store(), reusable = try key(kind: .reusableDinner), occurrence = try key(kind: .dinner)
+        var allowed = true
+        let model = CookingSessionModel(context: .init(key: occurrence, authorize: { allowed }, sourceNoteKey: reusable),
+            count: 2, store: disk, schedule: { _, _, _ in false }, removeAlerts: { _ in })
+        model.load()
+        let note = CookingStepNote(revision: reusable.revision, step: 1, instruction: "Taste", text: "Try half")
+        XCTAssertTrue(model.setStepNote(nil, with: note))
+        model.choose(1)
+        XCTAssertTrue(model.end())
+        model.load()
+        XCTAssertEqual(try disk.stepNotes(for: reusable), [note])
+        XCTAssertNil(try disk.load(occurrence, stepCount: 2))
+        XCTAssertTrue(try disk.stepNotes(for: occurrence).isEmpty)
+        allowed = false
+        XCTAssertFalse(model.setStepNote(note, with: nil))
+        XCTAssertNil(model.currentStepNote(note))
+        model.retire()
+        XCTAssertTrue(model.stepNotes.isEmpty)
+        let other = try key(), otherNote = CookingStepNote(revision: other.revision, step: 0, instruction: "Taste", text: "Private")
+        try disk.replaceStepNote(nil, with: otherNote, for: other)
+        _ = try disk.eraseUnretainedRecipes(retaining: [])
+        XCTAssertTrue(try disk.stepNotes(for: other).isEmpty)
+        XCTAssertEqual(try disk.stepNotes(for: reusable), [note])
+        _ = try disk.erase(workspace: workspace)
+        XCTAssertTrue(try disk.stepNotes(for: reusable).isEmpty)
+    }
+
     func testTwoTimersReopenPausedAndExpiredAndDeniedAlertRetainsDeadline() async throws {
         let disk = store(), source = try key(), origin = start
         var now = origin

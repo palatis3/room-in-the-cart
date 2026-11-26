@@ -126,6 +126,7 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                                     .buttonStyle(PrimaryAction()).accessibilityIdentifier("dinner.planSaved")
                                 recipeEditorButton(library, recipe: first, featured: true)
                             }.padding(.vertical, 6)
+                            reusableCookLink(library, recipe: first)
                             startPickupButton
                         }
                         Section {
@@ -166,7 +167,8 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                     Section {
                         DinnerTonightPlan(model: model, shop: shop)
                         if privateRecipeLibrary != nil { pasteRecipeButton.disabled(!model.editable) }
-                        if let recipe = privateRecipeLibrary?.workspace.mealTemplates.first {
+                        if let library = privateRecipeLibrary, let recipe = library.workspace.mealTemplates.first {
+                            reusableCookLink(library, recipe: recipe)
                             Button { handoff = recipe } label: {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(dinnerText("Plan a saved dinner")).font(.headline)
@@ -244,6 +246,14 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
             }
         }
         .sheet(item: $handoff) { recipe in NavigationStack { SavedDinnerHandoffView(recipe: recipe) } }
+    }
+
+    private func reusableCookLink(_ ledger: LedgerModel, recipe: MealTemplate) -> some View {
+        NavigationLink(recordsText("Cook this recipe")) {
+            ReusableDinnerCookingEntry(ledger: ledger, recipe: recipe) {
+                model.store === ledger && model.basketPrepAccess() && ledger.workspace.mealTemplates.first?.id == recipe.id
+            }
+        }.accessibilityIdentifier("cooking.openReusableDinner")
     }
 
     private var pasteRecipeButton: some View {

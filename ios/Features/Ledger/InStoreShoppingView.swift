@@ -115,6 +115,27 @@ struct InStoreShoppingView: View {
     @State private var cue: GroceryCheckCue?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scene
+    @EnvironmentObject private var photoAccess: WorkspaceAccess
+    @EnvironmentObject private var photoHousehold: HouseholdModel
+    @State private var packagePhotos: [UUID: PackageRowPhoto] = [:]
+    @State private var loadedPhotoScope: PhotoScope?
+    @State private var photoRefresh = UUID()
+    private struct PhotoScope: Equatable {
+        let owner: PackageRowPhoto.Owner
+        let workspace: UUID
+        let shop: UUID
+        let generation: UUID
+    }
+    private struct PhotoRequest: Equatable {
+        let scope: PhotoScope?
+        let refresh: UUID
+    }
+    private var photoScope: PhotoScope? {
+        guard scene == .active, authorize(), model.shop?.id == shopID, let workspace = model.sourceWorkspaceID,
+              let identity = CapturePrivateIdentity.current(access: photoAccess, household: photoHousehold) else { return nil }
+        return PhotoScope(owner: .init(identity), workspace: workspace, shop: shopID, generation: photoAccess.generation)
+    }
+
     @State private var displayOwner = UUID()
     @State private var editingPrice: ShoppingLine?
     private enum Focus: Hashable { case line(UUID), picked(UUID), subtotal }
@@ -156,7 +177,23 @@ struct InStoreShoppingView: View {
                         .accessibilityIdentifier("tripAddFind")
                     }
                 }
-                ToolbarItem(placement: .confirmationAction) { Button(ledgerText("Done")) { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    TripFinishButton(model: model, shopID: shopID, inspect: { destination = .details($0) }, finish: { dismiss() })
+                }
+            }
+            .task(id: PhotoRequest(scope: photoScope, refresh: photoRefresh)) {
+                let scope = photoScope
+                packagePhotos = [:]; loadedPhotoScope = nil
+                guard let scope else { return }
+                let target = CaptureTarget(workspaceID: scope.workspace, containerID: scope.shop, objectID: scope.shop,
+                                           revision: 0, kind: .packageReference)
+                guard let photos = try? await CaptureMediaStore.shared.packagePhotos(target: target, owner: scope.owner,
+                    authorize: { photoScope == scope }), !Task.isCancelled, photoScope == scope else { return }
+                packagePhotos = Dictionary(photos.map { ($0.target.objectID, $0) }, uniquingKeysWith: { first, _ in first })
+                loadedPhotoScope = scope
+            }
+            .onReceive(NotificationCenter.default.publisher(for: PackageRowPhoto.changed)) { _ in
+                packagePhotos = [:]; loadedPhotoScope = nil; photoRefresh = UUID()
             }
             .modifier(InStoreDisplayPreference(trip: shopID, owner: displayOwner, available: model.shop?.id == shopID && authorize()))
     }
@@ -195,6 +232,7 @@ struct InStoreShoppingView: View {
                 DinnerPantryReviewSection(shopID: shop.id, reviews: dinner.pending)
                 if model.error != nil || model.hasPendingSave { LedgerSaveStatus(model: model) }
                 listAndStop(shop)
+                TripDepartureSection(model: model, shop: shop)
                 ForEach(groups) { group in
                     let rows = group.lines.filter { available($0, shop: shop) }
                     if !rows.isEmpty {
@@ -384,7 +422,8 @@ struct InStoreShoppingView: View {
                     .frame(width: 44, height: 44).contentShape(Rectangle())
             }
             .accessibilityLabel(ledgerFormat("Check %@", line.name))
-            .accessibilityValue([amount ?? "", showDepartment ? department : "", line.notes, exclusions ?? ""].filter { !$0.isEmpty }.joined(separator: ", "))
+            .accessibilityValue([amount ?? "", showDepartment ? department : "", line.notes, exclusions ?? "",
+                                 loadedPhotoScope == photoScope ? packagePhotos[line.id]?.cue ?? "" : ""].filter { !$0.isEmpty }.joined(separator: ", "))
             .accessibilityFocused($focus, equals: .line(line.id))
             .accessibilityIdentifier("inStoreCheck-\(line.id)")
             Button { destination = .details(line.id) } label: {
@@ -397,6 +436,10 @@ struct InStoreShoppingView: View {
                         if let coupon = line.pinnedCoupon { InStoreCouponPickLabel(coupon: coupon, line: line) }
                         if !line.notes.isEmpty { Text(verbatim: line.notes) }
                         if let exclusions { Text(exclusions) }
+                        TripRequestSummary(shop: shop, line: line)
+                        if let photo = packagePhotos[line.id], loadedPhotoScope == photoScope {
+                            PackagePhotoRowLabel(photo: photo)
+                        }
                     }.foregroundStyle(Theme.ink)
                     Spacer(minLength: 4)
                     Image(systemName: "info.circle").accessibilityHidden(true)
@@ -454,6 +497,7 @@ struct InStoreShoppingView: View {
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(line.name).font(.headline).foregroundStyle(Theme.ink)
+                        TripRequestSummary(shop: shop, line: line)
                         if let pick = line.packagePick {
                             Text(pick.packages.shoppingLabel).foregroundStyle(Theme.secondary)
                         } else if let picked = try? shop.pickedQuantity(forLineID: line.id) {

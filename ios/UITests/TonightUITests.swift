@@ -60,6 +60,9 @@ import XCTest
         XCTAssertEqual(app.buttons["dinner.saveFirstRecipe"].label, "Replace Free reusable dinner")
         XCTAssertTrue(saved.exists)
         XCTAssertTrue(app.buttons["dinnerStartPickup"].exists)
+        tap(app.buttons["cooking.openReusableDinner"])
+        XCTAssertTrue(app.buttons["cooking.start"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.textFields["tonight.recipe.title"].exists)
     }
 
     func testSpanishLargeTypeKeyboardAdvancesFromTitleThroughIngredientAmount() {
