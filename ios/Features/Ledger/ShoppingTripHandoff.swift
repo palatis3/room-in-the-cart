@@ -80,6 +80,7 @@ struct TripHandoffEntry: View {
                         }
                     }
                 } else {
+                    NavigationLink(tripText("Split by department")) { DepartmentHandoffView(model: model, shopID: shopID) }
                     Section(tripText("Select outstanding items")) {
                         if rows.isEmpty { Text(shoppingText("No items left to pick.")) }
                         ForEach(rows) { row in
@@ -175,4 +176,121 @@ struct TripNextStoreEntry: View {
         }.navigationTitle(tripText("Next store"))
         .keyboardDoneAction(visible: editing, title: ledgerText("Done"), identifier: "tripStoreKeyboardDone") { editing = false }
     }
+}
+
+/// A local, one-time snapshot of reviewed rows. No connected permissions or claims are created.
+struct DepartmentChecklist: Equatable, Identifiable {
+    let department: String
+    let rows: [TripHandoffRow]
+    var id: String { department }
+    var title: String { department.isEmpty ? ledgerText("No aisle assigned") : department }
+
+    static func outstanding(in shop: ShoppingLedger, layout: LedgerListLayout, excluding: Set<UUID>) -> [Self] {
+        let rows = Dictionary(uniqueKeysWithValues: TripHandoffRow.outstanding(in: shop).map { ($0.id, $0) })
+        var grouped: [String: [TripHandoffRow]] = [:]
+        var order: [String] = []
+        for line in layout.groups(shop: shop, excluding: excluding).flatMap(\.lines) {
+            guard let row = rows[line.id], shop.outcomeAtCurrentStop(line) == nil,
+                  line.eligibleForStop(named: shop.currentStop.name) else { continue }
+            let department = layout.department(for: line, in: shop).trimmingCharacters(in: .whitespacesAndNewlines)
+            if grouped[department] == nil { order.append(department) }
+            grouped[department, default: []].append(row)
+        }
+        return order.map { Self(department: $0, rows: grouped[$0] ?? []) }
+    }
+
+    static func copy(for selected: Set<UUID>, from sections: [Self], heading: String, date: Date) -> String? {
+        var lines: [String] = []
+        for section in sections {
+            let rows = section.rows.filter { selected.contains($0.id) }
+            if !rows.isEmpty {
+                lines.append(section.title)
+                lines += rows.map { $0.text(includePack: false) }
+            }
+        }
+        guard !lines.isEmpty else { return nil }
+        return ([heading, date.formatted(date: .long, time: .shortened)] + lines).joined(separator: "\n")
+    }
+}
+
+private struct DepartmentHandoffView: View {
+    @ObservedObject var model: LedgerModel
+    let shopID: UUID
+    @Environment(\.shoppingListAuthorization) private var authorize
+    @State private var assignments: [UUID: Int] = [:]
+    @State private var preview: DatedPair?
+    @State private var sharing: Int?
+    private var pantry = ShoppingDinnerPantry()
+
+    init(model: LedgerModel, shopID: UUID) {
+        self.model = model
+        self.shopID = shopID
+    }
+
+    private struct DatedPair {
+        let revision: UUID
+        let sections: [DepartmentChecklist]
+        let first: String
+        let second: String
+    }
+    private func label(_ slot: Int) -> String {
+        slot == 1 ? tripText("First shopper") : tripText("Second shopper")
+    }
+
+    var body: some View {
+        WorkingForm {
+            if authorize(), let shop = model.shop, shop.id == shopID {
+                let status = pantry.status(in: shop, ledger: model)
+                let sections = DepartmentChecklist.outstanding(in: shop, layout: model.workspace.listLayout,
+                    excluding: status.covered.union(status.pending.flatMap { $0.lines.map(\.id) }))
+                Group {
+                    if let preview, preview.revision == shop.revisionID, preview.sections == sections {
+                        ForEach(1...2, id: \.self) { slot in
+                            Section(label(slot)) {
+                                Text(verbatim: slot == 1 ? preview.first : preview.second)
+                                Button(tripText("Choose how to send")) { sharing = slot }
+                            }
+                        }
+                        Text(tripText("Each copy is dated. Later changes require a new selection."))
+                        Button(tripText("Edit selection")) { self.preview = nil }
+                    } else {
+                        Text(verbatim: shop.title).font(.headline)
+                        Text(tripText("Choose a shopper for each department you want to send. Review both copies before sharing."))
+                        if sections.isEmpty { Text(shoppingText("No items left to pick.")) }
+                        ForEach(sections) { section in
+                            Section(section.title) {
+                                Picker(tripText("Shopper"), selection: Binding(get: {
+                                    section.rows.first.flatMap { assignments[$0.id] } ?? 0
+                                }, set: { slot in
+                                    for row in section.rows { assignments[row.id] = slot == 0 ? nil : slot }
+                                })) {
+                                    Text(tripText("Leave out")).tag(0)
+                                    Text(label(1)).tag(1)
+                                    Text(label(2)).tag(2)
+                                }
+                                ForEach(section.rows) { row in Text(verbatim: row.text(includePack: false)) }
+                            }
+                        }
+                        Button(tripText("Preview both checklists")) {
+                            let date = Date()
+                            guard authorize(), let a = DepartmentChecklist.copy(for: ids(1), from: sections, heading: label(1), date: date),
+                                  let b = DepartmentChecklist.copy(for: ids(2), from: sections, heading: label(2), date: date) else { return }
+                            preview = DatedPair(revision: shop.revisionID, sections: sections, first: a, second: b)
+                        }.disabled(ids(1).isEmpty || ids(2).isEmpty)
+                    }
+                }
+                .onChange(of: sections) { _, _ in reset() }
+                .onChange(of: shop.revisionID) { _, _ in reset() }
+                .sheet(isPresented: Binding(get: { sharing != nil }, set: { if !$0 { sharing = nil } })) {
+                    if authorize(), model.shop?.id == shopID, let slot = sharing, let preview,
+                       preview.sections == sections, preview.revision == model.shop?.revisionID {
+                        PickupActivitySheet(text: slot == 1 ? preview.first : preview.second) { _, _ in sharing = nil }
+                    }
+                }
+            }
+        }.navigationTitle(tripText("Split by department"))
+    }
+
+    private func ids(_ slot: Int) -> Set<UUID> { Set(assignments.compactMap { $0.value == slot ? $0.key : nil }) }
+    private func reset() { assignments = [:]; preview = nil; sharing = nil }
 }
