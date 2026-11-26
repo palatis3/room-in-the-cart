@@ -65,8 +65,7 @@ import UIKit
         XCTAssertTrue(element("openPickupList").label.contains("Start pickup"))
         tap(shortcut)
         let doneTyping = app.buttons["oneChange.done"]
-        for fields in [[("change", "Defer coffee, keep salsa"), ("branch", "North Market West"), ("source", "Retailer app")],
-                       [("before", "40.90"), ("after", "36.30"), ("cap", "38")]] {
+        func enter(_ fields: [(String, String)]) {
             for (id, value) in fields {
                 let field = app.textFields["oneChange." + id]
                 revealContent(field, above: doneTyping)
@@ -77,10 +76,14 @@ import UIKit
             }
             XCTAssertTrue(doneTyping.isHittable)
             doneTyping.tap()
-            XCTAssertTrue(doneTyping.waitForNonExistence(timeout: 5))
+            XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "oneChange.done", timeout: 5))
         }
+        enter([("change", "Defer coffee, keep salsa"), ("branch", "North Market West"), ("source", "Retailer app")])
+        enter([("before", "40.90")])
         enableSwitch("oneChange.beforeIncludesCharges")
+        enter([("after", "36.30")])
         enableSwitch("oneChange.afterIncludesCharges")
+        enter([("cap", "38")])
         enableSwitch("oneChange.samePickup")
         tap(element("oneChange.review"))
 
