@@ -157,7 +157,7 @@ private struct HelpArticleView: View {
                     paragraph(helpText("Use your private shopping list, plan dinners by hand, save one dinner to use again and export your records. You buy groceries from the retailer."))
                 }
                 Section(mtr("What Household adds")) {
-                    paragraph(mtr("Plan repeat weeks and compare dinner combinations using your own prices. Up to two named adults can plan."))
+                    paragraph(mtr("Save dinner rotations and compare what two plans put on your shopping list. Household includes up to two named adult planners."))
                     MembershipHelpAccess()
                 }
             }

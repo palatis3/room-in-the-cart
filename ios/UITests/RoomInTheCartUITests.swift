@@ -687,7 +687,9 @@ final class RoomInTheCartUITests: XCTestCase {
         tap(app.buttons["Preview message"])
         let preview = app.staticTexts["tripShareBody"]
         XCTAssertTrue(preview.waitForExistence(timeout: 8))
+        XCTAssertTrue(preview.label.hasPrefix("Shopping list copy · "))
         XCTAssertTrue(preview.label.contains(name))
+        XCTAssertTrue(app.staticTexts["The recipient can read this copy without the app. Later changes stay on your list."].exists)
         XCTAssertFalse(preview.label.contains("Quantity unresolved"))
         tap(app.buttons["tripShare.close"])
         XCTAssertTrue(preview.waitForNonExistence(timeout: 8))
@@ -1167,6 +1169,22 @@ final class RoomInTheCartUITests: XCTestCase {
         revealFullyInComparison(element("comparisonSourceNote"))
         XCTAssertFalse(app.buttons["saveComparison"].exists, "Reviewing the same values must keep the saved result")
         assertSavedStatus("Saved on this iPhone")
+    }
+
+    func testCurrencyMenuAcceptsEitherEdgeAtLargestSpanishText() {
+        launch(language: "es", contentSize: .accessibilityExtraExtraExtraLarge)
+        openEmptyComparison()
+        let picker = app.groceryCurrencyPicker("comparison.currency")
+        reveal(picker)
+        XCTAssertEqual(picker.label, "Moneda")
+        XCTAssertEqual(picker.value as? String, "Dólares estadounidenses (USD)")
+        XCTAssertGreaterThanOrEqual(picker.frame.height, 44)
+        picker.coordinate(withNormalizedOffset: CGVector(dx: 0.08, dy: 0.5)).tap()
+        app.selectGroceryCurrency(code: "MXN", label: "Pesos mexicanos (MXN)")
+        XCTAssertEqual(picker.value as? String, "Pesos mexicanos (MXN)")
+        picker.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        app.selectGroceryCurrency(code: "USD", label: "Dólares estadounidenses (USD)")
+        XCTAssertEqual(picker.value as? String, "Dólares estadounidenses (USD)")
     }
 
     func testPesoComparisonReopensInEnglishAfterSpanishUSSelection() {

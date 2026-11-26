@@ -1,6 +1,7 @@
 import SwiftUI
 import StoreKit
 import UIKit
+import CoreDomain
 
 func mtr(_ key: String) -> String { String(localized: String.LocalizationValue(key), table: "Membership") }
 
@@ -52,8 +53,106 @@ struct MembershipBenefits: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(mtr("What Household adds")).font(.title2.bold()).accessibilityAddTraits(.isHeader)
-            Text(mtr("Plan repeat weeks and compare dinner combinations using your own prices. Up to two named adults can plan."))
+            Text(mtr("Save dinner rotations and compare what two plans put on your shopping list. Household includes up to two named adult planners."))
         }
+    }
+}
+
+struct MembershipSampleLink: View {
+    var offer: MembershipOffer? = nil
+    var body: some View {
+        NavigationLink {
+            MembershipDinnerSampleView(presentedOffer: offer)
+        } label: {
+            Label(mtr("Compare two sample dinners"), systemImage: "basket")
+                .frame(minHeight: 44)
+        }
+        .accessibilityIdentifier("membership.sample")
+    }
+}
+
+private struct MembershipDinnerSampleView: View {
+    let presentedOffer: MembershipOffer?
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @State private var catalogOffer: MembershipOffer?
+    @State private var soup = false
+    @State private var currency = Currency.groceryDefault()
+    var body: some View {
+        WorkingForm {
+            Section {
+                Text(mtr("Sample basket for two. Four tortillas are on hand. Keep one for each of tomorrow’s two lunches."))
+                    .fixedSize(horizontal: false, vertical: true)
+                Picker(mtr("Sample grocery currency"), selection: $currency) {
+                    ForEach(Currency.allCases, id: \.self) { Text(verbatim: $0.rawValue).tag($0) }
+                }
+            }
+            Section {
+                if typeSize.isAccessibilitySize { dinnerPicker.pickerStyle(.menu) }
+                else { dinnerPicker.pickerStyle(.segmented) }
+                if let options = try? DinnerBasketSample.compare(currency: currency) {
+                    let basket = soup ? options.soup : options.tacos
+                    VStack(alignment: .leading, spacing: 5) {
+                        resultLine(mtr("Known grocery subtotal"), value: moneyText(basket.result.checkout.total.lowerBound))
+                            .font(.headline).accessibilityIdentifier("membership.sample.subtotal")
+                        resultLine(mtr("Beans"), value: mtr("Price missing"))
+                            .font(.subheadline).foregroundStyle(Theme.secondary)
+                            .accessibilityIdentifier("membership.sample.unpriced")
+                    }
+                    Text(soup ? mtr("Soup uses four tortillas and a carton of broth.") : mtr("Tacos use eight tortillas."))
+                    LabeledContent(mtr("Tortilla packs of four"),
+                        value: String(format: mtr("%lld × %@"), basket.tortillaPacks, moneyText(basket.tortillaPackPrice)))
+                    if let price = basket.brothPrice { LabeledContent(mtr("One carton of broth"), value: moneyText(price)) }
+                    if let difference = try? options.tacos.result.checkout.total.lowerBound.subtracting(options.soup.result.checkout.total.lowerBound) {
+                        Text(String(format: mtr("The soup basket costs %@ less for the priced items. Both baskets still need a price for beans."), moneyText(difference)))
+                    }
+                } else {
+                    Text(mtr("The sample could not be calculated."))
+                }
+            }
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            Group {
+                if let offer = catalogOffer ?? presentedOffer {
+                    Text(String(format: mtr("Household · %@ per year for up to two named adult planners"), offer.displayPrice))
+                } else {
+                    Text(mtr("Household Annual includes up to two named adult planners."))
+                }
+            }
+            .font(.footnote).frame(maxWidth: .infinity).padding().background(.bar)
+            .accessibilityIdentifier("membership.sample.annualTerms")
+        }
+        .task {
+            guard let productID = MembershipConfiguration.fromBundle().productID else { return }
+            catalogOffer = try? await StoreKitMembershipStorefront().load(productID: productID)
+        }
+        .navigationTitle(mtr("Dinner comparison example"))
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var dinnerPicker: some View {
+        Picker(mtr("Dinner"), selection: $soup) {
+            Text(mtr("Tacos")).tag(false)
+            Text(mtr("Tortilla soup")).tag(true)
+        }
+        .accessibilityIdentifier("membership.sample.dinners")
+    }
+
+    private func resultLine(_ label: String, value: String) -> some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(label).fixedSize()
+                Spacer(minLength: 12)
+                Text(value).fixedSize()
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(label)
+                Text(value)
+            }.fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(label)
+        .accessibilityValue(value)
     }
 }
 
@@ -82,6 +181,7 @@ struct MembershipLegalLinks: View {
 struct MembershipView: View {
     @ObservedObject var model: MembershipModel
     @ObservedObject var household: HouseholdModel
+    let returnsToDinnerComparison: Bool
     let onContinuePlanning: () -> Void
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var showingManage = false
@@ -128,7 +228,6 @@ struct MembershipView: View {
                     }
                     Divider()
                     MembershipFreeTools()
-                    if model.presentsAnnualOffer { comparisonExample }
                     householdRoles
                     Divider()
                     MembershipLegalLinks(configuration: model.configuration)
@@ -177,7 +276,7 @@ struct MembershipView: View {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(String(format: mtr("%@ every %@"), offer.displayPrice, offer.localizedPeriod))
             .accessibilityIdentifier("membership.annualPrice")
-            Text(mtr("Plan repeat weeks and compare dinner combinations using your own prices. Up to two named adults can plan."))
+            Text(mtr("Save dinner rotations and compare what two plans put on your shopping list. Household includes up to two named adult planners."))
             VStack(alignment: .leading, spacing: 9) {
                 Text(String(format: mtr("%@ due when you confirm with Apple."), offer.displayPrice)).font(.headline)
                 Text(String(format: mtr("Renews at %@ each year. Apple may charge you in the 24 hours before renewal. Manage or cancel in Apple subscriptions. Apple shows the final charge."), offer.displayPrice))
@@ -194,6 +293,7 @@ struct MembershipView: View {
                 RoundedRectangle(cornerRadius: 10).strokeBorder(Theme.divider)
                     .accessibilityHidden(true)
             }
+            MembershipSampleLink(offer: offer)
             Button(mtr("Subscribe to Household")) {
                 guard model.presentsAnnualOffer else { return }
                 Task { await model.purchase(fromPresentedOffer: true) }
@@ -209,19 +309,12 @@ struct MembershipView: View {
         } else {
             Text(mtr("Household subscription purchases are unavailable. You can keep using the free planning tools."))
         }
-    }
-
-    private var comparisonExample: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(mtr("Dinner comparison example")).font(.headline).accessibilityAddTraits(.isHeader)
-            Text(String(format: mtr("You entered %@ for rice. Beans still need a price. The comparison shows the rice cost and leaves the full dinner total open."),
-                        Decimal(2).formatted(.currency(code: "USD").presentation(.isoCode))))
-                .foregroundStyle(Theme.secondary)
-        }
+        if offer == nil { MembershipSampleLink() }
     }
 
     private var returnButton: some View {
-        Button(model.hasPaidAccess ? mtr("Continue planning") : mtr("Continue planning for free"), action: onContinuePlanning)
+        let title = model.hasPaidAccess ? mtr("Continue planning") : mtr("Continue planning for free")
+        return Button(returnsToDinnerComparison ? mtr("Return to dinner comparison") : title, action: onContinuePlanning)
             .buttonStyle(MembershipReturnButtonStyle())
             .accessibilityIdentifier(model.hasPaidAccess ? "membership.continue" : "membership.free")
     }

@@ -1,5 +1,6 @@
 import XCTest
 import HouseholdClient
+import DeviceSurfaces
 @testable import RoomInTheCart
 
 private final class ReceiptTestVault: RefreshTokenVault, @unchecked Sendable {
@@ -201,6 +202,68 @@ private final class DeletionProtocol: URLProtocol {
         await account.retryWorkspaceList()
         XCTAssertEqual(workspaceReads, 2)
         duringWorkspaceRead = nil
+    }
+
+    func testWidgetAndSharedTextLosePrivateAccessAfterHouseholdExit() async throws {
+        testingMemberships = true
+        soleGuardian = false
+        let account = try await model()
+        defer { DeletionProtocol.handle = nil }
+        account.keepLocalPrivate = true
+        await account.join(try XCTUnwrap(account.workspaces.first { $0.id == house }))
+
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let cleanup = SQLiteFixtureDirectory(directory, test: self)
+        let ledger = LedgerModel(databaseURL: directory.appendingPathComponent("ledger.sqlite"))
+        let pickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"), launchArguments: [])
+        let suite = "ExitSurfaces." + UUID().uuidString
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let access = WorkspaceAccess(defaults: defaults)
+        let surfaces = DeviceSurfacesComposition(directory: directory, launchArguments: ["--ui-testing"],
+                                                captureRequests: SurfaceCaptureRequests())
+        let widget = try WidgetProjectionFile(directory: directory.appendingPathComponent("TestWidget"))
+        let inbox = try SelectedTextInbox(url: directory.appendingPathComponent("TestInbox/selected-text.sqlite"))
+        cleanup.track(ledger, pickup, surfaces, inbox)
+        await ledger.open()
+        let started = await ledger.startShop(title: "Private grocery marker")
+        XCTAssertTrue(started)
+        await pickup.load()
+        let receipt = try await inbox.stage(operationID: UUID(), originalText: "Private share marker", now: Date())
+        surfaces.bind(ledger: ledger, pickup: pickup, household: account, access: access)
+        let deadline = ContinuousClock.now + .seconds(5)
+        while (try? widget.read().routeHandle) == nil && ContinuousClock.now < deadline {
+            try await Task.sleep(for: .milliseconds(20))
+        }
+        let handle = try XCTUnwrap(try widget.read().routeHandle)
+        let entry = try XCTUnwrap(surfaces.entries.first { $0.id == receipt.operationID })
+        let shop = try XCTUnwrap(ledger.shop?.id)
+        await surfaces.open(handle)
+        guard case .shop(shop) = surfaces.destination else { return XCTFail("Current organizer can open the widget") }
+        let saved = ledger.workspace
+
+        let exit = try XCTUnwrap(account.householdExit)
+        await exit.review(subject: "same-subject")
+        exit.select(try XCTUnwrap(exit.preview?.households.first))
+        exit.choices.organizers[house] = .transfer(successor)
+        exit.choices.shops[.init(household: house, id: self.shop)] = .archiveOrClose
+        let left = await exit.confirm(subject: "same-subject")
+        await account.householdExited(try XCTUnwrap(left))
+        XCTAssertNotNil(account.identity)
+        XCTAssertNil(account.projection)
+        XCTAssertTrue(access.unlocked)
+
+        await surfaces.sourceDidChange()
+        XCTAssertFalse(surfaces.privateAuthorized)
+        XCTAssertTrue(surfaces.entries.isEmpty)
+        XCTAssertNil(try widget.read().routeHandle)
+        await surfaces.open(handle)
+        guard case .unavailable = surfaces.destination else { return XCTFail("A retained widget requires current enrollment") }
+        await surfaces.review(entry, shopID: shop)
+        XCTAssertNil(surfaces.draft)
+        let staged = try await inbox.receipt(entry.id)
+        XCTAssertEqual(staged?.disposition, .pending)
+        XCTAssertEqual(ledger.workspace, saved)
     }
 
     func testLostHouseholdExitRetriesOriginalBytesWithoutADeviceAfterMembershipIsGone() async throws {

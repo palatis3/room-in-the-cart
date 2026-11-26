@@ -76,6 +76,16 @@ import LocalStore
         XCTAssertEqual(rows.first?.reserved.first?.protected, true)
         XCTAssertEqual(rows.first?.unresolved, false)
         let mealRows = try candidates(workspace)
+        try source.approveStaple(lineID: food, purpose: "Lunch", at: now)
+        var approved = workspace
+        approved.shops[0] = source
+        let staple = try XCTUnwrap(approved.priorStaples(for: approved.shops[1].id).first)
+        var choices = try candidates(approved).map(DinnerRepeatChoice.init)
+        let reviewed = try evidence(approved, staples: [staple])
+        choices[0].day = try day(20)
+        XCTAssertEqual(reviewed.firstDinner(using: staple.source, among: choices)?.id, choices[1].id)
+        XCTAssertEqual(reviewed.firstDinner(using: staple.source, among: [choices[0]])?.id, choices[0].id)
+        XCTAssertNil(reviewed.firstDinner(using: staple.source, among: []))
         let selected = mealRows.map(RepeatWeek.Selection.init)
         let needs = try evidence(workspace, canonical: supply).shoppingNeeds(for: selected, candidates: mealRows)
         XCTAssertEqual(needs.count, 1)
@@ -178,7 +188,9 @@ import LocalStore
         var basis = shop.basis; basis.branch = "Different store"
         try workspace.shops[0].updateBasis(basis, at: now)
         let stale = try evidence(workspace).priceChecks.joined()
-        XCTAssertFalse(stale.contains("Reviewed shelf")); XCTAssertTrue(stale.contains("stale"))
+        let expected = String(localized: "%@: previous package evidence is stale or conflicting; review the price again.", table: "DinnerRepeatEvidence")
+        XCTAssertFalse(stale.contains("Reviewed shelf"))
+        XCTAssertEqual(stale, String(format: expected, "Wraps"))
     }
 
     func testRecoveredNeedMapsExactFoodInsteadOfOriginalContributionOrMatchingName() throws {
@@ -193,7 +205,8 @@ import LocalStore
         let recovered = [meal.id: RepeatWeek.Recovery(meal: replacement, template: template)]
         let result = try evidence(workspace, recovered: recovered)
         XCTAssertEqual(result.stock.map(\.id), [foodID]); XCTAssertEqual(result.stock.first?.name, "Replacement rice")
-        XCTAssertTrue(result.priceChecks.first?.contains("confirmed food identity") == true)
+        let expected = String(localized: "%@: no price is linked to the confirmed food identity.", table: "DinnerRepeatEvidence")
+        XCTAssertEqual(result.priceChecks, [String(format: expected, "Replacement rice")])
         let rows = try candidates(workspace, recovered: recovered)
         XCTAssertThrowsError(try DinnerRepeatEvidence.build(candidates: rows, workspace: workspace, workspaceID: workspaceID,
             authorizedShopIDs: Set(workspace.shops.map(\.id)), targetShopID: XCTUnwrap(workspace.selectedShopID),

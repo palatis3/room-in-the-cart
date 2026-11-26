@@ -37,6 +37,7 @@ struct DinnerCookedPortionsView: View {
     @EnvironmentObject private var household: HouseholdModel
     @Environment(\.scenePhase) private var scene
     let id: UUID
+    var suggestedDay: MealDay? = nil
     @State private var date = Date()
     private struct Pending {
         let change: CookedDinnerChange
@@ -123,7 +124,11 @@ struct DinnerCookedPortionsView: View {
         }.privacySensitive()
         .navigationTitle(cookCompletionText("Leftover dinner"))
         .onChange(of: claim?.cookedDinner?.day, initial: true) { _, day in
-            if let day, let saved = day.date { date = saved }
+            if let day, let saved = day.date {
+                if let suggestedDay, suggestedDay.timeZoneIdentifier == day.timeZoneIdentifier,
+                   suggestedDay.iso8601 > day.iso8601, let target = suggestedDay.date { date = target }
+                else { date = saved }
+            }
         }
         .dinnerAccess(model)
         .onChange(of: actor) { _, _ in clearResult() }

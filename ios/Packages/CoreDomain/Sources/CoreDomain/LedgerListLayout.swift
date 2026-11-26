@@ -9,6 +9,7 @@ public struct ShopListLayout: Codable, Equatable, Sendable {
     public var branch = ""
     public var departmentStore: ShopDepartmentSnapshot?
     public var rowDepartments: [String: String]?
+    fileprivate var aislePicks: [String: StoreAislePick]?
     public init() {}
 
     /// Reorder the editable rows while preserving the positions of checked, handled and trashed rows.
@@ -35,10 +36,18 @@ public struct ShopDepartmentSnapshot: Codable, Equatable, Sendable {
     public var rows: [String: String]
 }
 
+private struct StoreAislePick: Codable, Equatable, Sendable {
+    let storeID: UUID
+    let stopID: UUID
+    let aisle: String
+    let checkedAt: Date
+}
+
 public struct DepartmentStore: Codable, Equatable, Sendable, Identifiable {
     public let id: UUID
     public let name: String
     public var products: [String: String]
+    public fileprivate(set) var learnsAisles: Bool? = nil
     public var order: [String]
 }
 
@@ -62,7 +71,7 @@ public struct LedgerListLayout: Codable, Equatable, Sendable {
         shopLayouts[shop.id.uuidString.lowercased()] ?? ShopListLayout()
     }
     private static func branch(_ shop: ShoppingLedger) -> String {
-        shop.basis.branch.trimmingCharacters(in: .whitespacesAndNewlines)
+        shop.currentStop.name.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     /// Full, shopper-reviewed item label. Keep accents, brand, variant and package wording.
@@ -88,6 +97,11 @@ public struct LedgerListLayout: Codable, Equatable, Sendable {
             return snapshot.storeID
         }
         return departmentDirectory?.aliases[branch]
+    }
+
+    public func departmentStore(in shop: ShoppingLedger) -> DepartmentStore? {
+        guard let id = matchedStore(in: shop) else { return nil }
+        return departmentDirectory?.stores[id.uuidString.lowercased()]
     }
 
     /// The shopper explicitly confirms this spelling as a branch alias or creates a separate store.
@@ -116,6 +130,9 @@ public struct LedgerListLayout: Codable, Equatable, Sendable {
         let shopKey = shop.id.uuidString.lowercased()
         var layout = layout(for: shop)
         if let previous = layout.departmentStore, previous.storeID != store.id {
+            if previous.branch == Self.branch(shop) {
+                layout.aislePicks = layout.aislePicks?.filter { $0.value.stopID != shop.currentStop.id }
+            }
             layout.aisleOverride = nil
         }
         let rows = shop.lines.compactMap { line -> (String, String)? in
@@ -161,6 +178,81 @@ public struct LedgerListLayout: Codable, Equatable, Sendable {
         shopLayouts[shop.id.uuidString.lowercased()]?.departmentStore?.order = names
     }
 
+    public mutating func followStoreOrder(in shop: ShoppingLedger) throws {
+        guard let store = departmentStore(in: shop) else { return }
+        _ = try confirmedStore(in: shop)
+        shopLayouts[shop.id.uuidString.lowercased()]?.departmentStore?.order = store.order
+    }
+
+    public mutating func resetStoreOrder(in shop: ShoppingLedger) throws {
+        let id = try confirmedStore(in: shop)
+        for (alias, storeID) in departmentDirectory?.aliases ?? [:] where storeID == id {
+            storeAisles.removeValue(forKey: alias)
+        }
+        try setStoreOrder([], in: shop)
+        shopLayouts[shop.id.uuidString.lowercased()]?.aisleOverride = nil
+    }
+
+    public mutating func setAisleLearning(_ enabled: Bool, in shop: ShoppingLedger) throws {
+        let id = try confirmedStore(in: shop)
+        departmentDirectory?.stores[id.uuidString.lowercased()]?.learnsAisles = enabled ? true : nil
+        if !enabled {
+            for key in shopLayouts.keys {
+                guard let picks = shopLayouts[key]?.aislePicks, picks.values.contains(where: { $0.storeID == id }) else { continue }
+                let retained = picks.filter { $0.value.storeID != id }
+                shopLayouts[key]?.aislePicks = retained.isEmpty ? nil : retained
+            }
+        }
+    }
+
+    /// Called in the same local transaction as the shopper’s in-store checkbox.
+    public mutating func recordAislePick(for rowID: UUID, in shop: ShoppingLedger) {
+        guard let store = departmentStore(in: shop), store.learnsAisles == true,
+              let line = shop.lines.first(where: { $0.id == rowID }), let checkedAt = line.checkedAt else { return }
+        let aisle = department(for: line, in: shop).trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !aisle.isEmpty, aisle.utf8.count <= 512 else { return }
+        let key = shop.id.uuidString.lowercased()
+        var layout = layout(for: shop)
+        var picks = layout.aislePicks ?? [:]
+        picks[rowID.uuidString.lowercased()] = StoreAislePick(storeID: store.id, stopID: shop.currentStop.id, aisle: aisle, checkedAt: checkedAt)
+        layout.aislePicks = picks
+        shopLayouts[key] = layout
+    }
+
+    /// Two distinct prior lists must agree. Do not combine purchases from different
+    /// stops within a list, undone checks, or two visits on the same list.
+    public func suggestedStoreOrder(storeID: UUID, for shop: ShoppingLedger, aisles: [String], history: [ShoppingLedger]) -> [String]? {
+        guard departmentDirectory?.stores[storeID.uuidString.lowercased()]?.learnsAisles == true else { return nil }
+        let allowed = Set(aisles)
+        var evidence: [(date: Date, order: [String])] = []
+        var seenLists: Set<UUID> = [shop.id]
+        for prior in history where seenLists.insert(prior.id).inserted {
+            guard let observations = layout(for: prior).aislePicks else { continue }
+            let valid = prior.lines.compactMap { row -> StoreAislePick? in
+                guard !row.isTrashed, let pick = observations[row.id.uuidString.lowercased()], pick.storeID == storeID,
+                      pick.checkedAt == row.checkedAt else { return nil }
+                let aisle = Self.displayAisle(pick.aisle, among: allowed)
+                guard allowed.contains(aisle) else { return nil }
+                return StoreAislePick(storeID: storeID, stopID: pick.stopID, aisle: aisle, checkedAt: pick.checkedAt)
+            }
+            let visits = Dictionary(grouping: valid, by: \.stopID)
+            let routes = visits.values.compactMap { visit -> (date: Date, order: [String])? in
+                let sorted = visit.sorted { $0.checkedAt < $1.checkedAt }
+                var seen = Set<String>()
+                let order = sorted.map(\.aisle).filter { seen.insert($0).inserted }
+                guard order.count >= 2, Set(sorted.map(\.checkedAt)).count == sorted.count, let last = sorted.last else { return nil }
+                return (last.checkedAt, order)
+            }
+            if let latest = routes.max(by: { $0.date < $1.date }) { evidence.append(latest) }
+        }
+        let latest = evidence.sorted { $0.date > $1.date }.prefix(2)
+        guard latest.count == 2, let first = latest.first, let second = latest.last, first.order == second.order else { return nil }
+        let seen = Set(first.order)
+        var route = first.order.makeIterator()
+        let proposed = aisles.map { seen.contains($0) ? (route.next() ?? $0) : $0 }
+        return proposed == aisles ? nil : proposed
+    }
+
     public mutating func applyDepartmentMemory(to shops: [ShoppingLedger], previous: [ShoppingLedger]) {
         guard let directory = departmentDirectory else { return }
         let previousByID = Dictionary(uniqueKeysWithValues: previous.map { ($0.id, $0) })
@@ -168,11 +260,18 @@ public struct LedgerListLayout: Codable, Equatable, Sendable {
             let prior = previousByID[shop.id]
             guard prior?.revisionID != shop.revisionID else { continue }
             let branch = Self.branch(shop), shopKey = shop.id.uuidString.lowercased()
+            if let picks = shopLayouts[shopKey]?.aislePicks {
+                let checked = Dictionary(uniqueKeysWithValues: shop.lines.compactMap { row in
+                    row.checkedAt.map { (row.id.uuidString.lowercased(), $0) }
+                })
+                let retained = picks.filter { checked[$0.key] == $0.value.checkedAt }
+                shopLayouts[shopKey]?.aislePicks = retained.isEmpty ? nil : retained
+            }
             if prior == nil || prior.map(Self.branch) != branch {
                 if let id = directory.aliases[branch], let store = directory.stores[id.uuidString.lowercased()] {
-                    let newList = (prior == nil || prior?.basis.branch.isEmpty == true) && shopLayouts[shopKey] == nil
+                    let useStoreDefault = shopLayouts[shopKey] == nil
                     attach(store, to: shop)
-                    if newList { shopLayouts[shopKey]?.mode = .aisle }
+                    if useStoreDefault { shopLayouts[shopKey]?.mode = .aisle }
                 } else { shopLayouts[shopKey]?.departmentStore = nil }
                 continue
             }
@@ -194,13 +293,30 @@ public struct LedgerListLayout: Codable, Equatable, Sendable {
         }
     }
 
+    /// Built-in department suggestions follow the display language. Preserve a
+    /// literal customer label whenever it is present in the current list.
+    private static let alternateLabels: [String: String] = Dictionary(uniqueKeysWithValues:
+        GroceryDepartment.allCases.flatMap { department in
+            let en = department.label(spanish: false), es = department.label(spanish: true)
+            return [(en, es), (es, en)]
+        })
+
+    private static func displayAisle(_ aisle: String, among labels: Set<String>) -> String {
+        guard !labels.contains(aisle), let alternate = alternateLabels[aisle], labels.contains(alternate) else { return aisle }
+        return alternate
+    }
+
     public func aisleNames(in shop: ShoppingLedger) -> [String] {
         let layout = layout(for: shop)
-        let branch = shop.basis.branch.trimmingCharacters(in: .whitespacesAndNewlines)
+        let branch = shop.currentStop.name.trimmingCharacters(in: .whitespacesAndNewlines)
         let saved = layout.departmentStore.flatMap { $0.branch == branch ? $0.order : nil }
-        let preferred = (layout.branch == branch ? layout.aisleOverride : nil) ?? saved ?? storeAisles[branch] ?? []
+        let store = departmentStore(in: shop)
+        let preferred = (layout.branch == branch ? layout.aisleOverride : nil) ?? saved ?? store?.order ?? storeAisles[branch] ?? []
+        let rowAisles = shop.lines.filter { !$0.isTrashed }.sorted { $0.originalOrder < $1.originalOrder }
+            .map { department(for: $0, in: shop).trimmingCharacters(in: .whitespacesAndNewlines) }
+        let available = Set(rowAisles)
         var seen = Set<String>()
-        return (preferred + shop.lines.filter { !$0.isTrashed }.sorted { $0.originalOrder < $1.originalOrder }.map { department(for: $0, in: shop) })
+        return (preferred.map { Self.displayAisle($0, among: available) } + rowAisles)
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty && seen.insert($0).inserted }
     }
@@ -224,9 +340,14 @@ public struct LedgerListLayout: Codable, Equatable, Sendable {
     public func scoped(to shop: ShoppingLedger) -> LedgerListLayout {
         let key = shop.id.uuidString.lowercased(), branch = Self.branch(shop)
         let visible = Set(shop.lines.map { department(for: $0, in: shop).trimmingCharacters(in: .whitespacesAndNewlines) })
+        func visibleOrder(_ order: [String]) -> [String] {
+            var seen = Set<String>()
+            return order.map { Self.displayAisle($0, among: visible) }.filter { visible.contains($0) && seen.insert($0).inserted }
+        }
         var result = LedgerListLayout()
         if var layout = shopLayouts[key] {
-            layout.aisleOverride = layout.aisleOverride?.filter(visible.contains)
+            layout.aislePicks = nil
+            layout.aisleOverride = layout.aisleOverride.map(visibleOrder)
             if var saved = layout.departmentStore, saved.branch == branch,
                var store = departmentDirectory?.stores[saved.storeID.uuidString.lowercased()] {
                 var products: [String: String] = [:]
@@ -238,10 +359,10 @@ public struct LedgerListLayout: Codable, Equatable, Sendable {
                     visibleRows[line.id.uuidString.lowercased()] = value
                 }
                 store.products = products
-                store.order = store.order.filter(visible.contains)
+                store.order = visibleOrder(store.order)
                 // A separate pickup’s name or previously matched alias is outside this export.
                 store = DepartmentStore(id: store.id, name: branch, products: store.products, order: store.order)
-                saved.order = saved.order.filter(visible.contains)
+                saved.order = visibleOrder(saved.order)
                 saved.rows = saved.rows.filter { visibleRows[$0.key] == $0.value }
                 layout.departmentStore = saved
                 var directory = DepartmentDirectory()
@@ -251,7 +372,7 @@ public struct LedgerListLayout: Codable, Equatable, Sendable {
             } else { layout.departmentStore = nil }
             result.shopLayouts[key] = layout
         }
-        if let order = storeAisles[branch]?.filter(visible.contains), !order.isEmpty {
+        if let order = storeAisles[branch].map(visibleOrder), !order.isEmpty {
             result.storeAisles[branch] = order
         }
         return result
@@ -289,6 +410,12 @@ public struct LedgerListLayout: Codable, Equatable, Sendable {
                   layout.branch.count <= 512, Set(layout.lineOrder).count == layout.lineOrder.count,
                   Set(layout.lineOrder).isSubset(of: Set(shop.lines.map(\.id))) else { throw LedgerError.invalid("shopOrder") }
             let lineIDs = Set(shop.lines.map { $0.id.uuidString.lowercased() })
+            if let picks = layout.aislePicks {
+                guard picks.allSatisfy({ key, pick in
+                    lineIDs.contains(key) && validLabel(pick.aisle) && pick.checkedAt.timeIntervalSinceReferenceDate.isFinite &&
+                        departmentDirectory?.stores[pick.storeID.uuidString.lowercased()]?.learnsAisles == true
+                }) else { throw LedgerError.invalid("aislePicks") }
+            }
             if let rows = layout.rowDepartments {
                 guard rows.allSatisfy({ lineIDs.contains($0.key) && ($0.value.isEmpty || validLabel($0.value)) }) else {
                     throw LedgerError.invalid("rowDepartments")

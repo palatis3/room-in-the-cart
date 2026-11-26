@@ -43,6 +43,7 @@ struct ReceiptTripPlan: Identifiable, Equatable {
     let lines: [BasketLine]
     let deliveryKeys: Set<ReceiptKey>
     var countsPacks = false
+    private(set) var orderRevisionID: UUID?
 
     init?(journey: PickupJourney) {
         guard let basket = journey.basket, let placement = basket.placements.first,
@@ -52,6 +53,7 @@ struct ReceiptTripPlan: Identifiable, Equatable {
               Set(physical.orderLines.map(\.id)) == Set(lines.map(\.id)) else { return nil }
         id = journey.id; self.branch = branch; date = placement.reportedAt; self.lines = lines
         deliveryKeys = Set(physical.receipts.map(\.key))
+        orderRevisionID = basket.amendments.last?.id ?? basket.snapshots.first(where: { $0.id == placement.snapshotID })?.revision.id
     }
 
     init(shared order: SharedConfirmedOrder, household: String) throws {

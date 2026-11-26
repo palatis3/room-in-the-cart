@@ -6,8 +6,13 @@ import RecordArchive
 
 final class LedgerReadableRecordTests: XCTestCase {
     private struct Document: Encodable {
-        let formatVersion = 1
+        let formatVersion: Int
         let workspace: LedgerWorkspace
+
+        init(workspace: LedgerWorkspace) {
+            self.workspace = workspace
+            self.formatVersion = workspace.ledgerDocumentVersion
+        }
     }
 
     @MainActor func testShopReadbackShowsStoredPesoCurrencyAndPickedSubtotal() throws {
@@ -22,6 +27,50 @@ final class LedgerReadableRecordTests: XCTestCase {
         XCTAssertTrue(record.contains(ledgerFormat("Currency: %@", "MXN")))
         XCTAssertTrue(record.contains(pickedSubtotalText(shop.pickedCartSubtotal)))
         XCTAssertTrue(record.contains(moneyText(total)))
+    }
+
+    @MainActor func testOwnerReadbackAssociatesPricesWeightAndUnknownsWithTheirGroceries() async throws {
+        func pesos(_ cents: Int64) -> Money { .init(minorUnits: cents, currency: .mxn) }
+        var shop = ShoppingLedger(title: "Mercado", basis: ShopBasis(currency: .mxn))
+        let apples = try shop.addManualLine(name: "Manzanas", quantity: nil)
+        let milk = try shop.addManualLine(name: "Leche", quantity: nil)
+        for id in [apples, milk] { try shop.setChecked(lineID: id, checked: true) }
+        let measured = Quantity(amount: try Rational(1, 2), unit: .kilogram, originalLiteral: "0.5")
+        let shelf = PickedShelfPrice(rate: pesos(4500), unit: .kilogram, measured: measured)
+        try shop.recordPickedPrice(lineID: apples, expectedRevision: shop.revisionID, total: shelf.lineTotal(),
+            membership: false, weighted: true, conditionsConfirmed: true, shelf: shelf, discount: pesos(200))
+        let bytes = try RecordsNativeCodec.canonical(Document(workspace: LedgerWorkspace(shops: [shop], selectedShopID: shop.id)))
+        let source = ArchiveRecord(id: shop.id.uuidString, origin: "ledger/" + UUID().uuidString,
+            revision: ArchiveCodec.digest(bytes), kind: .ledger, title: shop.title, savedAtMilliseconds: 1,
+            helperLines: shop.lines.map { HelperLine(label: $0.name, originalAmount: "", originalUnit: "") }, nativePayload: bytes)
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let registry = try RecoveryRegistry(url: directory.appendingPathComponent("registry.json"))
+        let model = RecordsToolsModel(registry: registry, snapshot: { .init(records: [source]) },
+                                     validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        await model.refresh()
+        model.selectAll()
+        func savedText(_ choice: RecordsToolsModel.ExportChoice, name: String) async throws -> String {
+            await model.prepareExport(choice)
+            let file = directory.appendingPathComponent(name)
+            try XCTUnwrap(model.preparedDocument).data.write(to: file)
+            return try String(contentsOf: file, encoding: .utf8)
+        }
+        let record = try await savedText(.ownerText, name: "owner.txt")
+        let helper = try await savedText(.helperText, name: "helper.txt")
+        XCTAssertTrue(helper.contains("Manzanas"))
+        XCTAssertTrue(helper.contains("Leche"))
+        let groceries = record.components(separatedBy: "• ")
+        let priced = try XCTUnwrap(groceries.first { $0.hasPrefix("Manzanas") })
+        let unpriced = try XCTUnwrap(groceries.first { $0.hasPrefix("Leche") })
+        for text in [moneyText(pesos(4500)), pQuantity(measured), moneyText(pesos(2250)),
+                     shelfFormat("Line discount · %@", moneyText(pesos(200))), moneyText(pesos(2050))] {
+            XCTAssertTrue(priced.contains(text), priced)
+            XCTAssertFalse(unpriced.contains(text), unpriced)
+            XCTAssertFalse(helper.contains(text), helper)
+        }
+        XCTAssertTrue(unpriced.contains(shoppingText("Price unknown")))
     }
 
     @MainActor func testTypedItemAndListProvenanceAgreeAcrossReadableRecordSections() throws {

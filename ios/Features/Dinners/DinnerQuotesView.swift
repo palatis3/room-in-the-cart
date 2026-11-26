@@ -21,6 +21,12 @@ struct DinnerQuotesView: View {
             if let pair, let result, model.budgetVisible {
                 Section(dinnerText("Reviewed trip comparison")) {
                     Text(dinnerText("These are entered observations, not live prices or stock."))
+                    if model.paid {
+                        if let coverage = pair.pairedItemCoverage {
+                            LabeledContent(dinnerText("Items priced for the same quantity at both stores"),
+                                           value: String(coverage.matched) + " / " + (coverage.total.map(String.init) ?? dinnerText("Unknown")))
+                        } else { Text(dinnerText("Price coverage by item is unknown for an inclusive total.")).font(.footnote) }
+                    }
                     quoteResult(pair.first, result.first).accessibilityIdentifier("quoteFirstResult")
                     quoteResult(pair.second, result.second).accessibilityIdentifier("quoteSecondResult")
                     quoteMoneyChange("Items before fees and discounts, second minus first: %@", result.itemSubtotalChange)
@@ -319,5 +325,232 @@ struct EnteredQuoteValueField: View {
             Text(title).font(.caption).foregroundStyle(Theme.secondary)
             TextField(title, text: $value).focused(focus, equals: identifier).accessibilityIdentifier(identifier)
         }
+    }
+}
+
+/// Reads only this private ledger's accepted plan and this device's authorized Pantry.
+struct WeeklyCostReviewView: View {
+    @ObservedObject var model: DinnerFeatureModel
+    @EnvironmentObject private var pickup: PickupModel
+    @State private var selected: UUID?
+    @State private var loaded: LoadKey?
+    @State private var review: WeeklyPurchaseReview?
+    @State private var failed = false
+
+    private struct LoadKey: Equatable {
+        let receipt: UUID
+        let origin: UUID
+        let inventoryRevision: Int64
+        let journeyRevision: Int64?
+        let generation: UUID
+        let actor: String
+    }
+
+    private var receipts: [DinnerApplyReceipt] {
+        guard let shop = model.shop, model.paid, model.budgetVisible, let owner = model.localIdeaWorkspaceID,
+              let actor = model.editorIdentity?.actorID else { return [] }
+        return model.state.applyReceipts.reversed().filter {
+            $0.proposal.shopID == shop.id && $0.proposal.repeatWeek != nil &&
+            $0.proposal.namespace == "local:\(owner.uuidString)" && $0.appliedBy == actor
+        }
+    }
+    private var receipt: DinnerApplyReceipt? { receipts.first { $0.id == selected } ?? receipts.first }
+    private var journey: PickupJourney? { pickup.journeys.first { $0.id == model.shop?.id } }
+    private var key: LoadKey? {
+        guard let receipt, receipt.costBaseline != nil, pickup.ready, pickup.pantryReadIsCurrent,
+              let state = pickup.pantrySnapshot?.state, state.active, pickup.sourceWorkspaceID == state.workspaceID,
+              let ledger = model.store as? LedgerModel, pickup.recoveryLedger === ledger,
+              let actor = model.editorIdentity?.actorID else { return nil }
+        return .init(receipt: receipt.id, origin: state.workspaceID, inventoryRevision: state.revision,
+                     journeyRevision: journey?.revision, generation: pickup.privatePantryGeneration, actor: actor)
+    }
+
+    var body: some View {
+        WorkingForm {
+            if receipts.count > 1, let receipt {
+                Picker(dinnerText("Accepted plan"), selection: Binding(get: { receipt.id }, set: { selected = $0 })) {
+                    ForEach(receipts) { plan in Text(plan.appliedAt.formatted()).tag(plan.id) }
+                }
+            }
+            if let receipt, let baseline = receipt.costBaseline {
+                Section(dinnerText("Original shopping estimate")) {
+                    Text(receipt.appliedAt.formatted())
+                    if !baseline.store.isEmpty { Text(verbatim: baseline.store) }
+                    let prices = baseline.lines.compactMap(\.estimate)
+                    LabeledContent(dinnerText("Priced items"), value: "\(prices.count) / \(baseline.lines.count)")
+                    LabeledContent(dinnerText("Known estimated subtotal"), value: dinnerMoney(try? WeeklyPurchaseReview.total(prices)))
+                }
+                let current = key != nil && loaded == key ? review : nil
+                purchaseSection(current, currency: baseline.currency)
+                plannedLines(baseline, current: current)
+                cookedSection(receipt)
+            } else { Text(dinnerText("No saved estimate for this shop.")) }
+        }
+        .privacySensitive()
+        .navigationTitle(dinnerText("Weekly costs and outcomes"))
+        .dinnerAccess(model, budget: true)
+        .task(id: key) { await load(key) }
+    }
+
+    private func purchaseSection(_ current: WeeklyPurchaseReview?, currency: Currency) -> some View {
+        Section(dinnerText("Confirmed private purchases")) {
+            LabeledContent(dinnerText("Known paid subtotal"), value: dinnerMoney(current?.knownActual))
+            if let current {
+                let matching = current.purchases.filter { $0.net?.currency == currency }
+                Text(dinnerFormat("Receipt lines with an amount in %@: %d of %d", currency.rawValue, matching.count, current.purchases.count))
+                Text(dinnerFormat("Planned items without a linked receipt line: %d", current.unmatchedPlanLines))
+                ForEach(current.purchases.filter { $0.plannedLineID == nil }, id: \.acquisition.id) { purchase in
+                    purchaseRow(purchase)
+                    if let match = purchase.acquisition.orderMatch, match.portions.count > 1 {
+                        Text(dinnerText("Receipt quantity split across items. The paid amount is counted once.")).font(.footnote)
+                    } else {
+                        Text(dinnerText("Receipt saved for this shop. Basket line unresolved.")).font(.footnote)
+                    }
+                }
+            } else if key != nil && !failed { ProgressView() }
+            else {
+                Text(dinnerText("Private purchase evidence is unavailable."))
+                if failed, let key { Button(ledgerText("Retry")) { Task { await load(key) } } }
+            }
+        }
+    }
+
+    private func plannedLines(_ baseline: WeeklyCostBaseline, current: WeeklyPurchaseReview?) -> some View {
+        Section(dinnerText("Planned items")) {
+            ForEach(baseline.lines) { line in
+                DisclosureGroup(line.name) {
+                    Text(dinnerQuantity(line.quantity))
+                    ForEach(Array(line.packages.enumerated()), id: \.offset) { _, pack in
+                        let size = Quantity(amount: pack.amountPerPack, unit: pack.unit, originalLiteral: pack.amountPerPack.description)
+                        Text(dinnerFormat("Packages: %@ × %@", String(pack.count), dinnerQuantity(size)))
+                    }
+                    if let containers = line.containers { Text(dinnerFormat("Reviewed containers: %lld", containers.count)) }
+                    LabeledContent(dinnerText("Original estimate"), value: dinnerMoney(line.estimate))
+                    switch line.source {
+                    case .pick(let at): Text(dinnerText("Recorded shelf price") + " · " + at.formatted()).font(.footnote)
+                    case .reviewedPack: Text(dinnerText("Reviewed pack choice")).font(.footnote)
+                    case nil: EmptyView()
+                    }
+                    let purchases = current?.purchases.filter { $0.plannedLineID == line.id } ?? []
+                    let split = current?.purchases.compactMap { purchase -> Quantity? in
+                        guard let match = purchase.acquisition.orderMatch, match.portions.count > 1 else { return nil }
+                        return match.portions.first { $0.lineID == line.id }?.quantity
+                    } ?? []
+                    if purchases.isEmpty && split.isEmpty { Text(dinnerText("No matched receipt line")) }
+                    ForEach(purchases, id: \.acquisition.id) { purchase in purchaseRow(purchase) }
+                    ForEach(Array(split.enumerated()), id: \.offset) { _, quantity in
+                        Text(dinnerFormat("Split receipt quantity: %@", dinnerQuantity(quantity)))
+                    }
+                    if split.isEmpty, let status = quantityDifference(line.quantity, purchases: purchases) { Text(status) }
+                    if split.isEmpty, let estimate = line.estimate, !purchases.isEmpty,
+                       purchases.allSatisfy({ $0.net?.currency == estimate.currency }),
+                       let actual = try? WeeklyPurchaseReview.total(purchases.compactMap(\.net)),
+                       let change = try? actual.subtracting(estimate) {
+                        LabeledContent(dinnerText("Paid minus estimate"), value: dinnerMoney(change))
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private func cookedSection(_ receipt: DinnerApplyReceipt) -> some View {
+        if let plan = receipt.proposal.repeatWeek, let start = plan.targetStart.date {
+            let cooked = (journey?.cookedMeals ?? []).filter { row in
+                row.isActive && receipt.proposal.changes.contains { change in
+                    if case .choose(let dinner) = change { return dinner.occurrenceID == row.draft.meal.id }
+                    return false
+                }
+            }
+            Section(dinnerText("Confirmed cooked dinners")) {
+                if cooked.isEmpty { Text(dinnerText("No cooking recorded for these dinners.")) }
+                ForEach(cooked, id: \.draft.id) { row in Text(verbatim: row.draft.cookedTitle) }
+            }
+            var calendar: Calendar { var c = Calendar(identifier: .gregorian); c.timeZone = TimeZone(identifier: plan.targetStart.timeZoneIdentifier) ?? .current; return c }
+            if let next = calendar.date(byAdding: .day, value: 7, to: start) {
+                if let target = try? MealDay(date: next, timeZoneIdentifier: plan.targetStart.timeZoneIdentifier) {
+                    waitingFood(receipt: receipt, next: target)
+                }
+                DinnerDecisionButton(model: model, title: dinnerText("Review items for next week"), identifier: "weekCost.repeat") {
+                    DinnerRepeatWeekView(model: model, initialDate: next, useSelectedStart: true)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private func waitingFood(receipt: DinnerApplyReceipt, next: MealDay) -> some View {
+        if key != nil, let snapshot = pickup.pantrySnapshot {
+            let claims = (try? model.cookedDinners(pickup: pickup)) ?? []
+            let meals = Set(receipt.proposal.changes.compactMap { change -> UUID? in
+                if case .choose(let dinner) = change { return dinner.occurrenceID }
+                return nil
+            })
+            let cooks = Set((journey?.cookedMeals ?? []).filter { $0.isActive && meals.contains($0.draft.meal.id) }.map(\.draft.id))
+            let waiting = claims.filter { claim in
+                guard claim.state == .active, let dinner = claim.cookedDinner, dinner.servedAt == nil, cooks.contains(dinner.cookID),
+                      let lot = snapshot.lots.first(where: { $0.id == claim.lotID }), let amount = claim.amount,
+                      amount.amount > .zero else { return false }
+                return snapshot.availability.reservations(for: lot, among: snapshot.reservations).contains {
+                    $0.id == claim.id && $0.allocation?.amount == amount.amount && !$0.coverage.unresolved
+                }
+            }
+            Section(dinnerText("Cooked food still waiting")) {
+                if waiting.isEmpty { Text(dinnerText("No confirmed portions waiting for these dinners.")) }
+                ForEach(waiting) { claim in
+                    NavigationLink {
+                        DinnerCookedPortionsView(model: model, id: claim.id, suggestedDay: next)
+                    } label: {
+                        VStack(alignment: .leading) {
+                            DinnerCookedPortionsLabel(claim: claim)
+                            Text(dinnerFormat("Review for %@", dinnerDay(next))).font(.footnote)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func quantityDifference(_ planned: Quantity?, purchases: [WeeklyPurchaseReview.Purchase]) -> String? {
+        guard let planned, !purchases.isEmpty else { return nil }
+        var total = Rational.zero
+        for purchase in purchases {
+            guard let amount = try? purchase.acquisition.received.converted(to: planned.unit),
+                  let next = try? total.adding(amount) else { return dinnerText("Quantity units need review.") }
+            total = next
+        }
+        return total != planned.amount ? dinnerText("Received quantity differs from the plan.") : nil
+    }
+
+    @ViewBuilder private func purchaseRow(_ purchase: WeeklyPurchaseReview.Purchase) -> some View {
+        let row = purchase.acquisition
+        VStack(alignment: .leading) {
+            Text(verbatim: row.name + " · " + dinnerQuantity(row.received))
+            Text(dinnerFormat("Receipt revision %lld", row.revision)).font(.footnote)
+            Text(verbatim: row.merchant + " · " + row.purchaseDate.formatted(date: .abbreviated, time: .omitted))
+            LabeledContent(dinnerText("Receipt line total"), value: dinnerMoney(row.paidLineTotal))
+            ForEach(purchase.earlierRevisions) { earlier in
+                LabeledContent(dinnerFormat("Receipt revision %lld", earlier.revision), value: dinnerMoney(earlier.paidLineTotal))
+            }
+            if let credit = purchase.credit, credit.minorUnits > 0 {
+                LabeledContent(dinnerText("Confirmed discounts and refunds"), value: dinnerMoney(credit))
+            }
+            if let id = purchase.plannedLineID,
+               let fragment = journey?.pickup?.receipts.first(where: { fragment in
+                   guard case .linked(let key) = row.stock else { return false }
+                   return fragment.key == key && key.orderLineID == id
+               }), fragment.disposition == .wrongItem { Text(dinnerText("Different item received")) }
+        }
+    }
+
+    @MainActor private func load(_ requested: LoadKey?) async {
+        review = nil; loaded = nil; failed = false
+        guard let requested, requested == key else { return }
+        guard let pantry = pickup.makePantryModel(),
+              let receipt, let baseline = receipt.costBaseline, let state = pickup.pantrySnapshot?.state else { failed = true; return }
+        do {
+            let result = try await pantry.weeklyPurchaseReview(baseline, pickup: .init(originID: requested.origin, id: receipt.proposal.shopID),
+                fragments: Set(journey?.pickup?.receipts.map(\.key) ?? []), expected: state)
+            guard !Task.isCancelled, requested == key else { return }
+            review = result; loaded = requested
+        } catch { if !Task.isCancelled, requested == key { failed = true } }
     }
 }

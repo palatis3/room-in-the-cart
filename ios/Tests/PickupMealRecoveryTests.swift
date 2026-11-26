@@ -599,6 +599,26 @@ import LocalStore
         XCTAssertEqual(Set(draft.carriedMeals.map(\.id)).count, draft.carriedMeals.count)
     }
 
+    func testTwoManualUsableCorrectionsReplaceTheSameArrivalAfterDinnerRecovery() async throws {
+        let f = try await fixture()
+        let reviewed = try review(f)
+        let applied = await f.model.applyMealRecovery(reviewed, currentAuthority: { f.authority })
+        XCTAssertTrue(applied)
+        let journey = try XCTUnwrap(f.model.journey)
+        let receipt = try XCTUnwrap(journey.pickup?.receipts.first)
+        var previous = try XCTUnwrap(journey.pickup?.usableObservations.last { $0.receipt == receipt.key })
+        for amount: Int64 in [3, 2] {
+            let correction = UsableObservation(id: UUID(), receipt: receipt.key, usable: q(amount), confirmedAt: now,
+                supersedesID: previous.id, confirmedMatchToOrderLine: true)
+            let saved = await f.model.confirmUsable(correction)
+            XCTAssertTrue(saved)
+            previous = try XCTUnwrap(f.model.journey?.pickup?.usableObservations.last { $0.receipt == receipt.key })
+            XCTAssertEqual(previous, correction)
+            XCTAssertEqual(f.model.journey?.pickup?.receipts, journey.pickup?.receipts)
+            XCTAssertEqual(f.model.journey?.mealRecovery, journey.mealRecovery)
+        }
+    }
+
     func testIndependentWriterWinsCASAndImportedFutureStockNeverCoversReview() async throws {
         let f = try await fixture(), reviewed = try review(f)
         let instant = now

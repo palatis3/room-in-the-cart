@@ -1,10 +1,12 @@
+import {requireAssistance} from './shared-fallback-options.js';
+import type {BillingService} from './billing/service.js';
 import { chooseTonight } from './contracts.js';
 import { z } from 'zod';
 import { digest } from './database.js';
 import { refresh, ServiceError, unavailable } from './errors.js';
 import { mealConstraints, mealEligibility, mealEvidence } from './meal-preferences.js';
 import { householdPantryEpoch, pantryRevision, tonightStock } from './pantry-lots.js';
-import { amount, dimension, inUnit, min, sub, zero } from './physical-quantity.js';
+import { amount, dimension, inUnit, min, sub, zero, type Rat } from './physical-quantity.js';
 import { householdStockCommitments } from './shared-recovery-basis.js';
 import { loadRecoveryPublication } from './shared-recovery-publication.js';
 import type { Context, HouseholdRepository, Shop } from './repository.js';
@@ -195,15 +197,16 @@ function productsForRecipe(recipe: Recipe, stock: Stock, settings: Settings) {
   });
 }
 
-function ingredientNeeds(recipe: Recipe, stock: ReturnType<typeof productsForRecipe>, now: Date) {
+function ingredientNeeds(recipe: Recipe, stock: ReturnType<typeof productsForRecipe>, now: Date, balances?: Map<string, Rat>) {
   const available = stock.map((lot) => ({
     id: lot.id,
     quantity: lot.observed?.quantity,
-    free: lot.free ? { n: BigInt(lot.free.numerator), d: BigInt(lot.free.denominator) } : null,
+    free: balances?.get(lot.id) ?? (lot.free ? { n: BigInt(lot.free.numerator), d: BigInt(lot.free.denominator) } : null),
     useSoon: lot.useFirstAt !== null && Date.parse(lot.useFirstAt) <= now.getTime() + 3 * 86400000,
     evidenceAt: lot.observed?.confirmedAt ?? null,
     eligible: lot.eligibility.eligible,
   }));
+  const remainingByLot = new Map<string, Rat>();
   let usedConfirmedStock = false;
   const ingredients = recipe.ingredients.map((ingredient) => {
     const required = ingredient.quantity;
@@ -231,6 +234,7 @@ function ingredientNeeds(recipe: Recipe, stock: ReturnType<typeof productsForRec
         usedConfirmedStock = true;
         useSoon ||= lot.useSoon;
         lot.free = sub(lot.free!, allocation);
+        remainingByLot.set(lot.id, lot.free);
         remaining = sub(remaining, allocation);
       }
       if (remaining.n === 0n) break;
@@ -251,7 +255,7 @@ function ingredientNeeds(recipe: Recipe, stock: ReturnType<typeof productsForRec
       },
     };
   });
-  return { ingredients, usedConfirmedStock };
+  return { ingredients, usedConfirmedStock, remainingByLot };
 }
 
 async function shopperPriceBasis(ctx: Context) {
@@ -373,6 +377,7 @@ async function candidates(ctx: Context) {
     return [
       {
         item,
+        products,
         recipe: source,
         covered,
         soon: ingredients.filter((i) => i.useSoon).length,
@@ -393,8 +398,48 @@ async function candidates(ctx: Context) {
       (a.recipe.minutes ?? Infinity) - (b.recipe.minutes ?? Infinity) ||
       a.item.recipeId.localeCompare(b.item.recipeId),
   );
-  return { epoch, revision, list, excludedCount, excludedReviewedRecipes };
+  return { epoch, revision, list, stock, excludedCount, excludedReviewedRecipes };
 }
+// Each candidate gets a scratch balance. An incomplete dinner never consumes another candidate's stock.
+export async function twoNightUseSoon(ctx: Context, selected: string[]) {
+  return twoNightSuggestions(ctx, await candidates(ctx), selected);
+}
+
+function twoNightSuggestions(ctx: Context, snapshot: Awaited<ReturnType<typeof candidates>>, selected: string[]) {
+  const requested = z.array(id).max(12).parse(selected);
+  const { epoch, revision, list, stock } = snapshot;
+  const lots = stock.flatMap(lot => {
+    if (!lot.useFirstAt || Date.parse(lot.useFirstAt) > ctx.now.getTime() + 3 * 86400000 ||
+        !lot.free || BigInt(lot.free.numerator) <= 0n || !lot.observed?.quantity) return [];
+    return [{ lotId: lot.id, name: lot.name, useFirstAt: lot.useFirstAt }];
+  });
+  if (requested.some(key => !lots.some(lot => lot.lotId === key))) throw refresh();
+  const focus = new Set(requested.length ? requested : lots.map(lot => lot.lotId));
+  const result = { householdId: ctx.householdId, grantEpoch: epoch, pantryRevision: revision, lots };
+  const eligible = list.filter(row => row.item.checkoutEstimate === 'noPurchaseNeeded');
+  for (let i = 0; i < eligible.length; i++) {
+    const first = eligible[i]!;
+    const initial = ingredientNeeds(first.recipe, first.products, ctx.now).remainingByLot;
+    if (![...initial.keys()].some(key => focus.has(key))) continue;
+    for (const second of eligible) {
+      if (second.item.recipeId === first.item.recipeId) continue;
+      const next = ingredientNeeds(second.recipe, second.products, ctx.now, initial);
+      if (!next.ingredients.every(ingredient => ingredient.status === 'covered')) continue;
+      const balances = new Map([...initial, ...next.remainingByLot]);
+      if (!requested.every(key => balances.has(key))) continue;
+      const remainders = stock.flatMap(lot => {
+        const balance = balances.get(lot.id), unit = lot.observed?.quantity?.unit;
+        if (!balance || !unit) return [];
+        const left = inUnit(balance, unit);
+        // Keep exact arithmetic through display. Never round a small balance up to a serving.
+        return [{ lotId: lot.id, name: lot.name, unit, amount: left.denominator === '1' ? left.numerator : left.numerator + '/' + left.denominator }];
+      });
+      return { ...result, recipeIds: [first.item.recipeId, second.item.recipeId], reviewTokens: [first.item.reviewToken, second.item.reviewToken], remainders };
+    }
+  }
+  return { ...result, recipeIds: [], reviewTokens: [], remainders: [] };
+}
+
 export async function householdTonight(ctx: Context) {
   const { epoch, revision, list, excludedCount, excludedReviewedRecipes } = await candidates(ctx);
   return {
@@ -415,76 +460,75 @@ export async function recordTonight(
   body: unknown,
   operationId: string,
   repo: HouseholdRepository,
+  billing?: BillingService,
 ) {
   repo.requireDraft(shop);
   if (shop.demand_revision)
     throw new ServiceError(409, 'demand_review_required', 'Review shared demand in the destination plan.');
-  const b = chooseTonight.parse(body),
-    { epoch, list } = await candidates(ctx);
-  const selection = list.find((v) => v.item.recipeId === b.recipeId);
-  if (
-    b.grantEpoch !== epoch ||
-    !selection ||
-    selection.item.recipeRevision !== b.recipeRevision ||
-    selection.item.reviewToken !== b.reviewToken
-  )
-    throw refresh();
+  const b = chooseTonight.parse(body);
+  if (b.second) await requireAssistance(ctx, billing);
+  const snapshot = await candidates(ctx);
+  const {epoch, list} = snapshot;
+  const choices = b.second ? [b, b.second] : [b];
+  if (b.grantEpoch !== epoch || (b.selectedLotIds && !b.second)) throw refresh();
+  if (b.second) {
+    const plan = twoNightSuggestions(ctx, snapshot, b.selectedLotIds ?? []);
+    if (!b.day || !b.second.day || b.second.day <= b.day || b.occurrenceId === b.second.occurrenceId ||
+        plan.recipeIds[0] !== b.recipeId || plan.recipeIds[1] !== b.second.recipeId) throw refresh();
+  }
+  const ids = choices.map(choice => choice.occurrenceId);
   const existing = await repo.meals(ctx, shop.shop_id);
-  if (
-    existing.length >= 100 ||
-    existing.some((m) => m.occurrenceId === b.occurrenceId) ||
-    (
-      await ctx.db.query(
-        'SELECT FROM ritc.shared_meal_revision WHERE household_id=$1 AND shop_id=$2 AND occurrence_id=$3 LIMIT 1',
-        [ctx.householdId, shop.shop_id, b.occurrenceId],
-      )
-    ).rowCount
-  )
-    throw refresh();
-  const r = selection.recipe,
-    meal = sharedMealSchema.parse({
-      title: r.title,
-      day: b.day,
-      kind: 'dinner',
-      portions: r.portions,
-      protected: false,
-      planning: {
-        groups: [],
-        ingredients: r.ingredients.map(({ id, name, quantity }) => ({
-          id,
-          name,
-          quantity,
-          groupIds: [],
-          exclusions: [],
-        })),
-        ...(r.minutes === null ? {} : { leadTimeMinutes: r.minutes }),
-      },
-    });
-  await ctx.db.query(
-    'INSERT INTO ritc.shared_meal_revision(household_id,shop_id,occurrence_id,revision,actor_id,meal) VALUES($1,$2,$3,$4,$5,$6)',
-    [ctx.householdId, shop.shop_id, b.occurrenceId, shop.revision + 1, ctx.member.member_id, meal],
-  );
-  await ctx.db.query(
-    'INSERT INTO ritc.tonight_choice(household_id,shop_id,occurrence_id,operation_id,recipe_id,recipe_revision,grant_epoch) VALUES($1,$2,$3,$4,$5,$6,$7)',
-    [ctx.householdId, shop.shop_id, b.occurrenceId, operationId, b.recipeId, b.recipeRevision, epoch],
-  );
+  if (existing.length + ids.length > 100 || (await ctx.db.query(
+    'SELECT FROM ritc.shared_meal_revision WHERE household_id=$1 AND shop_id=$2 AND occurrence_id=ANY($3::uuid[]) LIMIT 1',
+    [ctx.householdId, shop.shop_id, ids])).rowCount) throw refresh();
+  for (const choice of choices) {
+    const selection = list.find(row => row.item.recipeId === choice.recipeId);
+    if (!selection || selection.item.recipeRevision !== choice.recipeRevision || selection.item.reviewToken !== choice.reviewToken) throw refresh();
+    const r = selection.recipe,
+      meal = sharedMealSchema.parse({
+        title: r.title,
+        day: choice.day,
+        kind: 'dinner',
+        portions: r.portions,
+        protected: false,
+        planning: {
+          groups: [],
+          ingredients: r.ingredients.map(({ id, name, quantity }) => ({
+            id,
+            name,
+            quantity,
+            groupIds: [],
+            exclusions: [],
+          })),
+          ...(r.minutes === null ? {} : { leadTimeMinutes: r.minutes }),
+        },
+      });
+    await ctx.db.query(
+      'INSERT INTO ritc.shared_meal_revision(household_id,shop_id,occurrence_id,revision,actor_id,meal) VALUES($1,$2,$3,$4,$5,$6)',
+      [ctx.householdId, shop.shop_id, choice.occurrenceId, shop.revision + 1, ctx.member.member_id, meal],
+    );
+    await ctx.db.query(
+      'INSERT INTO ritc.tonight_choice(household_id,shop_id,occurrence_id,operation_id,recipe_id,recipe_revision,grant_epoch) VALUES($1,$2,$3,$4,$5,$6,$7)',
+      [ctx.householdId, shop.shop_id, choice.occurrenceId, operationId, choice.recipeId, choice.recipeRevision, epoch],
+    );
+  }
   await ctx.db.query('UPDATE ritc.shop SET revision=revision+1 WHERE household_id=$1 AND shop_id=$2', [
     ctx.householdId,
     shop.shop_id,
   ]);
-  return b.occurrenceId;
+  return {occurrenceId:b.occurrenceId, ...(b.second ? {secondOccurrenceId:b.second.occurrenceId} : {})};
 }
-export async function checkTonightReplay(ctx: Context, shop: Shop, id: string) {
+export async function checkTonightReplay(ctx: Context, shop: Shop, id: string, expected: number) {
   const epoch = authority(ctx);
   if (
-    !(
+    (
       await ctx.db.query(
         `SELECT FROM ritc.tonight_choice c JOIN ritc.tonight_recipe r USING(household_id,recipe_id)
    WHERE c.household_id=$1 AND c.shop_id=$2 AND c.operation_id=$3 AND c.grant_epoch=$4 AND r.recipe IS NOT NULL
    AND (SELECT meal IS NOT NULL FROM ritc.shared_meal_revision WHERE household_id=c.household_id AND shop_id=c.shop_id AND occurrence_id=c.occurrence_id ORDER BY revision DESC LIMIT 1)`,
         [ctx.householdId, shop.shop_id, id, epoch],
       )
-    ).rowCount
+    ).rowCount !== expected
   )
     throw refresh();
 }

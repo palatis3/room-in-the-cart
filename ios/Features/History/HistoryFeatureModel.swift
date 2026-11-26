@@ -91,6 +91,11 @@ enum HistoryReviewedWrite: Equatable {
         return period.period.shopIds.allSatisfy { owned.contains($0.lowercased()) }
     }
     var canApply: Bool { canEdit && reviewed != nil && approved }
+    func canCompareBasket(context: MembershipContext?, snapshot: MembershipSnapshot?, at now: Date) -> Bool {
+        guard authorized, let scope, let context, let snapshot, context.householdID == scope.householdID,
+              context.purchaserID == scope.memberID, snapshot.householdID == scope.householdID else { return false }
+        return snapshot.hasPaidAccess(for: scope.memberID, now: now)
+    }
     var filteredObservations: [HistoryPriceObservation] { authorized ? observations.filter(filter.matches) : [] }
     func cancelReview() { reviewed = nil; approved = false }
     func invalidate() {

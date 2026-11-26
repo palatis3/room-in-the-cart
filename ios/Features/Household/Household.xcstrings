@@ -1,6 +1,118 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Shared week costs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared week costs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Costos de la semana compartida"
+          }
+        }
+      }
+    },
+    "Original weekly basket": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original weekly basket"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lista de compras original de la semana"
+          }
+        }
+      }
+    },
+    "Accepted basket revision": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accepted basket revision"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisión aceptada de la lista"
+          }
+        }
+      }
+    },
+    "Reported shop charges after posted credits": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reported shop charges after posted credits"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargos registrados de la compra después de los abonos aplicados"
+          }
+        }
+      }
+    },
+    "Shared week costs are unavailable.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared week costs are unavailable."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los costos de la semana compartida no están disponibles."
+          }
+        }
+      }
+    },
+    "Adopted quote item subtotal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adopted quote item subtotal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subtotal de los artículos en la cotización aceptada"
+          }
+        }
+      }
+    },
+    "Adopted quote checkout": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adopted quote checkout"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total de la cotización aceptada"
+          }
+        }
+      }
+    },
     "A sign-in code could not be sent. Check the email address or continue planning for free.": {
       "extractionState": "manual",
       "localizations": {
@@ -17997,6 +18109,210 @@
           "stringUnit": {
             "state": "translated",
             "value": "libras"
+          }
+        }
+      }
+    },
+    "You can send and track your own grocery requests for free.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can send and track your own grocery requests for free."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puedes enviar tus propias solicitudes de productos y consultar su estado gratis."
+          }
+        }
+      }
+    },
+    "You can read the shared instructions for this shop for free.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can read the shared instructions for this shop for free."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puedes leer gratis las instrucciones compartidas para esta compra."
+          }
+        }
+      }
+    },
+    "You can read the shared instructions and suggest corrections for the shopper to review for free.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can read the shared instructions and suggest corrections for the shopper to review for free."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puedes leer gratis las instrucciones compartidas y sugerir correcciones para que las revise quien hace la compra."
+          }
+        }
+      }
+    },
+    "The purchaser manages billing and can assign two named adult planning seats. Joining does not use a seat.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The purchaser manages billing and can assign two named adult planning seats. Joining does not use a seat."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quien compra la suscripción gestiona los cobros y puede asignar dos lugares de planificación a personas adultas. Unirte no ocupa un lugar."
+          }
+        }
+      }
+    },
+    "The invitation shows the household and contributor role. The dinner opens on iPhone after the recipient joins, has a named planning seat, and receives meal access for this shop.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The invitation shows the household and contributor role. The dinner opens on iPhone after the recipient joins, has a named planning seat, and receives meal access for this shop."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La invitación muestra el hogar y el rol de colaborador. La cena se abre en el iPhone cuando la persona se une, tiene un lugar de planificación asignado y recibe acceso a las comidas de esta compra."
+          }
+        }
+      }
+    },
+    "Create dinner invitation": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create dinner invitation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crear invitación para la cena"
+          }
+        }
+      }
+    },
+    "Invite an adult to this dinner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invite an adult to this dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invitar a una persona adulta a esta cena"
+          }
+        }
+      }
+    },
+    "Dinner from your invitation": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dinner from your invitation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cena de tu invitación"
+          }
+        }
+      }
+    },
+    "Use your free grocery requests while the shopper checks this dinner invitation and your meal access.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use your free grocery requests while the shopper checks this dinner invitation and your meal access."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puedes enviar solicitudes de productos gratis mientras quien hace la compra revisa la invitación y tu acceso a las comidas."
+          }
+        }
+      }
+    },
+    "Check the invited dinner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the invited dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consultar la cena de la invitación"
+          }
+        }
+      }
+    },
+    "Open the household account that joined this invitation. Your shopper can check meal access and the purchaser can check your planning seat.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the household account that joined this invitation. Your shopper can check meal access and the purchaser can check your planning seat."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre la cuenta del hogar con la que aceptaste la invitación. Quien hace la compra puede revisar tu acceso a las comidas y quien compró la suscripción puede revisar tu lugar de planificación."
+          }
+        }
+      }
+    },
+    "Invited dinner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invited dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cena de la invitación"
           }
         }
       }

@@ -31,8 +31,8 @@ BITRISE_POOLS = ("A1", "A2")
 BITRISE_SLOTS_PER_POOL = 6
 
 
-def with_bitrise_slots(rows, identity_fields, estimated_seconds, *, first_pool="A1"):
-    """Assign whole jobs longest-first across the twelve reviewed provider lanes.
+def with_bitrise_slots(rows, identity_fields, estimated_seconds, *, first_pool="A1", a3_enabled=False):
+    """Assign whole jobs longest-first across the enabled provider lanes.
 
     Row order, identity and GitHub fallback metadata are preserved. Durations
     are scheduling estimates, not provider speed or currently available capacity.
@@ -51,6 +51,11 @@ def with_bitrise_slots(rows, identity_fields, estimated_seconds, *, first_pool="
         raise ValueError("Duplicate Bitrise job identity")
     pools = (first_pool, next(p for p in BITRISE_POOLS if p != first_pool))
     lanes = [(pool, slot) for slot in range(BITRISE_SLOTS_PER_POOL) for pool in pools]
+    if a3_enabled:
+        # A1 and A2 share six M4 machines. Alternate each of their first six
+        # combined lanes with one of the six separately budgeted M2 machines.
+        m4_lanes = lanes[:BITRISE_SLOTS_PER_POOL]
+        lanes = [lane for slot, m4 in enumerate(m4_lanes) for lane in (m4, ("A3", slot))]
     totals = [0] * len(lanes)
     result = [dict(row) for row in rows]
     for index in sorted(range(len(rows)), key=lambda i: (-estimated_seconds[i], identities[i])):

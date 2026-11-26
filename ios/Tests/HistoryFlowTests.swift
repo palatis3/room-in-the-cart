@@ -8,6 +8,50 @@ import HouseholdClient
     private let member = "10000000-0000-4000-8000-000000000002"
     private let shop = "10000000-0000-4000-8000-000000000003"
 
+    func testBasketRequiresCurrentSeatInThisHistoryScopeEvenWhenRawHistoryIsReadable() async throws {
+        let (model, _, _, _) = try await setup()
+        let now = Date()
+        let context = MembershipContext(purchaserID: member, purchaserName: "Alex", householdID: household, householdName: "Home")
+        func snapshot(_ status: MembershipStatus, _ memberID: String) -> MembershipSnapshot {
+            MembershipSnapshot(householdID: household, purchaserID: member, revision: 1, status: status, expiresAt: now.addingTimeInterval(60),
+                graceExpiresAt: nil, verifiedAt: now.addingTimeInterval(-60), validUntil: now.addingTimeInterval(30),
+                seats: [.init(userID: memberID, displayName: "Alex", isAdult: true)])
+        }
+        XCTAssertTrue(model.authorized)
+        XCTAssertTrue(model.canCompareBasket(context: context, snapshot: snapshot(.active, member), at: now))
+        XCTAssertFalse(model.canCompareBasket(context: context, snapshot: snapshot(.active, shop), at: now))
+        XCTAssertFalse(model.canCompareBasket(context: context, snapshot: snapshot(.revoked, member), at: now))
+        XCTAssertFalse(model.canCompareBasket(context: context, snapshot: snapshot(.active, member), at: now.addingTimeInterval(31)))
+        XCTAssertFalse(model.canCompareBasket(context: context, snapshot: nil, at: now))
+        XCTAssertTrue(model.authorized)
+    }
+
+    func testSameBasketRoundsWholePacksAndKeepsMismatchedEvidenceUnpriced() throws {
+        func row(_ store: String, grams: Int, cents: Int, currency: String) throws -> HistoryPriceObservation {
+            try .init(shopId: shop, itemName: "Beans", packLabel: "Beans", usablePack: .init(amount: .init(numerator: grams, denominator: 1),
+                unit: .gram, originalLiteral: String(grams)), price: .exact(minor: cents), store: store, branch: store,
+                channel: .storeShelf, mode: .inStore, eligibility: "Regular", observedAt: "2026-11-21T12:00:00Z",
+                sourceText: "Shelf", sourceLocale: "en", currency: currency)
+        }
+        for code in ["USD", "MXN"] {
+            let a = try row("Market", grams: 500, cents: 215, currency: code)
+            var b = try row("Super", grams: 400, cents: 170, currency: code)
+            let result = try XCTUnwrap(HistoryBasketComparison.cost(a, b, count: 2))
+            XCTAssertEqual(result.first.minorUnits, 430)
+            XCTAssertEqual(result.second.minorUnits, 510)
+            XCTAssertEqual(result.packs, 3)
+            b.itemName = "Rice"
+            XCTAssertNil(HistoryBasketComparison.cost(a, b, count: 2))
+            b.itemName = a.itemName
+            b.currency = code == "USD" ? "MXN" : "USD"
+            XCTAssertNil(HistoryBasketComparison.cost(a, b, count: 2))
+            b.currency = code; b.price = .unknown(reason: "not priced")
+            XCTAssertNil(HistoryBasketComparison.cost(a, b, count: 2))
+            b.price = .exact(minor: 170); b.usablePack?.unit = .milliliter
+            XCTAssertNil(HistoryBasketComparison.cost(a, b, count: 2))
+        }
+    }
+
     func testReviewedSharedPriceOmitsPrivateIdentitiesAndRequiresCurrentWritableShop() async throws {
         let (model, service, _, _) = try await setup()
         let assigned = try XCTUnwrap(model.ownedShops.first)
@@ -399,7 +443,7 @@ import HouseholdClient
         XCTAssertNil(model.pending); XCTAssertFalse(model.hasUnresolvedWrite); XCTAssertNil(model.selectedObservation)
         XCTAssertEqual(service.observationSends.count, 1)
         let state = await store.read(); XCTAssertTrue(state.pending.isEmpty); XCTAssertTrue(state.observations.isEmpty)
-        XCTAssertTrue(model.notice?.contains("does not undo") == true)
+        XCTAssertEqual(model.notice, HistoryCopy.text("The local retry was cleared after checking current access and record status. This does not undo a saved record or confirm the original result."))
     }
     func testStatusClearNeedsFreshAuthorityAndPreservesPrivateRetryOnDenial() async throws {
         let (model, service, store, _) = try await setup(); enterObservation(model); model.approved = true

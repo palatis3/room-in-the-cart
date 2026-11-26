@@ -568,6 +568,19 @@ public struct LedgerWorkspace: Codable, Equatable, Sendable {
         packSelections = try c.decodeIfPresent([LedgerPackSelection].self, forKey: .packSelections) ?? []
         try validate()
     }
+    /// Build 8 accepts only v1 and can silently discard additive fields on its next write.
+    /// Choose the format after scoping an export so plain, older-compatible copies stay v1.
+    public var ledgerDocumentVersion: Int {
+        if !dinnerPlanning.serveSchedules.isEmpty || dinnerPlanning.applyReceipts.contains(where: { $0.costBaseline != nil }) ||
+            listLayout.departmentDirectory?.stores.values.contains(where: { $0.learnsAisles != nil }) == true {
+            return 2
+        }
+        let discounted = shops.contains { shop in
+            shop.lines.contains { $0.pickedPrice?.discount != nil || $0.tripUndo?.price?.discount != nil }
+        }
+        return discounted ? 2 : 1
+    }
+
     public func validate() throws {
         guard shops.count <= 100, mealTemplates.count <= 500 else { throw LedgerError.invalid("workspaceSize") }
         try uniqueIDs(shops.map(\.id)); try uniqueIDs(mealTemplates.map(\.id))
@@ -1178,7 +1191,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     /// Records evidence for this specific pick. Checkout has its own evidence.
     public mutating func recordPickedPrice(lineID: UUID, expectedRevision: UUID, total: Money?,
                                            membership: Bool, weighted: Bool, conditionsConfirmed: Bool,
-                                           shelf: PickedShelfPrice? = nil) throws {
+                                           shelf: PickedShelfPrice? = nil, discount: Money? = nil) throws {
         guard revisionID == expectedRevision else { throw LedgerError.stalePreview }
         try mutate("pickedPrice", at: Date()) { next in
             let index = try next.lineIndex(lineID)
@@ -1186,7 +1199,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
             guard let picked = line.inStorePickedAt, !line.isTrashed, !line.isHandled else { throw LedgerError.stalePreview }
             let price = PickedLinePrice(total: total, membership: membership, weighted: weighted,
                 conditionsConfirmed: conditionsConfirmed, checkedAt: picked, name: line.name,
-                quantity: try next.pickedQuantity(forLineID: lineID), basisRevision: next.basisRevision, shelf: shelf)
+                quantity: try next.pickedQuantity(forLineID: lineID), basisRevision: next.basisRevision, shelf: shelf, discount: discount)
             try price.validate(currency: next.basis.currency)
             next.lines[index].pickedPrice = price
         }

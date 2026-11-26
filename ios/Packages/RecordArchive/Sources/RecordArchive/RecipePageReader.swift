@@ -30,6 +30,49 @@ public enum RecipePageReader {
         throw ArchiveError.invalidRecipe
     }
 
+    /// An offline review can keep the selected source even when its page is unavailable.
+    public static func partialRecipe(at address: String) throws -> ImportedRecipe {
+        let literal = address.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let url = URL(string: literal) else { throw ArchiveError.invalidRecipe }
+        let page = try checkedURL(url)
+        guard let host = page.host else { throw ArchiveError.invalidRecipe }
+        return try ImportedRecipe(title: host, sourceURL: literal).validated()
+    }
+
+    private static func source(of record: ArchiveRecord) -> (page: String, title: String, original: String)? {
+        guard record.kind == .recipe, record.origin == "recipe-library-v1", !PaprikaCollection.isTracked(record),
+              let bytes = record.nativePayload, let recipe = try? JSONDecoder().decode(ImportedRecipe.self, from: bytes),
+              let original = recipe.sourceURL, let url = URL(string: original), let page = try? checkedURL(url),
+              let address = page.url?.absoluteString else { return nil }
+        return (address, recipe.title.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(), original)
+    }
+
+    /// A page can contain multiple dishes. Only a retained link or a matching dish title calls for a version decision.
+    static func versionChoices(_ rows: [RecoveryReviewRow], saved: [ArchiveRecord]) -> Set<ArchiveIdentity> {
+        let incoming = rows.filter { $0.disposition == .absent }.compactMap { row in
+            source(of: row.record).map { (id: row.id, page: $0.page, title: $0.title) }
+        }
+        let pages = Set(incoming.map(\.page))
+        guard !pages.isEmpty else { return [] }
+        var retainedLinks = Set<String>()
+        var titles: [String: Set<String>] = [:]
+        for record in saved {
+            guard let prior = source(of: record), pages.contains(prior.page) else { continue }
+            titles[prior.page, default: []].insert(prior.title)
+            if (try? partialRecipe(at: prior.original).id) == record.id {
+                retainedLinks.insert(prior.page)
+            }
+        }
+        var choices = Set<ArchiveIdentity>()
+        for (page, recipes) in Dictionary(grouping: incoming, by: \.page) {
+            for (title, versions) in Dictionary(grouping: recipes, by: \.title)
+                where versions.count > 1 || retainedLinks.contains(page) || titles[page]?.contains(title) == true {
+                choices.formUnion(versions.map(\.id))
+            }
+        }
+        return choices
+    }
+
     static func checkedURL(_ url: URL) throws -> URLComponents {
         guard url.absoluteString.utf8.count <= 4096, var page = URLComponents(url: url, resolvingAgainstBaseURL: true),
               page.scheme?.lowercased() == "https", page.user == nil, page.password == nil,
@@ -54,8 +97,9 @@ public enum RecipePageReader {
         guard !body.isEmpty, body.count <= maximumBody else { throw ArchiveError.tooLarge }
         let mime = contentType.components(separatedBy: ";")[0].trimmingCharacters(in: .whitespaces).lowercased()
         let scripts: [Data]
+        var pageTitle: String?
         switch mime {
-        case "text/html", "application/xhtml+xml": scripts = try inlineScripts(body)
+        case "text/html", "application/xhtml+xml": (scripts, pageTitle) = try inlineScripts(body)
         case "application/ld+json", "application/json": scripts = [body]
         default: throw ArchiveError.invalidRecipe
         }
@@ -72,6 +116,9 @@ public enum RecipePageReader {
                     if types.contains(where: { ["Recipe", "https://schema.org/Recipe", "http://schema.org/Recipe"].contains($0) }) {
                         guard nodes.count < ArchiveCodec.maximumRecords else { throw ArchiveError.tooLarge }
                         var recipe = object
+                        if let pageTitle, (recipe["name"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty != false {
+                            recipe["name"] = pageTitle
+                        }
                         recipe.removeValue(forKey: "@graph") // Linked nodes are visited separately.
                         recipe["url"] = source.absoluteString
                         // Publishers often supply a short yield plus a human-readable alternative.
@@ -86,13 +133,16 @@ public enum RecipePageReader {
             }
             try append(json)
         }
+        if nodes.isEmpty, let pageTitle {
+            nodes.append(["@type": "Recipe", "name": pageTitle, "url": source.absoluteString])
+        }
         guard !nodes.isEmpty else { throw ArchiveError.invalidRecipe }
         let data = try JSONSerialization.data(withJSONObject: nodes)
         guard data.count <= ArchiveCodec.maximumFileBytes else { throw ArchiveError.tooLarge }
         return data
     }
 
-    private static func inlineScripts(_ body: Data) throws -> [Data] {
+    private static func inlineScripts(_ body: Data) throws -> (scripts: [Data], title: String?) {
         guard String(data: body, encoding: .utf8) != nil else { throw ArchiveError.invalidRecipe }
         // Parse an inert memory document. No browser, DTD loading, scripts, styles, frames or images.
         let options = HTML_PARSE_NONET.rawValue | HTML_PARSE_NOERROR.rawValue | HTML_PARSE_NOWARNING.rawValue
@@ -103,9 +153,17 @@ public enum RecipePageReader {
         defer { xmlFreeDoc(document) }
         guard let context = xmlXPathNewContext(document) else { throw ArchiveError.invalidRecipe }
         defer { xmlXPathFreeContext(context) }
+        var title: String?
+        if let result = xmlXPathEvalExpression("string(/html/head/title[1])", context) {
+            defer { xmlXPathFreeObject(result) }
+            if let value = result.pointee.stringval, xmlStrlen(value) <= 4096 {
+                let text = String(cString: value).trimmingCharacters(in: .whitespacesAndNewlines)
+                if !text.isEmpty { title = text }
+            }
+        }
         guard let matches = xmlXPathEvalExpression("//script[@type and not(@src)]", context) else { throw ArchiveError.invalidRecipe }
         defer { xmlXPathFreeObject(matches) }
-        guard let set = matches.pointee.nodesetval, let table = set.pointee.nodeTab else { return [] }
+        guard let set = matches.pointee.nodesetval, let table = set.pointee.nodeTab else { return ([], title) }
         var scripts: [Data] = []
         for i in 0..<Int(set.pointee.nodeNr) {
             guard let node = table[i], let type = xmlGetProp(node, "type") else { continue }
@@ -116,6 +174,6 @@ public enum RecipePageReader {
             defer { xmlFree(text) }
             scripts.append(Data(bytes: text, count: Int(xmlStrlen(text))))
         }
-        return scripts
+        return (scripts, title)
     }
 }

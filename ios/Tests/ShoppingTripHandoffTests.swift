@@ -4,6 +4,21 @@ import XCTest
 @testable import RoomInTheCart
 
 @MainActor final class ShoppingTripHandoffTests: XCTestCase {
+    func testReopenedShelfMeasurementAlwaysMatchesTheDisplayedPriceUnit() throws {
+        let grams = Quantity(amount: try Rational(500), unit: .gram, originalLiteral: "500")
+        let rate = Money(minorUnits: 4500, currency: .mxn)
+        let shelf = PickedShelfPrice(rate: rate, unit: .kilogram, measured: grams)
+        let english = Locale(identifier: "en_US")
+        let corrected = try ComparisonModel.quantity(shelf.editableMeasurement(locale: english), .kilogram)
+        XCTAssertEqual(corrected?.amount, try Rational(1, 2))
+        XCTAssertEqual(try PickedShelfPrice(rate: rate, unit: .kilogram, measured: corrected).lineTotal(), try shelf.lineTotal())
+
+        let local = Quantity(amount: try Rational(1, 2), unit: .kilogram, originalLiteral: "0,5")
+        let localShelf = PickedShelfPrice(rate: rate, unit: .kilogram, measured: local)
+        XCTAssertEqual(localShelf.editableMeasurement(locale: Locale(identifier: "es_ES")), "0,5")
+        XCTAssertEqual(try ComparisonModel.quantity(localShelf.editableMeasurement(locale: english), .kilogram)?.amount, local.amount)
+    }
+
     func testSingleUnpackagedItemUsesTheSingularInTheAisleAndHandoff() throws {
         var shop = ShoppingLedger()
         let one = Quantity(amount: .one, unit: .count, originalLiteral: "1")

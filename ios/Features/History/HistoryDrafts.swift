@@ -152,3 +152,39 @@ struct HistoryPriceFilter: Equatable {
         return (from == nil || date >= from!) && (through == nil || date <= through!)
     }
 }
+
+/// Entry amounts apply to a whole observed pack. Round whole packs up before
+/// comparing merchandise subtotals for the same requested usable quantity.
+enum HistoryBasketComparison {
+    struct Store: Hashable, Comparable {
+        let name: String
+        let branch: String
+        init(_ row: HistoryPriceObservation) { name = row.store; branch = row.branch }
+        var label: String { name == branch ? name : name + " · " + branch }
+        static func < (lhs: Self, rhs: Self) -> Bool { (lhs.name, lhs.branch) < (rhs.name, rhs.branch) }
+    }
+    struct Cost {
+        let first: Money
+        let second: Money
+        let packs: Int64
+    }
+    static func cost(_ first: HistoryPriceObservation, _ second: HistoryPriceObservation, count: Int) -> Cost? {
+        guard (1...100).contains(count), Store(first) != Store(second),
+              ShelfPriceOffer.normalized(first.itemName) == ShelfPriceOffer.normalized(second.itemName),
+              first.currency == second.currency, let currency = Currency(rawValue: first.currency),
+              first.channel == second.channel, first.mode == second.mode, first.eligibility == second.eligibility,
+              first.variant == second.variant, let a = first.usablePack, let b = second.usablePack,
+              let unitA = UnitOfMeasure(rawValue: a.unit.rawValue), let unitB = UnitOfMeasure(rawValue: b.unit.rawValue),
+              case .exact(let centsA) = first.price, case .exact(let centsB) = second.price else { return nil }
+        do {
+            let amountA = try Rational(Int64(a.amount.numerator), Int64(a.amount.denominator))
+            let amountB = try Rational(Int64(b.amount.numerator), Int64(b.amount.denominator))
+            let total = try amountA.multiplied(by: Rational(Int64(count)))
+            let pack = Quantity(amount: amountB, unit: unitB, originalLiteral: b.originalLiteral)
+            guard let available = try pack.converted(to: unitA) else { return nil }
+            let packs = try total.divided(by: available).roundedUp()
+            return try Cost(first: Money(minorUnits: Int64(centsA), currency: currency).multiplied(by: Int64(count)),
+                            second: Money(minorUnits: Int64(centsB), currency: currency).multiplied(by: packs), packs: packs)
+        } catch { return nil }
+    }
+}

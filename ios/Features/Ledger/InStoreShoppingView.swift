@@ -17,6 +17,18 @@ func pickedSubtotalText(_ subtotal: PickedCartSubtotal) -> String {
                           Int64(subtotal.priced), Int64(subtotal.picked))
 }
 
+func pickedPriceLabels(_ price: PickedLinePrice) -> [String] {
+    var parts = [price.total.map { shoppingFormat("Saved price · %@", moneyText($0)) } ?? shoppingText("Price unknown")]
+    if let discount = price.discount {
+        parts.append(shelfFormat("Line discount · %@", moneyText(discount)))
+        if let net = price.includedTotal { parts.append(shelfFormat("Picked line total · %@", moneyText(net))) }
+    }
+    if price.membership { parts.append(shoppingText("Member price")) }
+    if price.weighted { parts.append(shoppingText("Sold by weight")) }
+    if price.includedTotal == nil { parts.append(shoppingText("Excluded from subtotal")) }
+    return parts
+}
+
 private struct ShoppingListAuthorizationKey: EnvironmentKey {
     static let defaultValue: @MainActor () -> Bool = { false }
 }
@@ -275,6 +287,9 @@ struct InStoreShoppingView: View {
             TripNextStoreEntry(model: model, shopID: shopID).toolbar { closeSheet }
         case .options:
             List {
+                NavigationLink(ledgerText("List order and aisles")) {
+                    LedgerLayoutEditor(model: model, shop: shop)
+                }
                 NavigationLink(tripText("Preview list copy")) { TripHandoffEntry(model: model, shopID: shopID) }
                     .accessibilityIdentifier("tripShare.previewCopy")
                 FamilyPermissionGuideLink(title: GuardianCopy.text("Child permissions")) { destination = nil }
@@ -449,7 +464,8 @@ struct InStoreShoppingView: View {
                             Text(label ?? ledgerQuantity(picked)).foregroundStyle(Theme.secondary)
                         }
                         if let coupon = line.pinnedCoupon { InStoreCouponPickLabel(coupon: coupon, line: line) }
-                        Text(priceLabel(shop.priceForCurrentPick(lineID: line.id)))
+                        Text(shop.priceForCurrentPick(lineID: line.id).map { pickedPriceLabels($0).joined(separator: " · ") }
+                             ?? shoppingText("Price unknown · enter total"))
                             .foregroundStyle(Theme.secondary).monospacedDigit()
                     }
                     .multilineTextAlignment(.leading)
@@ -502,15 +518,6 @@ struct InStoreShoppingView: View {
         }
     }
 
-    private func priceLabel(_ price: PickedLinePrice?) -> String {
-        guard let price else { return shoppingText("Price unknown · enter total") }
-        var parts = [price.total.map { shoppingFormat("Saved price · %@", moneyText($0)) } ?? shoppingText("Price unknown")]
-        if price.membership { parts.append(shoppingText("Member price")) }
-        if price.weighted { parts.append(shoppingText("Sold by weight")) }
-        if price.includedTotal == nil { parts.append(shoppingText("Excluded from subtotal")) }
-        return parts.joined(separator: " · ")
-    }
-
     private func undo(_ line: ShoppingLine, in shop: ShoppingLedger) {
         Task {
             guard !model.hasPendingSave,
@@ -525,10 +532,13 @@ struct InStoreShoppingView: View {
 
     private func changePick(_ line: ShoppingLine, in shop: ShoppingLedger, checked: Bool, next: UUID?) {
         Task {
-            guard !model.hasPendingSave, await model.editShop(key: "pick-\(line.id)", shopID: shop.id, authorize: authorize, { current in
-                guard model.workspace.selectedShopID == shopID, current.revisionID == shop.revisionID,
-                      current.lines.contains(where: { $0.id == line.id && !$0.isHandled && !$0.isTrashed }) else { throw LedgerError.stalePreview }
-                try current.setChecked(lineID: line.id, checked: checked)
+            guard !model.hasPendingSave, await model.change(key: "pick-\(line.id)", reviewedPantryBasis: nil, authorize: authorize, { workspace in
+                guard workspace.selectedShopID == shopID, let index = workspace.shops.firstIndex(where: { $0.id == shopID }),
+                      workspace.shops[index].revisionID == shop.revisionID,
+                      workspace.shops[index].lines.contains(where: { $0.id == line.id && !$0.isHandled && !$0.isTrashed })
+                else { throw LedgerError.stalePreview }
+                try workspace.shops[index].setChecked(lineID: line.id, checked: checked)
+                if checked { workspace.listLayout.recordAislePick(for: line.id, in: workspace.shops[index]) }
             }) else { return }
             cue = checked && !reduceMotion && scene == .active ? GroceryCheckCue(lineID: line.id) : nil
             pendingFocus = next.map(Focus.line) ?? .subtotal

@@ -1360,6 +1360,86 @@
           }
         }
       }
+    },
+    "Shelf price per %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shelf price per %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio de estante por %@"
+          }
+        }
+      }
+    },
+    "Measured weight": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Measured weight"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Peso medido"
+          }
+        }
+      }
+    },
+    "Line discount · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Line discount · %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descuento del artículo · %@"
+          }
+        }
+      }
+    },
+    "Confirmed discount to subtract (%@, optional)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed discount to subtract (%@, optional)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descuento confirmado que se restará (%@, opcional)"
+          }
+        }
+      }
+    },
+    "Enter a discount that fits within the picked line price.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a discount that fits within the picked line price."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingresa un descuento que no supere el precio del artículo en el carrito."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

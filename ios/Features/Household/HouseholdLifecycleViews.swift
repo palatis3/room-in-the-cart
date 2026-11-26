@@ -66,6 +66,10 @@ struct HouseholdSetupSections: View {
                     .accessibilityIdentifier("household.invite.household")
                 Text(ht("Role offered by this invitation")).font(.subheadline).foregroundStyle(.secondary)
                 Text(roleLabel(offer.role)).privacySensitive().accessibilityIdentifier("household.invite.role")
+                Text(roleAccess(offer.role)).accessibilityIdentifier("household.invite.access")
+                if offer.role == .adultContributor {
+                    Text(ht("The purchaser manages billing and can assign two named adult planning seats. Joining does not use a seat."))
+                }
             }.accessibilityElement(children: .contain)
         case .unavailable:
             Text(ht("This invitation is unavailable. Ask the person who invited you for a current code."))
@@ -74,6 +78,13 @@ struct HouseholdSetupSections: View {
             Text(ht("The invitation could not be checked. Try again.")).accessibilityIdentifier("household.invite.status")
             Button(ht("Check invitation again")) { Task { await model.previewInvitation() } }
                 .accessibilityIdentifier("household.invite.retry")
+        }
+    }
+    private func roleAccess(_ role: InvitationOffer.Role) -> String {
+        switch role {
+        case .adultContributor: ht("You can send and track your own grocery requests for free.")
+        case .helperRead: ht("You can read the shared instructions for this shop for free.")
+        case .helperEdit: ht("You can read the shared instructions and suggest corrections for the shopper to review for free.")
         }
     }
     private func roleLabel(_ role: InvitationOffer.Role) -> String {
@@ -90,6 +101,118 @@ struct HouseholdSetupSections: View {
     private var canContinue: Bool { model.adultAttestation && model.keepLocalPrivate }
 }
 
+struct HouseholdDinnerInvitationView: View {
+    @ObservedObject var model: HouseholdLifecycleModel
+    let scope: HouseholdBootstrap
+    let target: InvitationDinnerTarget
+    let title: String
+
+    var body: some View {
+        WorkingForm {
+            if model.scope == scope, model.canAdminister, model.canShare {
+                Section {
+                    Text(verbatim: title).font(.headline).privacySensitive()
+                    Text(ht("The invitation shows the household and contributor role. The dinner opens on iPhone after the recipient joins, has a named planning seat, and receives meal access for this shop."))
+                    expiryPicker(model)
+                    if model.issuanceUncertain { uncertainCreation(model) }
+                    else {
+                        Button(ht("Create dinner invitation")) {
+                            Task { await model.createAdultInvitation(dinner: target) }
+                        }.disabled(model.busy)
+                    }
+                }
+                if model.issuedDinner == target { IssuedInvitationSection(model: model, helperOnly: false) }
+                lifecycleNotice(model)
+            }
+        }
+        .navigationTitle(ht("Invite an adult to this dinner"))
+    }
+}
+
+struct InvitedDinnerLink: Identifiable {
+    let id: UUID
+
+    init(id: UUID) { self.id = id }
+
+    init?(url: URL, scheme: String?) {
+        guard let scheme, let parts = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              parts.scheme == scheme, parts.host == "invitation-dinner",
+              let id = UUID(uuidString: String(parts.path.dropFirst())),
+              url.absoluteString == "\(scheme)://invitation-dinner/\(id.uuidString.lowercased())" else { return nil }
+        self.id = id
+    }
+}
+struct InvitedDinnerLanding: View {
+    @ObservedObject var household: HouseholdModel
+    let link: InvitedDinnerLink
+    var body: some View {
+        WorkingForm {
+            if !household.locked, let scope = household.projection, scope.enrolled, scope.grantId == nil,
+               scope.capabilities.contains("meal_proposals"), let lifecycle = household.lifecycle {
+                HouseholdInvitedDinnerEntry(model: lifecycle, scope: scope, link: link)
+            } else {
+                Text(ht("Open the household account that joined this invitation. Your shopper can check meal access and the purchaser can check your planning seat."))
+                NavigationLink(mtr("Open adult household setup")) { HouseholdSettingsView(model: household) }
+            }
+        }.navigationTitle(ht("Invited dinner"))
+    }
+}
+struct HouseholdInvitedDinnerEntry: View {
+    @ObservedObject var model: HouseholdLifecycleModel
+    let scope: HouseholdBootstrap
+    @Environment(\.scenePhase) private var scene
+    var link: InvitedDinnerLink? = nil
+    @State private var dinner: InvitedDinner?
+    @State private var checkedScope: HouseholdBootstrap?
+    @State private var retry = 0
+
+    private struct Request: Equatable {
+        let scope: HouseholdBootstrap
+        let invite: UUID
+        let retry: Int
+    }
+    private var request: Request? {
+        guard scene == .active, UIApplication.shared.isProtectedDataAvailable, scope == model.scope,
+              scope.enrolled, scope.grantId == nil, scope.capabilities.contains("meal_proposals"),
+              let invite = link?.id ?? model.joinedDinnerInvite else { return nil }
+        return Request(scope: scope, invite: invite, retry: retry)
+    }
+    var body: some View {
+        Group {
+            if (link != nil || model.joinedDinnerInvite != nil), scope == model.scope, scene == .active {
+                Section(ht("Dinner from your invitation")) {
+                    if let request, let dinner, checkedScope == request.scope,
+                       dinner.inviteId == request.invite, let expiry = serviceDate(dinner.expiresAt), expiry > Date() {
+                        SharedMealFacts(meal: dinner.occurrence.meal).privacySensitive()
+                            .accessibilityIdentifier("household.invite.dinner")
+                    } else {
+                        Text(ht("Use your free grocery requests while the shopper checks this dinner invitation and your meal access."))
+                        Button(ht("Check the invited dinner")) { retry += 1 }
+                            .disabled(request == nil)
+                    }
+                }
+            }
+        }
+        .task(id: request) {
+            dinner = nil; checkedScope = nil
+            guard let original = request else { return }
+            do {
+                while !Task.isCancelled {
+                    dinner = nil
+                    let next = try await model.resolveInvitedDinner(original.invite, expected: original.scope)
+                    guard original == request, !Task.isCancelled, let expiry = serviceDate(next.expiresAt) else { return }
+                    let seconds = min(15, expiry.timeIntervalSinceNow)
+                    guard seconds > 0 else { dinner = nil; return }
+                    dinner = next; checkedScope = original.scope
+                    try await Task.sleep(for: .seconds(seconds))
+                    if expiry <= Date() { dinner = nil; return }
+                }
+            } catch { if original == request, !Task.isCancelled { dinner = nil } }
+        }
+        .onDisappear { dinner = nil; checkedScope = nil }
+    }
+}
+
 struct HouseholdPeopleView: View {
     @ObservedObject var model: HouseholdLifecycleModel
     @State private var selectedMember: HouseholdMember?
@@ -103,7 +226,7 @@ struct HouseholdPeopleView: View {
                     if model.issuanceUncertain { uncertainCreation(model) }
                     else { Button(ht("Create adult invitation")) { Task { await model.createAdultInvitation() } }.buttonStyle(PrimaryAction()) }
                 }
-                IssuedInvitationSection(model: model, helperOnly: false)
+                if model.issuedDinner == nil { IssuedInvitationSection(model: model, helperOnly: false) }
                 if model.canReviewDevices {
                     Section {
                         NavigationLink(DeviceManagementCopy.text("Household devices")) {

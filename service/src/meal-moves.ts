@@ -4,7 +4,7 @@ import type { BillingService } from './billing/service.js';
 import { ServiceError, unavailable } from './errors.js';
 import { uuid } from './contracts.js';
 import {digest} from './database.js';
-import {moveSharedMeal,type SharedMealValue} from './shared-meal-planning.js';
+import {moveSharedMeal,sharedMealSchema,type SharedMealValue} from './shared-meal-planning.js';
 
 const positive = z.number().int().positive();
 export const grantChange = z.object({ plannerId: uuid.nullable(), grantRevision: positive.or(z.literal(0)), authorityEpoch: positive }).strict();
@@ -17,7 +17,7 @@ export class MealMoves {
   constructor(private readonly repo: HouseholdRepository, private readonly billing?: BillingService) {}
 
   async context(ctx: Context, id: string, allowLocked = false) {
-    if(ctx.viewGrantId || ctx.member.kind !== 'adult') throw unavailable();
+    if(ctx.ownRequestsOnly || ctx.viewGrantId || ctx.member.kind !== 'adult') throw unavailable();
     const shop = await this.repo.shop(ctx,id);
     const row = (await ctx.db.query('SELECT planner_id,revision,authority_epoch FROM ritc.meal_planner WHERE household_id=$1 AND shop_id=$2',
       [ctx.householdId,id])).rows[0];
@@ -31,8 +31,30 @@ export class MealMoves {
     return {shop,shopper,plannerId,grantRevision: Number(row?.revision ?? 0)};
   }
 
-  async read(ctx: Context,id: string) {
-    const {shop,shopper,plannerId,grantRevision} = await this.context(ctx,id);
+  async read(ctx: Context,id: string,currentWeek = false) {
+    const {shop,shopper,plannerId,grantRevision} = await this.context(ctx,id,currentWeek);
+    if (currentWeek && shop.phase === 'placed') {
+      const originals = await this.repo.meals(ctx,id);
+      const heads = await ctx.db.query<{occurrence_id:string, removed:boolean, title:string, day:string|null, portions:number}>(`
+        SELECT DISTINCT ON (occurrence_id) occurrence_id,current_meal IS NULL AS removed,
+          current_meal->>'title' AS title,current_meal->>'day' AS day,(current_meal->>'portions')::int AS portions
+        FROM ritc.meal_recovery_revision WHERE household_id=$1 AND shop_id=$2
+        ORDER BY occurrence_id,recovery_revision DESC`,[ctx.householdId,id]);
+      const replacements = new Map(heads.rows.map(row => [row.occurrence_id,row]));
+      const meals = originals.filter(row => !replacements.get(row.occurrenceId)?.removed).map(row => {
+        const original = sharedMealSchema.parse(row.meal);
+        const current = replacements.get(row.occurrenceId);
+        // The planning grant covers the shared menu. Keep delivery source identities,
+        // stock, financial evidence and cook notes in their separately authorized views.
+        return {occurrenceId:row.occurrenceId,revision:row.revision,meal:{
+          title:current ? current.title : original.title, day:current ? current.day : original.day,
+          kind:original.kind, portions:current ? current.portions : original.portions, protected:original.protected
+        }};
+      });
+      return {shopId:id,shopRevision:shop.revision,authorityEpoch:shop.authority_epoch,grantRevision,
+        shopper,plannerId,phase:shop.phase,adults:[],proposals:[],meals};
+    }
+    if (currentWeek && !shopper && shop.phase !== 'draft') throw unavailable();
     const proposals = (await ctx.db.query(`SELECT m.proposal_id,m.occurrence_id,m.proposed_day::text FROM ritc.meal_move m
       JOIN ritc.member a ON a.household_id=m.household_id AND a.member_id=m.actor_id AND a.state='active'
       WHERE m.household_id=$1 AND m.shop_id=$2 AND m.shop_revision=$3 AND m.authority_epoch=$4
@@ -41,12 +63,15 @@ export class MealMoves {
     const adults = shopper ? (await ctx.db.query("SELECT member_id,alias FROM ritc.member WHERE household_id=$1 AND member_id<>$2 AND kind='adult' AND state='active' ORDER BY alias,member_id",
       [ctx.householdId,ctx.member.member_id])).rows.map(row=>({id:row.member_id,label:row.alias})) : [];
     return {shopId:id,shopRevision:shop.revision,authorityEpoch:shop.authority_epoch,grantRevision,shopper,plannerId,adults,
+      ...(currentWeek ? {phase:shop.phase} : {}),
       meals:await this.repo.meals(ctx,id), proposals:proposals.map(row=>({proposalId:row.proposal_id,occurrenceId:row.occurrence_id,day:row.proposed_day}))};
   }
 
   async grant(ctx: Context,id: string,input: z.infer<typeof grantChange>) {
     const shop = await this.repo.shop(ctx,id);
-    this.repo.requireShopper(ctx,shop); this.repo.requireDraft(shop);
+    this.repo.requireShopper(ctx,shop);
+    // An existing reader must still be removable after the order is placed.
+    if (input.plannerId !== null || shop.phase !== 'placed') this.repo.requireDraft(shop);
     const {grantRevision,plannerId} = await this.context(ctx,id);
     if(input.authorityEpoch !== shop.authority_epoch) throw stale();
     if(input.plannerId === plannerId && (input.grantRevision === grantRevision || input.grantRevision+1 === grantRevision)) return {saved:true};

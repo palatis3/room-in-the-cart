@@ -4,6 +4,7 @@ import {checkPublishingMember,reviewSharedWording} from './shared-content-filter
 import {applyPair,checkPairReplay,inboxPairs,rememberPair,reviewPair} from './request-pair.js';
 import {proveSameItem,rememberSameItem,sameItemUndo,applySameItem,checkSameItemReplay} from './request-same-item.js';
 import {recordTonight,checkTonightReplay} from './household-tonight.js';
+import {acceptRepeatStep,assertRepeatStepReplay} from './shared-repeat-week.js';
 import {checkDraftDinnerSwap} from './shared-dinner-swap.js';
 import {checkIngredientChange} from './meal-preferences.js';
 import {isCookCommand} from './cook-completion-contracts.js';
@@ -437,6 +438,13 @@ export class HouseholdRepository {
         const shop=await this.shop(ctx,prior.shop_id);this.requireShopper(ctx,shop);
         await assertDemandReplay(this,ctx,shop,prior.operation_id);
         await assertRequestAcceptanceReplay(this,ctx,shop,prior,command);
+        if (prior.kind === 'shop.patch' && command.kind === 'shop.patch' && command.body.mealEdit &&
+            prior.payload_digest === payloadDigest && prior.device_id === ctx.deviceId) {
+          const edit = bodySchemas['shop.patch'].parse(command.body).mealEdit;
+          if (edit?.repeatPlanId) {
+            await assertRepeatStepReplay(ctx, billing, shop, edit.repeatPlanId, edit.occurrenceId, prior.operation_id);
+          }
+        }
         if(prior.kind==='request.apply'){
           await checkSameItemReplay(this,ctx,shop,prior.operation_id,prior.response?.authorityEpoch);
           await checkPairReplay(this,ctx,shop,prior.operation_id,prior.response?.authorityEpoch);
@@ -446,7 +454,7 @@ export class HouseholdRepository {
         if(prior.kind==='request.carry')await reauthorizeCarry(ctx,shop,this.carryNotice,prior.operation_id);
         if(prior.kind==='request.confirmPurchase' && (prior.response?.authorityEpoch!==shop.authority_epoch || !(await ctx.db.query(
           'SELECT 1 FROM ritc.request_purchase_review WHERE household_id=$1 AND operation_id=$2',[ctx.householdId,prior.operation_id])).rowCount)) throw refresh();
-        if(prior.kind==='meal.chooseTonight'){if(prior.response?.authorityEpoch!==shop.authority_epoch)throw refresh();await checkTonightReplay(ctx,shop,prior.operation_id);}
+        if(prior.kind==='meal.chooseTonight'){if(prior.response?.authorityEpoch!==shop.authority_epoch)throw refresh();await checkTonightReplay(ctx,shop,prior.operation_id,prior.response?.secondOccurrenceId?2:1);}
         if(prior.kind==='mealRecovery.apply') {
           if(prior.response?.authorityEpoch!==shop.authority_epoch || !(await ctx.db.query(
             'SELECT 1 FROM ritc.meal_recovery_revision WHERE household_id=$1 AND shop_id=$2 AND operation_id=$3 AND current_meal IS NOT NULL',
@@ -576,12 +584,12 @@ export class HouseholdRepository {
   }
   private async shopperCommand(ctx:Context,shop:Shop,c:Envelope,operationId:string,billing?:BillingService,internalPriceOnly=false) {
     if(c.kind==='meal.chooseTonight'){
-      const occurrenceId=await recordTonight(ctx,shop,c.body,operationId,this);
+      const choices=await recordTonight(ctx,shop,c.body,operationId,this,billing);
       await this.snapshot(ctx,shop.shop_id,operationId,'patch');
-      return {...await this.receipt(ctx,c,operationId,'meal_chosen'),occurrenceId};
+      return {...await this.receipt(ctx,c,operationId,'meal_chosen'),...choices};
     }
     if(isCookCommand(c.kind)){
-      const result=await recordCook(ctx,shop,c.kind,c.body,operationId);
+      const result=await recordCook(ctx,shop,c.kind,c.body,operationId,billing);
       return {...await this.receipt(ctx,c,operationId,'recorded'),...result};
     }
     if(c.kind==='mealRecovery.apply') {
@@ -642,6 +650,7 @@ export class HouseholdRepository {
         else preserveProtectedMeal(original ? sharedMealSchema.parse(original.meal) : undefined, meal);
         if((original?.revision ?? null)!==b.mealEdit.baseMealRevision)
           throw new ServiceError(409,'stale_meal','Review this occurrence again before applying a change.');
+        if(b.mealEdit.repeatPlanId) await acceptRepeatStep(this,billing,ctx,shop,b.mealEdit.repeatPlanId,occurrenceId,meal,operationId);
         if(b.mealEdit.dinnerSwap) await checkDraftDinnerSwap(ctx,original?sharedMealSchema.parse(original.meal):undefined,meal,b.mealEdit.preferenceReview);
         if(b.mealEdit.changeProposalId) await consumeSharedMealChange(ctx,shop,b.mealEdit.changeProposalId,occurrenceId,b.mealEdit.baseMealRevision,meal);
         else if(!b.demandReview)await checkIngredientChange(ctx,original?sharedMealSchema.parse(original.meal):undefined,meal,b.mealEdit.preferenceReview);

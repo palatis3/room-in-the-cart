@@ -67,7 +67,7 @@ struct TripHandoffEntry: View {
                 if let preview, preview.revision == shop.revisionID {
                     Section(tripText("Message preview")) {
                         Text(verbatim: preview.text).accessibilityIdentifier("tripShareBody")
-                        Text(tripText("The recipient can keep this copy and read it without the app. The assigned shopper records what arrived."))
+                        Text(tripText("The recipient can read this copy without the app. Later changes stay on your list."))
                             .font(.footnote)
                     }
                     Button(tripText("Choose how to send")) {
@@ -95,7 +95,7 @@ struct TripHandoffEntry: View {
                         let content = rows.filter { selected.contains($0.id) }.map { $0.text(includePack: includePack.contains($0.id)) }
                         guard authorize(), !content.isEmpty, model.shop?.revisionID == shop.revisionID else { return }
                         let date = Date().formatted(date: .long, time: .omitted)
-                        preview = Preview(revision: shop.revisionID, text: ([tripFormat("Shopping list · %@", date)] + content).joined(separator: "\n"))
+                        preview = Preview(revision: shop.revisionID, text: ([tripFormat("Shopping list copy · %@", date)] + content).joined(separator: "\n"))
                     }.buttonStyle(PrimaryAction()).disabled(selected.isDisjoint(with: rows.map(\.id)))
                 }
             }

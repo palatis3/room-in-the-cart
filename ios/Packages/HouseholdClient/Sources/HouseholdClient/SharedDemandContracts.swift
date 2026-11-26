@@ -241,9 +241,11 @@ public struct SharedDemandMealEdit: Codable, Equatable, Sendable {
     @SharedDemandNullable public var meal: SharedMeal?
     public var proposalId: SharedDemandID?
     public var preferenceReview: SharedRecipeReview?
+    public var repeatPlanId: SharedDemandID?
     public var dinnerSwap: Bool?
     public var changeProposalId: SharedDemandID?
-    public init(occurrenceId: SharedDemandID, baseMealRevision: Int?, meal: SharedMeal?, proposalId: SharedDemandID? = nil, changeProposalId: SharedDemandID? = nil, preferenceReview: SharedRecipeReview? = nil, dinnerSwap: Bool? = nil) {
+    public init(occurrenceId: SharedDemandID, baseMealRevision: Int?, meal: SharedMeal?, proposalId: SharedDemandID? = nil, changeProposalId: SharedDemandID? = nil, preferenceReview: SharedRecipeReview? = nil, dinnerSwap: Bool? = nil, repeatPlanId: SharedDemandID? = nil) {
+        self.repeatPlanId = repeatPlanId
         self.dinnerSwap = dinnerSwap
         self.preferenceReview = preferenceReview
         self.occurrenceId = occurrenceId; self.baseMealRevision = baseMealRevision; self.meal = meal; self.proposalId = proposalId; self.changeProposalId = changeProposalId

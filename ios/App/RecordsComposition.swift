@@ -23,7 +23,7 @@ private struct RecordsPlanningProjection: Codable {
     let portionBindings: [DinnerPortionBinding]
     let protectedDays: [DinnerProtectedDay]
     let weekNotes: [DinnerWeekNote]
-    let prepTasks: [DinnerPrepTask]?
+    let prepTasks: DinnerPrepRecords?
     let ideas: [DinnerIdeaDraft]
     let proposals: [DinnerProposal]
     let applyReceipts: [DinnerApplyReceipt]
@@ -51,7 +51,7 @@ private struct RecordsPlanningProjection: Codable {
             protectedDays = state.protectedDays.filter { $0.shopID == shop.id }
             weekNotes = state.weekNotes.filter { $0.shopID == shop.id }
             let prep = state.prepTasks.filter { $0.shopID == shop.id }
-            prepTasks = prep.isEmpty ? nil : prep
+            prepTasks = DinnerPrepRecords(tasks: prep, schedules: state.serveSchedules.filter { $0.shopID == shop.id })
             let ideaIDs = Set(acceptedDinners.compactMap(\.sourceIdeaID))
             ideas = state.ideas.filter { ideaIDs.contains($0.id) }
             quotePairs = state.quotePairs.filter { $0.shopID == shop.id }
@@ -132,7 +132,7 @@ private struct RecordsPlanningProjection: Codable {
 
     static func shoppingLibraryRecord(_ workspace: LedgerWorkspace, origin: String, date: Date) throws -> ArchiveRecord? {
         guard let selection = shoppingLibrary(workspace) else { return nil }
-        let bytes = try canonical(RecordsLedgerDocument(formatVersion: 1, workspace: selection))
+        let bytes = try canonical(RecordsLedgerDocument(formatVersion: selection.ledgerDocumentVersion, workspace: selection))
         return ArchiveRecord(id: "shopping-library", origin: origin, revision: ArchiveCodec.digest(bytes),
             kind: .ledger, title: "Shopping kits and standing list", savedAtMilliseconds: ArchiveCodec.milliseconds(date), nativePayload: bytes)
     }
@@ -146,7 +146,7 @@ private struct RecordsPlanningProjection: Codable {
         return value
     }
     private static func canonicalLedgerForImport(_ workspace: LedgerWorkspace, original: Data) throws -> Data {
-        let normalized = try canonical(RecordsLedgerDocument(formatVersion: 1, workspace: workspace))
+        let normalized = try canonical(RecordsLedgerDocument(formatVersion: workspace.ledgerDocumentVersion, workspace: workspace))
         // These public v1 fields have documented empty defaults. Only absent known
         // additions are normalized; unknown fields still fail equality.
         guard let source = try JSONSerialization.jsonObject(with: original) as? [String: Any],
@@ -192,14 +192,14 @@ private struct RecordsPlanningProjection: Codable {
         let workspace = try ledger(current.payload)
         var result = try workspace.shops.map { shop in
             let scoped = try ledgerScope(workspace, shop: shop, feedbackOwner: feedbackOwner)
-            let bytes = try canonical(RecordsLedgerDocument(formatVersion: 1, workspace: scoped))
+            let bytes = try canonical(RecordsLedgerDocument(formatVersion: scoped.ledgerDocumentVersion, workspace: scoped))
             let lines = shop.contributions.filter { $0.removedAt == nil }.map {
                 HelperLine(label: $0.productName, originalAmount: $0.quantity?.originalLiteral ?? "", originalUnit: $0.quantity?.unit.rawValue ?? "")
             }
             return try revised(saved.record, nativePayload: bytes, id: shop.id.uuidString, title: shop.title, date: current.savedAt, lines: lines)
         }
         if let library = try ledgerLibrary(workspace, feedbackOwner: feedbackOwner) {
-            let bytes = try canonical(RecordsLedgerDocument(formatVersion: 1, workspace: library))
+            let bytes = try canonical(RecordsLedgerDocument(formatVersion: library.ledgerDocumentVersion, workspace: library))
             result.append(try revised(saved.record, nativePayload: bytes, id: "meal-library", title: "Reusable dinners", date: current.savedAt, lines: []))
         }
         if let library = try shoppingLibraryRecord(workspace, origin: saved.record.origin, date: current.savedAt),
@@ -848,7 +848,7 @@ private struct RecordsRecoveredPantryView: View {
             let workspace = try RecordsNativeCodec.ledger(ledger.exportPayload())
             for shop in workspace.shops {
                 let scoped = try RecordsNativeCodec.ledgerScope(workspace, shop: shop, feedbackOwner: feedbackOwner)
-                let bytes = try RecordsNativeCodec.canonical(RecordsLedgerDocument(formatVersion: 1, workspace: scoped))
+                let bytes = try RecordsNativeCodec.canonical(RecordsLedgerDocument(formatVersion: scoped.ledgerDocumentVersion, workspace: scoped))
                 let lines = shop.contributions.filter { $0.removedAt == nil }.map { contribution in
                     HelperLine(label: contribution.productName, originalAmount: contribution.quantity?.originalLiteral ?? "",
                                originalUnit: contribution.quantity?.unit.rawValue ?? "")
@@ -860,7 +860,7 @@ private struct RecordsRecoveredPantryView: View {
             if let lists = try RecordsNativeCodec.shoppingLibraryRecord(workspace, origin: "ledger/" + originID.uuidString,
                 date: ledger.savedAt ?? Date(timeIntervalSince1970: 0)) { result.append(lists) }
             if let library = try RecordsNativeCodec.ledgerLibrary(workspace, feedbackOwner: feedbackOwner) {
-                let bytes = try RecordsNativeCodec.canonical(RecordsLedgerDocument(formatVersion: 1, workspace: library))
+                let bytes = try RecordsNativeCodec.canonical(RecordsLedgerDocument(formatVersion: library.ledgerDocumentVersion, workspace: library))
                 result.append(ArchiveRecord(id: "meal-library", origin: "ledger/" + originID.uuidString,
                     revision: ArchiveCodec.digest(bytes), kind: .ledger, title: "Reusable dinners",
                     savedAtMilliseconds: ArchiveCodec.milliseconds(ledger.savedAt ?? Date(timeIntervalSince1970: 0)), nativePayload: bytes))
@@ -967,7 +967,7 @@ private struct RecordsRecoveredPantryView: View {
                     if workspace.privateMealFeedback.contains(where: { $0.owner != feedbackOwner }) {
                         var visible = workspace
                         visible.copyPrivateMealFeedback(from: workspace, owner: feedbackOwner)
-                        let payload = try RecordsNativeCodec.canonical(RecordsLedgerDocument(formatVersion: 1, workspace: visible))
+                        let payload = try RecordsNativeCodec.canonical(RecordsLedgerDocument(formatVersion: visible.ledgerDocumentVersion, workspace: visible))
                         return [try RecordsNativeCodec.revised(saved.record, nativePayload: payload, id: saved.record.id,
                             title: saved.record.title, date: Date(timeIntervalSince1970: Double(saved.record.savedAtMilliseconds) / 1000),
                             lines: saved.record.helperLines)]

@@ -519,7 +519,7 @@ struct LedgerDepartmentPicker: View {
         }
         .buttonStyle(.borderless)
         .accessibilityLabel(title)
-        .accessibilityHint(shop.basis.branch.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?
+        .accessibilityHint(shop.currentStop.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?
             quickGroceryText("Applies to this list.") : quickGroceryText("Remembers this department for this product at this branch."))
         .accessibilityValue(department.isEmpty ? ledgerText("No aisle assigned") : department)
         .disabled(model.saving || model.hasPendingSave)
@@ -532,7 +532,7 @@ struct LedgerDepartmentPicker: View {
                                   current.revisionID == shop.revisionID, let source = current.lines.first(where: { $0.id == line.id }),
                                   candidate.listLayout.department(for: source, in: current) == department else { throw LedgerError.stalePreview }
                             try candidate.listLayout.setDepartment(label, for: source, in: current,
-                                remember: !current.basis.branch.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                                remember: !current.currentStop.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                         }
                     }
                 } label: {

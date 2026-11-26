@@ -97,6 +97,8 @@ struct PantryReceiptEntry: View {
                 Section(pantryText("Confirm receipt lines")) {
                     if let putaway = review.putaway {
                         ReviewedReceiptHeading(header: putaway.header)
+                        LabeledContent(putawayText("Lines adding pantry stock"), value: review.newStockLineCount.formatted())
+                        LabeledContent(putawayText("Lines keeping stock unchanged"), value: (putaway.decisions.count - review.newStockLineCount).formatted())
                         let facts = Dictionary(uniqueKeysWithValues: review.facts.map { ($0.lineID, $0) })
                         ForEach(putaway.decisions.sorted { $0.ordinal < $1.ordinal }) { decision in
                             if let fact = facts[decision.id] {
@@ -117,7 +119,7 @@ struct PantryReceiptEntry: View {
                     }
                     Text(pantryText("Saving receipt evidence does not post a payment."))
                         .font(.footnote).foregroundStyle(Theme.secondary)
-                    Button(review.putaway.map { putawayActionTitle($0.decisions.filter { $0.kind == .stored || $0.kind == .keptSome }.filter { !review.existing.contains($0.id) }.count) } ?? pantryText("Confirm pantry changes")) { commit(review) }.buttonStyle(PrimaryAction()).disabled(working || !model.canEdit)
+                    Button(review.putaway.map { _ in putawayActionTitle(review.newStockLineCount) } ?? pantryText("Confirm pantry changes")) { commit(review) }.buttonStyle(PrimaryAction()).disabled(working || !model.canEdit)
                         .accessibilityIdentifier("receipt.commit")
                     Button(pantryText("Edit receipt lines")) { self.review = nil; message = nil }.disabled(working)
                 }
@@ -434,6 +436,13 @@ struct PantryReceiptEntry: View {
         VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 5) {
                 Text(verbatim: row.name).font(.title3.weight(.semibold))
+                if let match = row.orderMatch, let trip = receiptTripReview.trip {
+                    ForEach(match.portions, id: \.lineID) { part in
+                        if let line = trip.lines.first(where: { $0.id == part.lineID }) {
+                            Text(captureText("Planned product") + " · " + line.name + " · " + pantryQuantity(part.quantity))
+                        }
+                    }
+                }
                 if review.putaway?.decisions.first(where: { $0.id == row.lineID })?.kind == .keptSome {
                     Text(putawayText("Kept some")).font(.subheadline)
                 }
@@ -487,13 +496,40 @@ struct PantryReceiptEntry: View {
             draft?.lines.first(where: { $0.id == basis.line.id }) == basis.line
     }
 
-    private func prepare(_ proposed: ReceiptImportDraft) {
+    private func prepare(_ input: ReceiptImportDraft) {
+        var proposed = input
         guard !working else { return }
         working = true
         Task {
             defer { working = false }
             do {
                 try await verifySource()
+                for index in proposed.lines.indices {
+                    proposed.lines[index].comparedPickup = nil
+                    proposed.lines[index].comparedOrderLine = nil
+                }
+                if !receiptTripReview.links.isEmpty, let trip = receiptTripReview.trip {
+                    guard model.receiptTrips.contains(trip), let revision = trip.orderRevisionID,
+                          proposed.savedPickup.map({ $0.id == trip.id }) != false else { throw ReceiptTripMatchError.stale }
+                    for index in proposed.lines.indices {
+                        let row = proposed.lines[index]
+                        guard row.treatment.recordsStock, row.canComparePurchase, let link = receiptTripReview.links[row.id] else { continue }
+                        let portions = link.portions.map { ReceiptAcquisition.OrderMatch.Portion(lineID: $0.key, quantity: $0.value) }
+                        if let checked = link.printedTotal, row.paid.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                            proposed.lines[index].paid = NSDecimalNumber(decimal: Decimal(checked.minorUnits) / 100).stringValue
+                        }
+                        guard let received = try ComparisonModel.quantity(row.received, row.unit),
+                              portions.allSatisfy({ portion in trip.lines.contains { $0.id == portion.lineID } }),
+                              let total = try? portions.reduce(Rational.zero, { previous, portion in
+                                  guard let amount = try portion.quantity.converted(to: received.unit) else { throw ReceiptTripMatchError.stale }
+                                  return try previous.adding(amount)
+                              }), total == received.amount,
+                              link.printedTotal == nil || link.printedTotal == (try? proposed.lines[index].paidTotal(in: proposed.currency))
+                        else { throw ReceiptTripMatchError.stale }
+                        proposed.lines[index].comparedPickup = .init(originID: proposed.workspaceID, id: trip.id)
+                        proposed.lines[index].comparedOrderLine = .init(revisionID: revision, portions: portions)
+                    }
+                }
                 let result = try await model.reviewReceipt(proposed)
                 guard model.permitsReceiptSource, draft?.draftID == proposed.draftID else { return }
                 review = result; draft = proposed; rescan = nil; overlap = nil; message = nil
@@ -1034,7 +1070,10 @@ private func receiptBasisChanged(_ error: Error) -> Bool {
     return (error as? ComparisonStoreError) == .staleInventory
 }
 
+private enum ReceiptTripMatchError: Error { case stale }
+
 private func receiptError(_ error: Error) -> String {
+    if error is ReceiptTripMatchError { return dinnerText("The receipt or plan changed. Review the product link in Receipt differences or clear it.") }
     if (error as? ComparisonStoreError) == .payloadTooLarge { return pantryText("This receipt exceeds the local comparison limit. Open Receipt history to inspect the saved lines.") }
     if error is ScanFailure { return pantryText("This saved source is unavailable. Reopen the receipt in its private workspace.") }
     if case PantryReceiptError.changedEvidence = error { return pantryText("This receipt line already has different confirmed evidence. Open Receipt history to review it.") }

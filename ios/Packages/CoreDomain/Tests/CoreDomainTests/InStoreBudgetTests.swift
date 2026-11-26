@@ -5,6 +5,46 @@ final class InStoreBudgetTests: XCTestCase {
     private let one = Quantity(amount: .one, unit: .count, originalLiteral: "1")
     private let zone = "America/New_York"
 
+    func testConfirmedWholeLineDiscountWithUnpricedMilkSurvivesReopenAndCorrection() throws {
+        for currency in Currency.allCases {
+            let scale: Int64 = currency == .usd ? 1 : 10
+            func money(_ cents: Int64) -> Money { Money(minorUnits: cents * scale, currency: currency) }
+            var shop = ShoppingLedger(basis: ShopBasis(currency: currency))
+            let beans = try shop.addManualLine(name: "Beans", quantity: nil)
+            let rice = try shop.addManualLine(name: "Rice", quantity: one)
+            let milk = try shop.addManualLine(name: "Milk", quantity: one)
+            for id in [beans, rice, milk] { try shop.setChecked(lineID: id, checked: true) }
+
+            let packs = Quantity(amount: try Rational(2), unit: .count, originalLiteral: "2")
+            let shelf = PickedShelfPrice(rate: money(250), unit: .count, measured: packs)
+            try shop.recordPickedPrice(lineID: beans, expectedRevision: shop.revisionID, total: shelf.lineTotal(),
+                membership: false, weighted: false, conditionsConfirmed: false, shelf: shelf, discount: money(100))
+            try shop.recordPickedPrice(lineID: rice, expectedRevision: shop.revisionID, total: money(300),
+                membership: false, weighted: false, conditionsConfirmed: false)
+            shop = try JSONDecoder().decode(ShoppingLedger.self, from: JSONEncoder().encode(shop))
+            try shop.validate()
+            XCTAssertEqual(shop.pickedCartSubtotal, .init(total: money(700), priced: 2, picked: 3))
+            XCTAssertEqual(shop.priceForCurrentPick(lineID: beans)?.shelf, shelf)
+            XCTAssertEqual(shop.priceForCurrentPick(lineID: beans)?.discount, money(100))
+
+            let original = shop
+            for invalid in [money(501), money(-1), Money(minorUnits: 1, currency: currency == .usd ? .mxn : .usd)] {
+                XCTAssertThrowsError(try shop.recordPickedPrice(lineID: beans, expectedRevision: shop.revisionID,
+                    total: shelf.lineTotal(), membership: false, weighted: false, conditionsConfirmed: false,
+                    shelf: shelf, discount: invalid))
+            }
+            XCTAssertThrowsError(try shop.recordPickedPrice(lineID: milk, expectedRevision: shop.revisionID, total: nil,
+                membership: false, weighted: false, conditionsConfirmed: false, discount: money(1)))
+            XCTAssertEqual(shop, original)
+            try shop.recordPickedPrice(lineID: beans, expectedRevision: shop.revisionID, total: shelf.lineTotal(),
+                membership: true, weighted: false, conditionsConfirmed: false, shelf: shelf, discount: money(50))
+            XCTAssertEqual(shop.pickedCartSubtotal, .init(total: money(300), priced: 1, picked: 3))
+            try shop.recordPickedPrice(lineID: beans, expectedRevision: shop.revisionID, total: shelf.lineTotal(),
+                membership: true, weighted: false, conditionsConfirmed: true, shelf: shelf, discount: money(50))
+            XCTAssertEqual(shop.pickedCartSubtotal, .init(total: money(750), priced: 2, picked: 3))
+        }
+    }
+
     func testPesoTripRetainsPricesAndRejectsForeignAmounts() throws {
         let price = Money(minorUnits: 4250, currency: .mxn)
         var shop = ShoppingLedger(basis: ShopBasis(currency: .mxn))

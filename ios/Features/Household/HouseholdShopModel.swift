@@ -369,10 +369,10 @@ struct SharedShopTransfer: Equatable {
         return page
     }
 
-    func sharedCookReview(occurrence: UUID) async throws -> SharedCookReview {
+    func sharedCookReview(occurrence: UUID, includePortions: Bool = false) async throws -> SharedCookReview {
         guard canCompleteCook, let id = scope.shopId else { throw ClientError.accessEnded }
         let start = generation, actor = scope
-        let result = try await service.sharedCookReview(shopID: id, occurrence: occurrence)
+        let result = try await service.sharedCookReview(shopID: id, occurrence: occurrence, includePortions: includePortions)
         guard start == generation, actor == scope, canCompleteCook else { throw ClientError.cancelled }
         if pendingCookOccurrence == occurrence, delivery == .needsReview { reviewedCurrentFacts = true }
         return result
@@ -859,13 +859,13 @@ struct SharedShopTransfer: Equatable {
                 if tracking.status == .enabled, tracking.state?.unbound.isEmpty == false || tracking.state?.legacyLineIds.isEmpty == false {
                     let meal = entered.mealEdit.map { edit in
                         SharedDemandMealEdit(occurrenceId: .init(edit.occurrenceID), baseMealRevision: edit.baseMealRevision, meal: edit.meal,
-                            proposalId: edit.proposalID.map(SharedDemandID.init), changeProposalId: edit.changeProposalID.map(SharedDemandID.init), preferenceReview: edit.preferenceReview, dinnerSwap: edit.dinnerSwap)
+                            proposalId: edit.proposalID.map(SharedDemandID.init), changeProposalId: edit.changeProposalID.map(SharedDemandID.init), preferenceReview: edit.preferenceReview, dinnerSwap: edit.dinnerSwap, repeatPlanId: edit.repeatPlanID.map(SharedDemandID.init))
                     }
                     trackingEditor = .init(shop: baseline, candidate: candidate, mealEdit: meal); return
                 }
                 if tracking.status == .legacy, let edit = entered.mealEdit {
                     let meal = SharedDemandMealEdit(occurrenceId: .init(edit.occurrenceID), baseMealRevision: edit.baseMealRevision, meal: edit.meal,
-                        proposalId: edit.proposalID.map(SharedDemandID.init), changeProposalId: edit.changeProposalID.map(SharedDemandID.init), preferenceReview: edit.preferenceReview, dinnerSwap: edit.dinnerSwap)
+                        proposalId: edit.proposalID.map(SharedDemandID.init), changeProposalId: edit.changeProposalID.map(SharedDemandID.init), preferenceReview: edit.preferenceReview, dinnerSwap: edit.dinnerSwap, repeatPlanId: edit.repeatPlanID.map(SharedDemandID.init))
                     trackingEditor = .init(shop: baseline, candidate: candidate, mealEdit: meal); return
                 }
                 if tracking.status == .reviewRequired {
@@ -888,7 +888,7 @@ struct SharedShopTransfer: Equatable {
             var mealContext: SharedMealFoodContext?
             if let edit = entered.mealEdit {
                 let meal = SharedDemandMealEdit(occurrenceId: .init(edit.occurrenceID), baseMealRevision: edit.baseMealRevision,
-                    meal: edit.meal, proposalId: edit.proposalID.map(SharedDemandID.init), changeProposalId: edit.changeProposalID.map(SharedDemandID.init), preferenceReview: edit.preferenceReview, dinnerSwap: edit.dinnerSwap)
+                    meal: edit.meal, proposalId: edit.proposalID.map(SharedDemandID.init), changeProposalId: edit.changeProposalID.map(SharedDemandID.init), preferenceReview: edit.preferenceReview, dinnerSwap: edit.dinnerSwap, repeatPlanId: edit.repeatPlanID.map(SharedDemandID.init))
                 let request = try SharedDemandActionSourceRequest(page: page, patch: .init(quote: candidate.quote, lines: candidate.lines,
                     mealEdit: meal, reviewedStoreBasisRevision: candidate.reviewedStoreBasisRevision))
                 let catalog = try await service.sharedDemandActionSources(shopID: id, page: page, request: request)
@@ -944,7 +944,9 @@ struct SharedShopTransfer: Equatable {
         } catch { await handle(error, start: start) }
     }
     func chooseTonight(_ recipe: HouseholdTonightPage.Recipe, from page: HouseholdTonightPage,
-                       destination: ShopperShop, day: String?, occurrence: UUID) async throws {
+                       destination: ShopperShop, day: String?, occurrence: UUID,
+                       second: (recipe: HouseholdTonightPage.Recipe, day: String, occurrence: UUID)? = nil,
+                       selectedLots: Set<UUID> = []) async throws {
         let actor = scope, start = generation
         guard !busy, !editing, pending == nil, canManage, scope.canBrowseHouseholdTonight,
               scope.shopId == destination.shopId, shop == destination, destination.phase == "draft" else { throw ClientError.accessEnded }
@@ -957,9 +959,17 @@ struct SharedShopTransfer: Equatable {
         }
         let window = try await service.replayWindow()
         guard generation == start, scope == actor, canManage, shop == destination, pending == nil, !Task.isCancelled else { throw ClientError.cancelled }
+        var body = try live.choiceBody(for: recipe, day: day, occurrence: occurrence)
+        if let second {
+            var next = try live.choiceBody(for: second.recipe, day: second.day, occurrence: second.occurrence)
+            next.removeValue(forKey: "v")
+            next.removeValue(forKey: "grantEpoch")
+            body["second"] = .object(next)
+            body["selectedLotIds"] = .array(selectedLots.map { $0.uuidString.lowercased() }.sorted().map(JSONValue.string))
+        }
         let envelope = CommandEnvelope(replayWindow: window.id, shopId: destination.shopId, kind: "meal.chooseTonight",
             base: .init(shopRevision: destination.shopRevision, authorityEpoch: destination.authorityEpoch),
-            body: try live.choiceBody(for: recipe, day: day, occurrence: occurrence))
+            body: body)
         try await queueAndDeliver(envelope, start: start)
         guard generation == start, scope.shopId == destination.shopId, scope.canBrowseHouseholdTonight else { throw ClientError.accessEnded }
         if delivery == .needsReview {

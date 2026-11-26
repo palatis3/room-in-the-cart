@@ -260,7 +260,7 @@ import LocalStore
     }
     @concurrent private static func encodeCandidate(_ workspace: LedgerWorkspace) async throws -> Data {
         struct Document: Encodable { let formatVersion: Int; let workspace: LedgerWorkspace }
-        return try encoded(Document(formatVersion: 1, workspace: workspace))
+        return try encoded(Document(formatVersion: workspace.ledgerDocumentVersion, workspace: workspace))
     }
     nonisolated private static func encoded<T: Encodable>(_ value: T) throws -> Data {
         let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]

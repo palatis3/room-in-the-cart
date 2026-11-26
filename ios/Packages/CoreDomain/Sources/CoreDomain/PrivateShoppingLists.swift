@@ -11,11 +11,22 @@ public struct PickedLinePrice: Codable, Sendable, Equatable {
     let basisRevision: Int
     public internal(set) var shelf: PickedShelfPrice? = nil
 
+    /// Confirmed reduction for this entire picked line, in the same currency as its recorded price.
+    public internal(set) var discount: Money? = nil
+
+    public static func netPrice(total: Money?, discount: Money?) throws -> Money? {
+        guard let discount else { return total }
+        guard let total, discount.currency == total.currency, discount.minorUnits >= 0, discount.minorUnits <= total.minorUnits
+        else { throw LedgerError.invalid("pickedDiscount") }
+        return try total.subtracting(discount)
+    }
+
     func validate(currency: Currency) throws {
         guard total.map({ $0.currency == currency }) != false,
               shelf.map({ $0.rate.currency == currency }) != false else { throw LedgerError.invalid("pickedCurrency") }
         // Bounded well above a grocery line, so the subtotal of 10,000 lines also fits.
         if let total, !(0...1_000_000_000).contains(total.minorUnits) { throw LedgerError.invalid("pickedPrice") }
+        _ = try Self.netPrice(total: total, discount: discount)
         guard checkedAt.timeIntervalSinceReferenceDate.isFinite, basisRevision >= 0 else { throw LedgerError.invalid("pickedPrice") }
         try ledgerText(name, nonempty: true, maximum: 512)
         try quantity?.validate()
@@ -26,7 +37,10 @@ public struct PickedLinePrice: Codable, Sendable, Equatable {
         }
     }
 
-    public var includedTotal: Money? { (!membership && !weighted) || conditionsConfirmed ? total : nil }
+    public var includedTotal: Money? {
+        guard (!membership && !weighted) || conditionsConfirmed else { return nil }
+        return try? Self.netPrice(total: total, discount: discount)
+    }
 }
 
 public struct PickedCartSubtotal: Equatable, Sendable {

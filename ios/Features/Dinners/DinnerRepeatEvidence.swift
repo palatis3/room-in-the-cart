@@ -201,6 +201,16 @@ struct DinnerRepeatEvidence {
                     protectedLunches: lunches, stapleChecks: stapleChecks, ingredientFoods: ingredientFoods)
     }
 
+    /// A shared spelling is insufficient evidence that a staple serves a particular dinner.
+    func firstDinner(using staple: StapleSource, among choices: [DinnerRepeatChoice]) -> DinnerRepeatChoice? {
+        choices.filter { choice in
+            choice.id.shopID == staple.shopID && ingredientFoods[choice.id]?.values.contains(staple.lineID) == true
+        }.min { first, second in
+            if first.day.iso8601 != second.day.iso8601 { return first.day.iso8601 < second.day.iso8601 }
+            return first.id.occurrenceID.uuidString < second.id.occurrenceID.uuidString
+        }
+    }
+
     /// A new-demand preview only. Current global holds are already reflected in
     /// `free`; source meals' old reservations are not released to fund the repeat.
     /// Group all selected ingredients before applying each food's free balance,

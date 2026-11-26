@@ -9,6 +9,19 @@ func shelfFormat(_ key: String, _ args: CVarArg...) -> String {
     String(format: shelfText(key), locale: .current, arguments: args)
 }
 
+extension PickedShelfPrice {
+    /// Price entry asks for a measurement in the rate's unit. An imported record can use a different weight unit.
+    func editableMeasurement(locale: Locale) -> String {
+        guard let measured, let exact = try? measured.converted(to: unit) else { return "" }
+        let original = measured.originalLiteral
+        let canonical = original.replacingOccurrences(of: locale.decimalSeparator ?? ".", with: ".")
+        if measured.unit == unit, (try? ComparisonModel.quantity(canonical, unit))?.amount == exact {
+            return original
+        }
+        return exact.description
+    }
+}
+
 private enum PickPriceMode: String, CaseIterable {
     case total, pack, weight
     var label: String {
@@ -24,11 +37,13 @@ struct InStorePriceEditor: View {
     @ObservedObject var model: LedgerModel
     let shop: ShoppingLedger
     let line: ShoppingLine
+    private let originalShelf: PickedShelfPrice?
     @Environment(\.shoppingListAuthorization) private var authorize
     @Environment(\.dismiss) private var dismiss
     @FocusState private var editingAmount: Bool
     @State private var mode: PickPriceMode
     @State private var amount: String
+    @State private var discount: String
     @State private var measurement: String
     @State private var unit: UnitOfMeasure
     @State private var membership: Bool
@@ -43,27 +58,36 @@ struct InStorePriceEditor: View {
         _revision = State(initialValue: shop.revisionID)
         let price = shop.priceForCurrentPick(lineID: line.id)
         let shelf = price?.shelf
+        originalShelf = shelf
         _mode = State(initialValue: shelf.map { $0.unit == .count ? .pack : .weight } ?? .total)
         _amount = State(initialValue: (shelf?.rate ?? price?.total).map { (Decimal($0.minorUnits) / 100).description } ?? "")
-        _measurement = State(initialValue: shelf?.measured?.originalLiteral ?? "")
+        _discount = State(initialValue: price?.discount.map { (Decimal($0.minorUnits) / 100).description } ?? "")
+        _measurement = State(initialValue: shelf?.editableMeasurement(locale: .current) ?? "")
         _unit = State(initialValue: shelf.flatMap { $0.unit.dimension == .mass ? $0.unit : nil } ?? .pound)
         _membership = State(initialValue: price?.membership ?? false)
         _weighted = State(initialValue: price?.weighted ?? false)
         _confirmed = State(initialValue: price?.conditionsConfirmed ?? false)
     }
 
-    private func entry() throws -> (total: Money?, shelf: PickedShelfPrice?) {
+    private func entry() throws -> (total: Money?, shelf: PickedShelfPrice?, discount: Money?, net: Money?) {
         let separator = Locale.current.decimalSeparator ?? "."
         let value = try ComparisonModel.money(amount.replacingOccurrences(of: separator, with: "."), currency: shop.basis.currency)
         if let value, !(0...1_000_000_000).contains(value.minorUnits) { throw LedgerError.invalid("pickedPrice") }
-        guard mode != .total else { return (value, nil) }
+        let reduction = try ComparisonModel.money(discount.replacingOccurrences(of: separator, with: "."), currency: shop.basis.currency)
+        guard mode != .total else { return try (value, nil, reduction, PickedLinePrice.netPrice(total: value, discount: reduction)) }
         guard let value else { throw LedgerError.invalid("shelfRate") }
         let basis = mode == .pack ? UnitOfMeasure.count : unit
         let literal = measurement.trimmingCharacters(in: .whitespacesAndNewlines)
-        let measured = try ComparisonModel.quantity(literal.replacingOccurrences(of: separator, with: "."), basis)
-        let shelf = PickedShelfPrice(rate: value, unit: basis,
-            measured: measured.map { Quantity(amount: $0.amount, unit: basis, originalLiteral: literal) })
-        return try (shelf.lineTotal(), shelf)
+        let measured: Quantity?
+        if let originalShelf, originalShelf.unit == basis, literal == originalShelf.editableMeasurement(locale: .current) {
+            measured = originalShelf.measured
+        } else {
+            let parsed = try ComparisonModel.quantity(literal.replacingOccurrences(of: separator, with: "."), basis)
+            measured = parsed.map { Quantity(amount: $0.amount, unit: basis, originalLiteral: literal) }
+        }
+        let shelf = PickedShelfPrice(rate: value, unit: basis, measured: measured)
+        let total = try shelf.lineTotal()
+        return try (total, shelf, reduction, PickedLinePrice.netPrice(total: total, discount: reduction))
     }
 
     var body: some View {
@@ -92,11 +116,17 @@ struct InStorePriceEditor: View {
                         workingTextField(label, text: $measurement).keyboardType(mode == .pack ? .numberPad : .decimalPad)
                             .focused($editingAmount).accessibilityIdentifier("inStoreMeasuredAmount")
                     }
-                    if let total = (try? entry())?.total {
-                        Text(shelfFormat("Picked line total · %@", moneyText(total))).monospacedDigit()
-                    } else { Text(shelfText("This pick stays unpriced until you enter the measured amount.")).font(.footnote) }
+                    if measurement.isEmpty { Text(shelfText("This pick stays unpriced until you enter the measured amount.")).font(.footnote) }
                 } else {
                     Toggle(shoppingText("Sold by weight"), isOn: $weighted)
+                }
+                let discountLabel = shelfFormat("Confirmed discount to subtract (%@, optional)", shop.basis.currency.rawValue)
+                WorkingField(discountLabel) {
+                    workingTextField(discountLabel, text: $discount).keyboardType(.decimalPad)
+                        .focused($editingAmount).accessibilityIdentifier("inStoreDiscount")
+                }
+                if mode != .total || !discount.isEmpty, let net = (try? entry())?.net {
+                    Text(shelfFormat("Picked line total · %@", moneyText(net))).monospacedDigit()
                 }
                 Toggle(shoppingText("Member price"), isOn: $membership)
                 if membership || mode == .total && weighted {
@@ -105,7 +135,9 @@ struct InStorePriceEditor: View {
             } header: {
                 Text(verbatim: line.name).font(.headline).foregroundStyle(Theme.ink).textCase(nil)
             }
-            if (try? entry()) == nil && !amount.isEmpty {
+            if (try? entry()) == nil && !discount.isEmpty {
+                Text(shelfText("Enter a discount that fits within the picked line price."))
+            } else if (try? entry()) == nil && !amount.isEmpty {
                 Text(shelfText("Check the shelf price and picked amount. Use a whole number for packs."))
             }
             if model.hasPendingSave || model.error != nil {
@@ -119,14 +151,15 @@ struct InStorePriceEditor: View {
                         let isWeighted = mode == .weight || mode == .total && weighted
                         try current.recordPickedPrice(lineID: line.id, expectedRevision: revision, total: value.total,
                             membership: membership, weighted: isWeighted,
-                            conditionsConfirmed: confirmed || mode == .weight && !membership && value.total != nil, shelf: value.shelf)
+                            conditionsConfirmed: confirmed || mode == .weight && !membership && value.total != nil, shelf: value.shelf, discount: value.discount)
                     }) { dismiss() }
                 }
             }.disabled((try? entry()) == nil || model.hasPendingSave || model.saving)
         }
         .navigationTitle(shoppingText("Picked item price")).navigationBarTitleDisplayMode(.inline)
         .keyboardDoneAction(visible: editingAmount, title: ledgerText("Done"), identifier: "inStoreAmountDone") { editingAmount = false }
-        .onChange(of: mode) { _, _ in amount = ""; measurement = ""; confirmed = false }
+        .onChange(of: mode) { _, _ in amount = ""; measurement = ""; discount = ""; confirmed = false }
+        .onChange(of: discount) { _, _ in confirmed = false }
         .onChange(of: membership) { _, _ in confirmed = false }
         .onChange(of: weighted) { _, _ in confirmed = false }
         .onChange(of: amount) { _, _ in confirmed = false }

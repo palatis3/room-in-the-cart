@@ -309,6 +309,7 @@ import XCTest
         draft.lines[6].received = "1"
         draft.lines[6].usable = "1"
         let review = try await repo.reviewReceipt(draft, expected: before.state, at: now)
+        XCTAssertEqual(review.newStockLineCount, 3)
         XCTAssertEqual(review.putaway?.decisions.map(\.original), words)
         XCTAssertEqual(review.facts.count, 4)
         try await repo.applyReceipt(review, at: now)
@@ -333,6 +334,7 @@ import XCTest
         XCTAssertEqual(saved.filter { $0.lotID == nil }.count, 3)
         XCTAssertEqual(saved.last?.lotID, delivery)
         let repeatReview = try await reopened.reviewReceipt(draft, expected: after.state, at: now)
+        XCTAssertEqual(repeatReview.newStockLineCount, 0)
         XCTAssertNil(repeatReview.batch)
         let outsider = PantryRepository(store: reopenedStore, aliasPersonaID: UUID(), authorize: { true })
         let hidden = try await outsider.putawayHeaders(after: nil)

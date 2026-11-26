@@ -1,0 +1,66 @@
+{
+  "identifier": "0BAF78C0-08CA-43A1-BE0D-0027DD090C6C",
+  "nonRenewingSubscriptions": [],
+  "products": [],
+  "settings": {
+    "_askToBuyEnabled": false,
+    "_billingGracePeriodEnabled": false,
+    "_billingIssuesEnabled": false,
+    "_disableDialogs": false,
+    "_failTransactionsEnabled": false,
+    "_locale": "es_MX",
+    "_renewalBillingIssuesEnabled": false,
+    "_storefront": "MEX",
+    "_timeRate": 0
+  },
+  "subscriptionGroups": [
+    {
+      "id": "test-household-group",
+      "localizations": [
+        {
+          "description": "Local StoreKit test hypothesis only; not an App Store product.",
+          "displayName": "Household test",
+          "locale": "en_US"
+        },
+        {
+          "description": "Solo para pruebas locales de StoreKit; no es un producto del App Store.",
+          "displayName": "Prueba de Household",
+          "locale": "es_MX"
+        }
+      ],
+      "name": "LOCAL TEST ONLY — Household annual hypothesis",
+      "subscriptions": [
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "699.00",
+          "familyShareable": false,
+          "groupNumber": 1,
+          "internalID": "E3210921-44FC-49DD-ABF4-9F21EB216106",
+          "introductoryOffer": null,
+          "localizations": [
+            {
+              "description": "Test planning for two named adults. Price is a local hypothesis only.",
+              "displayName": "Household (local test)",
+              "locale": "en_US"
+            },
+            {
+              "description": "Planificación de prueba para dos adultos. Precio hipotético local.",
+              "displayName": "Household (prueba local)",
+              "locale": "es_MX"
+            }
+          ],
+          "productID": "local.testing.household.annual",
+          "recurringSubscriptionPeriod": "P1Y",
+          "referenceName": "LOCAL TEST ONLY Mexico annual offer",
+          "subscriptionGroupID": "test-household-group",
+          "type": "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version": {
+    "major": 3,
+    "minor": 0
+  }
+}

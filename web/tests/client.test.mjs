@@ -1879,6 +1879,7 @@ for(const language of ['en','es']){
  test(`an ordinary invitation retries its original household when the join receipt names a different one (${language})`,async t=>{
   const destination='a73adb10-b84d-402b-9619-06560281846b';
   const otherHouse='b54acd22-b84d-402b-9619-06560281846b';
+  const dinnerInviteId='9b83e041-60dd-4205-ab09-b540b13cfd3d';
   const offer={householdLabel:'Casa Rosa',role:'adult_contributor'};
   const token=destination+'.'+'k'.repeat(43);
   const dom=new JSDOM('<div id="app"></div>',{url:'https://food.example/invite?lang='+language+(language==='en'?'#token='+token:'&enterCode=1')});
@@ -1891,7 +1892,7 @@ for(const language of ['en','es']){
    if(path==='/v1/invites/preview')return Response.json(offer);
    if(path==='/v1/invites/redeem'){
     attempts.push(JSON.parse(options.body));
-    return Response.json({householdId:attempts.length===1?otherHouse:destination.toUpperCase(),memberId:joined.memberId,role:'contributor'});
+    return Response.json({householdId:attempts.length===1?otherHouse:destination.toUpperCase(),memberId:joined.memberId,role:'contributor',dinnerInviteId});
    }
    if(path==='/v1/session'){
     if(options.method==='POST'){
@@ -1910,6 +1911,8 @@ for(const language of ['en','es']){
   root.querySelector('#adult-attestation').click();await waitForIdle(root);
   assert.equal(root.querySelector('#invitation-household').textContent,offer.householdLabel);
   type(dom,'invite-alias','Mar');
+  const handoff='a[href^="roominthecart://"]';
+  assert.equal(root.querySelector(handoff),null);
   const beforeJoin=calls.length;
   submit(root,dom);await waitForIdle(root);
   assert.deepEqual(calls.slice(beforeJoin),[['POST','/v1/invites/redeem']]);
@@ -1917,6 +1920,8 @@ for(const language of ['en','es']){
   click(root,language==='en'?'Retry joining':'Volver a intentar unirme');await waitForIdle(root);
   assert.deepEqual(attempts[0],{token,intent:'join',adultAttestation:true,reviewedOffer:offer,alias:'Mar'});
   assert.deepEqual(attempts[1],attempts[0]);
+  assert.equal(root.querySelector(handoff)?.getAttribute('href'),'roominthecart://invitation-dinner/'+dinnerInviteId);
+  assert.doesNotMatch(root.querySelector(handoff).getAttribute('href'),new RegExp(token));
   assert.deepEqual(calls.slice(beforeJoin+1),[['POST','/v1/invites/redeem'],['POST','/v1/session'],['GET','/v1/session'],['GET','/v1/auth/session'],['GET','/v1/households/'+destination+'/requests/mine']]);
   assert.match(root.querySelector('[role=status]').textContent,language==='en'?/You joined Casa Rosa/:/Te uniste a Casa Rosa/);
  });

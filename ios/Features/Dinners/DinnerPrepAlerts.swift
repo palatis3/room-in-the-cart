@@ -19,6 +19,10 @@ import CoreDomain
     private init() { enabled = Set(UserDefaults.standard.stringArray(forKey: "dinner.prep.local-consent") ?? []) }
 
     static func key(workspace: UUID, task: UUID) -> String { prefix + workspace.uuidString + "." + task.uuidString }
+    static func scheduleKey(workspace: UUID, schedule: UUID) -> String {
+        prefix + workspace.uuidString + ".schedule." + schedule.uuidString
+    }
+
     func setEnabled(_ value: Bool, key: String) {
         if value { enabled.insert(key) } else { enabled.remove(key) }
         UserDefaults.standard.set(Array(enabled), forKey: storage)
@@ -79,7 +83,7 @@ struct DinnerPrepAlertRuntime: ViewModifier {
               let workspace = ledger.sourceWorkspaceID else { return nil }
         guard CapturePrivateIdentity.current(access: access, household: household) != nil else { return [] }
         let now = Date()
-        return ledger.workspace.dinnerPlanning.prepTasks.compactMap { task in
+        var wanted: [DinnerPrepAlerts.Alert] = ledger.workspace.dinnerPlanning.prepTasks.compactMap { task in
             let key = DinnerPrepAlerts.key(workspace: workspace, task: task.id)
             guard alerts.enabled.contains(key),
                   let meal = ledger.workspace.shops.first(where: { $0.id == task.shopID })?.mealOccurrences.first(where: { $0.id == task.occurrenceID }),
@@ -89,6 +93,20 @@ struct DinnerPrepAlertRuntime: ViewModifier {
                journey.cookedMeals?.contains(where: { $0.isActive && $0.draft.meal.id == meal.id }) == true { return nil }
             return DinnerPrepAlerts.Alert(key: key, date: date)
         }
+        for schedule in ledger.workspace.dinnerPlanning.serveSchedules {
+            let key = DinnerPrepAlerts.scheduleKey(workspace: workspace, schedule: schedule.id)
+            guard alerts.enabled.contains(key),
+                  let meal = ledger.workspace.shops.first(where: { $0.id == schedule.shopID })?.mealOccurrences.first(where: { $0.id == schedule.occurrenceID }),
+                  meal.scheduledDay == schedule.dinnerDay else { continue }
+            if let journey = pickup.journeys.first(where: { $0.id == schedule.shopID }),
+               journey.closedAt != nil || journey.mealRecovery?.domain.events.contains(where: { $0.request.target.id == meal.id }) == true ||
+               journey.cookedMeals?.contains(where: { $0.isActive && $0.draft.meal.id == meal.id }) == true { continue }
+            wanted += schedule.pendingSteps(for: meal, now: now).map { slot in
+                let identifier = key + "." + slot.id.uuidString + "." + String(Int64(slot.start.timeIntervalSince1970))
+                return DinnerPrepAlerts.Alert(key: identifier, date: slot.start)
+            }
+        }
+        return wanted
     }
     func body(content: Content) -> some View {
         content.onChange(of: desired, initial: true) { _, value in

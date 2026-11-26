@@ -96,18 +96,34 @@ public enum RepeatWeekEngine {
 
     public static func candidates(targetStart: MealDay, workspace: LedgerWorkspace, recoveredMeals: [UUID: RepeatWeek.Recovery] = [:],
                                   access: DinnerAccessContext, at now: Date) throws -> [RepeatWeek.Candidate] {
-        _ = try target(workspace, access: access, at: now)
+        let targetIndex = try target(workspace, access: access, at: now)
         guard case .local(let workspaceID) = access.scope else { throw DinnerPlanningError.forbidden }
         // Match the calendar label saved with the prior meal. Converting its noon instant
         // into the target zone would shift weekday on trips crossing the date line.
         let dates = try (0..<7).map { (try dinnerDay(targetStart, adding: $0 - 7), try dinnerDay(targetStart, adding: $0)) }
         let days = Dictionary(uniqueKeysWithValues: dates.map { ($0.0.iso8601, $0.1) })
+        // A reopened review has a fresh operation ID. Match the saved receipt to its
+        // live target occurrence so a retry cannot add the same dinner a second time.
+        let targetShop = workspace.shops[targetIndex]
+        let liveTargetIDs = Set(targetShop.mealOccurrences.filter { $0.removedAt == nil }.map(\.id))
+        var repeated: [UUID: Set<UUID>] = [:]
+        for receipt in workspace.dinnerPlanning.applyReceipts where receipt.proposal.shopID == targetShop.id {
+            guard let plan = receipt.proposal.repeatWeek else { continue }
+            for meal in plan.meals where meal.source.workspaceID == workspaceID {
+                let source = meal.source
+                let id = identity(receipt.id, source: source.shopID, member: source.occurrenceID, kind: "occurrence")
+                if liveTargetIDs.contains(id) {
+                    repeated[source.shopID, default: []].insert(source.occurrenceID)
+                }
+            }
+        }
         var result = [RepeatWeek.Candidate]()
         var recoveredIDs = Set<UUID>()
         for shop in workspace.shops {
             let contributions = Dictionary(grouping: shop.contributions, by: \.id)
             let liveLines = Set(shop.lines.filter { !$0.isTrashed }.map(\.id))
             for occurrence in shop.mealOccurrences where occurrence.removedAt == nil && !occurrence.isHidden && occurrence.carryover == nil {
+                guard repeated[shop.id]?.contains(occurrence.id) != true else { continue }
                 let recovery = recoveredMeals[occurrence.id]
                 if recovery != nil, !recoveredIDs.insert(occurrence.id).inserted { throw DinnerPlanningError.invalid("ambiguousRecoveredMeal") }
                 let sourceDay = recovery.map { $0.meal.scheduledDay } ?? occurrence.scheduledDay
@@ -253,7 +269,7 @@ public enum RepeatWeekEngine {
         guard changes == proposal.changes, proposal.proposedRevisionID == identity(proposal.id, source: access.shopID, member: proposal.id, kind: "revision")
         else { throw DinnerPlanningError.stalePreview }
         var ledger = workspace.shops[index], state = workspace.dinnerPlanning
-        let receipt = try DinnerPlanningEngine.applyValidated(proposal, ledger: &ledger, state: &state, access: access, phase: phase, at: now, staples: rows)
+        let receipt = try DinnerPlanningEngine.applyValidated(proposal, ledger: &ledger, state: &state, access: access, phase: phase, at: now, staples: rows, weeklyPackSelections: workspace.packSelections)
         workspace.shops[index] = ledger; workspace.dinnerPlanning = state
         return receipt
     }

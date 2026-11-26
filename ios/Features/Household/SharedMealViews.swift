@@ -80,7 +80,7 @@ struct SharedMealEditor: View {
     var body: some View {
         Section(ht("Shared meal plan")) {
             if let edit = model.draft.mealEdit, let meal = edit.meal {
-                if edit.proposalID != nil || edit.changeProposalID != nil || edit.dinnerSwap == true { SharedMealFacts(meal: meal) }
+                if edit.proposalID != nil || edit.changeProposalID != nil || edit.dinnerSwap == true || edit.repeatPlanID != nil { SharedMealFacts(meal: meal) }
                 else { fields(for: edit.occurrenceID, meal: meal) }
             } else if model.draft.mealEdit == nil {
                 ForEach(meals) { occurrence in
@@ -256,12 +256,27 @@ private struct SharedMealDayPicker: View {
     }
 }
 
+func sharedWeekMeals(_ meals: [SharedMealOccurrence], starting date: Date) -> [SharedMealOccurrence] {
+    let start = sharedMealDay(date)
+    guard let endDate = mealCalendar().date(byAdding: .day, value: 7, to: date) else { return [] }
+    let end = sharedMealDay(endDate)
+    return meals.filter { row in
+        guard let day = row.meal.day else { return false }
+        return day >= start && day < end
+    }.sorted { lhs, rhs in
+        if lhs.meal.day != rhs.meal.day { return (lhs.meal.day ?? "") < (rhs.meal.day ?? "") }
+        return lhs.id.uuidString < rhs.id.uuidString
+    }
+}
+
 struct SharedMealMovesView: View {
     @ObservedObject var household: HouseholdModel
     var onReviewOpened: () -> Void = {}
     @Environment(\.locale) private var locale
     @Environment(\.dismiss) private var dismiss
     @State private var plan: SharedMealPlan?
+    @State private var reviewedScope: SharedMealChangeScope?
+    @State private var weekStart = sharedMealPickerToday()
     @State private var selectedAdult: UUID?
     @State private var occurrenceID: UUID?
     @State private var day = sharedMealPickerToday()
@@ -277,52 +292,99 @@ struct SharedMealMovesView: View {
               scope.role == "shopper" || scope.capabilities.contains("meal_proposals") else { return nil }
         return scope
     }
-    private var bindingID: String {
-        [context?.household.id,context?.memberId,context?.shopId,context?.role].compactMap { $0 }.joined(separator: "/")
-    }
+    private var bindingID: SharedMealChangeScope? { household.sharedMealChangeScope }
     var body: some View {
         WorkingForm {
             NavigationLink(ht("Household dinner ideas")) { SharedMealIdeasView(household: household) }
             Button(ht("Guest, ingredient, and serving-group proposals")) { showingChanges = true }
-            if let plan, plan.shopId == context?.shopId.flatMap(UUID.init(uuidString:)), plan.shopper == (context?.role == "shopper") {
-                if plan.shopper {
-                    Section(ht("Meal planning access")) {
-                        Text(ht("Choose an adult who can use a named planning seat to see these meals and suggest a different day. Only the shopper can apply changes."))
-                        Picker(ht("Planning adult"), selection: $selectedAdult) {
-                            Text(ht("No planning adult")).tag(nil as UUID?)
-                            ForEach(plan.adults) { Text($0.label).tag(Optional($0.id)) }
-                        }
-                        Button(ht("Review planning access")) { confirmingAccess = true }
-                            .disabled(selectedAdult == plan.plannerId)
-                    }
-                } else {
-                    Section(ht("Propose a meal move")) {
-                        Picker(ht("Meal to move"), selection: $occurrenceID) {
-                            Text(ht("Choose a meal")).tag(nil as UUID?)
-                            ForEach(plan.meals) { Text(verbatim: "\($0.meal.title) · \(sharedMealScheduleText($0.meal.day))").tag(Optional($0.id)) }
-                        }
-                        if let occurrence = plan.meals.first(where: { $0.id == occurrenceID }) {
-                            SharedMealFacts(meal: occurrence.meal)
-                            DatePicker(ht("Proposed day"), selection: $day, displayedComponents: .date)
-                                .environment(\.timeZone, mealCalendar().timeZone)
-                            Text(ht("The current meal and basket stay in place until the shopper reviews the move."))
-                            Button(ht("Send this proposed day")) {
-                                Task { await run { service in
-                                    try await service.proposeMealMove(id: proposalID, occurrenceID: occurrence.id, day: sharedMealDay(day), plan: plan)
-                                } }
-                            }.disabled(occurrence.meal.day == sharedMealDay(day))
+            if let plan, let bindingID, reviewedScope == bindingID,
+               plan.shopId == context?.shopId.flatMap(UUID.init(uuidString:)), plan.shopper == (context?.role == "shopper") {
+                Section(dinnerText("This week")) {
+                    DatePicker(dinnerText("Week starting"), selection: $weekStart, displayedComponents: .date)
+                        .environment(\.timeZone, mealCalendar().timeZone)
+                    HStack {
+                        Button(dinnerText("Previous week")) { if let day = mealCalendar().date(byAdding: .day, value: -7, to: weekStart) { weekStart = day } }
+                        Spacer()
+                        Button(dinnerText("Next week")) { if let day = mealCalendar().date(byAdding: .day, value: 7, to: weekStart) { weekStart = day } }
+                    }.buttonStyle(.borderless)
+                    let meals = sharedWeekMeals(plan.meals, starting: weekStart)
+                    if plan.phase == "placed" { Text(weekReviewText("Current menu after delivery")).font(.headline) }
+                    if meals.isEmpty { Text(weekReviewText("No shared meals scheduled for these seven days.")) }
+                    ForEach(meals) { row in
+                        DisclosureGroup {
+                            SharedMealFacts(meal: row.meal)
+                        } label: {
+                            VStack(alignment: .leading) {
+                                Text(verbatim: row.meal.title).font(.headline)
+                                Text(verbatim: sharedMealScheduleText(row.meal.day, locale: locale))
+                            }
                         }
                     }
                 }
-                Section(ht("Meal move proposals")) {
-                    if plan.proposals.isEmpty { Text(ht("No current meal moves to review.")) }
-                    ForEach(plan.proposals) { move in
-                        if let occurrence = plan.meals.first(where: { $0.id == move.occurrenceId }) {
-                            SharedMealFacts(meal: occurrence.meal)
-                            LabeledContent(ht("Proposed day"), value: sharedMealScheduleText(move.day, locale: locale))
-                            if plan.shopper {
-                                Button(ht("Review move with shared packs")) { review(move, occurrence, plan) }
-                                Button(ht("Dismiss proposed move"), role: .destructive) { dismissingMove = move }
+                if plan.phase == "draft" || plan.phase == "placed" {
+                    SharedWeekRepeatSection(household: household, plan: plan, scope: bindingID, start: weekStart) {
+                        dismiss(); onReviewOpened()
+                    }.id(SharedWeekRepeatIdentity(scope: bindingID, week: sharedMealDay(weekStart),
+                        shopRevision: plan.shopRevision, grantRevision: plan.grantRevision))
+                }
+                if plan.shopper && plan.phase == "placed" && plan.plannerId != nil {
+                    Button(weekReviewText("Remove planning access"), role: .destructive) {
+                        selectedAdult = nil; confirmingAccess = true
+                    }
+                }
+                if plan.phase == nil || plan.phase == "draft" {
+                    if plan.shopper {
+                        Section(ht("Meal planning access")) {
+                            Text(ht("Choose an adult who can use a named planning seat to see these meals and suggest a different day. Only the shopper can apply changes."))
+                            if let lifecycle = household.lifecycle, let scope = lifecycle.scope, scope == context,
+                               lifecycle.canAdminister, !plan.meals.isEmpty {
+                                DisclosureGroup(ht("Invite an adult to this dinner")) {
+                                    ForEach(plan.meals) { row in
+                                        NavigationLink {
+                                            HouseholdDinnerInvitationView(model: lifecycle, scope: scope,
+                                                target: .init(shopId: plan.shopId, occurrenceId: row.id), title: row.meal.title)
+                                        } label: {
+                                            Text(verbatim: "\(row.meal.title) · \(sharedMealScheduleText(row.meal.day))")
+                                        }
+                                    }
+                                }
+                            }
+                            Picker(ht("Planning adult"), selection: $selectedAdult) {
+                                Text(ht("No planning adult")).tag(nil as UUID?)
+                                ForEach(plan.adults) { Text($0.label).tag(Optional($0.id)) }
+                            }
+                            Button(ht("Review planning access")) { confirmingAccess = true }
+                                .disabled(selectedAdult == plan.plannerId)
+                        }
+                    } else {
+                        Section(ht("Propose a meal move")) {
+                            Picker(ht("Meal to move"), selection: $occurrenceID) {
+                                Text(ht("Choose a meal")).tag(nil as UUID?)
+                                ForEach(plan.meals) { Text(verbatim: "\($0.meal.title) · \(sharedMealScheduleText($0.meal.day))").tag(Optional($0.id)) }
+                            }
+                            if let occurrence = plan.meals.first(where: { $0.id == occurrenceID }) {
+                                SharedMealFacts(meal: occurrence.meal)
+                                DatePicker(ht("Proposed day"), selection: $day, displayedComponents: .date)
+                                    .environment(\.timeZone, mealCalendar().timeZone)
+                                Text(ht("The current meal and basket stay in place until the shopper reviews the move."))
+                                Button(ht("Send this proposed day")) {
+                                    Task { await run { service in
+                                        try await service.proposeMealMove(id: proposalID, occurrenceID: occurrence.id, day: sharedMealDay(day), plan: plan)
+                                    } }
+                                }.disabled(occurrence.meal.day == sharedMealDay(day))
+                            }
+                        }
+                    }
+                    Section(ht("Meal move proposals")) {
+                        if plan.proposals.isEmpty { Text(ht("No current meal moves to review.")) }
+                        ForEach(plan.proposals) { move in
+                            if let occurrence = plan.meals.first(where: { $0.id == move.occurrenceId }) {
+                                SharedMealFacts(meal: occurrence.meal)
+                                LabeledContent(ht("Proposed day"), value: sharedMealScheduleText(move.day, locale: locale))
+                                if plan.shopper {
+                                    Button(ht("Review move with shared packs")) { review(move, occurrence, plan) }
+                                    Button(ht("Dismiss proposed move"), role: .destructive) { dismissingMove = move }
+                                }
                             }
                         }
                     }
@@ -356,21 +418,22 @@ struct SharedMealMovesView: View {
         }
     }
     @MainActor private func run(_ action: ((HouseholdService) async throws -> Void)? = nil) async {
-        guard let scope = context, let id = scope.shopId.flatMap(UUID.init(uuidString:)), let service = household.service else { return }
-        let binding = bindingID
+        guard let scope = context, let id = scope.shopId.flatMap(UUID.init(uuidString:)), let service = household.service,
+              let binding = bindingID, action == nil || reviewedScope == binding else { return }
         busy = true; defer { if binding == bindingID { busy = false } }
         do {
             try await action?(service)
-            let fresh = try await service.mealPlan(shopID: id)
+            let fresh = try await service.mealPlan(shopID: id, currentWeek: true)
             guard !Task.isCancelled, binding == bindingID else { return }
-            plan = fresh; selectedAdult = fresh.plannerId; notice = nil
+            reviewedScope = binding; plan = fresh; selectedAdult = fresh.plannerId; notice = nil
         } catch {
             guard binding == bindingID else { return }
             plan = nil; notice = ht("Meal planning access or the plan changed. Refresh to check your current access and proposals.")
         }
     }
     private func review(_ move: SharedMealPlan.Move, _ occurrence: SharedMealOccurrence, _ plan: SharedMealPlan) {
-        guard let model = household.sharedShop, model.canManage, model.pending == nil, !model.editing,
+        guard let reviewedScope, reviewedScope == bindingID,
+              let model = household.sharedShop, model.canManage, model.pending == nil, !model.editing,
               let shop = model.shop, UUID(uuidString: shop.shopId) == plan.shopId, shop.shopRevision == plan.shopRevision,
               shop.authorityEpoch == plan.authorityEpoch else {
             notice = ht("Return to the shared shop and refresh or finish the current edit first."); return
@@ -380,5 +443,283 @@ struct SharedMealMovesView: View {
         var meal = occurrence.meal; meal.move(to: move.day)
         model.draft.mealEdit = .init(occurrenceID: occurrence.id, meal: meal, proposalID: move.id)
         dismiss(); onReviewOpened()
+    }
+}
+
+private struct SharedWeekRepeatIdentity: Hashable {
+    let scope: SharedMealChangeScope
+    let week: String
+    let shopRevision, grantRevision: Int
+}
+
+private struct SharedWeekRepeatSection: View {
+    @ObservedObject var household: HouseholdModel
+    let plan: SharedMealPlan
+    let scope: SharedMealChangeScope
+    let start: Date
+    let openShop: () -> Void
+    @State private var series: SharedRepeatSeries?
+    @State private var receiptMenu: SharedMealPlan?
+    @State private var selections: [UUID:Date] = [:]
+    @State private var requestID = UUID()
+    @State private var initialLoad = true
+    @State private var loaded = false
+    @State private var working = false
+    @State private var failed = false
+    @State private var confirmStop = false
+    @State private var openReview = false
+
+    private var current: Bool { household.sharedMealChangeScope == scope && !Task.isCancelled }
+    private var week: String { sharedMealDay(start) }
+    private var candidates: [SharedMealOccurrence] {
+        guard let previous = mealCalendar().date(byAdding: .day, value: -7, to: start) else { return [] }
+        return sharedWeekMeals(plan.meals, starting: previous).filter { $0.meal.kind == "dinner" }
+    }
+    private var bounds: ClosedRange<Date> {
+        let day = mealCalendar().startOfDay(for: start)
+        return day...(mealCalendar().date(byAdding: .day, value: 6, to: day) ?? day)
+    }
+
+    var body: some View {
+        Group {
+            if current, initialLoad {
+                ProgressView().task {
+                    await load()
+                    if !Task.isCancelled { initialLoad = false }
+                }
+            }
+            if current, loaded, let series {
+                let currentPlan = receiptMenu ?? plan
+                Section(weekReviewText("Shared repeat week")) {
+                    Text(weekReviewText("Each dinner has its own grocery review. Both planners can return to this list to see what was saved."))
+                    if household.storeQuoteScope != nil {
+                        NavigationLink(ht("Shared week costs")) {
+                            SharedWeekCostDetails(household: household, mealScope: scope, planID: series.planId)
+                        }
+                    }
+                    ForEach(series.steps) { step in
+                        let source = currentPlan.meals.first { $0.id == step.sourceId }
+                        VStack(alignment: .leading) {
+                            switch series.menuState(for: step, in: currentPlan.meals) {
+                            case .present(let dinner):
+                                Text(verbatim: dinner.meal.title).font(.headline)
+                                Text(verbatim: sharedMealScheduleText(dinner.meal.day))
+                                Label(weekReviewText("Saved to the shared shop"), systemImage: "checkmark.circle")
+                                if currentPlan.phase == "draft", currentPlan.shopper, !dinner.meal.protected,
+                                   dinner.meal.planning?.groups.contains(where: { $0.protected }) != true {
+                                    Button(ht("Review removing this meal")) {
+                                        Task { await reviewRemoval(of: dinner, in: currentPlan) }
+                                    }
+                                    .accessibilityIdentifier("week.series.remove." + step.id.uuidString)
+                                }
+                            case .removed:
+                                Text(verbatim: source?.meal.title ?? weekReviewText("Dinner unavailable")).font(.headline)
+                                Text(weekReviewText("Previously saved and now off the menu."))
+                            case .pending:
+                                Text(verbatim: source?.meal.title ?? weekReviewText("Dinner unavailable")).font(.headline)
+                                Text(verbatim: sharedMealScheduleText(step.day))
+                                if series.stopped || currentPlan.phase == "placed" { Text(weekReviewText("Stopped before saving")) }
+                                else if source?.revision != step.sourceRevision { Text(weekReviewText("Source dinner changed. Start a fresh review.")) }
+                                else if currentPlan.phase == "draft", currentPlan.shopper, let source {
+                                    Button(weekReviewText("Review this dinner and its groceries")) { Task { await open(step, source: source, series: series, menu: currentPlan) } }
+                                        .accessibilityIdentifier("week.series.review." + step.id.uuidString)
+                                } else { Text(weekReviewText("Waiting for shopper review")) }
+                            }
+                        }
+                    }
+                    if currentPlan.phase == "draft", currentPlan.shopper, let shop = household.sharedShop, shop.canManage, !series.receipts.isEmpty {
+                        NavigationLink(SharedOperationUndoCopy.text("Saved changes")) { SharedOperationUndoView(shopModel: shop) }
+                    }
+                    if currentPlan.phase == "draft" && !series.stopped && series.steps.contains(where: { !series.saved($0) }) {
+                        Button(weekReviewText("Stop remaining dinners"), role: .destructive) { confirmStop = true }
+                    }
+                    if currentPlan.phase == "draft" && series.stopped && !candidates.isEmpty {
+                        Button(weekReviewText("Start a fresh review")) { self.series = nil; selections = [:]; requestID = UUID() }
+                    }
+                    Button(ht("Refresh")) { Task { await load() } }
+                }
+            } else if current, plan.phase == "draft", loaded, !candidates.isEmpty {
+                Section(weekReviewText("Shared repeat week")) {
+                    DisclosureGroup(isExpanded: $openReview) {
+                        ForEach(candidates) { meal in
+                            Toggle(isOn: Binding(get: { selections[meal.id] != nil }, set: { selected in
+                                if selected, let original = sharedMealDate(meal.meal.day) {
+                                    selections[meal.id] = mealCalendar().date(byAdding: .day, value: 7, to: original)
+                                } else { selections.removeValue(forKey: meal.id) }
+                                requestID = UUID()
+                            })) { Text(verbatim: meal.meal.title) }
+                            if let chosen = selections[meal.id] {
+                                DatePicker(dinnerText("Dinner date"), selection: Binding(get: { chosen }, set: {
+                                    selections[meal.id] = $0; requestID = UUID()
+                                }), in: bounds, displayedComponents: .date)
+                                    .environment(\.timeZone, mealCalendar().timeZone)
+                                SharedMealFacts(meal: meal.meal.repeated(on: sharedMealDay(chosen)))
+                            }
+                        }
+                        Text(weekReviewText("Save the selected dinners for both planners to review. The shopper confirms grocery changes one dinner at a time."))
+                        Button(weekReviewText("Save shared review")) { Task { await stage() } }
+                            .disabled(selections.isEmpty).accessibilityIdentifier("week.series.stage")
+                    } label: { Text(dinnerText("Repeat last week")) }
+                }
+            }
+            if failed && current {
+                Button(weekReviewText("Refresh shared repeat review")) { Task { await load() } }
+            }
+        }
+        .disabled(working)
+        .confirmationDialog(weekReviewText("Stop remaining dinners?"), isPresented: $confirmStop) {
+            Button(weekReviewText("Stop remaining dinners"), role: .destructive) { Task { await stop() } }
+        } message: { Text(weekReviewText("Saved dinners stay in the shop. Review Saved changes to undo an eligible dinner.")) }
+    }
+
+    @MainActor private func load() async {
+        guard current, let service = household.service, !working else { return }
+        working = true; defer { working = false }
+        do {
+            let fresh = try await service.sharedRepeatWeek(shopID: scope.shopID, week: week)
+            try await display(fresh, using: service)
+        } catch {
+            guard current else { return }
+            receiptMenu = nil; series = nil; loaded = false
+            if case ClientError.service(let status, _, _, _) = error, [403,404].contains(status) { failed = false }
+            else { failed = true }
+        }
+    }
+    @MainActor private func stage() async {
+        guard current, let service = household.service, !working, !selections.isEmpty else { return }
+        let choices = candidates.compactMap { source in
+            selections[source.id].map { SharedRepeatSelection(source: source, day: sharedMealDay($0)) }
+        }
+        working = true; defer { working = false }
+        do {
+            let fresh = try await service.stageRepeatWeek(id: requestID, week: week, plan: plan, selections: choices)
+            try await display(fresh, using: service)
+        } catch { if current { failed = true; loaded = false } }
+    }
+    @MainActor private func stop() async {
+        guard current, !working, let series, let service = household.service else { return }
+        working = true; defer { working = false }
+        do {
+            let stopped = try await service.stopRepeatWeek(series, plan: plan)
+            try await display(stopped, using: service)
+        } catch { if current { failed = true; loaded = false } }
+    }
+    @MainActor private func display(_ fresh: SharedRepeatSeries?, using service: HouseholdService) async throws {
+        var menu: SharedMealPlan?
+        if let fresh, !fresh.receipts.isEmpty {
+            // Read the menu after the receipt so another adult's removal or later edit is visible.
+            let latest = try await service.mealPlan(shopID: scope.shopID, currentWeek: true)
+            guard latest.shopId == scope.shopID, latest.authorityEpoch == plan.authorityEpoch,
+                  latest.grantRevision == plan.grantRevision, latest.shopper == plan.shopper else {
+                throw ClientError.configuration
+            }
+            menu = latest
+        }
+        guard current else { return }
+        receiptMenu = menu; series = fresh; failed = false; loaded = true
+    }
+
+    @MainActor private func open(_ step: SharedRepeatSeries.Step, source: SharedMealOccurrence,
+                                 series: SharedRepeatSeries, menu: SharedMealPlan) async {
+        guard !working, !series.stopped, !series.saved(step) else { return }
+        working = true; defer { working = false }
+        guard let model = await reviewableShop(matching: menu), let meals = model.shop?.meals,
+              meals.contains(source), !meals.contains(where: { $0.id == step.id }),
+              let edit = try? step.reviewedEdit(source: source, planID: series.planId) else { failed = true; return }
+        show(edit, in: model)
+    }
+
+    @MainActor private func reviewRemoval(of dinner: SharedMealOccurrence, in menu: SharedMealPlan) async {
+        guard !working else { return }
+        working = true; defer { working = false }
+        guard let model = await reviewableShop(matching: menu), model.shop?.meals?.contains(dinner) == true else {
+            failed = true; return
+        }
+        // The shopper reviews the current packs, quote and any food commitments in the normal editor.
+        show(SharedMealEdit(occurrenceID: dinner.id, meal: nil), in: model)
+    }
+
+    @MainActor private func reviewableShop(matching menu: SharedMealPlan) async -> HouseholdShopModel? {
+        guard current, menu.shopper, let model = household.sharedShop, model.canManage,
+              !model.editing, !model.busy, model.pending == nil else { return nil }
+        if model.shop?.shopRevision != menu.shopRevision { await model.load() }
+        guard current, household.sharedShop === model, model.canManage, !model.editing, !model.busy,
+              model.pending == nil, let shop = model.shop, shop.phase == "draft",
+              UUID(uuidString: shop.shopId) == scope.shopID, shop.shopRevision == menu.shopRevision,
+              shop.authorityEpoch == menu.authorityEpoch else { return nil }
+        return model
+    }
+
+    @MainActor private func show(_ edit: SharedMealEdit, in model: HouseholdShopModel) {
+        model.beginEditing()
+        guard model.editing else { failed = true; return }
+        model.draft.mealEdit = edit
+        openShop()
+    }
+}
+
+private struct SharedWeekCostDetails: View {
+    @ObservedObject var household: HouseholdModel
+    let mealScope: SharedMealChangeScope
+    let planID: UUID
+    @Environment(\.scenePhase) private var scene
+    @EnvironmentObject private var membership: MembershipCoordinator
+    @State private var costs: SharedWeekCosts?
+    @State private var loaded: StoreQuoteScope?
+    @State private var failed = false
+    @State private var request = UUID()
+
+    private var scope: StoreQuoteScope? {
+        guard scene == .active, household.sharedMealChangeScope == mealScope,
+              membership.model(for: household.membershipSession)?.hasPaidAccess == true else { return nil }
+        return household.storeQuoteScope
+    }
+    var body: some View {
+        JournalList {
+            if let scope, loaded == scope, let costs {
+                Section(ht("Original weekly basket")) {
+                    if let original = costs.original { version(original) }
+                    else { Text(dinnerText("No saved estimate for this shop.")) }
+                }
+                ForEach(costs.revisions) { saved in
+                    Section(ht("Accepted basket revision") + " " + String(saved.revision)) { version(saved) }
+                }
+                LabeledContent(ht("Reported shop charges after posted credits"),
+                               value: money(costs.reportedNetMinor, currency: costs.currency))
+            } else if scope != nil && !failed { ProgressView() }
+            else { Text(ht("Shared week costs are unavailable.")) }
+        }
+        .navigationTitle(ht("Shared week costs")).privacySensitive()
+        .task(id: scope) { await load() }
+        .refreshable { await load() }
+    }
+    @ViewBuilder private func version(_ value: SharedWeekCosts.Version) -> some View {
+        if let date = serviceDate(value.capturedAt) { Text(date.formatted(date: .abbreviated, time: .shortened)) }
+        LabeledContent(dinnerText("Priced items"), value: "\(value.pricedLines) / \(value.lines.count)")
+        LabeledContent(dinnerText("Known estimated subtotal"), value: money(value.knownItemSubtotalMinor, currency: value.currency))
+        if let quote = value.adoptedQuote {
+            Text(verbatim: quote.store + " · " + quote.branch)
+            if let observed = serviceDate(quote.observedAt) { Text(observed.formatted(date: .abbreviated, time: .shortened)) }
+            LabeledContent(ht("Adopted quote item subtotal"), value: money(quote.itemsMinor, currency: value.currency))
+            LabeledContent(ht("Adopted quote checkout"), value: money(quote.checkoutMinor, currency: value.currency))
+        }
+        ForEach(value.lines) { line in
+            LabeledContent(line.name, value: String(line.packs) + " × " + money(line.unitPriceMinor, currency: value.currency))
+        }
+    }
+    private func money(_ minor: Int64?, currency: String) -> String {
+        guard let minor else { return dinnerText("Unknown") }
+        return (Decimal(minor) / 100).formatted(.currency(code: currency))
+    }
+    @MainActor private func load() async {
+        let token = UUID()
+        request = token
+        costs = nil; loaded = nil; failed = false
+        guard let expected = scope, let service = household.service else { return }
+        do {
+            let result = try await service.sharedWeekCosts(shopID: mealScope.shopID, planID: planID)
+            guard !Task.isCancelled, token == request, expected == scope else { return }
+            costs = result; loaded = expected
+        } catch { if token == request, !Task.isCancelled { failed = true } }
     }
 }

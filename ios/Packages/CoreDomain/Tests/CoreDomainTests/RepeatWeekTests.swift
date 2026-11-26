@@ -30,6 +30,31 @@ final class RepeatWeekTests: XCTestCase {
         return .init(shops: [history, target], mealTemplates: [recipe], selectedShopID: target.id)
     }
 
+    func testWeeklyReceiptCapturesBasketOnceAndRequiresBudgetAuthority() throws {
+        var workspace = try fixture()
+        let shop = workspace.shops[1]
+        let context = DinnerAccessContext(scope: .local(workspaceID: workspaceID), actorID: "adult", shopID: shop.id,
+            assignedShopperID: "adult", canPlan: true, canReadBudget: true, hasPaidTools: false, roleRevision: 1,
+            verifiedAt: now.addingTimeInterval(-10), validUntil: now.addingTimeInterval(300))
+        let start = try day(9)
+        let candidates = try RepeatWeekEngine.candidates(targetStart: start, workspace: workspace, access: context, at: now)
+        let meal = RepeatWeek.Selection(try XCTUnwrap(candidates.first))
+        let preview = try RepeatWeekEngine.preview(targetStart: start, meals: [meal], staples: [], workspace: workspace,
+                                                   access: context, phase: .draft, at: now)
+        var restricted = workspace
+        let redacted = try RepeatWeekEngine.apply(preview.proposal, workspace: &restricted, access: access(shop), phase: .draft, at: now)
+        XCTAssertNil(redacted.costBaseline)
+        let applied = try RepeatWeekEngine.apply(preview.proposal, workspace: &workspace, access: context, phase: .draft, at: now)
+        let baseline = try XCTUnwrap(applied.costBaseline)
+        XCTAssertEqual(Set(baseline.lines.map(\.name)), Set(["Coffee", "Beans", "Rice", "Salt"]))
+        XCTAssertTrue(baseline.lines.allSatisfy { $0.estimate == nil })
+        XCTAssertEqual(workspace.ledgerDocumentVersion, 2)
+        _ = try workspace.shops[1].addManualLine(name: "Later", quantity: nil, at: now)
+        let reopened = try JSONDecoder().decode(LedgerWorkspace.self, from: JSONEncoder().encode(workspace))
+        XCTAssertEqual(reopened.dinnerPlanning.applyReceipts.first?.costBaseline, baseline)
+        XCTAssertEqual(try RepeatWeekEngine.apply(preview.proposal, workspace: &workspace, access: context, phase: .draft, at: now).costBaseline, baseline)
+    }
+
     func testCivilLabelsEditedContributionsNewIdentitiesAndFreeRetryAcrossSourceChange() throws {
         var w = try fixture()
         let historical = w.shops[0], originalRecipes = w.mealTemplates, target = w.shops[1], auth = access(target)
@@ -146,6 +171,26 @@ final class RepeatWeekTests: XCTestCase {
         XCTAssertFalse(added.isHandled)
         XCTAssertFalse(added.isChecked)
         XCTAssertEqual(w.shops[0], originalShop)
+    }
+
+    func testReopenedWeekExcludesAnAppliedDinnerAndPersistsExplicitSkipWithoutAddingGroceries() throws {
+        var workspace = try fixture()
+        let target = workspace.shops[1], start = try day(9), actor = access(target, paid: true)
+        let rows = try RepeatWeekEngine.candidates(targetStart: start, workspace: workspace, access: actor, at: now)
+        let source = try XCTUnwrap(rows.first), staple = try XCTUnwrap(workspace.priorStaples(for: target.id).first)
+        var selected = RepeatWeek.Selection(source)
+        selected.day = try day(11)
+        let reviewed = try RepeatWeekEngine.preview(targetStart: start, meals: [selected], staples: [.init(review: staple, choice: .skip)],
+            workspace: workspace, access: actor, phase: .draft, at: now)
+        let receipt = try RepeatWeekEngine.apply(reviewed.proposal, workspace: &workspace, access: actor, phase: .draft, at: now)
+        let saved = workspace
+        XCTAssertEqual(try RepeatWeekEngine.apply(reviewed.proposal, workspace: &workspace, access: actor, phase: .draft, at: now), receipt)
+        XCTAssertEqual(workspace, saved)
+        XCTAssertTrue(try RepeatWeekEngine.candidates(targetStart: start, workspace: workspace, access: actor, at: now).isEmpty)
+        XCTAssertEqual(workspace.shops[1].stapleReviews?.first?.choice, .skip)
+        XCTAssertNil(workspace.shops[1].stapleReviews?.first?.newLineID)
+        XCTAssertThrowsError(try RepeatWeekEngine.preview(targetStart: start, meals: [selected], staples: [],
+            workspace: workspace, access: actor, phase: .draft, at: now))
     }
 
     func testRenamedFoodDoesNotInheritRecipeCertificationAcrossDSTTransition() throws {

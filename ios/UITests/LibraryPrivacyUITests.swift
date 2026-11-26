@@ -174,6 +174,40 @@ import XCTest
         XCTAssertFalse(element("cooking.timer.0").exists)
     }
 
+    func testFailedRecipeLinkCanBeSavedOfflineAndSupplementedAfterRelaunch() {
+        launch("--recipe-library-fixture")
+        XCTAssertTrue(app.navigationBars["Data and recovery"].waitForExistence(timeout: 25))
+        tap(button("records.recipeLink"))
+        let address = app.textFields["HTTPS recipe link"]
+        tap(address)
+        address.typeText("https://example.org/frijoles")
+        tap(app.buttons["Read recipe"])
+        assertText("Could not read this recipe.")
+        tap(button("records.keepPartialLink"))
+        assertText("Missing ingredients")
+        tap(button("records.saveRecipeDraft"))
+        assertResultVisible("records.status", "File saved.")
+        assertSavedRecipes(1)
+        app.terminate()
+        launch("--recipe-library-fixture", reset: false)
+        XCTAssertTrue(app.navigationBars["Data and recovery"].waitForExistence(timeout: 25))
+        chooseRecipeFile()
+        tap(app.buttons["Edit recipe, example.org"])
+        tap(app.buttons["Add missing text from a screenshot or paste"])
+        let supplement = app.textFields["Review or paste the missing text"]
+        tap(supplement)
+        supplement.typeText("250 g de frijoles")
+        dismissRecipeKeyboard("records.recipeEditorDone")
+        tap(app.buttons["Append to ingredients"])
+        tap(app.buttons["Review recipe"])
+        tap(element("records.applyImport"))
+        assertSavedRecipes(2)
+        tap(button("records.recovered.example.org"))
+        tap(app.buttons["Open saved recipe"])
+        assertText("250 g de frijoles")
+        assertText("https://example.org/frijoles")
+    }
+
     func testRecipeLinkAllowsMissingYieldCorrectionBeforeSaving() {
         launch("--recipe-library-fixture")
         XCTAssertTrue(app.navigationBars["Data and recovery"].waitForExistence(timeout: 25))

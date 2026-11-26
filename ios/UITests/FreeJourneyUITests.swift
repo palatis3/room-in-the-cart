@@ -52,6 +52,34 @@ import XCTest
         XCTAssertTrue(app.buttons["settings"].isHittable)
     }
 
+    func testSampleDinnersShowProtectedLunchAndAnIncompleteBasketInBothLanguages() {
+        for spanish in [false, true] {
+            app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", spanish ? "(es)" : "(en)",
+                                   "-AppleLocale", spanish ? "es_MX" : "en_US"]
+            app.launch()
+            tap(app.tabBars.buttons[spanish ? "Historial" : "Records"])
+            tap(app.buttons["settings"])
+            tap(app.buttons[spanish ? "Membresía del hogar" : "Household membership"])
+            tap(app.buttons["membership.sample"])
+            let subtotal = element("membership.sample.subtotal")
+            let annualTerms = element("membership.sample.annualTerms")
+            XCTAssertTrue(subtotal.waitForExistence(timeout: 8))
+            XCTAssertTrue(annualTerms.waitForExistence(timeout: 8))
+            XCTAssertFalse(subtotal.frame.isEmpty)
+            XCTAssertTrue(app.windows.firstMatch.frame.contains(subtotal.frame))
+            XCTAssertLessThanOrEqual(subtotal.frame.maxY, annualTerms.frame.minY,
+                "Show the whole known subtotal above the annual offer before the shopper scrolls.")
+            reveal(subtotal)
+            let tacos = subtotal.label + (subtotal.value as? String ?? "")
+            tap(app.buttons[spanish ? "Sopa de tortilla" : "Tortilla soup"])
+            reveal(subtotal)
+            XCTAssertNotEqual(subtotal.label + (subtotal.value as? String ?? ""), tacos)
+            XCTAssertEqual(element("membership.sample.unpriced").value as? String, spanish ? "Falta el precio" : "Price missing")
+            capture(spanish ? "Comparación de cenas de ejemplo" : "Sample dinner comparison")
+            app.terminate()
+        }
+    }
+
     func testLunchHoldShowsBackingAndShortfallAfterRestartAndPartialRelease() throws {
         launch(reset: true)
         tap(app.shopToolButton("shop.myPantry"))
@@ -283,7 +311,7 @@ import XCTest
     }
 
     private func addTypedProduct(_ value: String, using field: XCUIElement) {
-        tap(field)
+        tapVisibleFormRow(field, marker: "PRODUCT_INPUT_TAP")
         field.typeText(value)
         XCTAssertEqual(field.value as? String, value)
         tap(app.buttons["productBatch.keyboardDone"])
@@ -2080,7 +2108,7 @@ import XCTest
         let picker = app.groceryCurrencyPicker("receipt.currency")
         reveal(picker)
         assertGroceryCurrency("MXN", in: picker)
-        picker.tap()
+        tapVisibleFormRow(picker, marker: "RECEIPT_CURRENCY_TAP")
         app.selectGroceryCurrency(code: "USD", label: "US dollars (USD)")
 
         receiptTap(app.buttons["receipt.action.0"])
@@ -2091,7 +2119,7 @@ import XCTest
         assertText("The printed currency differs from USD.")
         XCTAssertFalse(confirmPrice.exists)
 
-        receiptTap(picker, initiallyUpward: false)
+        tapVisibleFormRow(picker, marker: "RECEIPT_CURRENCY_TAP")
         app.selectGroceryCurrency(code: "MXN", label: "Mexican pesos (MXN)")
         reveal(confirmPrice)
         XCTAssertEqual(confirmPrice.label, "I paid this line total in MXN")
@@ -4209,6 +4237,34 @@ import XCTest
         XCTAssertTrue(app.collectionViews.firstMatch.frame.contains(empty.frame))
     }
 
+    func testCheckingAcrossAislesKeepsNextCheckboxUnderThumb() {
+        launch(reset: true)
+        openShoppingList()
+        tap(element("ledgerImport"))
+        fill("Apples\nMilk\nBread", into: "ledgerImportText")
+        tap(element("ledgerReviewImport"))
+        tap(element("ledgerCommitImport"))
+
+        let menu = app.buttons.matching(identifier: "ledgerListOptions").firstMatch
+        menu.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        tap(app.buttons["List order and aisles"])
+        choose("List order", value: "Group by aisle")
+        tap(element("saveListOrder"))
+        tap(element("ledgerInStore"))
+
+        let check = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "inStoreCheck-"))
+        let apples = check.matching(NSPredicate(format: "label == %@", "Check Apples")).firstMatch
+        let milk = check.matching(NSPredicate(format: "label == %@", "Check Milk")).firstMatch
+        XCTAssertTrue(apples.wait(for: \.isHittable, toEqual: true, timeout: 8))
+        let thumb = CGPoint(x: apples.frame.midX, y: apples.frame.midY)
+        apples.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        XCTAssertTrue(apples.waitForNonExistence(timeout: 8))
+        let underThumb = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            milk.exists && milk.isHittable && milk.frame.width >= 44 && milk.frame.height >= 44 && milk.frame.contains(thumb)
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [underThumb], timeout: 8), .completed)
+    }
+
     func testManualListOrderSurvivesRestartAndOpensLargePrint() throws {
         func chooseListOption(_ label: String) {
             let menu = app.buttons.matching(identifier: "ledgerListOptions").firstMatch
@@ -4324,7 +4380,7 @@ import XCTest
         tap(app.buttons["dinnerLibrary"])
         tap(app.buttons["ledgerNewTemplate"])
         fillDinner("Rice bowls", ingredient: "Rice")
-        tap(app.buttons["ledgerReviewDinner"])
+        tapVisibleFormRow(app.buttons["ledgerReviewDinner"], marker: "SWAP_LIBRARY_REVIEW")
         tap(app.buttons["ledgerSaveDinner"])
         XCTAssertTrue(app.staticTexts["dinner.firstSaveConfirmation"].waitForExistence(timeout: 8),
                       "The private Dinners library must carry first-save access through both navigation links.")

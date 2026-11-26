@@ -29,6 +29,89 @@ final class RecordsAdapterTests: XCTestCase {
             kind: .comparison, title: draft.item, savedAtMilliseconds: 1_800_000_000_000,
             helperLines: [HelperLine(label: draft.item, originalAmount: draft.needed, originalUnit: "count")], nativePayload: data)
     }
+    @MainActor func testEncryptedWeeklyEstimateKeepsTwoIndependentRecordVersions() async throws {
+        let now = Date(), workspaceID = UUID()
+        let first = try MealDay(year: 2026, month: 11, day: 2, timeZoneIdentifier: "UTC")
+        let next = try MealDay(year: 2026, month: 11, day: 9, timeZoneIdentifier: "UTC")
+        let recipe = MealTemplate(title: "Beans", ingredients: [.init(name: "Beans", quantity: nil)])
+        var shop = ShoppingLedger(title: "Pickup", basis: .init(branch: "Market", timeZoneIdentifier: "UTC"))
+        _ = try shop.chooseMeal(recipe, on: first.date, at: now)
+        var workspace = LedgerWorkspace(shops: [shop], mealTemplates: [recipe], selectedShopID: shop.id)
+        let access = DinnerAccessContext(scope: .local(workspaceID: workspaceID), actorID: "adult", shopID: shop.id,
+            assignedShopperID: "adult", canPlan: true, canReadBudget: true, hasPaidTools: true, roleRevision: 0,
+            verifiedAt: now, validUntil: now.addingTimeInterval(60))
+        let registry = try RecoveryRegistry(url: temporaryDirectory().appendingPathComponent("registry.json"))
+        let key = EncryptedArchive.generateKey()
+        var copies = Set<String>()
+        for version in [1, 2] {
+            if version == 2 {
+                let candidate = try XCTUnwrap(RepeatWeekEngine.candidates(targetStart: next, workspace: workspace, access: access, at: now).first)
+                let preview = try RepeatWeekEngine.preview(targetStart: next, meals: [.init(candidate)], staples: [], workspace: workspace,
+                                                           access: access, phase: .draft, at: now)
+                _ = try RepeatWeekEngine.apply(preview.proposal, workspace: &workspace, access: access, phase: .draft, at: now)
+            }
+            let scoped = try RecordsNativeCodec.ledgerScope(workspace, shop: workspace.shops[0])
+            XCTAssertEqual(scoped.ledgerDocumentVersion, version)
+            let bytes = try RecordsNativeCodec.canonical(LedgerFixture(formatVersion: version, workspace: scoped))
+            let record = ArchiveRecord(id: shop.id.uuidString, origin: "ledger/fixture", revision: ArchiveCodec.digest(bytes),
+                kind: .ledger, title: shop.title, savedAtMilliseconds: ArchiveCodec.milliseconds(now), nativePayload: bytes)
+            let envelope = try ArchiveCodec.make(records: [record], kind: .personalRecovery, origin: "backup", revision: "accepted")
+            let decoded = try EncryptedArchive.open(EncryptedArchive.seal(envelope, key: key), key: key)
+            let saved = try await registry.apply(registry.review(decoded))
+            let copy = try XCTUnwrap(saved.records.first)
+            copies.insert(copy.id)
+            try RecordsNativeCodec.validate(copy.record)
+            let restored = try RecordsNativeCodec.ledger(XCTUnwrap(copy.record.nativePayload))
+            XCTAssertEqual(restored.dinnerPlanning.applyReceipts, scoped.dinnerPlanning.applyReceipts)
+            if version == 2 {
+                XCTAssertNotNil(restored.dinnerPlanning.applyReceipts.first?.costBaseline)
+                let mislabeled = try RecordsNativeCodec.canonical(LedgerFixture(formatVersion: 1, workspace: scoped))
+                XCTAssertThrowsError(try LedgerModel.validatePayload(mislabeled))
+            }
+        }
+        XCTAssertEqual(copies.count, 2)
+    }
+
+    @MainActor func testEncryptedServeScheduleRestoresItsShopAndKeepsEarlierCopy() async throws {
+        let now = Date(), zone = "America/Mexico_City"
+        var shop = ShoppingLedger(title: "Cena", basis: ShopBasis(timeZoneIdentifier: zone))
+        let other = ShoppingLedger(title: "Other")
+        let template = MealTemplate(title: "Arroz")
+        let meal = try shop.chooseMeal(template, on: now, at: now)
+        var workspace = LedgerWorkspace(shops: [shop, other], mealTemplates: [template], selectedShopID: shop.id)
+        let access = DinnerAccessContext(scope: .local(workspaceID: UUID()), actorID: "cook", shopID: shop.id,
+            assignedShopperID: "cook", canPlan: true, canReadBudget: false, hasPaidTools: true, roleRevision: 0,
+            verifiedAt: now, validUntil: now.addingTimeInterval(60))
+        let day = try MealDay(date: now, timeZoneIdentifier: zone)
+        let plan = DinnerServeSchedule(shopID: shop.id, occurrenceID: meal, dinnerDay: day, serveAt: try XCTUnwrap(day.date),
+            dishes: [.init(name: "Arroz", steps: [.init(instruction: "Cocer", minutes: 20, equipment: .burner)])])
+        let registry = try RecoveryRegistry(url: temporaryDirectory().appendingPathComponent("registry.json"))
+        let key = EncryptedArchive.generateKey()
+        var recoveredIDs = Set<String>()
+        for schedule in [nil, Optional(plan)] {
+            if let schedule {
+                try workspace.dinnerPlanning.setServeSchedule(schedule, replacing: nil, mealID: meal, ledger: shop,
+                    expectedRevision: shop.revisionID, access: access, at: now)
+            }
+            let scoped = try RecordsNativeCodec.ledgerScope(workspace, shop: shop)
+            XCTAssertEqual(scoped.ledgerDocumentVersion, schedule == nil ? 1 : 2)
+            let bytes = try RecordsNativeCodec.canonical(LedgerFixture(formatVersion: scoped.ledgerDocumentVersion, workspace: scoped))
+            let record = ArchiveRecord(id: shop.id.uuidString, origin: "ledger/fixture", revision: ArchiveCodec.digest(bytes),
+                kind: .ledger, title: shop.title, savedAtMilliseconds: ArchiveCodec.milliseconds(now), nativePayload: bytes)
+            let envelope = try ArchiveCodec.make(records: [record], kind: .personalRecovery, origin: "backup", revision: "saved")
+            let opened = try EncryptedArchive.open(EncryptedArchive.seal(envelope, key: key), key: key)
+            let result = try await registry.apply(registry.review(opened))
+            let copy = try XCTUnwrap(result.records.first)
+            recoveredIDs.insert(copy.id)
+            try RecordsNativeCodec.validate(copy.record)
+            let restored = try RecordsNativeCodec.ledger(XCTUnwrap(copy.record.nativePayload))
+            XCTAssertEqual(restored.dinnerPlanning.serveSchedules, schedule.map { [$0] } ?? [])
+            for excluded in ["local-consent", "hasPaidTools"] { XCTAssertFalse(String(decoding: bytes, as: UTF8.self).contains(excluded)) }
+        }
+        XCTAssertEqual(recoveredIDs.count, 2)
+        XCTAssertTrue(try RecordsNativeCodec.ledgerScope(workspace, shop: other).dinnerPlanning.serveSchedules.isEmpty)
+        XCTAssertTrue(try XCTUnwrap(RecordsNativeCodec.ledgerLibrary(workspace)).dinnerPlanning.serveSchedules.isEmpty)
+    }
     @MainActor func testPrepStaysInItsOwnShopArchiveAndRoundTripsWithoutDeviceConsent() throws {
         let now = Date(), zone = "America/New_York"
         var first = ShoppingLedger(title: "Monday", basis: ShopBasis(timeZoneIdentifier: zone))
@@ -211,7 +294,11 @@ final class RecordsAdapterTests: XCTestCase {
             })
         await model.refresh()
         let deletion = try XCTUnwrap(model.reviewRecoveredDeletion(.origin(first.origin), title: first.origin))
-        XCTAssertEqual(model.deletionMessage(for: deletion), "Recovered copies selected for deletion: 1.\n\nThe original records and exported files are unaffected. You can undo this deletion during this app session.")
+        let countFormat = recordsText("Recovered copies selected for deletion: %lld.")
+        let recoveredEffect = recordsText("The original records and exported files are unaffected.")
+        let reversible = recordsText("You can undo this deletion during this app session.")
+        let expected = String(format: countFormat, Int64(1)) + "\n\n" + recoveredEffect + " " + reversible
+        XCTAssertEqual(model.deletionMessage(for: deletion), expected)
         try await save(added)
         await model.confirmDeletion(deletion)
         XCTAssertEqual(model.error, .deletionSelectionChanged)
@@ -227,7 +314,7 @@ final class RecordsAdapterTests: XCTestCase {
         XCTAssertTrue(deletedSources.isEmpty)
         await model.refresh()
         let confirmed = try XCTUnwrap(model.reviewRecoveredDeletion(.origin(first.origin), title: first.origin))
-        XCTAssertTrue(model.deletionMessage(for: confirmed).hasPrefix("Recovered copies selected for deletion: 2."))
+        XCTAssertEqual(model.deletionMessage(for: confirmed), String(format: countFormat, Int64(2)) + "\n\n" + recoveredEffect + " " + reversible)
         try await save(elsewhere)
         await model.confirmDeletion(confirmed)
         XCTAssertNil(model.error)
@@ -238,7 +325,8 @@ final class RecordsAdapterTests: XCTestCase {
         XCTAssertEqual(model.error, .deletionSelectionChanged)
         XCTAssertEqual(Set(model.recoveredRecords.map(\.record.id)), [first.id, added.id, elsewhere.id])
         let sourceReview = try XCTUnwrap(model.reviewSourceDeletion(elsewhere))
-        XCTAssertEqual(model.deletionMessage(for: sourceReview), "Deleting this record also deletes its recovered copies on this iPhone. Files you already exported are unaffected. This cannot be undone.")
+        let sourceEffect = recordsText("Deleting this record also deletes its recovered copies on this iPhone. Files you already exported are unaffected.")
+        XCTAssertEqual(model.deletionMessage(for: sourceReview), sourceEffect + " " + recordsText("This cannot be undone."))
         await model.confirmDeletion(sourceReview)
         XCTAssertNil(model.error)
         XCTAssertEqual(deletedSources, [elsewhere.id])
@@ -931,6 +1019,65 @@ final class RecordsAdapterTests: XCTestCase {
         XCTAssertTrue(saved.isEmpty)
     }
 
+    @MainActor func testUnreachableRecipeCanKeepItsLinkOfflineAndResumeWithoutDuplicatingTheCorrectedSource() async throws {
+        let directory = try temporaryDirectory()
+        let registry = try RecoveryRegistry(url: directory.appendingPathComponent("library.json"))
+        let model = RecordsToolsModel(registry: registry, snapshot: { .init() },
+            validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        let source = "https://recipes.example.org/sopa"
+        let entry = try XCTUnwrap(model.beginImport(.recipePage))
+        do {
+            try await model.importRecipePage(source, from: entry) { _ in throw URLError(.notConnectedToInternet) }
+            XCTFail("The unreachable page must not fabricate a recipe")
+        } catch let failure as URLError { XCTAssertEqual(failure.code, .notConnectedToInternet) }
+        try await model.stagePartialRecipeLink(source, from: entry)
+        model.dismissImport(entry)
+        let row = try XCTUnwrap(model.review?.rows.first)
+        let editor = try XCTUnwrap(model.beginRecipeCorrection(row))
+        var recipe = try XCTUnwrap(editor.initialRecipe)
+        XCTAssertEqual(recipe.sourceURL, source)
+        recipe.title = "Sopa"
+        recipe.ingredients = ["250 g de frijoles"]
+        recipe.steps = ["Cocer."]
+        try await model.stageManualRecipe(recipe, from: editor)
+        model.dismissImport(editor)
+        let unsaved = try await registry.refreshList()
+        XCTAssertTrue(unsaved.isEmpty)
+        await model.applyReviewedImport()
+        let next = try XCTUnwrap(model.beginImport(.recipePage))
+        try await model.stagePartialRecipeLink(source, from: next)
+        XCTAssertNil(model.review)
+        XCTAssertEqual(model.recipeReport?.duplicateCount, 1)
+        let saved = try await registry.refreshList()
+        XCTAssertEqual(saved.map { $0.record.title }, ["Sopa"])
+
+        // Once the page is available, a changed publication must be compared with the private repair.
+        model.dismissImport(next)
+        let published = Data(#"{"@type":"Recipe","name":"Sopa publicada","url":"https://recipes.example.org/sopa","recipeIngredient":["300 g de frijoles"]}"#.utf8)
+        func readPublishedPage() async throws {
+            let reader = try XCTUnwrap(model.beginImport(.recipePage))
+            try await model.importRecipePage(source, from: reader) { _ in published }
+            model.dismissImport(reader)
+        }
+        try await readPublishedPage()
+        let updated = try XCTUnwrap(model.review?.rows.first)
+        XCTAssertTrue(model.recipeVersionChoices.contains(updated.id))
+        await model.applyReviewedImport()
+        let withoutApproval = try await registry.refreshList()
+        XCTAssertEqual(withoutApproval, saved)
+        await model.skipRecipe(updated)
+        XCTAssertNil(model.review)
+        try await readPublishedPage()
+        let chosen = try XCTUnwrap(model.review?.rows.first)
+        model.confirmRecipeVersion(chosen, selected: true)
+        await model.applyReviewedImport()
+        let versions = try await registry.refreshList()
+        XCTAssertEqual(Set(versions.map { $0.record.title }), ["Sopa", "Sopa publicada"])
+        try await readPublishedPage()
+        XCTAssertNil(model.review)
+        XCTAssertEqual(model.recipeReport?.duplicateCount, 1)
+    }
+
     @MainActor func testSelectedPaprikaCollectionReviewsBeforeSaveAndSupportsUndo() async throws {
         let directory = try temporaryDirectory()
         let registry = try RecoveryRegistry(url: directory.appendingPathComponent("manifest.json"))
@@ -956,6 +1103,48 @@ final class RecordsAdapterTests: XCTestCase {
         XCTAssertEqual(try Data(contentsOf: url), bytes)
     }
 
+    @MainActor func testPrivatePaprikaBatchKeepsUnchangedVersionChoiceWhileRepairingSeveralRows() async throws {
+        let directory = try temporaryDirectory()
+        let registry = try RecoveryRegistry(url: directory.appendingPathComponent("library.json"))
+        let model = RecordsToolsModel(registry: registry, snapshot: { .init() },
+            validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        // The identified Paprika fixture contains two revisions of one UID and a second UID with matching text.
+        let collection = try XCTUnwrap(Data(base64Encoded: "UEsDBBQAAAAAAAAAIVDInsugWwAAAFsAAAASAAAAYmFzZS5wYXByaWthcmVjaXBlH4sIAAAAAAAC/6tWKs1MUbJSUEqEAl0DINA1AREWIMIAAQyVdBSU8hJzU0HqgzKTU0H8zLz0otSUzNS8kmJk4ZTMotTkksz8PLCoc35+tp5SLQDTfGerbQAAAFBLAwQUAAAAAAAAACFQh2UJnVsAAABbAAAAEwAAAG90aGVyLnBhcHJpa2FyZWNpcGUfiwgAAAAAAAL/q1YqzUxRslJQSoQCXQMg0DUBERYgwgABjJR0FJTyEnNTQeqDMpNTQfzMvPSi1JTM1LySYmThlMyi1OSSzPw8sKhzfn62nlItALiNKPFtAAAAUEsDBBQAAAAAAAAAIVDkLAR3ZwAAAGcAAAAWAAAAcmV2aXNpb24ucGFwcmlrYXJlY2lwZR+LCAAAAAAAAv+rVirNTFGyUlByhAJdAyDQNQERFiDCAAEMlXQUlPISc1NB6oMyk1NB/My89KLUlMzUvJJimLBCYl6KQlJRfkkGSEFKZlFqcklmfh5Y3jk/P1tPqRYAzstbJ3cAAABQSwMEFAAAAAAAAAAhUMiey6BbAAAAWwAAABQAAAByZXBlYXQucGFwcmlrYXJlY2lwZR+LCAAAAAAAAv+rVirNTFGyUlBKhAJdAyDQNQERFiDCAAEMlXQUlPISc1NB6oMyk1NB/My89KLUlMzUvJJiZOGUzKLU5JLM/DywqHN+fraeUi0A03xnq20AAABQSwECFAMUAAAAAAAAACFQyJ7LoFsAAABbAAAAEgAAAAAAAAAAAAAAgAEAAAAAYmFzZS5wYXByaWthcmVjaXBlUEsBAhQDFAAAAAAAAAAhUIdlCZ1bAAAAWwAAABMAAAAAAAAAAAAAAIABiwAAAG90aGVyLnBhcHJpa2FyZWNpcGVQSwECFAMUAAAAAAAAACFQ5CwEd2cAAABnAAAAFgAAAAAAAAAAAAAAgAEXAQAAcmV2aXNpb24ucGFwcmlrYXJlY2lwZVBLAQIUAxQAAAAAAAAAIVDInsugWwAAAFsAAAAUAAAAAAAAAAAAAACAAbIBAAByZXBlYXQucGFwcmlrYXJlY2lwZVBLBQYAAAAABAAEAAcBAAA/AgAAAAA="))
+        let url = directory.appendingPathComponent("Rice.paprikarecipes")
+        try collection.write(to: url)
+        await model.importFile(url, recipes: true)
+        let initial = try XCTUnwrap(model.review)
+        XCTAssertEqual(initial.rows.count, 3)
+        let versions = initial.rows.filter { model.recipeVersionChoices.contains($0.id) }
+        XCTAssertEqual(versions.count, 2)
+        let keep = try XCTUnwrap(versions.first)
+        let skip = try XCTUnwrap(versions.last)
+        let other = try XCTUnwrap(initial.rows.first { $0.record.id != keep.record.id })
+        model.confirmRecipeVersion(keep, selected: true)
+        func correct(_ row: RecoveryReviewRow, title: String) async throws {
+            let editor = try XCTUnwrap(model.beginRecipeCorrection(row))
+            var recipe = try XCTUnwrap(editor.initialRecipe)
+            recipe.title = title
+            try await model.stageManualRecipe(recipe, from: editor)
+            model.dismissImport(editor)
+        }
+        try await correct(other, title: "Arroz de la casa")
+        XCTAssertEqual(model.acceptedRecipeVersions, [keep.id])
+        try await correct(keep, title: "Arroz con caldo")
+        XCTAssertTrue(model.acceptedRecipeVersions.isEmpty)
+        await model.skipRecipe(skip)
+        let untouched = try await registry.refreshList()
+        XCTAssertTrue(untouched.isEmpty)
+        await model.applyReviewedImport()
+        let saved = try await registry.refreshList()
+        XCTAssertEqual(Set(saved.map { $0.record.title }), ["Arroz de la casa", "Arroz con caldo"])
+        await model.importFile(url, recipes: true)
+        XCTAssertEqual(model.review?.rows.map(\.record.revision), [skip.record.revision])
+        model.cancelReview()
+        let afterRetry = try await registry.refreshList()
+        XCTAssertEqual(afterRetry, saved)
+    }
+
     @MainActor func testChangedPaprikaUIDRequiresSeparateCopyApprovalAndSupportsSkipping() async throws {
         let directory = try temporaryDirectory()
         let registry = try RecoveryRegistry(url: directory.appendingPathComponent("manifest.json"))
@@ -975,7 +1164,7 @@ final class RecordsAdapterTests: XCTestCase {
         await model.importFile(url, recipes: true)
         let changed = try XCTUnwrap(model.review?.rows.first)
         XCTAssertEqual(changed.disposition, .sibling)
-        XCTAssertTrue(model.paprikaVersionChoices.contains(changed.id))
+        XCTAssertTrue(model.recipeVersionChoices.contains(changed.id))
         await model.applyReviewedImport()
         let withoutConsent = try await registry.refreshList()
         XCTAssertEqual(withoutConsent, before)
@@ -983,7 +1172,7 @@ final class RecordsAdapterTests: XCTestCase {
         XCTAssertNil(model.review)
         await model.importFile(url, recipes: true)
         let reviewed = try XCTUnwrap(model.review?.rows.first)
-        model.confirmPaprikaVersion(reviewed, selected: true)
+        model.confirmRecipeVersion(reviewed, selected: true)
         await model.applyReviewedImport()
         let after = try await registry.refreshList()
         XCTAssertEqual(after.count, 2)

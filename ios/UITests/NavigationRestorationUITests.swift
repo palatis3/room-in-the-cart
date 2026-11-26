@@ -170,6 +170,62 @@ import XCTest
         XCTAssertFalse(tripRow.label.contains("still needed"))
     }
 
+    func testPickedDiscountAndUnknownMilkReopenInTheGuestTrip() {
+        launch(reset: true)
+        let field = element("quickGrocery.name")
+        tap(field)
+        for name in ["Beans", "Rice", "Milk"] {
+            field.typeText(name + "\n")
+            let saved = app.buttons.matching(NSPredicate(format: "identifier == %@ AND label CONTAINS %@",
+                                                         "quickGrocery.undo", name)).firstMatch
+            XCTAssertTrue(saved.waitForExistence(timeout: 8))
+        }
+        tap(app.buttons["quickGrocery.dismissKeyboard"])
+        tap(app.buttons["openPickupList"])
+        tap(app.buttons["ledgerInStore"])
+
+        func enter(_ text: String, into id: String) {
+            let input = app.textFields[id]
+            tap(input)
+            input.typeText(text)
+            tap(app.buttons["inStoreAmountDone"])
+        }
+        func pick(_ grocery: String) {
+            let check = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label == %@",
+                                                         "inStoreCheck-", "Check " + grocery)).element
+            XCTAssertTrue(check.wait(for: \.isHittable, toEqual: true, timeout: 8), check.debugDescription)
+            check.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        }
+        pick("Beans")
+        tap(app.buttons["inStoreLastPrice"])
+        tap(app.buttons["inStorePriceBasis"])
+        tap(app.buttons["Per pack"])
+        enter("2.50", into: "inStoreAmount")
+        enter("2", into: "inStoreMeasuredAmount")
+        enter("1.00", into: "inStoreDiscount")
+        XCTAssertTrue(app.staticTexts["Picked line total · $4.00"].exists)
+        tap(app.buttons["Save price"])
+        pick("Rice")
+        tap(app.buttons["inStoreLastPrice"])
+        enter("3.00", into: "inStoreAmount")
+        tap(app.buttons["Save price"])
+        pick("Milk")
+
+        func verifySubtotal() {
+            let subtotal = app.staticTexts["inStoreSubtotal"]
+            XCTAssertTrue(subtotal.wait(for: \.label, toEqual: "$7.00 for 2 of 3 picked items", timeout: 8))
+            XCTAssertTrue(app.staticTexts["Unpriced picks · 1"].exists)
+        }
+        verifySubtotal()
+        app.terminate()
+        launch(reset: false)
+        if !app.navigationBars["Shop in store"].exists {
+            if !app.buttons["ledgerInStore"].exists { tap(app.buttons["openPickupList"]) }
+            tap(app.buttons["ledgerInStore"])
+        }
+        verifySubtotal()
+    }
+
     func testShopShowsRemainingQuantityAfterAPartialPick() {
         launch(reset: true)
         let entry = element("quickGrocery.name")
@@ -178,9 +234,11 @@ import XCTest
         XCTAssertTrue(app.buttons["quickGrocery.undo"].waitForExistence(timeout: 8))
         tap(app.buttons["quickGrocery.dismissKeyboard"])
         let inspect = app.buttons["Inspect Pears"]
-        tap(inspect)
-        let details = app.navigationBars["Item details"]
-        tap(app.buttons["ledgerEditQuantityAndNotes"])
+        XCTAssertTrue(inspect.waitForExistence(timeout: 8))
+        let amountID = inspect.identifier.replacingOccurrences(of: "shop.inspect-", with: "shop.editAmount-")
+        let directAmount = app.buttons[amountID]
+        XCTAssertEqual(directAmount.value as? String, "Pears")
+        tap(directAmount)
         let quantity = app.textFields["Quantity (optional)"]
         quantity.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.7)).tap()
         app.typeText("4")
@@ -188,12 +246,8 @@ import XCTest
         XCTAssertTrue(app.waitForDoneAboveKeyboard(identifier: "ledgerSaveContributionChanges"))
         XCTAssertTrue(saveQuantity.isEnabled && saveQuantity.isHittable)
         saveQuantity.tap()
-        XCTAssertTrue(details.waitForExistence(timeout: 8))
-        tap(details.buttons["Close"])
         XCTAssertTrue(inspect.waitForExistence(timeout: 8))
-        XCTAssertTrue((inspect.value as? String)?.contains("4") == true)
-        let amountID = inspect.identifier.replacingOccurrences(of: "shop.inspect-", with: "shop.editAmount-")
-        let directAmount = app.buttons[amountID]
+        XCTAssertTrue((directAmount.value as? String)?.contains("4") == true)
         XCTAssertTrue(directAmount.isHittable)
         XCTAssertFalse(directAmount.frame.intersects(inspect.frame))
         capture("Market Journal - Four pears in Shop")

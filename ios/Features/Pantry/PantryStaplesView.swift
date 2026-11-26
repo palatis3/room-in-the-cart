@@ -60,6 +60,11 @@ struct PantryStaplesView: View {
                                 Text(pantryText("Your confirmed counts show none left in the recorded batches."))
                             }
                             Text(pantryFormat("Usually purchased about every %@ days.", prompt.intervalDays.formatted()))
+                            if let lot = model.snapshot?.lots.first(where: { $0.foodID == prompt.id && $0.name == prompt.name }) {
+                                PantryRestockActions(model: model, lot: lot, sourceCurrent: {
+                                    self.input == input && shown == input && self.review?.prompts.contains(prompt) == true
+                                }, showCheckDates: false)
+                            }
                             Button(pantryText("Still have it")) { answer(.stillHave, prompt: prompt, review: review, input: input) }
                             Button(pantryText("Snooze one week")) {
                                 if let next = Calendar.current.date(byAdding: .day, value: 7, to: input.today) {

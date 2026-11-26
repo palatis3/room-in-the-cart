@@ -29,6 +29,7 @@ struct DeviceReminderPersona: Equatable {
     @Published private(set) var shopperInbox: HouseholdInboxModel?
     @Published private(set) var sharedShop: HouseholdShopModel?
     @Published private(set) var lifecycle: HouseholdLifecycleModel?
+    @Published private(set) var joinedDinnerDestination: UUID?
     @Published private(set) var requests: [OwnRequest] = []
     @Published private(set) var requestReadTimes = RequestReadTimes()
     @Published private(set) var nextRequestCursor: String?
@@ -328,6 +329,14 @@ struct DeviceReminderPersona: Equatable {
             let value = try await service.enroll(householdID: receipt.householdId, grantID: receipt.grantId)
             guard current == self.generation else { throw ClientError.cancelled }
             try await self.finishEnrollment(value, start: current)
+            if let invite = receipt.dinnerInviteId, receipt.memberId == value.memberId,
+               receipt.householdId == value.household.id, value.capabilities.contains("meal_proposals") {
+                Task {
+                    guard (try? await service.invitedDinner(invite, scope: value)) != nil,
+                          self.generation == current, self.projection == value, !self.locked else { return }
+                    self.joinedDinnerDestination = invite
+                }
+            }
         } onAccessEnded: { [weak self] in
             await self?.show(ClientError.accessEnded, start: start)
         }
@@ -1062,6 +1071,7 @@ struct DeviceReminderPersona: Equatable {
         return token
     }
     private func clearProjection(preservePlacementEvidence: Bool = false) {
+        joinedDinnerDestination = nil
         safetyReviews.clear()
         if !preservePlacementEvidence {
             placementEvidenceIdentity = nil; placementEvidenceUnlocked = false; placementEvidenceNotice = nil

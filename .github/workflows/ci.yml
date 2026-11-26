@@ -645,6 +645,7 @@ jobs:
         shell: bash
         env:
           IOS_PROVIDER: ${{ needs.source-checks.outputs.ios_provider }}
+          RITC_BITRISE_A3_ENABLED: ${{ vars.RITC_BITRISE_A3_ENABLED }}
           REQUESTED_IOS_SCOPE: ${{ github.event_name == 'workflow_dispatch' && inputs.ios_scope || 'full' }}
         run: |
           python3 scripts/discover_ios_tests.py --simulator "$SIMULATOR_ID"
@@ -756,7 +757,7 @@ jobs:
       queue: max
       cancel-in-progress: false
     needs: ios-build
-    runs-on: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && (matrix.provider == 'bitrise-A2' && 'bitrise-runner-A2' || matrix.provider == 'bitrise-A1' && 'bitrise-runner-A1') || 'xcode-27' }}
+    runs-on: ${{ vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 'palatis3/room-in-the-cart' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event_name == 'schedule' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && (vars.RITC_BITRISE_A3_ENABLED == 'true' && matrix.provider == 'bitrise-A3' && 'bitrise-runner-a3' || matrix.provider == 'bitrise-A2' && 'bitrise-runner-A2' || matrix.provider == 'bitrise-A1' && 'bitrise-runner-A1') || 'xcode-27' }}
     timeout-minutes: 75
     strategy:
       fail-fast: false

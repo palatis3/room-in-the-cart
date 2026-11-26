@@ -1,6 +1,70 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Reset store order": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset store order"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restablecer orden de la tienda"
+          }
+        }
+      }
+    },
+    "Learn aisle order on this device": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Learn aisle order on this device"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprender el orden de los pasillos en este dispositivo"
+          }
+        }
+      }
+    },
+    "After you check aisles in the same order on two lists at this store, you can review a suggestion. Turning this off clears the saved checkoff order.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After you check aisles in the same order on two lists at this store, you can review a suggestion. Turning this off clears the saved checkoff order."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Después de marcar los pasillos en el mismo orden en dos listas de esta tienda, podrás revisar una sugerencia. Al desactivar esta opción, se borra el orden de marcado guardado."
+          }
+        }
+      }
+    },
+    "Review suggested store order": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review suggested store order"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar el orden sugerido para la tienda"
+          }
+        }
+      }
+    },
     "Add and open list": {
       "localizations": {
         "en": {
@@ -3183,6 +3247,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Total de la tienda (%@; desconocido si se deja en blanco)"
+          }
+        }
+      }
+    },
+    "Retry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintentar"
           }
         }
       }

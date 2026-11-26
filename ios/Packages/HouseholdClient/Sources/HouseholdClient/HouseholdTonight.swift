@@ -173,7 +173,45 @@ public struct HouseholdTonightRecipeWrite: Encodable, Sendable {
     }
 }
 
+public struct HouseholdTwoNightPlan: Decodable, Equatable, Sendable {
+    public struct Lot: Decodable, Identifiable, Equatable, Sendable {
+        public let lotId: UUID
+        public let name, useFirstAt: String
+        public var id: UUID { lotId }
+    }
+    public struct Remainder: Decodable, Identifiable, Equatable, Sendable {
+        public let lotId: UUID
+        public let name, unit, amount: String
+        public var id: UUID { lotId }
+    }
+    public let householdId: UUID
+    public let grantEpoch, pantryRevision: Int
+    public let lots: [Lot]
+    public let recipeIds: [UUID]
+    public let reviewTokens: [String]
+    public let remainders: [Remainder]
+}
+
 extension HouseholdService {
+    public func twoNightPlan(for session: HouseholdPantrySession, page: HouseholdTonightPage, lots: Set<UUID>) async throws -> HouseholdTwoNightPlan {
+        let start = generation
+        guard authorizedTonightSession == session, try currentHouseholdPantrySession() == session,
+              lots.count <= 12 else { throw ClientError.accessEnded }
+        let selected = lots.sorted { $0.uuidString < $1.uuidString }
+        let plan: HouseholdTwoNightPlan = try await perform("pantry/tonight/two-nights", method: "GET",
+            query: selected.map { .init(name: "lotId", value: $0.uuidString.lowercased()) }, omitSelectedShop: true)
+        guard start == generation, authorizedTonightSession == session, try currentHouseholdPantrySession() == session,
+              plan.householdId == session.householdID, plan.grantEpoch == page.grantEpoch, plan.pantryRevision == page.pantryRevision,
+              plan.recipeIds.count == plan.reviewTokens.count, plan.recipeIds.isEmpty || plan.recipeIds.count == 2,
+              Set(plan.recipeIds).count == plan.recipeIds.count, Set(plan.lots.map(\.id)).count == plan.lots.count,
+              lots.isSubset(of: Set(plan.lots.map(\.id))), plan.lots.allSatisfy({ validHelperTimestamp($0.useFirstAt) }),
+              Set(plan.remainders.map(\.id)).count == plan.remainders.count,
+              zip(plan.recipeIds, plan.reviewTokens).allSatisfy({ id, token in
+                  page.recipes.contains { $0.id == id && $0.reviewToken == token && $0.checkoutEstimate == .noPurchaseNeeded }
+              }) else { throw ClientError.invalidResponse }
+        return plan
+    }
+
     public func householdTonight(for session: HouseholdPantrySession) async throws -> HouseholdTonightPage {
         let start = generation
         guard authorizedTonightSession == session, try currentHouseholdPantrySession() == session else { throw ClientError.accessEnded }

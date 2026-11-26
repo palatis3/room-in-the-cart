@@ -233,6 +233,7 @@ public struct DinnerProposal: Codable, Equatable, Sendable, Identifiable {
     public let quoteSelection: DinnerQuoteSelection?
 }
 public struct DinnerApplyReceipt: Codable, Equatable, Sendable, Identifiable {
+    public fileprivate(set) var costBaseline: WeeklyCostBaseline? = nil
     public fileprivate(set) var swapEffect: DinnerSwapEffect? = nil
     public fileprivate(set) var swapUndoRevisionID: UUID? = nil
     public let proposal: DinnerProposal
@@ -310,10 +311,11 @@ public struct DinnerPlanningState: Codable, Equatable, Sendable {
     public private(set) var rotations: [DinnerRotation]
     public private(set) var portionBindings: [DinnerPortionBinding]
     public private(set) var protectedDays: [DinnerProtectedDay]
-    private var recordedPrepTasks: [DinnerPrepTask]?
+    private var recordedPrepTasks: DinnerPrepRecords?
+    public var serveSchedules: [DinnerServeSchedule] { recordedPrepTasks?.schedules ?? [] }
     public private(set) var prepTasks: [DinnerPrepTask] {
-        get { recordedPrepTasks ?? [] }
-        set { recordedPrepTasks = newValue.isEmpty ? nil : newValue }
+        get { recordedPrepTasks?.tasks ?? [] }
+        set { recordedPrepTasks = DinnerPrepRecords(tasks: newValue, schedules: serveSchedules) }
     }
     public private(set) var weekNotes: [DinnerWeekNote]
     public private(set) var ideas: [DinnerIdeaDraft]
@@ -330,6 +332,10 @@ public struct DinnerPlanningState: Codable, Equatable, Sendable {
         guard Set(prepTasks.map { [$0.shopID, $0.occurrenceID] }).count == prepTasks.count, prepTasks.count <= 2000
         else { throw DinnerPlanningError.invalid("prepTasks") }
         for task in prepTasks { try task.validate() }
+        try dinnerUnique(serveSchedules.map(\.id))
+        guard serveSchedules.count <= 2000, Set(serveSchedules.map { [$0.shopID, $0.occurrenceID] }).count == serveSchedules.count
+        else { throw DinnerPlanningError.invalid("serveSchedules") }
+        for schedule in serveSchedules { _ = try schedule.sequence() }
         guard acceptedDinners.count <= 500, rotations.count <= 100, portionBindings.count <= 20_000,
               protectedDays.count <= 10_000, weekNotes.count <= 2_000, ideas.count <= 500,
               proposals.count <= 2_000, applyReceipts.count <= 10_000, quotePairs.count <= 500 else { throw DinnerPlanningError.invalid("stateSize") }
@@ -358,6 +364,10 @@ public struct DinnerPlanningState: Codable, Equatable, Sendable {
         for proposal in proposals { try Self.validate(proposal) }
         for receipt in applyReceipts {
             try Self.validate(receipt.proposal); try dinnerText(receipt.appliedBy); try dinnerDate(receipt.appliedAt)
+            if let baseline = receipt.costBaseline {
+                guard receipt.proposal.repeatWeek != nil else { throw DinnerPlanningError.invalid("costBaseline") }
+                try baseline.validate()
+            }
             if let swap = receipt.swapEffect { try swap.validate(receipt.proposal) }
             guard (receipt.swapEffect != nil) == (receipt.proposal.swapOriginalID != nil),
                   receipt.swapUndoRevisionID == nil || receipt.swapEffect != nil,
@@ -435,6 +445,10 @@ public struct DinnerPlanningState: Codable, Equatable, Sendable {
                   shop.contributions.contains(where: { $0.id == protected.contributionID && $0.source.isProtected })
             else { throw DinnerPlanningError.invalid("protectedReference") }
         }
+        for schedule in serveSchedules {
+            guard shops.first(where: { $0.id == schedule.shopID })?.mealOccurrences.contains(where: { $0.id == schedule.occurrenceID }) == true
+            else { throw DinnerPlanningError.notFound(schedule.occurrenceID) }
+        }
         for task in prepTasks {
             guard shops.first(where: { $0.id == task.shopID })?.mealOccurrences.contains(where: { $0.id == task.occurrenceID }) == true
             else { throw DinnerPlanningError.notFound(task.occurrenceID) }
@@ -453,7 +467,7 @@ public struct DinnerPlanningState: Codable, Equatable, Sendable {
     }
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        recordedPrepTasks = try c.decodeIfPresent([DinnerPrepTask].self, forKey: .recordedPrepTasks)
+        recordedPrepTasks = try c.decodeIfPresent(DinnerPrepRecords.self, forKey: .recordedPrepTasks)
         revisionID = try c.decode(UUID.self, forKey: .revisionID)
         acceptedDinners = try c.decode([AcceptedDinner].self, forKey: .acceptedDinners)
         freeReusableDinnerID = try c.decodeIfPresent(UUID.self, forKey: .freeReusableDinnerID)
@@ -531,6 +545,33 @@ public struct DinnerPlanningState: Codable, Equatable, Sendable {
         var next = self; try next.saveIdea(draft, access: access, at: now); try next.accept(dinner, access: access, at: now); self = next
         return dinner
     }
+    public mutating func setServeSchedule(_ value: DinnerServeSchedule?, replacing previous: DinnerServeSchedule?,
+                                         mealID: UUID, ledger: ShoppingLedger, expectedRevision: UUID,
+                                         access: DinnerAccessContext, at now: Date) throws {
+        try access.validate(shopID: ledger.id, at: now, applying: true)
+        guard case .local = access.scope else { throw DinnerPlanningError.forbidden }
+        guard value == nil || access.hasPaidTools else { throw DinnerPlanningError.paidAccessRequired }
+        guard ledger.revisionID == expectedRevision,
+              let meal = ledger.mealOccurrences.first(where: { $0.id == mealID && $0.removedAt == nil })
+        else { throw DinnerPlanningError.stalePreview }
+        var schedules = serveSchedules
+        let index = schedules.firstIndex { $0.shopID == ledger.id && $0.occurrenceID == mealID }
+        let current = index.map { schedules[$0] }
+        if let value {
+            guard value.shopID == ledger.id, value.occurrenceID == mealID, value.dinnerDay == meal.scheduledDay,
+                  previous == nil || previous?.id == value.id else { throw DinnerPlanningError.stalePreview }
+        }
+        if current == value { return }
+        guard current == previous else { throw DinnerPlanningError.stalePreview }
+        if let index { schedules.remove(at: index) }
+        if let value { schedules.append(value) }
+        var next = self
+        next.recordedPrepTasks = DinnerPrepRecords(tasks: prepTasks, schedules: schedules)
+        try next.validate()
+        next.revisionID = UUID()
+        self = next
+    }
+
     public mutating func setPrep(_ task: DinnerPrepTask?, replacing previous: DinnerPrepTask?, mealID: UUID,
                                  ledger: ShoppingLedger, expectedRevision: UUID, access: DinnerAccessContext, at now: Date) throws {
         try access.validate(shopID: ledger.id, at: now, applying: true)
@@ -839,7 +880,8 @@ public enum DinnerPlanningEngine {
     }
 
     static func applyValidated(_ proposal: DinnerProposal, ledger: inout ShoppingLedger, state: inout DinnerPlanningState,
-                               access: DinnerAccessContext, phase: BasketPhase, at now: Date, staples: [RepeatWeek.PreparedStaple]) throws -> DinnerApplyReceipt {
+                               access: DinnerAccessContext, phase: BasketPhase, at now: Date, staples: [RepeatWeek.PreparedStaple],
+                               weeklyPackSelections: [LedgerPackSelection] = []) throws -> DinnerApplyReceipt {
         try access.validate(shopID: ledger.id, at: now, applying: true, budget: proposal.tool == .quoteAdoption || proposal.tool == .threeDinnerBasket)
         guard proposal.shopID == ledger.id, proposal.namespace == access.namespace, !proposal.isIsolatedPreview else { throw DinnerPlanningError.forbidden }
         try DinnerPlanningState.validate(proposal); try ledger.validate(); try state.validate()
@@ -864,6 +906,10 @@ public enum DinnerPlanningEngine {
             revisionID: proposal.proposedRevisionID, operationID: proposal.id, at: now, repeatWeek: proposal.repeatWeek, staples: staples)
         try validateManualBindings(proposal, ledger: ledger, projected: nextLedger, state: state)
         var receipt = DinnerApplyReceipt(proposal: proposal, appliedBy: access.actorID, appliedAt: now, revisionID: nextLedger.revisionID)
+        if proposal.repeatWeek != nil, access.canReadBudget, case .local(let workspaceID) = access.scope {
+            receipt.costBaseline = try WeeklyCostBaseline(accepted: nextLedger, previous: ledger, selections: weeklyPackSelections,
+                workspaceID: workspaceID, bindings: state.portionBindings, at: now)
+        }
         try nextState.applied(receipt)
         if proposal.swapOriginalID != nil {
             receipt.swapEffect = try DinnerSwapEffect.record(receipt, prior: ledger, planning: state, current: nextLedger, updated: nextState)

@@ -68,7 +68,9 @@ def main():
             print("Every selected fixture build and test job passed.")
             return
         # matrix() validates the entire source inventory before any filtering.
-        full_matrix = matrix(github_mac_only=os.environ.get("RITC_GITHUB_MAC_ONLY") == "true")
+        full_matrix = matrix(
+            github_mac_only=os.environ.get("RITC_GITHUB_MAC_ONLY") == "true",
+            a3_enabled=os.environ.get("RITC_BITRISE_A3_ENABLED") == "true")
         work = select_work(os.environ.get("GITHUB_EVENT_NAME", ""),
                            os.environ.get("REQUESTED_FIXTURE_SHARD", ""), full_matrix)
     except (ValueError, OSError, KeyError, TypeError) as error:

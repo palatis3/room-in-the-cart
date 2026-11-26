@@ -20,6 +20,7 @@ A1_SLOT_PREFIX = 'ritc-bitrise-a1-slot-'
 A1_LABEL = 'bitrise-runner-A1'
 A2_SLOT_PREFIX = 'ritc-bitrise-a2-slot-'
 A2_LABEL = 'bitrise-runner-A2'
+A3_LABEL = 'bitrise-runner-a3'
 SWIFT_PACKAGES_JOB = ('ci.yml', 'swift-packages')
 CORE_BUILD_JOB = ('ci.yml', 'ios-build')
 RELEASE_BUILD_JOB = ('ci.yml', 'ios-release')
@@ -35,8 +36,9 @@ FIXTURE_TRUSTED = ("vars.RITC_GITHUB_MAC_ONLY != 'true' && github.repository == 
                    "(github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository))")
 FIXTURE_RUNNER = "${{ " + FIXTURE_TRUSTED + " && '" + A1_LABEL + "' || 'xcode-27' }}"
 A2_RUNNER = "${{ " + FIXTURE_TRUSTED + " && '" + A2_LABEL + "' || 'xcode-27' }}"
+A3_ROUTE = "vars.RITC_BITRISE_A3_ENABLED == 'true' && matrix.provider == 'bitrise-A3'"
 FIXTURE_CONSUMER_RUNNER = ("${{ " + FIXTURE_TRUSTED +
-    " && (matrix.provider == 'bitrise-A2' && '" + A2_LABEL +
+    " && (" + A3_ROUTE + " && '" + A3_LABEL + "' || matrix.provider == 'bitrise-A2' && '" + A2_LABEL +
     "' || matrix.provider == 'bitrise-A1' && '" + A1_LABEL + "') || 'xcode-27' }}")
 QUEUE_ERROR = 'unexpected key "queue" for "concurrency" section. expected one of "cancel-in-progress", "group"'
 # Every native leaf job must remain represented; new native job definitions require review.
@@ -88,7 +90,8 @@ def bitrise_group(identity, expected):
         route = f"'{prefix}{expected}'"
         fields = ('locale',) if identity == STOREKIT_JOB else ()
     else:
-        route = ("(matrix.provider == 'bitrise-A2' && format('ritc-bitrise-a2-slot-{0}', matrix.pool_slot)" +
+        route = ("(" + A3_ROUTE + " && format('ritc-bitrise-a3-slot-{0}', matrix.pool_slot)" +
+                 " || matrix.provider == 'bitrise-A2' && format('ritc-bitrise-a2-slot-{0}', matrix.pool_slot)" +
                  " || matrix.provider == 'bitrise-A1' && format('ritc-bitrise-a1-slot-{0}', matrix.pool_slot))")
         fields = expected[1]
     return "${{ " + FIXTURE_TRUSTED + " && " + route + " || " + github_job_group(identity, fields) + " }}"

@@ -1,6 +1,144 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Previously saved and now off the menu." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Previously saved and now off the menu." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Esta cena se guardó antes y ya no está en el menú." } }
+      }
+    },
+    "Saved dinners stay in the shop. Review Saved changes to undo an eligible dinner." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Saved dinners stay in the shop. Review Saved changes to undo an eligible dinner." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Las cenas guardadas siguen en la lista. En Cambios guardados puedes deshacer las cenas que lo permitan." } }
+      }
+    },
+    "Stop remaining dinners?" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Stop remaining dinners?" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "¿Detener las cenas pendientes?" } }
+      }
+    },
+    "Refresh shared repeat review" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Refresh shared repeat review" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Actualizar la revisión de la semana compartida" } }
+      }
+    },
+    "Save shared review" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Save shared review" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Guardar la revisión compartida" } }
+      }
+    },
+    "Save the selected dinners for both planners to review. The shopper confirms grocery changes one dinner at a time." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Save the selected dinners for both planners to review. The shopper confirms grocery changes one dinner at a time." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Guarda las cenas elegidas para que ambas personas puedan revisarlas. Quien hace las compras confirma los cambios de una cena a la vez." } }
+      }
+    },
+    "Start a fresh review" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Start a fresh review" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Iniciar otra revisión" } }
+      }
+    },
+    "Stop remaining dinners" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Stop remaining dinners" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Detener las cenas pendientes" } }
+      }
+    },
+    "Waiting for shopper review" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Waiting for shopper review" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Pendiente de revisión por quien hace las compras" } }
+      }
+    },
+    "Review this dinner and its groceries" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Review this dinner and its groceries" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Revisar esta cena y sus compras" } }
+      }
+    },
+    "Source dinner changed. Start a fresh review." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Source dinner changed. Start a fresh review." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "La cena original cambió. Inicia otra revisión." } }
+      }
+    },
+    "Stopped before saving" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Stopped before saving" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Se detuvo antes de guardar" } }
+      }
+    },
+    "Saved to the shared shop" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Saved to the shared shop" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Guardada en la lista compartida" } }
+      }
+    },
+    "Dinner unavailable" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Dinner unavailable" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cena no disponible" } }
+      }
+    },
+    "Each dinner has its own grocery review. Both planners can return to this list to see what was saved." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Each dinner has its own grocery review. Both planners can return to this list to see what was saved." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cada cena tiene su propia revisión de compras. Las dos personas que planean pueden volver a esta lista para ver lo que se guardó." } }
+      }
+    },
+    "Shared repeat week" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Shared repeat week" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Repetir la semana en familia" } }
+      }
+    },
+    "Current menu after delivery" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Current menu after delivery" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Menú actual después de la entrega" } }
+      }
+    },
+    "Remove planning access" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Remove planning access" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Retirar el acceso al plan" } }
+      }
+    },
+    "No shared meals scheduled for these seven days." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No shared meals scheduled for these seven days." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No hay comidas compartidas programadas para estos siete días." } }
+      }
+    },
+    "Review food still needed" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Review food still needed" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Revisar los alimentos que faltan" } }
+      }
+    },
+    "Repair this short delivery" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Repair this short delivery" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ajustar esta cena por el faltante" } }
+      }
+    },
+    "Next planned use" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Next planned use" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Próxima comida prevista" } }
+      }
+    },
+    "Decide later" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Decide later" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Decidir después" } }
+      }
+    },
     "%@: no price is linked to the confirmed food identity." : {
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "%@: no price is linked to the confirmed food identity." } },

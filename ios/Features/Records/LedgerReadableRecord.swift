@@ -66,6 +66,20 @@ import CoreDomain
             row.optional ? shoppingText("Optional") : ""])
     }
 
+    private static func pickedPriceFacts(_ price: PickedLinePrice?) -> [String] {
+        guard let price else { return [shoppingText("Price unknown")] }
+        var facts: [String] = []
+        if let shelf = price.shelf {
+            let rate = shelf.unit == .count ? shelfText("Price per pack") : shelfFormat("Shelf price per %@", shelf.unit.comparisonLabel(for: .one))
+            facts.append(field(rate, moneyText(shelf.rate)))
+            if let measured = shelf.measured {
+                facts.append(shelf.unit == .count ? field(shelfText("Packs picked"), amountText(measured.amount)) :
+                             field(shelfText("Measured weight"), pQuantity(measured)))
+            }
+        }
+        return facts + pickedPriceLabels(price)
+    }
+
     private static func shoppingList(_ shop: ShoppingLedger, in workspace: LedgerWorkspace) throws -> [String] {
         let basis = shop.basis
         var lines = [joined([shop.title, revision(shop.revision)]),
@@ -83,8 +97,8 @@ import CoreDomain
             if !preview.includedCharges.isEmpty { lines.append(ledgerFormat("Included charges: %@", preview.includedCharges.joined(separator: ", "))) }
         }
 
-        if shop.lines.contains(where: { $0.pickedPrice != nil }) {
-            let subtotal = shop.pickedCartSubtotal
+        let subtotal = shop.pickedCartSubtotal
+        if subtotal.picked > 0 {
             lines.append(pickedSubtotalText(subtotal))
             lines.append(shoppingText("Entered item totals before checkout charges."))
         }
@@ -102,6 +116,9 @@ import CoreDomain
                 let total = try shop.quantity(forLineID: line.id)
                 lines.append(joined(["• " + line.name, total.map { pQuantity($0) } ?? ledgerText("Quantity unresolved"), line.aisle]))
                 if let summary = shop.packagePickSummary(line) { lines.append(summary) }
+                if line.inStorePickedAt != nil && !line.isHandled && !line.isTrashed {
+                    lines += pickedPriceFacts(shop.priceForCurrentPick(lineID: line.id))
+                }
                 if let date = line.checkedAt { lines.append(joined([ledgerText("Checked at"), stamp(date)])) }
                 if let date = line.handledAt {
                     lines.append(joined([line.handledBy.map { ledgerFormat("Handled by %@", $0) } ?? ledgerText("Handled"), stamp(date)]))
@@ -211,6 +228,12 @@ import CoreDomain
         for proposal in proposals { lines += proposalFacts(proposal, meals: meals, quotes: planning.quotePairs) }
         for receipt in receipts {
             lines += proposalFacts(receipt.proposal, meals: meals, quotes: planning.quotePairs)
+            if receipt.proposal.repeatWeek != nil {
+                if let baseline = receipt.costBaseline {
+                    lines.append(joined([dinnerText("Original shopping estimate"), stamp(receipt.appliedAt), baseline.store, baseline.currency.rawValue]))
+                    for line in baseline.lines { lines.append(joined([line.name, quantity(line.quantity), dinnerMoney(line.estimate)])) }
+                } else { lines.append(dinnerText("No saved estimate for this shop.")) }
+            }
             lines.append(joined([ledgerText("Applied by"), receipt.appliedBy, stamp(receipt.appliedAt)]))
         }
         return lines

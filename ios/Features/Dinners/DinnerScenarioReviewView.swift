@@ -55,7 +55,7 @@ struct DinnerScenarioReviewView: View {
                     if pairing.untestedCount > 0 { Text(dinnerFormat("Untested alternatives: %d", pairing.untestedCount)) }
                     if !model.paid, let household, household.canOpenMembership, child?.presented != true {
                         NavigationLink(mtr("Review Household for dinner comparisons")) {
-                            MembershipEntryView(household: household)
+                            MembershipEntryView(household: household, returnsToDinnerComparison: true)
                         }.accessibilityIdentifier("dinner.pairings.membership")
                     }
                     scenario(pairing.baseline)

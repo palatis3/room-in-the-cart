@@ -1,6 +1,74 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Check that the photo shows only this package. You can also type the name and size.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check that the photo shows only this package. You can also type the name and size."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa que la foto muestre solo este paquete. También puedes escribir el nombre y el contenido."
+          }
+        }
+      }
+    },
+    "Read a label for this barcode": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read a label for this barcode"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leer una etiqueta para este código de barras"
+          }
+        }
+      }
+    },
+    "Use label name: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use label name: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar el nombre de la etiqueta: %@"
+          }
+        }
+      }
+    },
+    "Use label size: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use label size: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar el contenido de la etiqueta: %@"
+          }
+        }
+      }
+    },
     "Printed quantity unknown. If you put this food away, enter how much you received.": {
       "extractionState": "manual",
       "localizations": {

@@ -25,6 +25,53 @@ final class RecipePageReaderTests: XCTestCase {
         XCTAssertEqual(report.recipes.first?.missingFields, [.instructions])
     }
 
+    func testOfflineSourceKeepsItsAddressAndPartialHTMLPreservesThePageTitle() throws {
+        let address = "https://recipes.example.org/frijoles#ingredients"
+        let offline = try RecipePageReader.partialRecipe(at: address)
+        XCTAssertEqual(offline.sourceURL, address)
+        XCTAssertEqual(offline.missingFields, [.servings, .ingredients, .instructions])
+        XCTAssertThrowsError(try RecipePageReader.partialRecipe(at: "https://name:secret@example.org/"))
+        let source = try XCTUnwrap(URL(string: address))
+        let html = Data("<html><head><title>Frijoles &amp; arroz</title></head><body></body></html>".utf8)
+        let report = try RecipeImporter.stage(RecipePageReader.document(body: html, contentType: "text/html", source: source))
+        XCTAssertEqual(report.recipes, [ImportedRecipe(title: "Frijoles & arroz", sourceURL: address)])
+        let partial = Data(#"<html><head><title>Sopa</title><script type="application/ld+json">{"@type":"Recipe","recipeIngredient":["1 kg de papa"]}</script></head></html>"#.utf8)
+        let partialReport = try RecipeImporter.stage(RecipePageReader.document(body: partial, contentType: "text/html", source: source))
+        XCTAssertEqual(partialReport.recipes, [ImportedRecipe(title: "Sopa", ingredients: ["1 kg de papa"], sourceURL: address)])
+    }
+
+    func testReviewedLinkAndChangedDishRequireChoicesButDifferentDishesOnOnePageStayIndependent() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let registry = try RecoveryRegistry(url: directory.appendingPathComponent("library.json"))
+        let origin = "recipe-library-v1", date = Date(timeIntervalSince1970: 0)
+        let address = "https://recipes.example.org/soup"
+        let link = try RecipePageReader.partialRecipe(at: address + "#ingredients")
+        let placeholder = try link.archiveRecord(origin: origin, savedAt: date)
+        let local = try PaprikaCollection.correctedRecord(
+            ImportedRecipe(title: "My family soup", ingredients: ["Beans"], sourceURL: link.sourceURL), previous: placeholder)
+        let menu = "https://recipes.example.org/menu"
+        let rice = try ImportedRecipe(title: "Arroz", ingredients: ["Rice"], sourceURL: menu).archiveRecord(origin: origin, savedAt: date)
+        func envelope(_ records: [ArchiveRecord]) throws -> ArchiveEnvelope {
+            try ArchiveCodec.make(records: records, kind: .personalRecovery, origin: origin, revision: "recipe-review")
+        }
+        let saved = try await registry.review(envelope([local, rice]))
+        _ = try await registry.apply(saved)
+        let published = ImportedRecipe(title: "Sopa de frijol", steps: ["Simmer."], sourceURL: address)
+        let amended = ImportedRecipe(title: "Arroz", sourceURL: menu, notes: "Changed")
+        let distinct = ImportedRecipe(title: "Flan", sourceURL: menu)
+        let sameFile = [ImportedRecipe(title: "Crema", ingredients: ["1 kg de papa"], sourceURL: menu),
+                        ImportedRecipe(title: "Crema", ingredients: ["500 g de papa"], sourceURL: menu)]
+        let incoming = try ([published, amended, distinct] + sameFile).map { try $0.archiveRecord(origin: origin, savedAt: date) }
+        let (review, choices) = try await registry.reviewRecipeVersions(envelope(incoming))
+        XCTAssertEqual(Set(review.rows.filter { choices.contains($0.id) }.map { $0.record.title }), ["Sopa de frijol", "Arroz", "Crema"])
+        XCTAssertEqual(choices.count, 4)
+        XCTAssertEqual(Set(review.rows.map(\.disposition)), [.absent])
+        let original = try await registry.refreshList()
+        XCTAssertEqual(Set(original.map { $0.record.title }), ["My family soup", "Arroz"])
+    }
+
     func testRedirectValidationPrecedesAnotherRequestAndStopsAtThreeHops() async throws {
         for (target, expectedRequests) in [("http://recipes.example.org/soup", 1), ("/next", 4)] {
             var requests = 0

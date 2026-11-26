@@ -1,6 +1,244 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Choose where to append the extra text or discard it before reviewing.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose where to append the extra text or discard it before reviewing."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige dónde agregar el texto adicional o descártalo antes de revisar."
+          }
+        }
+      }
+    },
+    "Discard this extra text": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard this extra text"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descartar este texto adicional"
+          }
+        }
+      }
+    },
+    "Review a draft with this link": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review a draft with this link"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar un borrador con este enlace"
+          }
+        }
+      }
+    },
+    "Reopen the recipe link to review it again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reopen the recipe link to review it again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve a abrir el enlace de la receta para revisarlo."
+          }
+        }
+      }
+    },
+    "Could not read this recipe. Keep the link in a draft and add the missing details.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not read this recipe. Keep the link in a draft and add the missing details."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo leer esta receta. Guarda el enlace en un borrador y agrega los detalles que faltan."
+          }
+        }
+      }
+    },
+    "Add missing text from a screenshot or paste": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add missing text from a screenshot or paste"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agregar el texto que falta desde una captura de pantalla o pegarlo"
+          }
+        }
+      }
+    },
+    "Read a recipe screenshot on this iPhone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read a recipe screenshot on this iPhone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leer una captura de la receta en este iPhone"
+          }
+        }
+      }
+    },
+    "Could not read the screenshot. Paste or type its text below.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not read the screenshot. Paste or type its text below."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo leer la captura de pantalla. Pega o escribe el texto abajo."
+          }
+        }
+      }
+    },
+    "Review or paste the missing text": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review or paste the missing text"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa o pega el texto que falta"
+          }
+        }
+      }
+    },
+    "Append to ingredients": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Append to ingredients"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agregar a los ingredientes"
+          }
+        }
+      }
+    },
+    "Append to steps": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Append to steps"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agregar a los pasos"
+          }
+        }
+      }
+    },
+    "Append to notes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Append to notes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agregar a las notas"
+          }
+        }
+      }
+    },
+    "Destination": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Destination"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Destino"
+          }
+        }
+      }
+    },
+    "Private recipe library on this iPhone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private recipe library on this iPhone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recetario privado en este iPhone"
+          }
+        }
+      }
+    },
     "Save the encrypted file for your own recovery. Keep its key separately.": {
       "localizations": {
         "en": {

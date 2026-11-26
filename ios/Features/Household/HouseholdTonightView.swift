@@ -2,12 +2,28 @@ import SwiftUI
 import HouseholdClient
 
 struct HouseholdTonightReturn {
+    struct Pair {
+        let secondRecipeID: UUID
+        let secondDay: Date
+        let lots: Set<UUID>
+    }
     let recipeID: UUID
+    let day: Date
+    let pair: Pair?
     let session: HouseholdPantrySession
     let subject: String
     let generation: UUID
     let grantEpoch: Int
     let expires: Date
+
+    func canResume(in currentSession: HouseholdPantrySession, scope: HouseholdPantryRuntime, grant: Int, now: Date) -> Bool {
+        subject == scope.subject && generation == scope.generation && session == currentSession && grantEpoch == grant && now < expires
+    }
+
+    func matchesPair(_ recipeIDs: [UUID], hasPaidSeat: Bool, now: Date) -> Bool {
+        guard let pair, hasPaidSeat, now < expires else { return false }
+        return recipeIDs == [recipeID, pair.secondRecipeID]
+    }
 }
 
 struct HouseholdTonightLink: View {
@@ -25,10 +41,15 @@ private struct HouseholdTonightView: View {
     @ObservedObject var household: HouseholdModel
     let scope: HouseholdPantryRuntime
     @Environment(\.scenePhase) private var scene
+    @EnvironmentObject private var membership: MembershipCoordinator
+    @State private var twoNights: HouseholdTwoNightPlan?
+    @State private var selectedLots = Set<UUID>()
     @State private var session: HouseholdPantrySession?
     @State private var page: HouseholdTonightPage?
     @State private var selection: HouseholdTonightPage.Recipe?
     @State private var preview: Preview?
+    @State private var secondSelection: HouseholdTonightPage.Recipe?
+    @State private var secondDay = sharedMealPickerToday()
     @State private var day = sharedMealPickerToday()
     @State private var notice: String?
     @State private var busy = false
@@ -46,8 +67,17 @@ private struct HouseholdTonightView: View {
         let shop: ShopperShop
         let day: String
         let occurrence = UUID()
+        let second: HouseholdTonightPage.Recipe?
+        let secondDay: String
+        let secondOccurrence = UUID()
+        let lots: Set<UUID>
     }
 
+    private var paid: Bool {
+        guard let seat = membership.model, seat.context?.householdID == scope.householdID,
+              seat.context?.purchaserID == scope.memberID else { return false }
+        return seat.hasPaidAccess
+    }
     private var live: Bool {
         scene == .active && UIApplication.shared.isProtectedDataAvailable && household.projection?.canBrowseHouseholdTonight == true && household.householdPantryScope == scope
     }
@@ -106,6 +136,51 @@ private struct HouseholdTonightView: View {
             }
             Button(tonightText("Refresh recipes and pantry")) { Task { await load() } }.disabled(busy)
         }
+        if paid {
+            Section(cookingText("Use soon across two dinners")) {
+                if let twoNights {
+                    ForEach(twoNights.lots) { lot in
+                        Toggle(isOn: Binding(get: { selectedLots.contains(lot.id) }, set: { selected in
+                            if selected { selectedLots.insert(lot.id) } else { selectedLots.remove(lot.id) }
+                            Task { await loadTwoNights(page) }
+                        })) {
+                            VStack(alignment: .leading) {
+                                Text(verbatim: lot.name)
+                                if let date = serviceDate(lot.useFirstAt) {
+                                    Text(verbatim: [ht("Use first by"), date.formatted(date: .abbreviated, time: .omitted),
+                                        String(lot.id.uuidString.suffix(6))].joined(separator: " · ")).font(.caption)
+                                }
+                            }
+                        }.disabled(busy || (!selectedLots.contains(lot.id) && selectedLots.count >= 12))
+                    }
+                    if !busy {
+                        if twoNights.recipeIds.isEmpty {
+                            Text(cookingText("Current unreserved food does not cover two reviewed dinners."))
+                        } else {
+                            ForEach(Array(twoNights.recipeIds.enumerated()), id: \.element) { index, id in
+                                if let recipe = page.recipes.first(where: { $0.id == id }) {
+                                    LabeledContent(cookingText(index == 0 ? "First dinner" : "Second dinner"), value: recipe.title)
+                                }
+                            }
+                            ForEach(twoNights.remainders) { lot in
+                                LabeledContent(lot.name, value: lot.amount + " " + cookingText(lot.unit))
+                            }
+                            Button(cookingText("Review both dinners")) {
+                                guard let first = page.recipes.first(where: { $0.id == twoNights.recipeIds[0] }),
+                                      let second = page.recipes.first(where: { $0.id == twoNights.recipeIds[1] }) else { return }
+                                day = sharedMealPickerToday()
+                                secondDay = Calendar(identifier: .gregorian).date(byAdding: .day, value: 1, to: day) ?? day
+                                selection = first; secondSelection = second; notice = nil
+                            }
+                            Text(cookingText("These amounts would remain after both dinners."))
+                                .font(.footnote)
+                        }
+                    }
+                } else {
+                    Button(cookingText("Find two dinners using available food")) { Task { await loadTwoNights(page) } }.disabled(busy)
+                }
+            }
+        }
         if page.canReviewRecipes, let excluded = page.excludedReviewedRecipes, !excluded.isEmpty {
             Section(tonightText("Your recipes excluded from Tonight")) {
                 ForEach(excluded) { record in
@@ -142,7 +217,7 @@ private struct HouseholdTonightView: View {
                 Text(tonightText(recipe.checkoutEstimate == .noPurchaseNeeded ?
                     "Confirmed pantry food covers these recipe amounts." : "Some amounts or package prices still need review."))
                 if recipe.status == .eligible {
-                    Button(tonightText("Choose a shared dinner destination")) { selection = recipe; notice = nil }
+                    Button(tonightText("Choose a shared dinner destination")) { selection = recipe; secondSelection = nil; notice = nil }
                         .accessibilityIdentifier("householdTonight.choose." + recipe.id.uuidString)
                 } else { Text(tonightText("Review household restrictions and recipe details before choosing this meal.")) }
             }
@@ -154,6 +229,11 @@ private struct HouseholdTonightView: View {
             Text(verbatim: recipe.title).font(.headline)
             DatePicker(ht("Meal day"), selection: $day, displayedComponents: .date)
                 .environment(\.timeZone, TimeZone(secondsFromGMT: 0)!)
+            if let secondSelection {
+                Text(verbatim: secondSelection.title)
+                DatePicker(cookingText("Second dinner day"), selection: $secondDay, displayedComponents: .date)
+                    .environment(\.timeZone, TimeZone(secondsFromGMT: 0)!)
+            }
             if let shop = household.sharedShop, shop.canManage, let id = household.projection?.shopId {
                 Button {
                     Task { await prepare(recipe, page: page, shop: shop) }
@@ -162,7 +242,8 @@ private struct HouseholdTonightView: View {
                         Text(tonightText("Review this shared shop"))
                         Text(verbatim: String(id.suffix(8))).font(.caption.monospaced())
                     }
-                }.accessibilityIdentifier("householdTonight.destination")
+                }.disabled(secondSelection != nil && (!paid || sharedMealDay(secondDay) <= sharedMealDay(day)))
+                    .accessibilityIdentifier("householdTonight.destination")
             }
             if household.projection?.canSelectShop == true || household.projection?.selectionRequired == true {
                 Button(ht("Choose shared shop")) { remember(recipe, page: page); choosingShop = true }
@@ -186,19 +267,45 @@ private struct HouseholdTonightView: View {
             Text(verbatim: value.recipe.title).font(.headline)
             LabeledContent(ht("Shared household shop"), value: String(value.shop.shopId.suffix(8)))
             Text(verbatim: sharedMealScheduleText(value.day))
-            Text(tonightText("Confirm to add one dinner to this shared shop. Pantry quantities and shopping items stay as reviewed."))
-            Button(tonightText("Confirm shared dinner")) { Task { await apply(value) } }
-                .accessibilityIdentifier("householdTonight.confirm")
+            if let second = value.second {
+                LabeledContent(second.title, value: sharedMealScheduleText(value.secondDay))
+                Text(cookingText("Both dinners will be added to this shop. Food quantities change when you record cooking."))
+            } else {
+                Text(tonightText("Confirm to add one dinner to this shared shop. Pantry quantities and shopping items stay as reviewed."))
+            }
+            Button(value.second == nil ? tonightText("Confirm shared dinner") : cookingText("Confirm both dinners")) { Task { await apply(value) } }
+                .accessibilityIdentifier("householdTonight.confirm").disabled(value.second != nil && !paid)
             Button(ht("Cancel")) { preview = nil; selection = nil }.accessibilityIdentifier("householdTonight.cancel")
         }.disabled(busy)
     }
 
+    @MainActor private func loadTwoNights(_ reviewed: HouseholdTonightPage) async {
+        guard live, paid, !busy, page == reviewed, let session, let service = household.service else { return }
+        let start = generation
+        let selected = selectedLots
+        busy = true
+        defer { if generation == start { busy = false } }
+        do {
+            let plan = try await service.twoNightPlan(for: session, page: reviewed, lots: selected)
+            guard current(start), paid, self.page == reviewed, selectedLots == selected else { return }
+            twoNights = plan
+            notice = nil
+        } catch {
+            if current(start) {
+                twoNights = nil; selectedLots = []; secondSelection = nil
+                notice = cookingText("Refresh recipes and pantry before reviewing two dinners again.")
+            }
+        }
+    }
+
     private func remember(_ recipe: HouseholdTonightPage.Recipe, page: HouseholdTonightPage) {
         guard let session, live else { return }
-        household.tonightDestinationReturn = .init(recipeID: recipe.id, session: session, subject: scope.subject,
+        let pair = secondSelection.map { HouseholdTonightReturn.Pair(secondRecipeID: $0.id, secondDay: secondDay, lots: selectedLots) }
+        household.tonightDestinationReturn = .init(recipeID: recipe.id, day: day, pair: pair, session: session, subject: scope.subject,
             generation: scope.generation, grantEpoch: page.grantEpoch, expires: Date().addingTimeInterval(600))
     }
     private func reset() {
+        twoNights = nil; selectedLots = []; secondSelection = nil
         generation = UUID(); session = nil; page = nil; selection = nil; preview = nil; notice = nil; busy = false
         editingRecipe = false; originalRecipe = nil; recipeWrite = nil; recipeLots = []; choosingShop = false; managingShop = false
     }
@@ -207,6 +314,7 @@ private struct HouseholdTonightView: View {
     @MainActor private func load() async {
         guard live, !busy, let p = household.projection, let service = household.service else { return }
         let start = generation
+        twoNights = nil; selectedLots = []; secondSelection = nil
         busy = true; page = nil; preview = nil; selection = nil; notice = nil
         defer { if generation == start { busy = false } }
         do {
@@ -217,10 +325,26 @@ private struct HouseholdTonightView: View {
             page = result
             if let resume = household.tonightDestinationReturn {
                 household.tonightDestinationReturn = nil
-                if resume.subject == scope.subject, resume.generation == scope.generation, resume.session == session,
-                   resume.grantEpoch == result.grantEpoch, resume.expires > Date() {
-                    selection = result.recipes.first { $0.id == resume.recipeID && $0.status == .eligible }
+                guard resume.canResume(in: session, scope: scope, grant: result.grantEpoch, now: Date()),
+                      let first = result.recipes.first(where: { $0.id == resume.recipeID && $0.status == .eligible }) else { return }
+                if let pair = resume.pair {
+                    guard paid, let second = result.recipes.first(where: { $0.id == pair.secondRecipeID && $0.status == .eligible }) else {
+                        notice = tonightText("Household stock, the recipe or planning access changed. Refresh before choosing again.")
+                        return
+                    }
+                    let plan = try await service.twoNightPlan(for: session, page: result, lots: pair.lots)
+                    guard current(start), self.page == result else { return }
+                    guard resume.matchesPair(plan.recipeIds, hasPaidSeat: paid, now: Date()) else {
+                        notice = tonightText("Household stock, the recipe or planning access changed. Refresh before choosing again.")
+                        return
+                    }
+                    twoNights = plan
+                    selectedLots = pair.lots
+                    secondSelection = second
+                    secondDay = pair.secondDay
                 }
+                selection = first
+                day = resume.day
             }
         } catch { if current(start) { await fail(error) } }
     }
@@ -273,7 +397,8 @@ private struct HouseholdTonightView: View {
             if current(start) { notice = tonightText("Choose a current draft shop and resolve any saved change first.") }
             return
         }
-        preview = Preview(recipe: recipe, page: page, shop: destination, day: sharedMealDay(day)); notice = nil
+        preview = Preview(recipe: recipe, page: page, shop: destination, day: sharedMealDay(day),
+                          second: secondSelection, secondDay: sharedMealDay(secondDay), lots: selectedLots); notice = nil
     }
 
     @MainActor private func apply(_ value: Preview) async {
@@ -282,9 +407,13 @@ private struct HouseholdTonightView: View {
         busy = true
         defer { if generation == start { busy = false } }
         do {
-            try await shop.chooseTonight(value.recipe, from: value.page, destination: value.shop, day: value.day, occurrence: value.occurrence)
+            if value.second != nil && !paid { throw ClientError.accessEnded }
+            try await shop.chooseTonight(value.recipe, from: value.page, destination: value.shop, day: value.day, occurrence: value.occurrence,
+                second: value.second.map { ($0, value.secondDay, value.secondOccurrence) }, selectedLots: value.lots)
             guard current(start) else { return }
-            preview = nil; selection = nil; notice = tonightText("Dinner added to the shared shop.")
+            preview = nil; selection = nil; secondSelection = nil
+            notice = value.second == nil ? tonightText("Dinner added to the shared shop.") : cookingText("Both dinners were added to the shared shop.")
+            if value.second != nil { twoNights = nil; selectedLots = [] }
         } catch { if current(start) { await fail(error) } }
     }
 

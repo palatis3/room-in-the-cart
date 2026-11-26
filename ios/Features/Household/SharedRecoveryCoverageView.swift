@@ -36,6 +36,12 @@ struct SharedRecoveryCoverageView: View {
                                 }.accessibilityIdentifier("recovery.currentNeed." + need.needId.uuidString)
                             }
                         }
+                        if model.shop?.phase == "placed", meal.needs.contains(where: { $0.priority == "required" }),
+                           snapshot.coverage.needs.contains(where: { $0.occurrenceId == meal.id && $0.missing.map { $0.numerator != "0" } == true }) {
+                            NavigationLink(weekReviewText("Repair this short delivery")) {
+                                SharedRecoveryDeskView(model: model, household: household, shopID: delivery.shopId, shortfallMealID: meal.id)
+                            }.accessibilityIdentifier("week.repair." + meal.id.uuidString)
+                        }
                         if let sealed = delivery.meals?.first(where: { $0.id == meal.id && $0.revision == meal.sourceMealRevision }) {
                             NavigationLink(pTr("Preview a dated cook instruction")) {
                                 SharedDeliveryCookView(model: model, household: household, page: delivery,
