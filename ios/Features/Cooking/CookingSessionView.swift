@@ -74,6 +74,25 @@ import SwiftUI
                             }
                         }
                     }
+                    if let amounts = model.session?.stepAmounts {
+                        let rows = amounts.allocations.filter { $0.byStep[index] != nil && ingredients.indices.contains($0.ingredient) }
+                        if !rows.isEmpty {
+                            Section(recordsText("Reviewed amounts for this step")) {
+                                Text(String(format: recordsText("Cooking for %@ servings"), cookingAmount(amounts.cookingServings)))
+                                ForEach(rows, id: \.ingredient) { row in
+                                    if let base = row.byStep[index], let scaled = try? amounts.scaled(base) {
+                                        LabeledContent(ingredients[row.ingredient], value: cookingAmount(scaled) + " " + cookingUnit(row.unit))
+                                            .accessibilityIdentifier("cooking.scaledAmount." + String(row.ingredient))
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if !steps.isEmpty, !ingredients.isEmpty {
+                        NavigationLink(recordsText("Review amounts by step")) {
+                            CookingAmountReview(model: model, steps: steps, ingredients: ingredients, yieldText: yieldText)
+                        }.accessibilityIdentifier("cooking.reviewAmounts")
+                    }
                     Section(linked.isEmpty ? recordsText("All recipe ingredients") : recordsText("Ingredients for this step")) {
                         if linked.isEmpty {
                             Text(recordsText("This step has no reviewed ingredient links. Use the original wording below."))
@@ -235,5 +254,169 @@ import SwiftUI
         readback = CookReadbackInstruction(authorityBindingID: UUID(), sourceID: model.context.key.source,
             sourceRevision: Int64(index), createdAt: now, startBefore: now.addingTimeInterval(120),
             text: text, localeIdentifier: locale.identifier, excludesPrivateBudget: true)
+    }
+}
+
+private func cookingUnit(_ unit: CookingStepAmounts.Unit) -> String {
+    switch unit {
+    case .tablespoons: recordsText("tbsp")
+    case .teaspoons: recordsText("tsp")
+    case .cups: dinnerUnit(.cup)
+    case .milliliters: dinnerUnit(.milliliter)
+    case .liters: dinnerUnit(.liter)
+    case .grams: dinnerUnit(.gram)
+    case .kilograms: dinnerUnit(.kilogram)
+    case .ounces: dinnerUnit(.ounce)
+    case .pounds: dinnerUnit(.pound)
+    case .pieces: dinnerUnit(.count)
+    }
+}
+
+private func cookingAmount(_ value: Rational) -> String {
+    let whole = value.numerator / value.denominator
+    let rem = value.numerator % value.denominator
+    if rem == 0 { return whole.formatted() }
+    let fraction: String
+    switch (rem, value.denominator) {
+    case (1, 2): fraction = "½"
+    case (1, 4): fraction = "¼"
+    case (3, 4): fraction = "¾"
+    default: return value.description
+    }
+    return (whole == 0 ? "" : whole.formatted()) + fraction
+}
+
+private struct CookingAmountReview: View {
+    @ObservedObject var model: CookingSessionModel
+    let steps: [RecipeStep]
+    let ingredients: [String]
+    let yieldText: String
+    @State private var target = ""
+
+    var body: some View {
+        WorkingForm {
+            if model.ready && model.context.authorize() {
+                if !yieldText.isEmpty { Text(verbatim: yieldText) }
+                if let prior = model.session?.stepAmounts {
+                    Section(recordsText("Servings")) {
+                        LabeledContent(recordsText("Source servings"), value: cookingAmount(prior.recipeServings))
+                        TextField(recordsText("Cooking servings"), text: $target)
+                        Button(recordsText("Update servings")) {
+                            if let next = resized(prior) { _ = model.saveAmounts(next, replacing: prior, ingredientCount: ingredients.count) }
+                        }.disabled(resized(prior) == nil)
+                    }.onAppear { target = ledgerAmountInput(prior.cookingServings) }
+                }
+                Section(recordsText("Choose a measured ingredient")) {
+                    ForEach(ingredients.indices, id: \.self) { i in
+                        NavigationLink {
+                            CookAllocationEditor(model: model, ingredient: i, ingredients: ingredients, steps: steps,
+                                yieldText: yieldText, prior: model.session?.stepAmounts)
+                        } label: {
+                            Text(verbatim: ingredients[i])
+                        }.accessibilityIdentifier("cooking.reviewIngredient." + String(i))
+                    }
+                }
+                if let message = model.message { Text(message) }
+            }
+        }.navigationTitle(recordsText("Review amounts by step"))
+    }
+
+    private func resized(_ prior: CookingStepAmounts) -> CookingStepAmounts? {
+        guard let servings = try? ListQuantityParser.numericAmount(target), servings != prior.cookingServings else { return nil }
+        var next = prior
+        next.cookingServings = servings
+        guard (try? next.validate(stepCount: steps.count, ingredientCount: ingredients.count)) != nil else { return nil }
+        return next
+    }
+}
+
+private struct CookAllocationEditor: View {
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject var model: CookingSessionModel
+    let ingredient: Int
+    let ingredients: [String]
+    let steps: [RecipeStep]
+    let yieldText: String
+    @State private var prior: CookingStepAmounts?
+    @State private var sourceServings: String
+    @State private var targetServings: String
+    @State private var total: String
+    @State private var unit: CookingStepAmounts.Unit?
+    @State private var shares: [Int: String]
+
+    init(model: CookingSessionModel, ingredient: Int, ingredients: [String], steps: [RecipeStep],
+         yieldText: String, prior: CookingStepAmounts?) {
+        self.model = model
+        self.ingredient = ingredient
+        self.ingredients = ingredients
+        self.steps = steps
+        self.yieldText = yieldText
+        let row = prior?.allocations.first { $0.ingredient == ingredient }
+        _prior = State(initialValue: prior)
+        _sourceServings = State(initialValue: prior.map { ledgerAmountInput($0.recipeServings) } ?? "")
+        _targetServings = State(initialValue: prior.map { ledgerAmountInput($0.cookingServings) } ?? "")
+        _total = State(initialValue: row.map { ledgerAmountInput($0.originalAmount) } ?? "")
+        _unit = State(initialValue: row?.unit)
+        _shares = State(initialValue: row?.byStep.mapValues { ledgerAmountInput($0) } ?? [:])
+    }
+
+    var body: some View {
+        WorkingForm {
+            if model.ready && model.context.authorize() {
+                Section(recordsText("Original ingredient")) {
+                    Text(verbatim: ingredients[ingredient])
+                    if !yieldText.isEmpty { Text(verbatim: yieldText) }
+                    if prior == nil {
+                        TextField(recordsText("Source servings"), text: $sourceServings)
+                        TextField(recordsText("Cooking servings"), text: $targetServings)
+                    }
+                    TextField(recordsText("Total in the original recipe"), text: $total)
+                    Picker(recordsText("Recipe unit"), selection: $unit) {
+                        Text(recordsText("Choose a unit")).tag(CookingStepAmounts.Unit?.none)
+                        ForEach(CookingStepAmounts.Unit.allCases, id: \.self) { u in
+                            Text(cookingUnit(u)).tag(Optional(u))
+                        }
+                    }
+                }
+                Section {
+                    ForEach(steps.indices, id: \.self) { i in
+                        VStack(alignment: .leading) {
+                            Text(verbatim: steps[i].instruction)
+                            TextField(String(format: recordsText("Amount for step %lld"), Int64(i + 1)),
+                                text: Binding(get: { shares[i] ?? "" }, set: { shares[i] = $0 }))
+                        }
+                    }
+                } footer: {
+                    Text(recordsText("Enter original step amounts that add up to the recipe total. Leave unmeasured instructions as written."))
+                }
+                Button(recordsText("Save reviewed amounts")) {
+                    if let next = reviewed, model.saveAmounts(next, replacing: prior, ingredientCount: ingredients.count) { dismiss() }
+                }.buttonStyle(PrimaryAction()).disabled(reviewed == nil).accessibilityIdentifier("cooking.saveReviewedAmounts")
+                if let prior, prior.allocations.contains(where: { $0.ingredient == ingredient }) {
+                    Button(recordsText("Remove this amount review"), role: .destructive) {
+                        var next = prior
+                        next.allocations.removeAll { $0.ingredient == ingredient }
+                        if model.saveAmounts(next.allocations.isEmpty ? nil : next, replacing: prior, ingredientCount: ingredients.count) { dismiss() }
+                    }
+                }
+                if let message = model.message { Text(message) }
+            }
+        }.navigationTitle(recordsText("Step amounts"))
+    }
+
+    private var reviewed: CookingStepAmounts? {
+        guard let unit, let source = try? ListQuantityParser.numericAmount(sourceServings),
+              let target = try? ListQuantityParser.numericAmount(targetServings),
+              let amount = try? ListQuantityParser.numericAmount(total) else { return nil }
+        var values: [Int: Rational] = [:]
+        for (i, literal) in shares where !literal.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            guard let value = try? ListQuantityParser.numericAmount(literal) else { return nil }
+            values[i] = value
+        }
+        var rows = prior?.allocations.filter { $0.ingredient != ingredient } ?? []
+        rows.append(.init(ingredient: ingredient, originalAmount: amount, unit: unit, byStep: values))
+        let next = CookingStepAmounts(recipeServings: source, cookingServings: target, allocations: rows)
+        guard (try? next.validate(stepCount: steps.count, ingredientCount: ingredients.count)) != nil else { return nil }
+        return next
     }
 }

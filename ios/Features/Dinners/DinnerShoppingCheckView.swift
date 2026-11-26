@@ -333,6 +333,7 @@ struct SavedDinnerProductChoice {
 
 struct SavedDinnerProductPicker: View {
     let recipe: MealTemplate
+    let omitted: Set<UUID>
     @ObservedObject var ledger: LedgerModel
     @ObservedObject var pickup: PickupModel
     let authorize: @MainActor () -> Bool
@@ -346,7 +347,7 @@ struct SavedDinnerProductPicker: View {
         WorkingForm {
             if authorize(), let input {
                 Text(dinnerText("Choose each pantry product you want to use. Only a separately confirmed allocation can remove a purchase."))
-                ForEach(recipe.ingredients.filter { ($0.quantity?.amount ?? .zero) > .zero }) { row in
+                ForEach(recipe.ingredients.filter { !omitted.contains($0.id) && ($0.quantity?.amount ?? .zero) > .zero }) { row in
                     Picker(row.name, selection: Binding(get: { matches[row.id] }, set: { matches[row.id] = $0 })) {
                         Text(tonightText("Not matched")).tag(UUID?.none)
                         ForEach(input.foods) { food in

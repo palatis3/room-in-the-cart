@@ -14247,6 +14247,1264 @@
           }
         }
       }
+    },
+    "Plan another night": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan another night"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planear otra noche"
+          }
+        }
+      }
+    },
+    "Previous recipe addition": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous recipe addition"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Última vez que agregaste esta receta"
+          }
+        }
+      }
+    },
+    "Previously %@ · Adding %@ · Total %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previously %@ · Adding %@ · Total %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Antes %@ · Se agregan %@ · Total %@"
+          }
+        }
+      }
+    },
+    "Unmeasured item · listed separately": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unmeasured item · listed separately"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artículo sin medida · se agrega por separado"
+          }
+        }
+      }
+    },
+    "Choose ingredients for this dinner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose ingredients for this dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir ingredientes para esta cena"
+          }
+        }
+      }
+    },
+    "Optional in the source recipe": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional in the source recipe"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opcional en la receta original"
+          }
+        }
+      }
+    },
+    "Use these choices next time on this list": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use these choices next time on this list"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar estas opciones la próxima vez en esta lista"
+          }
+        }
+      }
+    },
+    "Two cooking sessions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Two cooking sessions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dos sesiones de cocina"
+          }
+        }
+      }
+    },
+    "Cooking session %d": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cooking session %d"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sesión de cocina %d"
+          }
+        }
+      }
+    },
+    "Cook on": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cook on"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Día para cocinar"
+          }
+        }
+      }
+    },
+    "Dinner portions: %d": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dinner portions: %d"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porciones para cenar: %d"
+          }
+        }
+      }
+    },
+    "Promised lunch portions: %d": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Promised lunch portions: %d"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porciones apartadas para el almuerzo: %d"
+          }
+        }
+      }
+    },
+    "Promised lunches": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Promised lunches"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Almuerzos apartados"
+          }
+        }
+      }
+    },
+    "Choose the second cooking day after the first.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the second cooking day after the first."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige el segundo día de cocina después del primero."
+          }
+        }
+      }
+    },
+    "Save a reusable dinner with measured ingredients before planning cooking sessions.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save a reusable dinner with measured ingredients before planning cooking sessions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guarda una cena reutilizable con ingredientes medidos antes de planear las sesiones de cocina."
+          }
+        }
+      }
+    },
+    "Review portions and groceries": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review portions and groceries"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar porciones y compras"
+          }
+        }
+      }
+    },
+    "Confirm cooking sessions and groceries": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm cooking sessions and groceries"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar las sesiones de cocina y las compras"
+          }
+        }
+      }
+    },
+    "Edit week": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit week"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar semana"
+          }
+        }
+      }
+    },
+    "Plan to cook %d portions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan to cook %d portions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparar %d porciones"
+          }
+        }
+      }
+    },
+    "Recorded yield: %@ portions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recorded yield: %@ portions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rendimiento registrado: %@ porciones"
+          }
+        }
+      }
+    },
+    "Review actual cooking and portions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review actual cooking and portions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar lo que se cocinó y las porciones"
+          }
+        }
+      }
+    },
+    "Eating days": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eating days"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Días en que se come"
+          }
+        }
+      }
+    },
+    "Cook: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cook: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cocinar: %@"
+          }
+        }
+      }
+    },
+    "Reheat: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reheat: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recalentar: %@"
+          }
+        }
+      }
+    },
+    "Already covered by reserved dinner portions: %d": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already covered by reserved dinner portions: %d"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porciones de cena ya cubiertas por una reserva: %d"
+          }
+        }
+      }
+    },
+    "Uncovered: %d dinner, %d lunch": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uncovered: %d dinner, %d lunch"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Faltan %d porciones para la cena y %d para el almuerzo"
+          }
+        }
+      }
+    },
+    "Lunch portions take priority when a batch yields less. Review any physical changes in the cooked batch.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lunch portions take priority when a batch yields less. Review any physical changes in the cooked batch."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si la preparación rinde menos, se da prioridad a las porciones del almuerzo. Revisa los cambios en la preparación cocinada."
+          }
+        }
+      }
+    },
+    "The schedule compares yields with the portions you planned. Check remaining food in Pantry before serving.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The schedule compares yields with the portions you planned. Check remaining food in Pantry before serving."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El calendario compara el rendimiento con las porciones planeadas. Antes de servir, revisa qué queda en la despensa."
+          }
+        }
+      }
+    },
+    "Refresh the pantry to check current portion coverage.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh the pantry to check current portion coverage."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualiza la despensa para ver cuántas porciones están cubiertas."
+          }
+        }
+      }
+    },
+    "Shopping amounts use the batch size. Check amounts written in the original cooking steps.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shopping amounts use the batch size. Check amounts written in the original cooking steps."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las cantidades de la lista corresponden a toda la preparación. Revisa las cantidades escritas en los pasos de la receta original."
+          }
+        }
+      }
+    },
+    "Each cooking session needs at least one portion and a saved recipe with reviewed quantities and no existing serving groups.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Each cooking session needs at least one portion and a saved recipe with reviewed quantities and no existing serving groups."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada sesión necesita al menos una porción y una receta guardada con cantidades revisadas y sin grupos de porciones previos."
+          }
+        }
+      }
+    },
+    "A dinner or an away note already covers one of these dates. Review the eating days before adding groceries.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A dinner or an away note already covers one of these dates. Review the eating days before adding groceries."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya hay una cena o una nota de ausencia para una de estas fechas. Revisa los días antes de agregar las compras."
+          }
+        }
+      }
+    },
+    "Basket after confirmed stock": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Basket after confirmed stock"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compra después de descontar las existencias confirmadas"
+          }
+        }
+      }
+    },
+    "Known grocery subtotal before": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Known grocery subtotal before"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subtotal conocido de los alimentos antes del cambio"
+          }
+        }
+      }
+    },
+    "Known grocery subtotal after": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Known grocery subtotal after"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subtotal conocido de los alimentos después del cambio"
+          }
+        }
+      }
+    },
+    "Unpriced lines before and after": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unpriced lines before and after"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artículos sin precio antes y después"
+          }
+        }
+      }
+    },
+    "%d to %d": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d to %d"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De %d a %d"
+          }
+        }
+      }
+    },
+    "Change in comparable priced groceries": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change in comparable priced groceries"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambio en los alimentos con precios comparables"
+          }
+        }
+      }
+    },
+    "Price coverage changed or is unknown. Review the lines separately.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price coverage changed or is unknown. Review the lines separately."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambió la cobertura de precios o se desconoce. Revisa los artículos por separado."
+          }
+        }
+      }
+    },
+    "Estimated priced groceries above cap": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estimated priced groceries above cap"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Monto estimado por encima del límite para los alimentos con precio"
+          }
+        }
+      }
+    },
+    "Priced groceries are within the cap. The final checkout amount is unconfirmed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Priced groceries are within the cap. The final checkout amount is unconfirmed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los alimentos con precio quedan dentro del límite. Falta confirmar el total en caja."
+          }
+        }
+      }
+    },
+    "Estimates use the reviewed pack prices. Taxes, fees and other checkout adjustments need separate review.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estimates use the reviewed pack prices. Taxes, fees and other checkout adjustments need separate review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las estimaciones usan los precios revisados por paquete. Los impuestos, cargos y otros ajustes en caja se revisan por separado."
+          }
+        }
+      }
+    },
+    "Historical grocery estimate. Taxes, fees and posted charges are separate.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Historical grocery estimate. Taxes, fees and posted charges are separate."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estimación histórica de los alimentos. Los impuestos, comisiones y cargos contabilizados se muestran por separado."
+          }
+        }
+      }
+    },
+    "Compare a chosen two-store split": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare a chosen two-store split"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparar cómo repartir la compra entre dos tiendas"
+          }
+        }
+      }
+    },
+    "First shop with a whole bottle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "First shop with a whole bottle"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Primera compra con una botella entera"
+          }
+        }
+      }
+    },
+    "Known grocery subtotal": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Known grocery subtotal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subtotal conocido de los alimentos"
+          }
+        }
+      }
+    },
+    "Unpriced groceries": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unpriced groceries"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimentos sin precio"
+          }
+        }
+      }
+    },
+    "The basket includes the full packs you would buy today. Only confirmed usable stock reduces a later purchase. Taxes and fees are separate.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The basket includes the full packs you would buy today. Only confirmed usable stock reduces a later purchase. Taxes and fees are separate."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El subtotal incluye los paquetes completos que comprarías hoy. Solo las existencias utilizables confirmadas reducen una compra posterior. Los impuestos y cargos se calculan por separado."
+          }
+        }
+      }
+    },
+    "Fictional sample prices": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fictional sample prices"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precios ficticios de ejemplo"
+          }
+        }
+      }
+    },
+    "Other priced groceries": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other priced groceries"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otros alimentos con precio"
+          }
+        }
+      }
+    },
+    "One 500 mL bottle of oil": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One 500 mL bottle of oil"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una botella de aceite de 500 mL"
+          }
+        }
+      }
+    },
+    "This recipe needs 15 mL of oil. Buying the bottle leaves 485 mL after cooking.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This recipe needs 15 mL of oil. Buying the bottle leaves 485 mL after cooking."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La receta requiere 15 mL de aceite. Si compras la botella, quedarán 485 mL después de cocinar."
+          }
+        }
+      }
+    },
+    "Usable oil at home": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usable oil at home"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aceite disponible en casa"
+          }
+        }
+      }
+    },
+    "None available": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None available"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay disponible"
+          }
+        }
+      }
+    },
+    "At least 15 mL confirmed and free": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At least 15 mL confirmed and free"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hay al menos 15 mL confirmados y sin reservar"
+          }
+        }
+      }
+    },
+    "Quantity unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quantity unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad desconocida"
+          }
+        }
+      }
+    },
+    "Oil is unpriced in this subtotal until you confirm stock or choose to buy the bottle.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oil is unpriced in this subtotal until you confirm stock or choose to buy the bottle."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El subtotal no incluye el aceite hasta que confirmes cuánto tienes o decidas comprar la botella."
+          }
+        }
+      }
+    },
+    "Confirmed stock covers this recipe. No bottle is added.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed stock covers this recipe. No bottle is added."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El aceite disponible alcanza para la receta. No se agrega una botella."
+          }
+        }
+      }
+    },
+    "Taxes and fees are separate.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taxes and fees are separate."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los impuestos y cargos se calculan por separado."
+          }
+        }
+      }
+    },
+    "Beans": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beans"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frijoles"
+          }
+        }
+      }
+    },
+    "Choose each stop and enter its observed price per pack. Travel is the extra cost of adding the second stop.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose each stop and enter its observed price per pack. Travel is the extra cost of adding the second stop."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige dónde comprar cada artículo e ingresa el precio por paquete que viste. El traslado es el costo adicional de ir a la segunda tienda."
+          }
+        }
+      }
+    },
+    "Buy at %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buy at %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comprar en %@"
+          }
+        }
+      }
+    },
+    "Extra travel cost in %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extra travel cost in %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Costo adicional del traslado en %@"
+          }
+        }
+      }
+    },
+    "I checked the prices and promotion conditions for this exact allocation.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I checked the prices and promotion conditions for this exact allocation."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé los precios y las condiciones de las promociones para esta distribución de la compra."
+          }
+        }
+      }
+    },
+    "Store availability, minimums or price conditions still need review.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Store availability, minimums or price conditions still need review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falta revisar la disponibilidad, los mínimos de compra o las condiciones de precio de las tiendas."
+          }
+        }
+      }
+    },
+    "All groceries at the first store": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All groceries at the first store"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toda la compra en la primera tienda"
+          }
+        }
+      }
+    },
+    "Groceries across both stores": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Groceries across both stores"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimentos en las dos tiendas"
+          }
+        }
+      }
+    },
+    "Change including extra travel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change including extra travel"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diferencia con el traslado adicional"
+          }
+        }
+      }
+    },
+    "Grocery and travel estimates exclude checkout taxes and fees.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grocery and travel estimates exclude checkout taxes and fees."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las estimaciones de alimentos y traslado no incluyen impuestos ni cargos en caja."
+          }
+        }
+      }
+    },
+    "Review the entered prices and travel cost.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the entered prices and travel cost."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa los precios y el costo de traslado que ingresaste."
+          }
+        }
+      }
+    },
+    "%lld packs × %lld %@ · %lld left": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld packs × %lld %@ · %lld left"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld paquetes × %2$lld %3$@ · sobran %4$lld"
+          }
+        }
+      }
+    },
+    "No matching whole-pack observation for this requirement.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No matching whole-pack observation for this requirement."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falta un precio observado para paquetes completos que cubran esta necesidad."
+          }
+        }
+      }
+    },
+    "%d unpriced": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d unpriced"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d sin precio"
+          }
+        }
+      }
+    },
+    "This session changed after the groceries were approved. Review the current dinner before using the portion plan.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This session changed after the groceries were approved. Review the current dinner before using the portion plan."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta sesión cambió después de aprobar las compras. Revisa la cena actual antes de usar el plan de porciones."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

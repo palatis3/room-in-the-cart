@@ -61,26 +61,22 @@ public enum InventoryEngine {
                           revision.name == nil, revision.location == nil, revision.foodID == nil, revision.useFirst == nil
                     else { throw InventoryError.invalid("organizationOnly") }
                     physicalBasis = current.physicalBasis ?? current.revision
+                    discardUndo = current.discardUndo
                 }
                 if let edit = revision.placeEdit {
-                    guard revision.portion == nil, revision.location == nil, revision.observation == nil else {
-                        throw InventoryError.invalid("placeEdit")
-                    }
                     switch edit {
                     case .assign(let value): namedPlace = value
                     case .clear: namedPlace = nil
                     }
-                    discardUndo = current.discardUndo
                 } else if let newLocation = revision.location, newLocation != location {
                     namedPlace = nil
                 }
                 if let row = revision.spreadsheetRow {
                     guard let previous = spreadsheetRow, previous.sourceName == row.sourceName,
-                          previous.rowKey == row.rowKey, revision.observation == nil, revision.portion == nil else {
+                          previous.rowKey == row.rowKey else {
                         throw InventoryError.invalid("spreadsheetIdentity")
                     }
                     spreadsheetRow = row
-                    discardUndo = current.discardUndo
                 }
                 if let action = revision.portion {
                     guard let reading = revision.observation, reading.observedAt == current.confirmedAt, reading.count == (try action.remainder(of: current)),

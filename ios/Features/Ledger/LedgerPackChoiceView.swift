@@ -59,6 +59,7 @@ struct LedgerPackChoiceView: View {
                     Section {
                         Text(ledgerText("Use confirmed food at home · no purchase needed"))
                         Text(ledgerText("Keep every meal and protected portion. This decision adds no purchased item or item charge."))
+                        firstTripSubtotal(review, cost: review.result.offerA.totalCost)
                         Button(ledgerText("Use confirmed food for this need")) { save(review, offerID: review.request.offerA.id) }
                             .buttonStyle(PrimaryAction()).accessibilityIdentifier("ledgerUseAtHome")
                     }
@@ -115,6 +116,7 @@ struct LedgerPackChoiceView: View {
                     DatePicker(ledgerText("Checked at"), selection: $observedAt)
                     TextField(ledgerFormat("Item-only spending limit (%@, optional)", draft.currency.rawValue), text: $draft.cap).keyboardType(.decimalPad).focused($field, equals: .cap)
                     Text(ledgerText("Blank amount or price stays unresolved. A resolved pack can be selected even when the other pack is unknown."))
+                    NavigationLink(dinnerText("First shop with a whole bottle")) { WholePackTripExample(currency: draft.currency) }
                     Button(ledgerText("Review whole packs"), action: prepare).buttonStyle(PrimaryAction()).accessibilityIdentifier("ledgerReviewPacks")
                 }
                 }
@@ -161,6 +163,7 @@ struct LedgerPackChoiceView: View {
                     }
                 }
                 .padding(.vertical, 4)
+                firstTripSubtotal(review, cost: cost)
             }
             if let basis = offer.confirmedConversion {
                 Text(ComparisonConversion.readableText(for: basis))
@@ -180,6 +183,17 @@ struct LedgerPackChoiceView: View {
             if result.isResolved, result.packsToBuy.map({ $0 > 0 }) == true {
                 Button(ledgerFormat("Choose %@ for checkout review", offer.label)) { save(review, offerID: offer.id) }.buttonStyle(PrimaryAction()).accessibilityIdentifier("ledgerChoosePack-\(offer.id)")
             }
+        }
+    }
+    @ViewBuilder private func firstTripSubtotal(_ review: LedgerPackReview, cost: Money?) -> some View {
+        if model.revision == review.workspaceRevision, model.sourceWorkspaceID == review.sourceWorkspaceID,
+           review.request.confirmedAtHome == liveStock,
+           let others = try? GroceryCostReview.unchangedLines(in: review.sourceShop, excluding: [review.lineID], at: Date()),
+           let basket = try? GroceryCostReview(lines: others + [(review.lineID, cost)],
+                                                currency: review.sourceShop.basis.currency, inventoryComplete: true) {
+            LabeledContent(dinnerText("Known grocery subtotal"), value: dinnerMoney(basket.known))
+            LabeledContent(dinnerText("Unpriced groceries"), value: String(basket.unpriced.count))
+            Text(dinnerText("The basket includes the full packs you would buy today. Only confirmed usable stock reduces a later purchase. Taxes and fees are separate."))
         }
     }
     private var liveStock: Quantity? {

@@ -52,6 +52,29 @@ import XCTest
         XCTAssertTrue(app.buttons["settings"].isHittable)
     }
 
+    func testFirstTripPricesAWholeBottleThenKeepsUnknownStockVisible() {
+        app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        tap(app.tabBars.buttons["Records"])
+        tap(app.buttons["settings"])
+        tap(app.buttons["Household membership"])
+        tap(app.buttons["membership.sample"])
+        tap(app.buttons["membership.sample.firstTrip"])
+        func checkSubtotal(_ digits: String) {
+            let value = element("wholePack.example.subtotal")
+            reveal(value)
+            XCTAssertTrue((value.label + String(describing: value.value)).contains(digits))
+        }
+        checkSubtotal("39")
+        tap(app.buttons["wholePack.example.stock"])
+        tap(app.buttons["At least 15 mL confirmed and free"])
+        checkSubtotal("31")
+        tap(app.buttons["wholePack.example.stock"])
+        tap(app.buttons["Quantity unknown"])
+        checkSubtotal("31")
+        assertText("Oil is unpriced in this subtotal until you confirm stock or choose to buy the bottle.")
+    }
+
     func testSampleDinnersShowProtectedLunchAndAnIncompleteBasketInBothLanguages() {
         for spanish in [false, true] {
             app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", spanish ? "(es)" : "(en)",

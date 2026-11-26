@@ -147,3 +147,88 @@ final class SavedDinnerReviewTests: XCTestCase {
                                                    access: access, phase: .draft, at: now))
     }
 }
+
+extension SavedDinnerReviewTests {
+    func testTwoNightsPlusManualItemRestoreReplayAndRemoveOneNight() throws {
+        let cilantro = MealIngredient(name: "Cilantro", quantity: .init(amount: .one, unit: .count, originalLiteral: "1 bunch"))
+        let wine = MealIngredient(name: "Wine", quantity: .init(amount: .one, unit: .count, originalLiteral: "1 bottle"), notes: "Wine pairing")
+        let tacos = MealTemplate(title: "Tacos", ingredients: [cilantro, wine])
+        var data = LedgerWorkspace(shops: [shop], mealTemplates: [tacos], selectedShopID: shop.id)
+        let manual = try data.shops[0].addManualLine(name: cilantro.name, quantity: cilantro.quantity)
+        let restricted = try data.shops[0].addManualLine(name: cilantro.name, quantity: cilantro.quantity, exclusions: ["different requirement"])
+        let mass = try data.shops[0].addManualLine(name: cilantro.name,
+            quantity: .init(amount: .one, unit: .gram, originalLiteral: "1 g"))
+        let box = try data.shops[0].addManualLine(name: cilantro.name,
+            quantity: .init(amount: .one, unit: .count, originalLiteral: "1 box"))
+        func review(_ date: Date) throws -> SavedDinnerReview {
+            try SavedDinnerReview(recipe: tacos,
+                action: .plan(day: MealDay(date: date, timeZoneIdentifier: shop.basis.timeZoneIdentifier), servings: .one),
+                workspace: data, access: access, phase: .draft, at: now)
+        }
+        let first = try review(now)
+        XCTAssertEqual(first.receipt.changes.map(\.name), [cilantro.name])
+        XCTAssertEqual(first.receipt.changes.first?.before?.amount, .one)
+        try first.apply(to: &data, access: access, phase: .draft, at: now)
+        let second = try review(now.addingTimeInterval(86400))
+        XCTAssertEqual(second.receipt.changes.first?.before?.amount, try Rational(2))
+        XCTAssertEqual(second.receipt.changes.first?.after?.amount, try Rational(3))
+        try second.apply(to: &data, access: access, phase: .draft, at: now)
+        data = try JSONDecoder().decode(LedgerWorkspace.self, from: JSONEncoder().encode(data))
+        XCTAssertEqual(data.shops[0].revisions.last?.savedDinnerReceipt, second.receipt)
+        try second.apply(to: &data, access: access, phase: .draft, at: now)
+        XCTAssertEqual(try data.shops[0].quantity(forLineID: manual)?.amount, try Rational(3))
+        try data.shops[0].removeMeal(occurrenceID: XCTUnwrap(first.occurrenceID), at: now)
+        XCTAssertEqual(try data.shops[0].quantity(forLineID: manual)?.amount, try Rational(2))
+        XCTAssertEqual(try data.shops[0].quantity(forLineID: restricted)?.amount, .one)
+        XCTAssertEqual(try data.shops[0].quantity(forLineID: mass)?.unit, .gram)
+        XCTAssertEqual(try data.shops[0].quantity(forLineID: box)?.amount, .one)
+        XCTAssertFalse(data.shops[0].lines.contains { $0.name == wine.name })
+        XCTAssertEqual(data.mealTemplates, [tacos])
+        try data.validate()
+    }
+
+    func testReviewedOptionalChoiceAppliesToOneOccurrenceAndCanBeRememberedWithoutEditingSource() throws {
+        let oil = MealIngredient(name: "Aceite", quantity: .init(amount: .one, unit: .cup, originalLiteral: "1"))
+        let wine = MealIngredient(name: "Vino (opcional)", quantity: .init(amount: .one, unit: .count, originalLiteral: "1"))
+        let bread = MealIngredient(name: "Pan", quantity: .init(amount: .one, unit: .count, originalLiteral: "1"))
+        var dinner = MealTemplate(title: "Cena", ingredients: [oil, wine, bread])
+        dinner.recipeSteps = [.init("Agregar pan", ingredientIndices: [2])]
+        var data = LedgerWorkspace(shops: [shop], mealTemplates: [dinner], selectedShopID: shop.id)
+        XCTAssertTrue(wine.suggestedShoppingExtra)
+        let review = try SavedDinnerReview(recipe: dinner, action: .planTonight, workspace: data,
+            access: access, phase: .draft, at: now, omittedIngredientIDs: [bread.id], rememberChoices: true)
+        try review.apply(to: &data, access: access, phase: .draft, at: now)
+        let latest = try XCTUnwrap(data.shops[0].revisions.last?.savedDinnerReceipt)
+        XCTAssertEqual(latest.rememberedOmissions, [bread.id])
+        XCTAssertEqual(latest.changes.map(\.name), [oil.name, wine.name])
+        XCTAssertEqual(data.shops[0].mealOccurrences.first?.recipeSteps?.first?.ingredientIndices, [])
+        XCTAssertEqual(data.mealTemplates, [dinner])
+        let planOnly = try SavedDinnerReview(recipe: dinner, action: .planTonight, workspace: data, access: access,
+            phase: .draft, at: now, omittedIngredientIDs: Set(dinner.ingredients.map(\.id)))
+        try planOnly.apply(to: &data, access: access, phase: .draft, at: now)
+        XCTAssertTrue(planOnly.receipt.changes.isEmpty)
+        XCTAssertEqual(data.shops[0].mealOccurrences.last?.ingredientContributionIDs, [])
+        try data.validate()
+    }
+
+    func testReviewedStepPortionsPreserveExactTotalsAcrossResizingAndCommaInput() throws {
+        let total = try ListQuantityParser.numericAmount("4,0")
+        let byStep = [0: try ListQuantityParser.numericAmount("3"), 1: try ListQuantityParser.numericAmount("1")]
+        var amounts = CookingStepAmounts(recipeServings: total, cookingServings: try Rational(2), allocations: [
+            .init(ingredient: 0, originalAmount: total, unit: .tablespoons, byStep: byStep)
+        ])
+        try amounts.validate(stepCount: 2, ingredientCount: 1)
+        XCTAssertEqual(try amounts.scaled(byStep[0]!), try ListQuantityParser.numericAmount("1,5"))
+        XCTAssertEqual(try amounts.scaled(byStep[1]!), try ListQuantityParser.numericAmount("1/2"))
+        for servings in [total, try Rational(1), try Rational(6), try Rational(2)] {
+            amounts.cookingServings = servings
+            let sum = try byStep.values.reduce(Rational.zero) { try $0.adding(amounts.scaled($1)) }
+            XCTAssertEqual(sum, try amounts.scaled(total))
+        }
+        let invalid = CookingStepAmounts(recipeServings: total, cookingServings: .one, allocations: [
+            .init(ingredient: 0, originalAmount: total, unit: .tablespoons, byStep: [0: .one])
+        ])
+        XCTAssertThrowsError(try invalid.validate(stepCount: 2, ingredientCount: 1))
+        XCTAssertThrowsError(try amounts.validate(stepCount: 1, ingredientCount: 1))
+    }
+}

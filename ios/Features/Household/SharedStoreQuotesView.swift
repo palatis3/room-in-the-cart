@@ -36,9 +36,11 @@ private struct SharedStoreQuoteDraft {
 
 private struct SharedStoreQuotesContent: View {
     @ObservedObject var model: SharedStoreQuotesModel
+    @EnvironmentObject private var membership: MembershipCoordinator
     @ObservedObject var household: HouseholdModel
     @State private var first = SharedStoreQuoteDraft()
     @State private var second = SharedStoreQuoteDraft()
+    @State private var openedSplit: UUID?
     @State private var entering = false
     @State private var acknowledgedReviewID: UUID?
     @State private var clearing = false
@@ -112,6 +114,24 @@ private struct SharedStoreQuotesContent: View {
                             if let date = serviceDate(pair.savedAt) { Text(date.formatted(date: .complete, time: .shortened)) }
                             Text(pair.own ? (pair.proposals.isEmpty ? StoreQuoteCopy.text("Saved privately by you") : StoreQuoteCopy.text("You explicitly sent this comparison to the shopper")) : StoreQuoteCopy.text("Explicit proposal for your shopper review"))
                             SharedStoreQuoteFacts(options: pair.options, commitments: pair.commitments, shopID: page.shopId)
+                            if model.live, pair.current(in: page),
+                               (pair.options.first.branch != pair.options.second.branch || pair.options.first.store != pair.options.second.store),
+                               membership.model(for: household.membershipSession)?.hasPaidAccess == true {
+                                if openedSplit == pair.id {
+                                    GrocerySplitPreview(pair: pair, currency: currency)
+                                        .id("\(pair.id)-\(page.grantRevision)-\(page.authorityEpoch)-\(page.shopRevision)")
+                                } else {
+                                    Button(dinnerText("Compare a chosen two-store split")) {
+                                        Task {
+                                            openedSplit = nil
+                                            if await model.recheckSplit(pair), membership.model(for: household.membershipSession)?.hasPaidAccess == true {
+                                                openedSplit = pair.id
+                                            }
+                                        }
+                                    }
+                                    .disabled(model.busy)
+                                }
+                            }
                             if !pair.current(in: page) { Text(StoreQuoteCopy.text("Earlier revision or shopper assignment. Keep this proof; enter a fresh comparison for the current draft.")) }
                             if pair.own {
                                 ForEach(StoreQuoteChoice.allCases, id: \.self) { choice in

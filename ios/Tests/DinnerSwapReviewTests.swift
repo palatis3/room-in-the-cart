@@ -127,6 +127,9 @@ import LocalStore
             reviewedFoods: mapping, workspace: source.workspace, workspaceID: source.origin, supply: supply, canonical: context, at: now)
         let food = try XCTUnwrap(result.foods.first)
         XCTAssertEqual(result.foods.count, 1); XCTAssertEqual(food.beforeNeeded, q(2)); XCTAssertEqual(food.afterNeeded, q(8))
+        XCTAssertEqual(result.basketBefore?.known, Money(minorUnits: 0))
+        XCTAssertEqual(result.basketAfter?.known, Money(minorUnits: 250))
+        XCTAssertEqual(result.basketAfter?.unpriced, [])
         XCTAssertEqual(food.free, [q(5)]); XCTAssertEqual(food.beforePacks, 0); XCTAssertEqual(food.afterPacks, 2)
         XCTAssertEqual(food.afterCost, Money(minorUnits: 250)); XCTAssertEqual(food.packagePrice, Money(minorUnits: 125))
         XCTAssertEqual(food.priceSource, "Reviewed shelf"); XCTAssertEqual(food.holds.first?.name, "Thursday protected lunch")
@@ -136,6 +139,8 @@ import LocalStore
         XCTAssertEqual(source.workspace.shops[0].mealOccurrences.first, source.original)
         let redacted = try DinnerSwapEvidence.build(preview: preview(source, budget: false), original: source.original, replacement: source.planned,
             reviewedFoods: mapping, workspace: source.workspace, workspaceID: source.origin, supply: supply, canonical: context, at: now)
+        XCTAssertNil(redacted.basketBefore)
+        XCTAssertNil(redacted.basketAfter)
         XCTAssertNil(redacted.foods.first?.beforeCost); XCTAssertNil(redacted.foods.first?.afterCost); XCTAssertNil(redacted.foods.first?.packagePrice)
     }
 
@@ -151,6 +156,8 @@ import LocalStore
         let unknown = try DinnerSwapEvidence.build(preview: preview(source), original: source.original, replacement: source.planned,
             reviewedFoods: matches, workspace: source.workspace, workspaceID: source.origin, supply: supply, canonical: context, at: now)
         XCTAssertEqual(unknown.foods.first?.unresolved, true); XCTAssertNil(unknown.foods.first?.afterPacks)
+        XCTAssertNil(unknown.basketAfter?.known)
+        XCTAssertEqual(unknown.basketAfter?.unpriced, [source.food])
         XCTAssertNil(unknown.foods.first?.afterCost); XCTAssertEqual(unknown.foods.first?.packagePrice, .init(minorUnits: 125))
         let unmatched = try DinnerSwapEvidence.build(preview: preview(source), original: source.original, replacement: source.planned,
             reviewedFoods: [:], workspace: source.workspace, workspaceID: source.origin, supply: supply, canonical: context, at: now)

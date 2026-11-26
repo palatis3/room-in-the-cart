@@ -1,3 +1,4 @@
+import CoreDomain
 import Foundation
 import LocalStore
 import SwiftUI
@@ -111,6 +112,13 @@ import UserNotifications
             return false
         }
     }
+    func saveAmounts(_ amounts: CookingStepAmounts?, replacing prior: CookingStepAmounts?, ingredientCount: Int) -> Bool {
+        edit { session in
+            guard session.stepAmounts == prior else { throw CookingSessionError.stale }
+            try amounts?.validate(stepCount: count, ingredientCount: ingredientCount)
+            session.stepAmounts = amounts
+        }
+    }
     func choose(_ index: Int) { _ = edit { $0.step = index } }
     func start(minutes: Int, alert: Bool) async {
         guard (session?.timers.count ?? 0) < 8 else {
@@ -143,7 +151,10 @@ import UserNotifications
     func end() -> Bool {
         guard ready, context.authorize() else { retire(); return false }
         do {
-            try store.replace(session, with: nil, for: context.key, stepCount: count)
+            var retained = session
+            if retained?.stepAmounts == nil { retained = nil }
+            else { retained?.step = 0; retained?.timers = [] }
+            try store.replace(session, with: retained, for: context.key, stepCount: count)
             removeAlerts(session?.timers ?? [])
             session = nil
             return true

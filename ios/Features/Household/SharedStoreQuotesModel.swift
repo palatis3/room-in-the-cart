@@ -69,6 +69,35 @@ extension HouseholdService: SharedStoreQuotesServing {}
             }
         } catch { fail(error, start: start) }
     }
+    /// A fresh permitted read prevents an old on-screen pair from opening a new split
+    /// after its grant ended. Older pages remain reachable using the normal pagination.
+    func recheckSplit(_ pair: StoreQuotePage.Pair) async -> Bool {
+        guard canPrepare, let prior = page, pair.current(in: prior), pairs.contains(pair) else { return false }
+        let start = generation
+        busy = true
+        defer { if current(start) { busy = false } }
+        do {
+            var cursor: UUID?
+            var visited = Set<UUID>()
+            repeat {
+                let fresh = try await service.storeQuotes(shopID: scope.shopID, cursor: cursor)
+                guard current(start) else { return false }
+                try fresh.validate()
+                guard fresh.shopId == scope.shopID, fresh.grantRevision == prior.grantRevision,
+                      fresh.authorityEpoch == prior.authorityEpoch, pair.current(in: fresh) else {
+                    page = nil; pairs = []; return false
+                }
+                if fresh.pairs.contains(pair) { return true }
+                cursor = fresh.nextCursor
+                if let cursor, !visited.insert(cursor).inserted { break }
+            } while cursor != nil
+            pairs.removeAll { $0.id == pair.id }
+            return false
+        } catch {
+            fail(error, start: start)
+            return false
+        }
+    }
     func prepareSave(_ options: EnteredStoreQuoteOptions) async {
         guard canPrepare, let page, !page.commitments.isEmpty, options.first.currency == page.currency, options.second.currency == page.currency else { return }
         await prepare(.pairs, request: .init(page: page, options: options))

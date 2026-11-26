@@ -44,6 +44,31 @@ private actor StoreQuoteFixture: SharedStoreQuotesServing {
         try JSONDecoder().decode(StoreQuotePage.self,from:JSONSerialization.data(withJSONObject:["shopId":scope.shopID.uuidString,"shopRevision":revision,"authorityEpoch":epoch,"grantRevision":shopper ? 0 : grant,"shopper":shopper,"phase":phase,"adults":adults,"commitments":[["id":"11111111-1111-4111-8111-111111111111","label":"Wraps for dinner and lunch","packs":2]],"currentBasis":NSNull(),"pairs":pairs,"nextCursor":NSNull()]))
     }
     private func storeURL() -> URL { FileManager.default.temporaryDirectory.appendingPathComponent("quote-tests-" + UUID().uuidString).appendingPathComponent("retry.json") }
+    func testSplitRechecksPermissionBeforeShowingStoredPrices() async throws {
+        let scope = scope()
+        let initial = try page(scope)
+        let optionData = try JSONEncoder().encode(EnteredStoreQuoteOptions(first: option(), second: option("Second")))
+        let row: [String: Any] = [
+            "pairId": UUID().uuidString, "baseRevision": initial.shopRevision, "authorityEpoch": initial.authorityEpoch,
+            "grantRevision": initial.grantRevision, "stale": false, "own": true, "savedAt": "2026-11-25T12:00:00Z",
+            "commitments": try JSONSerialization.jsonObject(with: JSONEncoder().encode(initial.commitments)),
+            "options": try JSONSerialization.jsonObject(with: optionData), "comparison": ["comparable": true], "proposals": []
+        ]
+        let permitted = try page(scope, pairs: [row])
+        let service = StoreQuoteFixture(scope: scope, page: permitted)
+        let model = SharedStoreQuotesModel(scope: scope, service: service, store: .init(url: storeURL()), runtime: { scope })
+        await model.load()
+        let pair = try XCTUnwrap(model.pairs.first)
+        let before = await model.recheckSplit(pair)
+        XCTAssertTrue(before)
+        await service.deny(true)
+        let after = await model.recheckSplit(pair)
+        XCTAssertFalse(after)
+        XCTAssertNil(model.page)
+        XCTAssertTrue(model.pairs.isEmpty)
+        let sent = await service.sent()
+        XCTAssertTrue(sent.isEmpty)
+    }
     func testNativeCoreEngineShowsOneDollarMoreEighteenMinutesAndThreeDollarBreakEven() throws {
         let scope = scope(), page = try page(scope), first = option(), second = option("Second",checkout:3500,trip:400,minutes:18)
         var result = try SharedStoreQuoteMath.compare(.init(first:first,second:second),commitments:page.commitments,shopID:scope.shopID)

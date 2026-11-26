@@ -94,6 +94,12 @@ public struct PlannedDinner: Codable, Equatable, Sendable {
     public var plannedServings: Rational?
     public var lunchHold: ServingGroup?
     public var reviewedGroceryLines: [Int: UUID]?
+    /// The accepted template remains intact; only this occurrence drops reviewed extras.
+    public internal(set) var omittedIngredientIDs: [UUID]? = nil
+    var includedIngredientIndices: [Int] {
+        let omitted = Set(omittedIngredientIDs ?? [])
+        return template.ingredients.indices.filter { !omitted.contains(template.ingredients[$0].id) }
+    }
     public internal(set) var pantryProducts: DinnerPantryProducts? = nil
     public init(acceptedDinnerID: UUID? = nil, template: MealTemplate, occurrenceID: UUID = UUID(),
                 lineIDs: [UUID]? = nil, contributionIDs: [UUID]? = nil, day: MealDay? = nil) {
@@ -103,6 +109,10 @@ public struct PlannedDinner: Codable, Equatable, Sendable {
     }
     func validate() throws {
         try template.validate(); try day?.validate()
+        if let omittedIngredientIDs {
+            let ids = Set(omittedIngredientIDs)
+            guard ids.count == omittedIngredientIDs.count, ids.isSubset(of: Set(template.ingredients.map(\.id))) else { throw DinnerPlanningError.invalid("optionalIngredients") }
+        }
         if let plannedServings {
             let allocated = try template.servingGroups.reduce(Rational.zero) { try $0.adding($1.servings) }
             guard plannedServings > .zero, plannedServings >= allocated, lunchHold == nil else {
@@ -115,6 +125,7 @@ public struct PlannedDinner: Codable, Equatable, Sendable {
             let matches = pantryProducts.matches
             guard !matches.isEmpty, Set(matches.values).count == matches.count,
                   reviewedGroceryLines == nil,
+                  Set(omittedIngredientIDs ?? []).isDisjoint(with: matches.keys),
                   matches.keys.allSatisfy({ id in
                       guard let i = template.ingredients.firstIndex(where: { $0.id == id }) else { return false }
                       return matches[id] == lineIDs[i] && (template.ingredients[i].quantity?.amount ?? .zero) > .zero
@@ -215,6 +226,7 @@ public struct DinnerQuoteSelection: Codable, Equatable, Sendable {
     public init(pairID: UUID, optionID: UUID) { self.pairID = pairID; self.optionID = optionID }
 }
 public struct DinnerProposal: Codable, Equatable, Sendable, Identifiable {
+    public internal(set) var batchWeek: BatchCookingWeek? = nil
     public fileprivate(set) var swapOriginalID: UUID? = nil
     public internal(set) var repeatWeek: RepeatWeek.Plan? = nil
     public fileprivate(set) var preferenceRevision: UUID? = nil
@@ -376,6 +388,7 @@ public struct DinnerPlanningState: Codable, Equatable, Sendable {
         for pair in quotePairs { try pair.validate() }
     }
     static func validate(_ proposal: DinnerProposal) throws {
+        if let week = proposal.batchWeek { try week.validate(proposal: proposal) }
         if proposal.swapOriginalID != nil { _ = try DinnerSwapEffect.shape(proposal) }
         try dinnerDate(proposal.createdAt); try dinnerText(proposal.authorID); try dinnerText(proposal.namespace)
         if proposal.changes.contains(where: { if case .choose(let meal) = $0 { return meal.pantryProducts != nil }; return false }) {
@@ -405,8 +418,11 @@ public struct DinnerPlanningState: Codable, Equatable, Sendable {
                     guard proposal.changes.count == 1, proposal.repeatWeek == nil, proposal.swapOriginalID == nil,
                           [.manual, .reusableDinner].contains(proposal.tool) else { throw DinnerPlanningError.invalid("plannedServings") }
                 }
-                if dinner.lunchHold != nil || dinner.reviewedGroceryLines != nil {
-                    guard proposal.tool == .threeDinnerBasket else { throw DinnerPlanningError.invalid("basketPlan") }
+                if dinner.lunchHold != nil, proposal.tool != .threeDinnerBasket { throw DinnerPlanningError.invalid("basketPlan") }
+                if dinner.omittedIngredientIDs != nil || (dinner.reviewedGroceryLines != nil && proposal.tool != .threeDinnerBasket) {
+                    guard proposal.changes.count == 1, proposal.namespace.hasPrefix("local:"), proposal.repeatWeek == nil,
+                          proposal.swapOriginalID == nil, [.manual, .reusableDinner].contains(proposal.tool)
+                    else { throw DinnerPlanningError.invalid("recipeGroceryChoices") }
                 }
             case .move(_, let day): try day?.validate()
             case .adjust(let adjustment):
@@ -679,7 +695,7 @@ public enum DinnerPlanningEngine {
 
     static func makePreview(id: UUID, changes: [DinnerLedgerChange], tool: DinnerPlanningTool, ledger: ShoppingLedger, state: DinnerPlanningState,
                             access: DinnerAccessContext, phase: BasketPhase, at now: Date, isolated: Bool, quoteSelection: DinnerQuoteSelection?,
-                            repeatWeek: RepeatWeek.Plan?, staples: [RepeatWeek.PreparedStaple], revisionID: UUID, swapOriginalID: UUID? = nil) throws -> DinnerPreview {
+                            repeatWeek: RepeatWeek.Plan?, staples: [RepeatWeek.PreparedStaple], revisionID: UUID, swapOriginalID: UUID? = nil, batchWeek: BatchCookingWeek? = nil) throws -> DinnerPreview {
         try access.validate(shopID: ledger.id, at: now, budget: tool == .quoteAdoption || tool == .threeDinnerBasket)
         if tool.requiresPaidAccess && !access.hasPaidTools && !isolated { throw DinnerPlanningError.paidAccessRequired }
         try state.validate(); try ledger.validate()
@@ -691,6 +707,7 @@ public enum DinnerPlanningEngine {
             guard phase == .draft, case .local = access.scope else { throw DinnerPlanningError.lockedBasket }
             try DinnerSwapEffect.validateSlot(proposal, ledger: ledger, state: state)
         }
+        proposal.batchWeek = batchWeek
         proposal.repeatWeek = repeatWeek
         proposal.preferenceRevision = state.preferences(for: access)?.revision
         try DinnerPlanningState.validate(proposal)
@@ -706,6 +723,9 @@ public enum DinnerPlanningEngine {
             changedOccurrenceIDs: changedMeals, needsPurchaseAmendment: phase != .draft && (!staples.isEmpty || !changes.allSatisfy(\.isCalendarOnly)))
     }
     static func validateChosen(_ proposal: DinnerProposal, ledger: ShoppingLedger, state: DinnerPlanningState, access: DinnerAccessContext) throws {
+        if let week = proposal.batchWeek {
+            try week.validateSources(proposal: proposal, ledger: ledger, state: state, access: access)
+        }
         let profile = state.preferences(for: access)
         for change in proposal.changes {
             if case .choose(let planned) = change {
@@ -738,8 +758,15 @@ public enum DinnerPlanningEngine {
             }
         }
         for meal in chosen {
+            if let lines = meal.reviewedGroceryLines, proposal.tool != .threeDinnerBasket {
+                let compatible = SavedDinnerReview.matches(meal.includedIngredientIndices.map { meal.template.ingredients[$0] },
+                    in: ledger, exclusions: meal.template.exclusions)
+                guard lines.allSatisfy({ index, line in
+                    meal.template.ingredients.indices.contains(index) && compatible[meal.template.ingredients[index].id] == line
+                }) else { throw DinnerPlanningError.reviewRequired("groceryMatch") }
+            }
             if let acceptedID = meal.acceptedDinnerID {
-                guard state.acceptedDinners.contains(where: { $0.id == acceptedID && $0.template == meal.template }) else { throw DinnerPlanningError.reviewRequired("acceptedVersion") }
+                guard proposal.batchWeek != nil || state.acceptedDinners.contains(where: { $0.id == acceptedID && $0.template == meal.template }) else { throw DinnerPlanningError.reviewRequired("acceptedVersion") }
                 if !access.hasPaidTools && !proposal.isIsolatedPreview {
                     guard chosen.count == 1, state.freeReusableDinnerID == acceptedID else { throw DinnerPlanningError.paidAccessRequired }
                 }

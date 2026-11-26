@@ -368,7 +368,7 @@ public struct ShoppingLine: Codable, Equatable, Sendable, Identifiable {
     public var isTrashed: Bool { trashedAt != nil }
 }
 
-public enum ImportSource: String, Codable, CaseIterable, Sendable { case typed, paste, selectedText, voice, assistedVoice, photoOCR }
+public enum ImportSource: String, Codable, CaseIterable, Sendable { case typed, paste, selectedText, voice, assistedVoice, photoOCR, csv }
 public enum ImportResolution: Codable, Hashable, Sendable {
     case addNew
     case addToLine(UUID)
@@ -392,6 +392,7 @@ public struct StagedImportLine: Codable, Equatable, Sendable, Identifiable {
     public var duplicateLineIDs: [UUID]
     public var exclusions: [String]
     public var capture: CaptureImportMetadata?
+    public internal(set) var csvRecord: ShoppingCSVRecord?
     /// Opaque private product reference from an explicitly reviewed pantry suggestion.
     public var pantryProductLink: UUID?
     public let originalPack: ListQuantityParser.PackLabel?
@@ -409,7 +410,7 @@ public struct StagedImportLine: Codable, Equatable, Sendable, Identifiable {
         self.exclusions = exclusions; self.capture = capture; self.originalPack = originalPack
     }
     private enum CodingKeys: String, CodingKey {
-        case id, proposedLineID, originalText, name, quantity, unresolvedReason, duplicateLineIDs, exclusions, capture, originalPack, pantryProductLink, reviewedPackages
+        case id, proposedLineID, originalText, name, quantity, unresolvedReason, duplicateLineIDs, exclusions, capture, originalPack, pantryProductLink, reviewedPackages, csvRecord
     }
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -420,6 +421,7 @@ public struct StagedImportLine: Codable, Equatable, Sendable, Identifiable {
         duplicateLineIDs = try c.decode([UUID].self, forKey: .duplicateLineIDs)
         exclusions = try c.decodeIfPresent([String].self, forKey: .exclusions) ?? []
         capture = try c.decodeIfPresent(CaptureImportMetadata.self, forKey: .capture)
+        csvRecord = try c.decodeIfPresent(ShoppingCSVRecord.self, forKey: .csvRecord)
         pantryProductLink = try c.decodeIfPresent(UUID.self, forKey: .pantryProductLink)
         originalPack = try c.decodeIfPresent(ListQuantityParser.PackLabel.self, forKey: .originalPack)
         reviewedPackages = try c.decodeIfPresent(GroceryPackageCount.self, forKey: .reviewedPackages)
@@ -519,6 +521,7 @@ public struct LedgerRevision: Codable, Equatable, Sendable, Identifiable {
     public let createdAt: Date
     public let operation: String
     public let previousRetailerBasis: ShopBasis?
+    public internal(set) var savedDinnerReceipt: DinnerGroceryReceipt? = nil
 }
 
 public struct LedgerWorkspace: Codable, Equatable, Sendable {
@@ -571,10 +574,12 @@ public struct LedgerWorkspace: Codable, Equatable, Sendable {
     /// Build 8 accepts only v1 and can silently discard additive fields on its next write.
     /// Choose the format after scoping an export so plain, older-compatible copies stay v1.
     public var ledgerDocumentVersion: Int {
-        if !dinnerPlanning.serveSchedules.isEmpty || dinnerPlanning.applyReceipts.contains(where: { $0.costBaseline != nil }) ||
+        if !dinnerPlanning.serveSchedules.isEmpty || dinnerPlanning.proposals.contains(where: { $0.batchWeek != nil }) ||
+            dinnerPlanning.applyReceipts.contains(where: { $0.costBaseline != nil || $0.proposal.batchWeek != nil }) ||
             listLayout.departmentDirectory?.stores.values.contains(where: { $0.learnsAisles != nil }) == true {
             return 2
         }
+        if shops.contains(where: { $0.importBatches.contains(where: { $0.source == .csv }) }) { return 2 }
         let discounted = shops.contains { shop in
             shop.lines.contains { $0.pickedPrice?.discount != nil || $0.tripUndo?.price?.discount != nil }
         }
@@ -796,11 +801,16 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
             next.appendManualFields(id: UUID(), contributionID: UUID(), name: name, quantity: quantity, notes: notes, exclusions: exclusions)
         }
     }
-    /// Selected groceries are new manual rows, independent of any occurrence or pantry allocation.
-    mutating func addSavedDinnerGroceries(_ ingredients: [MealIngredient], exclusions: [String], revisionID: UUID, at date: Date) throws {
+    mutating func attachDinnerReceipt(_ receipt: DinnerGroceryReceipt) {
+        // Called in the same workspace transaction as the confirmed operation.
+        revisions[revisions.count - 1].savedDinnerReceipt = receipt
+    }
+
+    /// Selected groceries are additive manual demand, independent of any occurrence or pantry allocation.
+    mutating func addSavedDinnerGroceries(_ ingredients: [MealIngredient], exclusions: [String], revisionID: UUID, at date: Date, matched: [UUID: UUID] = [:]) throws {
         try mutate("savedDinnerGroceries", at: date, revisionID: revisionID) { next in
             for ingredient in ingredients {
-                let lineID = next.appendLine(id: UUID(), name: ingredient.name, notes: ingredient.notes)
+                let lineID = matched[ingredient.id] ?? next.appendLine(id: UUID(), name: ingredient.name, notes: ingredient.notes)
                 next.contributions.append(LedgerContribution(id: UUID(), lineID: lineID, source: .manual,
                     productName: ingredient.name, quantity: ingredient.quantity, originalText: ingredient.contributionWording,
                     notes: ingredient.notes, exclusions: exclusions + ingredient.exclusions, removedAt: nil,
@@ -1007,6 +1017,11 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         guard preview.shopID == id, preview.baseRevision == revision else { throw LedgerError.stalePreview }
         try validatePreview(preview)
         guard Set(decisions.keys).isSubset(of: Set(preview.lines.map(\.id))) else { throw LedgerError.invalid("importDecision") }
+        if preview.source == .csv {
+            let records = Set(preview.lines.compactMap(\.csvRecord))
+            guard records.count == preview.lines.count, !records.isEmpty, records.isDisjoint(with: importedCSVRecords),
+                  preview.lines.allSatisfy({ decisions[$0.id] == .addNew }) else { throw LedgerError.invalid("csvReplay") }
+        }
         return try mutate("commitImport", at: at) { next in
             var contributionIDs: [UUID] = []
             var existingNames = Set(next.lines.lazy.filter { !$0.isTrashed }.map { normalizedProduct($0.name) })
@@ -1022,7 +1037,8 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
                 var duplicateSupply: LedgerContribution?
                 switch resolution {
                 case .addNew:
-                    lineID = next.appendLine(id: entry.proposedLineID, name: entry.name)
+                    lineID = next.appendLine(id: entry.proposedLineID, name: entry.name, notes: entry.csvRecord?.note ?? "")
+                    if let record = entry.csvRecord { next.lines[next.lines.count - 1].aisle = record.category }
                     existingNames.insert(name)
                 case let .addToLine(target):
                     let line = next.lines[try next.lineIndex(target)]
@@ -1512,6 +1528,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
                   entry.parentID == parent else { throw LedgerError.invalid("revisionChain") }
             try ledgerDate(entry.createdAt); try ledgerText(entry.operation, nonempty: true, maximum: 128)
             try entry.previousRetailerBasis?.validate()
+            try entry.savedDinnerReceipt?.validate(revision: entry)
             parent = entry.id
         }
         guard revisions.count == revision, revisions.last.map({ $0.id == revisionID }) ?? (revision == 0)
@@ -1538,7 +1555,9 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
                     try dinner.validate()
                     guard touchedMeals.insert(dinner.occurrenceID).inserted,
                           !next.mealOccurrences.contains(where: { $0.id == dinner.occurrenceID }) else { throw DinnerPlanningError.operationConflict }
-                    for (index, ingredient) in dinner.template.ingredients.enumerated() {
+                    let included = dinner.includedIngredientIndices
+                    for index in included {
+                        let ingredient = dinner.template.ingredients[index]
                         let lineID: UUID
                         if let reviewed = dinner.reviewedGroceryLines?[index] {
                             guard let line = next.lines.first(where: { $0.id == reviewed && !$0.isChecked && !$0.isHandled && !$0.isTrashed }),
@@ -1558,8 +1577,8 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
                     let template = dinner.template
                     next.mealOccurrences.append(MealOccurrence(repeatedFrom: repeatWeek?.meals[changeIndex].source, id: dinner.occurrenceID, templateID: template.id, templateRevision: template.revision,
                         title: template.title, servings: dinner.plannedServings ?? template.servings, notes: template.notes, sourceURL: template.sourceURL,
-                        sourceEvidence: template.sourceEvidence, recipeSteps: template.recipeSteps, exclusions: template.exclusions, servingGroups: template.servingGroups + [dinner.lunchHold].compactMap { $0 }, leadTimeMinutes: template.leadTimeMinutes,
-                        completedSteps: template.completedSteps, ingredientContributionIDs: dinner.contributionIDs,
+                        sourceEvidence: template.sourceEvidence, recipeSteps: template.recipeSteps.map { RecipeStep.rebinding($0, from: template.ingredients, to: included.map { template.ingredients[$0] }) }, exclusions: template.exclusions, servingGroups: template.servingGroups + [dinner.lunchHold].compactMap { $0 }, leadTimeMinutes: template.leadTimeMinutes,
+                        completedSteps: template.completedSteps, ingredientContributionIDs: included.map { dinner.contributionIDs[$0] },
                         scheduledDay: dinner.day, isHidden: false, removedAt: nil))
                 case .move(let occurrenceID, let day):
                     guard touchedMeals.insert(occurrenceID).inserted else { throw DinnerPlanningError.invalid("duplicateMealChange") }
@@ -1940,6 +1959,13 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         try uniqueIDs(preview.lines.map(\.id)); try uniqueIDs(preview.lines.map(\.proposedLineID))
         for line in preview.lines {
             try ledgerText(line.originalText, maximum: StagedListImport.maximumOriginalLineBytes); try ledgerText(line.name, nonempty: true, maximum: 512)
+            if let record = line.csvRecord {
+                try record.validate()
+                guard preview.source == .csv, line.name == record.item, line.quantity == (try record.measure()),
+                      line.capture == nil, line.pantryProductLink == nil, line.reviewedPackages == nil else {
+                    throw LedgerError.invalid("csvRecord")
+                }
+            } else if preview.source == .csv { throw LedgerError.invalid("csvRecord") }
             try line.quantity?.validate()
             try line.originalPack?.validate()
             if let packages = line.reviewedPackages {

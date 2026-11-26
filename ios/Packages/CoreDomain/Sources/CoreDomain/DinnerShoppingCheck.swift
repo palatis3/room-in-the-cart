@@ -227,7 +227,7 @@ extension LedgerWorkspace {
                   !meal.isHidden, meal.removedAt == nil, meal.carryover == nil,
                   planned.template.ingredients.count == planned.contributionIDs.count,
                   planned.lineIDs.count == planned.contributionIDs.count,
-                  meal.ingredientContributionIDs == planned.contributionIDs else { continue }
+                  meal.ingredientContributionIDs == planned.includedIngredientIndices.map({ planned.contributionIDs[$0] }) else { continue }
             for (index, ingredient) in planned.template.ingredients.enumerated() {
                 guard let product = products.matches[ingredient.id], planned.lineIDs[index] == product,
                       (alreadyCooked || !otherLines.contains(product)), let line = lines[product], !line.isChecked, !line.isHandled, !line.isTrashed,

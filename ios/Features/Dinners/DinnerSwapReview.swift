@@ -62,6 +62,8 @@ struct DinnerSwapReview {
     let ingredients: [Ingredient]
     let foods: [Food]
     let retained: [Retained]
+    var basketBefore: GroceryCostReview? = nil
+    var basketAfter: GroceryCostReview? = nil
 }
 
 @MainActor extension DinnerFeatureModel {
@@ -269,8 +271,14 @@ struct DinnerSwapReview {
             let offer = selected.map { $0.request.offerA.id == $0.selectedOfferID ? $0.request.offerA : $0.request.offerB }
             let beforePacks = try !unresolved ? packs(needed: before, free: free, offer: offer) : nil
             let afterPacks = try !unresolved ? packs(needed: after, free: free, offer: offer) : nil
-            let beforeCost = try preview.budgetBasis == nil ? nil : beforePacks.flatMap { try offer?.price?.multiplied(by: $0) }
-            let afterCost = try preview.budgetBasis == nil ? nil : afterPacks.flatMap { try offer?.price?.multiplied(by: $0) }
+            func cost(_ count: Int64?, needs: Quantity?) throws -> Money? {
+                guard let basis = preview.budgetBasis else { return nil }
+                if count == 0 || needs?.amount == .zero { return Money(minorUnits: 0, currency: basis.currency) }
+                guard let count else { return nil }
+                return try offer?.price?.multiplied(by: count)
+            }
+            let beforeCost = try cost(beforePacks, needs: before)
+            let afterCost = try cost(afterPacks, needs: after)
             return .init(id: id, name: names[id]!, beforeNeeded: before, afterNeeded: after, free: free,
                 holds: supply?.reservations[id] ?? [], unresolved: unresolved, packageLabel: offer?.label,
                 packagePrice: preview.budgetBasis == nil ? nil : offer?.price,
@@ -284,8 +292,17 @@ struct DinnerSwapReview {
             return DinnerSwapReview.Retained(id: lot.id, name: lot.name, count: lot.count, location: lot.location,
                                              confirmedAt: lot.confirmedAt, purchased: purchased)
         }
-        return .init(preview: preview, original: original, replacement: replacement.template, pantryBasis: supply?.basis,
-                     ingredients: ingredients, foods: rows, retained: retained)
+        var review = DinnerSwapReview(preview: preview, original: original, replacement: replacement.template,
+                                      pantryBasis: supply?.basis, ingredients: ingredients, foods: rows, retained: retained)
+        if let basis = preview.budgetBasis {
+            let affected = Set(beforeLines.values.flatMap { $0 } + afterLines.values.flatMap { $0 })
+            let unchanged = try GroceryCostReview.unchangedLines(in: shop, excluding: affected, at: now)
+            review.basketBefore = try GroceryCostReview(lines: unchanged + rows.map { ($0.id, $0.beforeCost) },
+                                                        currency: basis.currency, inventoryComplete: true)
+            review.basketAfter = try GroceryCostReview(lines: unchanged + rows.map { ($0.id, $0.afterCost) },
+                                                       currency: basis.currency, inventoryComplete: true)
+        }
+        return review
     }
 
     private static func sum(_ quantities: [Quantity?], unit: UnitOfMeasure?) throws -> Quantity? {

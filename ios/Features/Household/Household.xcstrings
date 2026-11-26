@@ -18316,6 +18316,23 @@
           }
         }
       }
+    },
+    "Planning access changed or expired. Reconnect and review again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planning access changed or expired. Reconnect and review again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu acceso a la planificación cambió o venció. Vuelve a conectarte y revisa los cambios."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

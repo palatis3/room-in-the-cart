@@ -51,6 +51,18 @@ extension DinnerWorkspaceStore {
         guard let swapReview, canReviewPreview, swapReview.preview.proposal.id == preview?.proposal.id else { return nil }
         return swapReview
     }
+    var canReadSwapBasket: Bool {
+        guard paid, budgetVisible, let review = currentSwapReview, let shop, let pickup = swapPickup,
+              review.preview.proposal.baseRevisionID == shop.revisionID,
+              review.preview.proposal.planningRevisionID == state.revisionID,
+              Self.swapReadAllowed(pickup, store: store, affected: [review.original.id], shopID: shop.id)
+        else { return false }
+        do {
+            let fresh = try DinnerPantrySupply.read(pickup: pickup, workspaceID: localIdeaWorkspaceID,
+                linkedWorkspaceID: pickup.recoveryLedger?.sourceWorkspaceID, shopID: shop.id)
+            return fresh?.basis == review.pantryBasis
+        } catch { return false }
+    }
     private var observation: AnyCancellable?
     private var runtimeObservation: AnyCancellable?
 

@@ -117,6 +117,7 @@ private struct MembershipDinnerSampleView: View {
                 }
                 .accessibilityIdentifier("membership.sample.changeWeek")
                 NavigationLink(dinnerText("First shop with a whole bottle")) { WholePackTripExample(currency: currency) }
+                    .accessibilityIdentifier("membership.sample.firstTrip")
                 NavigationLink(dinnerText("Compare a chosen two-store split")) {
                     WorkingForm {
                         Text(dinnerText("Fictional sample prices"))

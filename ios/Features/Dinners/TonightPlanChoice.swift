@@ -141,6 +141,9 @@ struct SavedDinnerHandoffView: View {
     @State private var startingPickup = false
     @State private var selectingGroceries = false
     @State private var selected: Set<UUID> = []
+    @State private var omitted = Set<UUID>()
+    @State private var rememberChoices = false
+    @State private var selectedPriorID: UUID?
     @State private var plannedDate: Date?
     @State private var plannedServings: Rational
     @State private var editingPlan = false
@@ -184,6 +187,15 @@ struct SavedDinnerHandoffView: View {
                         Text(planSummary(day, count))
                     }
                     Text(countLabel(review, saved: true))
+                    receiptRows(review.receipt)
+                    if review.plansDinner {
+                        Button(dinnerText("Plan another night")) {
+                            let calendar = Calendar(identifier: .gregorian)
+                            plannedDate = calendar.date(byAdding: .day, value: 1, to: plannedDate ?? Date())
+                            prepare(.planTonight)
+                            editingPlan = true
+                        }.accessibilityIdentifier("dinner.handoff.anotherNight")
+                    }
                     if let occurrenceID = review.occurrenceID, let planner, planner.store === ledger,
                        planner.shop?.id == review.shopID, planner.accessAvailable {
                         NavigationLink(dinnerText("View planned dinner")) {
@@ -222,6 +234,10 @@ struct SavedDinnerHandoffView: View {
                         }.accessibilityElement(children: .combine).accessibilityIdentifier("dinner.handoff.destination")
                     }
                     if !ledger.workspace.shops.isEmpty { pickupMenu }
+                    if !priorReceipts.isEmpty {
+                        DisclosureGroup(dinnerText("Previous recipe addition")) { receiptHistory }
+                            .accessibilityIdentifier("dinner.handoff.previousReceipt")
+                    }
                 }
                 if !ledger.workspace.mealTemplates.contains(recipe) && !ledger.workspace.dinnerPlanning.acceptedDinners.contains(where: { $0.template == recipe }) {
                     Text(dinnerText("Your saved recipe changed. Open the current version to continue."))
@@ -233,7 +249,9 @@ struct SavedDinnerHandoffView: View {
                     }
                 } else if let review {
                     Section(dinnerText(review.plansDinner ? "Ingredients for the whole dinner" : "Selected groceries")) {
-                        ForEach(review.ingredients) { ingredientRow($0) }
+                        receiptRows(review.receipt)
+                        if review.plansDinner { ingredientChoices }
+
                     }
                     Section {
                         if let day = review.plannedDay, let count = review.plannedServings {
@@ -275,6 +293,7 @@ struct SavedDinnerHandoffView: View {
                     }
                 } else if error != nil {
                     Section {
+                        ingredientChoices
                         Button(dinnerText("Review dinner again")) { prepare(.planTonight) }
                         shopInstead
                     }
@@ -296,6 +315,7 @@ struct SavedDinnerHandoffView: View {
                 originalIdentity = identity
                 ledgerID = ledger.sourceWorkspaceID
                 destinationID = ledger.workspace.selectedShopID
+                restoreOptionalChoices()
             }
             .task(id: readyPlanDestination) {
                 if readyPlanDestination != nil, review == nil { prepare(.planTonight) }
@@ -313,7 +333,7 @@ struct SavedDinnerHandoffView: View {
             }
             .sheet(isPresented: $choosingProducts) {
                 NavigationStack {
-                    SavedDinnerProductPicker(recipe: recipe, ledger: ledger, pickup: pickup, authorize: privateProductAccess) { choice in
+                    SavedDinnerProductPicker(recipe: recipe, omitted: omitted, ledger: ledger, pickup: pickup, authorize: privateProductAccess) { choice in
                         productChoice = choice
                         prepare(.planTonight)
                     }
@@ -392,8 +412,74 @@ struct SavedDinnerHandoffView: View {
     }
 
     private func didSelectPickup(_ id: UUID) {
-        if authorized { productChoice = nil; destinationID = id; review = nil; error = nil }
+        if authorized {
+            productChoice = nil; destinationID = id; review = nil; error = nil
+            restoreOptionalChoices()
+        }
     }
+
+    @ViewBuilder private var receiptHistory: some View {
+        let history = priorReceipts
+        if let prior = history.first(where: { $0.1.id == selectedPriorID }) ?? history.first {
+            if history.count > 1 {
+                Picker(dinnerText("Previous recipe addition"), selection: Binding(get: { prior.1.id }, set: { selectedPriorID = $0 })) {
+                    ForEach(history, id: \.1.id) { date, receipt in
+                        Text(receipt.plannedDay.map(dinnerDay) ?? date.formatted(date: .abbreviated, time: .shortened))
+                            .tag(receipt.id)
+                    }
+                }
+            } else { Text(prior.0, style: .date) }
+            receiptRows(prior.1)
+        }
+    }
+    private func restoreOptionalChoices() {
+        omitted = Set(recipe.ingredients.filter(\.suggestedShoppingExtra).map(\.id))
+        if let remembered = priorReceipts.compactMap({ $0.1.rememberedOmissions }).first {
+            omitted = Set(remembered).intersection(recipe.ingredients.map(\.id))
+        }
+        rememberChoices = false
+        selectedPriorID = nil
+        showIngredientChoices = !omitted.isEmpty
+    }
+    private var priorReceipts: [(Date, DinnerGroceryReceipt)] {
+        guard authorized, let shop = ledger.shop, shop.id == destinationID else { return [] }
+        return shop.revisions.reversed().compactMap { revision in
+            guard let value = revision.savedDinnerReceipt, value.actor == originalIdentity?.actorID.uuidString,
+                  value.workspaceID == ledgerID, value.recipeID == recipe.id,
+                  value.recipeRevision == recipe.revision else { return nil }
+            return (revision.createdAt, value)
+        }
+    }
+    @ViewBuilder private func receiptRows(_ receipt: DinnerGroceryReceipt) -> some View {
+        ForEach(receipt.changes) { row in
+            VStack(alignment: .leading, spacing: 3) {
+                Text(verbatim: row.name).font(.headline)
+                if let before = row.before, let added = row.added, let after = row.after {
+                    Text(dinnerFormat("Previously %@ · Adding %@ · Total %@", dinnerQuantity(before), dinnerQuantity(added), dinnerQuantity(after)))
+                } else { Text(dinnerText("Unmeasured item · listed separately")) }
+            }.accessibilityElement(children: .combine).accessibilityIdentifier("dinner.handoff.amount." + row.id.uuidString)
+        }
+    }
+    private var ingredientChoices: some View {
+        DisclosureGroup(dinnerText("Choose ingredients for this dinner"), isExpanded: $showIngredientChoices) {
+            ForEach(recipe.ingredients) { ingredient in
+                Toggle(isOn: Binding(get: { !omitted.contains(ingredient.id) }, set: { included in
+                    if included { omitted.remove(ingredient.id) } else { omitted.insert(ingredient.id) }
+                    if !included, productChoice?.match.ingredients.contains(where: { $0.id == ingredient.id && $0.foodID != nil }) == true { productChoice = nil }
+                    prepare(.planTonight)
+                })) {
+                    VStack(alignment: .leading) {
+                        Text(verbatim: ingredient.name)
+                        if ingredient.suggestedShoppingExtra { Text(dinnerText("Optional in the source recipe")).font(.caption) }
+                    }
+                }.accessibilityIdentifier("dinner.handoff.planIngredient." + ingredient.id.uuidString)
+            }
+            Toggle(dinnerText("Use these choices next time on this list"), isOn: Binding(get: { rememberChoices }, set: {
+                rememberChoices = $0; prepare(.planTonight)
+            }))
+        }.accessibilityIdentifier("dinner.handoff.chooseIngredients")
+    }
+    @State private var showIngredientChoices = false
 
     private func ingredientRow(_ ingredient: MealIngredient) -> some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -418,7 +504,8 @@ struct SavedDinnerHandoffView: View {
             }
             review = try SavedDinnerReview(recipe: recipe, action: requested, workspace: ledger.workspace, access: access,
                 phase: TonightPlanChoice.phase(pickup, shopID: access.shopID), at: now,
-                pantryReview: productChoice.map { ($0.match, $0.basis.originID) }, reservedFoods: productChoice?.reservedFoods ?? [])
+                pantryReview: productChoice.map { ($0.match, $0.basis.originID) }, reservedFoods: productChoice?.reservedFoods ?? [],
+                omittedIngredientIDs: omitted, rememberChoices: rememberChoices)
             error = nil
         } catch { review = nil; self.error = message(error) }
     }

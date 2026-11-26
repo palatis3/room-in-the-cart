@@ -207,6 +207,15 @@ struct LedgerImportView: View {
                     }
                     Section {
                         if !pantryFoodPrefill, let binding = reminderCopyBinding {
+                            if firstDraft == nil {
+                                NavigationLink(ledgerText("Import shopping CSV")) {
+                                    ShoppingCSVImportView(model: model, shopID: shopID)
+                                        .environment(\.shoppingListAuthorization, {
+                                            scenePhase == .active && UIApplication.shared.applicationState == .active
+                                                && reminderCopyBinding == binding
+                                        })
+                                }.accessibilityIdentifier("ledger.addSeveralCSV")
+                            }
                             Button(applePlanningText("Copy from Reminders")) {
                                 inputFocus = nil
                                 reminderPicker = LedgerReminderPresentation(binding: binding)

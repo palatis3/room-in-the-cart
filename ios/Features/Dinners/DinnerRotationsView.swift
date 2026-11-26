@@ -9,6 +9,11 @@ struct DinnerRotationsView: View {
             Section {
                 Text(dinnerText("A rotation stores accepted dinner versions and relative nights. Select the nights to preview before adding any groceries."))
                 if model.paid {
+                    if model.basketPrepAccess(), model.localIdeaWorkspaceID != nil, let editor = model.editorIdentity {
+                        NavigationLink(dinnerText("Two cooking sessions")) {
+                            BatchCookingWeekView(model: model, editor: editor, start: weekStart)
+                        }
+                    }
                     NavigationLink(dinnerText("Create rotation")) { DinnerRotationEditor(model: model, existing: nil) }
                 } else {
                     Text(dinnerText("Rotations require paid access. You can still choose and date dinners individually."))
