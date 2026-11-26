@@ -80,7 +80,8 @@ import LocalStore
             let lot = InventoryLot(id: original.id, foodID: original.foodID, name: original.name, source: original.source,
                 revision: 1, location: original.location, openedAt: original.openedAt, unit: original.unit,
                 count: original.count, observationID: baselineID, confirmedAt: original.confirmedAt,
-                updatedAt: original.updatedAt, useFirst: original.useFirst)
+                updatedAt: original.updatedAt, useFirst: original.useFirst,
+                namedPlace: original.namedPlace, spreadsheetRow: original.spreadsheetRow)
             let observation = InventoryObservation(id: baselineID, lotID: lot.id, operationID: migrationID,
                 revision: 1, supersedesID: nil, observedAt: lot.confirmedAt, count: lot.count)
             let source = PantryPersistenceCodec.SourceLink(lotID: lot.id, source: lot.source)

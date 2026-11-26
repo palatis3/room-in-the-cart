@@ -36,7 +36,8 @@ enum PantryArchiveRestore {
                 revision: 1, location: original.location, openedAt: original.openedAt, unit: original.unit,
                 count: original.count, observationID: observationID, confirmedAt: original.confirmedAt,
                 updatedAt: original.updatedAt, useFirst: original.useFirst, countWording: original.countWording,
-                splitFromLotID: original.splitFromLotID, discardedTimes: original.discardedTimes)
+                splitFromLotID: original.splitFromLotID, discardedTimes: original.discardedTimes,
+                        namedPlace: original.namedPlace, spreadsheetRow: original.spreadsheetRow)
             lots.append(lot)
             observations.append(.init(id: observationID, lotID: lot.id, operationID: restorationID, revision: 1,
                 supersedesID: nil, observedAt: original.confirmedAt, count: original.count, countWording: original.countWording))
@@ -69,7 +70,8 @@ enum PantryArchiveRestore {
             location: original.location, openedAt: original.openedAt, unit: original.unit, count: original.count,
             observationID: identity(restorationID: restorationID, originID: newOriginID, lotID: original.id),
             confirmedAt: original.confirmedAt, updatedAt: original.updatedAt, useFirst: original.useFirst, countWording: original.countWording,
-            splitFromLotID: original.splitFromLotID, discardedTimes: original.discardedTimes)
+            splitFromLotID: original.splitFromLotID, discardedTimes: original.discardedTimes,
+                        namedPlace: original.namedPlace, spreadsheetRow: original.spreadsheetRow)
     }
     private static func historicalOrigins(_ source: PantryArchiveCodec.Snapshot) -> Set<UUID> {
         var result: Set<UUID> = [source.descriptor.originID]

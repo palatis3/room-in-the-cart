@@ -15815,6 +15815,941 @@
           }
         }
       }
+    },
+    "%lld additions · %lld changed · %lld already imported · %lld skipped": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld additions · %lld changed · %lld already imported · %lld skipped"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld nuevos · %lld modificados · %lld ya importados · %lld omitidos"
+          }
+        }
+      }
+    },
+    "%lld batches selected": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld batches selected"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld lotes seleccionados"
+          }
+        }
+      }
+    },
+    "Already imported": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already imported"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya se importó"
+          }
+        }
+      }
+    },
+    "Back to column mapping": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back to column mapping"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a la asignación de columnas"
+          }
+        }
+      }
+    },
+    "Category": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Category"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Categoría"
+          }
+        }
+      }
+    },
+    "Choose a different place or check its name.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a different place or check its name."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige otro lugar o revisa el nombre."
+          }
+        }
+      }
+    },
+    "Choose a food name column and map each column once.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a food name column and map each column once."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige la columna del nombre del alimento y asigna cada columna una sola vez."
+          }
+        }
+      }
+    },
+    "Choose a pantry CSV": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a pantry CSV"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir un CSV de la despensa"
+          }
+        }
+      }
+    },
+    "Could not read this spreadsheet. Use a UTF-8 CSV with a header row.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not read this spreadsheet. Use a UTF-8 CSV with a header row."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo leer la hoja. Usa un CSV en UTF-8 con una fila de encabezados."
+          }
+        }
+      }
+    },
+    "Date as written": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date as written"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fecha tal como aparece"
+          }
+        }
+      }
+    },
+    "Drawer or bin (optional)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drawer or bin (optional)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cajón o contenedor (opcional)"
+          }
+        }
+      }
+    },
+    "Find food": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar alimentos"
+          }
+        }
+      }
+    },
+    "Import pantry CSV": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import pantry CSV"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importar CSV de la despensa"
+          }
+        }
+      }
+    },
+    "Keep this source name when importing an updated file.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep this source name when importing an updated file."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conserva este nombre de origen cuando importes una versión actualizada del archivo."
+          }
+        }
+      }
+    },
+    "Last location change": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last location change"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Último cambio de ubicación"
+          }
+        }
+      }
+    },
+    "Lot identifier": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lot identifier"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identificador del lote"
+          }
+        }
+      }
+    },
+    "Move to another storage type": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move to another storage type"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mover a otro tipo de almacenamiento"
+          }
+        }
+      }
+    },
+    "Named pantry places": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Named pantry places"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ubicaciones con nombre"
+          }
+        }
+      }
+    },
+    "New lot": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New lot"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lote nuevo"
+          }
+        }
+      }
+    },
+    "New lots have an unknown count. Dates and amounts are kept as written until you check the food. Changed rows update source details only.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New lots have an unknown count. Dates and amounts are kept as written until you check the food. Changed rows update source details only."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los lotes nuevos quedan con cantidad desconocida. Las fechas y cantidades se conservan tal como aparecen hasta que revises el alimento. Las filas modificadas solo actualizan los datos de origen."
+          }
+        }
+      }
+    },
+    "Note": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Note"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nota"
+          }
+        }
+      }
+    },
+    "Original spreadsheet row": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original spreadsheet row"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fila original de la hoja"
+          }
+        }
+      }
+    },
+    "Pantry changed. Review your selection again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pantry changed. Review your selection again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La despensa cambió. Revisa tu selección de nuevo."
+          }
+        }
+      }
+    },
+    "Pantry import saved.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pantry import saved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se guardó la importación de la despensa."
+          }
+        }
+      }
+    },
+    "Preview pantry import": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview pantry import"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver vista previa de la importación"
+          }
+        }
+      }
+    },
+    "Put away selected food": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Put away selected food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar los alimentos seleccionados"
+          }
+        }
+      }
+    },
+    "Quantity": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quantity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad"
+          }
+        }
+      }
+    },
+    "Review named location": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review named location"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar la ubicación"
+          }
+        }
+      }
+    },
+    "Review pantry import": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review pantry import"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar la importación de la despensa"
+          }
+        }
+      }
+    },
+    "Review the file again. Rows already saved will be recognized.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the file again. Rows already saved will be recognized."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa el archivo de nuevo. Se reconocerán las filas que ya se guardaron."
+          }
+        }
+      }
+    },
+    "Row %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Row %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fila %lld"
+          }
+        }
+      }
+    },
+    "Save location labels": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save location labels"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar etiquetas de ubicación"
+          }
+        }
+      }
+    },
+    "Save reviewed pantry rows": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save reviewed pantry rows"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar las filas revisadas"
+          }
+        }
+      }
+    },
+    "Saved": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardado"
+          }
+        }
+      }
+    },
+    "Search food, storage or drawer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search food, storage or drawer"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar alimento, ubicación o cajón"
+          }
+        }
+      }
+    },
+    "Show all rows": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show all rows"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar todas las filas"
+          }
+        }
+      }
+    },
+    "Show first five rows": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show first five rows"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar las primeras cinco filas"
+          }
+        }
+      }
+    },
+    "Skip column": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skip column"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Omitir columna"
+          }
+        }
+      }
+    },
+    "Skipped: missing, duplicate or invalid field": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skipped: missing, duplicate or invalid field"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se omitió por un campo faltante, duplicado o inválido"
+          }
+        }
+      }
+    },
+    "Skipped: this row previously identified another lot": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skipped: this row previously identified another lot"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se omitió porque esta fila identificaba otro lote"
+          }
+        }
+      }
+    },
+    "Source spreadsheet": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source spreadsheet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoja de origen"
+          }
+        }
+      }
+    },
+    "Storage for unrecognized or empty locations": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Storage for unrecognized or empty locations"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dónde guardar los lotes sin ubicación reconocida"
+          }
+        }
+      }
+    },
+    "Storage name": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Storage name"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre de la ubicación"
+          }
+        }
+      }
+    },
+    "These batches changed after put-away. Undo is unavailable.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These batches changed after put-away. Undo is unavailable."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estos lotes cambiaron después de guardarlos. Ya no puedes deshacer el cambio."
+          }
+        }
+      }
+    },
+    "Undo location labels": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo location labels"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deshacer el cambio de ubicación"
+          }
+        }
+      }
+    },
+    "Update original wording": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update original wording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar el texto de origen"
+          }
+        }
+      }
+    },
+    "Use a saved place": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use a saved place"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar una ubicación guardada"
+          }
+        }
+      }
+    },
+    "Use a unique lot column when updating or reordering rows. Without one, keep rows in their original order.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use a unique lot column when updating or reordering rows. Without one, keep rows in their original order."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usa una columna de lotes únicos al actualizar o reordenar filas. Si no la tienes, conserva el orden original."
+          }
+        }
+      }
+    },
+    "The number of fields differs from the header.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The number of fields differs from the header."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El número de campos no coincide con el encabezado."
+          }
+        }
+      }
+    },
+    "The food name is empty.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The food name is empty."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falta el nombre del alimento."
+          }
+        }
+      }
+    },
+    "The lot identifier is empty or repeated.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The lot identifier is empty or repeated."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El identificador del lote falta o está repetido."
+          }
+        }
+      }
+    },
+    "A mapped field is too long or contains invalid text.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A mapped field is too long or contains invalid text."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un campo asignado es demasiado largo o contiene texto inválido."
+          }
+        }
+      }
+    },
+    "The location wording is unrecognized. The selected storage type will be used.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The location wording is unrecognized. The selected storage type will be used."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se reconoció el texto de la ubicación. Se usará el tipo de almacenamiento seleccionado."
+          }
+        }
+      }
+    },
+    "The day and month are ambiguous. The original date is kept as text.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The day and month are ambiguous. The original date is kept as text."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El día y el mes son ambiguos. La fecha original se conserva como texto."
+          }
+        }
+      }
+    },
+    "The pantry changed after put-away. These selected location labels can still be restored.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The pantry changed after put-away. These selected location labels can still be restored."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La despensa cambió después de guardar los productos. Todavía puedes restaurar las ubicaciones seleccionadas."
+          }
+        }
+      }
     }
   },
   "version": "1.0"
