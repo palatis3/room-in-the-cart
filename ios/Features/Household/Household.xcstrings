@@ -14074,6 +14074,40 @@
         }
       }
     },
+    "Set aside": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set aside"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apartar"
+          }
+        }
+      }
+    },
+    "Set aside for this group": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set aside for this group"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apartar para este grupo"
+          }
+        }
+      }
+    },
     "Set aside from this batch": {
       "extractionState": "manual",
       "localizations": {
@@ -14984,6 +15018,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lugar de almacenamiento"
+          }
+        }
+      }
+    },
+    "Store food": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Store food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar alimento"
           }
         }
       }
@@ -17206,6 +17257,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "El rendimiento utilizable o la conversión de unidades sigue sin resolverse."
+          }
+        }
+      }
+    },
+    "Update total": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update total"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar total"
+          }
+        }
+      }
+    },
+    "Update total set aside": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update total set aside"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar total apartado"
           }
         }
       }

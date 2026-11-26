@@ -133,7 +133,7 @@ private struct SharedPantryRegistration: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button(ht("Cancel")) { dismiss() }.disabled(model.busy) }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(ht("Save")) { editingField = nil; Task { await save() } }
+                    Button(ht("Store food")) { editingField = nil; Task { await save() } }
                         .disabled(model.busy || (source == nil && name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
                         .accessibilityIdentifier("pantry.saveBatch")
                 }

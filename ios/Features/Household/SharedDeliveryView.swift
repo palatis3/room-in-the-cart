@@ -314,12 +314,13 @@ private struct DeliveryReservationEditor: View {
         .navigationTitle(ht("Set food aside"))
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
-                Button(ht("Save")) {
+                Button(ht(head?.quantity == nil ? "Set aside" : "Update total")) {
                     guard let proposed else { return }
                     amountFocused = false
                     Task { await submit(proposed) }
                 }
-                .accessibilityLabel(ht("Save amount set aside"))
+                .accessibilityLabel(ht(head?.quantity == nil ? "Set aside for this group" : "Update total set aside"))
+                .accessibilityIdentifier("delivery.reservation.save")
                 .disabled(proposed == nil || model.busy)
             }
         }

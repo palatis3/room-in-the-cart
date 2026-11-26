@@ -564,6 +564,7 @@ import XCTest
         tap(app.buttons["pantry.ingredient." + lunch + "." + lunchIngredient])
         tap(app.buttons["pantry.group." + lunchGroup])
         enter("2", in: app.textFields["pantry.reserveAmount"])
+        XCTAssertEqual(app.buttons["pantry.saveReservation"].label, "Set aside for this group")
         tap(app.buttons["pantry.saveReservation"])
         back(from: "Tortillas")
         back(from: "Meal ingredient matches")
@@ -747,7 +748,8 @@ import XCTest
         tap(ingredient)
         tap(reviewReservation)
         enter("2", in: app.textFields["delivery.reservation.amount"])
-        tap(app.buttons["Save amount set aside"])
+        XCTAssertEqual(app.buttons["delivery.reservation.save"].label, "Set aside for this group")
+        tap(app.buttons["delivery.reservation.save"])
         // Saving dismisses the whole review stack asynchronously. The delivery
         // button can already exist underneath it before hit testing is ready.
         let matchSheet = app.navigationBars.matching(NSPredicate(format: "identifier IN %@",
@@ -853,10 +855,12 @@ import XCTest
         let reserve = app.buttons["Review amount to set aside for School lunch"]
         tap(matches); tap(ingredient); tap(reserve)
         enter("2", in: app.textFields["delivery.reservation.amount"])
-        tap(app.buttons["Save amount set aside"])
+        XCTAssertEqual(app.buttons["delivery.reservation.save"].label, "Set aside for this group")
+        tap(app.buttons["delivery.reservation.save"])
         tap(matches); tap(ingredient); tap(reserve)
         enter(XCUIKeyboardKey.delete.rawValue + "1", in: app.textFields["delivery.reservation.amount"])
-        tap(app.buttons["Save amount set aside"])
+        XCTAssertEqual(app.buttons["delivery.reservation.save"].label, "Update total set aside")
+        tap(app.buttons["delivery.reservation.save"])
         tap(app.buttons["Delivered food by meal"])
         assertFact("Uncovered by deliveries", "0 units")
         assertFact("Amount set aside", "1 unit")
