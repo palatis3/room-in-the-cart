@@ -102,10 +102,19 @@ import XCTest
         tap(app.buttons["household.tonight"])
         XCTAssertTrue(app.staticTexts["No household recipes are available for tonight."].waitForExistence(timeout: 10), app.debugDescription)
         tap(app.buttons["householdTonight.recipe.new"])
-        fill("Family rice", into: "householdTonight.recipe.title")
-        fill("2", into: "householdTonight.recipe.servings")
-        fill("Rice", into: "householdTonight.recipe.ingredient")
-        fill("3", into: "householdTonight.recipe.amount")
+        func finishRecipeEntry() {
+            let doneID = "householdTonight.keyboardDone"
+            XCTAssertTrue(app.waitForDoneAboveKeyboard(identifier: doneID))
+            app.buttons[doneID].tap()
+            XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: doneID))
+        }
+        // Enter the recipe as one form. Reopening the keyboard between adjacent
+        // fields can leave XCTest waiting for an animation after the app is ready.
+        fill("Family rice", into: "householdTonight.recipe.title", dismissAfterEntry: false)
+        fill("2", into: "householdTonight.recipe.servings", dismissAfterEntry: false)
+        fill("Rice", into: "householdTonight.recipe.ingredient", dismissAfterEntry: false)
+        fill("3", into: "householdTonight.recipe.amount", dismissAfterEntry: false)
+        finishRecipeEntry()
         tap(app.buttons["Match household batches"])
         let lot = app.switches.matching(NSPredicate(format: "identifier BEGINSWITH %@", "householdTonight.recipe.lot.")).firstMatch
         XCTAssertTrue(lot.waitForExistence(timeout: 5), app.debugDescription)
@@ -114,7 +123,8 @@ import XCTest
         tap(app.buttons["householdTonight.recipe.save"])
         XCTAssertTrue(app.staticTexts["Family rice"].waitForExistence(timeout: 10), app.debugDescription)
         tap(app.buttons["Edit household recipe"])
-        fill("Family rice bowls", into: "householdTonight.recipe.title", replacing: true)
+        fill("Family rice bowls", into: "householdTonight.recipe.title", replacing: true, dismissAfterEntry: false)
+        finishRecipeEntry()
         tap(app.buttons["householdTonight.recipe.review"])
         tap(app.buttons["householdTonight.recipe.save"])
         let title = app.staticTexts["Family rice bowls"]
@@ -133,6 +143,25 @@ import XCTest
         tap(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "householdTonight.choose.")).firstMatch)
         XCTAssertTrue(app.buttons["Review a new shared shop"].exists)
         XCTAssertFalse(app.buttons["householdTonight.destination"].exists)
+    }
+
+    func testSpanishHouseholdRecipeDoneKeepsTheEnteredServings() {
+        app.launchArguments = ["--ui-testing", "--reset-test-workspace", "--household-tonight-fixture",
+                               "-AppleLanguages", "(es-MX)", "-AppleLocale", "es_MX"]
+        app.launch()
+        tap(app.buttons["settings"])
+        tap(app.buttons["household.pantry"])
+        tap(app.buttons["household.tonight"])
+        tap(app.buttons["householdTonight.recipe.new"])
+        let servingsID = "householdTonight.recipe.servings"
+        let doneID = "householdTonight.keyboardDone"
+        fill("2", into: servingsID, dismissAfterEntry: false)
+        XCTAssertTrue(app.waitForDoneAboveKeyboard(identifier: doneID))
+        let done = app.buttons[doneID]
+        XCTAssertEqual(done.label, "Listo")
+        done.tap()
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: doneID))
+        XCTAssertEqual(app.textFields[servingsID].value as? String, "2")
     }
 
     func testAssignedShopperChoosesOneHouseholdDinnerAfterCancelingPreview() {
