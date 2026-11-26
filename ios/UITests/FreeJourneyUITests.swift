@@ -487,7 +487,7 @@ import XCTest
         }
         guard remember.exists else { return XCTFail("Missing pack confirmation in Review product: " + app.debugDescription) }
         XCTAssertFalse(remember.isEnabled, "A name alone cannot confirm an exact pack size.")
-        tap(app.buttons["Cancel"])
+        tap(app.buttons["productBatch.cancelLookupReview"])
         tap(resolve)
         reveal(review)
         XCTAssertEqual(lots.count, 0)
@@ -504,8 +504,10 @@ import XCTest
         XCTAssertTrue(remember.wait(for: \.label, toEqual: "Correct remembered pack", timeout: 8))
         tap(app.buttons["productBatch.finishEditing"])
         enableSwitch("productBatch.received")
-        tap(app.buttons["productBatch.review"])
-        tap(app.buttons["productBatch.commit"])
+        verifyCancelablePackReview(named: "Cereal box, 12 units", attachment: "Scanner review - English")
+        let commit = app.buttons["productBatch.commit"]
+        reveal(commit)
+        commit.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).doubleTap()
         XCTAssertTrue(app.staticTexts["productBatch.saved"].waitForExistence(timeout: 8))
 
         restart()
@@ -537,6 +539,60 @@ import XCTest
         tap(resolve)
         reveal(app.staticTexts["No confirmed match. Search by product name or check the retailer."])
         XCTAssertFalse(review.exists, "Shopping lookup cannot start a pantry intake.")
+    }
+
+    private func verifyCancelablePackReview(named name: String, attachment: String, file: StaticString = #filePath, line: UInt = #line) {
+        let opener = app.buttons["productBatch.review"]
+        let cancel = app.buttons["productBatch.cancelReview"]
+        let commit = app.buttons["productBatch.commit"]
+        XCTAssertTrue(opener.isHittable, file: file, line: line)
+        XCTAssertTrue(opener.label.contains(name), file: file, line: line)
+        let old = opener.frame
+        opener.tap()
+        XCTAssertTrue(element("productBatch.reviewPending").waitForExistence(timeout: 8), file: file, line: line)
+        for y in [old.minY + 2, old.midY, old.maxY - 2] {
+            app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: old.midX, dy: y)).tap()
+        }
+        XCTAssertFalse(app.staticTexts["productBatch.saved"].exists, file: file, line: line)
+        reveal(cancel)
+        capture(attachment + " - confirmation and Cancel")
+        XCTAssertFalse(app.keyboards.firstMatch.exists, file: file, line: line)
+        XCTAssertGreaterThanOrEqual(cancel.frame.height, 44, file: file, line: line)
+        XCTAssertFalse(old.intersects(cancel.frame), file: file, line: line)
+        cancel.tap()
+        XCTAssertTrue(opener.waitForExistence(timeout: 5), file: file, line: line)
+        XCTAssertTrue(opener.label.contains(name), file: file, line: line)
+        XCTAssertFalse(commit.exists, file: file, line: line)
+        capture(attachment + " - named review restored")
+        opener.tap()
+        XCTAssertTrue(commit.waitForExistence(timeout: 8), file: file, line: line)
+    }
+
+    func testMexicanSpanishPantryReviewCancelKeepsUnknownContentsUnrecorded() {
+        launch(reset: true, spanish: true, region: "MX", contentSize: .accessibilityExtraExtraExtraLarge)
+        tap(app.tabBars.buttons["Despensa"])
+        tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.productBatch"])
+        addTypedProduct("Avena", using: app.textViews["productBatch.label"])
+        tap(app.buttons["productBatch.row.0"])
+        enableSwitch("productBatch.oneUnknown")
+        tap(app.buttons["productBatch.finishEditing"])
+        enableSwitch("productBatch.received")
+        verifyCancelablePackReview(named: "Avena", attachment: "Scanner review - es-MX AX5")
+        XCUIDevice.shared.press(.home)
+        app.activate()
+        XCTAssertFalse(app.buttons["productBatch.commit"].exists)
+        if app.buttons["productBatch.review"].exists {
+            XCTAssertFalse(app.buttons["productBatch.review"].isEnabled)
+        }
+        app.terminate()
+        launch(reset: false, spanish: true, region: "MX")
+        tap(app.tabBars.buttons["Despensa"])
+        tap(app.buttons["pantry.findPack"])
+        let search = app.textFields["pack.find.name"]
+        tap(search)
+        search.typeText("Avena")
+        XCTAssertTrue(app.staticTexts["pack.find.noBatches"].waitForExistence(timeout: 5))
     }
 
     func testConfirmedPackAtHomeFindsOnlyItsTwoPhysicalBatchesAfterRelaunch() {
@@ -631,7 +687,7 @@ import XCTest
             "label CONTAINS %@ AND label CONTAINS %@ AND label CONTAINS %@",
             "Link evidence to the delivered batch", "Received 8 units", "Usable 6 units")).firstMatch
         reveal(linkReview)
-        tap(app.buttons["Edit batch"])
+        tap(app.buttons["productBatch.cancelReview"])
         XCTAssertTrue(app.buttons["productBatch.row.0"].exists)
         tap(app.buttons["productBatch.review"])
         tap(app.buttons["productBatch.commit"])

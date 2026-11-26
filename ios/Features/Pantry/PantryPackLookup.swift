@@ -10,6 +10,8 @@ private struct PackLookupInput: View {
     @Binding var selected: ConfirmedPantryPack?
     @Binding var unmatched: CapturedBarcode?
     var hasRecordedBatch = false
+    var returnToReview: UUID? = nil
+    @AccessibilityFocusState private var reviewFocused: Bool
     var reviewUnmatched: ((CapturedBarcode, String, Bool, PantryDigestAccess) throws -> Void)? = nil
     @ObservedObject private var memory = PantryDigestStore.shared.packMemory
     @State private var code = ""
@@ -24,6 +26,7 @@ private struct PackLookupInput: View {
     var body: some View {
         Section(pantryText("Find a pack")) {
             TextField(pantryText("Product name"), text: $query).focused($field, equals: .product)
+                .accessibilityIdentifier("pack.find.name")
                 .onChange(of: query) { _, _ in clearResult() }
             TextField(pantryText("Barcode"), text: $code)
                 .focused($field, equals: .barcode)
@@ -60,7 +63,13 @@ private struct PackLookupInput: View {
                unmatched.associationKey(retailer: retailer) != nil {
                 Button(pantryText("Review this package")) {
                     openReview(unmatched, access: access)
-                }.accessibilityIdentifier("pack.find.review")
+                }
+                .accessibilityLabel(pantryFormat("%@, %@", pantryText("Review this package"), query.isEmpty ? unmatched.value : query))
+                .accessibilityFocused($reviewFocused)
+                .accessibilityIdentifier("pack.find.review")
+                .onChange(of: returnToReview) { _, request in
+                    if request != nil, authorized(), access.authorized() { reviewFocused = true }
+                }
             }
         }
         .onChange(of: memory.generation) { _, _ in
@@ -141,6 +150,7 @@ struct PantryPackFind: View {
     @State private var selected: ConfirmedPantryPack?
     @State private var unmatched: CapturedBarcode?
     @State private var review: PackageReview?
+    @State private var returnToReview: UUID?
     private var canReview: Bool { allowsPackageReview && model.canEdit && scene == .active && scoped != nil }
     private var authorized: Bool { model.phase == .ready && model.snapshot?.state.workspaceID == origin }
     private var scoped: PantryDigestAccess? { access?.scope.origin == origin && access?.authorized() == true ? access : nil }
@@ -154,12 +164,12 @@ struct PantryPackFind: View {
             if authorized {
                 let recorded = recordedBarcodeBatches
                 PackLookupInput(workspaceID: origin, access: scoped, authorized: { authorized && scene == .active },
-                    query: $query, selected: $selected, unmatched: $unmatched, hasRecordedBatch: !recorded.isEmpty,
+                    query: $query, selected: $selected, unmatched: $unmatched, hasRecordedBatch: !recorded.isEmpty, returnToReview: returnToReview,
                     reviewUnmatched: canReview ? startReview : nil)
                     .id(presentationScope?.owner)
                 if let result = batchResults(recorded: recorded) {
                     Section(result.title) {
-                        if result.lots.isEmpty { Text(pantryText("No recorded batches.")) }
+                        if result.lots.isEmpty { Text(pantryText("No recorded batches.")).accessibilityIdentifier("pack.find.noBatches") }
                         ForEach(result.lots) { lot in
                             NavigationLink {
                                 PantryLotEntryView(model: model, lotID: lot.id, accessAllowed: authorized)
@@ -169,7 +179,9 @@ struct PantryPackFind: View {
                 }
             }
         }.privacySensitive().navigationTitle(pantryText("Find a package in Pantry"))
-        .sheet(item: $review) { review in
+        .sheet(item: $review, onDismiss: {
+            if canReview, unmatched != nil, recordedBarcodeBatches.isEmpty { returnToReview = UUID() }
+        }) { review in
             NavigationStack { PantryProductBatchView(model: model, lookupBatch: review.batch, access: review.access) }
                 .environment(\.pantryDigestAccess, review.access.forPackReview(current: access, scene: scene, saving: model.busy))
         }

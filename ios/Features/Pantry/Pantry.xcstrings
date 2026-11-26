@@ -1,6 +1,57 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Not recorded yet": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not recorded yet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún sin registrar"
+          }
+        }
+      }
+    },
+    "Cancel review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar revisión"
+          }
+        }
+      }
+    },
+    "%@, %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$@"
+          }
+        }
+      }
+    },
     "Check that the photo shows only this package. You can also type the name and size.": {
       "extractionState": "manual",
       "localizations": {
