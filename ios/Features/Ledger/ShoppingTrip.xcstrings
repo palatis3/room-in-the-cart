@@ -768,6 +768,142 @@
           }
         }
       }
+    },
+    "Choose a shopper for each department you want to send. Review both copies before sharing.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a shopper for each department you want to send. Review both copies before sharing."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige quién comprará en cada departamento que quieras incluir. Revisa ambas copias antes de compartirlas."
+          }
+        }
+      }
+    },
+    "Each copy is dated. Later changes require a new selection.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Each copy is dated. Later changes require a new selection."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada copia incluye la fecha y la hora. Si hay cambios, vuelve a seleccionar los departamentos."
+          }
+        }
+      }
+    },
+    "First shopper": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "First shopper"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Persona 1"
+          }
+        }
+      }
+    },
+    "Leave out": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave out"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No incluir"
+          }
+        }
+      }
+    },
+    "Preview both checklists": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview both checklists"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar ambas listas"
+          }
+        }
+      }
+    },
+    "Second shopper": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Second shopper"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Persona 2"
+          }
+        }
+      }
+    },
+    "Shopper": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shopper"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quién compra"
+          }
+        }
+      }
+    },
+    "Split by department": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Split by department"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repartir la compra por departamento"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

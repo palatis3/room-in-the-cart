@@ -2725,3 +2725,96 @@ test('shared week costs resolve an adopted proposal only while its original budg
  assert.equal(ok(await read(f.planner)).original,null);
  assert.equal(ok(await read(f.owner)).original.adoptedQuote,null);
 });
+
+test('saved-week confirmation preserves manual packs and holds, resumes exact per-night receipts and fences a changed grant',async()=>{
+ const f=await mealFixture(),route=f.path+'/meal-plan/saved-week',commands=f.base+'/commands';
+ const nights=[randomUUID(),randomUUID()];
+ const manual={lineId:randomUUID(),originalItem:'Private coffee packs',packs:1,feeEligible:true,unitPriceMinor:607};
+ for(let i=0;i<2;i++){
+   const meal={title:'Rice night '+i,day:'2026-11-0'+(4+i),kind:'dinner',portions:2,protected:false};
+   ok(await call(f.owner,commands,'POST',f.patch(2+i,{occurrenceId:nights[i],baseMealRevision:null,meal},{lines:[manual]})));
+ }
+ const menu=ok(await call(f.owner,f.path+'/meal-plan'));
+ const selected={week:'2026-11-01',ids:nights,shopRevision:menu.shopRevision,authorityEpoch:menu.authorityEpoch,grantRevision:menu.grantRevision};
+ const limited=ok(await call(f.planner,route+'/preview','POST',selected));
+ assert.deepEqual(limited.basket,[]);assert.equal(limited.shopper,false);assert.equal(JSON.stringify(limited).includes(manual.originalItem),false);
+ const planId=randomUUID(),review=ok(await call(f.owner,route+'/preview','POST',selected)),confirmation={...selected,planId,digest:review.digest};
+ assert.equal(review.basket.length,1);assert.equal(review.basket[0].after,1);assert.equal(review.basket[0].unlinked,true);
+ assert.equal(JSON.stringify(review).includes('unitPriceMinor'),false);
+ assert.equal((await call(f.planner,route+'/confirm','POST',{...confirmation,digest:limited.digest})).status,404);
+ const started=ok(await call(f.owner,route+'/confirm','POST',confirmation)).series;
+ const first={planId,id:started.steps[0].id}, second={planId,id:started.steps[1].id};
+ for(const result of await Promise.all([call(f.owner,route+'/step','POST',first),call(f.owner,route+'/step','POST',first)])){
+   assert.equal(ok(result).series.completed,1);
+ }
+ assert.equal(ok(await call(f.owner,route+'?week='+selected.week)).series.completed,1);
+ assert.equal(ok(await call(f.owner,route+'/confirm','POST',confirmation)).series.completed,1);
+ const membership=(await admin.query('SELECT subscription FROM ritc.billing_state WHERE household_id=$1',[f.h])).rows[0].subscription;
+ await admin.query('UPDATE ritc.billing_state SET subscription=$2 WHERE household_id=$1',[f.h,{...membership,expiresAt:Date.now()-1000}]);
+ assert.equal((await call(f.owner,route+'/step','POST',first)).data.error.code,'membership_inactive');
+ assert.equal((await call(f.owner,route+'/step','POST',second)).data.error.code,'membership_inactive');
+ await admin.query('UPDATE ritc.billing_state SET subscription=$2 WHERE household_id=$1',[f.h,membership]);
+ assert.equal(ok(await call(f.owner,route+'/step','POST',second)).series.completed,2);
+ const after=ok(await call(f.owner,f.path));
+ assert.deepEqual(after.lines,[manual]);assert.equal(after.meals.length,1);assert.deepEqual(after.meals[0].meal,f.meal);
+ ok(await call(f.owner,f.path+'/meal-plan/planner','PUT',{authorityEpoch:1,grantRevision:1,plannerId:null}));
+ assert.equal((await call(f.planner,route+'?week='+selected.week)).status,404);
+ assert.equal((await call(f.owner,route+'/step','POST',first)).status,404);
+});
+
+test('saved-week progress halts after an independent edit without writing the remaining occurrence',async()=>{
+ const f=await mealFixture(),route=f.path+'/meal-plan/saved-week',commands=f.base+'/commands',ids=[randomUUID(),randomUUID()];
+ for(let i=0;i<2;i++){
+   ok(await call(f.owner,commands,'POST',f.patch(2+i,{occurrenceId:ids[i],baseMealRevision:null,
+     meal:{title:'Dinner '+i,day:'2026-11-0'+(4+i),kind:'dinner',portions:2,protected:false}})));
+ }
+ const plan=ok(await call(f.owner,f.path+'/meal-plan')),input={week:'2026-11-01',ids,shopRevision:plan.shopRevision,
+   authorityEpoch:plan.authorityEpoch,grantRevision:plan.grantRevision};
+ const review=ok(await call(f.owner,route+'/preview','POST',input)),planId=randomUUID();
+ ok(await call(f.owner,route+'/confirm','POST',{...input,planId,digest:review.digest}));
+ ok(await call(f.owner,route+'/step','POST',{planId,id:ids[0]}));
+ const other=ok(await call(f.owner,f.path)),later={...other.meals.find(x=>x.occurrenceId===ids[1]).meal,title:'Changed independently'};
+ ok(await call(f.owner,commands,'POST',f.patch(other.shopRevision,{occurrenceId:ids[1],baseMealRevision:4,meal:later})));
+ assert.equal((await call(f.owner,route+'/step','POST',{planId,id:ids[1]})).status,409);
+ const progress=ok(await call(f.owner,route+'?week='+input.week)).series;assert.equal(progress.completed,1);assert.equal(progress.conflicted,true);
+ assert.equal(ok(await call(f.owner,route+'/stop','POST',{planId,id:ids[1]})).series.stopped,true);
+ assert.deepEqual(ok(await call(f.owner,f.path)).meals.find(x=>x.occurrenceId===ids[1]).meal,later);
+});
+
+test('saved-week tracked basket recomputes whole packs from stable dinner sources and keeps the held lunch and manual amount',async()=>{
+ const f=await fixture(),path=f.base+'/shops/'+f.shopId,route=path+'/meal-plan/saved-week',ids=[randomUUID(),randomUUID(),randomUUID()];
+ await f.paid();
+ const seats=ok(await call(f.owner,f.base+'/entitlements'));
+ ok(await call(f.owner,f.base+'/billing/seats','PUT',{revision:seats.revision,userIDs:[f.owner.id]}));
+ const initial=ok(await call(f.owner,path)),rice={lineId:randomUUID(),originalItem:'Rice',packs:2,unitPriceMinor:75,feeEligible:true};
+ const patch=(n,body)=>call(f.owner,f.base+'/commands','POST',{v:1,kind:'shop.patch',shopId:f.shopId,replayWindow:f.owner.window,
+   clientKey:randomUUID(),base:{shopRevision:n,authorityEpoch:1},body});
+ for(const [i,occurrenceId] of ids.entries()){
+   const n=i===2?100:300,protectedLunch=i===2;
+   const meal={title:protectedLunch?'Held lunch':'Rice night '+i,day:'2026-11-0'+(4+i),kind:protectedLunch?'lunch':'dinner',
+     portions:2,protected:protectedLunch,planning:{groups:[],ingredients:[{id:randomUUID(),name:'Rice',groupIds:[],exclusions:[],
+       quantity:{amount:{numerator:n,denominator:1},unit:'gram',originalLiteral:n+' g'}}]}};
+   ok(await patch(i+1,{lines:[rice],quote:initial.quote,mealEdit:{occurrenceId,baseMealRevision:null,meal}}));
+ }
+ const facts=ok(await call(f.owner,path+'/demand')).legacySources.sources;
+ const q=n=>({amount:{numerator:String(n),denominator:'1'},unit:'gram',originalLiteral:n+' g',confirmedConversion:null});
+ const common={lineId:rice.lineId,productKey:'rice',productName:'Rice',exclusions:[],contains:[],removedAt:null};
+ const manualId=randomUUID(),change={lines:[{id:rice.lineId,name:'Rice',unit:'gram',originalOrder:0,trashedAt:null}],
+   contributions:[{...common,id:manualId,source:{kind:'manual'},originalText:'My rice',quantity:q(100)},
+     ...facts.map(fact=>({...common,id:fact.id,source:fact.source,originalText:fact.originalText,quantity:fact.quantity,sourceExclusions:fact.sourceExclusions}))],
+   edges:[],removeSourceIds:[],removeEdgeIds:[]};
+ const body={quote:initial.quote,lines:[rice]}, adoption=ok(await call(f.owner,path+'/demand/previews','POST',{mode:'adopt',
+   base:{shopRevision:4,graphRevision:0,authorityEpoch:1},change,action:{kind:'shop.patch',body},
+   packs:[{lineId:rice.lineId,usablePerPack:q(500),acceptUnresolved:false}]}));
+ ok(await patch(4,{...body,demandReview:{previewId:adoption.previewId,previewDigest:adoption.previewDigest}}));
+ const input={week:'2026-11-01',ids:ids.slice(0,2),shopRevision:5,authorityEpoch:1,grantRevision:0},planId=randomUUID();
+ const review=ok(await call(f.owner,route+'/preview','POST',input));
+ assert.equal(review.basket[0].before,2);assert.equal(review.basket[0].after,1);
+ assert.equal(review.basket[0].manual,true);assert.equal(review.basket[0].held,true);
+ ok(await call(f.owner,route+'/confirm','POST',{...input,planId,digest:review.digest}));
+ for(const id of input.ids)ok(await call(f.owner,route+'/step','POST',{id,planId}));
+ const saved=ok(await call(f.owner,path)),graph=ok(await call(f.owner,path+'/demand')).graph;
+ assert.equal(saved.lines[0].packs,1);assert.deepEqual(saved.meals.map(row=>row.occurrenceId),[ids[2]]);
+ assert.equal(graph.contributions.find(c=>c.id===manualId).removedAt,null);
+ assert.equal(graph.contributions.find(c=>c.source.kind==='reservation').removedAt,null);
+});

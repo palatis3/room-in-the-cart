@@ -980,3 +980,24 @@ final class PantryRepository {
         }
     }
 }
+
+extension PantryRepository {
+    func applyOrganization(_ edits: [PantryOrganizationEdit], basis: InventoryState, at now: Date) async throws {
+        let before = try await loadForEditing(at: now)
+        guard before.state == basis, !edits.isEmpty, edits.count <= 64,
+              Set(edits.map(\.id)).count == edits.count else { throw InventoryError.stale }
+        let lots = Dictionary(uniqueKeysWithValues: before.lots.map { ($0.id, $0) })
+        var writes: [InventoryWrite] = []
+        for edit in edits {
+            try edit.validate(origin: originID)
+            let command = InventoryCommand(id: UUID(), originID: originID, lotID: edit.id, eventID: UUID(),
+                expectedRevision: edit.revision, occurredAt: now, change: edit.change)
+            writes += try PantryPersistenceCodec.writes(InventoryEngine.prepare(command, current: lots[edit.id], at: now))
+        }
+        try validateCapacity(of: writes, replacing: before)
+        let id = UUID()
+        let batch = InventoryBatch(workspaceID: originID, operationID: id, expectedRevision: basis.revision,
+            request: Data(SHA256.hash(data: try PantryAcquisitionCodec.data(writes))), writes: writes)
+        try await commitReviewedBatch(batch, workspaceID: originID, revision: basis.revision, at: now)
+    }
+}

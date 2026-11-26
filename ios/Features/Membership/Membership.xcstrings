@@ -2531,6 +2531,125 @@
           }
         }
       }
+    },
+    "Change a sample week": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change a sample week"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modificar una semana de ejemplo"
+          }
+        }
+      }
+    },
+    "Try changing a sample week. Wednesday needs 400 g of rice. Tuesday and Thursday each need 300 g.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try changing a sample week. Wednesday needs 400 g of rice. Tuesday and Thursday each need 300 g."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prueba cambiar el menú de esta semana de ejemplo. El miércoles necesitas 400 g de arroz. El martes y el jueves necesitas 300 g cada día."
+          }
+        }
+      }
+    },
+    "Cook on Tuesday": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cook on Tuesday"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cocinar el martes"
+          }
+        }
+      }
+    },
+    "Cook on Thursday": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cook on Thursday"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cocinar el jueves"
+          }
+        }
+      }
+    },
+    "Of the 500 g at home, 200 g are saved for lunch.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Of the 500 g at home, 200 g are saved for lunch."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De los 500 g que tienes en casa, 200 g están reservados para el almuerzo."
+          }
+        }
+      }
+    },
+    "500 g rice packs to buy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "500 g rice packs to buy"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paquetes de arroz de 500 g que hay que comprar"
+          }
+        }
+      }
+    },
+    "The coffee you added stays on the list. Its price is still unknown.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The coffee you added stays on the list. Its price is still unknown."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El café que agregaste sigue en la lista. Aún falta su precio."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -1,5 +1,6 @@
 import XCTest
 import LocalStore
+import CoreDomain
 @testable import RoomInTheCart
 
 @MainActor final class CookingSessionTests: XCTestCase {
@@ -116,5 +117,25 @@ import LocalStore
         changed.step = 1
         XCTAssertThrowsError(try disk.replace(state, with: changed, for: recipe, stepCount: 1))
         XCTAssertEqual(try disk.load(recipe, stepCount: 1), state)
+    }
+}
+
+extension CookingSessionTests {
+    func testMeasuredAllocationsReopenOnlyForSameRevisionAndSurviveEndingTimers() async throws {
+        let disk = store(), source = try key()
+        let model = CookingSessionModel(context: .init(key: source, authorize: { true }), count: 2, store: disk,
+            clock: { self.start }, schedule: { _, _, _ in false }, removeAlerts: { _ in })
+        model.load()
+        let amounts = CookingStepAmounts(recipeServings: try Rational(4), cookingServings: try Rational(2),
+            allocations: [.init(ingredient: 0, originalAmount: try Rational(4), unit: .tablespoons,
+                byStep: [0: try Rational(3), 1: .one])])
+        XCTAssertTrue(model.saveAmounts(amounts, replacing: nil, ingredientCount: 1))
+        await model.start(minutes: 12, alert: false)
+        XCTAssertEqual(try disk.load(source, stepCount: 2)?.timers.first?.seconds, 720)
+        XCTAssertTrue(model.end())
+        let fresh = try XCTUnwrap(disk.load(source, stepCount: 2))
+        XCTAssertEqual(fresh.stepAmounts, amounts)
+        XCTAssertTrue(fresh.timers.isEmpty)
+        XCTAssertNil(try disk.load(key(revision: "edited ingredients"), stepCount: 2))
     }
 }

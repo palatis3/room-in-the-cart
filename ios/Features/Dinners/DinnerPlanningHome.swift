@@ -560,7 +560,7 @@ struct DinnerPreviewView: View {
                     }
                 } else if let preview = model.preview, model.canReviewPreview {
                     if let detail = model.currentSwapReview {
-                        DinnerSwapEvidenceView(review: detail, showPrices: model.budgetVisible)
+                        DinnerSwapEvidenceView(review: detail, showPrices: model.budgetVisible, showBasket: model.canReadSwapBasket)
                     }
                     Section {
                         Text(dinnerText("Review before applying")).font(.title2.bold())

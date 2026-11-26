@@ -538,7 +538,9 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
             // Bind the new revision to the original source and its erasure history.
             record = try PaprikaCollection.correctedRecord(recipe, previous: saved.record)
         }
-        try await stageRecipeReview(.manual(recipe), records: [record], authorize: presentation.authorize)
+        guard let data = record.nativePayload else { throw ArchiveError.invalidRecipe }
+        let corrected = try JSONDecoder().decode(ImportedRecipe.self, from: data)
+        try await stageRecipeReview(.manual(corrected), records: [record], authorize: presentation.authorize)
     }
     private func restageCorrectedRecipe(_ recipe: ImportedRecipe, correction: RecipeCorrection,
                                         authorize: @escaping Authorization) async throws {
@@ -552,9 +554,47 @@ struct RecordsImportSourceVersion: Identifiable, Equatable {
             guard other.id != row.id, other.record.revision == updated.revision else { return false }
             return other.record.id == updated.id || (!PaprikaCollection.isTracked(other.record) && !PaprikaCollection.isTracked(updated))
         }) else { throw ArchiveError.conflict }
-        report.recipes[index] = recipe
+        guard let data = updated.nativePayload else { throw ArchiveError.invalidRecipe }
+        report.recipes[index] = try JSONDecoder().decode(ImportedRecipe.self, from: data)
         let records = review.rows.map { $0.id == row.id ? updated : $0.record }
         try await restageRecipeBatch(report, records: records, previous: review, authorize: authorize)
+    }
+
+    func renameCookbookCategory(_ source: String, to destination: String, reviewed: [RecoveredRecord]) async -> Bool {
+        guard !busy, review == nil else { return false }
+        busy = true
+        defer { busy = false }
+        do {
+            let authorize = try authorization()
+            let name = destination.trimmingCharacters(in: .whitespacesAndNewlines)
+            try await registry.renameCookbookCategory(source, to: name.isEmpty ? nil : name, reviewed: reviewed, authorize: authorize)
+            try requireAuthorization(authorize)
+            if !Set(lastImportIDs).isDisjoint(with: reviewed.map(\.id)) { lastImportIDs = [] }
+            dismissPreparedFile()
+            try await reloadListing(authorize: authorize)
+            return true
+        } catch { fail(error); return false }
+    }
+
+    func mapCookbookCategory(_ source: String, to destination: String, reviewed: RecoveryReview) async -> Bool {
+        guard !busy, let current = review, current.envelope.canonicalPayloadDigest == reviewed.envelope.canonicalPayloadDigest,
+              current.canApply, var report = recipeReport, let authorize = reviewAuthorization else { return false }
+        busy = true
+        defer { busy = false }
+        do {
+            try requireAuthorization(authorize)
+            let name = destination.trimmingCharacters(in: .whitespacesAndNewlines)
+            let records = try current.rows.map { row -> ArchiveRecord in
+                guard [.absent, .sibling].contains(row.disposition) else { return row.record }
+                return try PaprikaCollection.mapCategory(source, to: name.isEmpty ? nil : name, in: row.record)
+            }
+            report.recipes = try records.map { record in
+                guard let bytes = record.nativePayload else { throw ArchiveError.invalidRecipe }
+                return try JSONDecoder().decode(ImportedRecipe.self, from: bytes)
+            }
+            try await restageRecipeBatch(report, records: records, previous: current, authorize: authorize)
+            return true
+        } catch { fail(error); return false }
     }
 
     func skipRecipe(_ row: RecoveryReviewRow) async {

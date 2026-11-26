@@ -1,5 +1,6 @@
 import SwiftUI
 import HouseholdClient
+import CoreDomain
 
 struct SharedPickingLink: View {
     @ObservedObject var household: HouseholdModel
@@ -26,6 +27,7 @@ private struct SharedPickingView: View {
     @State private var selected = Set<UUID>()
     @State private var expiry = Date()
     @State private var confirmEnd = false
+    @State private var department: SharedPickingDepartments.Selection?
     init(household: HouseholdModel, scope: AdultRequestViewScope) {
         self.household = household
         _model = StateObject(wrappedValue: SharedPickingModel(household: household, scope: scope))
@@ -58,8 +60,25 @@ private struct SharedPickingView: View {
                         LabeledContent(householdTripText("Shared until"), value: until.formatted(date: .abbreviated, time: .shortened))
                         Text(householdTripText("The assigned shopper handles checkout."))
                     }
-                    ForEach(page.rows) { row in
+                    let pendingIDs = Set(model.pending.filter { $0.intent.operation.permissionId == page.permissionId }.map { $0.intent.operation.rowId })
+                    let projection = SharedPickingDepartments(page: page, selection: department, pending: pendingIDs)
+                    if projection.options.count > 1, let permissionID = page.permissionId {
+                        Section {
+                            Picker(householdTripText("Show department"), selection: Binding(get: { projection.selected }, set: { choice in
+                                department = .init(permissionID: permissionID, choice: choice)
+                            })) {
+                                ForEach(projection.options, id: \.self) { choice in Text(choice.title).tag(choice) }
+                            }.accessibilityIdentifier("household.picking.department")
+                        }
+                    }
+                    ForEach(projection.rows) { row in
                         SharedPickingRowView(row: row, permissionID: page.permissionId, model: model, household: household, managed: page.managed)
+                    }
+                    if !projection.otherChanges.isEmpty {
+                        Section { Text(householdTripText("Changes in other departments")).font(.headline) }
+                        ForEach(projection.otherChanges) { row in
+                            SharedPickingRowView(row: row, permissionID: page.permissionId, model: model, household: household, managed: page.managed)
+                        }
                     }
                 }
             }
@@ -87,7 +106,7 @@ private struct SharedPickingView: View {
             do { try await Task.sleep(for: .seconds(max(0, expiry.timeIntervalSinceNow))) } catch { return }
             await model.expire()
         }
-        .onChange(of: model.page?.permissionId) { _, _ in editing = false; selected = []; recipient = nil }
+        .onChange(of: model.page?.permissionId) { _, _ in editing = false; selected = []; recipient = nil; department = nil }
         .onDisappear { model.close() }
     }
     @ViewBuilder private func editor(_ page: SharedPickingPage) -> some View {
@@ -115,6 +134,53 @@ private struct SharedPickingView: View {
     }
 }
 
+/// A display-only projection of the current grant's published rows. Candidate rows in the
+/// management editor and private store layouts are outside this projection.
+struct SharedPickingDepartments {
+    enum Choice: Hashable {
+        case all, department(GroceryDepartment), unclassified
+
+        init(label: String) {
+            self = GroceryDepartment.suggested(for: label).map(Self.department) ?? .unclassified
+        }
+
+        var title: String {
+            switch self {
+            case .all: householdTripText("All shared rows")
+            case .department(let department): department.label(spanish: GroceryDepartment.usesSpanish)
+            case .unclassified: householdTripText("Unclassified department")
+            }
+        }
+    }
+
+    struct Selection {
+        let permissionID: UUID
+        let choice: Choice
+    }
+
+    let options: [Choice]
+    let selected: Choice
+    let rows, otherChanges: [SharedPickingPage.Row]
+
+    init(page: SharedPickingPage, selection: Selection?, pending: Set<UUID>, now: Date = Date()) {
+        guard let permissionID = page.permissionId, let expiry = page.expiry, expiry > now else {
+            options = []; selected = .all; rows = []; otherChanges = []
+            return
+        }
+        let classified = page.rows.map { (row: $0, choice: Choice(label: $0.label)) }
+        let present = Set(classified.map { $0.choice })
+        let known = GroceryDepartment.allCases.map(Choice.department).filter(present.contains)
+        let choices: [Choice] = known.count >= 2 ? [.all] + known + (present.contains(.unclassified) ? [.unclassified] : []) : [.all]
+        options = choices
+        let active = selection.flatMap { $0.permissionID == permissionID && choices.contains($0.choice) ? $0.choice : nil } ?? .all
+        selected = active
+        rows = classified.filter { active == .all || $0.choice == active }.map { $0.row }
+        otherChanges = classified.filter {
+            active != .all && $0.choice != active && (pending.contains($0.row.id) || $0.row.undoOperationId != nil)
+        }.map { $0.row }
+    }
+}
+
 private struct SharedPickingRowView: View {
     let row: SharedPickingPage.Row
     let permissionID: UUID?
@@ -126,6 +192,8 @@ private struct SharedPickingRowView: View {
         Section {
             Text(verbatim: row.label).font(.headline)
                 .accessibilityIdentifier("household.picking.row." + row.id.uuidString.lowercased())
+            Text(SharedPickingDepartments.Choice(label: row.label).title)
+                .font(.subheadline).foregroundStyle(.secondary)
             LabeledContent(householdTripText("Packs picked"), value: String(format: householdTripText("%lld of %lld"),
                 locale: .current, Int64(row.picked), Int64(row.packs)))
             if let actor = row.claimedByLabel { LabeledContent(householdTripText("Claimed by"), value: actor) }

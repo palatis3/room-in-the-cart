@@ -1,8 +1,48 @@
 import HouseholdClient
+import CoreDomain
 import XCTest
 @testable import RoomInTheCart
 
 @MainActor final class SharedPickingTests: XCTestCase {
+    func testDepartmentProjectionUsesOnlyGrantedRowsAndRetainsPendingAndUndo() throws {
+        let grant = UUID(), milk = UUID(), fruit = UUID(), unknown = UUID(), outside = UUID()
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        func published(_ id: UUID, _ label: String, undo: Bool = false) -> [String: Any] {
+            var value: [String: Any] = ["id": id.uuidString, "safetyId": UUID().uuidString, "label": label,
+                                        "packs": 1, "picked": 0, "revision": 1]
+            if undo { value["undoOperationId"] = UUID().uuidString }
+            return value
+        }
+        let expiry = now.addingTimeInterval(100)
+        let raw: [String: Any] = ["managed": true, "authorityEpoch": 1, "shopRevision": 1,
+            "permissionId": grant.uuidString, "recipientId": UUID().uuidString,
+            "expiresAt": ISO8601DateFormatter().string(from: expiry),
+            "members": [], "availableRows": [["id": outside.uuidString, "label": "bread", "packs": 1]],
+            "rows": [published(milk, "Leche entera"), published(fruit, "Apples", undo: true), published(unknown, "Brand ABC")]]
+        let page = try JSONDecoder().decode(SharedPickingPage.self, from: JSONSerialization.data(withJSONObject: raw))
+        let all = SharedPickingDepartments(page: page, selection: nil, pending: [outside], now: now)
+        XCTAssertEqual(all.rows.map(\.id), [milk, fruit, unknown])
+        XCTAssertEqual(Set(all.options), [.all, .department(.produce), .department(.dairy), .unclassified])
+        XCTAssertFalse(all.options.contains(.department(.bakery)))
+        let filter = SharedPickingDepartments.Selection(permissionID: grant, choice: .department(.dairy))
+        let dairy = SharedPickingDepartments(page: page, selection: filter, pending: [unknown, outside], now: now)
+        XCTAssertEqual(dairy.rows.map(\.id), [milk])
+        XCTAssertEqual(dairy.otherChanges.map(\.id), [fruit, unknown])
+        let unclassified = SharedPickingDepartments(page: page, selection: .init(permissionID: grant, choice: .unclassified), pending: [], now: now)
+        XCTAssertEqual(unclassified.rows.map(\.id), [unknown])
+        let replaced = SharedPickingDepartments(page: page, selection: .init(permissionID: UUID(), choice: .department(.dairy)), pending: [], now: now)
+        XCTAssertEqual(replaced.selected, .all)
+        XCTAssertEqual(replaced.rows, all.rows)
+        let expired = SharedPickingDepartments(page: page, selection: filter, pending: [unknown], now: expiry)
+        XCTAssertTrue(expired.options.isEmpty && expired.rows.isEmpty && expired.otherChanges.isEmpty)
+        var singleDepartment = raw
+        singleDepartment["rows"] = [published(milk, "milk"), published(unknown, "Brand ABC")]
+        let single = try JSONDecoder().decode(SharedPickingPage.self, from: JSONSerialization.data(withJSONObject: singleDepartment))
+        let one = SharedPickingDepartments(page: single, selection: filter, pending: [], now: now)
+        XCTAssertEqual(one.options, [.all])
+        XCTAssertEqual(one.rows.map(\.id), [milk, unknown])
+    }
+
     func testOfflinePendingRestoresAndReconcilesLastPackClaimedOnOtherDevice() async throws {
         let fixture = SharedPickingTestFixture()
         let server = S24FixtureServer()

@@ -275,6 +275,12 @@ struct PantryHomeView: View {
                                     PantryMinimumsView(model: model, scope: digestAccess.scope)
                                 }
                             }
+                            NavigationLink(pantryText("Named pantry places")) {
+                                PantryNamedPlacesView(model: model, origin: snapshot.state.workspaceID)
+                            }.accessibilityIdentifier("pantry.namedPlaces")
+                            NavigationLink(pantryText("Import pantry CSV")) {
+                                PantryCSVImportView(model: model, origin: snapshot.state.workspaceID)
+                            }.disabled(!model.canEdit).accessibilityIdentifier("pantry.importCSV")
                             Button { sheet = .products } label: {
                                 Label(pantryText("Scan products"), systemImage: "barcode.viewfinder")
                             }
@@ -494,6 +500,9 @@ private struct PantryShelfLotLabel: View {
                 }
                 VStack(alignment: .leading, spacing: 4) { name; count }
             }
+            if let place = lot.namedPlace {
+                Text(verbatim: pantryPlacePath(lot.location, place)).font(.caption).foregroundStyle(Theme.secondary)
+            }
             if let availability, availability.issues.isEmpty, let held = availability.held, held.amount > .zero {
                 Text(pantryFormat("%@ reserved · %@ available", pantryQuantity(held), pantryQuantity(availability.free)))
                     .font(.subheadline).foregroundStyle(Theme.secondary)
@@ -534,7 +543,7 @@ struct PantryBatchHeading: View {
     var showsBatchIdentifier = true
 
     var body: some View {
-        let location = pantryLocationName(lot.location)
+        let location = pantryPlacePath(lot.location, lot.namedPlace)
         let detail = showsBatchIdentifier ? location + " · " + lot.packageBatchLabel : location
         WorkingRecordHeading(lot.name, detail: detail, systemImage: "shippingbox")
     }
@@ -619,7 +628,8 @@ private struct PantryLotView: View {
                         }
                         .accessibilityIdentifier("pantry.estimateEvidence")
                     }
-                    LabeledContent(pantryText("Storage location"), value: pantryLocationName(lot.location))
+                    LabeledContent(pantryText("Storage location"), value: pantryPlacePath(lot.location, lot.namedPlace))
+                    if let source = lot.spreadsheetRow { PantrySpreadsheetEvidenceView(evidence: source) }
                     if let opened = lot.openedAt {
                         LabeledContent(pantryText("Opened"), value: opened.formatted(date: .abbreviated, time: .shortened))
                     }

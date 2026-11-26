@@ -3,7 +3,7 @@ import CoreDomain
 
 private enum LedgerHomeSheet: Hashable, Identifiable {
     case newShop, entry, facts, history, layout, printList, familyGuide
-    case inStore(UUID), shareItems(UUID), kits(UUID?), standing
+    case inStore(UUID), shareItems(UUID), shoppingCSV(UUID), kits(UUID?), standing
     case renameShop(id: UUID, title: String)
     case editLine(workspace: UUID, shop: UUID, line: UUID)
     case editAmount(workspace: UUID, shop: UUID, line: UUID, source: UUID)
@@ -56,6 +56,8 @@ struct LedgerHomeView: View {
                                 }
                             }
                     }
+                case .shoppingCSV(let id):
+                    PrivateShoppingSheet(model: model) { ShoppingCSVImportView(model: model, shopID: id) }
                 case .inStore(let id):
                     PrivateShoppingSheet(model: model) {
                         InStoreShoppingView(model: model, shopID: id) { selected in
@@ -240,7 +242,7 @@ struct LedgerHomeView: View {
 
     @ViewBuilder private func existingSheet(_ destination: LedgerHomeSheet) -> some View {
         switch destination {
-        case .inStore, .shareItems, .kits, .standing: EmptyView()
+        case .inStore, .shareItems, .shoppingCSV, .kits, .standing: EmptyView()
         case .newShop: LedgerNewShopView(model: model, onShopSelected: onShopSelected)
         case let .renameShop(id, title):
             LedgerNewShopView(model: model, shopID: id, title: title)
@@ -323,6 +325,8 @@ struct LedgerHomeView: View {
         }
         .accessibilityIdentifier("ledgerListOptions")
         .confirmationDialog(ledgerText("List options"), isPresented: $showingListOptions, titleVisibility: .visible) {
+            Button(ledgerText("Import shopping CSV")) { sheet = .shoppingCSV(shop.id) }
+                .accessibilityIdentifier("ledger.shoppingCSV")
             Button(tripText("Preview list copy")) { sheet = .shareItems(shop.id) }
                 .accessibilityIdentifier("tripShare.previewCopy")
             Button(GuardianCopy.text("Child permissions")) { sheet = .familyGuide }

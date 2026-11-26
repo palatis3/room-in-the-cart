@@ -2,6 +2,17 @@ import XCTest
 @testable import CoreDomain
 
 final class DinnerBasketSampleTests: XCTestCase {
+    func testChangingNightsBuysFewerPacksAndKeepsTheLunchReservation() throws {
+        for currency in Currency.allCases {
+            let price: Int64 = currency == .mxn ? 3_200 : 200
+            for (tuesday, thursday, packs) in [(true, true, Int64(2)), (false, true, 1), (true, false, 1), (false, false, 1)] {
+                let week = try DinnerBasketSample.changedWeek(currency: currency, keepTuesday: tuesday, keepThursday: thursday)
+                XCTAssertEqual(week.packs, packs)
+                XCTAssertEqual(week.riceCost, Money(minorUnits: price * packs, currency: currency))
+            }
+        }
+    }
+
     func testSwitchingDinnerPreservesTwoLunchesAndLeavesTheUnpricedLineOpen() throws {
         let held = try Rational(2)
         for currency in Currency.allCases {

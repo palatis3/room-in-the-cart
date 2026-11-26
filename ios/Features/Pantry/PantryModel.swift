@@ -213,6 +213,16 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
         return review
     }
 
+    func permitsOrganization(in origin: UUID) -> Bool {
+        phase == .ready && snapshot?.state.workspaceID == origin && (try? repository.requireAccess()) != nil
+    }
+
+    func saveOrganization(_ edits: [PantryOrganizationEdit], basis: InventoryState) async throws {
+        try await changeReceipt(basis) {
+            try await repository.applyOrganization(edits, basis: basis, at: clock())
+        }
+    }
+
     func saveReceipt(_ review: PantryReceiptReview) async throws {
         guard canEdit else { throw PantryReceiptError.stale }
         let token = generation

@@ -19,6 +19,32 @@ import XCTest
         XCTAssertEqual(try ComparisonModel.quantity(localShelf.editableMeasurement(locale: english), .kilogram)?.amount, local.amount)
     }
 
+    func testSplitChecklistIncludesOnlyPreviouslySelectedOutstandingRowsAtThisStop() throws {
+        var shop = ShoppingLedger(basis: ShopBasis(branch: "North"))
+        let a = try shop.addManualLine(name: "Rice", quantity: nil, notes: "private substitution")
+        let b = try shop.addManualLine(name: "Milk", quantity: nil)
+        try shop.updateLine(lineID: a, name: "Rice", notes: "private substitution", aisle: "Dry")
+        try shop.updateLine(lineID: b, name: "Milk", notes: "", aisle: "Cold")
+        let other = try shop.addManualLine(name: "Other store", quantity: nil)
+        try shop.setPreferredStores(["South"], lineID: other, expectedRevision: shop.revisionID)
+        let covered = try shop.addManualLine(name: "Already at home", quantity: nil)
+        let layout = LedgerListLayout()
+        let sections = DepartmentChecklist.outstanding(in: shop, layout: layout, excluding: [covered])
+        XCTAssertEqual(Set(sections.flatMap(\.rows).map(\.id)), [a,b])
+        let stamp = Date(timeIntervalSince1970: 1_700_000_000)
+        let first = try XCTUnwrap(DepartmentChecklist.copy(for: [a], from: sections, heading: "A", date: stamp))
+        let second = try XCTUnwrap(DepartmentChecklist.copy(for: [b], from: sections, heading: "B", date: stamp))
+        XCTAssertTrue(first.contains("Dry")); XCTAssertTrue(first.contains("Rice"))
+        XCTAssertFalse(first.contains("private")); XCTAssertFalse(first.contains("Milk"))
+        XCTAssertTrue(second.contains("Cold")); XCTAssertFalse(second.contains("Rice"))
+        _ = try shop.addManualLine(name: "Added later", quantity: nil)
+        try shop.setChecked(lineID: a, checked: true)
+        let updated = DepartmentChecklist.outstanding(in: shop, layout: layout, excluding: [covered])
+        XCTAssertNotEqual(updated, sections)
+        XCTAssertNil(DepartmentChecklist.copy(for: [a], from: updated, heading: "A", date: stamp))
+        XCTAssertFalse(first.contains("Added later"))
+    }
+
     func testSingleUnpackagedItemUsesTheSingularInTheAisleAndHandoff() throws {
         var shop = ShoppingLedger()
         let one = Quantity(amount: .one, unit: .count, originalLiteral: "1")

@@ -976,6 +976,7 @@ struct SettingsView: View {
     @AppStorage("appearance") private var appearance = "system"
     @State private var showingFamilyGuide = false
     @State private var dismissSettingsAfterGuide = false
+    @State private var showingMembership = false
     var body: some View {
         WorkingForm {
             Section {
@@ -989,8 +990,14 @@ struct SettingsView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }.accessibilityIdentifier("guardian.familyGuide")
                 if household.canOpenMembership {
-                    NavigationLink(value: HouseholdSettingsDestination.membership) {
-                        Label(tr("Household membership"), systemImage: "person.2")
+                    if #available(iOS 18, *) {
+                        NavigationLink(value: HouseholdSettingsDestination.membership) {
+                            Label(tr("Household membership"), systemImage: "person.2")
+                        }
+                    } else {
+                        Button { showingMembership = true } label: {
+                            Label(tr("Household membership"), systemImage: "person.2")
+                        }
                     }
                 }
                 HouseholdPantryLink(household: household)
@@ -1032,17 +1039,28 @@ struct SettingsView: View {
             #if DEBUG
             Section(tr("Development")) { NavigationLink(tr("Component gallery")) { ComponentGallery() } }
             #endif
-        }.navigationDestination(for: HouseholdSettingsDestination.self) { route in
-            switch route {
-            case .membership: MembershipEntryView(household: household, usesSettingsPath: true)
-            case .adultSetup: HouseholdSettingsView(model: household, continuesAfterWorkspaceLock: true)
-            }
         }
+            .navigationDestination(for: HouseholdSettingsDestination.self, destination: householdDestination)
             .navigationTitle(tr("Settings"))
             .navigationBarTitleDisplayMode(typeSize.isAccessibilitySize ? .inline : .automatic)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button(tr("Done")) { dismiss() }.accessibilityIdentifier("settings.done")
+                }
+            }
+            // Pushing membership from the Settings Form can loop in iOS 17 collection-cell layout.
+            .sheet(isPresented: $showingMembership) {
+                NavigationStack {
+                    MembershipEntryView(household: household, usesSettingsPath: true)
+                        .navigationDestination(for: HouseholdSettingsDestination.self, destination: householdDestination)
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button { showingMembership = false } label: {
+                                    Label(GuardianCopy.text("Back to Settings"), systemImage: "chevron.backward")
+                                        .labelStyle(.iconOnly)
+                                }
+                            }
+                        }
                 }
             }
             // Keep the self-sizing guide out of the Settings navigation push on compact iOS.
@@ -1059,6 +1077,13 @@ struct SettingsView: View {
                     }
                 }
             }
+    }
+
+    @ViewBuilder private func householdDestination(_ route: HouseholdSettingsDestination) -> some View {
+        switch route {
+        case .membership: MembershipEntryView(household: household, usesSettingsPath: true)
+        case .adultSetup: HouseholdSettingsView(model: household, continuesAfterWorkspaceLock: true)
+        }
     }
 }
 

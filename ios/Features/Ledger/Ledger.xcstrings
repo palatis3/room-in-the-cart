@@ -7204,6 +7204,414 @@
           }
         }
       }
+    },
+    "%lld rows need review or were already imported": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld rows need review or were already imported"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld filas requieren revisión o ya se importaron"
+          }
+        }
+      }
+    },
+    "%lld selected of %lld rows": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld selected of %lld rows"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld filas seleccionadas de %2$lld"
+          }
+        }
+      }
+    },
+    "Add selected CSV rows": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add selected CSV rows"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agregar las filas seleccionadas del CSV"
+          }
+        }
+      }
+    },
+    "Already imported on this list": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already imported on this list"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya se importó en esta lista"
+          }
+        }
+      }
+    },
+    "Barcode": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Barcode"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Código de barras"
+          }
+        }
+      }
+    },
+    "Check the quantity and unit in the source file": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the quantity and unit in the source file"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa la cantidad y la unidad en el archivo original"
+          }
+        }
+      }
+    },
+    "Choose a UTF-8 CSV with one header row, up to 1,000 items and 2 MB. Check its separators and quotes.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a UTF-8 CSV with one header row, up to 1,000 items and 2 MB. Check its separators and quotes."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige un CSV en UTF-8 con una fila de encabezados, hasta 1,000 productos y un máximo de 2 MB. Revisa los separadores y las comillas."
+          }
+        }
+      }
+    },
+    "Choose a distinct column for each field, including the item name.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a distinct column for each field, including the item name."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una columna distinta para cada campo, incluido el nombre del producto."
+          }
+        }
+      }
+    },
+    "Choose a shopping CSV": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a shopping CSV"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir un CSV de compras"
+          }
+        }
+      }
+    },
+    "Column count differs from the header": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Column count differs from the header"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El número de columnas no coincide con el encabezado"
+          }
+        }
+      }
+    },
+    "Department": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Department"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Departamento"
+          }
+        }
+      }
+    },
+    "Import shopping CSV": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import shopping CSV"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importar una lista de compras en CSV"
+          }
+        }
+      }
+    },
+    "Match spreadsheet columns": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Match spreadsheet columns"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asignar las columnas del archivo"
+          }
+        }
+      }
+    },
+    "Matching name on this list or in this file": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Matching name on this list or in this file"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El nombre ya aparece en la lista o en el archivo"
+          }
+        }
+      }
+    },
+    "Matching names start unchecked. Select one only to add a separate item. A quantity without a unit counts as individual items.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Matching names start unchecked. Select one only to add a separate item. A quantity without a unit counts as individual items."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los nombres repetidos aparecen sin seleccionar. Selecciona uno solo si quieres agregar otro producto por separado. Las cantidades sin unidad se cuentan por pieza."
+          }
+        }
+      }
+    },
+    "Missing item name or field exceeds its limit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Missing item name or field exceeds its limit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falta el nombre del producto o un campo supera su límite"
+          }
+        }
+      }
+    },
+    "Notes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notas"
+          }
+        }
+      }
+    },
+    "Preview CSV rows": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview CSV rows"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver las filas del CSV"
+          }
+        }
+      }
+    },
+    "Quantity": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quantity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad"
+          }
+        }
+      }
+    },
+    "Review CSV rows": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review CSV rows"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar filas del CSV"
+          }
+        }
+      }
+    },
+    "Show all CSV rows": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show all CSV rows"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar todas las filas del CSV"
+          }
+        }
+      }
+    },
+    "Show first five rows": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show first five rows"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar las primeras cinco filas"
+          }
+        }
+      }
+    },
+    "The list changed. Preview the CSV again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The list changed. Preview the CSV again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La lista cambió. Vuelve a revisar el CSV."
+          }
+        }
+      }
+    },
+    "Unmapped": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unmapped"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin asignar"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

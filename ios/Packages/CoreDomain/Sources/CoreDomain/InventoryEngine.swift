@@ -17,7 +17,8 @@ public enum InventoryEngine {
             }
             lot = InventoryLot(id: command.lotID, foodID: seed.foodID, name: seed.name, source: seed.source, revision: 1,
                 location: seed.location, openedAt: seed.openedAt, unit: seed.unit, count: seed.count, observationID: observationID,
-                confirmedAt: observedAt, updatedAt: command.occurredAt, useFirst: seed.useFirst, splitFromLotID: seed.splitFromLotID, packageCode: seed.packageCode, intakeOrdinal: seed.intakeOrdinal)
+                confirmedAt: observedAt, updatedAt: command.occurredAt, useFirst: seed.useFirst, splitFromLotID: seed.splitFromLotID, packageCode: seed.packageCode, intakeOrdinal: seed.intakeOrdinal,
+                namedPlace: seed.namedPlace, spreadsheetRow: seed.spreadsheetRow)
             observation = InventoryObservation(id: observationID, lotID: lot.id, operationID: command.id, revision: 1,
                 supersedesID: nil, observedAt: observedAt, count: seed.count)
         } else {
@@ -30,6 +31,9 @@ public enum InventoryEngine {
             var count = current.count, observationID = current.observationID, confirmedAt = current.confirmedAt
             var location = current.location, openedAt = current.openedAt, unit = current.unit
             var foodID = current.foodID, name = current.name, useFirst = current.useFirst
+            var physicalBasis: Int64?
+            var namedPlace = current.namedPlace
+            var spreadsheetRow = current.spreadsheetRow
             var countWording = current.countWording
             var discardUndo: InventoryDiscardUndo?
             var discardedTimes = current.discardedTimes
@@ -47,9 +51,33 @@ public enum InventoryEngine {
                 count = .exact(Quantity(amount: .zero, unit: unit, originalLiteral: "0"))
                 observationID = id; confirmedAt = command.occurredAt
                 recordsObservation = true
-            case .move(let value): location = value
+            case .move(let value):
+                if value != location { namedPlace = nil }
+                location = value
             case .opened(let value): openedAt = value
             case .revise(let revision):
+                if revision.placeEdit != nil || revision.spreadsheetRow != nil {
+                    guard revision.observation == nil, revision.portion == nil, revision.usage == nil,
+                          revision.name == nil, revision.location == nil, revision.foodID == nil, revision.useFirst == nil
+                    else { throw InventoryError.invalid("organizationOnly") }
+                    physicalBasis = current.physicalBasis ?? current.revision
+                    discardUndo = current.discardUndo
+                }
+                if let edit = revision.placeEdit {
+                    switch edit {
+                    case .assign(let value): namedPlace = value
+                    case .clear: namedPlace = nil
+                    }
+                } else if let newLocation = revision.location, newLocation != location {
+                    namedPlace = nil
+                }
+                if let row = revision.spreadsheetRow {
+                    guard let previous = spreadsheetRow, previous.sourceName == row.sourceName,
+                          previous.rowKey == row.rowKey else {
+                        throw InventoryError.invalid("spreadsheetIdentity")
+                    }
+                    spreadsheetRow = row
+                }
                 if let action = revision.portion {
                     guard let reading = revision.observation, reading.observedAt == current.confirmedAt, reading.count == (try action.remainder(of: current)),
                           revision.usage == nil, revision.name == nil, revision.foodID == nil,
@@ -69,7 +97,7 @@ public enum InventoryEngine {
                 }
                 try revision.validateUsage(replacing: current.count)
                 guard revision.observation != nil || revision.foodID != nil || revision.name != nil
-                        || revision.useFirst != nil || revision.location != nil else {
+                        || revision.useFirst != nil || revision.location != nil || revision.placeEdit != nil || revision.spreadsheetRow != nil else {
                     throw InventoryError.invalid("emptyRevision")
                 }
                 if let observation = revision.observation {
@@ -100,7 +128,8 @@ public enum InventoryEngine {
                 revision: next.partialValue, location: location, openedAt: openedAt, unit: unit, count: count,
                 observationID: observationID, confirmedAt: confirmedAt, updatedAt: command.occurredAt, useFirst: useFirst, countWording: countWording,
                 splitFromLotID: current.splitFromLotID, discardUndo: discardUndo, discardedTimes: discardedTimes,
-                packageCode: foodID == current.foodID ? current.packageCode : nil, intakeOrdinal: current.intakeOrdinal)
+                packageCode: foodID == current.foodID ? current.packageCode : nil, intakeOrdinal: current.intakeOrdinal,
+                namedPlace: namedPlace, spreadsheetRow: spreadsheetRow, physicalBasis: physicalBasis)
         }
         try lot.validate(); try observation?.validate()
         let event = InventoryEvent(id: command.eventID, operationID: command.id, originID: command.originID,

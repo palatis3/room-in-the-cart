@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 TABLES = {'tr': 'Localizable', 'message': 'Localizable',
           'entry': 'Localizable', 'unitPicker': 'Localizable', 'offerSection': 'Localizable',
           'ledgerText': 'Ledger', 'ledgerFormat': 'Ledger', 'mtr': 'Membership',
-          'ht': 'Household', 'recordsText': 'Records', 'pTr': 'Pickup', 'pCook': 'Pickup',
+          'ht': 'Household', 'savedWeekText': 'SavedWeekChanges', 'recordsText': 'Records', 'pTr': 'Pickup', 'pCook': 'Pickup',
           'captureText': 'Capture', 'dinnerText': 'Dinners', 'dinnerFormat': 'Dinners',
           'SurfaceCopy.text': 'DeviceSurfaces', 'HistoryCopy.text': 'History', 'fd': 'History', 'PlacementCopy.text': 'Placement',
           'helpText': 'Help', 'StoreQuoteCopy.text': 'StoreQuotes', 'GuardianCopy.text': 'Guardian',

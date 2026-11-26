@@ -104,6 +104,7 @@ struct VoicePantryRow {
     @FocusState private var focusedEditor: Editor?
     @State private var requestedAmount: Int?
     private var editing: Bool { focusedEditor != nil }
+    @State private var softwareKeyboardVisible = false
     @State private var reviewAfterEditing = false
     @State private var remainingChoices: Int?
     @State private var identity: CapturePrivateIdentity?
@@ -394,11 +395,14 @@ struct VoicePantryRow {
             }
         }
         .disabled(scene != .active)
-        .onChange(of: editing) { _, isEditing in
-            if !isEditing, reviewAfterEditing {
-                reviewAfterEditing = false
-                if stage == .entry { parse() }
-            }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
+            softwareKeyboardVisible = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidHideNotification)) { _ in
+            softwareKeyboardVisible = false
+            guard reviewAfterEditing else { return }
+            reviewAfterEditing = false
+            if !editing, stage == .entry { parse() }
         }
         .onChange(of: canRetainDictation) { _, allowed in if !allowed { voice.cancel() } }
         .onChange(of: boundScope) { _, allowed in
@@ -409,6 +413,8 @@ struct VoicePantryRow {
             if !working, basis != nil, model.snapshot?.state != basis { resetReview(); message = pantryNotice(.stale) }
         }
         .onDisappear {
+            reviewAfterEditing = false
+            softwareKeyboardVisible = false
             // A pushed shopping/reminder handoff still needs its saved lot and live identity.
             voice.cancel()
             if balanceFood == nil {
@@ -419,7 +425,9 @@ struct VoicePantryRow {
 
     private func reviewWordsButton(compact: Bool = false) -> some View {
         Button(pantryText(compact ? "Review" : "Review my words")) {
-            if editing {
+            guard !reviewAfterEditing else { return }
+            // Keep the entry form mounted until its software keyboard has finished dismissing.
+            if editing && softwareKeyboardVisible {
                 reviewAfterEditing = true
                 focusedEditor = nil
             } else {

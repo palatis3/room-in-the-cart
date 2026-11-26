@@ -4,6 +4,29 @@ import Foundation
 
 public struct ImportedRecipe: Codable, Equatable, Sendable, Identifiable {
     public var id: String { (try? ArchiveCodec.digest(ArchiveCodec.canonical(self))) ?? title }
+    /// Private cookbook filing. Missing from legacy recipes and excluded from helper projections.
+    public struct Filing: Codable, Equatable, Sendable {
+        public let source: String
+        public var category: String?
+        public init(source: String, category: String?) { self.source = source; self.category = category }
+
+        public static func valid(_ label: String) -> Bool {
+            !label.isEmpty && label.utf8.count <= 256 &&
+                label == label.trimmingCharacters(in: .whitespacesAndNewlines) &&
+                !label.unicodeScalars.contains(where: CharacterSet.controlCharacters.contains)
+        }
+    }
+    public var filing: [Filing]?
+    public internal(set) var paprikaLegacyRevision: String?
+    public var categories: [String] { Set((filing ?? []).compactMap(\.category)).sorted() }
+    var contentBeforeFiling: String {
+        guard filing != nil else { return id }
+        var previous = self
+        previous.filing = nil
+        previous.paprikaLegacyRevision = nil
+        return previous.id
+    }
+
     public var title: String
     public var yieldText: String
     public var ingredients: [String]
@@ -73,6 +96,14 @@ public struct ImportedRecipe: Codable, Equatable, Sendable, Identifiable {
               [title, yieldText, notes].allSatisfy({ !$0.contains("\0") }),
               ingredients.count <= 1000, steps.count <= 1000,
               (ingredients + steps).allSatisfy({ $0.utf8.count <= 32768 && !$0.contains("\0") }) else { throw ArchiveError.invalidRecipe }
+        if let paprikaLegacyRevision {
+            guard filing != nil, ArchiveCodec.validProjectionDigest(paprikaLegacyRevision) else { throw ArchiveError.invalidRecipe }
+        }
+        if let filing {
+            guard !filing.isEmpty, filing.count <= 64, Set(filing.map(\.source)).count == filing.count,
+                  filing.allSatisfy({ Filing.valid($0.source) && ($0.category.map(Filing.valid) ?? true) })
+            else { throw ArchiveError.invalidRecipe }
+        }
         if let reviewedSteps {
             guard reviewedSteps.map(\.instruction) == steps,
                   (try? RecipeStep.validate(reviewedSteps, ingredientCount: ingredients.count)) != nil else {

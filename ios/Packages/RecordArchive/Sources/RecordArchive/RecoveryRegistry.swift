@@ -569,9 +569,14 @@ public actor RecoveryRegistry {
     /// Decide versions against the same manifest generation that apply() will check.
     public func reviewRecipeVersions(_ envelope: ArchiveEnvelope) throws -> (RecoveryReview, Set<ArchiveIdentity>) {
         let (staged, legacy) = try reviewPaprikaRecipes(envelope)
-        let tracked = staged.rows.filter { PaprikaCollection.isTracked($0.record) }
-        let byUID = Dictionary(grouping: tracked, by: { $0.record.id })
-        let paprikaChoices = byUID.values.flatMap { versions in
+        let paprikaRows = staged.rows.filter { row in
+            if PaprikaCollection.isTracked(row.record) { return true }
+            guard row.record.origin == "recipe-library-v1", row.record.kind == .recipe, let data = row.record.nativePayload,
+                  let recipe = try? JSONDecoder().decode(ImportedRecipe.self, from: data) else { return false }
+            return recipe.filing != nil
+        }
+        let bySource = Dictionary(grouping: paprikaRows, by: { $0.record.id })
+        let paprikaChoices = bySource.values.flatMap { versions in
             versions.filter { row in
                 row.disposition == .sibling || (row.disposition == .absent && (versions.count > 1 || legacy.contains(row.record.id)))
             }.map(\.id)
@@ -616,7 +621,8 @@ public actor RecoveryRegistry {
             let source = ArchiveSourceIdentity(origin: record.origin, recordID: record.id)
             // Older Paprika imports had only their content hash as identity. A tracked source
             // must honor an erasure that already covered this exact imported or corrected wording.
-            let legacyErased = PaprikaCollection.isTracked(record) && [record.revision, record.parentRevision].compactMap { $0 }.contains { revision in
+            let legacyErased = record.kind == .recipe && record.origin == "recipe-library-v1" &&
+                PaprikaCollection.legacyContentRevisions(record).contains { revision in
                 erasedSources.contains(ArchiveSourceIdentity(origin: record.origin, recordID: revision)) ||
                 erasedIdentities.contains(ArchiveIdentity(origin: record.origin, recordID: revision, revision: revision, projection: identity.projection))
             }
@@ -636,6 +642,41 @@ public actor RecoveryRegistry {
         }
         return RecoveryReview(envelope: envelope, rows: rows, registryGeneration: manifest.generation)
     }
+    /// Rename filing on the exact private copies the shopper reviewed. Keep source and copy identity.
+    public func renameCookbookCategory(_ source: String, to name: String?, reviewed: [RecoveredRecord],
+                                       authorize: @MainActor @Sendable () -> Bool) async throws {
+        guard await authorize(), ImportedRecipe.Filing.valid(source), name.map(ImportedRecipe.Filing.valid) ?? true,
+              !reviewed.isEmpty else { throw ArchiveError.unavailable }
+        let lock = try acquireLock()
+        defer { releaseLock(lock) }
+        try refreshFromDisk()
+        let selected = Set(reviewed.map(\.id))
+        let current = manifest.records.filter { selected.contains($0.id) }
+        guard selected.count == reviewed.count, current.count == reviewed.count else { throw ArchiveError.staleReview }
+        let expected = Dictionary(uniqueKeysWithValues: reviewed.map { ($0.id, $0) })
+        guard current.allSatisfy({ expected[$0.id] == $0 }) else { throw ArchiveError.staleReview }
+        if name == source { return }
+        var next = manifest
+        for index in next.records.indices where selected.contains(next.records[index].id) {
+            let copy = next.records[index]
+            guard copy.documentKind == .personalRecovery, copy.record.kind == .recipe, let payload = copy.record.nativePayload else {
+                throw ArchiveError.invalidRecipe
+            }
+            var recipe = try JSONDecoder().decode(ImportedRecipe.self, from: payload).validated()
+            guard var filing = recipe.filing, filing.contains(where: { $0.category == source }) else { throw ArchiveError.staleReview }
+            for i in filing.indices where filing[i].category == source { filing[i].category = name }
+            recipe.filing = filing
+            let edited = try PaprikaCollection.correctedRecord(recipe, previous: copy.record)
+            let receipt = try ArchiveCodec.receipt(edited, projection: copy.receipt.identity.projection, localCopyID: copy.id)
+            guard !next.erasedIdentities.contains(receipt.identity) else { throw ArchiveError.conflict }
+            next.records[index] = RecoveredRecord(receipt: receipt, record: edited, documentKind: copy.documentKind,
+                recoveredAtMilliseconds: copy.recoveredAtMilliseconds, backupLifetime: UUID())
+        }
+        guard Set(next.records.map(\.receipt.identity)).count == next.records.count else { throw ArchiveError.conflict }
+        purgeBackups(&next, removedCopies: selected)
+        try persist(&next)
+    }
+
     /// Call only after the domain adapter has validated every private native payload.
     /// No current record is replaced. A retry returns the previous local copy IDs.
     public func apply(_ reviewed: RecoveryReview, now: Date = Date()) throws -> RecoveryCommit {
@@ -985,6 +1026,9 @@ public enum ReadableArchive {
             var lines = [owner ? heading(record, locale: locale) : record.title]
             if owner, record.kind == .recipe, let payload = record.nativePayload,
                let recipe = try? JSONDecoder().decode(ImportedRecipe.self, from: payload).validated() {
+                if !recipe.categories.isEmpty {
+                    lines.append((spanish ? "Categorías: " : "Categories: ") + recipe.categories.joined(separator: ", "))
+                }
                 if !recipe.yieldText.isEmpty { lines.append((spanish ? "Rinde: " : "Yield: ") + recipe.yieldText) }
                 if !recipe.ingredients.isEmpty {
                     lines.append(spanish ? "Ingredientes" : "Ingredients")

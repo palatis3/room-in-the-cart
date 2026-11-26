@@ -416,8 +416,13 @@ import XCTest
         fill(words, into: "pantry.voiceText")
         XCTAssertTrue(app.keyboards.firstMatch.exists)
         let reviewWords = app.buttons["pantry.voiceReview"]
-        XCTAssertTrue(reviewWords.isHittable)
-        XCTAssertLessThanOrEqual(reviewWords.frame.maxY, app.keyboards.firstMatch.frame.minY + 2)
+        let keyboard = app.keyboards.firstMatch
+        let reviewAboveKeyboard = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard keyboard.exists, reviewWords.exists, reviewWords.isHittable else { return false }
+            let button = reviewWords.frame
+            return button.height > 0 && button.maxY <= keyboard.frame.minY + 2
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [reviewAboveKeyboard], timeout: 8), .completed, app.debugDescription)
         reviewWords.tap()
         let picker = app.buttons["pantry.voiceRemaining.0"]
         XCTAssertTrue(picker.waitForExistence(timeout: 8), app.debugDescription)

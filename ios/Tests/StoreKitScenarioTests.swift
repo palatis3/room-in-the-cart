@@ -107,7 +107,7 @@ import StoreKitTest
         session.storefront = "MEX"
         session.locale = offerLocale
         try await AppStore.sync()
-        try await assertAnnualOffer(country: "MEX", currency: "MXN", amount: 699, name: offerName)
+        try await assertAnnualOffer(country: "MEX", currency: "MXN", amount: 499, name: offerName)
     }
 
     private func assertAnnualOffer(country: String, currency: String, amount: Decimal, name: String) async throws {

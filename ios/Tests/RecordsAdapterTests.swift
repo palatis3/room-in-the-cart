@@ -1078,6 +1078,64 @@ final class RecordsAdapterTests: XCTestCase {
         XCTAssertEqual(model.recipeReport?.duplicateCount, 1)
     }
 
+    @MainActor func testCookbookFilingSavesOnlyPrivateRecordsAndFreeCanReuseOneChosenDinner() async throws {
+        let directory = try temporaryDirectory()
+        let registry = try RecoveryRegistry(url: directory.appendingPathComponent("cookbook.json"))
+        let model = RecordsToolsModel(registry: registry, snapshot: { .init() },
+            validateNativePayload: { try RecordsNativeCodec.validate($0) }, openRecovered: { _ in })
+        let data = try XCTUnwrap(Data(base64Encoded: "UEsDBBQAAAAAAAAAIVy1Z2+dZQAAAGUAAAASAAAAU291cC5wYXByaWthcmVjaXBlH4sIAAAAAAAC/6tWykvMTVWyUlAKzi8tUNJRUCrNTEHmFqcWlWXmpReDxIwU4DygDJAuSk3JTM0rgUomJxYV5ZeA5ZITS1LT84syU0FS0UrhqanZeZnpGUDJ2FoAQpO0I3MAAABQSwMEFAAAAAAAAAAhXPV5OntmAAAAZgAAABMAAABUYWNvcy5wYXByaWthcmVjaXBlH4sIAAAAAAAC/6tWykvMTVWyUlAKSUzOL1bSUVAqzUxB4RenFpVl5qUXgwSNFOA8oAyQLkpNyUzNK4FKJicWFeWXgOWSE0tS0/OLMlNBUtFK4amp2XmZ6RlAydhaAK3XXR11AAAAUEsBAhQDFAAAAAAAAAAhXLVnb51lAAAAZQAAABIAAAAAAAAAAAAAAIABAAAAAFNvdXAucGFwcmlrYXJlY2lwZVBLAQIUAxQAAAAAAAAAIVz1eTp7ZgAAAGYAAAATAAAAAAAAAAAAAACAAZUAAABUYWNvcy5wYXByaWthcmVjaXBlUEsFBgAAAAACAAIAgQAAACwBAAAAAA=="))
+        let url = directory.appendingPathComponent("TwoRecipes.paprikarecipes")
+        try data.write(to: url)
+        await model.importFile(url, recipes: true)
+        let review = try XCTUnwrap(model.review)
+        let mapped = await model.mapCookbookCategory("Weeknights", to: "Menú rápido", reviewed: review)
+        XCTAssertTrue(mapped)
+        let staged = try await registry.refreshList()
+        XCTAssertTrue(staged.isEmpty)
+        await model.applyReviewedImport()
+        let saved = try await registry.refreshList()
+        XCTAssertEqual(saved.count, 2)
+        var planning = DinnerPlanningState()
+        let ledger = ShoppingLedger(), now = Date()
+        let access = DinnerAccessContext(scope: .local(workspaceID: UUID()), actorID: "Mia",
+            shopID: ledger.id, assignedShopperID: "Mia", canPlan: true, canReadBudget: true,
+            hasPaidTools: false, roleRevision: 1, verifiedAt: now, validUntil: now.addingTimeInterval(300))
+        for copy in saved {
+            let recipe = try JSONDecoder().decode(ImportedRecipe.self, from: XCTUnwrap(copy.record.nativePayload))
+            XCTAssertEqual(recipe.categories, ["Menú rápido"])
+            let template = MealTemplate(title: recipe.title, servings: .one, ingredients: recipe.ingredients.map(ImportedRecipe.ingredientDraft))
+            try planning.accept(.init(id: UUID(), template: template, acceptedAt: now), access: access, at: now)
+        }
+        let first = planning.acceptedDinners[0], second = planning.acceptedDinners[1]
+        func reuse(_ dinner: AcceptedDinner) throws {
+            _ = try DinnerPlanningEngine.preview(changes: [.choose(.init(acceptedDinnerID: dinner.id, template: dinner.template))],
+                tool: .reusableDinner, ledger: ledger, state: planning, access: access, phase: .draft, at: now)
+        }
+        try reuse(first)
+        XCTAssertThrowsError(try reuse(second))
+        try planning.selectFreeReusableDinner(second.id, access: access, at: now)
+        try reuse(second)
+        XCTAssertThrowsError(try reuse(first))
+        await model.importFile(url, recipes: true)
+        XCTAssertNil(model.review)
+        let repeated = try await registry.refreshList()
+        XCTAssertEqual(repeated.count, 2)
+        let renamed = await model.renameCookbookCategory("Menú rápido", to: "Mi colección", reviewed: repeated)
+        XCTAssertTrue(renamed)
+        let reopened = try await registry.refreshList()
+        XCTAssertEqual(Set(reopened.map(\.id)), Set(repeated.map(\.id)))
+        XCTAssertEqual(Set(reopened.map(\.record.id)), Set(repeated.map(\.record.id)))
+        for copy in reopened {
+            let recipe = try JSONDecoder().decode(ImportedRecipe.self, from: XCTUnwrap(copy.record.nativePayload))
+            XCTAssertEqual(recipe.categories, ["Mi colección"])
+        }
+        let stale = await model.renameCookbookCategory("Menú rápido", to: "Stale", reviewed: repeated)
+        XCTAssertFalse(stale)
+        await model.importFile(url, recipes: true)
+        XCTAssertNil(model.review)
+
+    }
+
     @MainActor func testSelectedPaprikaCollectionReviewsBeforeSaveAndSupportsUndo() async throws {
         let directory = try temporaryDirectory()
         let registry = try RecoveryRegistry(url: directory.appendingPathComponent("manifest.json"))

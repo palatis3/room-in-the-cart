@@ -136,6 +136,7 @@ struct DinnerSwapView: View {
 struct DinnerSwapEvidenceView: View {
     let review: DinnerSwapReview
     let showPrices: Bool
+    var showBasket = false
     var body: some View {
         Section(dinnerText("Dinner swap")) {
             LabeledContent(dinnerText("Current dinner"), value: review.original.title)
@@ -179,6 +180,29 @@ struct DinnerSwapEvidenceView: View {
                         }
                     }
                 }
+            }
+        }
+        if showPrices, showBasket, let before = review.basketBefore, let after = review.basketAfter,
+           let basis = review.preview.budgetBasis {
+            Section(dinnerText("Basket after confirmed stock")) {
+                LabeledContent(dinnerText("Known grocery subtotal before"), value: dinnerMoney(before.known))
+                LabeledContent(dinnerText("Known grocery subtotal after"), value: dinnerMoney(after.known))
+                LabeledContent(dinnerText("Unpriced lines before and after"), value: dinnerFormat("%d to %d", before.unpriced.count, after.unpriced.count))
+                if let change = try? after.pricedChange(from: before) {
+                    LabeledContent(dinnerText("Change in comparable priced groceries"), value: dinnerMoney(change))
+                } else { Text(dinnerText("Price coverage changed or is unknown. Review the lines separately.")) }
+                if let cap = basis.cap {
+                    LabeledContent(dinnerBudgetScope(basis.capScope), value: dinnerMoney(cap))
+                    if basis.capScope == .wholeShop, let subtotal = after.known,
+                       let difference = try? subtotal.subtracting(cap) {
+                        if difference.minorUnits > 0 {
+                            LabeledContent(dinnerText("Estimated priced groceries above cap"), value: dinnerMoney(difference))
+                        } else {
+                            Text(dinnerText("Priced groceries are within the cap. The final checkout amount is unconfirmed."))
+                        }
+                    }
+                }
+                Text(dinnerText("Estimates use the reviewed pack prices. Taxes, fees and other checkout adjustments need separate review."))
             }
         }
         if !review.retained.isEmpty {

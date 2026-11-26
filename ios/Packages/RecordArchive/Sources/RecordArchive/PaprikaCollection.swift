@@ -16,9 +16,15 @@ public enum PaprikaCollection {
 
     /// For a local edit, remember which incoming revision it corrected even after further edits.
     public static func correctedRecord(_ recipe: ImportedRecipe, previous: ArchiveRecord) throws -> ArchiveRecord {
+        var recipe = recipe
+        if let bytes = previous.nativePayload {
+            let prior = try JSONDecoder().decode(ImportedRecipe.self, from: bytes)
+            if recipe.filing == nil { recipe.filing = prior.filing }
+            recipe.paprikaLegacyRevision = prior.paprikaLegacyRevision
+        }
         var updated = try recipe.archiveRecord(origin: previous.origin, savedAt: Date(timeIntervalSince1970: 0))
         updated.id = previous.id
-        let original = isTracked(previous) ? previous.parentRevision ?? previous.revision : previous.id
+        let original = isTracked(previous) || recipe.filing != nil ? previous.parentRevision ?? previous.revision : previous.id
         updated.parentRevision = updated.revision == original ? nil : original
         return updated
     }
@@ -28,7 +34,28 @@ public enum PaprikaCollection {
     public static func legacyMatches(_ records: [ArchiveRecord], saved: [ArchiveRecord]) -> Set<String> {
         let existing = saved.filter { $0.kind == .recipe && $0.origin == "recipe-library-v1" && $0.nativePayload != nil && !isTracked($0) }
         let revisions = Set(existing.flatMap { [$0.id, $0.revision] })
-        return Set(records.filter { isTracked($0) && (revisions.contains($0.revision) || $0.parentRevision.map(revisions.contains) == true) }.map(\.id))
+        return Set(records.filter { isTracked($0) && !revisions.isDisjoint(with: legacyContentRevisions($0)) }.map(\.id))
+    }
+
+    static func legacyContentRevisions(_ record: ArchiveRecord) -> [String] {
+        var revisions = [record.revision, record.parentRevision].compactMap { $0 }
+        if let data = record.nativePayload, let recipe = try? JSONDecoder().decode(ImportedRecipe.self, from: data),
+           recipe.filing != nil {
+            revisions.append(recipe.paprikaLegacyRevision ?? recipe.contentBeforeFiling)
+            return revisions
+        }
+        return isTracked(record) ? revisions : []
+    }
+
+    /// One reviewed mapping applies to all eligible recipes in this batch. Keep source labels for later repair.
+    public static func mapCategory(_ source: String, to category: String?, in record: ArchiveRecord) throws -> ArchiveRecord {
+        guard ImportedRecipe.Filing.valid(source), category.map(ImportedRecipe.Filing.valid) ?? true,
+              record.kind == .recipe, let data = record.nativePayload else { throw ArchiveError.invalidRecipe }
+        var recipe = try JSONDecoder().decode(ImportedRecipe.self, from: data).validated()
+        guard let index = recipe.filing?.firstIndex(where: { $0.source == source }),
+              recipe.filing?[index].category != category else { return record }
+        recipe.filing?[index].category = category
+        return try correctedRecord(recipe, previous: record)
     }
 
     private struct Version: Hashable {
@@ -61,6 +88,9 @@ public enum PaprikaCollection {
                 known.versions.insert(Version(source: record.id, revision: content))
                 if let imported = record.parentRevision { known.versions.insert(Version(source: record.id, revision: imported)) }
             } else {
+                if recipe.filing != nil, let original = record.parentRevision {
+                    known.versions.insert(Version(source: record.id, revision: original))
+                }
                 if record.origin == "recipe-library-v1", record.parentRevision == record.id, content == record.revision {
                     known.allContent.insert(record.id)
                 }
@@ -114,7 +144,9 @@ public enum PaprikaCollection {
                 let version = Version(source: record.id, revision: revision)
                 guard known.versions.insert(version).inserted else { duplicates += 1; continue }
             } else {
-                guard !known.allContent.contains(revision) else { duplicates += 1; continue }
+                record.id = recipe.contentBeforeFiling
+                guard !known.allContent.contains(revision),
+                      !known.versions.contains(Version(source: record.id, revision: revision)) else { duplicates += 1; continue }
             }
             known.allContent.insert(revision)
             recipes.append(recipe)
@@ -128,7 +160,7 @@ public enum PaprikaCollection {
 
     private static func readRecipe(_ fields: [String: Any], unsupported: inout Set<String>) -> ImportedRecipe? {
         let mapped = ["name", "servings", "ingredients", "directions", "source_url", "source", "notes"]
-        for (key, value) in fields where key != "uid" && !mapped.contains(key) && !(value is NSNull) {
+        for (key, value) in fields where key != "uid" && key != "categories" && !mapped.contains(key) && !(value is NSNull) {
             unsupported.insert(String(key.prefix(80)))
         }
         guard let title = fields["name"] as? String,
@@ -139,8 +171,20 @@ public enum PaprikaCollection {
         }
         let source = value("source_url").trimmingCharacters(in: .whitespacesAndNewlines)
         let notes = [value("source"), value("notes")].filter { !$0.isEmpty }.joined(separator: "\n\n")
-        let recipe = ImportedRecipe(title: title, yieldText: value("servings"), ingredients: lines("ingredients"),
+        var recipe = ImportedRecipe(title: title, yieldText: value("servings"), ingredients: lines("ingredients"),
                                     steps: lines("directions"), sourceURL: source.isEmpty ? nil : source, notes: notes)
+        if let input = fields["categories"], !(input is NSNull) {
+            if let values = input as? [Any], values.count <= 64 {
+                let labels = values.compactMap { ($0 as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) }
+                    .filter(ImportedRecipe.Filing.valid)
+                if labels.count != values.count { unsupported.insert("categories") }
+                if !labels.isEmpty {
+                    let legacyRevision = recipe.id
+                    recipe.filing = Set(labels).sorted().map { .init(source: $0, category: $0) }
+                    recipe.paprikaLegacyRevision = legacyRevision
+                }
+            } else { unsupported.insert("categories") }
+        }
         guard recipe.ingredients.allSatisfy({ $0.utf8.count <= ArchiveCodec.maximumHelperFieldBytes }),
               (try? recipe.validated()) != nil,
               let payload = try? ArchiveCodec.canonical(recipe), payload.count <= memberLimit else { return nil }

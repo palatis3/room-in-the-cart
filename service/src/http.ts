@@ -1,4 +1,5 @@
 import {readSharedWeekCosts} from './shared-week-costs.js';
+import {savedWeekRoute} from './saved-week-changes.js';
 import {readRepeatWeek,startRepeatWeek,stopRepeatWeek,repeatWeekStart,repeatWeekStop} from './shared-repeat-week.js';
 import type {ClosedReview} from './closed-review.js';
 import {tripSubstitution} from './trip-substitutions.js';
@@ -631,6 +632,8 @@ export function createHTTPServer(options:HTTPOptions) {
           if(tail==='/meal-plan/changes'&&method==='POST')return mealChanges.propose(ctx,shopId,sharedMealChangeSchema.parse(payload));
           if(tail==='/meal-plan/changes/dismissals'&&method==='POST')return mealChanges.dismiss(ctx,shopId,sharedMealDismissSchema.parse(payload));
           if(tail==='/meal-plan'&&method==='GET')return mealMoves.read(ctx,shopId,url.searchParams.get('view')==='week');
+          if(tail && /^\/meal-plan\/saved-week(?:\/(?:preview|confirm|step|stop))?$/.test(tail))
+            return savedWeekRoute(repository,mealMoves,options.billing,ctx,shopId,tail.slice('/meal-plan/saved-week'.length),method??'',payload,url.searchParams);
           if(tail==='/meal-plan/repeat-week/costs' && method==='GET'){
             return readSharedWeekCosts(mealMoves,options.billing,ctx,shopId,uuid.parse(url.searchParams.get('planId')).toLowerCase());
           }

@@ -30,6 +30,77 @@ private enum S17GroupAmountFixture {
         return planning
     }
 }
+/// HTTP contract fixture for an offline initial lookup and a lost reply after the first committed night.
+/// The production service tests own the demand graph and pack arithmetic.
+private final class SavedWeekUIFixture {
+    let ids = ["55555555-5555-4555-8555-555555555555", "88888888-8888-4888-8888-888888888888"]
+    private let lunchID = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+    private let start = sharedMealPickerToday()
+    private let digest = String(repeating: "c", count: 64)
+    private var planID: String?
+    private var firstLookup = true
+    private(set) var completed = 0
+    private func day(_ offset: Int) -> String {
+        // The shared-week picker represents each civil date at UTC midnight.
+        sharedMealDay(start.addingTimeInterval(TimeInterval(offset * 86_400)))
+    }
+    private var steps: [[String: Any]] {
+        ids.enumerated().map { ["id": $0.element, "revision": 1, "day": day($0.offset)] }
+    }
+    var meals: [[String: Any]] {
+        func occurrence(id: String, offset: Int, title: String, lunch: Bool) -> [String: Any] {
+            let meal: [String: Any] = ["title": title, "day": day(offset), "kind": lunch ? "lunch" : "dinner",
+                                       "portions": 2, "protected": lunch]
+            return ["occurrenceId": id, "revision": 1, "meal": meal]
+        }
+        let dinners = ids.enumerated().dropFirst(completed).map {
+            occurrence(id: $0.element, offset: $0.offset, title: $0.offset == 0 ? "Arroz" : "Tacos", lunch: false)
+        }
+        return dinners + [occurrence(id: lunchID, offset: 2, title: "Almuerzo", lunch: true)]
+    }
+    private var progress: [String: Any] {
+        guard let planID else { return ["series": NSNull()] }
+        let series: [String: Any] = ["planId": planID, "steps": steps, "completed": completed,
+                                     "stopped": false, "conflicted": false]
+        return ["series": series]
+    }
+    func respond(_ route: String, method: String?, input: [String: Any]) throws -> [String: Any] {
+        if route.isEmpty && method == "GET" {
+            if firstLookup {
+                firstLookup = false
+                throw URLError(.notConnectedToInternet)
+            }
+            return progress
+        }
+        guard method == "POST" else { throw URLError(.badServerResponse) }
+        if route == "/preview" || route == "/confirm" {
+            guard input["ids"] as? [String] == ids, input["week"] as? String == day(0),
+                  input["shopRevision"] as? Int == 2, input["authorityEpoch"] as? Int == 1,
+                  input["grantRevision"] as? Int == 1 else { throw URLError(.badServerResponse) }
+            if route == "/preview" {
+                let basket: [[String: Any]] = [
+                    ["id": "66666666-6666-4666-8666-666666666666", "name": "Arroz", "before": 2, "after": 1,
+                     "unlinked": false, "manual": false, "held": true, "mealIds": ids],
+                    ["id": "99999999-9999-4999-8999-999999999999", "name": "Café", "before": 1, "after": 1,
+                     "unlinked": false, "manual": true, "held": false, "mealIds": [String]()]
+                ]
+                return ["steps": steps, "basket": basket, "digest": digest, "shopper": true]
+            }
+            guard let key = input["planId"] as? String, input["digest"] as? String == digest,
+                  planID == nil || planID == key else { throw URLError(.badServerResponse) }
+            planID = key
+            return progress
+        }
+        guard route == "/step", let key = input["planId"] as? String, key == planID,
+              let id = input["id"] as? String, let index = ids.firstIndex(of: id), index <= completed
+        else { throw URLError(.badServerResponse) }
+        if index == completed {
+            completed += 1
+            if completed == 1 { throw URLError(.networkConnectionLost) }
+        }
+        return progress
+    }
+}
 private final class S17FixtureServer: @unchecked Sendable {
     static let household = "11111111-1111-4111-8111-111111111111"
     static let shopper = "22222222-2222-4222-8222-222222222222"
@@ -43,6 +114,7 @@ private final class S17FixtureServer: @unchecked Sendable {
     private let financial = ProcessInfo.processInfo.arguments.contains("--financial-closeout-fixture") ? SharedFinancialFixture() : nil
     private let confirmedOrder = ProcessInfo.processInfo.arguments.contains("--confirmed-order-fixture") ? SharedConfirmedOrderUIFixture() : nil
     private let repeatWeekFixture = ProcessInfo.processInfo.arguments.contains("--shared-repeat-week-fixture")
+    private let savedWeek = ProcessInfo.processInfo.arguments.contains("--saved-week-ui-fixture") ? SavedWeekUIFixture() : nil
     private var revision = 2
     private let quoteObservedAt = Date().addingTimeInterval(-60)
     private let quoteExpiresAt = Date().addingTimeInterval(3600)
@@ -291,6 +363,12 @@ private final class S17FixtureServer: @unchecked Sendable {
         if path.hasSuffix("/inbox") { return try json(["requests":[],"nextCursor":NSNull()]) }
         if path.hasSuffix("/requests/mine") { return try json(["requests":[],"nextCursor":NSNull()]) }
         let occurrence: [String:Any] = ["occurrenceId":Self.occurrence,"revision":revision,"meal":meal]
+        let savedWeekPath = deliveryPath + "/meal-plan/saved-week"
+        if let savedWeek, path == savedWeekPath || path.hasPrefix(savedWeekPath + "/") {
+            guard shopper, request.value(forHTTPHeaderField: "X-Device-Token") == "shopper-token" else { return try denied() }
+            defer { changed?(proposals.count, savedWeek.completed) }
+            return try json(savedWeek.respond(String(path.dropFirst(savedWeekPath.count)), method: request.httpMethod, input: input))
+        }
         if path.hasSuffix("/meal-plan/changes"), request.httpMethod == "POST" {
             guard !shopper, let id = input["proposalId"] as? String, input["shopRevision"] as? Int == revision else { return try denied() }
             if !proposals.contains(where: { ($0["proposalId"] as? String) == id }) { proposals.append(["proposalId":id,"request":input,"original":meal,"state":"pending"]) }
@@ -303,7 +381,11 @@ private final class S17FixtureServer: @unchecked Sendable {
         }
         if path.hasSuffix("/meal-plan") {
             var page: [String: Any] = ["shopId":Self.shop,"shopRevision":revision,"authorityEpoch":1,"grantRevision":1,"shopper":shopper,"plannerId":Self.planner,"adults":[["id":Self.planner,"label":"Fixture planner"]],"meals":[occurrence],"proposals":[]]
-            if repeatWeekFixture { page["phase"] = "draft" }
+            if repeatWeekFixture || savedWeek != nil { page["phase"] = "draft" }
+            if let savedWeek {
+                page["meals"] = savedWeek.meals
+                page["shopRevision"] = 2 + savedWeek.completed
+            }
             return try json(page)
         }
         if path.hasSuffix("/shops/"+Self.shop) {

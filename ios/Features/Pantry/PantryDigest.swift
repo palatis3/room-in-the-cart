@@ -31,7 +31,7 @@ struct PantryFoodKeeperSelection: Codable, Equatable {
     static let reference = try? FoodKeeperReference.bundled()
 
     func applies(to lot: InventoryLot) -> Bool {
-        guard lot.id == lotID, lot.revision == revision, range.storage == lot.location.foodKeeperStorage,
+        guard lot.id == lotID, lot.retainsPhysicalState(at: revision), range.storage == lot.location.foodKeeperStorage,
               let reference = Self.reference else { return false }
         return range.matches(reference, asOf: range.start)
     }
@@ -537,7 +537,10 @@ typealias PantryNotificationPresenter = @MainActor (PantryNotificationRequest) a
             }
             var removed = Set<UUID>()
             for rule in doc.rules {
-                if try await inventory.inventoryRecord(.init(.lot, rule.lotID))?.revision != rule.revision { removed.insert(rule.lotID) }
+                let record = try await inventory.inventoryRecord(.init(.lot, rule.lotID))
+                if try record.map(PantryPersistenceCodec.lot)?.retainsPhysicalState(at: rule.revision) != true {
+                    removed.insert(rule.lotID)
+                }
             }
             var erasedChoices = Set<UUID>()
             for choice in doc.selections {

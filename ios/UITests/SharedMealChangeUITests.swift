@@ -60,6 +60,70 @@ import XCTest
         XCTAssertTrue(app.buttons["sharedFood.apply"].waitForNonExistence(timeout: 10))
         capture("S17-actual-shared-apply-confirmed-once")
     }
+    func testSavedWeekResumesAfterLostFirstNightReplyInEnglish() {
+        checkSavedWeekRecovery(spanish: false)
+    }
+
+    func testSavedWeekResumesAfterLostFirstNightReplyInMexicanSpanish() {
+        checkSavedWeekRecovery(spanish: true)
+    }
+
+    private func checkSavedWeekRecovery(spanish: Bool) {
+        app.launchArguments = ["--ui-testing", "--shared-meal-fixture", "--saved-week-ui-fixture",
+                               "-AppleLanguages", spanish ? "(es)" : "(en)", "-AppleLocale", spanish ? "es_MX" : "en_US"]
+        app.launch()
+        tap(element("fixture.s17.switch"))
+        tap(app.buttons[spanish ? "Fechas de comidas compartidas" : "Shared meal dates"])
+        let retry = app.buttons["savedWeek.retryConnection"]
+        reveal(retry)
+        XCTAssertEqual(retry.label, spanish ? "Volver a intentar la conexión" : "Retry connection")
+        XCTAssertFalse(app.buttons["savedWeek.open"].exists)
+        XCTAssertEqual(element("fixture.s17.applications").label, "Fixture shared applications: 0")
+        tap(retry)
+        tap(app.buttons["savedWeek.open"])
+        let preview = app.buttons["savedWeek.preview"]
+        reveal(preview)
+        XCTAssertFalse(preview.isEnabled)
+        let firstNight = "savedWeek.select.55555555-5555-4555-8555-555555555555"
+        let secondNight = "savedWeek.select.88888888-8888-4888-8888-888888888888"
+        enableSwitch(firstNight)
+        enableSwitch(secondNight)
+        XCTAssertFalse(app.switches["savedWeek.select.bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"].exists,
+                       "A protected lunch is outside the removable dinner selection.")
+        tap(preview)
+        assertText("Almuerzo")
+        func assertBasketRow(_ id: String, name: String, packs: String, reason: String) {
+            let row = element("savedWeek.basket." + id)
+            reveal(row)
+            let detail = [row.label, row.value as? String ?? ""].joined(separator: " ")
+            for fact in [name, packs, reason] { XCTAssertTrue(detail.contains(fact), detail) }
+        }
+        assertBasketRow("66666666-6666-4666-8666-666666666666", name: "Arroz", packs: "2 → 1",
+                        reason: spanish ? "Incluye una cantidad apartada." : "Includes a protected reservation.")
+        assertBasketRow("99999999-9999-4999-8999-999999999999", name: "Café", packs: "1 → 1",
+                        reason: spanish ? "Incluye un artículo agregado por separado." : "Includes an independent grocery item.")
+        let writes = element("fixture.s17.applications")
+        XCTAssertEqual(writes.label, "Fixture shared applications: 0")
+        tap(app.buttons["savedWeek.confirm"])
+
+        // The fixture durably committed night one before dropping its reply.
+        XCTAssertTrue(element("savedWeek.error").waitForExistence(timeout: 12))
+        XCTAssertEqual(writes.label, "Fixture shared applications: 1")
+        tap(app.buttons["savedWeek.reload"])
+        let resume = app.buttons["savedWeek.resume"]
+        tap(resume)
+        let finished = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Fixture shared applications: 2"),
+                                                object: writes)
+        XCTAssertEqual(XCTWaiter.wait(for: [finished], timeout: 12), .completed)
+        XCTAssertTrue(resume.waitForNonExistence(timeout: 10))
+        tap(app.buttons["savedWeek.reload"])
+        reveal(preview)
+        XCTAssertFalse(preview.isEnabled)
+        XCTAssertFalse(app.switches[firstNight].exists)
+        XCTAssertFalse(app.switches[secondNight].exists)
+        XCTAssertEqual(writes.label, "Fixture shared applications: 2")
+    }
+
     func testSharedRepeatReviewLoadsWhenOpenedForTheFirstTime() {
         launch(repeatWeek: true)
         tap(element("fixture.s17.switch"))

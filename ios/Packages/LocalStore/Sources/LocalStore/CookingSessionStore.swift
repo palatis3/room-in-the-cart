@@ -1,3 +1,4 @@
+import CoreDomain
 import CryptoKit
 import Foundation
 
@@ -44,6 +45,7 @@ public struct CookingSession: Codable, Equatable, Sendable {
     public let version: Int
     public let id: UUID
     public var step: Int
+    public var stepAmounts: CookingStepAmounts?
     public var timers: [CookingTimer]
     public init() { version = 1; id = UUID(); step = 0; timers = [] }
     public mutating func start(minutes: Int, step: Int, alert: Bool, at now: Date) throws {
@@ -69,6 +71,7 @@ public struct CookingSession: Codable, Equatable, Sendable {
     public mutating func remove(_ id: UUID) { timers.removeAll { $0.id == id } }
 
     fileprivate func validate(count: Int) throws {
+        try stepAmounts?.validate(stepCount: count)
         guard version == 1, (1...1000).contains(count), (0..<count).contains(step), timers.count <= 8,
               Set(timers.map(\.id)).count == timers.count else { throw CookingSessionError.invalid }
         for timer in timers {
@@ -83,7 +86,7 @@ public struct CookingSession: Codable, Equatable, Sendable {
 }
 
 /// The containing app owns these files. The main actor serializes their read/compare/write
-/// operations across presentations. Files contain timing state and positions only.
+/// operations across presentations. Files include reviewed measures and timer state for the exact source revision.
 @MainActor public final class CookingSessionStore {
     private let root: URL
     public init(directory: URL) { root = directory }
@@ -96,7 +99,7 @@ public struct CookingSession: Codable, Equatable, Sendable {
         guard FileManager.default.fileExists(atPath: url.path) else { return nil }
         let facts = try url.resourceValues(forKeys: [.fileSizeKey, .isRegularFileKey, .isSymbolicLinkKey])
         guard facts.isRegularFile == true, facts.isSymbolicLink != true,
-              let size = facts.fileSize, size <= 16_384 else { throw CookingSessionError.invalid }
+              let size = facts.fileSize, size <= 262_144 else { throw CookingSessionError.invalid }
         return try JSONDecoder().decode(CookingSession.self, from: Data(contentsOf: url))
     }
     public func load(_ key: CookingSessionKey, stepCount: Int) throws -> CookingSession? {
@@ -119,6 +122,7 @@ public struct CookingSession: Codable, Equatable, Sendable {
         availability.isExcludedFromBackup = true
         try folder.setResourceValues(availability)
         let bytes = try JSONEncoder().encode(next)
+        guard bytes.count <= 262_144 else { throw CookingSessionError.capacity }
         #if os(iOS)
         try bytes.write(to: url, options: [.atomic, .completeFileProtection])
         #else

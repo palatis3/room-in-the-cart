@@ -95,6 +95,13 @@ public struct InventoryLot: Codable, Equatable, Sendable, Identifiable {
     public let updatedAt: Date
     public let useFirst: Bool
 
+    /// The first head in a run of label-only edits, used to retain date guidance.
+    public let physicalBasis: Int64?
+    public func retainsPhysicalState(at priorRevision: Int64) -> Bool {
+        priorRevision >= (physicalBasis ?? revision) && priorRevision <= revision
+    }
+    public let namedPlace: InventoryNamedPlace?
+    public let spreadsheetRow: InventorySpreadsheetRow?
     public let intakeOrdinal: Int?
     public let packageCode: InventoryPackageCode?
     public let splitFromLotID: UUID?
@@ -104,7 +111,11 @@ public struct InventoryLot: Codable, Equatable, Sendable, Identifiable {
     public init(id: UUID, foodID: UUID, name: String, source: InventorySource, revision: Int64,
                 location: InventoryLocation, openedAt: Date? = nil, unit: UnitOfMeasure, count: InventoryCount,
                 observationID: UUID, confirmedAt: Date, updatedAt: Date, useFirst: Bool = false, countWording: String? = nil,
-                splitFromLotID: UUID? = nil, discardUndo: InventoryDiscardUndo? = nil, discardedTimes: Int? = nil, packageCode: InventoryPackageCode? = nil, intakeOrdinal: Int? = nil) {
+                splitFromLotID: UUID? = nil, discardUndo: InventoryDiscardUndo? = nil, discardedTimes: Int? = nil, packageCode: InventoryPackageCode? = nil, intakeOrdinal: Int? = nil,
+                namedPlace: InventoryNamedPlace? = nil, spreadsheetRow: InventorySpreadsheetRow? = nil, physicalBasis: Int64? = nil) {
+        self.physicalBasis = physicalBasis
+        self.namedPlace = namedPlace
+        self.spreadsheetRow = spreadsheetRow
         self.intakeOrdinal = intakeOrdinal
         self.packageCode = packageCode
         self.splitFromLotID = splitFromLotID; self.discardUndo = discardUndo; self.discardedTimes = discardedTimes
@@ -113,6 +124,11 @@ public struct InventoryLot: Codable, Equatable, Sendable, Identifiable {
         self.observationID = observationID; self.confirmedAt = confirmedAt; self.updatedAt = updatedAt; self.useFirst = useFirst
     }
     public func validate() throws {
+        if let physicalBasis {
+            guard physicalBasis > 0, physicalBasis < revision else { throw InventoryError.invalid("physicalBasis") }
+        }
+        try namedPlace?.validate()
+        try spreadsheetRow?.validate()
         try packageCode?.validateBounds()
         guard intakeOrdinal.map({ (0..<200).contains($0) }) ?? true else { throw InventoryError.invalid("intakeOrdinal") }
         guard splitFromLotID != id, (discardedTimes ?? 0) >= 0, revision >= 1, !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, name.utf8.count <= 512,
@@ -139,12 +155,17 @@ public struct InventoryLotSeed: Codable, Equatable, Sendable {
     public let useFirst: Bool
     public let observedAt: Date?
     public let openedAt: Date?
+    public let namedPlace: InventoryNamedPlace?
+    public let spreadsheetRow: InventorySpreadsheetRow?
     public let intakeOrdinal: Int?
     public let packageCode: InventoryPackageCode?
     public let splitFromLotID: UUID?
     public init(foodID: UUID, name: String, source: InventorySource, location: InventoryLocation,
                 unit: UnitOfMeasure, count: InventoryCount, useFirst: Bool = false, observedAt: Date? = nil,
-                openedAt: Date? = nil, splitFromLotID: UUID? = nil, packageCode: InventoryPackageCode? = nil, intakeOrdinal: Int? = nil) {
+                openedAt: Date? = nil, splitFromLotID: UUID? = nil, packageCode: InventoryPackageCode? = nil, intakeOrdinal: Int? = nil,
+                namedPlace: InventoryNamedPlace? = nil, spreadsheetRow: InventorySpreadsheetRow? = nil) {
+        self.namedPlace = namedPlace
+        self.spreadsheetRow = spreadsheetRow
         self.intakeOrdinal = intakeOrdinal
         self.packageCode = packageCode
         self.openedAt = openedAt; self.splitFromLotID = splitFromLotID
@@ -179,6 +200,8 @@ public struct InventoryUsage: Codable, Equatable, Sendable, Identifiable {
 /// One reviewed source edit advances a head once. Omitted fields retain the
 /// canonical pantry value; changing a label must never manufacture a recount.
 public struct InventoryLotRevision: Codable, Equatable, Sendable {
+    public let placeEdit: InventoryPlaceEdit?
+    public let spreadsheetRow: InventorySpreadsheetRow?
     public let observation: InventoryCountRevision?
     public let portion: InventoryPortionAction?
     public let usage: [InventoryUsage]?
@@ -188,7 +211,10 @@ public struct InventoryLotRevision: Codable, Equatable, Sendable {
     public let location: InventoryLocation?
     public init(observation: InventoryCountRevision? = nil, foodID: UUID? = nil,
                 name: String? = nil, useFirst: Bool? = nil, location: InventoryLocation? = nil, usage: [InventoryUsage]? = nil,
-                portion: InventoryPortionAction? = nil) {
+                portion: InventoryPortionAction? = nil, placeEdit: InventoryPlaceEdit? = nil,
+                spreadsheetRow: InventorySpreadsheetRow? = nil) {
+        self.placeEdit = placeEdit
+        self.spreadsheetRow = spreadsheetRow
         self.portion = portion
         self.usage = usage
         self.observation = observation; self.foodID = foodID; self.name = name

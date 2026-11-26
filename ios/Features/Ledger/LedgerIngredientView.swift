@@ -50,6 +50,11 @@ struct LedgerIngredientView: View {
                             .disabled(model.saving || model.hasPendingSave)
                     }
                     if !line.notes.isEmpty { Text(line.notes) }
+                    if let barcode = shop.importBatches.lazy.filter({ $0.undoneAt == nil })
+                        .compactMap({ $0.preview.lines.first(where: { $0.proposedLineID == lineID })?.csvRecord?.barcode })
+                        .first(where: { !$0.isEmpty }) {
+                        LabeledContent(ledgerText("Barcode"), value: barcode)
+                    }
                     let department = model.workspace.listLayout.department(for: line, in: shop)
                     if !department.isEmpty { Text(department) }
                     NavigationLink(ledgerText("Staple for future pickups")) { StapleApprovalView(ledger: model, shop: shop, line: line) }

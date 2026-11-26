@@ -159,6 +159,81 @@ import XCTest
         XCTAssertFalse(app.staticTexts["No dinner planned"].exists)
     }
 
+    func testSecondNightKeepsOptionalFoodOffReceiptInEnglish() {
+        checkSecondNightReceipt(spanish: false)
+    }
+
+    func testSecondNightKeepsOptionalFoodOffReceiptInMexicanSpanish() {
+        checkSecondNightReceipt(spanish: true)
+    }
+
+    private func checkSecondNightReceipt(spanish: Bool) {
+        app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", spanish ? "(es)" : "(en)",
+                               "-AppleLocale", spanish ? "es_MX" : "en_US"]
+        app.launch()
+        let dinners = app.tabBars.buttons[spanish ? "Cenas" : "Dinners"]
+        let staple = spanish ? "Huevos" : "Eggs"
+        let pairing = spanish ? "Vino (opcional)" : "Wine (optional)"
+        let amounts = app.textFields.matching(NSPredicate(format: "label == %@", spanish ? "Cantidad (obligatoria)" : "Amount (required)"))
+        let ingredients = app.textFields.matching(identifier: "tonight.recipe.ingredient")
+        tap(dinners)
+        tap(app.buttons["dinner.saveFirstRecipe"])
+        fill(app.textFields["tonight.recipe.title"], spanish ? "Tacos de huevo" : "Egg tacos")
+        fill(app.textFields["tonight.recipe.servings"], "2")
+        fill(ingredients.firstMatch, staple)
+        fill(amounts.firstMatch, "2")
+        tap(app.buttons[spanish ? "Añadir ingrediente" : "Add ingredient"])
+        fill(ingredients.element(boundBy: 1), pairing)
+        fill(amounts.element(boundBy: 1), "1")
+        tap(app.buttons["tonight.recipe.review"])
+        tap(app.buttons["tonight.recipe.save"])
+        tap(app.buttons["dinner.planSaved"].firstMatch)
+        tap(app.buttons["dinner.handoff.startPickup"])
+        tap(app.buttons["ledgerCreateShop"])
+
+        let rows = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "dinner.handoff.amount."))
+        let stapleRows = rows.matching(NSPredicate(format: "label CONTAINS %@", staple))
+        let pairingRows = rows.matching(NSPredicate(format: "label CONTAINS %@", pairing))
+        func assertQuantities(_ expected: [Int], includesPairing: Bool = false, file: StaticString = #filePath, line: UInt = #line) {
+            let item = stapleRows.firstMatch
+            reveal(item)
+            let numbers = item.label.components(separatedBy: CharacterSet.decimalDigits.inverted).compactMap(Int.init)
+            XCTAssertEqual(numbers, expected, item.label, file: file, line: line)
+            XCTAssertEqual(pairingRows.firstMatch.exists, includesPairing, "Grocery demand must use this night's choice", file: file, line: line)
+        }
+        assertQuantities([0, 2, 2])
+        let choices = app.buttons["dinner.handoff.chooseIngredients"]
+        reveal(choices)
+        XCTAssertEqual(choices.label, spanish ? "Elegir ingredientes para esta cena" : "Choose ingredients for this dinner")
+        XCTAssertGreaterThanOrEqual(choices.frame.height, 44)
+        XCTAssertGreaterThan(choices.frame.width, app.frame.width / 2)
+        let wine = app.switches.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
+                                                     "dinner.handoff.planIngredient.", pairing)).firstMatch
+        reveal(wine)
+        XCTAssertEqual(wine.value as? String, "0")
+        tap(wine, at: CGVector(dx: 0.92, dy: 0.5))
+        assertQuantities([0, 2, 2], includesPairing: true)
+        let confirm = app.buttons["dinner.handoff.confirm"]
+        tap(confirm)
+        let saved = app.descendants(matching: .any).matching(identifier: "dinner.handoff.saved").firstMatch
+        XCTAssertTrue(saved.waitForExistence(timeout: 10))
+        assertQuantities([0, 2, 2], includesPairing: true)
+        tap(app.buttons["dinner.handoff.anotherNight"])
+        tap(app.buttons["dinner.plan.reviewFacts"])
+        assertQuantities([2, 2, 4])
+        tap(confirm)
+        XCTAssertTrue(saved.waitForExistence(timeout: 10))
+        assertQuantities([2, 2, 4])
+
+        // Reopening must preserve the two accepted nights. A third preview remains read-only.
+        app.terminate()
+        app.launchArguments.removeAll { $0 == "--reset-test-workspace" }
+        app.launch()
+        tap(dinners)
+        tap(app.buttons["dinner.planSaved"].firstMatch)
+        assertQuantities([4, 2, 6])
+    }
+
     func testPastedFamilyNotePlansTomorrowAndChangesOccurrenceBeforeColdReturn() {
         checkFamilyPlanEdit(maximumText: false)
     }
