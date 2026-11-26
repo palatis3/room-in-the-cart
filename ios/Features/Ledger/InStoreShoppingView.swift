@@ -188,7 +188,14 @@ struct InStoreShoppingView: View {
     @State private var searching = false
     @State private var query = ""
     @State private var searchReturnTargets: [Focus] = []
-    @StateObject private var listAccessibility = InStoreListAccessibility()
+    private struct AislePosition {
+        let row: Focus
+        let anchor: UnitPoint
+    }
+    @State private var centerPosition: AislePosition?
+    @State private var searchPosition: AislePosition?
+    @State private var returnPosition: AislePosition?
+    @State private var aisleHeight: CGFloat = 0
     @State private var viewportAnchor: Focus?
     @FocusState private var editingSearch: Bool
     @SceneStorage("inStoreScrollRow") private var previousSavedRow = ""
@@ -272,12 +279,10 @@ struct InStoreShoppingView: View {
         Group {
             if let shop = model.shop, shop.id == shopID {
                 VStack(spacing: 0) {
-                    ZStack {
-                        // Keep the aisle list mounted while filtering so clearing search restores the actual viewport.
+                    if searching {
+                        shoppingList(in: shop, filtering: true)
+                    } else {
                         shoppingList(in: shop, filtering: false)
-                            .ignoresSafeArea(.keyboard, edges: .bottom)
-                            .opacity(searching ? 0 : 1).allowsHitTesting(!searching).accessibilityHidden(searching)
-                        if searching { shoppingList(in: shop, filtering: true) }
                     }
                     if typeSize.isAccessibilitySize, !editingSearch, let last = shop.inStorePickedLines.first, last.canUndoInStore {
                         reachableUndo(last, in: shop)
@@ -304,8 +309,6 @@ struct InStoreShoppingView: View {
         let dinner = dinnerPantry.status(in: shop, ledger: model)
         let groups = model.workspace.listLayout.groups(shop: shop, excluding: dinner.covered)
         let matches = filtering ? searchMatches(in: shop) : nil
-        let hideList = (!filtering && searching) || destination != nil || editingPrice != nil
-        let accessibilityAnchor = InStoreCollectionAnchor(owner: listAccessibility, isSearch: filtering)
         func included(_ line: ShoppingLine) -> Bool {
             guard filtering else { return true }
             return line.eligibleForStop(named: shop.currentStop.name) && (matches == nil || matches?[line.id] != nil)
@@ -315,8 +318,6 @@ struct InStoreShoppingView: View {
         let outstanding = matched.filter { shop.outcomeAtCurrentStop($0) != nil }
         let basket = shop.inStorePickedLines
         let picked = basket.filter(included)
-        let firstRow = (visible.first ?? outstanding.first).map { Focus.line($0.id) } ?? picked.first.map { Focus.picked($0.id) }
-        let anchor = filtering ? firstRow : (viewportAnchor ?? firstRow)
         let exclusions = shop.listExclusions
         let packages = shop.itemPackages
         return ScrollViewReader { reader in
@@ -324,7 +325,7 @@ struct InStoreShoppingView: View {
                 if model.error != nil || model.hasPendingSave { LedgerSaveStatus(model: model) }
                 if !filtering {
                     DinnerPantryReviewSection(shopID: shop.id, reviews: dinner.pending)
-                    listAndStop(shop).background(accessibilityAnchor)
+                    listAndStop(shop)
                     savedPlaceEntry(in: shop)
                     TripDepartureSection(model: model, shop: shop)
                 }
@@ -335,24 +336,20 @@ struct InStoreShoppingView: View {
                             ForEach(rows) { line in
                                 outstandingRow(line, shop: shop, visible: visible, exclusions: exclusions[line.id],
                                                packages: packages[line.id] ?? [], hit: matches?[line.id])
-                                .background { if anchor == .line(line.id) { accessibilityAnchor } }
-                                .accessibilityHidden(hideList)
                             }
                         }
                     }
                 }
                 if matches != nil && visible.isEmpty && outstanding.isEmpty && picked.isEmpty {
-                    Text(shelfText("No matching groceries at this stop.")).background(accessibilityAnchor)
+                    Text(shelfText("No matching groceries at this stop."))
                 } else if matches == nil && visible.isEmpty {
                     Text(groups.allSatisfy { $0.lines.isEmpty } ? shoppingText("No items left to pick.") : tripText("Nothing else to pick at this stop."))
-                        .background(accessibilityAnchor)
+
                 }
                 if !outstanding.isEmpty {
                     Section(tripText("Still needed")) {
                         ForEach(outstanding) { line in
                             stillNeededRow(line, in: shop, filtering: filtering, packages: packages[line.id] ?? [], hit: matches?[line.id])
-                                .background { if anchor == .line(line.id) { accessibilityAnchor } }
-                                .accessibilityHidden(hideList)
                         }
                     }
                 }
@@ -360,8 +357,6 @@ struct InStoreShoppingView: View {
                     Section(filtering ? shelfText("In your basket") : shoppingText("Picked items")) {
                         ForEach(picked) { line in
                             pickedRow(line, in: shop, filtering: filtering, packages: packages[line.id] ?? [], hit: matches?[line.id])
-                                .background { if anchor == .picked(line.id) { accessibilityAnchor } }
-                                .accessibilityHidden(hideList)
                         }
                     }
                 }
@@ -369,7 +364,7 @@ struct InStoreShoppingView: View {
                     Section {
                         Button { destination = .nextStore } label: { Label(tripText("Next store"), systemImage: "storefront") }
                             .accessibilityIdentifier("tripNextStore")
-                            .background(accessibilityAnchor)
+
                     }.frame(minHeight: 44)
                     if typeSize.isAccessibilitySize {
                         Section { subtotalSummary(shop, last: basket.first).id(Focus.subtotal) }
@@ -377,11 +372,18 @@ struct InStoreShoppingView: View {
                 }
             }
             .listStyle(.plain)
-            .onChange(of: hideList, initial: true) { _, hidden in listAccessibility.setHidden(hidden, search: filtering) }
+            .accessibilityIdentifier(filtering ? "inStoreSearchResults" : "inStoreAisle")
+            .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { height in
+                if !filtering { aisleHeight = height }
+            }
             .safeAreaInset(edge: .top, spacing: 0) { if filtering { searchField } }
             .coordinateSpace(name: "shoppingAisles")
             .onAppear {
-                if !filtering, let id = restoredRow(), id != visible.first?.id {
+                if !filtering, let position = returnPosition {
+                    reader.scrollTo(position.row, anchor: position.anchor)
+                    if UIAccessibility.isVoiceOverRunning { focus = position.row }
+                    returnPosition = nil
+                } else if !filtering, let id = restoredRow(), id != visible.first?.id {
                     if visible.contains(where: { $0.id == id }) || outstanding.contains(where: { $0.id == id }) {
                         reader.scrollTo(Focus.line(id), anchor: .top)
                     } else if basket.contains(where: { $0.id == id }) {
@@ -395,6 +397,12 @@ struct InStoreShoppingView: View {
                       let top = rows.filter({ $0.value.maxY > 0 }).min(by: { $0.value.minY < $1.value.minY })
                 else { return }
                 viewportAnchor = top.key
+                if let center = rows.filter({ $0.key != .subtotal && $0.value.maxY > 0 && $0.value.minY < aisleHeight })
+                    .min(by: { abs($0.value.midY - aisleHeight / 2) < abs($1.value.midY - aisleHeight / 2) }) {
+                    let span = aisleHeight - center.value.height
+                    let fraction = span > 0 ? min(1, max(0, center.value.minY / span)) : 0
+                    centerPosition = AislePosition(row: center.key, anchor: UnitPoint(x: 0.5, y: fraction))
+                }
                 switch top.key {
                 case .line(let id), .picked(let id): remember(id)
                 case .subtotal: break
@@ -485,28 +493,38 @@ struct InStoreShoppingView: View {
     private func beginSearch() {
         guard let shop = model.shop, shop.id == shopID else { return }
         let order = aisleFocusOrder(in: shop)
-        let anchor = (UIAccessibility.isVoiceOverRunning ? focus : nil) ?? viewportAnchor
-        if UIAccessibility.isVoiceOverRunning, let anchor, let index = order.firstIndex(of: anchor) {
-            // If the anchor itself is picked or removed during search, restore its closest surviving neighbor.
+        let position: AislePosition?
+        if UIAccessibility.isVoiceOverRunning, let focus {
+            position = AislePosition(row: focus, anchor: .center)
+        } else {
+            position = centerPosition ?? viewportAnchor.map { AislePosition(row: $0, anchor: .top) }
+        }
+        searchPosition = position
+        if let anchor = position?.row, let index = order.firstIndex(of: anchor) {
+            // The saved grocery may be picked or removed while searching.
             let following = order[index...].filter { $0 != .subtotal }
             let preceding = order.prefix(index).reversed()
             searchReturnTargets = anchor == .subtotal ? [.subtotal] : following + preceding + [.subtotal]
-        } else { searchReturnTargets = [] }
+        } else {
+            searchReturnTargets = []
+        }
         searching = true
     }
 
     private func endSearch() {
         editingSearch = false
-        searching = false
-        query = ""
         if let shop = model.shop, shop.id == shopID {
             let remaining = Set(aisleFocusOrder(in: shop))
             if let target = searchReturnTargets.first(where: remaining.contains) {
-                scrollToReturn = true
-                pendingFocus = target
+                let alignment = target == searchPosition?.row ? (searchPosition?.anchor ?? .center) : .center
+                returnPosition = AislePosition(row: target, anchor: alignment)
             }
         }
+        pendingFocus = nil
         searchReturnTargets = []
+        searchPosition = nil
+        searching = false
+        query = ""
     }
 
     @ViewBuilder private func destinationContent(_ value: Destination, in shop: ShoppingLedger) -> some View {
