@@ -2,6 +2,20 @@ import SwiftUI
 import CoreDomain
 import HouseholdClient
 
+extension EnteredStoreQuoteOptions {
+    func splitSupplies(for item: UUID) -> (StoreCommitmentSupply?, StoreCommitmentSupply?) {
+        func pack(_ quote: EnteredStoreQuote) -> StoreCommitmentSupply? {
+            let rows = quote.supplies?.filter { $0.commitmentId == item } ?? []
+            guard rows.count == 1, let row = rows.first, let value = try? row.reviewedSupply(),
+                  (try? value.surplus()).map({ $0 >= 0 }) == true else { return nil }
+            return value
+        }
+        let a = pack(first), b = pack(second)
+        guard let a, let b else { return (a, b) }
+        return (a, a.unit == b.unit && a.requiredUnits == b.requiredUnits ? b : nil)
+    }
+}
+
 /// Built exclusively from a current pair returned to this reader by the quote service.
 struct GrocerySplitPreview: View {
     struct Item: Identifiable {
@@ -43,23 +57,13 @@ struct GrocerySplitPreview: View {
         _secondPrices = State(initialValue: [tortillas: currency == .usd ? "2" : "40", beans: currency == .usd ? "5" : "80"])
         _secondPicks = State(initialValue: [tortillas])
     }
-    private func pack(_ item: UUID, _ quote: EnteredStoreQuote) -> StoreCommitmentSupply? {
-        let rows = quote.supplies?.filter { $0.commitmentId == item } ?? []
-        guard rows.count == 1, let row = rows.first, let value = try? row.reviewedSupply(),
-              (try? value.surplus()).map({ $0 >= 0 }) == true else { return nil }
-        return value
-    }
-    private func supplies(_ item: UUID) -> (StoreCommitmentSupply?, StoreCommitmentSupply?) {
-        let a = pack(item, options.first), b = pack(item, options.second)
-        return (a, a?.unit == b?.unit && a?.requiredUnits == b?.requiredUnits ? b : nil)
-    }
     private func applicable(_ quote: EnteredStoreQuote) -> Bool {
         quote.available == true && quote.quantitiesMatched && quote.singleStore &&
             quote.eligibilityConfirmed && quote.orderMinimum?.kind == .noneRequired
     }
     private var result: GroceryStoreSplit? {
         let rows = items.map { item in
-            let (a,b) = supplies(item.id)
+            let (a,b) = options.splitSupplies(for: item.id)
             func cost(_ pack: StoreCommitmentSupply?, _ value: String?) -> Money? {
                 guard let pack, let price = try? DinnerEntry.money(value ?? "", currency: currency),
                       price.minorUnits >= 0 else { return nil }
@@ -76,7 +80,7 @@ struct GrocerySplitPreview: View {
         VStack(alignment: .leading, spacing: 12) {
             Text(dinnerText("Choose each stop and enter its observed price per pack. Travel is the extra cost of adding the second stop."))
             ForEach(items) { item in
-                let (a,b) = supplies(item.id)
+                let (a,b) = options.splitSupplies(for: item.id)
                 VStack(alignment: .leading, spacing: 6) {
                     Text(item.label).font(.headline)
                     stopRow(a, quote: options.first, text: priceField($firstPrices, item.id))

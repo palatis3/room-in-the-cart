@@ -37,8 +37,18 @@ private actor StoreQuoteFixture: SharedStoreQuotesServing {
 }
 @MainActor final class SharedStoreQuoteTests: XCTestCase {
     private func scope() -> StoreQuoteScope { .init(generation:UUID(),enrollmentRevision:UUID(),subject:"verified-adult",householdID:UUID().uuidString,memberID:UUID().uuidString,shopID:UUID(),authorityStamp:"contributor/store_quotes") }
-    private func option(_ label: String = "First", checkout: Int? = 3800, trip: Int? = 0, minutes: Int? = 0) -> EnteredStoreQuote {
-        .init(label:label,store:label,branch:"Branch",mode:"pickup",slot:"2026-11-05T18:00:00Z",observedAt:"2026-11-03T12:00:00Z",source:"Entered checkout",itemsMinor:checkout,checkoutMinor:checkout,allChargesIncluded:true,available:true,quantitiesMatched:true,singleStore:true,tripAlreadyPlanned:trip == 0,tripMinor:trip,extraMinutes:minutes,capMinor:3800,eligibilityConfirmed:true,orderMinimum:.init(kind:.noneRequired))
+    private func option(_ label: String = "First", checkout: Int? = 3800, trip: Int? = 0, minutes: Int? = 0,
+                        supplies: [EnteredCommitmentSupply]? = nil) -> EnteredStoreQuote {
+        .init(label:label,store:label,branch:"Branch",mode:"pickup",slot:"2026-11-05T18:00:00Z",observedAt:"2026-11-03T12:00:00Z",source:"Entered checkout",itemsMinor:checkout,checkoutMinor:checkout,allChargesIncluded:true,available:true,quantitiesMatched:true,singleStore:true,tripAlreadyPlanned:trip == 0,tripMinor:trip,extraMinutes:minutes,capMinor:3800,eligibilityConfirmed:true,orderMinimum:.init(kind:.noneRequired),supplies:supplies)
+    }
+    func testSplitKeepsReviewedSecondStorePacksWhenFirstStoreHasNoObservation() throws {
+        let item = UUID()
+        let source = EnteredCommitmentSupply(commitmentId: item, unit: "count", requiredUnits: 6, usableUnitsPerPackage: 4, packages: 2)
+        let options = EnteredStoreQuoteOptions(first: option(), second: option("Second", supplies: [source]))
+        let (first, second) = options.splitSupplies(for: item)
+        XCTAssertNil(first)
+        XCTAssertEqual(second?.packages, 2)
+        XCTAssertEqual(try second?.surplus(), 2)
     }
     private func page(_ scope: StoreQuoteScope, shopper: Bool = false, revision: Int = 3, epoch: Int = 2, grant: Int = 1, phase: String = "draft", pairs: [Any] = [], adults: [Any] = []) throws -> StoreQuotePage {
         try JSONDecoder().decode(StoreQuotePage.self,from:JSONSerialization.data(withJSONObject:["shopId":scope.shopID.uuidString,"shopRevision":revision,"authorityEpoch":epoch,"grantRevision":shopper ? 0 : grant,"shopper":shopper,"phase":phase,"adults":adults,"commitments":[["id":"11111111-1111-4111-8111-111111111111","label":"Wraps for dinner and lunch","packs":2]],"currentBasis":NSNull(),"pairs":pairs,"nextCursor":NSNull()]))
