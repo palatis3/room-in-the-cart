@@ -124,9 +124,9 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
                                 }
                                 Button(dinnerText("Plan this dinner")) { handoff = first }
                                     .buttonStyle(PrimaryAction()).accessibilityIdentifier("dinner.planSaved")
-                                reusableCookLink(library, recipe: first)
                                 recipeEditorButton(library, recipe: first, featured: true)
                             }.padding(.vertical, 6)
+                            reusableCookLink(library, recipe: first)
                             startPickupButton
                         }
                         Section {
