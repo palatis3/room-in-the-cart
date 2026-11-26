@@ -152,7 +152,7 @@ struct PackagePhotoChoice: View {
     }
 
     private func actionLabel(_ title: String) -> some View {
-        Text(title).frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
+        Text(title).frame(maxWidth: .infinity, minHeight: 48, alignment: .leading).contentShape(Rectangle())
     }
 
     private func update(show: Bool) {
