@@ -142,6 +142,10 @@ struct TripNextStoreEntry: View {
                         }
                     }
                 }
+                NavigationLink {
+                    SkippedStoreView(model: model, shopID: shopID, suggested: store)
+                } label: { Text(tripText("Preview skipping a store")) }
+                .accessibilityIdentifier("trip.skipPreview")
                 ForEach(0..<3) { group in
                     let choices = rows.filter { row in
                         guard let line = byID[row.id], !shop.isLeftForNextTrip(line),
@@ -175,6 +179,144 @@ struct TripNextStoreEntry: View {
             }
         }.navigationTitle(tripText("Next store"))
         .keyboardDoneAction(visible: editing, title: ledgerText("Done"), identifier: "tripStoreKeyboardDone") { editing = false }
+    }
+}
+
+/// Compares only the shopper's explicitly selected stops. Store preferences describe
+/// where a line was listed, never stock or a route the shopper has agreed to take.
+struct SkippedStorePreview {
+    enum Group: CaseIterable {
+        case stranded, alternatives, outsidePlan, unassigned
+        var title: String {
+            switch self {
+            case .stranded: tripText("Would lose its last planned store")
+            case .alternatives: tripText("Still has a planned store")
+            case .outsidePlan: tripText("Already outside the plan")
+            case .unassigned: tripText("Unassigned groceries")
+            }
+        }
+    }
+    struct Item: Identifiable {
+        let row: TripHandoffRow
+        let stores: [String]
+        var id: UUID { row.id }
+    }
+    private(set) var groups: [Group: [Item]] = [:]
+
+    init?(shop: ShoppingLedger, remaining: Set<String>, skipping: String, excluding: Set<UUID>) {
+        let planned = Set(remaining.map { $0.lowercased() })
+        let skipped = skipping.lowercased()
+        guard !skipped.isEmpty, planned.contains(skipped) else { return nil }
+        let lines = Dictionary(uniqueKeysWithValues: shop.lines.map { ($0.id, $0) })
+        for row in TripHandoffRow.outstanding(in: shop) {
+            guard !excluding.contains(row.id), let line = lines[row.id], !shop.isLeftForNextTrip(line) else { continue }
+            let assigned = line.preferredStores ?? []
+            let matched = assigned.filter { planned.contains($0.lowercased()) }
+            let other = matched.filter { $0.lowercased() != skipped }
+            let group: Group
+            if assigned.isEmpty { group = .unassigned }
+            else if !other.isEmpty { group = .alternatives }
+            else if !matched.isEmpty { group = .stranded }
+            else { group = .outsidePlan }
+            groups[group, default: []].append(Item(row: row, stores: group == .alternatives ? other : assigned))
+        }
+    }
+}
+
+private struct SkippedStoreView: View {
+    @ObservedObject var model: LedgerModel
+    let shopID: UUID
+    let suggested: String
+    @Environment(\.shoppingListAuthorization) private var authorize
+    @State private var entered: [String] = []
+    @State private var remaining = Set<String>()
+    @State private var skipping = ""
+    @State private var newStore = ""
+    @FocusState private var editing: Bool
+    private var pantry = ShoppingDinnerPantry()
+
+    init(model: LedgerModel, shopID: UUID, suggested: String) {
+        self.model = model
+        self.shopID = shopID
+        self.suggested = suggested
+    }
+
+    var body: some View {
+        WorkingForm {
+            if authorize(), let shop = model.shop, shop.id == shopID {
+                let candidates = storeChoices(shop)
+                let selected = candidates.filter { remaining.contains($0.lowercased()) }
+                Section {
+                    Text(tripText("Choose only the stops you still plan to visit. This preview leaves your list and current stop unchanged."))
+                    ForEach(candidates, id: \.self) { name in
+                        Toggle(isOn: selection(for: name)) { Text(verbatim: name) }
+                            .frame(minHeight: 44)
+                    }
+                    let name = newStore.trimmingCharacters(in: .whitespacesAndNewlines)
+                    workingTextField(tripText("Another planned store"), text: $newStore)
+                        .focused($editing)
+                    Button(tripText("Include this store")) {
+                        if !candidates.contains(where: { $0.caseInsensitiveCompare(name) == .orderedSame }) { entered.append(name) }
+                        remaining.insert(name.lowercased())
+                        newStore = ""
+                        editing = false
+                    }
+                    .disabled(name.isEmpty || name.utf8.count > 512)
+                } header: { Text(tripText("Remaining planned stops")) }
+                if !selected.isEmpty {
+                    Section {
+                        Picker(tripText("Preview skipping"), selection: $skipping) {
+                            Text(tripText("Choose a stop")).tag("")
+                            ForEach(selected, id: \.self) { name in Text(verbatim: name).tag(name.lowercased()) }
+                        }
+                        .accessibilityIdentifier("trip.skipChoice")
+                    } footer: { Text(tripText("Based on your store preferences. Store stock is unknown.")) }
+                }
+                if selected.contains(where: { $0.lowercased() == skipping }) {
+                    let status = pantry.status(in: shop, ledger: model)
+                    let excluded = status.covered.union(status.pending.flatMap { $0.lines.map(\.id) })
+                    if let result = SkippedStorePreview(shop: shop, remaining: Set(selected), skipping: skipping, excluding: excluded) {
+                        ForEach(SkippedStorePreview.Group.allCases, id: \.self) { group in
+                            let items = result.groups[group] ?? []
+                            if !items.isEmpty || group == .stranded {
+                                Section(group.title) {
+                                    if items.isEmpty { Text(tripText("No groceries would lose a planned store.")) }
+                                    ForEach(items) { item in
+                                        VStack(alignment: .leading, spacing: 3) {
+                                            Text(verbatim: item.row.text(includePack: false))
+                                            if !item.stores.isEmpty {
+                                                Text(verbatim: item.stores.joined(separator: " · "))
+                                                    .font(.footnote).foregroundStyle(Theme.secondary)
+                                            }
+                                        }.accessibilityElement(children: .combine)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }.navigationTitle(tripText("Preview skipping a store"))
+        .keyboardDoneAction(visible: editing, title: ledgerText("Done"), identifier: "tripSkipKeyboardDone") { editing = false }
+    }
+
+    private func storeChoices(_ shop: ShoppingLedger) -> [String] {
+        let names = shop.lines.filter { !$0.isTrashed && !$0.isHandled }.flatMap { $0.preferredStores ?? [] }
+            + [shop.currentStop.name, suggested] + entered
+        var seen = Set<String>()
+        return names.filter { !$0.isEmpty && seen.insert($0.lowercased()).inserted }
+            .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+    }
+
+    private func selection(for store: String) -> Binding<Bool> {
+        let key = store.lowercased()
+        return Binding(get: { remaining.contains(key) }, set: { included in
+            if included { remaining.insert(key) }
+            else {
+                remaining.remove(key)
+                if skipping == key { skipping = "" }
+            }
+        })
     }
 }
 

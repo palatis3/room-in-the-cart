@@ -29,7 +29,7 @@ interface StoredCheck {
   check_id:string;kind:Kind;source_id:string;expires_at:Date;recipient_id:string;
   answer:Answer|null;quantity:Amount|null;answered_at:Date|null;reviewed:boolean;withdrawn:boolean;
 }
-interface Pair {id:string;label:string}
+export interface NamedAdultPair {id:string;label:string}
 const duration=7*86400000;
 
 // Entering a general workspace as a Free adult must not contact the billing provider.
@@ -43,9 +43,9 @@ export async function adultCheckCapability(ctx:Context,billing:BillingService|un
   catch(error){if(error instanceof ServiceError)return false;throw error;}
 }
 
-async function findPair(ctx:Context,shop:Shop,otherID:string|undefined):Promise<Pair|null> {
+async function findPair(ctx:Context,shop:Shop,otherID:string|undefined):Promise<NamedAdultPair|null> {
   if(!otherID || (ctx.member.member_id!==shop.shopper_id && otherID!==shop.shopper_id))return null;
-  const row=(await ctx.db.query<Pair>(`SELECT member_id AS id,alias AS label FROM ritc.member
+  const row=(await ctx.db.query<NamedAdultPair>(`SELECT member_id AS id,alias AS label FROM ritc.member
     WHERE household_id=$1 AND member_id=$2 AND kind='adult' AND state='active'
     AND (can_contribute OR organizer OR member_id=$3)
     AND ritc.shared_content_visible($1,$4,$2,'adultCheck',$5,1,1)
@@ -69,14 +69,14 @@ async function choices(ctx:Context,shop:Shop,shopper:boolean,rows:StoredCheck[])
   return {dinners,items};
 }
 
-export async function adultChecksRoute(repo:HouseholdRepository,billing:BillingService|undefined,ctx:Context,shopId:string,method:string,body:unknown) {
+export async function namedAdultScope(repo:HouseholdRepository,billing:BillingService|undefined,ctx:Context,shopId:string,phases:readonly string[]) {
   if(!billing||ctx.ownRequestsOnly||ctx.viewGrantId||ctx.member.kind!=='adult'||ctx.member.state!=='active')throw unavailable();
   const boot=await repo.bootstrap(ctx);
   if(boot.shopId!==shopId||boot.grantId)throw unavailable();
   const shop=await repo.shop(ctx,shopId);
   const shopper=shop.shopper_id===ctx.member.member_id;
   if(!shopper&&!ctx.member.can_contribute&&!ctx.member.organizer)throw unavailable();
-  if(shop.phase!=='draft')throw unavailable();
+  if(!phases.includes(shop.phase))throw unavailable();
   const snapshot=await billing.snapshot(ctx);
   if(!hasPaidSeat(snapshot,ctx.member.member_id,ctx.now))throw new ServiceError(403,'membership_inactive','Use Free or manage named adult seats.');
   const other=snapshot.seats.find(s=>s.userID!==ctx.member.member_id && hasPaidSeat(snapshot,s.userID,ctx.now));
@@ -84,11 +84,16 @@ export async function adultChecksRoute(repo:HouseholdRepository,billing:BillingS
   const pairRevision=(await ctx.db.query<{revision:number}>(`SELECT coalesce(max(revision),0) AS revision FROM ritc.billing_event
     WHERE household_id=$1 AND kind='seats_changed'`,[ctx.householdId])).rows[0]!.revision;
   const recipientId=shopper?pair?.id:ctx.member.member_id;
+  return {shop,shopper,snapshot,pair,pairRevision,recipientId};
+}
+
+export async function adultChecksRoute(repo:HouseholdRepository,billing:BillingService|undefined,ctx:Context,shopId:string,method:string,body:unknown) {
+  const {shop,shopper,snapshot,pair,pairRevision,recipientId}=await namedAdultScope(repo,billing,ctx,shopId,['draft']);
   const basis=[ctx.householdId,shopId,shop.shopper_id,recipientId??null,shop.revision,shop.authority_epoch,pairRevision,ctx.now];
   const input=method==='POST'?command.parse(body):null;
   const readRows=async()=>pair?(await ctx.db.query<StoredCheck>(`SELECT check_id,kind,source_id,expires_at,recipient_id,answer,quantity,answered_at,reviewed,withdrawn
     FROM ritc.adult_check WHERE household_id=$1 AND shop_id=$2 AND shopper_id=$3 AND recipient_id=$4
-    AND shop_revision=$5 AND authority_epoch=$6 AND pair_revision=$7 AND expires_at>$8
+    AND kind IN ('attendance','cupboard') AND shop_revision=$5 AND authority_epoch=$6 AND pair_revision=$7 AND expires_at>$8
     AND (NOT withdrawn OR check_id=$9::uuid) ORDER BY created_at,check_id`,[...basis,input?.id??null])).rows:[];
   let rows=await readRows();
   const {dinners,items}=pair?await choices(ctx,shop,shopper,rows.filter(r=>!r.withdrawn)):{dinners:[],items:[]};

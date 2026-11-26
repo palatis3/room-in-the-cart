@@ -15,7 +15,16 @@ private struct ReviewedQuickGroceryDraftKey: EnvironmentKey {
     static let defaultValue: FirstListDraftVersion? = nil
 }
 
+private struct DirectListDictationKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
 extension EnvironmentValues {
+    var directListDictation: Bool {
+        get { self[DirectListDictationKey.self] }
+        set { self[DirectListDictationKey.self] = newValue }
+    }
+
     var reviewedQuickGroceryDraft: FirstListDraftVersion? {
         get { self[ReviewedQuickGroceryDraftKey.self] }
         set { self[ReviewedQuickGroceryDraftKey.self] = newValue }
@@ -111,6 +120,7 @@ struct ShopListLinkProvided: PreferenceKey {
 struct LedgerQuickGroceryEntry: View {
     @ObservedObject var model: LedgerModel
     var prominent = false
+    var openBatch: (() -> Void)? = nil
     @EnvironmentObject private var access: WorkspaceAccess
     @EnvironmentObject private var household: HouseholdModel
     @Environment(\.guardianChildCoordinator) private var child
@@ -122,7 +132,7 @@ struct LedgerQuickGroceryEntry: View {
            let identity = CapturePrivateIdentity.current(access: access, household: household) {
             if let owner = try? firstListOwner(identity), let workspaceID = model.sourceWorkspaceID {
                 let available = scene == .active && model.firstListStore != nil
-                QuickGroceryField(model: model, workspaceID: workspaceID, owner: owner, prominent: prominent, available: available, householdMember: household.projection != nil, authorize: {
+                QuickGroceryField(model: model, workspaceID: workspaceID, owner: owner, prominent: prominent, openBatch: openBatch, available: available, householdMember: household.projection != nil, authorize: {
                     UIApplication.shared.isProtectedDataAvailable && UIApplication.shared.applicationState == .active &&
                     child?.presented != true && household.projection?.grantId == nil &&
                     CapturePrivateIdentity.current(access: access, household: household) == identity &&
@@ -148,9 +158,11 @@ private struct QuickGroceryField: View {
     let workspaceID: UUID
     let owner: Data
     let prominent: Bool
+    let openBatch: (() -> Void)?
     let available: Bool
     let householdMember: Bool
     let authorize: @MainActor () -> Bool
+    @Environment(\.grocerySpeechPermission) private var speechPermission
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var draft: QuickGroceryDraft?
     @State private var loadFailed = false
@@ -191,6 +203,7 @@ private struct QuickGroceryField: View {
         let preview: StagedListImport?
         let draft: QuickGroceryDraft
         let version: FirstListDraftVersion?
+        var startsDictation = false
     }
     private var confirmedBatch: LedgerImportBatch? {
         guard let receipt, let shop = model.shop, shop.revisionID == receipt.revisionID else { return nil }
@@ -294,6 +307,43 @@ private struct QuickGroceryField: View {
                     .accessibilityIdentifier("quickGrocery.add")
                     .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || busy)
             }
+            if let openBatch {
+                Button {
+                    guard let draft = currentDraft, authorize(), !busy else { return }
+                    editing = false
+                    Task {
+                        guard await draft.prepareToSubmit(draft.text, revision: model.revision), draft.failure == nil,
+                              currentDraft === draft, authorize(), !busy else { return }
+                        openBatch()
+                    }
+                } label: {
+                    Label(ledgerText("Add several items"), systemImage: "text.badge.plus")
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.borderless).disabled(currentDraft == nil || busy)
+                .accessibilityIdentifier("shop.addFirstList")
+            }
+            Button {
+                guard authorize(), let draft = currentDraft, !busy else { return }
+                let selected = model.shop?.id, wording = draft.text
+                editing = false
+                submitting = true
+                Task {
+                    defer { submitting = false }
+                    do {
+                        if let speechPermission { try await OnDeviceSpeechCapture.prepareGroceryPermissions(speechPermission) }
+                    } catch { return } // A changed or locked workspace cancelled the route.
+                    guard visible, authorize(), selected == model.shop?.id, await draft.prepareToSubmit(wording, revision: model.revision), authorize(),
+                          currentDraft === draft, selected == model.shop?.id else { return }
+                    review = Review(shopID: selected, text: wording, preview: nil, draft: draft,
+                        version: draft.version, startsDictation: true)
+                }
+            } label: {
+                Label(captureText("Dictate on this iPhone"), systemImage: "mic").frame(minHeight: 44)
+            }
+            .buttonStyle(.borderless).disabled(busy || currentDraft == nil)
+            .accessibilityIdentifier("quickGrocery.dictate")
             if loadFailed || currentDraft?.failure != nil {
                 let reopen = loadFailed || currentDraft?.failure == .operationConflict
                 Text(ledgerText(loadFailed ? "Draft unavailable" : reopen ? "This draft changed or expired. Reopen it to review the saved version." :
@@ -367,6 +417,7 @@ private struct QuickGroceryField: View {
                     }
                 }
             }
+            .environment(\.directListDictation, original.startsDictation)
             .environment(\.reviewedQuickGroceryDraft, original.version)
         }
     }

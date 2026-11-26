@@ -44,7 +44,7 @@ import CoreDomain
     private let initialLabel: String
     private let focusReceiptText: Bool
     private var cameraPermission: SourceCameraPermission
-    @StateObject private var model = ScanModel()
+    @StateObject private var model: ScanModel
     @StateObject private var corrections = CaptureCorrectionsModel()
     @State private var label: String
     @State private var photo: PhotosPickerItem?
@@ -78,6 +78,7 @@ import CoreDomain
          focusReceiptText: Bool = false,
          authorize: @escaping () -> Bool,
          onReviewed: @escaping (ReviewedScan) -> Void) {
+        _model = StateObject(wrappedValue: ScanModel(service: OnDeviceScanService(receiptReadings: kind == .receipt)))
         self.kind = kind; self.target = target; self.authorize = authorize; self.onReviewed = onReviewed
         self.correctionScope = correctionScope; _label = State(initialValue: initialLabel)
         self.initialLabel = initialLabel
@@ -227,9 +228,19 @@ import CoreDomain
                let index = rows.firstIndex(where: { $0.id == inspectedLineID }) {
                 NavigationStack {
                     ReceiptPrintedLineInspector(lines: rows.enumerated().map { offset, row in
-                        ReceiptDocumentPage.Line(id: offset + 1, text: row.originalText, uncertain: row.uncertainOCR == true)
+                        let source = model.accepted
+                        let sameLayout = source != nil && source?.originalText == model.text && source?.lineBounds.count == rows.count
+                        return ReceiptDocumentPage.Line(id: offset + 1, text: row.originalText, uncertain: row.uncertainOCR == true,
+                            bounds: sameLayout ? source?.lineBounds[offset] : nil,
+                            wordReadings: sameLayout && source?.wordReadings.count == rows.count ? source?.wordReadings[offset] ?? [] : [])
                     }, pageNumber: nil, index: index, originalPage: {
                         authorize() ? model.accepted?.originalImageData : nil
+                    }, uprightPreview: model.accepted?.referenceJPEG, reviewed: rows[index].reviewedText, apply: { wording in
+                        guard authorize(), !model.closed, let current = receiptLines?.firstIndex(where: { $0.id == inspectedLineID }),
+                              receiptLines?[current] == rows[index] else { return }
+                        receiptLines?[current].reviewedText = wording
+                        model.confirmed = false
+                        inspectedLineID = nil
                     })
                 }
             }

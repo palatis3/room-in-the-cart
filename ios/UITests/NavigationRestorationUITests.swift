@@ -366,6 +366,42 @@ import XCTest
         app.assertSelectedShoppingList(named: firstName)
     }
 
+    func testPreviousTripAddsOnlyTheSelectedGroceryToTheNamedDestination() {
+        launch(reset: true)
+        let entry = element("quickGrocery.name")
+        tap(entry)
+        for name in ["milk", "eggs"] {
+            entry.typeText(name + "\n")
+            XCTAssertTrue(app.buttons.matching(NSPredicate(format: "identifier == %@ AND label CONTAINS %@",
+                                                           "quickGrocery.undo", name)).firstMatch.waitForExistence(timeout: 8))
+        }
+        tap(app.buttons["openPickupList"])
+        let picker = app.buttons["ledgerShopPicker"]
+        tap(picker)
+        tap(app.buttons["Start another pickup"])
+        let title = element("ledgerShopName")
+        tap(title)
+        title.typeText("Friday market")
+        tap(app.buttons["ledgerCreateShop"])
+        app.assertSelectedShoppingList(named: "Friday market")
+        tap(app.buttons["ledgerListOptions"])
+        tap(app.buttons["Choose groceries from a previous trip"])
+        tap(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "previousGroceries.trip-")).firstMatch)
+        let add = app.buttons["previousGroceries.add"]
+        XCTAssertTrue(add.waitForExistence(timeout: 8))
+        XCTAssertFalse(add.isEnabled)
+        let milk = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS[c] %@",
+                                                   "previousGroceries.row-", "milk")).firstMatch
+        tap(milk)
+        XCTAssertTrue(add.isEnabled)
+        tap(add)
+        XCTAssertTrue(add.waitForNonExistence(timeout: 8))
+        app.assertSelectedShoppingList(named: "Friday market")
+        let added = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS[c] %@", "ledgerCheck-", "milk")).firstMatch
+        XCTAssertTrue(added.waitForExistence(timeout: 8))
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS[c] %@", "ledgerCheck-", "eggs")).firstMatch.exists)
+    }
+
     func testInStoreListPickerOpensTheChosenListAndPreservesItsStopAndGroceries() {
         launch(reset: true)
         let entry = element("quickGrocery.name")

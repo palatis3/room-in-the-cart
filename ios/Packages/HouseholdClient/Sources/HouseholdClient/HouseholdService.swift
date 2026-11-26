@@ -436,11 +436,21 @@ public actor HouseholdService {
         let status: MealPlanReceipt = try await perform("shops/\(plan.shopId.uuidString.lowercased())/meal-plan/proposals", method: "POST", body: encoded(fields))
         guard status.saved else { throw ClientError.invalidResponse }
     }
+    public func shopperDevice(for projection: HouseholdBootstrap) throws -> HouseholdDeviceSession {
+        guard projection.enrolled, projection.grantId == nil, projection.role == "shopper",
+              projection.household.id == householdID, projection.memberId == memberID,
+              projection.capabilities.contains("shopper_commands") else { throw ClientError.accessEnded }
+        return try currentHouseholdDeviceSession()
+    }
+
     public func shopperShop(shopID: String) async throws -> ShopperShop {
         let start = generation
         try await authorizeShopper(shopID: shopID)
         guard start == generation else { throw ClientError.cancelled }
-        return try await perform("shops/\(shopID)", method: "GET")
+        let result: ShopperShop = try await perform("shops/\(shopID)", method: "GET")
+        guard start == generation else { throw ClientError.cancelled }
+        guard result.nextCursor == nil, UUID(uuidString: result.shopId) == UUID(uuidString: shopID) else { throw ClientError.invalidResponse }
+        return result
     }
     public func confirmedOrder(shopID: UUID) async throws -> SharedConfirmedOrder {
         let start = generation

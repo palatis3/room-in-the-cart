@@ -300,6 +300,34 @@ import UniformTypeIdentifiers
         model.confirmed = true
         XCTAssertEqual(model.reviewed()?.localeIdentifier, expected)
     }
+    func testRepairReplacesOnlySelectedOccurrenceAndKeepsOriginalEvidence() async throws {
+        let speech = FakeSpeech(), original = "🥑 pan, pan y dos peras"
+        let model = make(speech)
+        let secondPan = try XCTUnwrap(SpeechWordRepair(text: original, range: (original as NSString).range(of: "pan", options: .backwards),
+            word: "pan", alternatives: ["pan", "panqué", "panqué", "flan", "extra"]))
+        let peras = try XCTUnwrap(SpeechWordRepair(text: original, range: (original as NSString).range(of: "peras"),
+            word: "peras", alternatives: ["perras"]))
+        XCTAssertNil(SpeechWordRepair(text: original, range: NSRange(location: 1, length: 4), word: "pan", alternatives: ["flan"]))
+        XCTAssertEqual(secondPan.alternatives, ["panqué", "flan"])
+        model.startSpeech()
+        await settle { model.listening }
+        speech.yield(.init(text: original, isFinal: true, uncertain: true, repairs: [secondPan, peras]))
+        await settle { !model.busy && model.candidate?.text == original }
+        XCTAssertEqual(model.text, "12 wraps")
+        model.acceptCandidate()
+        model.resolveWord(secondPan, as: "panqué")
+        XCTAssertEqual(model.text, "🥑 pan, panqué y dos peras")
+        model.resolveWord(peras, as: "perras") // Stale pre-edit range.
+        XCTAssertEqual(model.text, "🥑 pan, panqué y dos peras")
+        let shifted = try XCTUnwrap(model.wordRepairs.first)
+        model.resolveWord(shifted, as: "manzanas")
+        XCTAssertEqual(model.text, "🥑 pan, panqué y dos manzanas")
+        XCTAssertTrue(model.wordRepairs.isEmpty)
+        model.confirmed = true
+        let result = try XCTUnwrap(model.reviewed())
+        XCTAssertEqual(result.originalText, original)
+        XCTAssertEqual(result.text, "🥑 pan, panqué y dos manzanas")
+    }
     func testRepeatedSpeechCallbackDoesNotAppendOrApply() async {
         let speech = FakeSpeech(); let model = make(speech); model.startSpeech()
         await settle { model.listening }

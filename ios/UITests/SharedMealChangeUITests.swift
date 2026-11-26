@@ -365,10 +365,18 @@ import XCTest
         start.press(forDuration: 0.05, thenDragTo: end)
     }
     private func assertText(_ text: String) {
-        let matches = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", text))
-        if matches.allElementsBoundByIndex.contains(where: { $0.exists && $0.isHittable }) { return }
-        reveal(matches.firstMatch)
-        XCTAssertTrue(matches.allElementsBoundByIndex.contains(where: { $0.exists && $0.isHittable }), "Missing visible text: \(text)")
+        let labels = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", text))
+        for attempt in 0..<24 {
+            let (bounds, area) = scrollGeometry()
+            // Static text can be readable inside the content area even when UIKit supplies no activation point.
+            let frames = labels.allElementsBoundByIndex.map(\.frame).filter { !$0.isEmpty }
+            if frames.contains(where: {
+                area.contains(CGPoint(x: $0.midX, y: $0.midY)) && $0.minY >= area.minY && $0.maxY <= area.maxY
+            }) { return }
+            let upward = frames.first.map { $0.midY > area.midY } ?? (attempt < 16)
+            scrollContent(upward: upward, area: area, bounds: bounds)
+        }
+        XCTFail("Missing visible text: \(text)")
     }
     private func assertElementContains(_ id: String, _ text: String) {
         let target = element(id); reveal(target); XCTAssertTrue(target.label.contains(text), target.label)

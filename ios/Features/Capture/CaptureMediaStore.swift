@@ -69,18 +69,80 @@ actor CaptureMediaStore {
     func packagePhotos(target: CaptureTarget, owner: PackageRowPhoto.Owner,
                        authorize: @MainActor @Sendable () -> Bool) async throws -> [PackageRowPhoto] {
         guard target.kind == .packageReference, await authorize() else { throw ScanFailure.stale }
-        let url = try packagePhotoFile(target.workspaceID)
-        guard FileManager.default.fileExists(atPath: url.path) else { return [] }
         let rows = try withLock {
-            try loadPackagePhotos(target.workspaceID).filter { row in
-                guard row.owner == owner, row.target.containerID == target.containerID,
-                      try !retired(row.target, mediaID: row.source.mediaID) else { return false }
-                let source = try workspaceDirectory(target.workspaceID).appendingPathComponent(row.source.mediaID.uuidString.lowercased() + ".json")
-                return FileManager.default.fileExists(atPath: source.path)
+            try livePackagePhotos(in: target.workspaceID, owner: owner).flatMap { row -> [PackageRowPhoto] in
+                if row.target.containerID == target.containerID { return [row] }
+                return (row.destinations ?? []).filter { $0.target.containerID == target.containerID }.map { row.projected(to: $0) }
             }
         }
         guard await authorize() else { throw ScanFailure.stale }
         return rows
+    }
+
+    private func livePackagePhotos(in workspace: UUID, owner: PackageRowPhoto.Owner) throws -> [PackageRowPhoto] {
+        try loadPackagePhotos(workspace).filter { row in
+            guard row.owner == owner, try !retired(row.target, mediaID: row.source.mediaID) else { return false }
+            let source = try workspaceDirectory(workspace).appendingPathComponent(row.source.mediaID.uuidString.lowercased() + ".json")
+            return FileManager.default.fileExists(atPath: source.path)
+        }
+    }
+
+    /// Only source photos explicitly shown by this adult are offered for reuse.
+    func earlierPackagePhotos(for target: CaptureTarget, owner: PackageRowPhoto.Owner,
+                              authorize: @MainActor @Sendable () -> Bool) async throws -> [PackageRowPhoto] {
+        guard target.kind == .packageReference, await authorize() else { throw ScanFailure.stale }
+        let rows = try withLock { try livePackagePhotos(in: target.workspaceID, owner: owner).filter { $0.target.containerID != target.containerID } }
+        guard await authorize() else { throw ScanFailure.stale }
+        return rows
+    }
+
+    func reusePackagePhoto(_ original: PackageRowPhoto, destination: PackageRowPhoto.Destination, owner: PackageRowPhoto.Owner,
+                           authorize: @MainActor @Sendable () -> Bool) async throws {
+        let target = destination.target
+        guard original.owner == owner, original.target.workspaceID == target.workspaceID, target.kind == .packageReference,
+              target.containerID != original.target.containerID, original.association == nil,
+              destination.originalProduct.utf8.count == 64, destination.destinationProduct.utf8.count == 64,
+              await authorize() else { throw ScanFailure.stale }
+        try withLock {
+            var rows = try loadPackagePhotos(target.workspaceID)
+            let sourceFile = try workspaceDirectory(target.workspaceID)
+                .appendingPathComponent(original.source.mediaID.uuidString.lowercased() + ".json")
+            guard FileManager.default.fileExists(atPath: sourceFile.path), try !retired(original.target, mediaID: original.source.mediaID),
+                  let i = rows.firstIndex(where: { $0.revision == original.revision && $0.source == original.source &&
+                      $0.owner == owner && $0.target.sameObject(as: original.target) }),
+                  !rows.contains(where: { row in row.owner == owner && (row.target.sameObject(as: target) ||
+                      row.destinations?.contains(where: { $0.target.sameObject(as: target) }) == true) }) else { throw ScanFailure.stale }
+            var links = rows[i].destinations ?? []
+            guard links.count < 100 else { throw ScanFailure.tooLarge }
+            links.append(destination)
+            rows[i].destinations = links
+            try savePackagePhotos(rows, in: target.workspaceID)
+        }
+        guard await authorize() else {
+            try unlinkPackageDestination(destination, from: original.source, owner: owner)
+            await notifyPackagePhotosChanged()
+            throw ScanFailure.stale
+        }
+        await notifyPackagePhotosChanged()
+    }
+
+    private func unlinkPackageDestination(_ link: PackageRowPhoto.Destination, from source: SourceMediaReference,
+                                          owner: PackageRowPhoto.Owner) throws {
+        try withLock {
+            var rows = try loadPackagePhotos(source.workspaceID)
+            guard let i = rows.firstIndex(where: { $0.source == source && $0.owner == owner }),
+                  rows[i].destinations?.contains(link) == true else { return }
+            rows[i].destinations?.removeAll { $0 == link }
+            try savePackagePhotos(rows, in: source.workspaceID)
+        }
+    }
+
+    func removeReusedPackagePhoto(_ photo: PackageRowPhoto, target: CaptureTarget, owner: PackageRowPhoto.Owner,
+                                  authorize: @MainActor @Sendable () -> Bool) async throws {
+        guard let link = photo.association, link.target.sameObject(as: target), target.workspaceID == photo.source.workspaceID,
+              owner == photo.owner, await authorize() else { throw ScanFailure.stale }
+        try unlinkPackageDestination(link, from: photo.source, owner: owner)
+        await notifyPackagePhotosChanged()
     }
 
     func setPackagePhoto(_ reference: SourceMediaReference, target: CaptureTarget, owner: PackageRowPhoto.Owner,
@@ -96,9 +158,16 @@ actor CaptureMediaStore {
                                               thumbnail: PackageRowPhoto.makeThumbnail(jpeg))
         }
         guard await authorize() else { throw ScanFailure.stale }
-        let previous: PackageRowPhoto? = try withLock {
+        let previous: (direct: PackageRowPhoto?, reused: PackageRowPhoto?) = try withLock {
             guard try !retired(target, mediaID: reference.mediaID) else { throw ScanFailure.retired }
             var rows = try loadPackagePhotos(target.workspaceID)
+            var oldReuse: PackageRowPhoto?
+            if replacement != nil, let i = rows.firstIndex(where: { $0.owner == owner &&
+                $0.destinations?.contains(where: { $0.target.sameObject(as: target) }) == true }),
+               let linked = rows[i].destinations?.first(where: { $0.target.sameObject(as: target) }) {
+                oldReuse = rows[i].projected(to: linked)
+                rows[i].destinations?.removeAll { $0.id == linked.id }
+            }
             let previous = rows.first { $0.owner == owner && $0.target.sameObject(as: target) }
             rows.removeAll { row in
                 row.owner == owner && row.target.sameObject(as: target) && (replacement != nil || row.source == reference)
@@ -106,7 +175,7 @@ actor CaptureMediaStore {
             if let replacement { rows.append(replacement) }
             guard rows.count <= ScanLimits.maximumWorkspaceRecords else { throw ScanFailure.tooLarge }
             try savePackagePhotos(rows, in: target.workspaceID)
-            return previous
+            return (previous, oldReuse)
         }
         if let replacement, !(await authorize()) {
             // An interrupted opt-in cannot expose a new picture. Preserve a concurrent choice or removal.
@@ -114,7 +183,11 @@ actor CaptureMediaStore {
                 var rows = try loadPackagePhotos(target.workspaceID)
                 guard rows.contains(where: { $0.revision == replacement.revision }) else { return }
                 rows.removeAll { $0.revision == replacement.revision }
-                if let previous, try !retired(previous.target, mediaID: previous.source.mediaID) { rows.append(previous) }
+                if let prior = previous.direct, try !retired(prior.target, mediaID: prior.source.mediaID) { rows.append(prior) }
+                if let prior = previous.reused, let link = prior.association,
+                   let i = rows.firstIndex(where: { $0.owner == owner && $0.revision == prior.revision && $0.source == prior.source }) {
+                    rows[i].destinations = (rows[i].destinations ?? []) + [link]
+                }
                 try savePackagePhotos(rows, in: target.workspaceID)
             }
             await notifyPackagePhotosChanged()
@@ -142,7 +215,11 @@ actor CaptureMediaStore {
         guard rows.count <= ScanLimits.maximumWorkspaceRecords else { throw ScanFailure.invalidImage }
         for row in rows {
             guard row.target.kind == .packageReference, row.target.workspaceID == workspace,
-                  row.source.workspaceID == workspace, row.thumbnail.count <= PackageRowPhoto.maximumBytes,
+                  row.source.workspaceID == workspace, row.association == nil, row.originalTarget == nil,
+                  (row.destinations?.count ?? 0) <= 100,
+                  (row.destinations ?? []).allSatisfy({ $0.target.workspaceID == workspace && $0.target.kind == .packageReference &&
+                      $0.target.containerID != row.target.containerID && $0.originalProduct.utf8.count == 64 && $0.destinationProduct.utf8.count == 64 }),
+                  row.thumbnail.count <= PackageRowPhoto.maximumBytes,
                   try PackageRowPhoto.normalizedCue(row.cue) == row.cue,
                   PackageRowPhoto.validThumbnail(row.thumbnail) else { throw ScanFailure.invalidImage }
         }
@@ -153,7 +230,11 @@ actor CaptureMediaStore {
         let url = try packagePhotoFile(workspace)
         if rows.isEmpty {
             if FileManager.default.fileExists(atPath: url.path) { try FileManager.default.removeItem(at: url) }
-        } else { try write(JSONEncoder().encode(rows), to: url) }
+        } else {
+            let data = try JSONEncoder().encode(rows)
+            guard data.count <= 600_000 else { throw ScanFailure.tooLarge }
+            try write(data, to: url)
+        }
     }
 
     @MainActor private func notifyPackagePhotosChanged() {

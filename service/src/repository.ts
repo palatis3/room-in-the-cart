@@ -218,8 +218,9 @@ export class HouseholdRepository {
       selectionRequired:!helperRole&&!ctx.viewGrantId&&!ctx.selectedShopId&&candidates.length>1,role:isShopper?'shopper':ctx.member.organizer?'organizer':helperRole?(helper.mode==='edit'?'editor':'helper'):'contributor',shopId:helperRole?helper.shop_id:shop?.shop_id??null,...(helperRole?{grantId:helper.grant_id}:{}),enrolled:true,canSetRequestQueue:Boolean(queueEligible),queueConsent:false,
       ...(shop && !helperRole && ctx.member.can_contribute ? {nextShopOnly:shop.phase!=='draft'||Boolean(lateCutoff)} : {}),
       ...(grant ? {requestQueueGrant:grant.request_queue_grant,requestQueueUntil:grant.request_queue_until.toISOString()} : {}),
-      capabilities:[...(!ctx.ownRequestsOnly&&!ctx.viewGrantId&&!helperRole&&ctx.member.kind==='adult'&&shop?.phase==='draft'&&
-        (isShopper||ctx.member.organizer||ctx.member.can_contribute)&&await adultCheckCapability(ctx,billing)?['adult_checks']:[]),
+      capabilities:[...(!ctx.ownRequestsOnly&&!ctx.viewGrantId&&!helperRole&&ctx.member.kind==='adult'&&shop&&['draft','frozen','placed'].includes(shop.phase)&&
+        (isShopper||ctx.member.organizer||ctx.member.can_contribute)&&await adultCheckCapability(ctx,billing)?
+          [...(shop.phase==='draft'?['adult_checks']:[]),'cook_step_handoff']:[]),
         ...(adultPickup&&shop&&['draft','frozen'].includes(shop.phase)&&this.options.sharedContentSafety&&this.options.moderationRetentionDays
         ?[...(this.options.tripSubstitutions?['trip_substitutions']:[]),...(this.options.sharedPicking?['shared_picking']:[])]:[]),
         ...(adultPickup&&this.options.adultLastCall?['adult_last_call']:[]),

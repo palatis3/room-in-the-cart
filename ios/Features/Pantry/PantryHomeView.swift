@@ -271,6 +271,9 @@ struct PantryHomeView: View {
                                 } label: { Label(pantryText("Count one shelf"), systemImage: "checklist") }
                             }
                             if let digestAccess, digestAccess.scope.origin == snapshot.state.workspaceID, digestAccess.authorized() {
+                                NavigationLink(pantryText("Standing stock checks")) {
+                                    PantryStandingChecksView(scope: digestAccess.scope)
+                                }.accessibilityIdentifier("pantry.standingChecks")
                                 NavigationLink(pantryText("Staple minimums")) {
                                     PantryMinimumsView(model: model, scope: digestAccess.scope)
                                 }

@@ -60,6 +60,7 @@ public enum QuickGrocery {
     static func packageRequest(_ text: String) -> (name: String, packages: GroceryPackageCount)? {
         var wording = text.trimmingCharacters(in: .whitespaces)
         if wording.hasPrefix("- ") || wording.hasPrefix("• ") || wording.hasPrefix("* ") { wording.removeFirst(2) }
+        guard !ListQuantityParser.containsGroceryMoney(wording) else { return nil }
         let parts = wording.split(maxSplits: 3, whereSeparator: \.isWhitespace)
         guard parts.count == 4 else { return nil }
         let kind: GroceryPackageCount.Kind
@@ -77,7 +78,13 @@ public enum QuickGrocery {
         var countTokens = [String(literal)][...]
         guard let count = try? ListQuantityParser.takeAmount(from: &countTokens, allowingWords: true),
               countTokens.isEmpty, count.denominator == 1, count > .zero,
-              let name = plainName(String(parts[3])) else { return nil }
+              !parts[3].isEmpty else { return nil }
+        let name = String(parts[3])
+        // Validate the entire suffix just as strictly as any other package name.
+        // Only the known printed number may precede the ordinary name.
+        let numberedName = ListQuantityParser.isNumberLedGroceryName(name) &&
+            plainName(String(name.drop(while: { $0.isNumber || $0.isWhitespace }))) != nil
+        guard plainName(name) != nil || numberedName else { return nil }
         let words = name.lowercased().split(whereSeparator: \.isWhitespace)
         guard words.first != "of", words.first != "de",
               words.allSatisfy({ !["per", "por", "each", "cada", "to", "destino"].contains($0) }) else { return nil }

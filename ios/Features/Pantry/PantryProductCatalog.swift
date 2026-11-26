@@ -1,6 +1,6 @@
 import Foundation
 
-struct ProductCatalogProposal: Equatable, Sendable {
+struct ProductCatalogProposal: Equatable, Sendable, Codable {
     let barcode: String
     let name: String?
     let quantity: String?

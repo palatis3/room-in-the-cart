@@ -5,6 +5,17 @@ import HouseholdClient
 
 final class StructuredCaptureTests: XCTestCase {
     private let destination = "Saturday pickup"
+    func testCurrencyAndNumberLedNamesKeepUnknownPhysicalAmount() throws {
+        for phrase in ["30 pesos de tortillas", "5 dollars of apples", "7 Up", "2 botellas a MX$30"] {
+            for draft in [try StructuredCaptureParser.lines(phrase, destination: "Shop").first,
+                          try StructuredCaptureParser.naturalList(phrase, destination: "Shop").lines.first] {
+                let row = try XCTUnwrap(draft)
+                XCTAssertEqual(row.originalText, phrase)
+                XCTAssertEqual(row.amount, "")
+                XCTAssertEqual(row.packCount, "")
+            }
+        }
+    }
     func testOnlineWordingNeedsExplicitReviewAndPreservesSourceDestinationQuantityAndExclusions() throws {
         let proposal = try StructuredCaptureParser.naturalList("2 litros de leche sin lactosa", destination: destination)
         var line = try XCTUnwrap(proposal.lines.first)

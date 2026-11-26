@@ -17,6 +17,46 @@ final class RoomInTheCartUITests: XCTestCase {
         app.terminate()
     }
 
+    func testBatchShortcutPreservesUnsentGroceryAcrossFirstSaveAndPopulatedReturn() {
+        launch()
+        let field = element("quickGrocery.name")
+        let batch = app.buttons["shop.addFirstList"]
+        let editor = app.textViews["ledgerImportText"]
+        func verifyDraft() {
+            let restored = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "Unsent oats"), object: field)
+            XCTAssertEqual(XCTWaiter.wait(for: [restored], timeout: 8), .completed)
+        }
+        tap(field)
+        field.typeText("Unsent oats")
+        tap(app.buttons["quickGrocery.dismissKeyboard"])
+        tap(batch)
+        tap(editor)
+        editor.typeText("Milk\nLimes")
+        tap(app.buttons["ledgerReviewImport"])
+        tap(app.buttons["ledgerCommitImport"])
+        XCTAssertTrue(app.fullListGrocery(labeled: "Inspect Milk").waitForExistence(timeout: 10))
+        XCTAssertFalse(app.fullListGrocery(labeled: "Inspect Unsent oats").exists)
+        tap(app.navigationBars.firstMatch.buttons.firstMatch)
+        XCTAssertTrue(batch.waitForExistence(timeout: 8))
+        verifyDraft()
+        tap(batch)
+        XCTAssertTrue(editor.waitForExistence(timeout: 8))
+        XCTAssertEqual(editor.value as? String, "")
+        tap(app.buttons["Cancel"])
+        app.terminate()
+        launch(reset: false)
+        XCTAssertTrue(batch.waitForExistence(timeout: 8))
+        verifyDraft()
+        tap(batch)
+        tap(editor)
+        editor.typeText("Red peppers")
+        tap(app.buttons["ledgerReviewImport"])
+        tap(app.buttons["ledgerCommitImport"])
+        XCTAssertTrue(app.fullListGrocery(labeled: "Inspect Red peppers").waitForExistence(timeout: 10))
+        XCTAssertTrue(app.fullListGrocery(labeled: "Inspect Milk").exists)
+        XCTAssertFalse(app.fullListGrocery(labeled: "Inspect Unsent oats").exists)
+    }
+
     func testOpenPantryDinnerChooserWithAnActivePickup() {
         launch()
         let grocery = element("quickGrocery.name")
@@ -202,6 +242,58 @@ final class RoomInTheCartUITests: XCTestCase {
         tap(field)
         field.typeText("Milk")
         XCTAssertEqual(field.value as? String, "Milk")
+    }
+
+    func testDirectLocalDictationCanReturnToTypedGroceryWithoutAddingIt() {
+        launch()
+        let field = element("quickGrocery.name")
+        tap(field)
+        field.typeText("Apples\n")
+        XCTAssertTrue(app.buttons["quickGrocery.undo"].waitForExistence(timeout: 8))
+        field.typeText("Brown rice")
+        tap(app.buttons["quickGrocery.dismissKeyboard"])
+        tap(app.buttons["quickGrocery.dictate"])
+        // A supported simulator can present the system prompt before capture.
+        // Unavailable hardware still reaches the same editable capture surface.
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let capture = app.navigationBars["Capture a list"]
+        let deadline = Date().addingTimeInterval(22)
+        while !capture.exists && Date() < deadline {
+            let deny = springboard.alerts.buttons.matching(NSPredicate(format: "label IN %@", ["Don’t Allow", "Don't Allow", "No permitir"])).firstMatch
+            if deny.waitForExistence(timeout: 1) { deny.tap() }
+        }
+        XCTAssertTrue(capture.exists)
+        tap(capture.buttons["Cancel"])
+        XCTAssertTrue(capture.waitForNonExistence(timeout: 8))
+        tap(app.navigationBars.buttons["Cancel"])
+        XCTAssertTrue(field.waitForExistence(timeout: 8))
+        XCTAssertEqual(field.value as? String, "Brown rice")
+        let added = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "shop.inspect-", "Brown rice")).firstMatch
+        XCTAssertFalse(added.exists)
+    }
+
+    func testFirstPesoRequestKeepsItsWordsAndUnknownQuantityAcrossRelaunch() {
+        launch(language: "es", region: "MX")
+        let wording = "30 pesos de tortillas"
+        let field = element("quickGrocery.name")
+        tap(field)
+        field.typeText(wording + "\n")
+        let review = app.buttons["ledgerReviewImport"]
+        tap(review)
+        let name = element("ledgerImportName-1")
+        reveal(name)
+        XCTAssertEqual(name.value as? String, wording)
+        let amount = element("ledgerImportAmount-1")
+        reveal(amount)
+        XCTAssertEqual(amount.value as? String ?? "", "")
+        tap(app.buttons["ledgerCommitImport"])
+        XCTAssertTrue(app.buttons["ledgerCommitImport"].waitForNonExistence(timeout: 8))
+        app.terminate()
+        launch(language: "es", region: "MX", reset: false)
+        let row = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
+            "shop.inspect-", wording)).firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 10))
+        XCTAssertFalse((row.value as? String ?? "").contains("30 unidades"))
     }
 
     func testTypedContainerOfGroceriesCanBeReviewedCorrectedAndReopenedInBothLanguages() {
@@ -602,11 +694,20 @@ final class RoomInTheCartUITests: XCTestCase {
                 screenshot("Spanish largest text compact review and reachable confirmation")
             }
             tap(confirm)
+            // The first-list sheet returns through Shop before the new list
+            // mounts. Wait for its selected pickup before scrolling for Undo.
+            let listTitle = language == "en" ? "Shopping list" : "Lista de compras"
+            XCTAssertTrue(app.navigationBars[listTitle].waitForExistence(timeout: 10))
+            let pickup = app.buttons["ledgerShopPicker"]
+            XCTAssertTrue(pickup.wait(for: \.isHittable, toEqual: true, timeout: 8))
+            XCTAssertEqual(pickup.label, destination)
             let undo = app.buttons["ledgerUndoImport"]
             reveal(undo)
             XCTAssertEqual(undo.label, language == "en" ? "Undo last import · 2 entries" : "Deshacer la última importación · 2 entradas")
             tap(undo)
             XCTAssertTrue(undo.waitForNonExistence(timeout: 10))
+            reveal(app.staticTexts[language == "en" ? "Add the groceries you need for this pickup." :
+                "Añade los alimentos que necesitas para esta compra."])
             app.terminate()
         }
     }

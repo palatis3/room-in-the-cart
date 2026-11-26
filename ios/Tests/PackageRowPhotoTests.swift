@@ -1,3 +1,4 @@
+import CoreDomain
 import UIKit
 import XCTest
 @testable import RoomInTheCart
@@ -69,6 +70,81 @@ final class PackageRowPhotoTests: XCTestCase {
         let archive = try await reopened.archiveListing(workspaceID: target.workspaceID) { true }
         XCTAssertEqual(Set(archive.records.map(\.id)), [source.id, alternate.id])
         XCTAssertEqual(archive.unavailableCount, 0)
+    }
+
+    func testLaterTripConfirmsOneExactPhotoAndClearsStaleOrDeletedAssociations() async throws {
+        let directory = root
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let store = CaptureMediaStore(directory: directory), adult = owner(), workspaceID = UUID()
+        var old = ShoppingLedger(), next = ShoppingLedger()
+        let oldID = try old.addManualLine(name: "Milk", quantity: nil, notes: "Blue cap")
+        let wanted = try next.addManualLine(name: "Milk", quantity: nil, notes: "One liter")
+        let other = try next.addManualLine(name: "Milk", quantity: nil, notes: "Red cap")
+        let workspace = LedgerWorkspace(shops: [old, next], selectedShopID: next.id)
+        let a = CaptureTarget(workspaceID: workspaceID, containerID: old.id, objectID: oldID, revision: 0, kind: .packageReference)
+        let b = CaptureTarget(workspaceID: workspaceID, containerID: next.id, objectID: wanted, revision: 0, kind: .packageReference)
+        let source = record(a)
+        _ = try await store.save(source) { true }
+        try await store.setPackagePhoto(source.reference, target: a, owner: adult, cue: "Azul") { true }
+        let choices = try await store.earlierPackagePhotos(for: b, owner: adult) { true }
+        let photo = try XCTUnwrap(choices.first)
+        let link = PackageRowPhoto.Destination(id: UUID(), target: b,
+            originalProduct: try XCTUnwrap(PackageRowPhoto.productSignature(a, in: workspace)),
+            destinationProduct: try XCTUnwrap(PackageRowPhoto.productSignature(b, in: workspace)))
+        let unconfirmed = try await store.packagePhotos(target: b, owner: adult) { true }
+        XCTAssertTrue(unconfirmed.isEmpty)
+        var permitReads = 0
+        do {
+            try await store.reusePackagePhoto(photo, destination: link, owner: adult) {
+                permitReads += 1
+                return permitReads == 1
+            }
+            XCTFail("An interrupted confirmation must leave the destination unchanged")
+        } catch { XCTAssertEqual(error as? ScanFailure, .stale) }
+        let interrupted = try await store.packagePhotos(target: b, owner: adult) { true }
+        XCTAssertTrue(interrupted.isEmpty)
+        try await store.reusePackagePhoto(photo, destination: link, owner: adult) { true }
+        let fresh = CaptureMediaStore(directory: directory)
+        let rows = try await fresh.packagePhotos(target: b, owner: adult) { true }
+        let reused = try XCTUnwrap(rows.first)
+        XCTAssertEqual(rows.map(\.target.objectID), [wanted])
+        XCTAssertNotEqual(reused.target.objectID, other)
+        XCTAssertEqual(reused.source, photo.source)
+        XCTAssertTrue(reused.matchesCurrentGroceries(in: workspace))
+        var changed = workspace
+        try changed.shops[1].updateLine(lineID: wanted, name: "Milk", notes: "Red cap", aisle: "")
+        XCTAssertFalse(reused.matchesCurrentGroceries(in: changed))
+        let wrongActor = try await fresh.packagePhotos(target: b, owner: owner()) { true }
+        XCTAssertTrue(wrongActor.isEmpty)
+        let replacement = record(b)
+        _ = try await fresh.save(replacement) { true }
+        var checks = 0
+        do {
+            try await fresh.setPackagePhoto(replacement.reference, target: b, owner: adult, cue: "Otra") {
+                checks += 1
+                return checks < 5
+            }
+            XCTFail("Revoked change must restore the previously linked cue")
+        } catch { XCTAssertEqual(error as? ScanFailure, .stale) }
+        let restored = try await fresh.packagePhotos(target: b, owner: adult) { true }
+        XCTAssertEqual(restored.first?.association, link)
+        try await fresh.removeReusedPackagePhoto(reused, target: b, owner: adult) { true }
+        let removed = try await fresh.packagePhotos(target: b, owner: adult) { true }
+        XCTAssertTrue(removed.isEmpty)
+        try await fresh.reusePackagePhoto(photo, destination: link, owner: adult) { true }
+        try await fresh.setPackagePhoto(photo.source, target: a, owner: adult, cue: nil) { true }
+        let hidden = try await fresh.packagePhotos(target: b, owner: adult) { true }
+        XCTAssertTrue(hidden.isEmpty)
+        try await fresh.setPackagePhoto(photo.source, target: a, owner: adult, cue: "New cue") { true }
+        do {
+            try await fresh.reusePackagePhoto(photo, destination: link, owner: adult) { true }
+            XCTFail("Old preview cannot opt in to a corrected source")
+        } catch { XCTAssertEqual(error as? ScanFailure, .stale) }
+        let latest = try await fresh.earlierPackagePhotos(for: b, owner: adult) { true }
+        try await fresh.reusePackagePhoto(try XCTUnwrap(latest.first), destination: link, owner: adult) { true }
+        try await fresh.remove(photo.source, target: a) { true }
+        let erased = try await fresh.packagePhotos(target: b, owner: adult) { true }
+        XCTAssertTrue(erased.isEmpty)
     }
 
     func testReplacementHideAndDeletionRemoveOnlySelectedEvidence() async throws {

@@ -10,6 +10,7 @@ struct CaptureEvidence: Equatable, Sendable {
     let uncertainLines: [String]
     let sourceImageData: Data?
     let previewImageData: Data?
+    var speechRepairs: [SpeechWordRepair] = []
 }
 
 /// A review result, not a saved ledger mutation or verified food/price fact.
@@ -74,10 +75,31 @@ struct NaturalCaptureBatch: Equatable, Sendable {
     }
 }
 
+/// The offset belongs to this transcript, including when the same word occurs twice.
+struct SpeechWordRepair: Equatable, Sendable, Identifiable {
+    let id: Int
+    var range: NSRange
+    let word: String
+    let alternatives: [String]
+
+    init?(text: String, range: NSRange, word: String, alternatives: [String]) {
+        guard let span = Range(range, in: text), !word.isEmpty, String(text[span]) == word else { return nil }
+        var seen: Set<String> = [word]
+        let choices = alternatives.filter {
+            !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && $0.utf8.count <= 128 &&
+                !$0.unicodeScalars.contains(where: CharacterSet.controlCharacters.contains) && seen.insert($0).inserted
+        }
+        guard !choices.isEmpty else { return nil }
+        self.id = range.location; self.range = range; self.word = word
+        self.alternatives = Array(choices.prefix(2))
+    }
+}
+
 struct SpeechCaptureUpdate: Sendable {
     let text: String
     let isFinal: Bool
     let uncertain: Bool
+    var repairs: [SpeechWordRepair] = []
 }
 
 @MainActor protocol CaptureSpeechService {

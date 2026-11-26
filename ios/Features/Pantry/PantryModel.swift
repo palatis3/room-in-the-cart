@@ -6,7 +6,7 @@ import LocalStore
 
 /// Explicit identity selected from a currently authorized ingredient or need.
 /// This value is presentation input, never an authorization or archive capability.
-struct PantryReviewedFood: Equatable {
+struct PantryReviewedFood: Equatable, Codable {
     let id: UUID
     let name: String
     let inventoryWorkspaceID: UUID

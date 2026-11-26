@@ -29,6 +29,8 @@ struct ScannedSource: Equatable, Sendable {
     let originalImageData: Data
     let referenceJPEG: Data
     let barcodes: [CapturedBarcode]
+    var lineBounds: [CGRect] = []
+    var wordReadings: [[ReceiptWordReading]] = []
 }
 /// Receipt rows are literal evidence only. These strings never become Money, ReceiptFragment or usable stock.
 struct ScanReceiptLine: Codable, Equatable, Identifiable, Sendable {

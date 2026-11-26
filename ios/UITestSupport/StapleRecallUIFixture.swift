@@ -36,7 +36,17 @@ struct StapleRecallUIFixture: View {
                         let tea = try west.addManualLine(name: "Tea", quantity: nil, at: past)
                         try west.approveStaple(lineID: tea, purpose: "School lunches", at: past)
                         var current = ShoppingLedger(title: "This trip", basis: .init(branch: "North market"))
-                        if ProcessInfo.processInfo.arguments.contains("--package-row-photo-fixture") {
+                        if ProcessInfo.processInfo.arguments.contains("--long-current-stop-fixture") {
+                            current = ShoppingLedger(title: "This trip", basis: .init(branch: "North market", mode: .inStore, currency: .mxn))
+                            for index in 1...40 {
+                                try current.addManualLine(name: String(format: "Pasillo %02d", index), quantity: nil)
+                            }
+                            let one = Quantity(amount: .one, unit: .count, originalLiteral: "1")
+                            try current.addManualLine(name: "Café", quantity: one, notes: "Molido")
+                            try current.addManualLine(name: "Café", quantity: one, notes: "En grano")
+                            let other = try current.addManualLine(name: "Café para otra tienda", quantity: one)
+                            try current.setPreferredStores(["West store"], lineID: other, expectedRevision: current.revisionID)
+                        } else if ProcessInfo.processInfo.arguments.contains("--package-row-photo-fixture") {
                             try current.addManualLine(name: "Coffee", quantity: nil)
                         } else if ProcessInfo.processInfo.arguments.contains("--trip-reminders-fixture") {
                             try current.addManualLine(name: "Agua", quantity: nil)

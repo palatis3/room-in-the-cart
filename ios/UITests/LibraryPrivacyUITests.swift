@@ -93,6 +93,47 @@ import XCTest
 }
 
 @MainActor final class RecipeLibraryAcceptanceUITests: LibraryPrivacyUITestCase {
+    func testPrivateCookingPhotoSurvivesNextCookAndDisplayOptInEndsWithSession() throws {
+        app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        SimulatorPhotosFixture(app: app).saveSourcePhoto()
+        app.terminate()
+
+        launch("--recipe-library-fixture", arguments: ["--recipe-full-screen"])
+        tap(app.buttons["records.recovered.Existing family soup"])
+        tap(app.buttons["records.openSavedRecipe"])
+        tap(app.buttons["cooking.openRecipe"])
+        tap(app.buttons["cooking.stepPhoto.add"])
+        tap(element("cooking.stepPhoto.pick"))
+        try SimulatorPhotosFixture(app: app).chooseNewestSourcePhoto()
+
+        let cue = app.textFields["cooking.stepPhoto.description"]
+        tap(cue)
+        cue.typeText("Golden at the edges")
+        tap(app.buttons["cooking.stepNote.done"])
+        tap(app.buttons["cooking.stepPhoto.save"])
+        let saved = app.staticTexts["Step photo, Golden at the edges"]
+        reveal(saved, requiresHitTarget: false)
+        let display = app.switches["cooking.keepAwake"].firstMatch
+        reveal(display)
+        XCTAssertEqual(display.value as? String, "0")
+        display.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        XCTAssertEqual(display.value as? String, "1")
+        tap(app.buttons["cooking.end"])
+        // iOS 27 exposes a native action and its nested button with the same identifier.
+        let confirmation = app.sheets.buttons.matching(identifier: "cooking.confirmEnd").firstMatch
+        tap(confirmation)
+        tap(app.buttons["cooking.openRecipe"])
+        reveal(saved, requiresHitTarget: false)
+        capture("Private photo and description on a later cook")
+        reveal(display)
+        XCTAssertEqual(display.value as? String, "0")
+        tap(app.buttons["Edit step photo"])
+        tap(app.buttons["Remove step photo"])
+        reveal(app.buttons["cooking.stepPhoto.add"])
+        XCTAssertFalse(saved.exists)
+    }
+
     func testPrivateStepNoteReopensOnNextCookAndCanBeDeleted() {
         launch("--recipe-library-fixture", arguments: ["--recipe-full-screen"])
         tap(button("records.recovered.Existing family soup"))

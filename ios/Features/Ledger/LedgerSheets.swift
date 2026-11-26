@@ -16,6 +16,8 @@ private enum LedgerImportField: Hashable {
 }
 
 struct LedgerImportView: View {
+    @Environment(\.directListDictation) private var directDictation
+    @State private var openedDirectDictation = false
     @Environment(\.reviewedQuickGroceryDraft) private var quickDraft
     @ObservedObject var model: LedgerModel
     @EnvironmentObject private var access: WorkspaceAccess
@@ -299,12 +301,19 @@ struct LedgerImportView: View {
                     if let picker = reminderPicker, picker.binding != value { reminderPicker = nil }
                     if reminderDestination != nil, let binding = captureBinding, binding != value { invalidateCapture() }
                 }
+                .task(id: liveCaptureBinding) {
+                    guard directDictation, !openedDirectDictation, liveCaptureBinding != nil,
+                          preview == nil, incomingWording == nil, captured == nil,
+                          !model.saving, !model.hasPendingSave else { return }
+                    openedDirectDictation = true
+                    beginCapture(startsDictation: true)
+                }
                 .sheet(item: $capturePresentation) { presentation in
                     let binding = presentation.binding
                     let pickups = liveCaptureBinding == binding ? reviewWorkspace?.shops.map(CapturePickup.init) ?? [] : []
                     NavigationStack {
                         CaptureReviewView(initialText: presentation.text, initialSource: presentation.source, localeIdentifier: binding.captureLanguage,
-                            destination: presentation.destination, existingCapture: presentation.reviewed,
+                            destination: presentation.destination, startsDictation: presentation.startsDictation, existingCapture: presentation.reviewed,
                             correctionScope: CaptureCorrectionScope(profileID: "local:" + binding.workspaceID.uuidString, localeIdentifier: binding.captureLanguage),
                             currentPickup: pickups.first { $0.id == binding.shopID }, availablePickups: pickups,
                             authorizePickup: { liveCaptureBinding == binding && availablePickup($0) },
@@ -534,11 +543,11 @@ struct LedgerImportView: View {
         guard let batch = captured?.naturalBatch else { return true }
         return batch.pickup.map(availablePickup) == true
     }
-    private func beginCapture() {
+    private func beginCapture(startsDictation: Bool = false) {
         guard let binding = liveCaptureBinding, let shop = currentShop, !model.saving, !model.hasPendingSave else { return }
         inputFocus = nil
         capturePresentation = LedgerCapturePresentation(binding: binding, destination: shop.title,
-            text: original, source: source == .paste ? .paste : .typed, reviewed: captured)
+            text: original, source: source == .paste ? .paste : .typed, reviewed: captured, startsDictation: startsDictation)
     }
     private func receiveCapture(_ capture: ReviewedCapture, binding: LedgerCaptureBinding) {
         guard liveCaptureBinding == binding, !model.saving, !model.hasPendingSave, let reviewWorkspace else { return }
@@ -635,6 +644,7 @@ private struct LedgerCapturePresentation: Identifiable {
     let text: String
     let source: CaptureSource
     let reviewed: ReviewedCapture?
+    var startsDictation = false
 }
 
 struct LedgerImportReview {

@@ -133,7 +133,8 @@ public actor LedgerStore {
     /// No result is returned until SQLite COMMIT succeeds.
     @discardableResult
     public func save(payload: Data, expectedRevision: Int64, operationID: UUID, savedAt: Date,
-                     consuming draft: FirstListDraftVersion? = nil, clearingQuickDraft: FirstListDraftVersion? = nil) throws -> LedgerRecord {
+                     consuming draft: FirstListDraftVersion? = nil, clearingQuickDraft: FirstListDraftVersion? = nil,
+                     firstShopForQuickDraft: UUID? = nil) throws -> LedgerRecord {
         guard payload.count <= Self.maximumPayloadBytes else { throw LedgerStoreError.payloadTooLarge }
         guard expectedRevision >= 0, savedAt.timeIntervalSinceReferenceDate.isFinite
         else { throw LedgerStoreError.invalidInput }
@@ -149,6 +150,14 @@ public actor LedgerStore {
                 // Review can update the committed wording. Clear its originating field
                 // only if another editor hasn't replaced that exact draft in the meantime.
                 try deleteMatchingDraft(clearingQuickDraft)
+            }
+            if let draft, let firstShopForQuickDraft, try database.record(operationID: operationID, workspaceID: workspaceID) == nil {
+                // A separate unsent quick entry targets this person's first list. Move its
+                // owner key with the list commit so reopening finds it without adding a row.
+                let source = Self.quickGroceryDraftOwner(persona: draft.owner, shopID: nil)
+                let target = Self.quickGroceryDraftOwner(persona: draft.owner, shopID: firstShopForQuickDraft)
+                try database.run("UPDATE first_list_draft SET owner=? WHERE workspace_id=? AND owner=?",
+                    [.blob(target), .text(workspaceID.uuidString), .blob(source)])
             }
             return try saveSnapshot(payload: payload, expectedRevision: expectedRevision, operationID: operationID, savedAt: savedAt)
         }

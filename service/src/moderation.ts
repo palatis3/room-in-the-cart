@@ -1,3 +1,5 @@
+import {cookingStepWording} from './cooking-step.js';
+import type {BillingService} from './billing/service.js';
 import {tripSubstitution} from './trip-substitutions.js';
 import {pickingWording} from './shared-picking.js';
 import {randomUUID} from 'node:crypto';
@@ -16,6 +18,7 @@ const source=z.discriminatedUnion('kind',[
   z.object({...reference,kind:z.literal('suggestion'),field:z.literal('correction')}).strict(),
   z.object({...reference,kind:z.literal('substitution'),field:z.literal('alternative')}).strict(),
   z.object({...reference,kind:z.literal('pickingRow'),field:z.literal('label')}).strict(),
+  z.object({...reference,kind:z.literal('cookStep'),field:z.literal('text')}).strict(),
   z.object({...reference,kind:z.literal('cookCopy'),field:z.literal('text')}).strict(),
 ]).refine(value=>value.kind!=='instruction'||(value.field==='shopLabel')===(value.index===undefined));
 export const moderationAction=z.discriminatedUnion('action',[
@@ -33,8 +36,9 @@ export function moderationConfiguration(env:NodeJS.ProcessEnv) {
   return {sharedContentSafety:true,moderationRetentionDays:days};
 }
 
-async function currentWording(repo:HouseholdRepository,ctx:Context,ref:Source):Promise<Wording> {
+async function currentWording(repo:HouseholdRepository,ctx:Context,ref:Source,billing?:BillingService):Promise<Wording> {
   const h=ctx.householdId;
+  if(ref.kind==='cookStep')return cookingStepWording(repo,billing,ctx,ref.id);
   if(ref.kind==='pickingRow')return pickingWording(repo,ctx,ref.id);
   if(ref.kind==='substitution'){
     const record=(await ctx.db.query('SELECT shop_id,author_id FROM ritc.trip_substitution WHERE household_id=$1 AND request_id=$2',[h,ref.id])).rows[0];
@@ -75,7 +79,7 @@ async function currentWording(repo:HouseholdRepository,ctx:Context,ref:Source):P
   return {author:proposal.actor_id,first:1,revision:proposal.revision,text:proposal.correction};
 }
 
-export async function recordModerationAction(repo:HouseholdRepository,ctx:Context,input:z.infer<typeof moderationAction>) {
+export async function recordModerationAction(repo:HouseholdRepository,ctx:Context,input:z.infer<typeof moderationAction>,billing?:BillingService) {
   const days=repo.options.moderationRetentionDays;
   if(!repo.options.sharedContentSafety||!days)throw new ServiceError(503,'moderation_unavailable','Contact support.');
   const h=ctx.householdId,viewer=ctx.member.member_id;
@@ -87,7 +91,7 @@ export async function recordModerationAction(repo:HouseholdRepository,ctx:Contex
     return {receiptId:old.receipt_id as string,status:old.status as string};
   }
   const ref=input.source;
-  const wording=await currentWording(repo,ctx,ref);
+  const wording=await currentWording(repo,ctx,ref,billing);
   if(!wording.text||wording.author===viewer)throw unavailable();
   const visible=await ctx.db.query('SELECT ritc.shared_content_visible($1,$2,$3,$4,$5,$6,$7) AS allowed',
     [h,viewer,wording.author,ref.kind,ref.id,wording.first,wording.revision]);

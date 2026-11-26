@@ -13,6 +13,7 @@ final class ShoppingDisplayTimer: ObservableObject {
     private let current: () -> Bool
     private let apply: (Bool) -> Void
     private let duration: Duration
+    private(set) var deadlines: [UUID: Date] = [:]
     private var previousSetting = false
     private var expirations: [UUID: Task<Void, Never>] = [:]
 
@@ -28,6 +29,7 @@ final class ShoppingDisplayTimer: ObservableObject {
             previousSetting = current()
             apply(true)
         }
+        deadlines[owner] = Date.now.addingTimeInterval(TimeInterval(duration.components.seconds) + Double(duration.components.attoseconds) / 1e18)
         active.insert(owner)
         expirations[owner] = Task { [weak self, duration] in
             do { try await Task.sleep(for: duration) } catch { return }
@@ -37,6 +39,7 @@ final class ShoppingDisplayTimer: ObservableObject {
 
     func end(_ owner: UUID) {
         guard active.remove(owner) != nil else { return }
+        deadlines.removeValue(forKey: owner)
         expirations.removeValue(forKey: owner)?.cancel()
         if active.isEmpty { apply(previousSetting) }
     }
@@ -44,8 +47,19 @@ final class ShoppingDisplayTimer: ObservableObject {
 
 struct InStoreDisplayToggle: View {
     let owner: UUID
-    @Environment(\.scenePhase) private var scene
     @Environment(\.shoppingListAuthorization) private var authorize
+
+    var body: some View {
+        ScreenAwakeToggle(owner: owner, identifier: "inStoreKeepAwake", authorize: authorize)
+    }
+}
+
+struct ScreenAwakeToggle: View {
+    let owner: UUID
+    let identifier: String
+    let authorize: () -> Bool
+    var deadlineLabel: ((Date) -> String)? = nil
+    @Environment(\.scenePhase) private var scene
     @ObservedObject private var timer = ShoppingDisplayTimer.shared
 
     var body: some View {
@@ -59,14 +73,20 @@ struct InStoreDisplayToggle: View {
                 }
             }
         )) {
-            Label(shoppingText("Keep screen awake for 15 minutes"), systemImage: "sun.max")
+            VStack(alignment: .leading) {
+                Label(shoppingText("Keep screen awake for 15 minutes"), systemImage: "sun.max")
+                if let deadlineLabel, let deadline = timer.deadlines[owner] {
+                    Text(deadlineLabel(deadline))
+                        .font(.footnote)
+                }
+            }
         }
-        .accessibilityIdentifier("inStoreKeepAwake")
+        .accessibilityIdentifier(identifier)
     }
 }
 
-struct InStoreDisplayPreference: ViewModifier {
-    let trip: UUID
+struct InStoreDisplayPreference<Scope: Equatable>: ViewModifier {
+    let trip: Scope
     let owner: UUID
     let available: Bool
     @Environment(\.scenePhase) private var scene

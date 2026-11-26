@@ -4,6 +4,41 @@ import XCTest
 @testable import RoomInTheCart
 
 @MainActor final class ShoppingTripHandoffTests: XCTestCase {
+    func testSkipPreviewUsesOnlyRemainingStoresAndOutstandingQuantitiesWithoutChangingTrip() throws {
+        var shop = ShoppingLedger(basis: ShopBasis(branch: "South"))
+        func grocery(_ name: String, _ stores: [String], count: Int64 = 1) throws -> UUID {
+            let q = Quantity(amount: try Rational(count), unit: .count, originalLiteral: String(count))
+            let id = try shop.addManualLine(name: name, quantity: q)
+            if !stores.isEmpty { try shop.setPreferredStores(stores, lineID: id, expectedRevision: shop.revisionID) }
+            return id
+        }
+        let exclusive = try grocery("Bread", ["North"], count: 3)
+        try shop.pickPart(lineID: exclusive, amount: .one, expectedRevision: shop.revisionID)
+        let either = try grocery("Beans", ["North", "East"])
+        let elsewhere = try grocery("Coffee", ["South"])
+        let unassigned = try grocery("Tea", [])
+        let covered = try grocery("Rice", ["North"])
+        let picked = try grocery("Milk", ["North"])
+        try shop.setChecked(lineID: picked, checked: true)
+        let deferred = try grocery("Juice", ["East"])
+        try shop.setChecked(lineID: deferred, checked: true)
+        try shop.setBudgetFlexible(lineID: deferred, expectedRevision: shop.revisionID, flexible: true)
+        try shop.leaveForNextTrip(lineID: deferred, expectedRevision: shop.revisionID)
+        let original = shop
+        XCTAssertNil(SkippedStorePreview(shop: shop, remaining: ["North"], skipping: "East", excluding: [covered]))
+        let first = try XCTUnwrap(SkippedStorePreview(shop: shop, remaining: ["north", "East"], skipping: "NORTH", excluding: [covered]))
+        XCTAssertEqual(first.groups[.stranded]?.map(\.id), [exclusive])
+        let two = try Rational(2)
+        XCTAssertEqual(first.groups[.stranded]?.first?.row.amount, "2 " + UnitOfMeasure.count.comparisonLabel(for: two))
+        XCTAssertEqual(first.groups[.alternatives]?.map(\.id), [either])
+        XCTAssertEqual(first.groups[.alternatives]?.first?.stores, ["East"])
+        XCTAssertEqual(first.groups[.outsidePlan]?.map(\.id), [elsewhere])
+        XCTAssertEqual(first.groups[.unassigned]?.map(\.id), [unassigned])
+        let noEast = try XCTUnwrap(SkippedStorePreview(shop: shop, remaining: ["North"], skipping: "North", excluding: [covered]))
+        XCTAssertEqual(Set(noEast.groups[.stranded, default: []].map(\.id)), [exclusive, either])
+        XCTAssertEqual(shop, original)
+    }
+
     func testReopenedShelfMeasurementAlwaysMatchesTheDisplayedPriceUnit() throws {
         let grams = Quantity(amount: try Rational(500), unit: .gram, originalLiteral: "500")
         let rate = Money(minorUnits: 4500, currency: .mxn)

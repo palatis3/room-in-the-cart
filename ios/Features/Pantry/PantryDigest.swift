@@ -69,6 +69,7 @@ struct PantryDigestDocument: Codable, Equatable {
     var shelf: PantryShelfCount?
     var presence: [PantryPresence]?
     var minimums: [PantryStapleMinimum]?
+    var standingChecks: [PantryStandingCheck]?
     var selections: [PantryFoodKeeperSelection] { foodKeeper ?? [] }
 
     func currentGuideRange(for lot: InventoryLot) -> FoodKeeperReviewedRange? {
@@ -96,6 +97,9 @@ struct PantryDigestDocument: Codable, Equatable {
                   Set(shelf.batches.map(\.id)).count == shelf.batches.count,
                   shelf.batches.allSatisfy({ $0.revision > 0 }) else { throw PantryDigestFailure.invalid }
         }
+        let checks = standingChecks ?? []
+        guard checks.count <= 64, Set(checks.map(\.id)).count == checks.count else { throw PantryDigestFailure.invalid }
+        try checks.forEach { try $0.validate() }
         let sightings = presence ?? [], targets = minimums ?? []
         guard sightings.count <= 256, targets.count <= 64,
               Set(sightings.map(\.lotID)).count == sightings.count, Set(targets.map(\.foodID)).count == targets.count,
@@ -377,6 +381,19 @@ typealias PantryNotificationPresenter = @MainActor (PantryNotificationRequest) a
             observations.append(.init(lotID: sighting, date: now()))
             doc.presence = Array(observations.suffix(256))
         }
+        try write(doc, to: file(access.scope))
+    }
+
+    func updateStandingCheck(_ expected: PantryStandingCheck?, next: PantryStandingCheck?, access: PantryDigestAccess) throws {
+        guard access.authorized(), let id = (expected ?? next)?.id, next == nil || next?.id == id else {
+            throw PantryDigestFailure.changed
+        }
+        var doc = try document(access.scope)
+        var checks = doc.standingChecks ?? []
+        guard checks.first(where: { $0.id == id }) == expected else { throw PantryDigestFailure.changed }
+        checks.removeAll { $0.id == id }
+        if let next { checks.append(next) }
+        doc.standingChecks = checks.isEmpty ? nil : checks
         try write(doc, to: file(access.scope))
     }
 

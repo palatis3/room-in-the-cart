@@ -18,6 +18,35 @@ final class LedgerStoreTests: XCTestCase {
         try FileManager.default.removeItem(at: directory)
     }
 
+    func testFirstBatchMovesOnlyItsPersonsUnsentQuickDraftAndReplayKeepsLaterEdits() async throws {
+        let store = try LedgerStore(url: url)
+        let person = Data(repeating: 8, count: 32)
+        let otherPerson = Data(repeating: 9, count: 32)
+        let shop = UUID()
+        let from = LedgerStore.quickGroceryDraftOwner(persona: person, shopID: nil)
+        let to = LedgerStore.quickGroceryDraftOwner(persona: person, shopID: shop)
+        let other = LedgerStore.quickGroceryDraftOwner(persona: otherPerson, shopID: nil)
+        let wording = Data("Unsent oats".utf8)
+        _ = try await store.replaceFirstListDraft(owner: from, expected: nil, baseRevision: 0, payload: wording)
+        let independent = try await store.replaceFirstListDraft(owner: other, expected: nil, baseRevision: 0, payload: Data("private".utf8))
+        let batch = try await store.replaceFirstListDraft(owner: person, expected: nil, baseRevision: 0, payload: Data("rice".utf8))
+        let snapshot = Data("saved rice".utf8)
+        let first = try await store.save(payload: snapshot, expectedRevision: 0, operationID: batch.token, savedAt: Date(),
+                                         consuming: batch, firstShopForQuickDraft: shop)
+        let moved = try await store.firstListDraft(owner: to)
+        let vacated = try await store.firstListDraft(owner: from)
+        let untouched = try await store.firstListDraft(owner: other)
+        XCTAssertEqual(moved?.payload, wording)
+        XCTAssertNil(vacated)
+        XCTAssertEqual(untouched?.version, independent)
+        let edit = try await store.replaceFirstListDraft(owner: to, expected: moved?.version, baseRevision: first.revision, payload: Data("Oat milk".utf8))
+        let replay = try await store.save(payload: snapshot, expectedRevision: 0, operationID: batch.token, savedAt: Date(),
+                                          consuming: batch, firstShopForQuickDraft: shop)
+        let stillEdited = try await store.firstListDraft(owner: to)
+        XCTAssertEqual(first, replay)
+        XCTAssertEqual(stillEdited?.version, edit)
+    }
+
     func testFirstListIsPrivateUntilAtomicCommitAndExactReplay() async throws {
         let owner = Data(repeating: 1, count: 32), other = Data(repeating: 2, count: 32)
         let store = try LedgerStore(url: url)

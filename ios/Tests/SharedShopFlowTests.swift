@@ -15,6 +15,48 @@ import LocalAuthentication
         model.email = actor + "@example.test"; model.code = "123456"; await model.verifyCode()
         XCTAssertNotNil(model.identity); return model
     }
+    func testReturningShopperReviewsOfflinePackChangeWithoutSendingACommand() async throws {
+        let fixture = SharedFlowService()
+        fixture.enrolledDeviceID = UUID().uuidString
+        let actor = try await createdHousehold(fixture)
+        let model = try XCTUnwrap(actor.sharedShop)
+        enterShop(model)
+        await model.applyReviewed()
+        await model.load()
+        let initial = try XCTUnwrap(model.packObservation)
+        let shopID = initial.scope.shop, rowID = try XCTUnwrap(initial.counts.keys.first)
+        let commands = fixture.kinds
+        XCTAssertTrue(initial.previous.isEmpty)
+        fixture.readFailureAfterCreate = 503
+        fixture.lines[0]["packs"] = 3
+        fixture.revision += 1
+        await model.load()
+        XCTAssertTrue(model.packComparisonUnavailable)
+        XCTAssertNil(model.packObservation)
+        fixture.readFailureAfterCreate = nil
+        await model.load()
+        let returned = try XCTUnwrap(model.packObservation)
+        XCTAssertEqual(returned.previous, [rowID: 1])
+        let row = try await model.currentGrocery(shopID: shopID, rowID: rowID, revision: returned.revision,
+                                                 authority: returned.scope.authorityEpoch)
+        XCTAssertEqual(row.packs, 3)
+        XCTAssertTrue(model.preparePackEdit(rowID: rowID, original: row, count: 2, revision: returned.revision,
+                                            authority: returned.scope.authorityEpoch))
+        XCTAssertEqual(model.draft.lines.first?.packs, 2)
+        XCTAssertNil(model.review)
+        XCTAssertFalse(model.acknowledged)
+        XCTAssertEqual(fixture.kinds, commands)
+        model.cancelEditing()
+        if let latest = model.packObservation { await model.dismissPackChange(rowID, observed: latest) }
+        await model.load()
+        XCTAssertTrue(try XCTUnwrap(model.packObservation).previous.isEmpty)
+        XCTAssertEqual(fixture.kinds, commands)
+        fixture.shopperTransferred = true
+        await model.load()
+        XCTAssertNil(model.packObservation)
+        XCTAssertFalse(model.canManage)
+    }
+
     func testCancelledDeviceUnlockKeepsHouseholdProtectedWithoutRequestingTheService() async throws {
         let fixture = SharedFlowService()
         let household = try await model("mia", fixture: fixture)
@@ -1051,6 +1093,7 @@ private final class SharedFlowService {
     var canSelectShop = false
     var storeBasisRevision: Int?
     var transferAfterLibraryRead = false
+    var enrolledDeviceID: String?
     var ownRequestsUnavailable = false
     var readFailureAfterCreate: Int?
     var placedRevision: Int?
@@ -1102,7 +1145,7 @@ private final class SharedFlowService {
             // The receipt describes this invitation. Bootstrap supplies the member's current permissions.
             return try ok(["householdId": household, "memberId": organizer ? miaID : samID, "role": "contributor"])
         }
-        if path.hasSuffix("/devices") { return try ok(["deviceId":actor+"-device","deviceToken":actor+"-device-token"],201) }
+        if path.hasSuffix("/devices") { return try ok(["deviceId":enrolledDeviceID ?? actor+"-device","deviceToken":actor+"-device-token"],201) }
         XCTAssertEqual(request.value(forHTTPHeaderField: "X-Device-Token"), actor+"-device-token")
         if path.hasSuffix("/bootstrap") {
             if shopID != nil, let status = readFailureAfterCreate { return try ok(["error":["code":"access_ended","correlationId":"test"]],status) }

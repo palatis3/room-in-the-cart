@@ -12,9 +12,10 @@ struct OnDeviceTextCapture: CaptureOCRService {
     struct Reading: Sendable {
         let evidence: CaptureEvidence
         let lineBounds: [CGRect]
+        let wordReadings: [[ReceiptWordReading]]
     }
 
-    func recognizeWithLayout(_ data: Data) async throws -> Reading {
+    func recognizeWithLayout(_ data: Data, receiptReadings: Bool = false) async throws -> Reading {
         guard !data.isEmpty, data.count <= CaptureLimits.imageBytes else { throw CaptureFailure.inputTooLarge }
         let cancellation = OCRRequestCancellation()
         let work = Task.detached(priority: .userInitiated) {
@@ -45,7 +46,21 @@ struct OnDeviceTextCapture: CaptureOCRService {
             let observations = CaptureReadingOrder.indices(positions).map { raw[$0] }
             guard observations.count <= CaptureLimits.lines else { throw CaptureFailure.inputTooLarge }
             let recognized = observations.compactMap { observation in
-                observation.topCandidates(1).first.map { ($0, observation.boundingBox) }
+                let candidates = observation.topCandidates(receiptReadings ? 3 : 1)
+                return candidates.first.map { best in
+                    let wording = best.string
+                    let words = wording.split(whereSeparator: \.isWhitespace)
+                    let choices = ReceiptWordReading.choices(original: wording, candidates: candidates.dropFirst().map(\.string))
+                        .compactMap { value -> ReceiptWordReading? in
+                            let word = words[value.wordIndex]
+                            guard let box = try? best.boundingBox(for: word.startIndex..<word.endIndex)?.boundingBox,
+                                  !box.isEmpty, observation.boundingBox.insetBy(dx: -0.005, dy: -0.005).contains(box) else { return nil }
+                            var choice = value
+                            choice.bounds = box
+                            return choice
+                        }
+                    return (best, observation.boundingBox, choices)
+                }
             }
             let lines = recognized.map(\.0)
             let text = lines.map(\.string).joined(separator: "\n")
@@ -58,7 +73,7 @@ struct OnDeviceTextCapture: CaptureOCRService {
             let evidence = CaptureEvidence(text: text, source: .photoOCR, uncertainLines: lines.filter { $0.confidence < 0.7 }.map(\.string),
                 sourceImageData: data, previewImageData: preview as Data)
             let bounds = lines.contains { $0.string.contains(where: \.isNewline) } ? [] : recognized.map(\.1)
-            return Reading(evidence: evidence, lineBounds: bounds)
+            return Reading(evidence: evidence, lineBounds: bounds, wordReadings: bounds.isEmpty ? [] : recognized.map(\.2))
         }
         return try await withTaskCancellationHandler(operation: { try await work.value }, onCancel: {
             cancellation.cancel(); work.cancel()

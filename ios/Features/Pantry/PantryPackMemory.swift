@@ -126,7 +126,7 @@ struct RecordedPackReceiptLink: Codable, Equatable, Identifiable {
             generation = UUID()
         } else {
             for path in try FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil) {
-                if path.lastPathComponent.hasPrefix("pending-") {
+                if path.lastPathComponent.hasPrefix("pending-") || path.lastPathComponent.hasPrefix("draft-") {
                     try FileManager.default.removeItem(at: path)
                     continue
                 }
@@ -159,6 +159,7 @@ struct ReviewedPackSave: Codable, Equatable {
         var reviewedDateWording: String? = nil
     }
     let owner: String
+    let intakeID: UUID?
     let batch: InventoryBatch
     let rows: [Row]
     var review: PantryReceiptReview {
@@ -167,7 +168,7 @@ struct ReviewedPackSave: Codable, Equatable {
     init?(review: PantryReceiptReview, intake: PantryProductBatch, scope: PantryDigestScope, atHome: Bool) throws {
         guard let batch = review.batch else { return nil }
         guard scope.origin == intake.workspaceID, scope.origin == review.workspaceID, review.id == batch.operationID else { throw ProductBatchError.invalid }
-        self.batch = batch; owner = scope.owner
+        self.batch = batch; owner = scope.owner; intakeID = intake.id
         rows = try intake.candidates.filter(\.included).map { candidate in
             let lot = atHome ? candidate.id : review.facts.first { $0.ordinal == candidate.ordinal }?.lotID
             guard let lot else { throw ProductBatchError.invalid }
@@ -213,5 +214,70 @@ extension PantryPackMemory {
         guard let old = try pending(scope) else { return }
         guard old == record else { throw PantryDigestFailure.changed }
         try FileManager.default.removeItem(at: pendingURL(scope))
+    }
+}
+
+/// A draft carries label wording and a photo digest, never camera frames or a confirmed save.
+struct PantryScanDraft: Codable, Equatable {
+    let batch: PantryProductBatch
+    let atHome: Bool
+    let merchant: String
+    let retailer: String
+    let purchaseDate: Date
+    let purchaseZone: TimeZone
+}
+
+struct StoredPantryScanDraft: Codable, Equatable {
+    let version: UUID
+    let owner: String
+    let modified: Date
+    let value: PantryScanDraft
+}
+
+extension PantryPackMemory {
+    private func scanURL(_ scope: PantryDigestScope) -> URL {
+        url(scope).deletingLastPathComponent().appendingPathComponent("draft-" + scope.owner + ".json")
+    }
+
+    /// Only the newest draft per owner/workspace is retained. Expiry is checked on access.
+    func scanDraft(_ scope: PantryDigestScope, now: Date = Date()) throws -> StoredPantryScanDraft? {
+        let file = scanURL(scope)
+        guard FileManager.default.fileExists(atPath: file.path) else { return nil }
+        let stored = try JSONDecoder().decode(StoredPantryScanDraft.self, from: PantryArchiveFiles.read(file, maximum: 262_144))
+        let batch = stored.value.batch
+        guard stored.owner == scope.owner, batch.workspaceID == scope.origin, (1...12).contains(batch.candidates.count),
+              Set(batch.candidates.map(\.id)).count == batch.candidates.count else { throw ProductBatchError.invalid }
+        if now.timeIntervalSince(stored.modified) >= 7 * 86_400 {
+            try FileManager.default.removeItem(at: file)
+            return nil
+        }
+        return stored
+    }
+
+    @discardableResult
+    func updateDraft(_ value: PantryScanDraft?, replacing expected: UUID?, access: PantryDigestAccess,
+                     now: Date = Date()) throws -> StoredPantryScanDraft? {
+        let scope = access.scope
+        guard access.authorized(), try pending(scope) == nil, try scanDraft(scope, now: now)?.version == expected else { throw PantryDigestFailure.changed }
+        let file = scanURL(scope)
+        guard let value else {
+            if expected != nil { try FileManager.default.removeItem(at: file) }
+            return nil
+        }
+        guard value.batch.workspaceID == scope.origin, (1...12).contains(value.batch.candidates.count) else { throw PantryDigestFailure.changed }
+        let record = StoredPantryScanDraft(version: UUID(), owner: scope.owner, modified: now, value: value)
+        let bytes = try JSONEncoder().encode(record)
+        guard bytes.count <= 262_144 else { throw PantryDigestFailure.capacity }
+        try PantryArchiveFiles.directory(file.deletingLastPathComponent(), create: true)
+        try bytes.write(to: file, options: [.atomic, .completeFileProtection])
+        try PantryArchiveFiles.protect(file, permissions: 0o600)
+        return record
+    }
+
+    func clearDraft(for entry: ReviewedPackSave, access: PantryDigestAccess) throws {
+        guard access.authorized(), try pending(access.scope) == entry else { throw PantryDigestFailure.changed }
+        if let current = try scanDraft(access.scope), current.value.batch.id == entry.intakeID {
+            try FileManager.default.removeItem(at: scanURL(access.scope))
+        }
     }
 }

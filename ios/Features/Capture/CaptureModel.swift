@@ -3,7 +3,8 @@ import CoreDomain
 import Combine
 
 @MainActor final class CaptureModel: ObservableObject {
-    @Published var text: String { didSet { confirmed = false } }
+    @Published var text: String { didSet { confirmed = false; wordRepairs = [] } }
+    @Published private(set) var wordRepairs: [SpeechWordRepair] = []
     @Published var confirmed = false
     @Published private var preferredNaturalListMode: Bool?
     var naturalListMode: Bool {
@@ -86,7 +87,7 @@ import Combine
                     guard self.generation == current, !self.closed, !Task.isCancelled else { return }
                     try CaptureLimits.validate(update.text)
                     self.candidate = .init(text: update.text, source: .speech,
-                        uncertainLines: update.uncertain ? [update.text] : [], sourceImageData: nil, previewImageData: nil)
+                        uncertainLines: update.uncertain ? [update.text] : [], sourceImageData: nil, previewImageData: nil, speechRepairs: update.repairs)
                     if update.isFinal { self.stopSpeech(); return }
                 }
                 if self.generation == current { self.stopSpeech() }
@@ -109,8 +110,26 @@ import Combine
             try CaptureLimits.validate(candidate.text)
             guard !candidate.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw CaptureFailure.noText }
             if candidate.source == .photoOCR { preferredNaturalListMode = nil }
-            acceptedEvidence = candidate; text = candidate.text; self.candidate = nil; failure = nil
+            acceptedEvidence = candidate; text = candidate.text; wordRepairs = candidate.speechRepairs
+            self.candidate = nil; failure = nil
         } catch { failure = error as? CaptureFailure ?? .recognitionFailed }
+    }
+    func resolveWord(_ repair: SpeechWordRepair, as replacement: String) {
+        guard canReviewText, wordRepairs.contains(repair),
+              let span = Range(repair.range, in: text), String(text[span]) == repair.word,
+              !replacement.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              !replacement.unicodeScalars.contains(where: CharacterSet.controlCharacters.contains) else { return }
+        let revised = text.replacingCharacters(in: span, with: replacement)
+        guard (try? CaptureLimits.validate(revised)) != nil else { failure = .inputTooLarge; return }
+        let shift = replacement.utf16.count - repair.range.length
+        let remaining = wordRepairs.compactMap { other -> SpeechWordRepair? in
+            guard NSIntersectionRange(other.range, repair.range).length == 0 else { return nil }
+            var next = other
+            if next.range.location >= NSMaxRange(repair.range) { next.range.location += shift }
+            return next
+        }
+        text = revised
+        wordRepairs = remaining
     }
     func discardCandidate() { guard !busy else { return }; candidate = nil; failure = nil }
     func fields(forList: Bool, destination: String, explicitlyTreatAsItems: Bool = false) throws -> (lines: [CaptureLineDraft], timing: String?) {

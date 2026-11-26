@@ -453,9 +453,13 @@ extension PantryLiveStockProjectionTests {
         let journal = PantryPackMemory(folder: folder)
         let staged = try XCTUnwrap(ReviewedPackSave(review: review, intake: intake, scope: scope, atHome: true))
         XCTAssertEqual(staged.rows.first?.reviewedDateWording, "BEST BEFORE DEC 2026")
-        try journal.stage(staged, scope: scope) { true }
-        let lookup = CapturedBarcode(symbology: "manual", value: "012345678905")
         let access = PantryDigestAccess(scope: scope) { true }
+        let draft = PantryScanDraft(batch: intake, atHome: true, merchant: "", retailer: "", purchaseDate: now, purchaseZone: .gmt)
+        let working = try XCTUnwrap(journal.updateDraft(draft, replacing: nil, access: access))
+        try journal.stage(staged, scope: scope) { true }
+        XCTAssertThrowsError(try journal.updateDraft(nil, replacing: working.version, access: access))
+        XCTAssertEqual(try PantryPackMemory(folder: folder).scanDraft(scope)?.value, draft)
+        let lookup = CapturedBarcode(symbology: "manual", value: "012345678905")
         XCTAssertThrowsError(try journal.reviewUnmatched(lookup, retailer: "", productName: "Cereal", typed: true,
             access: access, canEdit: true)) { error in
             guard case ProductBatchError.pendingPackSave = error else { return XCTFail("Expected the pending pack save") }
@@ -465,7 +469,9 @@ extension PantryLiveStockProjectionTests {
         XCTAssertTrue(try XCTUnwrap(editor.snapshot).singlePackageIntakes.contains(row.id))
         let retry = try XCTUnwrap(PantryPackMemory(folder: folder).pending(scope))
         try await editor.saveReceipt(retry.review)
+        try journal.clearDraft(for: retry, access: access)
         try journal.clear(retry, scope: scope) { true }
+        XCTAssertNil(try journal.scanDraft(scope))
         let reopened = try XCTUnwrap(pickup.makePantryModel())
         await reopened.load()
         let after = try XCTUnwrap(reopened.snapshot).lots

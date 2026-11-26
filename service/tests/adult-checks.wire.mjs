@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
 
-export function adultCheckTests({fixture,request,ok,admin,runtime,subscriptions}){
+export function adultCheckTests({fixture,request,ok,admin,runtime,subscriptions,repository}){
   async function prepared(){
     const f=await fixture(),peer=await f.otherMember(),path=f.shopPath+'/adult-checks';
     assert.equal((await request(peer,path)).status,403);
@@ -22,6 +22,68 @@ export function adultCheckTests({fixture,request,ok,admin,runtime,subscriptions}
       expiresAt:new Date(Date.now()+3600000).toISOString()});
     return {...f,peer,dinner,day,read,post,ask,subscription,path};
   }
+  test('cooking step shares one approved instruction between named adults, with immutable replies and exact retries',async()=>{
+    const f=await prepared(),path=f.shopPath+'/cooking-step';
+    const read=actor=>request(actor,path),post=(actor,data)=>request(actor,path,'POST',data);
+    const page=ok(await read(f.peer)),before=ok(await request(f.owner,f.shopPath));
+    assert(ok(await request(f.peer,f.base+'/bootstrap')).capabilities.includes('cook_step_handoff'));
+    const offer={action:'offer',id:randomUUID(),recipientId:f.owner.id,shopRevision:page.shopRevision,authorityEpoch:page.authorityEpoch,
+      pairRevision:page.pairRevision,instruction:'Enjuaga el arroz',reviewed:true,expiresAt:new Date(Date.now()+3600000).toISOString()};
+    for(const extra of [{reviewed:false},{recipe:'private'},{instruction:'Te voy a matar'}])
+      assert.equal((await post(f.peer,{...offer,...extra})).status,422);
+    for(const res of await Promise.all([post(f.peer,offer),post(f.peer,offer)]))assert.equal(ok(res).offers.length,1);
+    const inbox=ok(await read(f.owner));assert.deepEqual(inbox.offers,[{id:offer.id,instruction:offer.instruction,mine:false,answer:null,expiresAt:offer.expiresAt}]);
+    assert(!JSON.stringify(inbox).includes('Sopa'));assert.deepEqual(ok(await f.read(f.owner)).checks,[]);
+    assert.equal((await post(f.peer,{...offer,id:randomUUID()})).status,409);
+    assert.equal((await post(f.peer,{action:'reply',id:offer.id,answer:'accepted'})).status,404);
+    const replies=await Promise.all(['accepted','declined'].map(answer=>post(f.owner,{action:'reply',id:offer.id,answer})));
+    assert.deepEqual(replies.map(r=>r.status).sort(),[200,409]);
+    const settled=ok(await read(f.peer)).offers[0];assert(settled.mine);assert(settled.answer);
+    ok(await post(f.owner,{action:'reply',id:offer.id,answer:settled.answer}));
+    assert.deepEqual(ok(await request(f.owner,f.shopPath)),before);
+    assert.equal((await post(f.owner,{action:'withdraw',id:offer.id})).status,404);
+    ok(await post(f.owner,{action:'release',id:offer.id}));
+    assert.equal(ok(await read(f.peer)).offers[0].answer,'declined');
+    ok(await post(f.peer,{action:'withdraw',id:offer.id}));assert.deepEqual(ok(await read(f.peer)).offers,[]);
+    assert.equal((await post(f.peer,offer)).status,409);
+    assert.equal((await admin.query('SELECT step_text FROM ritc.adult_check WHERE check_id=$1',[offer.id])).rows[0].step_text,null);
+  });
+  test('cooking step expires, hides on revoked access, clears on block, and cannot replay after a changed pair',async()=>{
+    const f=await prepared(),path=f.shopPath+'/cooking-step',post=(a,d)=>request(a,path,'POST',d);
+    const page=ok(await request(f.owner,path)),offer={action:'offer',id:randomUUID(),recipientId:f.peer.id,shopRevision:page.shopRevision,
+      authorityEpoch:page.authorityEpoch,pairRevision:page.pairRevision,instruction:'Start the rice',reviewed:true,expiresAt:new Date(Date.now()+3600000).toISOString()};
+    const third=await f.otherMember();
+    assert.equal((await request(third,path)).status,403);
+    assert.equal((await request(f.peer,path,'GET',undefined,{'X-View-Grant-ID':randomUUID()})).status,404);
+    ok(await post(f.owner,offer));
+    await admin.query("UPDATE ritc.adult_check SET created_at=now()-interval '2 hours',expires_at=now()-interval '1 second' WHERE check_id=$1",[offer.id]);
+    assert.deepEqual(ok(await request(f.peer,path)).offers,[]);
+    assert.equal((await post(f.peer,{action:'reply',id:offer.id,answer:'accepted'})).status,404);
+    const next={...offer,id:randomUUID()};ok(await post(f.owner,next));
+    await admin.query('INSERT INTO ritc.moderation_block(household_id,viewer_id,author_id) VALUES($1,$2,$3)',[f.h,f.peer.id,f.owner.id]);
+    await admin.query('DELETE FROM ritc.moderation_block WHERE household_id=$1',[f.h]);
+    assert.deepEqual(ok(await request(f.peer,path)).offers,[]);assert.equal((await post(f.owner,next)).status,409);
+    const last={...offer,id:randomUUID()};ok(await post(f.owner,last));
+    await f.seats([f.owner.id,third.id]);assert.equal((await request(f.peer,path)).status,403);
+    await f.seats([f.owner.id,f.peer.id]);assert.equal((await post(f.owner,last)).status,409);
+  });
+  test('cooking step moderation resolves only the approved words and denies other actors',async t=>{
+    const previous={safety:repository.options.sharedContentSafety,days:repository.options.moderationRetentionDays};
+    repository.options.sharedContentSafety=true;repository.options.moderationRetentionDays=2;
+    t.after(()=>{repository.options.sharedContentSafety=previous.safety;repository.options.moderationRetentionDays=previous.days;});
+    const f=await prepared(),path=f.shopPath+'/cooking-step',page=ok(await request(f.owner,path)),id=randomUUID();
+    const offer={action:'offer',id,recipientId:f.peer.id,shopRevision:page.shopRevision,authorityEpoch:page.authorityEpoch,
+      pairRevision:page.pairRevision,instruction:'Start the rice',reviewed:true,expiresAt:new Date(Date.now()+3600000).toISOString()};
+    ok(await request(f.owner,path,'POST',offer));
+    const report={action:'report',clientKey:randomUUID(),source:{id,revision:1,kind:'cookStep',field:'text'},reason:'other',text:offer.instruction};
+    const action=(actor,body)=>request(actor,f.base+'/moderation/actions','POST',body,{'X-Shared-Content-Safety':'1'});
+    assert.equal((await action(f.owner,report)).status,404);
+    assert.equal((await action(f.peer,{...report,text:'Private full recipe'})).status,409);
+    const receipt=ok(await action(f.peer,report));assert.equal(receipt.status,'received');
+    await admin.query("SELECT ritc.moderation_resolve($1,'remove')",[receipt.receiptId]);
+    assert.deepEqual(ok(await request(f.peer,path)).offers,[]);
+    assert.deepEqual(ok(await request(f.owner,path)).offers,[]);
+  });
   test('adult checks address one dinner or basket item, admit one immutable reply and review independently of groceries',async()=>{
     const f=await prepared(),shopper=f.owner,peer=f.peer;
     const before=ok(await request(shopper,f.shopPath));

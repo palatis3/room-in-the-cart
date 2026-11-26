@@ -86,9 +86,40 @@ import XCTest
         openPage()
         XCTAssertTrue(contains("Queda poco").exists)
         XCTAssertTrue(contains("Revisa si los paquetes de la lista alcanzan para lo que necesitas.").exists)
+        tap(app.buttons["adultChecks.openGrocery"])
+        let name = app.staticTexts["sharedGrocery.name"]
+        XCTAssertTrue(name.waitForExistence(timeout: 12), app.debugDescription)
+        XCTAssertEqual(name.label, "Arroz integral")
+        XCTAssertFalse(contains("Arroz blanco").exists)
+        XCTAssertTrue(contains("Queda poco").exists)
+        let current = app.descendants(matching: .any).matching(identifier: "sharedGrocery.currentPacks").firstMatch
+        XCTAssertTrue(current.label.contains("2") || (current.value as? String)?.contains("2") == true, app.debugDescription)
+        XCTAssertFalse(app.buttons["sharedGrocery.review"].exists)
+        counts("1/1/2/0")
+        tap(app.buttons["sharedGrocery.keep"])
+        counts("1/1/2/0")
         tap(app.buttons["Marcar como revisada"])
         counts("1/1/3/0")
         XCTAssertTrue(contains("Respuesta revisada").exists)
+    }
+
+    func testCookingStepOfferedAndAcceptedInSpanish() {
+        app.launchArguments = ["--ui-testing", "--adult-checks-fixture", "--cook-handoff-fixture", "-AppleLanguages", "(es)", "-AppleLocale", "es_MX"]
+        app.launch()
+        tap(app.buttons["cookHandoff.currentStep"])
+        XCTAssertTrue(contains("Dani Rivera").waitForExistence(timeout: 5))
+        tap(app.buttons["cookHandoff.offer"])
+        XCTAssertTrue(contains("En espera de respuesta").waitForExistence(timeout: 5))
+        switchTo("contributor")
+        XCTAssertFalse(app.buttons["cookHandoff.inbox"].exists)
+        switchTo("dani")
+        tap(app.buttons["cookHandoff.inbox"])
+        XCTAssertTrue(contains("Enjuaga el arroz").waitForExistence(timeout: 5))
+        tap(app.buttons["cookHandoff.accept"])
+        XCTAssertTrue(contains("Marca el avance de la preparación por separado.").waitForExistence(timeout: 5))
+        switchTo("shopper")
+        tap(app.buttons["cookHandoff.inbox"])
+        XCTAssertTrue(contains("Se encarga de este paso").waitForExistence(timeout: 5))
     }
 
     private func launch(spanish: Bool) {

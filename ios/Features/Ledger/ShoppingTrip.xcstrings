@@ -904,6 +904,198 @@
           }
         }
       }
+    },
+    "Already outside the plan": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already outside the plan"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya estaban fuera del plan"
+          }
+        }
+      }
+    },
+    "Another planned store": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Another planned store"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otra tienda que piensas visitar"
+          }
+        }
+      }
+    },
+    "Based on your store preferences. Store stock is unknown.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Based on your store preferences. Store stock is unknown."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se consideran las tiendas que indicaste. Se desconoce si tienen existencias."
+          }
+        }
+      }
+    },
+    "Choose a stop": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a stop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una tienda"
+          }
+        }
+      }
+    },
+    "Choose only the stops you still plan to visit. This preview leaves your list and current stop unchanged.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose only the stops you still plan to visit. This preview leaves your list and current stop unchanged."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige solo las tiendas que aún piensas visitar. Esta vista no cambia tu lista ni tu parada actual."
+          }
+        }
+      }
+    },
+    "Include this store": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Include this store"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incluir esta tienda"
+          }
+        }
+      }
+    },
+    "No groceries would lose a planned store.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No groceries would lose a planned store."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ningún producto se quedaría sin una tienda prevista."
+          }
+        }
+      }
+    },
+    "Preview skipping": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview skipping"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tienda que omitirías"
+          }
+        }
+      }
+    },
+    "Preview skipping a store": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview skipping a store"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver qué pasa si omites una tienda"
+          }
+        }
+      }
+    },
+    "Remaining planned stops": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remaining planned stops"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tiendas que aún piensas visitar"
+          }
+        }
+      }
+    },
+    "Still has a planned store": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Still has a planned store"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todavía tienen una tienda prevista"
+          }
+        }
+      }
+    },
+    "Would lose its last planned store": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Would lose its last planned store"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se quedarían sin una tienda prevista"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -209,3 +209,116 @@ private struct ShoppingKitReview: View {
         }.navigationTitle(kit.name)
     }
 }
+
+struct PreviousGroceryTrips: View {
+    @ObservedObject var model: LedgerModel
+    let destinationID: UUID
+    @EnvironmentObject private var pickup: PickupModel
+    @Environment(\.shoppingListAuthorization) private var authorize
+    @Environment(\.dismiss) private var dismiss
+
+    private var editable: Bool {
+        guard authorize(), model.shop?.id == destinationID, pickup.ready, !pickup.saving, !pickup.hasPendingSave else { return false }
+        guard let journey = pickup.journeys.first(where: { $0.id == destinationID }) else { return true }
+        return journey.closedAt == nil && (journey.basket == nil || journey.basket?.phase == .draft)
+    }
+
+    var body: some View {
+        JournalList {
+            if !pickup.ready { ProgressView() }
+            else if editable, let destination = model.shop {
+                Section(shoppingFormat("Add to %@", destination.title)) {
+                    ForEach(model.workspace.shops.reversed().filter { $0.id != destinationID && $0.lines.contains { !$0.isTrashed } }) { source in
+                        NavigationLink {
+                            PreviousGroceriesReview(model: model, source: source, destination: destination,
+                                                    editable: { editable }, finish: { dismiss() })
+                        } label: {
+                            VStack(alignment: .leading) {
+                                Text(verbatim: source.title)
+                                if !source.basis.branch.isEmpty { Text(verbatim: source.basis.branch) }
+                                if let date = source.basis.slot ?? source.revisions.last?.createdAt { Text(date, style: .date) }
+                            }
+                        }.accessibilityIdentifier("previousGroceries.trip-\(source.id)")
+                    }
+                    if !model.workspace.shops.contains(where: { $0.id != destinationID && $0.lines.contains { !$0.isTrashed } }) {
+                        Text(shoppingText("No other trips contain groceries."))
+                    }
+                }
+            } else { Text(shoppingText("Choose an open shopping list to add groceries.")) }
+        }
+        .navigationTitle(shoppingText("Previous trips"))
+        .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Close")) { dismiss() } } }
+        .task { await pickup.load() }
+    }
+}
+
+private struct PreviousGroceriesReview: View {
+    @ObservedObject var model: LedgerModel
+    @State private var source: ShoppingLedger
+    @State private var destination: ShoppingLedger
+    @State private var rows: [ShoppingKitRow]
+    @State private var overlaps: Set<UUID>
+    @State private var priorNotes: [UUID: String]
+    @State private var selected = Set<UUID>()
+    let editable: @MainActor () -> Bool
+    let finish: @MainActor () -> Void
+
+    init(model: LedgerModel, source: ShoppingLedger, destination: ShoppingLedger,
+         editable: @escaping @MainActor () -> Bool, finish: @escaping @MainActor () -> Void) {
+        self.model = model
+        _source = State(initialValue: source)
+        _destination = State(initialValue: destination)
+        let rows = source.previousGroceryRows
+        _rows = State(initialValue: rows)
+        _overlaps = State(initialValue: ShoppingKitRow.overlaps(rows, in: destination))
+        _priorNotes = State(initialValue: Dictionary(uniqueKeysWithValues: source.lines.filter { !$0.notes.isEmpty }.map { ($0.id, $0.notes) }))
+        self.editable = editable
+        self.finish = finish
+    }
+
+    var body: some View {
+        WorkingForm {
+            if model.shop?.revisionID == destination.revisionID,
+               model.workspace.shops.first(where: { $0.id == source.id })?.revisionID == source.revisionID, editable() {
+                Section(shoppingFormat("Add to %@", destination.title)) {
+                    Text(shoppingText("Choose names and exclusions. Set this trip’s quantities on your list."))
+                    ForEach(rows) { row in
+                        Button {
+                            if !selected.insert(row.id).inserted { selected.remove(row.id) }
+                        } label: {
+                            HStack(alignment: .firstTextBaseline, spacing: 12) {
+                                Image(systemName: selected.contains(row.id) ? "checkmark.circle.fill" : "circle")
+                                    .accessibilityHidden(true)
+                                VStack(alignment: .leading) {
+                                    Text(verbatim: row.name)
+                                    if let note = priorNotes[row.id] { Text(shoppingFormat("Previous note: %@", note)).font(.footnote) }
+                                    if !row.exclusions.isEmpty { Text(ledgerFormat("Exclusions: %@", row.exclusions.joined(separator: ", "))) }
+                                    if overlaps.contains(row.id) {
+                                        Text(shoppingText("Already on this list. Select to add a separate row.")).font(.footnote)
+                                    }
+                                }
+                            }
+                            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityAddTraits(selected.contains(row.id) ? .isSelected : [])
+                        .accessibilityIdentifier("previousGroceries.row-\(row.id)")
+                    }
+                }
+                Button(shoppingText("Add selected items")) {
+                    let ids = selected
+                    Task {
+                        if await model.change(key: "previous-groceries-\(destination.id)-\(destination.revisionID)",
+                                              reviewedPantryBasis: nil, authorize: editable, { workspace in
+                            try workspace.addPreviousGroceries(from: source.id, sourceRevision: source.revisionID, selected: ids,
+                                                               to: destination.id, destinationRevision: destination.revisionID)
+                        }) { finish() }
+                    }
+                }.disabled(selected.isEmpty || model.saving || model.hasPendingSave)
+                    .accessibilityIdentifier("previousGroceries.add")
+            } else { Text(ledgerText("This pickup changed. Close these edits and reopen the current pickup details.")) }
+            LedgerSaveStatus(model: model, onRetried: finish)
+        }.navigationTitle(source.title)
+    }
+}

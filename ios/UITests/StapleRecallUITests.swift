@@ -196,6 +196,36 @@ import XCTest
         waitForBudgetSubtotal("$4.13 for 1 of 2")
     }
 
+    func testSkipStorePreviewRequiresExplicitStopsAndReturnsWithoutStartingOne() {
+        continueAfterFailure = false
+        launch(fresh: true, shelfBudget: true)
+        tapTrip(app.buttons["ledgerInStore"])
+        tapTrip(app.buttons["tripNextStore"])
+        tapTrip(app.buttons["trip.skipPreview"])
+        let choice = app.buttons["trip.skipChoice"]
+        XCTAssertFalse(choice.exists)
+        let store = app.textFields["Another planned store"]
+        enter("New market", in: store)
+        if app.buttons["tripSkipKeyboardDone"].isHittable { app.buttons["tripSkipKeyboardDone"].tap() }
+        tapTrip(app.buttons["Include this store"])
+        tapTrip(choice)
+        tapTrip(app.buttons["New market"])
+        XCTAssertTrue(app.staticTexts["No groceries would lose a planned store."].waitForExistence(timeout: 8))
+        let unassigned = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] %@", "Unassigned groceries")).firstMatch
+        show(unassigned)
+        XCTAssertTrue(unassigned.isHittable)
+        let selected = app.switches["New market"]
+        for _ in 0..<4 where !selected.isHittable { app.swipeDown() }
+        selected.coordinate(withNormalizedOffset: CGVector(dx: 0.91, dy: 0.5)).tap()
+        XCTAssertTrue(choice.waitForNonExistence(timeout: 6))
+        tapTrip(app.navigationBars["Preview skipping a store"].buttons.firstMatch)
+        XCTAssertTrue(app.navigationBars["Next store"].waitForExistence(timeout: 8))
+        XCTAssertFalse(app.buttons["Start this stop"].isEnabled)
+        tapTrip(app.navigationBars["Next store"].buttons["Done"])
+        XCTAssertTrue(app.navigationBars["Shop in store"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "inStoreCheck-", "Apples")).firstMatch.exists)
+    }
+
     func testPartialPickUnavailableHandoffAndSecondStoreUndoAfterRestart() throws {
         continueAfterFailure = false
         launch(fresh: true, shelfBudget: true)
@@ -379,6 +409,97 @@ import XCTest
         let expected = NSPredicate(format: "label CONTAINS %@", text)
         let result = XCTNSPredicateExpectation(predicate: expected, object: app.staticTexts["inStoreSubtotal"])
         XCTAssertEqual(XCTWaiter.wait(for: [result], timeout: 8), .completed)
+    }
+
+    func testCurrentStopSearchRestoresAisleAndChecksOnlySelectedCoffee() {
+        continueAfterFailure = false
+        openLongCurrentStop()
+        let original = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label == %@", "inStoreCheck-", "Check Pasillo 20")).firstMatch
+        show(original)
+        XCTAssertTrue(original.isHittable)
+        app.buttons["inStoreSearch"].tap()
+        let field = app.textFields["inStoreSearchQuery"]
+        enter("cafe", in: field)
+        let coffees = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label == %@", "inStoreCheck-", "Check Café"))
+        XCTAssertEqual(coffees.count, 2)
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label == %@", "inStoreCheck-", "Check Café para otra tienda")).firstMatch.exists)
+        let ground = coffees.matching(NSPredicate(format: "value CONTAINS %@", "Molido")).firstMatch
+        let id = String(ground.identifier.dropFirst("inStoreCheck-".count))
+        ground.tap()
+        XCTAssertTrue(app.buttons["inStoreUncheck-" + id].waitForExistence(timeout: 8))
+        app.buttons["inStoreClearSearch"].tap()
+        XCTAssertTrue(field.waitForNonExistence(timeout: 6))
+        let restored = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"), object: original)
+        XCTAssertEqual(XCTWaiter.wait(for: [restored], timeout: 6), .completed)
+        XCTAssertFalse(app.buttons["inStoreCheck-" + id].exists)
+    }
+
+    func testLargestTypeCanUndoLastPickFromCurrentViewport() {
+        continueAfterFailure = false
+        openLongCurrentStop(largeSpanish: true)
+        app.swipeUp()
+        let checks = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "inStoreCheck-"))
+        guard let row = checks.allElementsBoundByIndex.first(where: {
+            $0.isHittable && $0.frame.midY > app.frame.height * 0.25 && $0.frame.midY < app.frame.height * 0.68
+        }) else { return XCTFail("Expected a checkbox in the aisle viewport.") }
+        let id = row.identifier
+        row.tap()
+        let undo = app.buttons["inStoreReachableUndo"]
+        XCTAssertTrue(undo.waitForExistence(timeout: 8))
+        let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true AND enabled == true"), object: undo)
+        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 6), .completed, undo.debugDescription)
+        let evidence = XCTAttachment(screenshot: app.screenshot())
+        evidence.name = "Current aisle with last-pick Undo at largest Spanish text"
+        evidence.lifetime = .keepAlways
+        add(evidence)
+        let name = undo.label
+        XCTAssertTrue(name.contains("Pasillo"), name)
+        undo.tap()
+        let alert = app.alerts.containing(.staticText, identifier: name).firstMatch
+        XCTAssertTrue(alert.waitForExistence(timeout: 5))
+        // iOS 27 exposes the confirmation as nested buttons with the same identifier.
+        let confirm = alert.buttons.matching(identifier: "inStoreConfirmUndo").firstMatch
+        XCTAssertEqual(confirm.label, "Deshacer")
+        XCTAssertTrue(confirm.isHittable)
+        confirm.tap()
+        XCTAssertTrue(alert.waitForNonExistence(timeout: 5))
+        let restored = app.buttons[id]
+        let visibleAgain = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"), object: restored)
+        XCTAssertEqual(XCTWaiter.wait(for: [visibleAgain], timeout: 8), .completed, restored.debugDescription)
+    }
+
+    func testSimpleLineTotalSavesFromKeyboardAndUnknownHasNoShortcut() {
+        continueAfterFailure = false
+        openLongCurrentStop()
+        let row = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label == %@", "inStoreCheck-", "Check Pasillo 01")).firstMatch
+        show(row)
+        row.tap()
+        app.buttons["inStoreLastPrice"].tap()
+        let amount = app.textFields["inStoreAmount"]
+        amount.tap()
+        let save = app.buttons["inStoreSaveLineTotal"]
+        XCTAssertFalse(save.exists)
+        amount.typeText("24.50")
+        XCTAssertTrue(save.waitForExistence(timeout: 8))
+        XCTAssertTrue(save.label.contains("24.50"), save.label)
+        XCTAssertTrue(app.buttons["inStoreAmountDone"].exists)
+        save.tap()
+        XCTAssertTrue(amount.waitForNonExistence(timeout: 8))
+        let subtotal = app.staticTexts["inStoreSubtotal"]
+        let saved = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label CONTAINS %@", "24.50"), object: subtotal)
+        XCTAssertEqual(XCTWaiter.wait(for: [saved], timeout: 8), .completed)
+    }
+
+    private func openLongCurrentStop(largeSpanish: Bool = false) {
+        app.launchArguments = ["--ui-testing", "--staple-recall-fixture", "--long-current-stop-fixture", "--reset-test-workspace",
+                               "-AppleLanguages", largeSpanish ? "(es)" : "(en)", "-AppleLocale", largeSpanish ? "es_MX" : "en_US",
+                               "-UIPreferredContentSizeCategoryName", largeSpanish ? "UICTContentSizeCategoryAccessibilityXXXL" : "UICTContentSizeCategoryL"]
+        app.launch()
+        let inStore = app.buttons["ledgerInStore"]
+        XCTAssertTrue(app.buttons["ledgerListOptions"].waitForExistence(timeout: 30))
+        show(inStore)
+        inStore.tap()
+        XCTAssertTrue(app.buttons["inStoreSearch"].waitForExistence(timeout: 10))
     }
 
     private func enter(_ value: String, in field: XCUIElement) {

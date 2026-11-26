@@ -33,6 +33,11 @@ struct PantryProductBatchView: View {
     @State private var restoredRows: [ReviewedPackSave.Row] = []
     @State private var recovery: ReviewedPackSave?
     @State private var recoveryReadFailed = false
+    @State private var offeredDraft: StoredPantryScanDraft?
+    @State private var draftVersion: UUID?
+    @State private var inspectedDraft = false
+    @State private var draftWriteFailed = false
+    @State private var draftChangedElsewhere = false
     @State private var saved = false
     @State private var working = false
     @State private var code = ""
@@ -76,8 +81,19 @@ struct PantryProductBatchView: View {
         return access.retainsPresentation()
     }
 
+    private var scanDraft: PantryScanDraft {
+        PantryScanDraft(batch: batch, atHome: atHome, merchant: merchant, retailer: retailer, purchaseDate: date, purchaseZone: purchaseTimeZone)
+    }
+
     var body: some View {
-        if reviewingLookup, authorized, let row = batch.candidates.first {
+        Group { content }
+            .task(id: access?.scope) { inspectPending() }
+            .onChange(of: scanDraft) { _, _ in persistDraft() }
+            .onChange(of: reviewingLookup) { _, editing in if !editing { persistDraft() } }
+    }
+
+    @ViewBuilder private var content: some View {
+        if reviewingLookup, !draftChangedElsewhere, offeredDraft == nil, recovery == nil, !recoveryReadFailed, inspectedDraft, authorized, let row = batch.candidates.first {
             candidateEditor(row, finishEditing: { reviewingLookup = false }, current: { authorized })
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) { Button(pantryText("Cancel")) { dismiss() } }
@@ -109,6 +125,20 @@ struct PantryProductBatchView: View {
                     if model.snapshot?.state.revision != recovery.batch.expectedRevision {
                         Button(pantryText("Review current pantry")) { recover(recovery, discardIfStale: true) }
                     }
+                }
+            } else if draftChangedElsewhere {
+                Text(pantryText("This scan changed in another window. Reopen Scan products to see the current draft."))
+                Button(pantryText("Close")) { dismiss() }.accessibilityIdentifier("productBatch.closeChangedDraft")
+            } else if let offeredDraft {
+                Section {
+                    let count = offeredDraft.value.batch.candidates.count
+                    let title = count == 1 ? pantryText("Continue 1 scanned item") : pantryFormat("Continue %lld scanned items", Int64(count))
+                    Button(title) {
+                        resume(offeredDraft)
+                    }.buttonStyle(PrimaryAction()).accessibilityIdentifier("productBatch.resume")
+                    Button(pantryText("Discard unfinished scan"), role: .destructive) { discard(offeredDraft) }
+                        .accessibilityIdentifier("productBatch.discardDraft")
+                    Text(pantryText("Unfinished scans stay on this device for seven days."))
                 }
             } else if saved {
                 Text(pantryText("Product batch saved.")).accessibilityIdentifier("productBatch.saved")
@@ -187,7 +217,7 @@ struct PantryProductBatchView: View {
                 }.disabled(working)
             } else {
                 Section {
-                    Picker(pantryText("Package source"), selection: $atHome) {
+                    Picker(pantryText("Package source"), selection: Binding(get: { atHome }, set: changeSource)) {
                         Text(pantryText("Counted at home")).tag(true)
                         Text(pantryText("Received purchase")).tag(false)
                     }.accessibilityIdentifier("pack.source")
@@ -298,6 +328,10 @@ struct PantryProductBatchView: View {
                     }
                 }
             }
+            if authorized, draftWriteFailed {
+                Text(pantryText("The unfinished scan could not be saved."))
+                Button(pantryText("Retry")) { persistDraft() }
+            }
             if authorized, let result { Text(result).accessibilityIdentifier("productBatch.status") }
         }
         .disabled(working || !authorized)
@@ -314,15 +348,7 @@ struct PantryProductBatchView: View {
                 }
             }
         }
-        .task(id: access?.scope) { inspectPending() }
         .onChange(of: batch.candidates) { _, _ in confirmed = false }
-        .onChange(of: atHome) { _, _ in
-            confirmed = false
-            for index in batch.candidates.indices {
-                batch.candidates[index].stockAction = nil
-                batch.candidates[index].onePackageUnknown = false
-            }
-        }
         .onChange(of: merchant) { _, _ in confirmed = false }
         .onChange(of: date) { old, new in if !Calendar.current.isDate(old, inSameDayAs: new) { confirmed = false } }
         .onChange(of: canPresent) { _, allowed in
@@ -335,6 +361,10 @@ struct PantryProductBatchView: View {
     }
 
     private func finish(with lotID: UUID?) {
+        if let draftVersion, let access, authorized {
+            do { try memory.updateDraft(nil, replacing: draftVersion, access: access); self.draftVersion = nil }
+            catch { draftWriteFailed = true; return }
+        }
         if let lotID, let didFinishWithLot {
             didFinishWithLot(lotID)
         } else {
@@ -453,13 +483,73 @@ struct PantryProductBatchView: View {
         }
     }
 
+    private func changeSource(_ newValue: Bool) {
+        guard atHome != newValue else { return }
+        atHome = newValue
+        confirmed = false
+        for index in batch.candidates.indices {
+            batch.candidates[index].stockAction = nil
+            batch.candidates[index].onePackageUnknown = false
+        }
+    }
+
+    private func persistDraft() {
+        guard inspectedDraft, !draftChangedElsewhere, !reviewingLookup, !working, !saved, offeredDraft == nil, recovery == nil, !recoveryReadFailed,
+              authorized, let access, initialAccess?.scope == access.scope, access.authorized() else { return }
+        do {
+            let record = try memory.updateDraft(batch.candidates.isEmpty ? nil : scanDraft, replacing: draftVersion, access: access)
+            draftVersion = record?.version
+            draftWriteFailed = false
+        } catch {
+            draftWriteFailed = true
+            if case PantryDigestFailure.changed = error {
+                draftChangedElsewhere = true
+                draftWriteFailed = false
+                editingProduct = nil
+                review = nil
+            }
+        }
+    }
+
+    private func resume(_ record: StoredPantryScanDraft) {
+        guard authorized, let access, access.authorized(), initialAccess?.scope == access.scope,
+              (try? memory.scanDraft(access.scope))?.version == record.version else { draftChangedElsewhere = true; return }
+        let value = record.value
+        reviewingLookup = false; draftWriteFailed = false
+        review = nil; confirmed = false
+        batch = value.batch; atHome = value.atHome; merchant = value.merchant
+        retailer = value.retailer; date = value.purchaseDate; purchaseTimeZone = value.purchaseZone
+        offeredDraft = nil; draftVersion = record.version
+    }
+
+    private func discard(_ record: StoredPantryScanDraft) {
+        guard authorized, let access, initialAccess?.scope == access.scope else { return }
+        do {
+            try memory.updateDraft(nil, replacing: record.version, access: access)
+            // Discard means an empty intake, including a seed supplied by package lookup.
+            // An older editor cannot resurrect the deleted draft because writes compare its version.
+            batch = PantryProductBatch(workspaceID: access.scope.origin)
+            review = nil; confirmed = false; reviewingLookup = false; editingProduct = nil
+            merchant = ""; retailer = ""; atHome = true; date = Calendar.current.startOfDay(for: Date())
+            purchaseTimeZone = .current; name = ""; code = ""; photoConsent = false
+            offeredDraft = nil; draftVersion = nil; draftWriteFailed = false
+        } catch {
+            draftChangedElsewhere = true
+        }
+    }
+
     private func inspectPending() {
         recoveryReadFailed = false
         guard let access, access.scope.origin == batch.workspaceID, access.authorized(), !working else { return }
         if initialAccess == nil { initialAccess = access }
         guard initialAccess?.scope == access.scope else { return }
-        do { recovery = try memory.pending(access.scope) }
-        catch { recoveryReadFailed = true }
+        do {
+            recovery = try memory.pending(access.scope)
+            if recovery == nil, let current = try memory.scanDraft(access.scope), current.version != draftVersion {
+                offeredDraft = current
+            } else { offeredDraft = nil }
+            inspectedDraft = true
+        } catch { recoveryReadFailed = true }
     }
 
     private func recover(_ entry: ReviewedPackSave, discardIfStale: Bool = false) {
@@ -476,12 +566,16 @@ struct PantryProductBatchView: View {
                           try await !model.packSaveAlreadyApplied(entry) else { throw PantryReceiptError.stale }
                     try memory.clear(entry, scope: access.scope, authorized: access.authorized)
                     recovery = nil; review = nil; confirmed = false; result = nil
+                    offeredDraft = try memory.scanDraft(access.scope)
+                    draftVersion = nil
                     return
                 }
                 if !applied { try await model.saveReceipt(entry.review) }
                 else { await model.load() }
                 guard authorized, access.authorized() else { throw PantryReceiptError.stale }
+                try memory.clearDraft(for: entry, access: access)
                 try memory.clear(entry, scope: access.scope, authorized: access.authorized)
+                draftVersion = nil
                 restoredRows = entry.rows
                 savedLotID = entry.rows.first?.lotID
                 savedRows = Dictionary(uniqueKeysWithValues: entry.rows.map { ($0.id, $0.lotID) })
@@ -502,6 +596,10 @@ struct PantryProductBatchView: View {
             defer { working = false }
             do {
                 try verifyMatches()
+                if let access, access.authorized(), try memory.scanDraft(access.scope)?.version != draftVersion {
+                    draftChangedElsewhere = true
+                    throw PantryDigestFailure.changed
+                }
                 if let access, access.scope.origin == batch.workspaceID, access.authorized(),
                    let exact = try ReviewedPackSave(review: proposal, intake: batch, scope: access.scope, atHome: atHome) {
                     try memory.stage(exact, scope: access.scope, authorized: access.authorized)
@@ -511,8 +609,14 @@ struct PantryProductBatchView: View {
                 else { try await model.saveProducts(batch, review: proposal) }
                 if authorized {
                     if let recovery, let access {
+                        try memory.clearDraft(for: recovery, access: access)
                         try memory.clear(recovery, scope: access.scope, authorized: access.authorized)
+                        draftVersion = nil
                         self.recovery = nil
+                    }
+                    if let draftVersion, let access {
+                        try memory.updateDraft(nil, replacing: draftVersion, access: access)
+                        self.draftVersion = nil
                     }
                     let physicalIDs = Set(model.snapshot?.lots.map(\.id) ?? [])
                     for row in batch.candidates where row.included {

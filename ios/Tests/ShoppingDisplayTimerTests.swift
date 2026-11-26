@@ -14,7 +14,10 @@ final class ShoppingDisplayTimerTests: XCTestCase {
             let first = UUID()
             let second = UUID()
             timer.begin(first)
+            let originalDeadline = timer.deadlines[first]
+            XCTAssertNotNil(originalDeadline)
             timer.begin(first)
+            XCTAssertEqual(timer.deadlines[first], originalDeadline)
             timer.begin(second)
             timer.end(first)
             timer.end(first)
@@ -23,6 +26,7 @@ final class ShoppingDisplayTimerTests: XCTestCase {
             XCTAssertEqual(systemValue, previous)
             XCTAssertEqual(writes, [true, previous])
             XCTAssertTrue(timer.active.isEmpty)
+            XCTAssertTrue(timer.deadlines.isEmpty)
         }
     }
 
@@ -39,6 +43,7 @@ final class ShoppingDisplayTimerTests: XCTestCase {
         timer.begin(owner)
         await fulfillment(of: [expired], timeout: 2)
         XCTAssertFalse(timer.active.contains(owner))
+        XCTAssertNil(timer.deadlines[owner])
         timer.begin(owner)
         XCTAssertTrue(timer.active.contains(owner))
         timer.end(owner)

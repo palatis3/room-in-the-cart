@@ -95,6 +95,43 @@ final class PrivateShoppingListsTests: XCTestCase {
         XCTAssertEqual(try JSONDecoder().decode(LedgerWorkspace.self, from: JSONEncoder().encode(workspace)), workspace)
     }
 
+    func testSelectFromAnotherTripIsOneRevisionWithOnlyNamesAndExclusions() throws {
+        var prior = shop("West")
+        let rice = try prior.addManualLine(name: "Rice", quantity: unit, notes: "Paid $4", exclusions: ["mix"])
+        let other = try prior.addManualLine(name: "Bread", quantity: nil)
+        try prior.setChecked(lineID: rice, checked: true)
+        try prior.recordPickedPrice(lineID: rice, expectedRevision: prior.revisionID, total: Money(minorUnits: 400),
+                                   membership: false, weighted: false, conditionsConfirmed: false)
+        var current = shop("East")
+        _ = try current.addManualLine(name: "Rice", quantity: nil)
+        var state = LedgerWorkspace(shops: [prior, current], selectedShopID: current.id)
+        XCTAssertEqual(prior.previousGroceryRows.first?.overlaps(in: current).count, 1)
+        func apply(_ ids: Set<UUID>, from source: ShoppingLedger, to state: inout LedgerWorkspace) throws {
+            try state.addPreviousGroceries(from: source.id, sourceRevision: source.revisionID,
+                                          selected: ids, to: current.id, destinationRevision: current.revisionID)
+        }
+        XCTAssertThrowsError(try apply([rice, UUID()], from: prior, to: &state))
+        XCTAssertThrowsError(try apply([rice], from: current, to: &state))
+        var changed = prior
+        try changed.updateLine(lineID: other, name: "Rolls", notes: "", aisle: "")
+        XCTAssertThrowsError(try apply([rice], from: changed, to: &state))
+        XCTAssertEqual(state.shops[1], current)
+        try apply([rice], from: prior, to: &state)
+        XCTAssertThrowsError(try apply([rice], from: prior, to: &state))
+        let result = try XCTUnwrap(state.shops[1].lines.last)
+        XCTAssertEqual(state.shops[0], prior)
+        XCTAssertEqual(state.shops[1].lines.count, 2)
+        XCTAssertEqual(state.shops[1].revision, current.revision + 1)
+        XCTAssertNotEqual(result.id, rice)
+        XCTAssertEqual(result.name, "Rice")
+        XCTAssertEqual(result.notes, "")
+        XCTAssertNil(result.pickedPrice)
+        XCTAssertFalse(result.isChecked)
+        XCTAssertNil(try state.shops[1].quantity(forLineID: result.id))
+        XCTAssertEqual(state.shops[1].itemExclusions[result.id], ["mix"])
+        XCTAssertEqual(try JSONDecoder().decode(LedgerWorkspace.self, from: JSONEncoder().encode(state)), state)
+    }
+
     func testStandingTransferOfflineReplayCorrectionAndShopBinding() throws {
         let a = shop("West"), b = shop("East"), c = shop("North")
         var workspace = LedgerWorkspace(shops: [a,b,c], selectedShopID: c.id)

@@ -94,6 +94,11 @@ public struct ShoppingKitRow: Identifiable, Codable, Equatable, Sendable {
         shop.lines.filter { !$0.isTrashed && normalizedProduct($0.name) == normalizedProduct(name) }
     }
 
+    public static func overlaps(_ rows: [Self], in shop: ShoppingLedger) -> Set<UUID> {
+        let names = Set(shop.lines.lazy.filter { !$0.isTrashed }.map { normalizedProduct($0.name) })
+        return Set(rows.lazy.filter { names.contains(normalizedProduct($0.name)) }.map(\.id))
+    }
+
     func validate() throws {
         try ledgerText(name, nonempty: true, maximum: 512)
         try ledgerText(notes)
@@ -236,6 +241,18 @@ extension LedgerWorkspace {
         try shops[index].appendKitRows(kit.rows.filter { selected.contains($0.id) })
     }
 
+    /// The reviewed source contributes product names and exclusions only. Old prices,
+    /// picked amounts, free-form notes, and meal allocations belong to the original trip.
+    public mutating func addPreviousGroceries(from sourceID: UUID, sourceRevision: UUID, selected: Set<UUID>,
+                                              to destinationID: UUID, destinationRevision: UUID) throws {
+        let index = try selectedPickup(destinationID, revision: destinationRevision)
+        guard sourceID != destinationID, let source = shops.first(where: { $0.id == sourceID }),
+              source.revisionID == sourceRevision, !selected.isEmpty else { throw LedgerError.stalePreview }
+        let rows = source.previousGroceryRows.filter { selected.contains($0.id) }
+        guard rows.count == selected.count else { throw LedgerError.stalePreview }
+        try shops[index].appendKitRows(rows, operation: "addPreviousGroceries")
+    }
+
     public mutating func transferStanding(_ item: StandingListItem, shopID: UUID, revision: UUID) throws {
         let targetIndex = try selectedPickup(shopID, revision: revision)
         var target = shops[targetIndex]
@@ -268,5 +285,15 @@ extension LedgerWorkspace {
         try target.removeContribution(contributionID: transfer.contributionID)
         shoppingLists.standing[index].transfer = nil
         shops[targetIndex] = target
+    }
+}
+
+
+extension ShoppingLedger {
+    public var previousGroceryRows: [ShoppingKitRow] {
+        let exclusions = itemExclusions
+        return lines.filter { !$0.isTrashed }.map {
+            ShoppingKitRow(id: $0.id, name: $0.name, exclusions: exclusions[$0.id] ?? [])
+        }
     }
 }
