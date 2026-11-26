@@ -115,7 +115,9 @@ struct PantryProductBatchView: View {
             if showsReviewFooter { reviewFooter }
         }
         .disabled(working || !authorized)
-        .navigationTitle(pantryText("Scan products")).privacySensitive().scrollDismissesKeyboard(.interactively)
+        .navigationTitle(pantryText("Scan products"))
+        .navigationBarTitleDisplayMode(typeSize.isAccessibilitySize ? .inline : .automatic)
+        .privacySensitive().scrollDismissesKeyboard(.interactively)
         .keyboardDoneAction(visible: focus != nil, title: pantryText("Done"), identifier: "productBatch.keyboardDone") { focus = nil }
         .toolbar {
             if review == nil {

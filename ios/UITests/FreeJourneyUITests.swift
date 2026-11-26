@@ -580,7 +580,9 @@ import XCTest
         XCTAssertFalse(commit.exists, file: file, line: line)
         capture(attachment + " - named review restored")
         opener.tap()
-        XCTAssertTrue(commit.waitForExistence(timeout: 8), file: file, line: line)
+        XCTAssertTrue(element("productBatch.reviewPending").waitForExistence(timeout: 8), file: file, line: line)
+        reveal(commit)
+        XCTAssertTrue(commit.isHittable, file: file, line: line)
     }
 
     func testMexicanSpanishPantryReviewCancelKeepsUnknownContentsUnrecorded() {
