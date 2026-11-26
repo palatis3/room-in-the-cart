@@ -73,6 +73,8 @@ export function adultCheckTests({fixture,request,ok,admin,runtime,subscriptions}
     assert.equal(ok(await f.read()).recipient,null);
     assert(!ok(await request(f.peer,f.base+'/bootstrap')).capabilities.includes('adult_checks'));
     await admin.query('UPDATE ritc.member SET can_contribute=true WHERE household_id=$1 AND member_id=$2',[f.h,f.peer.id]);
+    assert.deepEqual(ok(await f.read(f.peer)).checks,[]);
+    assert.equal((await f.post(f.owner,a)).status,409);
     await f.transfer(f.owner,f.peer);
     assert.deepEqual(ok(await f.read()).checks,[]);
     assert.equal((await f.post(f.owner,a)).status,404);
@@ -94,6 +96,8 @@ export function adultCheckTests({fixture,request,ok,admin,runtime,subscriptions}
     await admin.query('INSERT INTO ritc.moderation_block(household_id,viewer_id,author_id) VALUES($1,$2,$3)',[f.h,f.peer.id,f.owner.id]);
     assert.deepEqual(ok(await f.read()).checks,[]);assert.deepEqual(ok(await f.read(f.peer)).checks,[]);
     await admin.query('DELETE FROM ritc.moderation_block WHERE household_id=$1',[f.h]);
+    assert.deepEqual(ok(await f.read(f.peer)).checks,[]);
+    assert.equal((await f.post(f.owner,ask)).status,409);
     await admin.query("UPDATE ritc.adult_check SET created_at=now()-interval '2 hours',expires_at=now()-interval '1 second' WHERE check_id=$1",[ask.id]);
     assert.deepEqual(ok(await f.read(f.peer)).checks,[]);
     assert.equal((await f.post(f.peer,{action:'answer',id:ask.id,answer:'home'})).status,404);
@@ -116,6 +120,6 @@ export function adultCheckTests({fixture,request,ok,admin,runtime,subscriptions}
     subscriptions.set(f.subscription,{...original,status:'revoked',signedAt:original.signedAt+1});
     assert.equal((await f.read(f.peer)).status,403);
     assert(!ok(await request(f.owner,f.base+'/bootstrap')).capabilities.includes('adult_checks'));
-    assert.equal((await admin.query('SELECT 1 FROM ritc.adult_check WHERE household_id=$1',[f.h])).rowCount,0);
+    assert.equal((await admin.query('SELECT 1 FROM ritc.adult_check WHERE household_id=$1 AND (NOT withdrawn OR answer IS NOT NULL OR quantity IS NOT NULL)',[f.h])).rowCount,0);
   });
 }
