@@ -26,6 +26,7 @@ private struct SharedShopContent: View {
         WorkingForm {
             if model.authorized {
                 HouseholdCheckLink(household: household)
+                CookingStepHandoffLink(household: household)
                 Section {
                     HouseholdScopeHeading(scope: model.scope)
                     SharedPickingLink(household: household)
@@ -167,7 +168,11 @@ private struct SharedShopContent: View {
             }
         }) { target in
             NavigationStack {
-                SharedGroceryLineView(household: household, target: target) {
+                SharedGroceryLineView(household: household, target: target, onKeep: {
+                    guard let current = model.packObservation, current.revision == target.revision,
+                          current.scope.shop == target.shopID, current.scope.authorityEpoch == target.authorityEpoch else { return }
+                    Task { await model.dismissPackChange(target.rowID, observed: current) }
+                }) {
                     preparedGrocery = true
                     selectedGrocery = nil
                 }

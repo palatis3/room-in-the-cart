@@ -24,6 +24,7 @@ private final class CheckFixtureServer: @unchecked Sendable {
     let item = "66666666-6666-4666-8666-666666666666"
     private let lock = NSLock()
     private var rows: [[String: Any]] = []
+    private var cookingOffer: (id: String, words: String, expires: String, sender: CheckPersona, answer: String?)?
     private let clock = ISO8601DateFormatter()
     var counters: (@Sendable (Int, Int, Int, Int) -> Void)?
     private var writes = 0
@@ -52,7 +53,7 @@ private final class CheckFixtureServer: @unchecked Sendable {
                 return try json(["error": ["code": "wrong_device"]], 403)
             }
             if path.hasSuffix("/bootstrap") {
-                let capabilities = ["own_requests"] + (actor == .contributor ? [] : ["adult_checks"])
+                let capabilities = ["own_requests"] + (actor == .contributor ? [] : ["adult_checks", "cook_step_handoff"])
                     + (actor == .shopper ? ["shopper_inbox", "request_preview", "shopper_commands"] : [])
                 return try json(["household": ["id": household, "label": "Rivera"], "memberId": actor.member,
                                  "role": actor.role, "shopId": shop, "enrolled": true, "queueConsent": false, "capabilities": capabilities])
@@ -71,6 +72,38 @@ private final class CheckFixtureServer: @unchecked Sendable {
                 let meal: [String: Any] = ["title": "Tacos de frijoles", "day": "2026-12-02", "kind": "dinner", "portions": 4, "protected": false]
                 return try json(["shopId": shop, "shopRevision": 3, "authorityEpoch": 2, "grantRevision": 1, "phase": "draft",
                                  "shopper": true, "meals": [["occurrenceId": dinner, "revision": 1, "meal": meal]], "proposals": []])
+            }
+            if path == householdPath + "/shops/" + shop + "/cooking-step" {
+                guard request.value(forHTTPHeaderField: "X-Shop-ID") == shop, actor != .contributor else {
+                    return try json(["error": ["code": "unavailable"]], 404)
+                }
+                let peer: CheckPersona = actor == .shopper ? .dani : .shopper
+                if request.httpMethod == "POST" {
+                    switch body["action"] as? String {
+                    case "offer":
+                        guard body["recipientId"] as? String == peer.member, body["reviewed"] as? Bool == true,
+                              let id = body["id"] as? String, let words = body["instruction"] as? String,
+                              let expiry = body["expiresAt"] as? String, cookingOffer == nil else { return try json([:], 409) }
+                        cookingOffer = (id, words, expiry, actor, nil)
+                    case "reply":
+                        guard let row = cookingOffer, row.sender != actor, body["id"] as? String == row.id,
+                              let answer = body["answer"] as? String, ["accepted","declined"].contains(answer) else { return try json([:], 409) }
+                        cookingOffer?.answer = answer
+                    case "release":
+                        guard let row = cookingOffer, row.sender != actor, row.answer == "accepted", body["id"] as? String == row.id else { return try json([:], 409) }
+                        cookingOffer?.answer = "declined"
+                    case "withdraw":
+                        guard cookingOffer?.id == body["id"] as? String else { return try json([:], 409) }
+                        cookingOffer = nil
+                    default: return try json([:], 422)
+                    }
+                }
+                let offers: [[String: Any]] = cookingOffer.map { row in
+                    [["id":row.id,"instruction":row.words,"expiresAt":row.expires,"mine":row.sender == actor,"answer":row.answer as Any? ?? NSNull()]]
+                } ?? []
+                return try json(["shopId":shop,"shopRevision":3,"authorityEpoch":2,"pairRevision":4,
+                                 "otherAdult":["id":peer.member,"label":peer == .dani ? "Dani Rivera" : "Alex Rivera"],
+                                 "offers":offers,"validUntil":clock.string(from:Date().addingTimeInterval(60))])
             }
             guard path == householdPath + "/shops/" + shop + "/adult-checks", request.value(forHTTPHeaderField: "X-Shop-ID") == shop else {
                 return try json(["error": ["code": "unavailable"]], 404)
@@ -166,7 +199,16 @@ struct AdultChecksFixtureRoot: View {
             }
             Text(verbatim: counts).accessibilityIdentifier("fixture.checks.counts")
             if let household = actors[current] {
-                NavigationStack { HouseholdSettingsView(model: household) }.id(current)
+                NavigationStack {
+                    if ProcessInfo.processInfo.arguments.contains("--cook-handoff-fixture") {
+                        List {
+                            if current == .shopper {
+                                CookingStepHandoffLink(household: household, instruction: "Enjuaga el arroz")
+                            }
+                            CookingStepHandoffLink(household: household)
+                        }
+                    } else { HouseholdSettingsView(model: household) }
+                }.id(current)
                     .environmentObject(access).environmentObject(membership)
             } else if failure { Text(verbatim: "Fixture setup failed") }
             else { ProgressView() }

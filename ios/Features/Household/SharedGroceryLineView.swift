@@ -27,13 +27,14 @@ struct SharedGroceryTarget: Identifiable {
 struct SharedGroceryLineView: View {
     @ObservedObject var household: HouseholdModel
     let target: SharedGroceryTarget
+    var onKeep: (() -> Void)? = nil
     let onPrepared: () -> Void
 
     var body: some View {
         PrivateAdultRequestSurface(household: household, shopID: target.shopID,
                                   capability: target.reply == nil ? "shopper_commands" : "adult_checks") { scope in
             if let model = household.sharedShop, model.canManage {
-                GroceryLineDetail(household: household, model: model, scope: scope, target: target, onPrepared: onPrepared)
+                GroceryLineDetail(household: household, model: model, scope: scope, target: target, onKeep: onKeep, onPrepared: onPrepared)
             } else { Text(checkText("Refresh the shared shop to review this grocery.")) }
         }
     }
@@ -44,6 +45,7 @@ private struct GroceryLineDetail: View {
     @ObservedObject var model: HouseholdShopModel
     let scope: AdultRequestViewScope
     let target: SharedGroceryTarget
+    let onKeep: (() -> Void)?
     let onPrepared: () -> Void
     @Environment(\.dismiss) private var dismiss
     @Environment(\.locale) private var locale
@@ -68,6 +70,7 @@ private struct GroceryLineDetail: View {
                     Text(checkText(answer.reviewPrompt))
                 }
                 LabeledContent(checkText("Packs on the shopping list"), value: current.packs.formatted())
+                    .accessibilityElement(children: .combine)
                     .accessibilityIdentifier("sharedGrocery.currentPacks")
                 if model.shop?.phase == "draft", !model.editing, model.pending == nil {
                     Stepper(value: $count, in: 1...10_000) {
@@ -78,7 +81,10 @@ private struct GroceryLineDetail: View {
                             .accessibilityIdentifier("sharedGrocery.review")
                     }
                 }
-                Button(checkText("Keep current packs")) { dismiss() }.accessibilityIdentifier("sharedGrocery.keep")
+                Button(checkText("Keep current packs")) {
+                    onKeep?()
+                    dismiss()
+                }.accessibilityIdentifier("sharedGrocery.keep")
             } else if working { ProgressView() }
             else {
                 Text(checkText("Refresh the shared shop to review this grocery."))

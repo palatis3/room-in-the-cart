@@ -264,6 +264,7 @@ final class RoomInTheCartUITests: XCTestCase {
         }
         XCTAssertTrue(capture.exists)
         tap(capture.buttons["Cancel"])
+        XCTAssertTrue(capture.waitForNonExistence(timeout: 8))
         tap(app.navigationBars.buttons["Cancel"])
         XCTAssertTrue(field.waitForExistence(timeout: 8))
         XCTAssertEqual(field.value as? String, "Brown rice")
@@ -284,7 +285,7 @@ final class RoomInTheCartUITests: XCTestCase {
         XCTAssertEqual(name.value as? String, wording)
         let amount = element("ledgerImportAmount-1")
         reveal(amount)
-        XCTAssertNotEqual(amount.value as? String, "30")
+        XCTAssertEqual(amount.value as? String ?? "", "")
         tap(app.buttons["ledgerCommitImport"])
         XCTAssertTrue(app.buttons["ledgerCommitImport"].waitForNonExistence(timeout: 8))
         app.terminate()

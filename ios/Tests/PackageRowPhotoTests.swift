@@ -93,6 +93,16 @@ final class PackageRowPhotoTests: XCTestCase {
             destinationProduct: try XCTUnwrap(PackageRowPhoto.productSignature(b, in: workspace)))
         let unconfirmed = try await store.packagePhotos(target: b, owner: adult) { true }
         XCTAssertTrue(unconfirmed.isEmpty)
+        var permitReads = 0
+        do {
+            try await store.reusePackagePhoto(photo, destination: link, owner: adult) {
+                permitReads += 1
+                return permitReads == 1
+            }
+            XCTFail("An interrupted confirmation must leave the destination unchanged")
+        } catch { XCTAssertEqual(error as? ScanFailure, .stale) }
+        let interrupted = try await store.packagePhotos(target: b, owner: adult) { true }
+        XCTAssertTrue(interrupted.isEmpty)
         try await store.reusePackagePhoto(photo, destination: link, owner: adult) { true }
         let fresh = CaptureMediaStore(directory: directory)
         let rows = try await fresh.packagePhotos(target: b, owner: adult) { true }

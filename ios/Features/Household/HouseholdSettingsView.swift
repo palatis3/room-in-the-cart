@@ -104,6 +104,7 @@ struct HouseholdSettingsView: View {
                         HouseholdScopeHeading(scope: projection)
                         SharedPickingLink(household: model)
                         HouseholdCheckLink(household: model)
+                        CookingStepHandoffLink(household: model)
                         if projection.canSelectShop == true || projection.selectionRequired == true {
                             NavigationLink(ht("Choose shared shop")) { HouseholdShopSelector(household: model) }
                         }

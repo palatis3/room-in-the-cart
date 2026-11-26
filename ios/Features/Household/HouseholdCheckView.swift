@@ -42,7 +42,6 @@ struct HouseholdCheckLink: View {
                 Label(checkText("Dinner and cupboard questions"), systemImage: "bubble.left.and.bubble.right")
             }.accessibilityIdentifier("household.adultChecks")
         }
-        CookingStepHandoffLink(household: household)
     }
 }
 

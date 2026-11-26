@@ -58,6 +58,10 @@ extension HouseholdService {
         guard !offer.mine, offer.answer == nil else { throw ClientError.configuration }
         return try await cookingStep(in: session, body: ["action": .string("reply"), "id": .string(offer.id.uuidString.lowercased()), "answer": .string(answer.rawValue)])
     }
+    public func releaseCookingStep(in session: AdultShopRequestSession, offer: CookingStepHandoff.Offer) async throws -> CookingStepHandoff {
+        guard !offer.mine, offer.answer == .accepted else { throw ClientError.configuration }
+        return try await cookingStep(in: session, body: ["action": .string("release"), "id": .string(offer.id.uuidString.lowercased())])
+    }
     public func withdrawCookingStep(in session: AdultShopRequestSession, id: UUID) async throws -> CookingStepHandoff {
         try await cookingStep(in: session, body: ["action": .string("withdraw"), "id": .string(id.uuidString.lowercased())])
     }

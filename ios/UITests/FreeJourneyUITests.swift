@@ -1485,7 +1485,7 @@ import XCTest
             app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
             if toReplaceOriginal { app.launchArguments.append("--checkout-crop-photo") }
             app.launch()
-            saveSourcePhoto()
+            SimulatorPhotosFixture(app: app).saveSourcePhoto()
             app.terminate()
         }
 
@@ -1506,7 +1506,7 @@ import XCTest
         tap(app.buttons["shelfPhotos.location.fridge"])
         tap(app.buttons["shelfPhotos.edit"])
         tap(element("shelfPhotos.choose"))
-        try chooseNewestSourcePhoto()
+        try SimulatorPhotosFixture(app: app).chooseNewestSourcePhoto()
         saveSelectedPhoto()
         let stamp = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Taken ")).firstMatch
         reveal(stamp)
@@ -1514,7 +1514,7 @@ import XCTest
         inspectPhoto(dated: captured, evidence: "Original dated shelf photo")
         tap(app.buttons["shelfPhotos.edit"])
         tap(element("shelfPhotos.choose"))
-        let picker = try systemPhotoPicker()
+        let picker = try SimulatorPhotosFixture(app: app).systemPhotoPicker()
         // The remote Photos sheet and our editor both expose Cancel. XCTest can
         // omit the remote button's hit point even while its frame is onscreen.
         let photosBar = app.navigationBars["Photos"]
@@ -1545,7 +1545,7 @@ import XCTest
         inspectPhoto(dated: captured, evidence: "Original shelf photo reopened from Shop after cancel")
         tap(app.buttons["shelfPhotos.edit"])
         tap(element("shelfPhotos.choose"))
-        try chooseNewestSourcePhoto()
+        try SimulatorPhotosFixture(app: app).chooseNewestSourcePhoto()
         saveSelectedPhoto()
         reveal(stamp)
         let replacementDate = stamp.label
@@ -1562,7 +1562,7 @@ import XCTest
     func testReviewedCheckoutCropClearsSubtotalAndKeepsOriginalWithEditedTotal() throws {
         app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "--checkout-crop-photo", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
-        saveSourcePhoto()
+        SimulatorPhotosFixture(app: app).saveSourcePhoto()
         app.terminate()
         app.launchArguments = ["--ui-testing", "--meal-language-fixture", "--checkout-crop-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
@@ -1573,7 +1573,7 @@ import XCTest
         let chooser = element("priceImage.choose")
         XCTAssertTrue(chooser.waitForExistence(timeout: 8), app.debugDescription)
         chooser.tap()
-        try chooseNewestSourcePhoto()
+        try SimulatorPhotosFixture(app: app).chooseNewestSourcePhoto()
         let subtotal = app.textFields["priceImage.amount.subtotal"]
         XCTAssertTrue(subtotal.waitForExistence(timeout: 25), app.debugDescription)
         XCTAssertEqual(subtotal.value as? String, "12.5")
@@ -1615,146 +1615,10 @@ import XCTest
         capture("Checkout review preserves original OCR, accepted crop and shopper amount")
     }
 
-    #if CONTRIBUTOR_CAPTURE_UI_FIXTURE
-    func testPrivateCookingPhotoSurvivesNextCookAndDisplayOptInEndsWithSession() throws {
-        app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
-        app.launch()
-        saveSourcePhoto()
-        app.terminate()
-
-        app.launchArguments = ["--ui-testing", "--recipe-library-fixture", "--recipe-full-screen", "--reset-library-privacy-fixture",
-                               "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
-        app.launch()
-        tap(app.buttons["records.recovered.Existing family soup"])
-        tap(app.buttons["records.openSavedRecipe"])
-        tap(app.buttons["cooking.openRecipe"])
-        tap(app.buttons["cooking.stepPhoto.add"])
-        tap(element("cooking.stepPhoto.pick"))
-        try chooseNewestSourcePhoto()
-
-        let cue = app.textFields["cooking.stepPhoto.description"]
-        tap(cue)
-        cue.typeText("Golden at the edges")
-        tap(app.buttons["cooking.stepNote.done"])
-        tap(app.buttons["cooking.stepPhoto.save"])
-        let saved = app.staticTexts["Step photo, Golden at the edges"]
-        reveal(saved)
-        let display = app.switches["cooking.keepAwake"].firstMatch
-        reveal(display)
-        XCTAssertEqual(display.value as? String, "0")
-        display.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
-        XCTAssertEqual(display.value as? String, "1")
-        tap(app.buttons["cooking.end"])
-        tap(app.buttons["cooking.confirmEnd"])
-        tap(app.buttons["cooking.openRecipe"])
-        reveal(saved)
-        capture("Private photo and description on a later cook")
-        reveal(display)
-        XCTAssertEqual(display.value as? String, "0")
-        tap(app.buttons["Edit step photo"])
-        tap(app.buttons["Remove step photo"])
-        reveal(app.buttons["cooking.stepPhoto.add"])
-        XCTAssertFalse(saved.exists)
-    }
-    #endif
-
-    private func systemPhotoPicker() throws -> XCUIElement {
-        let identifiedGrid = app.scrollViews["photosView_content_scroll_view"]
-        // iOS 17 presents an unlabelled grid beneath the native Photos navigation bar.
-        let photosBar = app.navigationBars["Photos"]
-        let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            identifiedGrid.exists || photosBar.exists
-        }, object: nil)
-        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 60), .completed, app.debugDescription)
-        if identifiedGrid.exists { return identifiedGrid }
-        return try XCTUnwrap(photosBar.exists ? photosBar : nil, "The system photo picker did not open.")
-    }
-
-    private func chooseNewestSourcePhoto() throws {
-        // The system picker can group its thumbnails in one accessible grid.
-        // Its snapshot still exposes each photo's label and actual tap target.
-        func firstPhoto(in node: any XCUIElementSnapshot) -> CGRect? {
-            if (node.elementType == .image || node.elementType == .cell),
-               node.label.hasPrefix("Photo,"), !node.frame.isEmpty { return node.frame }
-            for child in node.children {
-                if let frame = firstPhoto(in: child) { return frame }
-            }
-            return nil
-        }
-        let picker = try systemPhotoPicker()
-        // On iOS 17 the Photos bar identifies the picker, but only its window has
-        // both the thumbnail descendants and a screen-space frame.
-        let grid = picker.elementType == .navigationBar
-            ? app.windows.containing(.navigationBar, identifier: "Photos").firstMatch : picker
-        for _ in 0..<2 {
-            // The first-use privacy banner can move the grid after its images appear.
-            // Sample the center in picker coordinates until it stays in place.
-            var center: CGPoint?
-            let settled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-                guard let view = try? grid.snapshot(), let photo = firstPhoto(in: view) else {
-                    center = nil
-                    return false
-                }
-                // A thumbnail can straddle the grid edge by a fraction of a point.
-                // The actual center we tap must lie inside the visible picker.
-                let screenCenter = CGPoint(x: photo.midX, y: photo.midY)
-                guard view.frame.contains(screenCenter) else {
-                    center = nil
-                    return false
-                }
-                let point = CGPoint(x: screenCenter.x - view.frame.minX, y: screenCenter.y - view.frame.minY)
-                defer { center = point }
-                return center == point
-            }, object: nil)
-            XCTAssertEqual(XCTWaiter.wait(for: [settled], timeout: 60), .completed, app.debugDescription)
-            let point = try XCTUnwrap(center)
-            grid.coordinate(withNormalizedOffset: .zero)
-                .withOffset(CGVector(dx: point.x, dy: point.y)).tap()
-            if picker.waitForNonExistence(timeout: 5) { return }
-        }
-        XCTFail("Photos remained open after selecting the newest image. " + app.debugDescription)
-    }
-
-    private func saveSourcePhoto() {
-        let add = app.buttons["Add sample receipt to simulator Photos"]
-        XCTAssertTrue(add.waitForExistence(timeout: 10), app.debugDescription)
-        add.tap()
-        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
-        // Only dismiss this fixture's add-only Photos prompt. SpringBoard can
-        // expose a hittable Allow button while its presentation is still animating.
-        let purpose = "Add a synthetic receipt to this test simulator for the Photos picker check."
-        let title = NSPredicate(format: "label CONTAINS[c] %@ AND (label CONTAINS[c] %@ OR label CONTAINS[c] %@)",
-                                "Room in the Cart", "add photos and videos to your photo library", "add to your photos")
-        let byTitle = springboard.alerts.matching(title).firstMatch
-        let byPurpose = springboard.alerts.containing(.staticText, identifier: purpose).firstMatch
-        if springboard.alerts.firstMatch.waitForExistence(timeout: 6) {
-            let prompt = byTitle.exists ? byTitle : byPurpose
-            if prompt.exists {
-                let allow = prompt.buttons["Allow"].exists ? prompt.buttons["Allow"] : prompt.buttons["OK"]
-                for attempt in 0..<2 {
-                    guard prompt.exists else { break }
-                    guard allow.wait(for: \.isHittable, toEqual: true, timeout: 3) else {
-                        XCTFail("The simulator Photos permission button is unavailable. " + springboard.debugDescription)
-                        return
-                    }
-                    allow.tap()
-                    if prompt.waitForNonExistence(timeout: 3) { break }
-                    if attempt == 1 {
-                        XCTFail("The simulator Photos add-only prompt remained after Allow. " + springboard.debugDescription)
-                        return
-                    }
-                }
-            }
-        }
-        let saved = app.staticTexts["fixture.receipt.photoResult"]
-        XCTAssertTrue(saved.waitForExistence(timeout: 12), app.debugDescription)
-        XCTAssertEqual(saved.label, "Test photo saved")
-    }
-
     private func openReceiptScreenshotFromPhotos() throws {
         app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
-        saveSourcePhoto()
+        SimulatorPhotosFixture(app: app).saveSourcePhoto()
         app.terminate()
         launch(reset: true)
         tap(app.shopToolButton("shop.myPantry")); tap(app.buttons["pantry.setup.apply"])
@@ -1762,7 +1626,7 @@ import XCTest
         let screenshot = app.buttons["receipt.chooseScreenshot"]
         XCTAssertTrue(screenshot.waitForExistence(timeout: 5) && screenshot.isHittable, app.debugDescription)
         screenshot.tap()
-        try chooseNewestSourcePhoto()
+        try SimulatorPhotosFixture(app: app).chooseNewestSourcePhoto()
     }
 
     func testFeeOnlyScreenshotCanBeSavedWithoutConfirmingReceivedFood() throws {
@@ -5769,6 +5633,110 @@ extension FreeJourneyUITests {
         tap(app.tabBars.buttons["Pantry"])
         tap(app.buttons["pantry.standingChecks"])
         XCTAssertFalse(app.buttons["pantry.standing.add"].exists)
-        XCTAssertTrue(app.staticTexts["Next check"].exists)
+        let result = element("pantry.standing.lastAnswer")
+        reveal(result)
+        openShoppingList()
+        let groceries = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label == %@", "ledgerCheck-", "Check Coffee"))
+        reveal(groceries.firstMatch)
+        XCTAssertEqual(groceries.count, 1)
     }
 }
+
+#if DEBUG && targetEnvironment(simulator)
+@MainActor struct SimulatorPhotosFixture {
+    let app: XCUIApplication
+
+    func systemPhotoPicker() throws -> XCUIElement {
+        let identifiedGrid = app.scrollViews["photosView_content_scroll_view"]
+        // iOS 17 presents an unlabelled grid beneath the native Photos navigation bar.
+        let photosBar = app.navigationBars["Photos"]
+        let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            identifiedGrid.exists || photosBar.exists
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 60), .completed, app.debugDescription)
+        if identifiedGrid.exists { return identifiedGrid }
+        return try XCTUnwrap(photosBar.exists ? photosBar : nil, "The system photo picker did not open.")
+    }
+
+    func chooseNewestSourcePhoto() throws {
+        // The system picker can group its thumbnails in one accessible grid.
+        // Its snapshot still exposes each photo's label and actual tap target.
+        func firstPhoto(in node: any XCUIElementSnapshot) -> CGRect? {
+            if (node.elementType == .image || node.elementType == .cell),
+               node.label.hasPrefix("Photo,"), !node.frame.isEmpty { return node.frame }
+            for child in node.children {
+                if let frame = firstPhoto(in: child) { return frame }
+            }
+            return nil
+        }
+        let picker = try systemPhotoPicker()
+        // On iOS 17 the Photos bar identifies the picker, but only its window has
+        // both the thumbnail descendants and a screen-space frame.
+        let grid = picker.elementType == .navigationBar
+            ? app.windows.containing(.navigationBar, identifier: "Photos").firstMatch : picker
+        for _ in 0..<2 {
+            // The first-use privacy banner can move the grid after its images appear.
+            // Sample the center in picker coordinates until it stays in place.
+            var center: CGPoint?
+            let settled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+                guard let view = try? grid.snapshot(), let photo = firstPhoto(in: view) else {
+                    center = nil
+                    return false
+                }
+                // A thumbnail can straddle the grid edge by a fraction of a point.
+                // The actual center we tap must lie inside the visible picker.
+                let screenCenter = CGPoint(x: photo.midX, y: photo.midY)
+                guard view.frame.contains(screenCenter) else {
+                    center = nil
+                    return false
+                }
+                let point = CGPoint(x: screenCenter.x - view.frame.minX, y: screenCenter.y - view.frame.minY)
+                defer { center = point }
+                return center == point
+            }, object: nil)
+            XCTAssertEqual(XCTWaiter.wait(for: [settled], timeout: 60), .completed, app.debugDescription)
+            let point = try XCTUnwrap(center)
+            grid.coordinate(withNormalizedOffset: .zero)
+                .withOffset(CGVector(dx: point.x, dy: point.y)).tap()
+            if picker.waitForNonExistence(timeout: 5) { return }
+        }
+        XCTFail("Photos remained open after selecting the newest image. " + app.debugDescription)
+    }
+
+    func saveSourcePhoto() {
+        let add = app.buttons["Add sample receipt to simulator Photos"]
+        XCTAssertTrue(add.waitForExistence(timeout: 10), app.debugDescription)
+        add.tap()
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        // Only dismiss this fixture's add-only Photos prompt. SpringBoard can
+        // expose a hittable Allow button while its presentation is still animating.
+        let purpose = "Add a synthetic receipt to this test simulator for the Photos picker check."
+        let title = NSPredicate(format: "label CONTAINS[c] %@ AND (label CONTAINS[c] %@ OR label CONTAINS[c] %@)",
+                                "Room in the Cart", "add photos and videos to your photo library", "add to your photos")
+        let byTitle = springboard.alerts.matching(title).firstMatch
+        let byPurpose = springboard.alerts.containing(.staticText, identifier: purpose).firstMatch
+        if springboard.alerts.firstMatch.waitForExistence(timeout: 6) {
+            let prompt = byTitle.exists ? byTitle : byPurpose
+            if prompt.exists {
+                let allow = prompt.buttons["Allow"].exists ? prompt.buttons["Allow"] : prompt.buttons["OK"]
+                for attempt in 0..<2 {
+                    guard prompt.exists else { break }
+                    guard allow.wait(for: \.isHittable, toEqual: true, timeout: 3) else {
+                        XCTFail("The simulator Photos permission button is unavailable. " + springboard.debugDescription)
+                        return
+                    }
+                    allow.tap()
+                    if prompt.waitForNonExistence(timeout: 3) { break }
+                    if attempt == 1 {
+                        XCTFail("The simulator Photos add-only prompt remained after Allow. " + springboard.debugDescription)
+                        return
+                    }
+                }
+            }
+        }
+        let saved = app.staticTexts["fixture.receipt.photoResult"]
+        XCTAssertTrue(saved.waitForExistence(timeout: 12), app.debugDescription)
+        XCTAssertEqual(saved.label, "Test photo saved")
+    }
+}
+#endif

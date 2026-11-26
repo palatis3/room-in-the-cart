@@ -279,6 +279,8 @@ struct SharedShopTransfer: Equatable {
     }
     func dismissPackChange(_ id: UUID, observed: ShopPackObservation) async {
         guard canManage, !busy, pending == nil, packObservation == observed, let store = financialStore else { return }
+        busy = true
+        defer { busy = false }
         let start = generation
         let epoch = await store.epoch()
         guard start == generation, packObservation == observed else { return }

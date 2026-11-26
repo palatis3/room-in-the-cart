@@ -159,6 +159,15 @@ struct PantryStandingChecksView: View {
                     ForEach((doc.standingChecks ?? []).sorted { ($0.next.iso8601, $0.name) < ($1.next.iso8601, $1.name) }) { check in
                         Section(check.name) {
                             LabeledContent(pantryText("Next check"), value: check.next.iso8601 + " · " + check.next.timeZoneIdentifier)
+                            if let last = check.lastAnswer {
+                                let answer = switch last {
+                                case .have: pantryText("Already have it")
+                                case .skipped: pantryText("Skipped")
+                                case .shopping: pantryText("Marked for shopping")
+                                }
+                                LabeledContent(pantryText("Last check"), value: answer)
+                                    .accessibilityIdentifier("pantry.standing.lastAnswer")
+                            }
                             if check.due(at: clock.date) {
                                 if check.adding == nil {
                                     Button(pantryText("Already have it")) { answer(check, .have, access) }

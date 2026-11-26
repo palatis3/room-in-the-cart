@@ -295,4 +295,4 @@ test('structured promotion binds an explicitly reviewed note version, organizer,
   assert.deepEqual(erased.settings.preferredBrands,['Casa']);
 });
 
-adultCheckTests({fixture,request,ok,admin,runtime,subscriptions});
+adultCheckTests({fixture,request,ok,admin,runtime,subscriptions,repository});

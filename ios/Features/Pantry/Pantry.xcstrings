@@ -17056,6 +17056,40 @@
           }
         }
       }
+    },
+    "Marked for shopping": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marked for shopping"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marcado para comprar"
+          }
+        }
+      }
+    },
+    "Last check": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last check"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Última revisión"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

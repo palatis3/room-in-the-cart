@@ -1429,23 +1429,6 @@
         }
       }
     },
-    "Declined": {
-      "extractionState": "manual",
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rechazado"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Declined"
-          }
-        }
-      }
-    },
     "Accept this step": {
       "extractionState": "manual",
       "localizations": {
@@ -1544,6 +1527,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "A cooking step handoff expired."
+          }
+        }
+      }
+    },
+    "This step is back with you.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este paso queda a tu cargo."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This step is back with you."
+          }
+        }
+      }
+    },
+    "You passed this step back.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Devolviste este paso a la otra persona."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You passed this step back."
           }
         }
       }

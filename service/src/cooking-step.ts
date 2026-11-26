@@ -11,6 +11,7 @@ const command=z.discriminatedUnion('action',[
     instruction:z.string().trim().min(1).max(240).refine(s=>!/[\p{Cc}\p{Cf}]/u.test(s)),expiresAt:z.iso.datetime({offset:true}),reviewed:z.literal(true)}).strict(),
   z.object({action:z.literal('reply'),id:uuid,answer:z.enum(['accepted','declined'])}).strict(),
   z.object({action:z.literal('withdraw'),id:uuid}).strict(),
+  z.object({action:z.literal('release'),id:uuid}).strict(),
 ]);
 interface Row {check_id:string;step_sender:string;step_text:string;answer:'accepted'|'declined'|null;expires_at:Date;withdrawn:boolean}
 const phases=['draft','frozen','placed'];
@@ -40,14 +41,24 @@ export async function cookingStepRoute(repo:HouseholdRepository,billing:BillingS
         await checkPublishingMember(ctx);
         const inserted=await ctx.db.query(`INSERT INTO ritc.adult_check(household_id,shop_id,check_id,source_id,kind,shopper_id,recipient_id,
           shop_revision,authority_epoch,pair_revision,created_at,expires_at,step_sender,step_text)
-          VALUES($1,$2,$3,$3,'cookStep',$4,$5,$6,$7,$8,$9,$10,$11,$12) ON CONFLICT DO NOTHING`,
+          SELECT $1::uuid,$2::uuid,$3::uuid,$3::uuid,'cookStep',$4::uuid,$5::uuid,$6::integer,$7::integer,$8::integer,
+            $9::timestamptz,$10::timestamptz,$11::uuid,$12::text
+          WHERE NOT EXISTS (SELECT FROM ritc.adult_check WHERE household_id=$1 AND check_id=$3 AND kind='cookStep')
+          ON CONFLICT DO NOTHING`,
           [...key,shop.shopper_id,recipientId,shop.revision,shop.authority_epoch,pairRevision,ctx.now,expiry,member,input.instruction]);
         if(!inserted.rowCount)throw refresh();
       }
     }else{
       if(!row)throw unavailable();
       if(input.action==='withdraw'){
+        if(row.step_sender!==member)throw unavailable();
         await ctx.db.query("UPDATE ritc.adult_check SET withdrawn=true,answer=NULL,answered_at=NULL WHERE household_id=$1 AND shop_id=$2 AND check_id=$3",key);
+      }else if(input.action==='release'){
+        if(row.withdrawn||row.step_sender===member)throw unavailable();
+        if(!row.answer)throw refresh();
+        if(row.answer==='accepted'){
+          await ctx.db.query("UPDATE ritc.adult_check SET answer='declined',answered_at=$4 WHERE household_id=$1 AND shop_id=$2 AND check_id=$3",[...key,ctx.now]);
+        }
       }else{
         if(row.withdrawn||row.step_sender===member)throw unavailable();
         if(row.answer && row.answer!==input.answer)throw refresh();

@@ -121,7 +121,7 @@ private struct CookingStepHandoffView: View {
             case .accepted:
                 LabeledContent(stepText("Taking this step"), value: offer.mine ? peer.label : stepText("You"))
                 Text(stepText("Mark cooking progress separately."))
-            case .declined: Text(stepText("Declined"))
+            case .declined: Text(stepText(offer.mine ? "This step is back with you." : "You passed this step back."))
             case nil:
                 Text(stepText("Waiting for a reply"))
                 if !offer.mine {
@@ -132,7 +132,10 @@ private struct CookingStepHandoffView: View {
             if offer.mine || offer.answer == .accepted {
                 Button(stepText(offer.mine ? "Withdraw this offer" : "Release this step")) {
                     Task {
-                        await perform { try await $0.withdrawCookingStep(in: $1, id: offer.id) }
+                        await perform { service, session in
+                            if offer.mine { return try await service.withdrawCookingStep(in: session, id: offer.id) }
+                            return try await service.releaseCookingStep(in: session, offer: offer)
+                        }
                         if page?.offers.contains(where: { $0.id == offer.id }) == false { requestID = UUID() }
                     }
                 }
