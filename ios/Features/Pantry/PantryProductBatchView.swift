@@ -273,10 +273,11 @@ struct PantryProductBatchView: View {
                 .transition(reduceMotion ? .identity : .opacity)
             } else {
                 Section {
-                    Picker(pantryText("Package source"), selection: Binding(get: { atHome }, set: changeSource)) {
-                        Text(pantryText("Counted at home")).tag(true)
-                        Text(pantryText("Received purchase")).tag(false)
-                    }.accessibilityIdentifier("pack.source")
+                    if typeSize.isAccessibilitySize {
+                        packageSource.pickerStyle(.inline)
+                    } else {
+                        packageSource
+                    }
                 } footer: {
                     Text(pantryText("Choose Counted at home for food you already have."))
                 }
@@ -389,6 +390,14 @@ struct PantryProductBatchView: View {
         }
     }
 
+    private var packageSource: some View {
+        Picker(pantryText("Package source"), selection: Binding(get: { atHome }, set: changeSource)) {
+            Text(pantryText("Counted at home")).fixedSize(horizontal: false, vertical: true).tag(true)
+            Text(pantryText("Received purchase")).fixedSize(horizontal: false, vertical: true).tag(false)
+        }
+        .accessibilityIdentifier("pack.source")
+    }
+
     private var reviewTitle: String { pantryText(atHome ? "Review pantry count" : "Review received products") }
 
     private var visibleReviewTitle: String {
@@ -411,6 +420,7 @@ struct PantryProductBatchView: View {
                     .buttonStyle(PrimaryAction())
                     .disabled(!confirmed || working || !model.canEdit || (!atHome && merchant.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
                     .accessibilityLabel(reviewActionLabel)
+                    .accessibilityInputLabels([Text(visibleReviewTitle), Text(reviewActionLabel)])
                     .accessibilityFocused($reviewFocus, equals: .opener)
                     .accessibilityIdentifier("productBatch.review")
                     .task(id: restoreReviewFocus) {

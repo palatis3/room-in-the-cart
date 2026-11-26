@@ -588,6 +588,7 @@ import XCTest
         tap(app.tabBars.buttons["Despensa"])
         tap(app.buttons["pantry.setup.apply"])
         tap(app.buttons["pantry.productBatch"])
+        capture("Scanner intake - es-MX AX5 - package source")
         addTypedProduct("Avena", using: app.textViews["productBatch.label"])
         tap(app.buttons["productBatch.row.0"])
         enableSwitch("productBatch.oneUnknown")
