@@ -7,10 +7,19 @@ func currentStopSourceText(_ key: String) -> String {
 
 struct CurrentStopSearchHit {
     var fields: [ShoppingSearchEvidence] = []
+    var spansFields = false
     var photoCue = false
 
     func contains(_ field: ShoppingSearchEvidence.Field) -> Bool {
         fields.contains { $0.field == field }
+    }
+
+    var noteCaption: CurrentStopSourceCaption {
+        !spansFields && contains(.lineNote) ? .matchedNote : .note
+    }
+
+    var departmentCaption: CurrentStopSourceCaption {
+        spansFields ? .savedDepartment : .department
     }
 
     static let rowEntryLimit = 2
@@ -21,13 +30,14 @@ struct CurrentStopSearchHit {
 }
 
 enum CurrentStopSourceCaption: Equatable {
-    case name, note, matchedNote, department, photo, matchedPhoto, earlierPhoto, matchedEarlierPhoto, entry, entryNote
+    case name, note, matchedNote, department, savedDepartment, photo, matchedPhoto, earlierPhoto, matchedEarlierPhoto, entry, entryNote
 
     var title: String {
         switch self {
         case .name: currentStopSourceText("Matching item name")
         case .note: currentStopSourceText("List note")
         case .matchedNote: currentStopSourceText("Matching list note")
+        case .savedDepartment: currentStopSourceText("List department")
         case .department: currentStopSourceText("Matching department")
         case .photo: currentStopSourceText("Photo cue")
         case .matchedPhoto: currentStopSourceText("Matching photo cue")
@@ -41,7 +51,7 @@ enum CurrentStopSourceCaption: Equatable {
     var journalKind: JournalSourceKind? {
         switch self {
         case .name, .note, .matchedNote, .entry, .entryNote: .shoppingList
-        case .department, .photo, .matchedPhoto, .earlierPhoto, .matchedEarlierPhoto: nil
+        case .department, .savedDepartment, .photo, .matchedPhoto, .earlierPhoto, .matchedEarlierPhoto: nil
         }
     }
 

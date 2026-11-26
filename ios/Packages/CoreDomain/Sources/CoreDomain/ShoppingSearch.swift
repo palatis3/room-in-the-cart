@@ -27,7 +27,7 @@ public struct ShoppingSearchEvidence: Hashable, Sendable {
         let direct = components.filter { $0.1.contains(term) }.map(\.0)
         if !direct.isEmpty { return direct }
         let joined = components.map(\.1).joined(separator: " ")
-        guard let range = joined.range(of: term, options: .literal) else { return [] }
+        guard let range = joined.range(of: term) else { return [] }
         let start = joined.utf8.distance(from: joined.startIndex, to: range.lowerBound)
         let end = joined.utf8.distance(from: joined.startIndex, to: range.upperBound)
         var offset = 0
@@ -42,6 +42,7 @@ public struct ShoppingSearchEvidence: Hashable, Sendable {
 public struct ShoppingSearchResult: Sendable {
     public let line: ShoppingLine
     public let evidence: [ShoppingSearchEvidence]
+    public let spansFields: Bool
 }
 
 extension ShoppingLedger {
@@ -60,7 +61,7 @@ extension ShoppingLedger {
             guard !source.isTrashed else { return nil }
             var line = source
             if let department { line.aisle = department(source) }
-            if term.isEmpty { return ShoppingSearchResult(line: line, evidence: []) }
+            if term.isEmpty { return ShoppingSearchResult(line: line, evidence: [], spansFields: false) }
             let fields = ShoppingSearchEvidence.matching([
                 .init(.name, line.name), .init(.lineNote, line.notes), .init(.department, line.aisle)
             ], term: term)
@@ -73,7 +74,9 @@ extension ShoppingLedger {
                 if item.field == .contributionNote && seen.contains(.init(.lineNote, item.text)) { return false }
                 return seen.insert(item).inserted
             }
-            return ShoppingSearchResult(line: line, evidence: fields + extra)
+            let evidence = fields + extra
+            let spansFields = evidence.count > 1 && !evidence.contains { normalizedProduct($0.text).contains(term) }
+            return ShoppingSearchResult(line: line, evidence: evidence, spansFields: spansFields)
         }.sorted { $0.line.originalOrder < $1.line.originalOrder }
     }
 }

@@ -1,6 +1,22 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "List department": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "List department"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Departamento de la lista"
+          }
+        }
+      }
+    },
     "List note": {
       "localizations": {
         "en": {
@@ -189,6 +205,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lee el texto completo en Detalles del artículo."
+          }
+        }
+      }
+    },
+    "Search words span saved fields.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search words span saved fields."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las palabras de búsqueda aparecen en campos distintos."
           }
         }
       }

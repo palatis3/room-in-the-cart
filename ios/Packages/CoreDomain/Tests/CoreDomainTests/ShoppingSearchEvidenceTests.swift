@@ -10,6 +10,7 @@ final class ShoppingSearchEvidenceTests: XCTestCase {
         let results = shop.searchResults("LIBRE de AZUCAR")
         XCTAssertEqual(results.map(\.line.id), [substitute, desired])
         XCTAssertEqual(results[0].evidence, [.init(.lineNote, note)])
+        XCTAssertFalse(results[0].spansFields)
         XCTAssertEqual(results[1].evidence, [.init(.name, "Bebida libre de azúcar")])
         XCTAssertEqual(shop.search("LIBRE de AZUCAR").map(\.id), results.map(\.line.id))
         XCTAssertEqual(shop.searchResults("").map(\.evidence), [[], []])
@@ -41,6 +42,7 @@ final class ShoppingSearchEvidenceTests: XCTestCase {
         let results = shop.searchResults("fino    bebidas", department: { _ in "Bebidas frías" })
         XCTAssertEqual(results.map(\.line.id), [id])
         XCTAssertEqual(results[0].evidence, [.init(.lineNote, "Molido fino"), .init(.department, "Bebidas frías")])
+        XCTAssertTrue(results[0].spansFields)
         XCTAssertEqual(results[0].line.aisle, "Bebidas frías")
         XCTAssertTrue(shop.searchResults("bebidas").isEmpty)
     }

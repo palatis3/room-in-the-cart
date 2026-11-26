@@ -428,7 +428,7 @@ struct InStoreShoppingView: View {
         let term = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard searching, !term.isEmpty else { return nil }
         let lines = shop.searchResults(term, department: { model.workspace.listLayout.department(for: $0, in: shop) })
-        var matches = Dictionary(uniqueKeysWithValues: lines.map { ($0.line.id, CurrentStopSearchHit(fields: $0.evidence)) })
+        var matches = Dictionary(uniqueKeysWithValues: lines.map { ($0.line.id, CurrentStopSearchHit(fields: $0.evidence, spansFields: $0.spansFields)) })
         for (id, photo) in packagePhotos where photo.cue.localizedStandardContains(term) {
             if currentPhoto(for: id) != nil {
                 matches[id, default: CurrentStopSearchHit()].photoCue = true
@@ -531,6 +531,7 @@ struct InStoreShoppingView: View {
                        placeActions: placeActions(for: id)) { shop, line in
             if authorize() {
                 let hit = searching ? searchMatches(in: shop)?[line.id] : nil
+                nameSource(hit)
                 searchDetails(line, in: shop, hit: hit, showAisle: searching, fullText: true)
             }
         }
@@ -713,7 +714,7 @@ struct InStoreShoppingView: View {
         let department = model.workspace.listLayout.department(for: line, in: shop)
         let showDepartment = !department.isEmpty && model.workspace.listLayout.layout(for: shop).mode != .aisle
         let photo = currentPhoto(for: line.id)
-        let noteCaption: CurrentStopSourceCaption = hit?.contains(.lineNote) == true ? .matchedNote : .note
+        let noteCaption: CurrentStopSourceCaption = hit?.noteCaption ?? .note
         return HStack(alignment: .top, spacing: 8) {
             Button {
                 let index = visible.firstIndex(where: { $0.id == line.id }) ?? 0
@@ -737,7 +738,7 @@ struct InStoreShoppingView: View {
                             .accessibilityElement(children: .ignore)
                             .accessibilityLabel([line.name, amount].compactMap { $0 }.joined(separator: ", "))
                         if hit?.contains(.department) == true {
-                            CurrentStopSourceText(caption: .department, literal: department)
+                            CurrentStopSourceText(caption: hit?.departmentCaption ?? .department, literal: department)
                         } else if showDepartment {
                             Text(verbatim: department).font(.subheadline).foregroundStyle(Theme.secondary)
                         }
@@ -791,10 +792,15 @@ struct InStoreShoppingView: View {
 
     private func rowSourceValue(_ line: ShoppingLine, department: String, amount: String? = nil,
                                 exclusions: String? = nil, photo: PackageRowPhoto?, hit: CurrentStopSearchHit?) -> String {
-        let note: CurrentStopSourceCaption = hit?.contains(.lineNote) == true ? .matchedNote : .note
-        var words = [amount, hit?.contains(.name) == true ? CurrentStopSourceCaption.name.title : nil]
+        let note: CurrentStopSourceCaption = hit?.noteCaption ?? .note
+        var words = [amount]
+        if hit?.spansFields == true {
+            words.append(currentStopSourceText("Search words span saved fields."))
+        } else if hit?.contains(.name) == true {
+            words.append(CurrentStopSourceCaption.name.title)
+        }
         if let field = hit?.fields.first(where: { $0.field == .department }) {
-            words.append(CurrentStopSourceCaption.department.spoken(field.text))
+            words.append((hit?.departmentCaption ?? .department).spoken(field.text))
         } else if !department.isEmpty {
             words.append(department)
         }
@@ -811,7 +817,9 @@ struct InStoreShoppingView: View {
     }
 
     @ViewBuilder private func nameSource(_ hit: CurrentStopSearchHit?) -> some View {
-        if hit?.contains(.name) == true {
+        if hit?.spansFields == true {
+            Text(verbatim: currentStopSourceText("Search words span saved fields.")).font(.caption).foregroundStyle(Theme.secondary)
+        } else if hit?.contains(.name) == true {
             Text(verbatim: CurrentStopSourceCaption.name.title).font(.caption).foregroundStyle(Theme.secondary)
         }
     }
@@ -835,13 +843,13 @@ struct InStoreShoppingView: View {
         let aisle = model.workspace.listLayout.department(for: line, in: shop)
         if showAisle && !aisle.isEmpty {
             if hit?.contains(.department) == true {
-                CurrentStopSourceText(caption: .department, literal: aisle, fullText: fullText)
+                CurrentStopSourceText(caption: hit?.departmentCaption ?? .department, literal: aisle, fullText: fullText)
             } else {
                 Text(verbatim: aisle).foregroundStyle(Theme.secondary)
             }
         }
         if !line.notes.isEmpty {
-            CurrentStopSourceText(caption: hit?.contains(.lineNote) == true ? .matchedNote : .note, literal: line.notes, fullText: fullText)
+            CurrentStopSourceText(caption: hit?.noteCaption ?? .note, literal: line.notes, fullText: fullText)
         }
         originalSources(hit, fullText: fullText)
         if let photo = currentPhoto(for: line.id) {
