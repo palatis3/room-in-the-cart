@@ -115,9 +115,20 @@ private struct CookingNoteEditor: View {
             if let previous, !previous.belongs(to: model.context.noteKey, step: index, instruction: instruction) {
                 Text(String(format: recordsText("Step %lld"), Int64(index + 1)) + " · " + instruction)
             }
-            TextField(cookCompletionText("What would you change next time?"), text: $text, axis: .vertical)
-                .textFieldStyle(WorkingInputStyle()).focused($focused)
-                .accessibilityIdentifier("cooking.stepNote.text")
+            VStack(alignment: .leading, spacing: 6) {
+                let prompt = cookCompletionText("What would you change next time?")
+                Text(prompt).font(.subheadline).accessibilityHidden(true)
+                TextEditor(text: $text)
+                    .focused($focused)
+                    .accessibilityLabel(prompt)
+                    .accessibilityIdentifier("cooking.stepNote.text")
+                    .font(.body).frame(minHeight: 76)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 5)
+                            .strokeBorder(Theme.controlEdge, lineWidth: 1)
+                            .allowsHitTesting(false).accessibilityHidden(true)
+                    }
+            }
             Button(cookCompletionText("Save note")) {
                 let next = CookingStepNote(id: previous?.id ?? UUID(), revision: model.context.noteKey.revision, step: index,
                     instruction: instruction, text: text, hidden: false)

@@ -99,7 +99,8 @@ import XCTest
         tap(button("records.openSavedRecipe"))
         tap(button("cooking.openRecipe"))
         tap(button("cooking.stepNote.add"))
-        let field = element("cooking.stepNote.text")
+        let field = app.textViews["cooking.stepNote.text"]
+        XCTAssertTrue(field.waitForExistence(timeout: 8))
         tap(field)
         field.typeText("Use half the lime.")
         let save = button("cooking.stepNote.save")
