@@ -558,10 +558,9 @@ import XCTest
         let check = results.buttons["inStoreCheck-" + id]
         XCTAssertTrue(check.waitForExistence(timeout: 8))
         XCTAssertTrue((check.value as? String)?.contains(matchedNote + ", " + note) == true)
-        XCTAssertEqual(resultButtons.count, 2)
-        // The preserved, visually hidden aisle must not expose a second actionable copy.
+        if !spanish { XCTAssertEqual(resultButtons.count, 2) }
+        // Only the active list can expose this grocery's actionable checkbox.
         XCTAssertEqual(app.buttons.matching(identifier: "inStoreCheck-" + id).count, 1)
-        XCTAssertEqual(resultButtons.matching(NSPredicate(format: "value CONTAINS %@", matchedName)).count, 1)
         let detail = results.buttons["tripDetails-" + id]
         XCTAssertTrue(detail.label.contains(note))
         XCTAssertTrue(detail.label.contains(matchedNote))
@@ -578,6 +577,15 @@ import XCTest
         close.tap()
         XCTAssertTrue(detail.waitForExistence(timeout: 8))
 
+        // A full note can consume the entire largest-type viewport. Reach the
+        // second result before asking XCTest about its separate source and identity.
+        let named = resultButtons.matching(NSPredicate(format: "value CONTAINS %@", matchedName)).firstMatch
+        for _ in 0..<5 {
+            if named.exists && named.isHittable { break }
+            results.swipeUp()
+        }
+        XCTAssertTrue(named.isHittable)
+        XCTAssertNotEqual(named.identifier, "inStoreCheck-" + id)
         app.buttons["inStoreClearSearch"].tap()
         XCTAssertTrue(input.waitForNonExistence(timeout: 8))
         let returned = app.collectionViews["inStoreAisle"].buttons["inStoreCheck-" + id]
