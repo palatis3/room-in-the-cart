@@ -202,8 +202,15 @@ import XCTest
             XCTAssertEqual(pairingRows.firstMatch.exists, includesPairing, "Grocery demand must use this night's choice", file: file, line: line)
         }
         assertQuantities([0, 2, 2])
+        let choices = app.buttons["dinner.handoff.chooseIngredients"]
+        reveal(choices)
+        XCTAssertEqual(choices.label, spanish ? "Elegir ingredientes para esta cena" : "Choose ingredients for this dinner")
+        XCTAssertGreaterThanOrEqual(choices.frame.height, 44)
+        XCTAssertGreaterThan(choices.frame.width, app.frame.width / 2)
         let wine = app.switches.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
                                                      "dinner.handoff.planIngredient.", pairing)).firstMatch
+        reveal(wine)
+        XCTAssertEqual(wine.value as? String, "0")
         tap(wine, at: CGVector(dx: 0.92, dy: 0.5))
         assertQuantities([0, 2, 2], includesPairing: true)
         let confirm = app.buttons["dinner.handoff.confirm"]

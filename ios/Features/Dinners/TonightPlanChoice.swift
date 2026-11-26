@@ -464,7 +464,8 @@ struct SavedDinnerHandoffView: View {
         }
     }
     private var ingredientChoices: some View {
-        DisclosureGroup(dinnerText("Choose ingredients for this dinner"), isExpanded: $showIngredientChoices) {
+        let title = dinnerText("Choose ingredients for this dinner")
+        return DisclosureGroup(title, isExpanded: $showIngredientChoices) {
             ForEach(recipe.ingredients) { ingredient in
                 Toggle(isOn: Binding(get: { !omitted.contains(ingredient.id) }, set: { included in
                     if included { omitted.remove(ingredient.id) } else { omitted.insert(ingredient.id) }
@@ -480,7 +481,7 @@ struct SavedDinnerHandoffView: View {
             Toggle(dinnerText("Use these choices next time on this list"), isOn: Binding(get: { rememberChoices }, set: {
                 rememberChoices = $0; prepare(.planTonight)
             }))
-        }.accessibilityIdentifier("dinner.handoff.chooseIngredients")
+        }.disclosureGroupStyle(LabeledFormDisclosureStyle(label: title, identifier: "dinner.handoff.chooseIngredients"))
     }
     @State private var showIngredientChoices = false
 
