@@ -1,5 +1,6 @@
 import SwiftUI
 import HouseholdClient
+import CoreDomain
 
 // A menu date is a civil day. Never store it as an instant relative to the device's zone.
 private func mealCalendar() -> Calendar {
@@ -320,6 +321,11 @@ struct SharedMealMovesView: View {
                             }
                         }
                     }
+                }
+                if plan.phase == "draft" {
+                    SavedWeekEntry(household: household, scope: bindingID, start: weekStart)
+                        .id(SharedWeekRepeatIdentity(scope: bindingID, week: sharedMealDay(weekStart),
+                            shopRevision: plan.shopRevision, grantRevision: plan.grantRevision))
                 }
                 if plan.phase == "draft" || plan.phase == "placed" {
                     SharedWeekRepeatSection(household: household, plan: plan, scope: bindingID, start: weekStart) {
@@ -682,7 +688,13 @@ private struct SharedWeekCostDetails: View {
                     else { Text(dinnerText("No saved estimate for this shop.")) }
                 }
                 ForEach(costs.revisions) { saved in
-                    Section(ht("Accepted basket revision") + " " + String(saved.revision)) { version(saved) }
+                    Section(ht("Accepted basket revision") + " " + String(saved.revision)) {
+                        version(saved)
+                        if let original = costs.original, let change = comparableChange(original, saved) {
+                            LabeledContent(dinnerText("Change in comparable priced groceries"), value: dinnerMoney(change))
+                            Text(dinnerText("Historical grocery estimate. Taxes, fees and posted charges are separate."))
+                        }
+                    }
                 }
                 LabeledContent(ht("Reported shop charges after posted credits"),
                                value: money(costs.reportedNetMinor, currency: costs.currency))
@@ -706,6 +718,22 @@ private struct SharedWeekCostDetails: View {
         ForEach(value.lines) { line in
             LabeledContent(line.name, value: String(line.packs) + " × " + money(line.unitPriceMinor, currency: value.currency))
         }
+    }
+    /// The service redacts line prices for a planner with only a shared adoption.
+    /// An aggregate store quote alone supplies no per-line comparison.
+    private func comparableChange(_ before: SharedWeekCosts.Version, _ after: SharedWeekCosts.Version) -> Money? {
+        guard scope != nil, loaded == scope, let currency = Currency(rawValue: before.currency),
+              after.currency == before.currency, before.pricedLines > 0, after.pricedLines > 0 else { return nil }
+        func estimate(_ version: SharedWeekCosts.Version) throws -> GroceryCostReview {
+            let rows = try version.lines.map { row in
+                let amount = try row.unitPriceMinor.map {
+                    try Money(minorUnits: $0, currency: currency).multiplied(by: Int64(row.packs))
+                }
+                return (row.id, amount)
+            }
+            return try GroceryCostReview(lines: rows, currency: currency, inventoryComplete: true)
+        }
+        return try? estimate(after).pricedChange(from: estimate(before))
     }
     private func money(_ minor: Int64?, currency: String) -> String {
         guard let minor else { return dinnerText("Unknown") }
