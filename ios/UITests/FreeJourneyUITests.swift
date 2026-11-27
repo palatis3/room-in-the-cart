@@ -1749,12 +1749,14 @@ import XCTest
     func testFeeOnlyScreenshotCanBeSavedWithoutConfirmingReceivedFood() throws {
         try openReceiptScreenshotFromPhotos()
         let fee = app.switches["receipt.document.line.1.2"]
-        XCTAssertTrue(fee.waitForExistence(timeout: 25), app.debugDescription)
+        XCTAssertTrue(app.staticTexts["receipt.unsavedReviewNotice"].waitForExistence(timeout: 25))
+        reveal(fee)
         XCTAssertTrue(fee.label.uppercased().contains("SERVICE FEE"))
         enableSwitch("receipt.document.line.1.2")
         fill("Room Market", into: "receipt.document.store", control: app.textFields["receipt.document.store"])
         XCTAssertFalse(app.switches["I checked these printed lines and physically received food from this purchase."].exists)
         let sourceReview = app.buttons["receipt.document.accept"]
+        reveal(sourceReview)
         XCTAssertEqual(sourceReview.label, "Use selected receipt lines")
         tap(sourceReview)
         checkReceiptSwitch("I checked the purchase date.")
@@ -1845,7 +1847,9 @@ import XCTest
         try SimulatorPhotosFixture(app: app).chooseNewestSourcePhoto()
         XCTAssertTrue(notice.waitForExistence(timeout: 25))
         XCTAssertNotEqual(store.value as? String, "Mercado Familiar")
-        XCTAssertEqual(app.switches["receipt.document.line.1.1"].value as? String, "0")
+        let unselected = app.switches["receipt.document.line.1.1"]
+        reveal(unselected)
+        XCTAssertEqual(unselected.value as? String, "0")
     }
 
     func testPrivateReceiptLineDraftSurvivesRelaunchAndCanBeDiscarded() throws {
@@ -1854,7 +1858,7 @@ import XCTest
         XCTAssertTrue(store.waitForExistence(timeout: 25))
         fill("Park Market", into: "receipt.document.store", control: store)
         enableSwitch("receipt.document.line.1.1")
-        receiptTap(app.buttons["receipt.draft.save"])
+        tapReceiptFormCenter(app.buttons["receipt.draft.save"], initiallyUpward: false)
         waitForReceiptDraftSave(spanish: false)
         XCUIDevice.shared.press(.home)
         app.terminate()
@@ -1863,8 +1867,12 @@ import XCTest
         receiptTap(app.buttons["receipt.draft.resume"])
         XCTAssertTrue(store.waitForExistence(timeout: 8))
         XCTAssertEqual(store.value as? String, "Park Market")
-        XCTAssertEqual(app.switches["receipt.document.line.1.1"].value as? String, "1")
-        XCTAssertEqual(app.switches["receipt.document.line.1.2"].value as? String, "0")
+        let oats = app.switches["receipt.document.line.1.1"]
+        let fee = app.switches["receipt.document.line.1.2"]
+        reveal(oats)
+        XCTAssertEqual(oats.value as? String, "1")
+        reveal(fee)
+        XCTAssertEqual(fee.value as? String, "0")
         XCTAssertFalse(app.buttons["receipt.commit"].exists)
         receiptTap(app.buttons["receipt.document.close"])
         let discard = app.buttons["receipt.draft.discard"]
@@ -1888,7 +1896,7 @@ import XCTest
         fill("Mercado Familiar", into: "receipt.document.store", control: store)
         enableSwitch("receipt.document.line.1.2")
         if saveAtLineSelection {
-            receiptTap(app.buttons["receipt.draft.save"])
+            tapReceiptFormCenter(app.buttons["receipt.draft.save"], initiallyUpward: false)
             waitForReceiptDraftSave(spanish: spanish)
         }
         receiptTap(app.buttons["receipt.document.accept"])
@@ -1910,17 +1918,21 @@ import XCTest
         XCTAssertGreaterThanOrEqual(status.frame.minY, commit.frame.maxY - 1)
         XCTAssertGreaterThanOrEqual(save.frame.minY, status.frame.maxY - 1)
         XCTAssertLessThan(save.frame.minY - commit.frame.maxY, 200, "The shopper must see the draft choice beside the final action")
-        receiptTap(save)
+        tapReceiptFormCenter(save)
         waitForReceiptDraftSave(spanish: spanish)
         XCUIDevice.shared.press(.home)
         app.terminate()
         launch(reset: false, spanish: spanish)
         reopenPrivateReceiptEntry()
         receiptTap(app.buttons["receipt.draft.resume"])
-        XCTAssertTrue(reference.waitForExistence(timeout: 8))
+        reveal(reference)
         XCTAssertEqual(reference.value as? String, "FAMILIA27")
-        XCTAssertEqual(app.textFields["receipt.store"].value as? String, "Mercado Familiar")
-        XCTAssertEqual(app.switches["receipt.purchaseDateConfirmation"].value as? String, "0")
+        let resumedStore = app.textFields["receipt.store"]
+        reveal(resumedStore, initiallyUpward: false)
+        XCTAssertEqual(resumedStore.value as? String, "Mercado Familiar")
+        let dateConfirmation = app.switches["receipt.purchaseDateConfirmation"]
+        reveal(dateConfirmation)
+        XCTAssertEqual(dateConfirmation.value as? String, "0")
         XCTAssertFalse(app.buttons["receipt.commit"].exists)
         enableSwitch("receipt.purchaseDateConfirmation")
         receiptTap(app.buttons["receipt.review"])
@@ -1945,6 +1957,7 @@ import XCTest
     private func waitForReceiptDraftSave(spanish: Bool) {
         let status = app.staticTexts["receipt.draft.saved"]
         let text = spanish ? "Borrador guardado en este iPhone." : "Draft saved on this iPhone."
+        reveal(status, initiallyUpward: false)
         let saved = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND label == %@", text), object: status)
         XCTAssertEqual(XCTWaiter.wait(for: [saved], timeout: 10), .completed)
     }
@@ -2143,6 +2156,18 @@ import XCTest
         tap(app.buttons["pantry.receipt"])
     }
 
+    // A partially clipped row can report hittable beneath a sheet navigation bar.
+    // Position the exact center in the content, then tap that same point once.
+    private func tapReceiptFormCenter(_ control: XCUIElement, initiallyUpward: Bool = true) {
+        let center = CGVector(dx: 0.5, dy: 0.5)
+        reveal(control, initiallyUpward: initiallyUpward, requiredHit: center)
+        let point = control.coordinate(withNormalizedOffset: center)
+        guard scrollableArea().contains(point.screenPoint) else {
+            return XCTFail("Receipt control center is outside its visible form: " + control.debugDescription)
+        }
+        point.tap()
+    }
+
     private func receiptTap(_ control: XCUIElement, initiallyUpward: Bool = true) {
         reveal(control, initiallyUpward: initiallyUpward)
         control.tap()
@@ -2189,9 +2214,9 @@ import XCTest
         let reviewDetails = app.buttons["scan.receipt.review"]
         reveal(reviewDetails)
         XCTAssertEqual(reviewDetails.label, "Review receipt details")
-        receiptTap(reviewDetails)
+        tapReceiptFormCenter(reviewDetails)
         let reference = app.textFields["receipt.transactionReference"]
-        XCTAssertTrue(reference.waitForExistence(timeout: 5))
+        reveal(reference)
         XCTAssertEqual(reference.label, "Transaction reference (optional)")
         XCTAssertGreaterThanOrEqual(reference.frame.height, 44)
         if let transactionReference { enterReceiptField(transactionReference, id: "receipt.transactionReference") }
