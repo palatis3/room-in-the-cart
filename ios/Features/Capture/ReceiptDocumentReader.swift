@@ -205,7 +205,9 @@ struct ExtractedReceiptDocument: Equatable, Codable, Sendable {
     /// Reconstruct observed columns in physical order. A bare count needs a second
     /// merchandise row with matching count and currency columns to establish the layout.
     /// Keep the original item position so subsequent receipt lines retain their IDs.
-    static func groupingQuantityPriceColumns(_ lines: [ReceiptDocumentPage.Line]) -> [ReceiptDocumentPage.Line] {
+    static func groupingQuantityPriceColumns(_ lines: [ReceiptDocumentPage.Line],
+                                             photo: () -> CGImage? = { nil }) -> [ReceiptDocumentPage.Line] {
+        lazy var normalizedPhoto = photo()
         guard lines.count >= 2, lines.allSatisfy({ $0.bounds?.isEmpty == false }) else { return lines }
         var rateRows: [[ReceiptDocumentPage.Line]] = []
         var countRows: [[ReceiptDocumentPage.Line]] = []
@@ -221,16 +223,28 @@ struct ExtractedReceiptDocument: Equatable, Codable, Sendable {
                   neighbors.allSatisfy({ $0.bounds.map { samePrintedRow(box, $0) } == true }),
                   zip(neighbors, neighbors.dropFirst()).allSatisfy({ left, right in
                       guard let lhs = left.bounds, let rhs = right.bounds else { return false }
-                      return lhs.maxX <= rhs.minX && samePrintedRow(lhs, rhs)
+                      return samePrintedRow(lhs, rhs)
                   }) else { continue }
+            let separate = zip(neighbors, neighbors.dropFirst()).allSatisfy { left, right in
+                guard let lhs = left.bounds, let rhs = right.bounds else { return false }
+                return lhs.maxX <= rhs.minX
+            }
             let wording = neighbors.map(\.text).joined(separator: " ")
             guard wording.utf8.count <= 2048 else { continue }
             // Vision sometimes includes the count and rate in the name observation.
             // In that layout the only other cell must be the complete printed total.
             if let fields = ReceiptPrintedEvidence.printedQuantityPriceColumns(wording),
                fields.item == item.text || (neighbors.count == 2 && fields.total == neighbors[1].text) {
+                if !separate {
+                    // OCR can pad the name and rate into the same blank gutter. Only
+                    // the original photo can establish separation when boxes overlap.
+                    guard neighbors.count == 3, fields.item == item.text, fields.total == neighbors[2].text,
+                          !neighbors.contains(where: \.uncertain), let rate = neighbors[1].bounds,
+                          let total = neighbors[2].bounds, rate.maxX <= total.minX,
+                          let photo = normalizedPhoto, printedGutterSeparates(box, rate, in: photo) else { continue }
+                }
                 rateRows.append(neighbors)
-            } else if neighbors.count == 3, !neighbors.contains(where: \.uncertain),
+            } else if separate, neighbors.count == 3, !neighbors.contains(where: \.uncertain),
                       ReceiptPrintedEvidence.isPlainColumnItem(item.text),
                       ReceiptPrintedEvidence.isBareCountColumn(neighbors[1].text),
                       let countBox = neighbors[1].bounds, let amountBox = neighbors[2].bounds,
@@ -277,6 +291,36 @@ struct ExtractedReceiptDocument: Equatable, Codable, Sendable {
             absorbed.formUnion(neighbors.dropFirst().map(\.id))
         }
         return lines.compactMap { absorbed.contains($0.id) ? nil : replacements[$0.id] ?? $0 }
+    }
+
+    /// Check the full overlapping strip and both inked sides in the upright OCR input.
+    private static func printedGutterSeparates(_ item: CGRect, _ rate: CGRect, in image: CGImage) -> Bool {
+        guard item.minX < rate.minX, item.maxX < rate.maxX, item.maxX > rate.minX,
+              let left = ReceiptWordReading.pixels(for: item, width: image.width, height: image.height),
+              let right = ReceiptWordReading.pixels(for: rate, width: image.width, height: image.height) else { return false }
+        let overlap = left.maxX - right.minX
+        guard overlap > 0, overlap <= min(left.height, right.height) / 4 else { return false }
+        let area = left.union(right)
+        guard area.width * area.height <= 250_000, let strip = image.cropping(to: area),
+              let context = CGContext(data: nil, width: strip.width, height: strip.height, bitsPerComponent: 8,
+                                      bytesPerRow: strip.width, space: CGColorSpaceCreateDeviceGray(),
+                                      bitmapInfo: CGImageAlphaInfo.none.rawValue),
+              let data = context.data else { return false }
+        context.draw(strip, in: CGRect(x: 0, y: 0, width: strip.width, height: strip.height))
+        let pixels = data.assumingMemoryBound(to: UInt8.self)
+        let first = Int(right.minX - area.minX) - 1
+        let last = Int(left.maxX - area.minX)
+        guard first > 0, last < strip.width - 1 else { return false }
+        var leftInk = false, rightInk = false
+        for y in 0..<strip.height {
+            for x in 0..<strip.width {
+                let gray = pixels[y * context.bytesPerRow + x]
+                if x < first { leftInk = leftInk || gray < 128 }
+                else if x > last { rightInk = rightInk || gray < 128 }
+                else if gray < 248 { return false }
+            }
+        }
+        return leftInk && rightInk
     }
 
     func source(target: CaptureTarget, merchant: String, stage: ReceiptAcquisition.DocumentLine.Stage,
@@ -385,7 +429,7 @@ struct ReceiptDocumentReader: Sendable {
 
     private func readPages(_ input: ReceiptDocumentBytes) async throws -> [ReceiptDocumentPage] {
         var characterCount = 0
-        func page(_ number: Int, method: ReceiptAcquisition.DocumentLine.Method, reading: Reading) throws -> ReceiptDocumentPage {
+        func page(_ number: Int, method: ReceiptAcquisition.DocumentLine.Method, reading: Reading, photo: Data? = nil) throws -> ReceiptDocumentPage {
             characterCount += reading.text.count
             guard characterCount <= 100_000, !reading.text.contains("\0") else { throw ReceiptDocumentFailure.characters }
             var lines: [ReceiptDocumentPage.Line] = []
@@ -397,7 +441,10 @@ struct ReceiptDocumentReader: Sendable {
                                    wordReadings: reading.wordReadings.indices.contains(index) ? reading.wordReadings[index] : []))
             }
             if method == .imageOCR || method == .pdfOCR {
-                lines = ExtractedReceiptDocument.groupingQuantityPriceColumns(lines)
+                lines = ExtractedReceiptDocument.groupingQuantityPriceColumns(lines) {
+                    guard let photo, let source = CGImageSourceCreateWithData(photo as CFData, nil) else { return nil }
+                    return CGImageSourceCreateImageAtIndex(source, 0, nil)
+                }
             }
             return .init(id: number, method: method, lines: lines)
         }
@@ -408,7 +455,7 @@ struct ReceiptDocumentReader: Sendable {
         case .image:
             try Self.checkPixels(input.data)
             let jpeg = try ScanImageNormalizer.normalize(input.data)
-            return [try page(1, method: .imageOCR, reading: try await readImage(jpeg))]
+            return [try page(1, method: .imageOCR, reading: try await readImage(jpeg), photo: jpeg)]
         case .pdf:
             guard let pdf = PDFDocument(data: input.data) else { throw ReceiptDocumentFailure.unsupported }
             guard !pdf.isLocked else { throw ReceiptDocumentFailure.locked }

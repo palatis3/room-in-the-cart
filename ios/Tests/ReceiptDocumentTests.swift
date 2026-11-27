@@ -228,6 +228,51 @@ import XCTest
         XCTAssertTrue(draft.selectedLines.isEmpty)
     }
 
+    func testOverlappingReceiptBoxesRequireAVisibleGutterOnTheOriginalPhoto() throws {
+        typealias Line = ReceiptDocumentPage.Line
+        // iOS Vision returned these rectangles for the normalized 1050 × 1400
+        // Mercado receipt. The name and rate share six pixels of empty paper.
+        let item = Line(id: 4, text: "Tortillas de maíz", bounds: CGRect(x: 0.057471, y: 0.631429, width: 0.387931, height: 0.023744))
+        let rate = Line(id: 5, text: "2 х 20.00", bounds: CGRect(x: 0.439655, y: 0.627143, width: 0.252874, height: 0.028030))
+        let total = Line(id: 6, text: "40.00", bounds: CGRect(x: 0.749683, y: 0.626872, width: 0.112838, height: 0.027509))
+        let rows = [item, rate, total]
+        func image(ink: [CGRect]) throws -> CGImage {
+            let context = try XCTUnwrap(CGContext(data: nil, width: 1050, height: 1400, bitsPerComponent: 8,
+                                                   bytesPerRow: 1050, space: CGColorSpaceCreateDeviceGray(),
+                                                   bitmapInfo: CGImageAlphaInfo.none.rawValue))
+            context.setFillColor(gray: 1, alpha: 1)
+            context.fill(CGRect(x: 0, y: 0, width: 1050, height: 1400))
+            context.translateBy(x: 0, y: 1400)
+            context.scaleBy(x: 1, y: -1)
+            context.setFillColor(gray: 0, alpha: 1)
+            for mark in ink { context.fill(mark) }
+            return try XCTUnwrap(context.makeImage())
+        }
+        let marks = [CGRect(x: 439, y: 490, width: 16, height: 23), CGRect(x: 509, y: 490, width: 18, height: 24)]
+        let whiteGutter = try image(ink: marks)
+        let result = ExtractedReceiptDocument.groupingQuantityPriceColumns(rows) { whiteGutter }
+        XCTAssertEqual(result.map(\.id), [4])
+        XCTAssertEqual(result.map(\.text), ["Tortillas de maíz 2 х 20.00 40.00"])
+        func separate(_ lines: [Line], photo: CGImage?, line: UInt = #line) {
+            let output = ExtractedReceiptDocument.groupingQuantityPriceColumns(lines) { photo }
+            XCTAssertEqual(output, lines, line: line)
+        }
+        separate(rows, photo: nil)
+        separate(rows, photo: try image(ink: []))
+        separate(rows, photo: try image(ink: marks + [CGRect(x: 464, y: 500, width: 2, height: 2)]))
+        var uncertain = rate
+        uncertain.uncertain = true
+        separate([item, uncertain, total], photo: whiteGutter)
+        var tooWide = rate
+        tooWide.bounds?.origin.x -= 0.012
+        separate([item, tooWide, total], photo: whiteGutter)
+        separate([Line(id: 4, text: "Descuento", bounds: item.bounds), rate, total], photo: whiteGutter)
+        separate(rows + [Line(id: 7, text: "20.00", bounds: total.bounds)], photo: whiteGutter)
+        var anotherRow = total
+        anotherRow.bounds?.origin.y -= 0.02
+        separate([item, rate, anotherRow], photo: whiteGutter)
+    }
+
     func testReceiptColumnsRejectCouponsAmbiguousNeighborsAndOtherBaselines() {
         typealias Line = ReceiptDocumentPage.Line
         func cell(_ id: Int, _ text: String, _ x: CGFloat, _ y: CGFloat) -> Line {
