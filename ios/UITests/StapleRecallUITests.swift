@@ -577,6 +577,10 @@ import XCTest
         XCTAssertEqual(XCTWaiter.wait(for: [covered], timeout: 6), .completed)
         let explanation = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@ AND label CONTAINS %@", matchedNote, note)).firstMatch
         XCTAssertTrue(explanation.waitForExistence(timeout: 8))
+        let detailFrame = XCTAttachment(screenshot: app.screenshot())
+        detailFrame.name = spanish ? "es-MX large text full note in Item details" : "Full note in Item details"
+        detailFrame.lifetime = .keepAlways
+        add(detailFrame)
         if !spanish, #available(iOS 27, *) { try assertModalSourceSpeech() }
         let close = app.navigationBars.buttons[spanish ? "Listo" : "Done"]
         close.tap()
@@ -602,18 +606,35 @@ import XCTest
     private func assertModalSourceSpeech() throws {
         let service = XCUIDevice.shared.voiceOverService
         let wasEnabled = service.isEnabled
-        if !wasEnabled { try service.enable() }
-        defer { if !wasEnabled { try? service.disable() } }
+        if !wasEnabled {
+            addTeardownBlock {
+                if XCUIDevice.shared.voiceOverService.isEnabled { try XCUIDevice.shared.voiceOverService.disable() }
+            }
+            try service.enable()
+        }
+        // The service returned a 64-character prefix in this sheet. The complete
+        // literal is checked on the actual detail element before this traversal.
+        func isMatchingSource(_ utterance: String) -> Bool {
+            utterance.localizedCaseInsensitiveContains("Matching list note")
+                && utterance.localizedCaseInsensitiveContains("The sugar-free carton sold out.")
+        }
         var utterances = [try service.currentSpeech().utterance]
         for _ in 0..<16 {
-            if utterances.contains(where: { $0.localizedCaseInsensitiveContains("sold out") && $0.localizedCaseInsensitiveContains("sweetened") }) { break }
+            if utterances.contains(where: isMatchingSource) { break }
             utterances.append(try service.moveForward().utterance)
         }
+        // Finish and verify cleanup before an XCTest assertion can end this case.
+        if !wasEnabled { try service.disable() }
+        let restored = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            XCUIDevice.shared.voiceOverService.isEnabled == wasEnabled
+        }, object: nil)
+        let restorationResult = XCTWaiter.wait(for: [restored], timeout: 5)
         let speech = XCTAttachment(data: try JSONEncoder().encode(utterances), uniformTypeIdentifier: "public.json")
         speech.name = "Item details VoiceOver source traversal"
         speech.lifetime = .keepAlways
         add(speech)
-        XCTAssertTrue(utterances.contains { $0.localizedCaseInsensitiveContains("sold out") && $0.localizedCaseInsensitiveContains("sweetened") })
+        XCTAssertEqual(restorationResult, .completed, "VoiceOver must return to its original setting.")
+        XCTAssertTrue(utterances.contains(where: isMatchingSource))
         XCTAssertFalse(utterances.contains { $0.localizedCaseInsensitiveContains("Check Oat drink") || $0.localizedCaseInsensitiveContains("Check Sugar-free oat drink") })
     }
 
