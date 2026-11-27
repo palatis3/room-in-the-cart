@@ -667,34 +667,41 @@ final class RoomInTheCartUITests: XCTestCase {
             XCTAssertEqual(app.textFields["ledgerImportAmount-2"].value as? String, "2")
             if compact {
                 XCTAssertEqual(confirm.value as? String, both)
-                XCTAssertTrue(confirm.isHittable && confirm.isEnabled)
-                let amount = app.textFields["ledgerImportAmount-2"]
-                revealReviewAction(amount, above: confirm)
-                amount.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5)).tap()
-                amount.typeText("..")
-                XCTAssertTrue(doneButton.wait(for: \.isHittable, toEqual: true, timeout: 5))
-                doneButton.tap()
-                XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: done))
-                XCTAssertFalse(confirm.isEnabled)
+            }
+            XCTAssertTrue(confirm.isHittable && confirm.isEnabled)
+            let amount = app.textFields["ledgerImportAmount-2"]
+            revealReviewAction(amount, above: confirm)
+            amount.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5)).tap()
+            amount.typeText("..")
+            XCTAssertTrue(doneButton.wait(for: \.isHittable, toEqual: true, timeout: 5))
+            doneButton.tap()
+            XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: done))
+            XCTAssertFalse(confirm.isEnabled)
+            if compact {
                 tap(summary)
                 let totals = app.alerts["Totales de la revisión"]
                 XCTAssertTrue(totals.staticTexts[both].exists)
                 let jump = totals.buttons["Revisar línea 2"]
                 XCTAssertTrue(jump.isHittable)
                 jump.tap()
-                revealReviewAction(amount, above: confirm)
-                amount.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5)).tap()
-                amount.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 3) + "2")
-                XCTAssertTrue(doneButton.wait(for: \.isHittable, toEqual: true, timeout: 5))
-                doneButton.tap()
-                XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: done))
-                // Dismissing the keyboard resizes the Form. Large text can move
-                // this second row outside the collection's mounted cells.
-                revealReviewAction(amount, above: confirm)
-                XCTAssertEqual(amount.value as? String, "2")
-                XCTAssertTrue(confirm.isEnabled && confirm.isHittable)
-                screenshot("Spanish largest text compact review and reachable confirmation")
+            } else {
+                let jump = app.buttons["ledgerNextReviewLine"]
+                XCTAssertTrue(jump.waitForExistence(timeout: 5))
+                XCTAssertEqual(jump.label, "Review line 2")
+                tap(jump)
             }
+            revealReviewAction(amount, above: confirm)
+            amount.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5)).tap()
+            amount.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 3) + "2")
+            XCTAssertTrue(doneButton.wait(for: \.isHittable, toEqual: true, timeout: 5))
+            doneButton.tap()
+            XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: done))
+            // Dismissing the keyboard resizes the Form. Large text can move
+            // this second row outside the collection's mounted cells.
+            revealReviewAction(amount, above: confirm)
+            XCTAssertEqual(amount.value as? String, "2")
+            XCTAssertTrue(confirm.isEnabled && confirm.isHittable)
+            screenshot("Spanish largest text compact review and reachable confirmation")
             tap(confirm)
             // The first-list sheet returns through Shop before the new list
             // mounts. Wait for its selected pickup before scrolling for Undo.
