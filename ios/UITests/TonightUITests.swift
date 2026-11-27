@@ -227,7 +227,32 @@ import XCTest
             XCTAssertFalse(app.buttons["Set amount for " + name].exists)
         }
         tap(review)
-        XCTAssertTrue(app.buttons["Save meal allocations"].waitForExistence(timeout: 8))
+        let save = app.buttons["Save meal allocations"]
+        XCTAssertTrue(save.waitForExistence(timeout: 8))
+        tap(save)
+        let reviewFood = app.buttons["Review food to use at home"]
+        XCTAssertTrue(reviewFood.waitForExistence(timeout: 10))
+        XCTAssertFalse(save.exists)
+        tap(reviewFood)
+        tap(app.buttons["Use the allocated food"])
+        let restorePurchase = app.buttons["Put these ingredients back on the shopping list"]
+        XCTAssertTrue(restorePurchase.waitForExistence(timeout: 10),
+                      "This dinner should now have a saved at-home purchase decision.")
+        tap(app.buttons["Shopping list"])
+        let pickup = app.buttons.matching(NSPredicate(format: "identifier == %@ AND label == %@", "ledgerShopPicker", "Pickup")).firstMatch
+        XCTAssertTrue(pickup.waitForExistence(timeout: 8))
+        let checkBread = app.fullListCheck(labeled: "Check Bread")
+        for name in ["Milk", "Oats", "Cheese"] {
+            let check = app.fullListCheck(labeled: "Check " + name)
+            reveal(check)
+            XCTAssertTrue(check.isEnabled)
+            XCTAssertFalse(checkBread.exists, "The reserved bread is not an active purchase.")
+        }
+        let home = app.staticTexts.matching(NSPredicate(format: "label ==[c] %@", "Using food at home")).firstMatch
+        reveal(home)
+        let reservedBread = app.staticTexts["Bread"].firstMatch
+        reveal(reservedBread)
+        XCTAssertFalse(checkBread.exists)
     }
 
     private func startPrivatePantryDinner(food: String, recipe: String) {
