@@ -172,7 +172,7 @@ import XCTest
         app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", "(en)", "-AppleLocale", "en_CA"]
         app.launch()
         for name in ["Milk", "Oats"] {
-            let grocery = app.textFields["quickGrocery.name"]
+            let grocery = app.descendants(matching: .any).matching(identifier: "quickGrocery.name").element
             tap(grocery)
             grocery.typeText(name)
             tap(app.buttons["quickGrocery.add"])
