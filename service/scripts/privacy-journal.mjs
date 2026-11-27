@@ -168,6 +168,20 @@ async function reportGate(extra={}){
  if((await owner.query("SELECT to_regclass('ritc.request_queue_permission') IS NOT NULL AS installed")).rows[0].installed &&
     (await owner.query('SELECT 1 FROM ritc.request_queue_permission LIMIT 1')).rowCount)
   throw Error('Restored device queue permissions must be cleared in quarantine');
+ const tables=(await owner.query(`SELECT to_regclass('ritc.shared_repeat_week') IS NOT NULL AS repeat_week,
+    to_regclass('ritc.saved_week_change') IS NOT NULL AS saved_week,
+    to_regclass('ritc.adult_check') IS NOT NULL AS adult_check`)).rows[0];
+ // Older backups can lack these tables or columns. Inspect only authority present in the restored schema.
+ const dinnerInvitation=await owner.query(`SELECT FROM ritc.invite i WHERE to_jsonb(i)->>'dinner_occurrence_id' IS NOT NULL
+    AND revoked_at IS NULL AND expires_at>statement_timestamp() LIMIT 1`);
+ const repeatWeek=tables.repeat_week && (await owner.query(`SELECT FROM ritc.shared_repeat_week w WHERE NOT stopped
+    AND EXISTS (SELECT FROM jsonb_array_elements(w.steps) s WHERE NOT (w.receipts ? (s->>'targetId'))) LIMIT 1`)).rowCount;
+ const savedWeek=tables.saved_week && (await owner.query(`SELECT FROM ritc.saved_week_change
+    WHERE NOT stopped AND jsonb_array_length(receipts)<jsonb_array_length(steps) LIMIT 1`)).rowCount;
+ const adultCheck=tables.adult_check && (await owner.query(`SELECT FROM ritc.adult_check a
+    WHERE NOT withdrawn OR to_jsonb(a)->>'step_text' IS NOT NULL LIMIT 1`)).rowCount;
+ if(dinnerInvitation.rowCount || repeatWeek || savedWeek || adultCheck)
+  throw Error('Retire restored dinner invitations, unfinished week changes and shared adult questions before reopening');
  console.log(JSON.stringify({runId,localAppErasureApplied:true,syntheticProbePermitted:true,providerReconciliationRequired:true,productionReady:false,...extra}));
 }
 

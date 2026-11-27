@@ -32,7 +32,7 @@ Normal mode refuses a fenced source or an uncheckpointed tail. `mode:'recover_fe
 
 ### Backups that span journal rollover
 
-Restore the pinned dump into a separate quarantine database and apply the reviewed migrations through 029 there. The quarantine must deny effective CONNECT to application logins and have no existing application connection. Grant the reviewed replay worker its separate login.
+Restore the pinned dump into a separate quarantine database and apply the reviewed current migrations there before registering the first archive. The quarantine must deny effective CONNECT to application logins and have no existing application connection. Grant the reviewed replay worker its separate login.
 
 Use the same command with an owner-only configuration containing `destination`, `worker`, `dumpPath`, `dumpSHA256`, `runId`, `archiveWindowPath` and `segmentRunIds`. The archive window file is the [signed window input](journal-authority/README.md#successor-registration-and-archive-verification) for `verify-window`, including its independent start and final anchors. Set `runId` to the window UUID and provide a distinct UUID for each segment in order.
 
@@ -62,3 +62,6 @@ The019 close trigger preserves a recorded close time only inside the original ow
 The tested single-host fsync/checkpoint boundary does not establish independent-host disaster durability, malicious-owner resistance, production key custody, real provider deletion, an approved retention policy, arbitrary historical-backup coverage or deployment readiness. Source owner, signer and host owner are trusted. Keep source/dumps/journal/manifests and quarantine databases separate from the private signing keys.
 
 With migration 041 or later, keep a restored database disconnected from application clients while preparing it. A positive device request-queue permission in a backup may already have been withdrawn. The verified restore plan clears `ritc.request_queue_permission` in its registration transaction, and the gate verifies it is empty. For a database-only restore, the owner must run `TRUNCATE ritc.request_queue_permission` on the verified quarantine destination before allowing application connections. A contributor can then opt in again on their current device.
+
+
+After the final signed archive has been replayed, migration 085 withdraws shared dinner invitations, ends unfinished repeat-week and saved-week operations, and clears shared cooking instructions and answers to adult questions. A shopper can invite or share again and review a fresh plan. Previously applied steps, ordinary groceries, saved dinners, completed plan receipts, memberships and billing seats remain available under their usual rules. The gate checks for any remaining actionable copies. Apply the migrations before registration. If the final transition already occurred on an older schema and the gate rejects the result, start a fresh quarantined restore. A standalone database backup cannot establish that the older sharing instructions are still current.
