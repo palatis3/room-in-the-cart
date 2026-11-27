@@ -17,7 +17,7 @@
 .public-language select { width: auto; }
 .public-navigation, .public-footer { border-block: 1px solid var(--divider); }
 .public-navigation { display: flex; flex-wrap: wrap; gap: .25rem .5rem; padding-block: .625rem; }
-.public-navigation a, .public-footer a, .public-contents a, .public-contact {
+.public-navigation a, .public-footer a, .public-contents a, .public-contact, .public-resource {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
@@ -42,7 +42,8 @@
   background: var(--warning-surface);
   line-height: 1.55;
 }
-.public-contact { margin-top: 1rem; font-weight: 600; }
+.public-contact, .public-resource { margin-top: 1rem; font-weight: 600; }
+.public-contact + .public-resource { display: flex; width: fit-content; }
 .public-reading { margin-top: clamp(2rem, 5vw, 3rem); }
 .public-contents { padding-block: 1rem; border-block: 1px solid var(--divider); }
 .public-contents h2 { font-size: 1.0625rem; margin: 0 0 .5rem; }

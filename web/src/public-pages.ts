@@ -12,6 +12,11 @@ const labels = {
   staleSection: { en: 'This section has moved. Choose a topic below.', es: 'Esta sección cambió de lugar. Elige un tema a continuación.' },
   invited: { en: 'Open the invited app', es: 'Abrir la app por invitación' },
   householdRequests: { en: 'Open household requests', es: 'Abrir solicitudes del hogar' },
+  policy: { en: 'Read the privacy policy', es: 'Leer la política de privacidad' },
+  license: { en: 'Read Apple’s standard license agreement', es: 'Leer el contrato de licencia estándar de Apple' },
+  supportSite: { en: 'Visit the support website', es: 'Visitar el sitio de soporte' },
+  membershipHelp: { en: 'Get help with renewal, cancellation or restoring a purchase', es: 'Obtener ayuda para renovar, cancelar o restaurar una compra' },
+  fallback: { en: 'If the page does not open, contact support.', es: 'Si la página no se abre, contacta a soporte.' },
   support: { en: 'Contact support', es: 'Contactar con soporte' },
   emailSupport: { en: 'Email support', es: 'Enviar correo a soporte' },
   operator: { en: 'Operator', es: 'Operador' },
@@ -132,7 +137,27 @@ export function mountPublicPage(root: HTMLElement, configuration: PublicSiteConf
     const introduction = element('div'); introduction.className = 'public-introduction';
     introduction.append(element('h1', page.title[language]), element('p', page.lead[language]));
     main.append(introduction);
-    if (staleSection) introduction.append(element('p', labels.staleSection[language]));
+    const resourceLink = (label: string, href: string): HTMLAnchorElement => {
+      const link = element('a', label);
+      link.className = 'public-resource'; link.href = href; link.rel = 'noreferrer';
+      return link;
+    };
+    if (key === 'privacy' || key === 'terms') {
+      const resource = key === 'privacy'
+        ? resourceLink(labels.policy[language], 'https://help.roominthecart.com/privacy?lang=' + language)
+        : resourceLink(labels.license[language], 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/');
+      introduction.append(resource);
+      if (key === 'terms') {
+        const membership = element('p');
+        const link = element('a', labels.membershipHelp[language]);
+        link.href = '/support?lang=' + language + '#public-section-3';
+        membership.append(link); introduction.append(membership);
+      }
+      const fallback = element('p');
+      const link = element('a', labels.fallback[language]); link.href = '/support?lang=' + language;
+      fallback.append(link); introduction.append(fallback);
+    }
+    if (staleSection && page.sections.length) introduction.append(element('p', labels.staleSection[language]));
     if (operatorName && (key === 'privacy' || key === 'terms')) {
       const operator = element('p', labels.operator[language] + ': ' + operatorName);
       operator.className = 'public-operator'; introduction.append(operator);
@@ -145,6 +170,9 @@ export function mountPublicPage(root: HTMLElement, configuration: PublicSiteConf
       const notice = element('aside', page.notice[language]);
       notice.className = 'notice'; notice.setAttribute('role', 'note'); introduction.append(notice);
     }
+    if (key === 'support') {
+      introduction.append(resourceLink(labels.supportSite[language], 'https://help.roominthecart.com/support?lang=' + language));
+    }
     const contents = element('nav'); contents.className = 'public-contents'; contents.setAttribute('aria-label', labels.contents[language]);
     const contentsTitle = element('h2', labels.contents[language]); const contentsList = element('ul');
     page.sections.forEach((section, index) => {
@@ -154,7 +182,8 @@ export function mountPublicPage(root: HTMLElement, configuration: PublicSiteConf
     contents.append(contentsTitle, contentsList);
     const reading = element('div'); reading.className = 'public-reading';
     const sections = element('div'); sections.className = 'public-sections';
-    reading.append(contents, sections); main.append(reading);
+    reading.append(contents, sections);
+    if (page.sections.length) main.append(reading);
     page.sections.forEach((section, index) => {
       const article = element('section'); article.className = 'public-article'; article.id = sectionIds[index]!; article.tabIndex = -1;
       const title = element('h2', section.title[language]); title.id = article.id + '-title'; article.setAttribute('aria-labelledby', title.id);
