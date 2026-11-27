@@ -372,8 +372,65 @@ test(restoreTestName,async()=>{
   const preview=ok(await call(child,'/v1/privacy/deletion-preview'));
   assert.equal(preview.adult,false);assert.equal(preview.deletionAvailable,false);assert.deepEqual(preview.households,[]);
  }
+ const other=await family(),paired=await active(other),consent=ok(await call(other.adult,other.base+'/guardian/consents')).consents[0];
+ const pendingFamily=await family(),claim=await claimed(pendingFamily);
+ ok(await call(other.child,other.base+'/bootstrap'));
  const review=await reviewChildAccount(f,id),pendingReview=await reviewChildAccount(unjoined,pendingId);
- await verifyChildBackup({family:f,unjoined,childMemberId:enrolled.receipt.memberId,journal,accept:async()=>{
+ async function checkAuthority(db,retired){
+  const evidence=(await db.query(`SELECT c.revoked_at,e.state,e.revision,v.revoked_at AS device_retired,
+      m.state AS member_state,EXISTS(SELECT FROM ritc.guardian_relationship g WHERE g.household_id=c.household_id
+      AND g.child_id=c.child_id AND g.guardian_id=c.guardian_id AND g.revoked_at IS NULL) AS guardian_retained
+      FROM ritc.consent c JOIN ritc.guardian_enrollment e USING(household_id,consent_id)
+      JOIN ritc.device v ON v.household_id=c.household_id AND v.device_id=$2
+      JOIN ritc.member m ON (m.household_id,m.member_id)=(c.household_id,c.guardian_id)
+      WHERE c.consent_id=$1`,[consent.consentId,paired.receipt.deviceId])).rows[0];
+  assert.equal(evidence.revoked_at!==null,retired);
+  assert.equal(evidence.device_retired!==null,retired);
+  assert.equal(evidence.state,retired?'withdrawn':'active');
+  assert.equal(evidence.member_state,'active');
+  assert.equal(evidence.guardian_retained,true);
+  const pending=(await db.query(`SELECT e.state,i.revoked_at AS invite_retired,c.revoked_at AS claim_retired
+      FROM ritc.guardian_enrollment e JOIN ritc.guardian_child_invitation i USING(household_id,enrollment_id)
+      JOIN ritc.guardian_child_claim c USING(household_id,invite_id) WHERE e.enrollment_id=$1`,[claim.setup.enrollmentId])).rows[0];
+  assert.equal(pending.state,retired?'withdrawn':'child_claimed');
+  assert.equal(pending.invite_retired!==null,retired);
+  assert.equal(pending.claim_retired!==null,retired);
+  return {evidence,pending};
+ }
+ async function checkRenewal(urls){
+  const appPool=new pg.Pool({connectionString:urls.app}),proofPool=new pg.Pool({connectionString:urls.verifier});
+  const repository=new HouseholdRepository(appPool,repo.options);
+  const enrollment=new GuardianEnrollmentService(repository,{...guardian.options,verifierPool:proofPool});
+  const browser=new BrowserAuthService(repository,verifier,otpProvider,{encryptionKey:randomBytes(32).toString('base64'),childSignin:enrollment});
+  enrollment.attachChildSignin(browser,otpProvider);
+  const probe=createHTTPServer({repository,verifier,guardian:enrollment,browserAuth:browser,maxRequestsPerMinute:10000});
+  const sourceOrigin=origin;
+  try{
+   await new Promise(resolve=>probe.listen(0,'127.0.0.1',resolve));
+   origin='http://127.0.0.1:'+probe.address().port;
+   ok(await call(other.adult,other.base+'/bootstrap'));
+   assert.equal((await call(other.child,other.base+'/bootstrap')).status,403);
+   const pending=await claimed(other,{childId:paired.receipt.memberId});
+   assert.equal((await call(other.child,other.base+'/bootstrap')).status,403);
+   const pairing={claimId:pending.claim.claimId,pairingCode:pending.input.pairingCode};
+   ok(await call(other.adult,other.base+'/guardian/enrollments/'+pending.setup.enrollmentId+'/confirm-child','POST',
+      {...pairing,clientKey:randomUUID(),baseRevision:pending.setup.revision}));
+   const renewed=ok(await call(other.child,'/v1/child-invitations/finish','POST',
+      {...pairing,clientKey:randomUUID(),householdId:other.house.householdId,deviceSecret:randomBytes(32).toString('base64url')}));
+   assert.equal(renewed.memberId,paired.receipt.memberId);
+   assert.notEqual(renewed.deviceId,paired.receipt.deviceId);
+   assert.equal((await call(other.child,other.base+'/bootstrap')).status,403);
+   assert.deepEqual(ok(await call({...other.child,...renewed},other.base+'/bootstrap')).capabilities,['own_requests']);
+  }finally{
+   origin=sourceOrigin;
+   await new Promise(resolve=>probe.close(resolve));
+   await Promise.all([appPool.end(),proofPool.end()]);
+  }
+ }
+ await verifyChildBackup({family:f,unjoined,childMemberId:enrolled.receipt.memberId,journal,checkAuthority,checkRenewal,accept:async()=>{
+  ok(await call(other.adult,other.base+'/guardian/consents/'+consent.consentId+'/revoke','POST',{}));
+  assert.equal((await call(other.child,other.base+'/bootstrap')).status,403);
+  ok(await call(other.adult,other.base+'/bootstrap'));
   const account=deletionReceipt(),noMembership=deletionReceipt();
   ok(await requestChildAccount(f,id,review,account),202);
   ok(await requestChildAccount(unjoined,pendingId,pendingReview,noMembership),202);

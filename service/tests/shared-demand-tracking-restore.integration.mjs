@@ -2,6 +2,7 @@ import test,{before,after} from 'node:test';
 import assert from 'node:assert/strict';
 import {randomUUID,randomBytes} from 'node:crypto';
 import pg from 'pg';
+import {restoredMealPermissions} from './restored-meal-permissions-fixture.mjs';
 import {trackingPrivacyFixtures} from './shared-demand-tracking-privacy-fixture.mjs';
 import {generateKeyPair,exportJWK,createLocalJWKSet,SignJWT} from 'jose';
 import {HouseholdRepository} from '../dist/repository.js';
@@ -82,6 +83,9 @@ test('signed quarantined restore removes tracking transfers, lineage, sealed cop
  const later=await addLater(f),p=await page(f),held=ok(await candidate(f,{mode:'review',base:baseOf(p),action:{kind:'shop.patch',body:{quote:f.quote,lines:p.state.basket.map(l=>({lineId:l.id,originalItem:l.name,packs:l.packs,unitPriceMinor:l.priceMinor,feeEligible:l.feeEligible}))}},packs:p.state.packReviews}));
  const frozen=ok(await send(f,'shop.freeze',{trackingReview:p.freezeReview},p.shopRevision,p.authorityEpoch));
  const linkCase=await privacyCases.linkAuthor(),labelCase=await privacyCases.legacyLabel();
+ const otherFamily=await fixture();
+ const checkRestoredPermissions=await restoredMealPermissions(admin,otherFamily,await invited(otherFamily));
+ await checkRestoredPermissions(admin,false);
  const dumpPath=join(privateRoot,'tracking-before-deletion.dump'),pgTool=name=>process.env.RITC_TEST_PG_BIN?join(process.env.RITC_TEST_PG_BIN,name):name;
  const connection=['--host',controlURL.hostname,'--port',controlURL.port||'5432','--username',decodeURIComponent(controlURL.username)],toolEnv={...process.env,PGPASSWORD:decodeURIComponent(controlURL.password)};
  execFileSync(pgTool('pg_dump'),[...connection,'--format=custom','--file',dumpPath,'--dbname',sourceName],{env:toolEnv,timeout:30000,maxBuffer:65536});
@@ -100,11 +104,13 @@ test('signed quarantined restore removes tracking transfers, lineage, sealed cop
   const secret='six wraps',copies=['shared_tracking_revision','shared_tracking_adoption','shop_snapshot'];
   for(const table of copies)assert.ok(JSON.stringify((await restored.query('SELECT to_jsonb(t) AS value FROM ritc.'+table+' t WHERE household_id=$1',[f.h])).rows).includes(secret),'backup really includes '+table);
   assert.equal((await restored.query('SELECT count(*)::integer AS n FROM ritc.shared_tracking_preview WHERE household_id=$1',[f.h])).rows[0].n,1);
+  await checkRestoredPermissions(restored,false);
   const oid=(await restored.query('SELECT oid FROM pg_database WHERE datname=current_database()')).rows[0].oid,runId=randomUUID();
   await restored.query('SELECT ritc.privacy_restore_register($1,$2,$3,$4::jsonb,$5::jsonb)',[runId,oid,verified.bundleDigest,JSON.stringify(verified.head),JSON.stringify(verified.events)]);
   const lease=randomUUID(),job=(await restoreWorker.query('SELECT ritc.privacy_restore_claim($1,$2) AS job',[runId,lease])).rows[0].job;assert.ok([deletion.clientKey,linkDeletion.clientKey,labelDeletion.clientKey].includes(job));
   const result=(await restoreWorker.query('SELECT ritc.privacy_restore_erase_next($1,$2,$3) AS value',[runId,job,lease])).rows[0].value;assert.equal(result.applied,true);
   const appliedJobs=new Set([job]);for(let remaining=0;remaining<2;remaining++){const nextLease=randomUUID(),next=(await restoreWorker.query('SELECT ritc.privacy_restore_claim($1,$2) AS job',[runId,nextLease])).rows[0].job;assert.ok(next&&!appliedJobs.has(next));const receipt=(await restoreWorker.query('SELECT ritc.privacy_restore_erase_next($1,$2,$3) AS value',[runId,next,nextLease])).rows[0].value;assert.equal(receipt.applied,true);appliedJobs.add(next);}
+  await checkRestoredPermissions(restored,true);
   assert.deepEqual([...appliedJobs].sort(),[deletion.clientKey,linkDeletion.clientKey,labelDeletion.clientKey].sort());
   await privacyCases.assertProjection(linkCase,restored);await privacyCases.assertProjection(labelCase,restored);
   for(const table of [...copies,'shared_tracking_preview','shared_demand_revision','basket_line','operation_response'])assert.ok(!JSON.stringify((await restored.query('SELECT to_jsonb(t) AS value FROM ritc.'+table+' t WHERE household_id=$1',[f.h])).rows).includes(secret),'erased '+table);

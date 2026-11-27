@@ -56,7 +56,7 @@ export async function runIsolatedChildRestore(){
  }
 }
 
-export async function verifyChildBackup({family,unjoined,childMemberId,journal,accept}){
+export async function verifyChildBackup({family,unjoined,childMemberId,journal,accept,checkAuthority,checkRenewal}){
  const sourceURL=new URL(process.env.TEST_ADMIN_DATABASE_URL);
  assert.match(sourceURL.pathname,/^\/ritc_child_source_[0-9a-f]+$/);
  const params=new pg.Client({connectionString:sourceURL.toString()}).connectionParameters;
@@ -89,6 +89,7 @@ export async function verifyChildBackup({family,unjoined,childMemberId,journal,a
  const restored=new pg.Client({connectionString:databaseURL(sourceURL,dest)}),worker=new pg.Client({connectionString:databaseURL(process.env.TEST_WORKER_DATABASE_URL,dest)});
  await restored.connect();await worker.connect();
  try{
+  await checkAuthority(restored,false);
   const before=(await restored.query('SELECT subject,alias FROM ritc.member WHERE member_id=$1',[childMemberId])).rows[0];
   assert.equal(before.subject,family.child.subject);
   assert.equal((await restored.query('SELECT 1 FROM ritc.guardian_child_signin WHERE subject=$1',[unjoined.child.subject])).rowCount,1);
@@ -106,7 +107,27 @@ export async function verifyChildBackup({family,unjoined,childMemberId,journal,a
   const pendingState=await restored.query('SELECT ritc.identity_blocked($1,$2) AS blocked, EXISTS(SELECT 1 FROM ritc.guardian_child_signin WHERE subject=$2) AS admitted',['https://guardian.fixture.invalid',unjoined.child.subject]);
   assert.deepEqual(pendingState.rows[0],{blocked:true,admitted:false});
   assert.equal((await restored.query("SELECT 1 FROM ritc.member WHERE subject=$1 AND state='active'",[unjoined.adult.subject])).rowCount,1);
+  const afterWithdrawal=await checkAuthority(restored,true);
+  // Repeating the accepted archive cannot retire the same generation a second time.
+  await restored.query('SELECT ritc.privacy_restore_register($1,$2,$3,$4::jsonb,$5::jsonb)',[run,oid,verified.bundleDigest,JSON.stringify(verified.head),JSON.stringify(verified.events)]);
+  assert.deepEqual(await checkAuthority(restored,true),afterWithdrawal);
   // Provider reconciliation is separate from quarantined app-data replay.
   assert.equal((await restored.query('SELECT 1 FROM auth.users WHERE id IN($1,$2)',[family.child.subject,family.adult.subject])).rowCount,2);
  }finally{await worker.end();await restored.end();}
+
+ // Probe an independent copy of the synthetic result. The actual quarantine keeps denying runtime connections.
+ const probe=dest.replace('ritc_child_restore_','ritc_child_probe_');
+ const control=new pg.Client({connectionString:sourceURL.toString()});
+ await control.connect();
+ try {
+  await control.query('CREATE DATABASE '+probe+' TEMPLATE '+dest);
+  await checkRenewal({
+   app:databaseURL(process.env.TEST_DATABASE_URL,probe),
+   verifier:databaseURL(process.env.TEST_GUARDIAN_VERIFIER_DATABASE_URL,probe)
+  });
+  assert.equal((await control.query("SELECT has_database_privilege($1,$2,'CONNECT') AS allowed",[runtimeRole,dest])).rows[0].allowed,false);
+ }finally{
+  try { await control.query('DROP DATABASE IF EXISTS '+probe+' WITH (FORCE)'); }
+  finally { await control.end(); }
+ }
 }

@@ -84,6 +84,8 @@ function pool(settings,kind){
    throw Error('Separate fixed owner/worker identities required');
  }
  return new pg.Pool({host,port,database:settings.database,user:settings.user,password:()=>'',ssl:false,max:1,
+  // A restore owner must see the complete quarantine or fail the verification.
+  ...(kind==='owner'?{options:'-c row_security=off'}:{}),
   connectionTimeoutMillis:3000,statement_timeout:10000,lock_timeout:2000,query_timeout:12000,application_name:'ritc-local-privacy-journal'});
 }
 
@@ -168,6 +170,27 @@ async function reportGate(extra={}){
  if((await owner.query("SELECT to_regclass('ritc.request_queue_permission') IS NOT NULL AS installed")).rows[0].installed &&
     (await owner.query('SELECT 1 FROM ritc.request_queue_permission LIMIT 1')).rowCount)
   throw Error('Restored device queue permissions must be cleared in quarantine');
+ const tables=(await owner.query(`SELECT to_regclass('ritc.shared_repeat_week') IS NOT NULL AS repeat_week,
+    to_regclass('ritc.saved_week_change') IS NOT NULL AS saved_week,
+    to_regclass('ritc.adult_check') IS NOT NULL AS adult_check`)).rows[0];
+ // Older backups can lack these tables or columns. Inspect only authority present in the restored schema.
+ const dinnerInvitation=await owner.query(`SELECT FROM ritc.invite i WHERE to_jsonb(i)->>'dinner_occurrence_id' IS NOT NULL
+    AND revoked_at IS NULL AND expires_at>statement_timestamp() LIMIT 1`);
+ const repeatWeek=tables.repeat_week && (await owner.query(`SELECT FROM ritc.shared_repeat_week w WHERE NOT stopped
+    AND EXISTS (SELECT FROM jsonb_array_elements(w.steps) s WHERE NOT (w.receipts ? (s->>'targetId'))) LIMIT 1`)).rowCount;
+ const savedWeek=tables.saved_week && (await owner.query(`SELECT FROM ritc.saved_week_change
+    WHERE NOT stopped AND jsonb_array_length(receipts)<jsonb_array_length(steps) LIMIT 1`)).rowCount;
+ const adultCheck=tables.adult_check && (await owner.query(`SELECT FROM ritc.adult_check a
+    WHERE NOT withdrawn OR to_jsonb(a)->>'step_text' IS NOT NULL LIMIT 1`)).rowCount;
+ if(dinnerInvitation.rowCount || repeatWeek || savedWeek || adultCheck)
+  throw Error('Retire restored dinner invitations, unfinished week changes and shared adult questions before reopening');
+ const consent=(await owner.query('SELECT FROM ritc.consent WHERE revoked_at IS NULL LIMIT 1')).rowCount;
+ const hasEnrollment=(await owner.query("SELECT to_regclass('ritc.guardian_enrollment') IS NOT NULL AS installed")).rows[0].installed;
+ const pending=hasEnrollment && (await owner.query(`SELECT FROM ritc.guardian_enrollment
+     WHERE state NOT IN ('withdrawn','cancelled','expired') LIMIT 1`)).rowCount;
+ const childSession=(await owner.query(`SELECT FROM ritc.web_session s JOIN ritc.member m USING(household_id,member_id)
+     WHERE m.kind='child' AND s.revoked_at IS NULL LIMIT 1`)).rowCount;
+ if(consent || pending || childSession)throw Error('Retire restored child consent and pairing authority before reopening');
  console.log(JSON.stringify({runId,localAppErasureApplied:true,syntheticProbePermitted:true,providerReconciliationRequired:true,productionReady:false,...extra}));
 }
 
