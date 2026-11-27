@@ -20,6 +20,46 @@ final class DinnerPlanningTests: XCTestCase {
     }
     private func roundTrip<T: Codable>(_ value: T) throws -> T { try JSONDecoder().decode(T.self, from: JSONEncoder().encode(value)) }
 
+    func testAlreadyAtHomeUnmeasuredBreadStaysInToastButOnlyHoneyIsNeeded() throws {
+        let bread = MealIngredient(name: "Bread", quantity: nil, checkedWithoutAmount: true)
+        let honey = MealIngredient(name: "Honey", quantity: try q(1))
+        let recipe = MealTemplate(title: "Toast", ingredients: [bread, honey])
+        let dinner = PlannedDinner(template: recipe, confirmedAtHome: [bread.id])
+        var shop = ShoppingLedger(), state = DinnerPlanningState()
+        let otherBread = try shop.addManualLine(name: "Bread", quantity: q(2))
+        let context = access(shop, paid: false)
+        let preview = try DinnerPlanningEngine.preview(changes: [.choose(dinner)], tool: .manual, ledger: shop,
+            state: state, access: context, phase: .draft, at: now)
+        XCTAssertEqual(preview.confirmedAtHomeLineIDs, [dinner.lineIDs[0]])
+        XCTAssertTrue(shop.handled.isEmpty)
+        let proposal = try roundTrip(preview.proposal)
+        _ = try DinnerPlanningEngine.apply(proposal, ledger: &shop, state: &state, access: context, phase: .draft, at: now)
+        let applied = shop
+        _ = try DinnerPlanningEngine.apply(proposal, ledger: &shop, state: &state, access: context, phase: .draft, at: now)
+        XCTAssertEqual(try roundTrip(shop), applied)
+        XCTAssertEqual(shop.handled.map(\.id), [dinner.lineIDs[0]])
+        XCTAssertEqual(Set(LedgerListLayout().groups(shop: shop).flatMap(\.lines).map(\.id)), [otherBread, dinner.lineIDs[1]])
+        XCTAssertEqual(Set(shop.purchaseReviewLines.map(\.id)), [otherBread, dinner.lineIDs[1]])
+        let home = try XCTUnwrap(shop.handled.first)
+        XCTAssertNil(home.inStorePickedAt)
+        XCTAssertNil(home.pickedPrice)
+        XCTAssertTrue(shop.allocations.isEmpty)
+        let meal = try XCTUnwrap(shop.mealOccurrences.first)
+        XCTAssertEqual(meal.ingredientContributionIDs, dinner.contributionIDs)
+        XCTAssertEqual(CookCompletionDraft.activeIngredientIDs(for: meal, in: shop), dinner.contributionIDs)
+        let check = try DinnerShoppingCheck(shop: shop, occurrenceID: meal.id, savedTemplates: [])
+        XCTAssertEqual(check.recipe.ingredients.map(\.name), ["Bread", "Honey"])
+        XCTAssertEqual(check.recipe.ingredients.map(\.quantity), [nil, try q(1)])
+        XCTAssertEqual(check.confirmedAtHomeIngredientIDs, [dinner.contributionIDs[0]])
+        XCTAssertEqual(check.recipe.ingredients.filter { !check.confirmedAtHomeIngredientIDs.contains($0.id) }.map(\.name), ["Honey"])
+        try shop.reopen(lineID: home.id)
+        XCTAssertTrue(try DinnerShoppingCheck(shop: shop, occurrenceID: meal.id, savedTemplates: []).confirmedAtHomeIngredientIDs.isEmpty)
+        XCTAssertEqual(shop.mealOccurrences.first?.ingredientContributionIDs, dinner.contributionIDs)
+        XCTAssertThrowsError(try PlannedDinner(template: recipe, confirmedAtHome: [honey.id]).validate())
+        XCTAssertThrowsError(try DinnerPlanningEngine.preview(changes: [.choose(dinner)], tool: .manual, ledger: shop,
+            state: state, access: access(shop, shared: true, authorized: true), phase: .draft, at: now))
+    }
+
     func testServingOnlyChildRequiresSameIngredientAmountsAndNoInterveningRevision() throws {
         var previous = ShoppingLedger()
         let id = try previous.chooseMeal(meal(), at: now)

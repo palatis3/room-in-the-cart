@@ -120,6 +120,7 @@ import CoreDomain
                     lines += pickedPriceFacts(shop.priceForCurrentPick(lineID: line.id))
                 }
                 if let date = line.checkedAt { lines.append(joined([ledgerText("Checked at"), stamp(date)])) }
+                if let date = line.dinnerAtHomeAt { lines.append(joined([dinnerText("Already at home for this dinner"), stamp(date)])) }
                 if let date = line.handledAt {
                     lines.append(joined([line.handledBy.map { ledgerFormat("Handled by %@", $0) } ?? ledgerText("Handled"), stamp(date)]))
                 }

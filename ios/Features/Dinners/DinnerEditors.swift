@@ -66,6 +66,7 @@ struct DinnerTemplateEditor: View {
     @ObservedObject var model: DinnerFeatureModel
     let purpose: DinnerEditorPurpose
     @State private var originalIdea: DinnerIdeaDraft?
+    @State private var atHome: [UUID: String] = [:]
     @State private var draft: DinnerTemplateDraft
     @State private var scheduled = false
     @State private var date = Date()
@@ -226,7 +227,8 @@ struct DinnerTemplateEditor: View {
                         .foregroundStyle(Theme.action).disabled(accepting)
                 }
             } else {
-                DinnerTemplateFields(draft: $draft, focus: $inputFocus)
+                DinnerTemplateFields(draft: $draft, focus: $inputFocus, atHome: $atHome,
+                                     offersAtHome: purpose == .manual && model.localIdeaWorkspaceID != nil)
                 if purpose == .manual {
                     Section(dinnerText("Night")) {
                         Toggle(dinnerText("Assign a date"), isOn: $scheduled)
@@ -297,7 +299,8 @@ struct DinnerTemplateEditor: View {
             if purpose == .manual {
                 guard let shop = model.shop else { return }
                 let day = try DinnerEntry.date(date, zone: shop.basis.timeZoneIdentifier, scheduled: scheduled)
-                showPreview = model.prepare([.choose(PlannedDinner(template: template, day: day))])
+                let confirmed = Set(draft.ingredients.filter { $0.checkedWithoutAmount && atHome[$0.id] == $0.name }.map(\.id))
+                showPreview = model.prepare([.choose(PlannedDinner(template: template, day: day, confirmedAtHome: confirmed))])
             } else if purpose == .idea {
                 var idea = try originalIdea ?? model.newIdea(seed: 0, exclusions: DinnerEntry.list(draft.exclusions), manual: template)
                 idea.preferenceRevision = model.mealPreferences?.revision
@@ -319,6 +322,8 @@ struct DinnerTemplateEditor: View {
 struct DinnerTemplateFields: View {
     @Binding var draft: DinnerTemplateDraft
     let focus: FocusState<String?>.Binding
+    @Binding var atHome: [UUID: String]
+    let offersAtHome: Bool
     @State private var showRecipeDetails = false
     @State private var showPreferences = false
 
@@ -361,6 +366,16 @@ struct DinnerTemplateFields: View {
                         .toggleStyle(DinnerRowToggleStyle())
                         .accessibilityLabel(ingredient.name.isEmpty ? tonightText("Use without a measured amount") :
                             ingredient.name + ", " + tonightText("Use without a measured amount"))
+                    if offersAtHome, ingredient.checkedWithoutAmount,
+                       !ingredient.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        Toggle(dinnerText("I have this at home. Leave it off this shopping list."), isOn: Binding(
+                            get: { atHome[ingredient.id] == ingredient.name },
+                            set: { atHome[ingredient.id] = $0 ? ingredient.name : nil }
+                        ))
+                        .toggleStyle(DinnerRowToggleStyle())
+                        .accessibilityLabel(ingredient.name + ", " + dinnerText("I have this at home. Leave it off this shopping list."))
+                        .accessibilityIdentifier("dinner.atHome." + ingredient.id.uuidString)
+                    }
                     if !ingredient.checkedWithoutAmount {
                         draftField(dinnerText("Amount, optional"), value: row.amount, key: prefix + "amount", axis: .horizontal)
                         .keyboardType(.numbersAndPunctuation).textInputAutocapitalization(.never).autocorrectionDisabled()
@@ -377,6 +392,8 @@ struct DinnerTemplateFields: View {
                     }
                     .buttonStyle(.borderless).foregroundStyle(Theme.error)
                 }.padding(.vertical, 6)
+                .onChange(of: ingredient.name) { _, _ in atHome[ingredient.id] = nil }
+                .onChange(of: ingredient.checkedWithoutAmount) { _, _ in atHome[ingredient.id] = nil }
             }
             Button(dinnerText("Add ingredient")) { draft.ingredients.append(DinnerIngredientDraft()) }.foregroundStyle(Theme.action).disabled(draft.ingredients.count >= 200)
         }

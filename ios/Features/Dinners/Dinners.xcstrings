@@ -1,6 +1,57 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Kept in the recipe. You can put it back on the shopping list in Handled.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kept in the recipe. You can put it back on the shopping list in Handled."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se conserva en la receta. Puedes volver a ponerlo en la lista de compras desde Atendidos."
+          }
+        }
+      }
+    },
+    "Already at home for this dinner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already at home for this dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya en casa para esta cena"
+          }
+        }
+      }
+    },
+    "I have this at home. Leave it off this shopping list.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I have this at home. Leave it off this shopping list."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya lo tengo en casa. Dejar fuera de esta lista de compras."
+          }
+        }
+      }
+    },
     "Split receipt quantity: %@": {
       "localizations": {
         "en": {

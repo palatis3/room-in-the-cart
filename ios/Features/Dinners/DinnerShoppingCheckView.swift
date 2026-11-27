@@ -87,7 +87,7 @@ private struct DinnerShoppingCheckView: View {
     // has reached checkout must use its real purchase and allocation review.
     private func needsListReview(shop: ShoppingLedger, check: DinnerShoppingCheck) -> Bool {
         let started = shop.lines.contains { line in
-            check.lineIDs.contains(line.id) && (line.isTrashed || line.isChecked || line.isHandled ||
+            check.lineIDs.contains(line.id) && (line.isTrashed || line.isChecked || (line.isHandled && line.dinnerAtHomeAt == nil) ||
                 line.tripPick != nil || line.packagePick != nil || line.stopObservation != nil)
         }
         if started { return true }
@@ -130,7 +130,7 @@ private struct DinnerShoppingEstimate: View {
             input = try? TonightMealModel.input(workspace: workspace, ledgerRevision: ledgerRevision, context: context, sources: [])
         }
         if let review, review.eligibility.eligible {
-            let remaining = review.ingredients.filter { DinnerShoppingCheck.remainder($0) != .covered }
+            let remaining = review.ingredients.filter { !check.confirmedAtHomeIngredientIDs.contains($0.id) && DinnerShoppingCheck.remainder($0) != .covered }
             Section(dinnerText("Still to buy or check")) {
                 if review.ingredients.isEmpty {
                     Text(dinnerText("This dinner has no planned ingredients."))
@@ -147,11 +147,18 @@ private struct DinnerShoppingEstimate: View {
             }.accessibilityIdentifier("dinner.shoppingRemainder")
         } else {
             Section(dinnerText("Planned ingredients")) {
-                ForEach(check.recipe.ingredients) { ingredient in
+                ForEach(check.recipe.ingredients.filter { !check.confirmedAtHomeIngredientIDs.contains($0.id) }) { ingredient in
                     LabeledContent(ingredient.name, value: ingredient.reviewedAmountLabel)
                 }
                 Text(dinnerText(current == nil ? "Pantry availability could not be verified." :
                     "Check meal preferences and ingredient details before using these pantry matches."))
+            }
+        }
+        if !check.confirmedAtHomeIngredientIDs.isEmpty {
+            Section(dinnerText("Already at home for this dinner")) {
+                ForEach(check.recipe.ingredients.filter { check.confirmedAtHomeIngredientIDs.contains($0.id) }) { ingredient in
+                    Text(verbatim: ingredient.name)
+                }
             }
         }
         if let current, !current.foods.isEmpty {
