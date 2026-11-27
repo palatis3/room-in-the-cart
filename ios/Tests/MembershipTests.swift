@@ -1464,6 +1464,49 @@ import StoreKit
             session: fixture.session, deviceToken: { "test-device-token" }, token: { "test.access.token" })
     }
 
+    func testHouseholdRoleNameUsesOnlyTheCurrentAdultsOwnIdentityInActiveAndLapsedHouseholds() {
+        let memberID = "22222222-2222-4222-8222-222222222222"
+        let url = URL(string: "https://service.example.test")!
+        let subject = "signed-in-adult"
+        func adult(account: String?) -> MembershipSession {
+            MembershipSession(subjectID: subject, memberID: memberID, accountName: account, householdID: "household-one",
+                              householdName: "Home", serviceURL: url)
+        }
+        func shopper(_ session: MembershipSession, _ snapshot: MembershipSnapshot?) -> String? {
+            session.householdRoleNames(role: "shopper", canAdminister: false, hasShop: true, snapshot: snapshot)?.shopper
+        }
+        let me = adult(account: nil)
+        let named = MembershipSeat(userID: memberID, displayName: "  María  ", isAdult: true)
+        let other = MembershipSeat(userID: "another-adult", displayName: "Otra persona", isAdult: true)
+        for status: MembershipStatus in [.active, .expired] {
+            XCTAssertEqual(shopper(me, snapshot(status: status, seats: [other, named])), "María")
+            XCTAssertEqual(shopper(me, snapshot(status: status, household: "another-home", seats: [named])), mtr("You"))
+            XCTAssertEqual(shopper(me, snapshot(status: status, seats: [other])), mtr("You"))
+        }
+        for missing in [nil, " ", subject, memberID] as [String?] {
+            XCTAssertEqual(adult(account: missing).accountName, mtr("You"))
+        }
+        let emailed = adult(account: "  maria@example.test ")
+        XCTAssertEqual(shopper(emailed, nil), "maria@example.test")
+        for placeholder in [memberID, UUID().uuidString, subject, "  "] {
+            let seat = MembershipSeat(userID: memberID, displayName: placeholder, isAdult: true)
+            XCTAssertEqual(shopper(emailed, snapshot(seats: [seat])), "maria@example.test")
+        }
+        let active = snapshot(seats: [named])
+        let organizer = me.householdRoleNames(role: "organizer", canAdminister: true, hasShop: true, snapshot: active)
+        XCTAssertEqual(organizer?.organizer, "María")
+        XCTAssertNil(organizer?.shopper)
+        let both = me.householdRoleNames(role: "shopper", canAdminister: true, hasShop: true, snapshot: active)
+        XCTAssertEqual(both?.organizer, "María")
+        XCTAssertEqual(both?.shopper, "María")
+        XCTAssertNil(me.householdRoleNames(role: "shopper", canAdminister: false, hasShop: false, snapshot: active)?.shopper)
+        for role in ["contributor", "helper", "child", "unrecognized"] {
+            XCTAssertNil(me.householdRoleNames(role: role, canAdminister: false, hasShop: true, snapshot: active))
+        }
+        let child = MembershipSeat(userID: memberID, displayName: "Child", isAdult: false)
+        XCTAssertEqual(shopper(me, snapshot(seats: [child])), mtr("You"))
+    }
+
     private func session(household: String = "household-one", subject: String = "subject-one") -> MembershipSession {
         .init(subjectID: subject, memberID: context.purchaserID, accountName: "Mia", householdID: household,
             householdName: "Home", serviceURL: URL(string: "https://service.example.test")!)

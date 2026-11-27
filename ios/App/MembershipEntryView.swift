@@ -148,7 +148,7 @@ extension HouseholdModel: MembershipSessionSource {
     var membershipSession: MembershipSession? {
         guard canOpenMembership, let identity, let projection, projection.enrolled, let serviceURL else { return nil }
         return MembershipSession(subjectID: identity.subject, memberID: projection.memberId,
-            accountName: identity.email ?? projection.memberId, householdID: projection.household.id,
+            accountName: identity.email, householdID: projection.household.id,
             householdName: projection.household.label, serviceURL: serviceURL)
     }
 

@@ -421,17 +421,19 @@ struct MembershipView: View {
     @ViewBuilder private var householdRoles: some View {
         if let session = household.membershipSession, let scope = household.projection,
            session.memberID == model.context?.purchaserID, session.householdID == model.context?.householdID,
-           scope.capabilities.contains("household_admin") || scope.role == "shopper" {
+           let roles = session.householdRoleNames(role: scope.role, canAdminister: scope.capabilities.contains("household_admin"),
+                                                  hasShop: scope.shopId != nil,
+                                                  snapshot: model.verificationIsStale || model.verificationFailed ? nil : model.state.snapshot) {
             Divider()
             Text(mtr("Household and pickup roles")).font(.title2.bold()).accessibilityAddTraits(.isHeader)
-            if scope.capabilities.contains("household_admin") {
-                LabeledContent(mtr("Household organizer"), value: session.accountName)
+            if let organizer = roles.organizer {
+                LabeledContent(mtr("Household organizer"), value: organizer)
                 if let lifecycle = household.lifecycle, lifecycle.canAdminister {
                     NavigationLink(ht("People and invitations")) { HouseholdPeopleView(model: lifecycle) }
                 }
             }
-            if scope.role == "shopper", scope.shopId != nil {
-                LabeledContent(ht("Current shopper"), value: session.accountName)
+            if let shopper = roles.shopper {
+                LabeledContent(ht("Current shopper"), value: shopper)
                     .accessibilityIdentifier("household.currentShopper")
             } else if let shop = household.sharedShop, shop.scope == scope, scope.shopId != nil {
                 NavigationLink(ht("Current shopper")) { SharedShopAssignmentView(household: household, model: shop, allowsTransfer: false) }
