@@ -874,7 +874,8 @@ final class RoomInTheCartUITests: XCTestCase {
         permissions.tap()
         reveal(rule)
         screenshot("Spanish Help expanded household permissions")
-        let safety = app.staticTexts["help.sharedMessageSafety"]
+        let safety = article.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@",
+                                                          "Para reportar un mensaje compartido")).firstMatch
         reveal(safety)
         XCTAssertTrue(safety.label.contains("Reportar o bloquear") && safety.label.contains("Revisar solicitudes de la familia"))
     }

@@ -1971,13 +1971,15 @@ import XCTest
         XCTAssertTrue(oats.waitForExistence(timeout: 25), app.debugDescription)
         XCTAssertTrue(oats.label.uppercased().contains("OATS"))
         reveal(element("receipt.document.ocrGuidance.1"), initiallyUpward: false)
+        reveal(oats)
         XCTAssertEqual(oats.value as? String, "0")
         let fee = app.switches["receipt.document.line.1.2"]
-        XCTAssertTrue(fee.exists && fee.label.uppercased().contains("SERVICE FEE"))
+        reveal(fee)
+        XCTAssertTrue(fee.label.uppercased().contains("SERVICE FEE"), fee.debugDescription)
         XCTAssertEqual(fee.value as? String, "0")
         XCTAssertFalse(app.buttons["receipt.commit"].exists)
 
-        tap(app.buttons["receipt.document.inspect.1.1"])
+        receiptTap(app.buttons["receipt.document.inspect.1.1"], initiallyUpward: false)
         XCTAssertTrue(app.staticTexts["Selected printed line"].waitForExistence(timeout: 5))
         tap(app.buttons["receipt.original.open"])
         let canvas = element("receipt.original.canvas")
@@ -1996,7 +1998,9 @@ import XCTest
         tap(app.buttons["Done"])
         XCTAssertTrue(app.staticTexts["Selected printed line"].waitForExistence(timeout: 5))
         tap(app.buttons["Done"])
+        reveal(oats, initiallyUpward: false)
         XCTAssertEqual(oats.value as? String, "0")
+        reveal(fee)
         XCTAssertEqual(fee.value as? String, "0")
         enableSwitch("receipt.document.line.1.1")
         let storeIssue = app.buttons["receipt.document.storeIssue"]
