@@ -2227,8 +2227,8 @@ import XCTest
         receiptTap(app.buttons["receipt.review"])
     }
 
-    private func openMixedTypedReceipt(_ lines: String) {
-        launch(reset: true)
+    private func openMixedTypedReceipt(_ lines: String, contentSize: UIContentSizeCategory? = nil) {
+        launch(reset: true, contentSize: contentSize)
         receiptTap(app.shopToolButton("shop.myPantry"))
         openReceiptAfterPantrySetup()
         receiptTap(app.buttons["receipt.scan"])
@@ -2252,6 +2252,29 @@ import XCTest
         receiptTap(app.buttons["scan.receipt.review"])
 
         checkReceiptSwitch("I checked the purchase date.")
+    }
+
+    func testLargestTypeReceiptActionShowsNameAndSelectedTreatmentAtFullWidth() {
+        openMixedTypedReceipt("Oats 3 count USD 4.20", contentSize: .accessibilityExtraExtraExtraLarge)
+        let action = app.buttons["receipt.action.0"]
+        reveal(action)
+        XCTAssertEqual(action.label, "Receipt line action")
+        XCTAssertEqual(action.value as? String, "Skip this line")
+        receiptTap(action)
+        receiptTap(app.buttons["Put this food away"])
+        reveal(action)
+        XCTAssertEqual(action.label, "Receipt line action")
+        XCTAssertEqual(action.value as? String, "Put this food away")
+        XCTAssertGreaterThanOrEqual(action.frame.width, app.frame.width - 80)
+        XCTAssertGreaterThanOrEqual(action.frame.height, 44)
+        // On the 375-point SE the former side-by-side row measured 271.5 points
+        // and split “Receipt” and “away” between lines.
+        XCTAssertLessThan(action.frame.height, 260)
+        capture("AX5 receipt action with the selected treatment")
+        receiptTap(action)
+        receiptTap(app.buttons["Ate this"])
+        XCTAssertEqual(action.value as? String, "Ate this")
+        XCTAssertFalse(app.textFields["receipt.received.0"].exists)
     }
 
     func testReviewReopensKeptPortionAndFocusesItsMissingAmount() {

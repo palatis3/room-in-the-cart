@@ -1042,28 +1042,7 @@ struct PantryReceiptLineEditor: View {
                 }.accessibilityIdentifier("receipt.savePrintedDiscount.\(line.ordinal)")
             }
         }
-        Picker(pantryText("Receipt line action"), selection: $line.treatment) {
-            Text(pantryText("Skip this line")).tag(ReceiptImportDraft.Treatment.skip)
-            if !permitsPutaway || line.printed?.kind != .adjustment && line.printed?.kind != .date {
-                Text(putawayText("Put this food away")).tag(ReceiptImportDraft.Treatment.add)
-                if permitsPutaway {
-                    Text(putawayText("Ate this")).tag(ReceiptImportDraft.Treatment.eaten)
-                    Text(putawayText("Kept some")).tag(ReceiptImportDraft.Treatment.keptSome)
-                    Text(putawayText("Missing or unusable")).tag(ReceiptImportDraft.Treatment.missing)
-                }
-            }
-            if permitsPutaway {
-                Text(putawayText("Fee, adjustment or return")).tag(ReceiptImportDraft.Treatment.chargeOrReturn)
-            }
-            ForEach(lots.filter { PantryReceiptDelivery.fragment(of: $0) != nil }) { lot in
-                Text(label(lot))
-                    .tag(ReceiptImportDraft.Treatment.link(lot.id))
-            }
-            ForEach(householdDeliveries) { lot in
-                Text(pantryFormat("Link delivery: %@ · %@", lot.foodName, String(lot.id.uuidString.suffix(8))))
-                    .tag(ReceiptImportDraft.Treatment.link(lot.id))
-            }
-        }
+        receiptActionPicker
         .onChange(of: line.treatment) { _, next in
             line.clearAlias()
             if next != .add { line.selectedIntact = false }
@@ -1078,7 +1057,6 @@ struct PantryReceiptLineEditor: View {
         .onChange(of: line.unit) { _, unit in
             if line.selectedIntact && unit != line.printed?.unit { line.selectedIntact = false }
         }
-        .accessibilityIdentifier("receipt.action.\(line.ordinal)")
         if line.treatment != .skip {
             if line.selectedIntact && !grouped {
                 Button(putawayText("Edit amount")) { expanded.toggle() }
@@ -1093,6 +1071,44 @@ struct PantryReceiptLineEditor: View {
             Button(pantryText("Help with this line"), action: assist)
                 .accessibilityIdentifier("receipt.assistance.\(line.ordinal)")
         }
+    }
+
+    @ViewBuilder private var receiptActionPicker: some View {
+        let title = pantryText("Receipt line action")
+        let id = "receipt.action.\(line.ordinal)"
+        let choices = receiptActions
+        let picker = Picker(title, selection: $line.treatment) {
+            ForEach(choices.indices, id: \.self) { index in
+                Text(verbatim: choices[index].label).tag(choices[index].treatment)
+            }
+        }
+        if typeSize.isAccessibilitySize {
+            let selection = choices.first { $0.treatment == line.treatment }?.label ?? ht("Choose an action")
+            journalStackedMenu(title, value: selection, id: id) { picker.pickerStyle(.inline) }
+        } else {
+            picker.accessibilityIdentifier(id)
+        }
+    }
+
+    private var receiptActions: [(treatment: ReceiptImportDraft.Treatment, label: String)] {
+        var choices: [(ReceiptImportDraft.Treatment, String)] = [(.skip, pantryText("Skip this line"))]
+        if !permitsPutaway || line.printed?.kind != .adjustment && line.printed?.kind != .date {
+            choices.append((.add, putawayText("Put this food away")))
+            if permitsPutaway {
+                choices.append((.eaten, putawayText("Ate this")))
+                choices.append((.keptSome, putawayText("Kept some")))
+                choices.append((.missing, putawayText("Missing or unusable")))
+            }
+        }
+        if permitsPutaway { choices.append((.chargeOrReturn, putawayText("Fee, adjustment or return"))) }
+        for lot in lots where PantryReceiptDelivery.fragment(of: lot) != nil {
+            choices.append((.link(lot.id), label(lot)))
+        }
+        for lot in householdDeliveries {
+            let name = pantryFormat("Link delivery: %@ · %@", lot.foodName, String(lot.id.uuidString.suffix(8)))
+            choices.append((.link(lot.id), name))
+        }
+        return choices
     }
 
     @ViewBuilder private var receivedFields: some View {
