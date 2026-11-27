@@ -30,8 +30,9 @@ struct PantryNoticeLabel: View {
         let title = pantryNotice(notice)
         let symbol = Image(systemName: notice.isSaved ? "checkmark.circle" : "exclamationmark.circle")
         Text("\(symbol)  \(title)")
-            .accessibilityLabel(Text(verbatim: title))
             .accessibilityIdentifier(identifier)
+            // Apply one label to the element after composing the symbol and text runs.
+            .accessibilityLabel(Text(verbatim: title))
     }
 }
 

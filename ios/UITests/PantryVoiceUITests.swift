@@ -594,6 +594,22 @@ import XCTest
         XCTAssertFalse(element("pantry.usageEvent.1").exists)
     }
 
+    func testLargestTextHalfLeftConfirmationHasOneAccessibleSentence() {
+        openPantry(reset: true)
+        let lotID = addLot("Sourdough sandwich bread", amount: "2")
+        app.terminate()
+        openPantry(reset: false, accessibilityText: true, locale: "en_CA")
+        tap(app.buttons[lotID])
+        tap(app.buttons["pantry.voiceUsedSome"])
+        tap(app.buttons["pantry.voiceHalf.0"])
+        tap(app.buttons["pantry.voicePreview"])
+        tap(app.buttons["pantry.voiceConfirm"])
+
+        let status = app.staticTexts["pantry.voiceSaved"]
+        XCTAssertTrue(status.waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertEqual(status.label, "Recorded one use of Sourdough sandwich bread.")
+    }
+
     func testUsedSomeFromBatchAndTypedUseProduceTwoPrivateHistoryEntries() {
         openPantry(reset: true)
         let id = addLot("Ketchup", amount: "3")
