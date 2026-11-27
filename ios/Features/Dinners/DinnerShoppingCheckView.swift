@@ -52,8 +52,13 @@ struct DinnerShoppingCheckView: View {
                 } else {
                     allocationForm.toolbar {
                         ToolbarItem(placement: .cancellationAction) {
-                            Button(dinnerText("Back to planned dinner"), action: returnToPlan)
-                                .accessibilityIdentifier("dinner.allocation.backToPlan")
+                            Button(action: returnToPlan) {
+                                Label(dinnerText("Back to planned dinner"), systemImage: "chevron.backward")
+                                    .labelStyle(.iconOnly)
+                                    .frame(minWidth: 44, minHeight: 44)
+                                    .contentShape(Rectangle())
+                            }
+                            .accessibilityIdentifier("dinner.allocation.backToPlan")
                         }
                     }
                 }
