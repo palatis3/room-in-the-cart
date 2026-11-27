@@ -15590,6 +15590,40 @@
           }
         }
       }
+    },
+    "This review includes your whole shopping list. Check these grocery amounts, then review the allocations again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This review includes your whole shopping list. Check these grocery amounts, then review the allocations again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta revisión incluye toda tu lista de compras. Revisa las cantidades de estos productos y vuelve a revisar las asignaciones."
+          }
+        }
+      }
+    },
+    "Set amount for %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set amount for %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indicar la cantidad de %@"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

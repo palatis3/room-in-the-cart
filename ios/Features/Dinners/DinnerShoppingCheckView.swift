@@ -405,6 +405,7 @@ private struct DinnerPurchaseChoices: View {
     @State private var review: DinnerPurchaseDecision?
     @State private var failed = false
     @State private var busy = false
+    @State private var needsAmounts = false
 
     var body: some View {
         Section(dinnerText("Use food at home")) {
@@ -433,7 +434,14 @@ private struct DinnerPurchaseChoices: View {
                             allocation = try DinnerAllocationChoice(ledger: ledger, pickup: pickup, shop: shop,
                                 occurrenceID: occurrenceID, identity: identity, linked: linked)
                             failed = false
-                        } catch { failed = true }
+                            needsAmounts = false
+                        } catch LedgerCheckoutError.missingQuantity {
+                            needsAmounts = true
+                            failed = true
+                        } catch {
+                            needsAmounts = false
+                            failed = true
+                        }
                     }
                 }
             } else if pickup.journeys.first(where: { $0.id == shop.id })?.ledgerSourceRevisionID != shop.revisionID {
@@ -510,7 +518,29 @@ private struct DinnerPurchaseChoices: View {
                 }
             }
             if failed {
-                Text(dinnerText("Check the product, available amount and other list commitments before trying again."))
+                let unresolved = needsAmounts ? shop.purchaseReviewLines.filter {
+                    shop.belongsInCurrentBasket($0) && (try? shop.quantity(forLineID: $0.id)) == nil
+                } : []
+                if !unresolved.isEmpty {
+                    Text(dinnerText("This review includes your whole shopping list. Check these grocery amounts, then review the allocations again."))
+                    ForEach(unresolved) { line in
+                        if let source = shop.ordinaryQuantitySource(for: line, contributions: shop.contributions(forLineID: line.id),
+                                                                   typedItemBatches: shop.typedItemBatchIDs) {
+                            NavigationLink(dinnerFormat("Set amount for %@", line.name)) {
+                                if authorize(), ledger.shop?.id == shop.id {
+                                    LedgerContributionEditor(model: ledger, shopID: shop.id, contribution: source)
+                                }
+                            }
+                            .accessibilityIdentifier("dinner.allocation.amount." + line.id.uuidString)
+                        } else {
+                            Text(verbatim: line.name)
+                        }
+                    }
+                } else if needsAmounts {
+                    Text(dinnerText("Review the current shopping list for this dinner’s purchases and allocations."))
+                } else {
+                    Text(dinnerText("Check the product, available amount and other list commitments before trying again."))
+                }
             }
         }
     }
