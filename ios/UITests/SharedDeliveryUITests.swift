@@ -68,7 +68,10 @@ import XCTest
             XCTAssertTrue(packs.waitForNonExistence(timeout: 8))
             let reference=app.textFields["sharedOrder.reference"]
             tap(reference); reference.typeText("Native market ABC-51")
-            tap(app.buttons[done])
+            XCTAssertEqual(reference.value as? String, "Native market ABC-51")
+            XCTAssertTrue(app.waitForDoneAboveKeyboard(identifier: done))
+            app.buttons[done].tap()
+            XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: done))
             if spanishLargestText {
                 let date = app.datePickers["sharedOrder.date"]
                 let time = app.datePickers["sharedOrder.time"]
@@ -78,7 +81,10 @@ import XCTest
                 capture.name = "Shared-confirmation-date-Spanish-largest-text"
                 capture.lifetime = .keepAlways; add(capture)
             }
-            tap(app.buttons["sharedOrder.review"])
+            let review = app.buttons["sharedOrder.review"]
+            tap(review)
+            XCTAssertTrue(review.waitForNonExistence(timeout: 8), "Open the retailer review before cancelling or confirming")
+            reveal(app.buttons["sharedOrder.confirm"])
         }
         open(reset:true)
         reveal(row("sharedOrder.original"));XCTAssertTrue(row("sharedOrder.original").label.contains("\(packsLabel) 1"))
