@@ -1,19 +1,19 @@
 {
   "sourceLanguage": "en",
   "strings": {
-    "The draft keeps selected text, store, date, amounts and storage choices. Resume opens the editable lines for a new confirmation. The photo or file is excluded.": {
+    "The draft keeps every line in this review, including lines you skip, along with the store, date, amounts and storage choices. Resume opens the editable lines for a new confirmation. The photo or file is excluded.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The draft keeps selected text, store, date, amounts and storage choices. Resume opens the editable lines for a new confirmation. The photo or file is excluded."
+            "value": "The draft keeps every line in this review, including lines you skip, along with the store, date, amounts and storage choices. Resume opens the editable lines for a new confirmation. The photo or file is excluded."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El borrador conserva el texto seleccionado, la tienda, la fecha, las cantidades, los importes y los lugares de almacenamiento. Al retomarlo, puedes editar las líneas y volver a confirmar. La foto o el archivo quedan fuera."
+            "value": "El borrador conserva todos los renglones de esta revisión, incluso los que omitas, además de la tienda, la fecha, las cantidades, los importes y los lugares de almacenamiento. Al retomarlo, puedes editar las líneas y volver a confirmar. La foto o el archivo quedan fuera."
           }
         }
       }
@@ -307,19 +307,19 @@
         }
       }
     },
-    "The draft keeps selected text, store, date, entered amounts and storage choices. Recheck the date, package and any linked purchases when you return. The original image or file is excluded.": {
+    "The draft keeps every line in this review, including lines you skip, along with the store, date, amounts and storage choices. Recheck the date, package and any linked purchases when you return. The original image or file is excluded.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The draft keeps selected text, store, date, entered amounts and storage choices. Recheck the date, package and any linked purchases when you return. The original image or file is excluded."
+            "value": "The draft keeps every line in this review, including lines you skip, along with the store, date, amounts and storage choices. Recheck the date, package and any linked purchases when you return. The original image or file is excluded."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El borrador conserva el texto seleccionado, la tienda, la fecha, las cantidades e importes que ingresaste y el lugar de almacenamiento. Al regresar, revisa la fecha, el envase y las compras vinculadas. La imagen o el archivo original quedan fuera."
+            "value": "El borrador conserva todos los renglones de esta revisión, incluso los que omitas, además de la tienda, la fecha, las cantidades, los importes y los lugares de almacenamiento. Al regresar, revisa la fecha, el envase y las compras vinculadas. La imagen o el archivo original quedan fuera."
           }
         }
       }

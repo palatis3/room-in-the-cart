@@ -188,7 +188,9 @@ import XCTest
         back.tap()
         XCTAssertTrue(guidance.waitForNonExistence(timeout: 8))
         let tabs = app.tabBars.firstMatch
-        XCTAssertTrue(tabs.buttons["Despensa"].wait(for: \.isHittable, toEqual: true, timeout: 8))
+        for tab in ["Compras", "Despensa", "Cenas", "Historial"] {
+            XCTAssertTrue(tabs.buttons[tab].wait(for: \.isHittable, toEqual: true, timeout: 8), tab)
+        }
         XCTAssertTrue(app.buttons["pantry.add"].wait(for: \.isHittable, toEqual: true, timeout: 10))
         assertLot(batch, contains: "2 unidades")
         tap(app.buttons[batch])

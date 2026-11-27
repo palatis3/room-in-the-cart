@@ -236,9 +236,9 @@ struct PrivateReceiptDraftSave: View {
             return "The draft keeps all recognized text, the store, your wording and line choices. The photo or file is excluded."
         }
         if atConfirmation {
-            return "The draft keeps selected text, store, date, amounts and storage choices. Resume opens the editable lines for a new confirmation. The photo or file is excluded."
+            return "The draft keeps every line in this review, including lines you skip, along with the store, date, amounts and storage choices. Resume opens the editable lines for a new confirmation. The photo or file is excluded."
         }
-        return "The draft keeps selected text, store, date, entered amounts and storage choices. Recheck the date, package and any linked purchases when you return. The original image or file is excluded."
+        return "The draft keeps every line in this review, including lines you skip, along with the store, date, amounts and storage choices. Recheck the date, package and any linked purchases when you return. The original image or file is excluded."
     }
 
     private func saveButton(active: Bool) -> some View {

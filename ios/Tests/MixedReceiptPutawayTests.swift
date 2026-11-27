@@ -75,8 +75,17 @@ import XCTest
         #else
         XCTAssertEqual(protection, FileProtectionType.complete.rawValue)
         #endif
+        // Skipping a row excludes it from confirmed receipt changes. The shopper
+        // still needs its original text and edits when reopening this optional draft.
+        draft.lines[0].treatment = .skip
         let replacement = try await repo.saveReceiptDraft(.putaway(draft), replacing: saved.revision)
         XCTAssertNotEqual(replacement.revision, saved.revision)
+        guard case .putaway(let updated)? = try files.read(scope)?.draft.payload else { return XCTFail("Expected the updated review") }
+        let skipped = try XCTUnwrap(updated.lines.first { $0.id == draft.lines[0].id })
+        XCTAssertEqual(skipped.treatment, .skip)
+        XCTAssertEqual(skipped.original, draft.lines[0].original)
+        XCTAssertEqual(skipped.paid, draft.lines[0].paid)
+        XCTAssertFalse(updated.selectedLines.contains(where: { $0.id == skipped.id }))
         XCTAssertThrowsError(try files.replace(.putaway(draft), expected: nil, scope: scope))
         XCTAssertThrowsError(try files.remove(scope, revision: saved.revision))
         allowed = false
