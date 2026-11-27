@@ -294,9 +294,7 @@ import RecordArchive
             var details: [String] = []
             for row in rows {
                 names.append(row.current.name)
-                let count: String = pantryCount(row.current.count)
-                let date: String = row.current.confirmedAt.formatted(date: .abbreviated, time: .shortened)
-                details.append([pantryLocationName(row.current.location), count, date].joined(separator: " · "))
+                details.append(DinnerPantrySupply.lotDetail(row.current))
             }
             let distinctNames = Set(names)
             let name = distinctNames.sorted().joined(separator: " / ")

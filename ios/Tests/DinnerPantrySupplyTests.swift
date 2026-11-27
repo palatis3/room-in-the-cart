@@ -137,6 +137,44 @@ import LocalStore
         let heads = try await f.store.list(); XCTAssertTrue(heads.isEmpty, "Reading dinner supply never fabricates a pickup")
     }
 
+    func testPrivateMealMatchingShowsSavedEstimateUntilTheNextCountWithoutCreditingIt() async throws {
+        let f = try await activate([]), shop = ShoppingLedger(), food = UUID()
+        let lotID = try await add(f, foodID: food, count: .exact(q(6)))
+        let before = try await f.repository.load(at: now)
+        let lot = try XCTUnwrap(before.lots.first { $0.id == lotID })
+        let wording = "Queda aproximadamente la mitad"
+        let observation = InventoryCountRevision(count: .someLeft, observationID: UUID(), observedAt: now, countWording: wording)
+        _ = try await f.repository.apply(.init(id: UUID(), originID: f.store.workspaceID, lotID: lotID, eventID: UUID(),
+            expectedRevision: lot.revision, occurredAt: now, change: .revise(.init(observation: observation))),
+            reviewedInventoryRevision: before.state.revision, at: now)
+        let workspace = LedgerWorkspace(shops: [shop], selectedShopID: shop.id)
+        func matchInputs() async throws -> (TonightMealModel.Input, DinnerPantrySupply.Snapshot) {
+            let context = PantryPackStockReview.Context(snapshot: try await f.repository.load(at: now), mapping: f.mapping, asOf: now)
+            return (try TonightMealModel.input(workspace: workspace, ledgerRevision: 0, context: context, sources: []),
+                    try DinnerPantrySupply.build(context: context, shopID: shop.id))
+        }
+
+        let (tonight, dinner) = try await matchInputs()
+        let detail = try XCTUnwrap(tonight.foods.first { $0.id == food }?.detail)
+        XCTAssertTrue(detail.contains(pantryFormat("%@ (estimate)", wording)))
+        XCTAssertEqual(dinner.foods.first { $0.id == food }?.detail, detail)
+        XCTAssertTrue(tonight.freeLots.isEmpty)
+        XCTAssertTrue(dinner.globallyFreeLots.isEmpty)
+        XCTAssertTrue(tonight.unresolvedFoods.contains(food))
+        XCTAssertTrue(dinner.unresolvedFoodIDs.contains(food))
+
+        try await recount(f, lotID: lotID, count: .exact(q(2)))
+        let (freshTonight, freshDinner) = try await matchInputs()
+        let freshDetail = try XCTUnwrap(freshTonight.foods.first { $0.id == food }?.detail)
+        XCTAssertTrue(freshDetail.contains(pantryQuantity(q(2))))
+        XCTAssertFalse(freshDetail.contains(wording))
+        XCTAssertEqual(freshDinner.foods.first { $0.id == food }?.detail, freshDetail)
+        XCTAssertEqual(freshTonight.freeLots.map(\.usable), [q(2)])
+        XCTAssertEqual(freshDinner.globallyFreeLots.map(\.usable), [q(2)])
+        XCTAssertFalse(freshTonight.unresolvedFoods.contains(food))
+        XCTAssertFalse(freshDinner.unresolvedFoodIDs.contains(food))
+    }
+
     func testNoJourneyNamedProtectedNeedConsumesOnlyPreviouslyUnreservedSupply() async throws {
         let f = try await activate([]), scope = UUID()
         var shop = ShoppingLedger()
