@@ -214,10 +214,14 @@ struct VoicePantryRow {
                     Text(pantryText("This review closed. Any change you hadn’t confirmed was discarded."))
                         .accessibilityIdentifier("pantry.use.interrupted")
                     if startingLot == nil || returnFromExpiredLot != nil {
-                        Button(pantryText("Return to My Pantry")) {
+                        Button {
                             if let returnFromExpiredLot { returnFromExpiredLot() }
                             else { dismiss() }
-                        }.frame(minHeight: 44).accessibilityIdentifier("pantry.use.returnToShelf")
+                        } label: {
+                            Text(pantryText("Return to My Pantry"))
+                                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                                .contentShape(Rectangle())
+                        }.accessibilityIdentifier("pantry.use.returnToShelf")
                     }
                 } else {
                     Text(pantryText("Unlock the authorized private workspace to view pantry food."))
@@ -368,6 +372,7 @@ struct VoicePantryRow {
             }
         }
         .navigationTitle(pantryText(stage == .review ? "Review pantry changes" : (startingLot == nil ? "Talk or type" : "Record use")))
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
         .privacySensitive()
         .keyboardDoneAction(visible: editing && stage != .entry, title: pantryText("Done"), identifier: "pantry.voiceKeyboardDone") { focusedEditor = nil }

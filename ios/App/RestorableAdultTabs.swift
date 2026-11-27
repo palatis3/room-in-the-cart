@@ -5,15 +5,22 @@ import LocalStore
 /// sheets may add transient UI, but only these reviewed source locators persist.
 struct RestorableAdultTabs: View {
     @EnvironmentObject private var navigation: NavigationRestorationModel
+    @State private var pantryStackID = UUID()
+
     var body: some View {
         TabView(selection: Binding(get: { navigation.selection }, set: navigation.select)) {
             NavigationStack(path: path(.shop)) {
                 ShopView().navigationDestination(for: RestorableDestination.self) { RestoredDestinationView(destination: $0) }
             }.tabItem { Label(tr("Shop"), systemImage: "cart") }.tag(AdultTab.shop)
             NavigationStack(path: path(.pantry)) {
-                AdultPantryTab().settingsButton()
+                AdultPantryTab(returnToShelf: { [navigation, stack = $pantryStackID] in
+                    // Home can remove the shelf that initiated a view-based push.
+                    // Retire the transient stack and let the current root authorize its own read.
+                    navigation.setPath([], for: .pantry)
+                    stack.wrappedValue = UUID()
+                }).settingsButton()
                     .navigationDestination(for: RestorableDestination.self) { RestoredDestinationView(destination: $0) }
-            }.tabItem { Label(quickGroceryText("Pantry"), systemImage: "cabinet") }.tag(AdultTab.pantry)
+            }.id(pantryStackID).tabItem { Label(quickGroceryText("Pantry"), systemImage: "cabinet") }.tag(AdultTab.pantry)
             NavigationStack(path: path(.dinners)) {
                 DinnerPlanningEntry().settingsButton()
                     .navigationDestination(for: RestorableDestination.self) { RestoredDestinationView(destination: $0) }

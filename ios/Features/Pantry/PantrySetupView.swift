@@ -7,6 +7,7 @@ struct PantrySetupView: View {
     @ObservedObject var ledger: LedgerModel
     enum Destination { case home, prices, receipts }
     var destination: Destination = .home
+    var returnToCurrentShelf: (() -> Void)? = nil
     private var title: String {
         switch destination {
         case .home: pantryText("My Pantry")
@@ -148,7 +149,7 @@ struct PantrySetupView: View {
         .navigationDestination(item: $shelfLot) { lot in
             PantryLotEntryView(model: lot.model, lotID: lot.id, accessAllowed: scope == lot.scope,
                                offersTonight: true, household: household,
-                               returnToShelf: { [selection = $shelfLot] in selection.wrappedValue = nil })
+                               returnToShelf: returnToCurrentShelf ?? { [selection = $shelfLot] in selection.wrappedValue = nil })
         }
         .privacySensitive()
         .navigationTitle(title)

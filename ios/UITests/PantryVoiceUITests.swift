@@ -170,7 +170,14 @@ import XCTest
         XCTAssertTrue(closed.label.contains("no hubieras confirmado"), closed.label)
         XCTAssertFalse(element("pantry.voiceSummary.0").exists)
         XCTAssertFalse(app.buttons["pantry.voiceConfirm"].exists)
-        tap(app.buttons["pantry.use.returnToShelf"])
+        let returnButton = app.buttons["pantry.use.returnToShelf"]
+        XCTAssertTrue(returnButton.isHittable)
+        let bar = app.navigationBars["Registrar uso"]
+        XCTAssertTrue(bar.exists)
+        XCTAssertGreaterThanOrEqual(closed.frame.minY, bar.frame.maxY - 1)
+        XCTAssertGreaterThanOrEqual(returnButton.frame.height, 44)
+        returnButton.tap()
+        XCTAssertTrue(closed.waitForNonExistence(timeout: 8))
         XCTAssertTrue(app.buttons["pantry.add"].wait(for: \.isHittable, toEqual: true, timeout: 10))
         assertLot(batch, contains: "2 unidades")
         tap(app.buttons[batch])

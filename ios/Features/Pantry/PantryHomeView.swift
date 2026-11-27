@@ -374,8 +374,11 @@ struct PantryLotEntryView: View {
                     Button(pantryText("Review pending save")) { sheet = .review }
                         .frame(minHeight: 44).buttonStyle(.borderedProminent)
                 } else if let returnToShelf, !accessAllowed || model.phase == .accessDenied {
-                    Button(pantryText("Return to My Pantry"), action: returnToShelf)
-                        .frame(minHeight: 44).accessibilityIdentifier("pantry.lot.returnToShelf")
+                    Button(action: returnToShelf) {
+                        Text(pantryText("Return to My Pantry"))
+                            .frame(maxWidth: .infinity, minHeight: 44)
+                            .contentShape(Rectangle())
+                    }.accessibilityIdentifier("pantry.lot.returnToShelf")
                 } else if accessAllowed, model.phase != .ready, model.phase != .accessDenied {
                     Button(pantryText("Refresh pantry")) { Task { await model.load() } }
                         .frame(minHeight: 44).disabled(model.busy)
