@@ -370,6 +370,7 @@ struct LedgerContributionEditor: View {
     @ObservedObject var model: LedgerModel
     let shopID: UUID
     let contribution: LedgerContribution
+    let authorize: (@MainActor () -> Bool)?
     @Environment(\.dismiss) private var dismiss
     @State private var amount: String
     @State private var unit: GroceryEntryUnit
@@ -381,7 +382,8 @@ struct LedgerContributionEditor: View {
         amount != contribution.editableAmount || unit != GroceryEntryUnit(contribution) || notes != ledgerEditableNote(contribution)
     }
 
-    init(model: LedgerModel, shopID: UUID, contribution: LedgerContribution) {
+    init(model: LedgerModel, shopID: UUID, contribution: LedgerContribution, authorize: (@MainActor () -> Bool)? = nil) {
+        self.authorize = authorize
         self.model = model; self.shopID = shopID; self.contribution = contribution
         _amount = State(initialValue: contribution.editableAmount)
         _unit = State(initialValue: GroceryEntryUnit(contribution))
@@ -441,7 +443,7 @@ struct LedgerContributionEditor: View {
             .interactiveDismissDisabled(model.saving)
             .confirmationDialog(ledgerText("Remove only this contribution?"), isPresented: $confirmingRemoval, titleVisibility: .visible) {
                 Button(ledgerText("Remove contribution"), role: .destructive) {
-                    Task { if await model.editShop(key: "remove-source-\(contribution.id)", shopID: shopID, { try $0.removeContribution(contributionID: contribution.id) }) { dismiss() } }
+                    Task { if await model.editShop(key: "remove-source-\(contribution.id)", shopID: shopID, authorize: authorize, { try $0.removeContribution(contributionID: contribution.id) }) { dismiss() } }
                 }
             } message: { Text(ledgerText("Other sources remain saved. Needs linked to this quantity may require another source.")) }
     }
@@ -458,7 +460,7 @@ struct LedgerContributionEditor: View {
         let savedNotes = notes == ledgerEditableNote(contribution) ? contribution.notes : notes
         focusedField = nil
         Task {
-            let saved = await model.editShop(key: "contribution-\(contribution.id)", shopID: shopID) { current in
+            let saved = await model.editShop(key: "contribution-\(contribution.id)", shopID: shopID, authorize: authorize) { current in
                 try current.updateContribution(contributionID: contribution.id, quantity: quantity, notes: savedNotes, reviewedPackages: packages)
             }
             if saved { dismiss() }

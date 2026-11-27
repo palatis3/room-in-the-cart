@@ -1,6 +1,23 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "The missing grocery amounts have been entered. Review shopping allocations again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The missing grocery amounts have been entered. Review shopping allocations again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya se ingresaron las cantidades que faltaban. Vuelve a revisar las asignaciones de la compra."
+          }
+        }
+      }
+    },
     "Kept in the recipe. You can put it back on the shopping list in Handled.": {
       "extractionState": "manual",
       "localizations": {

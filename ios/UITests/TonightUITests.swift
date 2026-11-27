@@ -167,6 +167,68 @@ import XCTest
         XCTAssertEqual(app.textFields["tonight.recipe.title"].value as? String, "Sopa")
     }
 
+    func testJustPlannedDinnerKeepsAllocationReviewWhenMissingListAmountsAreSaved() {
+        app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", "(en)", "-AppleLocale", "en_CA"]
+        app.launch()
+        for name in ["Milk", "Oats"] {
+            let grocery = app.textFields["quickGrocery.name"]
+            tap(grocery)
+            grocery.typeText(name)
+            tap(app.buttons["quickGrocery.add"])
+            XCTAssertTrue(app.buttons["quickGrocery.undo"].waitForExistence(timeout: 8))
+        }
+        tap(app.tabBars.buttons["Pantry"])
+        tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.add"])
+        for (id, value) in [("pantry.foodName", "Bread"), ("pantry.amount", "1")] {
+            let field = app.textFields[id]
+            tap(field)
+            field.typeText(value + "\n")
+        }
+        tap(app.buttons["pantry.review"])
+        tap(app.buttons["pantry.confirm"])
+        XCTAssertTrue(app.buttons["pantry.confirm"].waitForNonExistence(timeout: 8))
+        tap(app.tabBars.buttons["Dinners"])
+        tap(app.buttons["dinner.tonight"])
+        tap(app.buttons["tonight.addRecipe"])
+        fill(app.textFields["tonight.recipe.title"], "Cheese toast")
+        fill(app.textFields["tonight.recipe.servings"], "1")
+        let ingredients = app.textFields.matching(identifier: "tonight.recipe.ingredient")
+        let amounts = app.textFields.matching(NSPredicate(format: "label == %@", "Amount (required)"))
+        fill(ingredients.firstMatch, "Bread")
+        fill(amounts.firstMatch, "1")
+        tap(app.buttons["Add ingredient"])
+        fill(ingredients.element(boundBy: 1), "Cheese")
+        fill(amounts.element(boundBy: 1), "1")
+        tap(app.buttons["tonight.recipe.review"])
+        tap(app.buttons["tonight.recipe.save"])
+        tap(app.buttons["dinner.planSaved"])
+        tap(app.buttons["dinner.handoff.matchPantry"])
+        let bread = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label BEGINSWITH %@",
+                                                     "dinner.handoff.pantryProduct.", "Bread")).firstMatch
+        tap(bread)
+        tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Bread · ")).firstMatch)
+        tap(app.buttons["Use these product matches"])
+        tap(app.buttons["dinner.handoff.confirm"])
+        XCTAssertTrue(app.descendants(matching: .any)["dinner.handoff.saved"].waitForExistence(timeout: 10))
+        tap(app.buttons["dinner.checkShopping"])
+        let review = app.buttons["Review shopping allocations"]
+        tap(review)
+        let screen = app.navigationBars["Check what to buy"]
+        for name in ["Milk", "Oats"] {
+            tap(app.buttons["Set amount for " + name])
+            let field = app.textFields["Quantity (optional)"]
+            tap(field)
+            field.typeText("1")
+            tap(app.buttons["ledgerSaveContributionChanges"])
+            XCTAssertTrue(app.navigationBars["Quantity and notes"].waitForNonExistence(timeout: 8))
+            XCTAssertTrue(screen.exists && screen.isHittable, "Saving must return to this dinner's allocation review.")
+            XCTAssertFalse(app.buttons["Set amount for " + name].exists)
+        }
+        tap(review)
+        XCTAssertTrue(app.buttons["Save meal allocations"].waitForExistence(timeout: 8))
+    }
+
     func testPlanSavedEggsForTwoInNamedPickupAndReopenDinner() {
         app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
