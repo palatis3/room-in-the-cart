@@ -247,7 +247,7 @@ struct PantryHomeView: View {
                                     ForEach(lots) { lot in
                                         NavigationLink {
                                             PantryLotEntryView(model: model, lotID: lot.id, accessAllowed: accessAllowed, offersTonight: offersTonight,
-                                                               household: household, recoveredHistoryAccess: recoveredHistoryAccess)
+                                                               household: household, recoveredHistoryAccess: recoveredHistoryAccess, opensFromShelf: true)
                                         } label: {
                                             PantryShelfLotLabel(lot: lot, availability: snapshot.availability.lots.first { $0.id == lot.id },
                                                                 distinguishesBatches: (names[lot.name.lowercased()]?.count ?? 0) > 1)
@@ -348,16 +348,28 @@ struct PantryLotEntryView: View {
     var availabilityNeedsReview = false
     var household: HouseholdModel? = nil
     var recoveredHistoryAccess: (@MainActor () -> Bool)? = nil
+    var opensFromShelf = false
+    @Environment(\.dismiss) private var dismiss
+    @State private var leaveExpiredLot = false
     @State private var sheet: PantrySheet?
 
     var body: some View {
         PantryLotView(model: model, lotID: lotID, accessAllowed: accessAllowed, offersTonight: offersTonight,
                       availabilityNeedsReview: availabilityNeedsReview, household: household,
-                      recoveredHistoryAccess: recoveredHistoryAccess) { sheet = .recount(lotID) }
+                      recoveredHistoryAccess: recoveredHistoryAccess,
+                      returnFromExpiredUse: opensFromShelf ? { leaveExpiredLot = true } : nil) { sheet = .recount(lotID) }
+            .onAppear {
+                // After the use editor closes, this destination is the next item on the stack.
+                // Return to the shelf, which resolves the current actor and workspace independently.
+                if leaveExpiredLot { dismiss() }
+            }
             .safeAreaInset(edge: .bottom) {
                 if accessAllowed, model.pending != nil {
                     Button(pantryText("Review pending save")) { sheet = .review }
                         .frame(minHeight: 44).buttonStyle(.borderedProminent)
+                } else if opensFromShelf, model.phase == .accessDenied {
+                    Button(pantryText("Return to My Pantry")) { dismiss() }
+                        .frame(minHeight: 44).accessibilityIdentifier("pantry.lot.returnToShelf")
                 } else if accessAllowed, model.phase != .ready, model.phase != .accessDenied {
                     Button(pantryText("Refresh pantry")) { Task { await model.load() } }
                         .frame(minHeight: 44).disabled(model.busy)
@@ -613,6 +625,7 @@ private struct PantryLotView: View {
     var availabilityNeedsReview = false
     var household: HouseholdModel?
     var recoveredHistoryAccess: (@MainActor () -> Bool)?
+    var returnFromExpiredUse: (() -> Void)?
     let recount: () -> Void
     @FocusState private var reservationAmountFocused: Bool
     @AccessibilityFocusState private var resultFocused: Bool
@@ -644,7 +657,7 @@ private struct PantryLotView: View {
                 if let household, let origin = model.snapshot?.state.workspaceID {
                     Section {
                         NavigationLink(pantryText("Used some")) {
-                            PantryVoiceView(model: model, household: household, origin: origin, startingLot: lot)
+                            PantryVoiceView(model: model, household: household, origin: origin, startingLot: lot, returnFromExpiredLot: returnFromExpiredUse)
                         }
                         .disabled(!model.canEdit || lot.count.quantity?.amount == .zero)
                         .accessibilityIdentifier("pantry.voiceUsedSome")

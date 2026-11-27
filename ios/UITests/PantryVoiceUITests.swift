@@ -143,6 +143,36 @@ import XCTest
         assertLot(unrecorded, contains: "3 unidades")
     }
 
+    func testSpanishInterruptedExactUseReturnsToCurrentShelfWithoutSaving() {
+        openPantry(reset: true, spanish: true)
+        let batch = addLot("Pan de centeno", amount: "2")
+        tap(app.buttons[batch])
+        tap(app.buttons["pantry.voiceUsedSome"])
+        tap(app.buttons["pantry.voiceUseAmount.0"])
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 8))
+        app.typeText("1")
+        tap(app.buttons["pantry.voiceKeyboardDone"])
+        tap(app.buttons["pantry.voicePreview"])
+        XCTAssertTrue(element("pantry.voiceSummary.0").waitForExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["pantry.voiceConfirm"].exists)
+        XCUIDevice.shared.press(.home)
+        app.activate()
+        let closed = element("pantry.use.interrupted")
+        XCTAssertTrue(closed.waitForExistence(timeout: 10))
+        XCTAssertTrue(closed.label.contains("no hubieras confirmado"), closed.label)
+        XCTAssertFalse(element("pantry.voiceSummary.0").exists)
+        XCTAssertFalse(app.buttons["pantry.voiceConfirm"].exists)
+        tap(app.buttons["pantry.use.returnToShelf"])
+        XCTAssertTrue(app.buttons["pantry.add"].wait(for: \.isHittable, toEqual: true, timeout: 10))
+        assertLot(batch, contains: "2 unidades")
+        tap(app.buttons[batch])
+        tap(app.buttons["pantry.usageHistory"])
+        let count = element("pantry.usageCount")
+        XCTAssertTrue(count.waitForExistence(timeout: 8))
+        XCTAssertTrue(count.label.contains("0") || (count.value as? String)?.contains("0") == true)
+        XCTAssertFalse(element("pantry.usageEvent.0").exists)
+    }
+
     func testEnglishLowStockKeepsItsWordingAndOffersRestockingSeparately() {
         checkLowStock(spanish: false)
     }

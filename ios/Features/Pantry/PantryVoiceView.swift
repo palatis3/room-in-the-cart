@@ -90,6 +90,8 @@ struct VoicePantryRow {
     @ObservedObject var household: HouseholdModel
     let origin: UUID
     var startingLot: InventoryLot? = nil
+    var returnFromExpiredLot: (() -> Void)? = nil
+    @State private var previouslyOpened = false
     @EnvironmentObject private var access: WorkspaceAccess
     @EnvironmentObject private var pickup: PickupModel
     @Environment(\.guardianChildCoordinator) private var child
@@ -208,7 +210,18 @@ struct VoicePantryRow {
     private var voiceForm: some View {
         WorkingForm {
             if !boundScope {
-                Text(pantryText("Unlock the authorized private workspace to view pantry food."))
+                if previouslyOpened {
+                    Text(pantryText("This review closed. Any change you hadn’t confirmed was discarded."))
+                        .accessibilityIdentifier("pantry.use.interrupted")
+                    if startingLot == nil || returnFromExpiredLot != nil {
+                        Button(pantryText("Return to My Pantry")) {
+                            returnFromExpiredLot?()
+                            dismiss()
+                        }.frame(minHeight: 44).accessibilityIdentifier("pantry.use.returnToShelf")
+                    }
+                } else {
+                    Text(pantryText("Unlock the authorized private workspace to view pantry food."))
+                }
             } else if let pending = model.pending {
                 if working || model.busy {
                     ProgressView(pantryText("Saving your change…"))
@@ -386,8 +399,9 @@ struct VoicePantryRow {
             }
         }
         .onAppear {
-            if identity == nil, scene == .active {
+            if identity == nil, !previouslyOpened, scene == .active {
                 identity = currentIdentity; generation = pickup.privatePantryGeneration
+                if identity != nil { previouslyOpened = true }
                 if let startingLot, authorized, model.canEdit, lots.contains(startingLot) {
                     basis = model.snapshot?.state
                     rows = [.init(food: startingLot.name, original: startingLot.name, lotID: startingLot.id, mode: .usedSome)]

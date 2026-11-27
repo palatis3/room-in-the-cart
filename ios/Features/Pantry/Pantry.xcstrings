@@ -1,6 +1,40 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "This review closed. Any change you hadn’t confirmed was discarded.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This review closed. Any change you hadn’t confirmed was discarded."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta revisión se cerró. Se descartó cualquier cambio que no hubieras confirmado."
+          }
+        }
+      }
+    },
+    "Return to My Pantry": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Return to My Pantry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a Mi despensa"
+          }
+        }
+      }
+    },
     "Draft saved on this iPhone.": {
       "extractionState": "manual",
       "localizations": {
