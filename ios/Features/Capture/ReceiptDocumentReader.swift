@@ -99,6 +99,26 @@ struct ExtractedReceiptDocument: Equatable, Codable, Sendable {
         var id: Self { self }
     }
 
+    struct PurchaseDateEvidence: Equatable {
+        let wording: String
+        let position: Selection?
+    }
+
+    /// Keep ambiguous wording available for inspection. Only one clear source
+    /// position can be offered for inclusion with the shopper's food selection.
+    func purchaseDateEvidence(at now: Date, calendar: Calendar = .current) -> PurchaseDateEvidence? {
+        let dates = pages.flatMap { page in
+            page.lines.filter { ReceiptPrintedDate.looksLikeDate($0.text) }.map {
+                (position: Selection(page: page.id, line: $0.id), line: $0)
+            }
+        }
+        let readable = dates.filter { !$0.line.uncertain }
+        guard let first = readable.first, readable.allSatisfy({ $0.line.text == first.line.text }) else { return nil }
+        let offersDate = dates.count == 1 && pages.allSatisfy { $0.skipped == nil }
+            && ReceiptPrintedDate.unique(in: [.init(originalText: first.line.text)], now: now, calendar: calendar) != nil
+        return .init(wording: first.line.text, position: offersDate ? first.position : nil)
+    }
+
     struct PrintedPaidTotal: Equatable, Codable, Sendable {
         let wording: String
         let amount: String

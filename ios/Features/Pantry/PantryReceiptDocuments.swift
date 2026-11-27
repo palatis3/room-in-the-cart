@@ -66,8 +66,7 @@ struct PantryReceiptDocuments: View {
     @State private var job: Task<Void, Never>?
     @State private var generation = UUID()
     @State private var document: ExtractedReceiptDocument?
-    @State private var documentDateWording: String?
-    @State private var purchaseDatePosition: ExtractedReceiptDocument.Selection?
+    @State private var purchaseDateEvidence: ExtractedReceiptDocument.PurchaseDateEvidence?
     @State private var reviewedWording: [ExtractedReceiptDocument.Selection: String] = [:]
     @State private var inspectedLine: ExtractedReceiptDocument.Selection?
     @State private var savedFileReceipt: ReviewedReceiptHeader?
@@ -161,11 +160,11 @@ struct PantryReceiptDocuments: View {
                         .frame(minHeight: 44)
                         .accessibilityIdentifier("receipt.document.usePrintedName")
                     }
-                    if let dateWording = documentDateWording, stage != .order {
+                    if let purchaseDateEvidence, stage != .order {
                         LabeledContent(pantryText("Date wording on the receipt")) {
-                            Text(verbatim: dateWording).font(.system(.subheadline, design: .monospaced))
+                            Text(verbatim: purchaseDateEvidence.wording).font(.system(.subheadline, design: .monospaced))
                         }
-                        if let position = purchaseDatePosition, !omittedLines.contains(position), reviewedWording[position] == nil {
+                        if let position = purchaseDateEvidence.position, !omittedLines.contains(position), reviewedWording[position] == nil {
                             Toggle(putawayText("Use this printed date for the purchase"), isOn: Binding(
                                 get: { selection.contains(position) },
                                 set: { include in
@@ -340,19 +339,8 @@ struct PantryReceiptDocuments: View {
                 return try input.bytes
             }
         }
-        .onChange(of: document?.digest) { _, _ in
-            let dates = (document?.pages ?? []).flatMap { page in
-                page.lines.filter { ReceiptPrintedDate.looksLikeDate($0.text) }.map {
-                    (position: ExtractedReceiptDocument.Selection(page: page.id, line: $0.id), line: $0)
-                }
-            }
-            let clearDates = dates.filter { !$0.line.uncertain }
-            documentDateWording = Set(clearDates.map { $0.line.text }).count == 1 ? clearDates.first?.line.text : nil
-            purchaseDatePosition = nil
-            if let first = clearDates.first, clearDates.count == dates.count, documentDateWording != nil,
-               ReceiptPrintedDate.unique(in: [.init(originalText: first.line.text)], now: Date()) != nil {
-                purchaseDatePosition = first.position
-            }
+        .onChange(of: document) { _, newDocument in
+            purchaseDateEvidence = newDocument?.purchaseDateEvidence(at: Date())
         }
         .onChange(of: merchant) { _, _ in confirmed = false }
         .onChange(of: stage) { _, newStage in

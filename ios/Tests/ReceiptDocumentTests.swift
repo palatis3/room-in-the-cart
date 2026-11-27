@@ -3,6 +3,7 @@ import CryptoKit
 import DeviceSurfaces
 import UniformTypeIdentifiers
 import HouseholdClient
+import LocalStore
 import PDFKit
 import UIKit
 import XCTest
@@ -157,6 +158,92 @@ import XCTest
         let document = try await ReceiptDocumentReader().extract(picked)
         XCTAssertEqual(document.pages.first?.lines.first?.text, long)
         XCTAssertEqual(document.digest, Data(SHA256.hash(data: bytes)))
+    }
+
+    func testNextDayReceiptCanIncludeThePrintedDateWithGroceriesAndRequiresConfirmation() async throws {
+        let zone = try XCTUnwrap(TimeZone(identifier: "America/Mexico_City"))
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = zone
+        let now = try XCTUnwrap(calendar.date(from: .init(year: 2026, month: 11, day: 27, minute: 5)))
+        let purchase = try XCTUnwrap(calendar.date(from: .init(year: 2026, month: 11, day: 26)))
+        let dateWording = "26/11/2026 13:15"
+        let grocery = "Tortillas de maíz"
+        let document = ExtractedReceiptDocument(digest: Data(repeating: 1, count: 32), pages: [
+            .init(id: 1, method: .imageOCR, lines: [.init(id: 3, text: dateWording), .init(id: 4, text: grocery),
+                                                    .init(id: 15, text: "TOTAL MXN")])
+        ])
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let cleanup = SQLiteFixtureDirectory(root, test: self)
+        let store = try ComparisonStore(url: root.appendingPathComponent("shop.sqlite"), inventoryEnabled: true)
+        cleanup.track(store)
+        let token = try await store.inventorySourceToken()
+        try await store.commitInventory(.init(workspaceID: store.workspaceID, operationID: UUID(), expectedRevision: 0,
+                                             request: Data([1]), mode: .activate, sourceToken: token), at: now)
+        let repository = PantryRepository(store: store, authorize: { true })
+        cleanup.track(repository)
+        let snapshot = try await repository.load(at: now)
+        let target = CaptureTarget(workspaceID: store.workspaceID, containerID: UUID(), objectID: UUID(),
+                                   revision: 1, kind: .receiptEvidence)
+        func review(_ selection: Set<ExtractedReceiptDocument.Selection>) throws -> ReceiptImportDraft {
+            let source = try document.source(target: target, merchant: "Mercado Prueba", stage: .receipt, selection: selection, at: now)
+            return try ReceiptImportDraft(source: source, now: now, timeZone: zone)
+        }
+        var selection: Set<ExtractedReceiptDocument.Selection> = [.init(page: 1, line: 4)]
+        let foodOnly = try review(selection)
+        XCTAssertNil(foodOnly.printedDate)
+        XCTAssertEqual(foodOnly.purchaseDate, calendar.startOfDay(for: now))
+        XCTAssertFalse(foodOnly.dateConfirmed)
+        let evidence = try XCTUnwrap(document.purchaseDateEvidence(at: now, calendar: calendar))
+        XCTAssertEqual(evidence.wording, dateWording)
+        let position = try XCTUnwrap(evidence.position)
+        XCTAssertEqual(position, .init(page: 1, line: 3))
+        selection.insert(position)
+        var draft = try review(selection)
+        XCTAssertEqual(draft.lines.map(\.original), [dateWording, grocery])
+        XCTAssertEqual(draft.printedDate?.wording, dateWording)
+        XCTAssertEqual(draft.purchaseDate, purchase)
+        XCTAssertFalse(draft.dateConfirmed)
+        XCTAssertTrue(draft.selectedLines.isEmpty)
+        draft.lines[1].treatment = .add
+        draft.lines[1].received = "1"
+        draft.lines[1].usable = "1"
+        func facts() throws -> [ReceiptAcquisition] {
+            try draft.facts(receiptID: draft.receiptID, snapshot: snapshot, at: now)
+        }
+        XCTAssertThrowsError(try facts())
+        draft.dateConfirmed = true
+        let confirmed = try facts()
+        XCTAssertEqual(confirmed.map(\.purchaseDate), [purchase])
+        XCTAssertEqual(confirmed.map(\.originalLine), [grocery])
+        XCTAssertNil(confirmed.first?.paidLineTotal)
+        draft.selectedPurchaseDate = calendar.startOfDay(for: now)
+        XCTAssertFalse(draft.dateConfirmed)
+        XCTAssertThrowsError(try facts())
+    }
+
+    func testPurchaseDateOfferRequiresOneReadableUnambiguousSourcePosition() throws {
+        typealias Line = ReceiptDocumentPage.Line
+        let zone = try XCTUnwrap(TimeZone(secondsFromGMT: 0))
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = zone
+        let now = try XCTUnwrap(calendar.date(from: .init(year: 2026, month: 11, day: 27)))
+        let clear = Line(id: 3, text: "26/11/2026 13:15")
+        let ambiguous = Line(id: 3, text: "03/04/2026")
+        let uncertain = Line(id: 4, text: "25/11/2026", uncertain: true)
+        let other = Line(id: 4, text: "25/11/2026")
+        func evidence(_ lines: [Line], otherPages: [ReceiptDocumentPage] = []) -> ExtractedReceiptDocument.PurchaseDateEvidence? {
+            ExtractedReceiptDocument(digest: Data(repeating: 2, count: 32),
+                                     pages: [.init(id: 1, method: .imageOCR, lines: lines)] + otherPages)
+                .purchaseDateEvidence(at: now, calendar: calendar)
+        }
+        XCTAssertEqual(evidence([ambiguous])?.wording, ambiguous.text)
+        for rows in [[ambiguous], [uncertain], [clear, uncertain], [clear, other],
+                     [Line(id: 3, text: "28/11/2026")], [Line(id: 3, text: "31/11/2026")]] {
+            XCTAssertNil(evidence(rows)?.position)
+        }
+        XCTAssertNil(evidence([clear], otherPages: [.init(id: 2, method: .imageOCR, lines: [clear])])?.position)
+        XCTAssertNil(evidence([clear], otherPages: [.init(id: 2, method: .pdfOCR, lines: [], skipped: .unavailable)])?.position)
     }
 
     func testLocalReceiptPhotoOffersPrintedFieldsWithoutClaimingReceivedUsableOrPaid() async throws {
