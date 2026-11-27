@@ -64,7 +64,17 @@ import XCTest
         XCTAssertNil(try files.read(.init(origin: UUID(), owner: owner)))
         let file = try XCTUnwrap(FileManager.default.contentsOfDirectory(at: privateFolder, includingPropertiesForKeys: nil).first { $0.pathExtension == "draft" })
         XCTAssertEqual(try file.resourceValues(forKeys: [.isExcludedFromBackupKey]).isExcludedFromBackup, true)
-        XCTAssertEqual(try FileManager.default.attributesOfItem(atPath: file.path)[.protectionKey] as? FileProtectionType, .complete)
+        let attributes = try FileManager.default.attributesOfItem(atPath: file.path)
+        XCTAssertEqual((attributes[.posixPermissions] as? NSNumber)?.intValue, 0o600)
+        let directoryAttributes = try FileManager.default.attributesOfItem(atPath: privateFolder.path)
+        XCTAssertEqual((directoryAttributes[.posixPermissions] as? NSNumber)?.intValue, 0o700)
+        let protection = (attributes[.protectionKey] as? FileProtectionType)?.rawValue ?? attributes[.protectionKey] as? String
+        #if targetEnvironment(simulator)
+        // Some simulator runtimes omit Data Protection metadata even when the write requested complete protection.
+        if let protection { XCTAssertEqual(protection, FileProtectionType.complete.rawValue) }
+        #else
+        XCTAssertEqual(protection, FileProtectionType.complete.rawValue)
+        #endif
         let replacement = try await repo.saveReceiptDraft(.putaway(draft), replacing: saved.revision)
         XCTAssertNotEqual(replacement.revision, saved.revision)
         XCTAssertThrowsError(try files.replace(.putaway(draft), expected: nil, scope: scope))
