@@ -55,6 +55,7 @@ struct PantryHomeView: View {
     var holdsLoadedReview: () -> Bool = { false }
     var recoveredHistoryAccess: (@MainActor () -> Bool)? = nil
     var initialSheet: Binding<PantrySheet?>? = nil
+    var openShelfLot: ((UUID) -> Void)? = nil
     @State private var sheet: PantrySheet?
     @State private var selectedLocation: InventoryLocation?
     @State private var choosingLocation = false
@@ -245,12 +246,24 @@ struct PantryHomeView: View {
                                 Section {
                                     if lots.isEmpty { Text(pantryText("No food recorded here.")).foregroundStyle(Theme.secondary) }
                                     ForEach(lots) { lot in
-                                        NavigationLink {
-                                            PantryLotEntryView(model: model, lotID: lot.id, accessAllowed: accessAllowed, offersTonight: offersTonight,
-                                                               household: household, recoveredHistoryAccess: recoveredHistoryAccess, opensFromShelf: true)
-                                        } label: {
-                                            PantryShelfLotLabel(lot: lot, availability: snapshot.availability.lots.first { $0.id == lot.id },
-                                                                distinguishesBatches: (names[lot.name.lowercased()]?.count ?? 0) > 1)
+                                        let label = PantryShelfLotLabel(lot: lot, availability: snapshot.availability.lots.first { $0.id == lot.id },
+                                                                        distinguishesBatches: (names[lot.name.lowercased()]?.count ?? 0) > 1)
+                                        Group {
+                                            if let openShelfLot {
+                                                Button { openShelfLot(lot.id) } label: {
+                                                    HStack {
+                                                        label
+                                                        Spacer(minLength: 4)
+                                                        Image(systemName: "chevron.forward").font(.footnote.weight(.semibold))
+                                                            .foregroundStyle(Theme.secondary).accessibilityHidden(true)
+                                                    }.contentShape(Rectangle())
+                                                }
+                                            } else {
+                                                NavigationLink {
+                                                    PantryLotEntryView(model: model, lotID: lot.id, accessAllowed: accessAllowed, offersTonight: offersTonight,
+                                                                       household: household, recoveredHistoryAccess: recoveredHistoryAccess)
+                                                } label: { label }
+                                            }
                                         }
                                         .accessibilityIdentifier("pantry.lot.\(lot.id)")
                                         .accessibilityFocused($focusedLot, equals: lot.id)
@@ -348,27 +361,20 @@ struct PantryLotEntryView: View {
     var availabilityNeedsReview = false
     var household: HouseholdModel? = nil
     var recoveredHistoryAccess: (@MainActor () -> Bool)? = nil
-    var opensFromShelf = false
-    @Environment(\.dismiss) private var dismiss
-    @State private var leaveExpiredLot = false
+    var returnToShelf: (() -> Void)? = nil
     @State private var sheet: PantrySheet?
 
     var body: some View {
         PantryLotView(model: model, lotID: lotID, accessAllowed: accessAllowed, offersTonight: offersTonight,
                       availabilityNeedsReview: availabilityNeedsReview, household: household,
                       recoveredHistoryAccess: recoveredHistoryAccess,
-                      returnFromExpiredUse: opensFromShelf ? { leaveExpiredLot = true } : nil) { sheet = .recount(lotID) }
-            .onAppear {
-                // After the use editor closes, this destination is the next item on the stack.
-                // Return to the shelf, which resolves the current actor and workspace independently.
-                if leaveExpiredLot { dismiss() }
-            }
+                      returnFromExpiredUse: returnToShelf) { sheet = .recount(lotID) }
             .safeAreaInset(edge: .bottom) {
                 if accessAllowed, model.pending != nil {
                     Button(pantryText("Review pending save")) { sheet = .review }
                         .frame(minHeight: 44).buttonStyle(.borderedProminent)
-                } else if opensFromShelf, model.phase == .accessDenied {
-                    Button(pantryText("Return to My Pantry")) { dismiss() }
+                } else if let returnToShelf, !accessAllowed || model.phase == .accessDenied {
+                    Button(pantryText("Return to My Pantry"), action: returnToShelf)
                         .frame(minHeight: 44).accessibilityIdentifier("pantry.lot.returnToShelf")
                 } else if accessAllowed, model.phase != .ready, model.phase != .accessDenied {
                     Button(pantryText("Refresh pantry")) { Task { await model.load() } }

@@ -145,9 +145,17 @@ import XCTest
 
     func testSpanishInterruptedExactUseReturnsToCurrentShelfWithoutSaving() {
         openPantry(reset: true, spanish: true)
-        let batch = addLot("Pan de centeno", amount: "2")
+        let batch = addLot("Avena S7", amount: "2")
+        app.terminate()
+        openPantry(reset: false, spanish: true)
         tap(app.buttons[batch])
-        tap(app.buttons["pantry.voiceUsedSome"])
+        let use = app.buttons["pantry.voiceUsedSome"]
+        tap(use)
+        XCTAssertTrue(app.navigationBars["Registrar uso"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["pantry.voiceUseAmount.0"].waitForExistence(timeout: 8))
+        tap(app.buttons["pantry.voiceCancel"])
+        XCTAssertTrue(use.wait(for: \.isHittable, toEqual: true, timeout: 8))
+        tap(use)
         tap(app.buttons["pantry.voiceUseAmount.0"])
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 8))
         app.typeText("1")

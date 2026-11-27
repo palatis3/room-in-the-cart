@@ -23,6 +23,22 @@ struct PantrySetupView: View {
     @State private var generation = UUID()
     @State private var busy = false
     @State private var initialSheet: PantrySheet?
+    @State private var shelfLot: ShelfLot?
+
+    /// Retain the selected model and its original authorization basis until the user goes back.
+    /// A newly authorized shelf must not rebind an open usage editor.
+    private struct ShelfLot: Hashable {
+        let id: UUID
+        let model: PantryModel
+        let scope: Scope
+
+        static func == (lhs: Self, rhs: Self) -> Bool { lhs.id == rhs.id && lhs.model === rhs.model && lhs.scope == rhs.scope }
+        func hash(into hasher: inout Hasher) {
+            hasher.combine(id)
+            hasher.combine(ObjectIdentifier(model))
+            hasher.combine(scope.generation)
+        }
+    }
     @State private var startPriceEntry = false
 
     private func setupExplanation(startsEmpty: Bool) -> String {
@@ -66,7 +82,9 @@ struct PantrySetupView: View {
                 case .home:
                     LivePantryHomeView(pickup: pickup, model: model, household: household, holdsLoadedReview: {
                         pantryVoicePrompt?.holdsPresentation() == true && scope == original
-                    }, initialSheet: $initialSheet)
+                    }, initialSheet: $initialSheet, openShelfLot: { [selection = $shelfLot] id in
+                        selection.wrappedValue = ShelfLot(id: id, model: model, scope: original)
+                    })
                 }
             } else {
                 JournalList {
@@ -126,6 +144,11 @@ struct PantrySetupView: View {
                     if destination == .home { HouseholdTonightLink(household: household) }
                 }.disabled(busy)
             }
+        }
+        .navigationDestination(item: $shelfLot) { lot in
+            PantryLotEntryView(model: lot.model, lotID: lot.id, accessAllowed: scope == lot.scope,
+                               offersTonight: true, household: household,
+                               returnToShelf: { [selection = $shelfLot] in selection.wrappedValue = nil })
         }
         .privacySensitive()
         .navigationTitle(title)
@@ -233,6 +256,7 @@ struct LivePantryHomeView: View {
     let household: HouseholdModel
     let holdsLoadedReview: () -> Bool
     @Binding var initialSheet: PantrySheet?
+    var openShelfLot: ((UUID) -> Void)? = nil
 
     private var newerRevision: Int64? {
         guard model.canEdit, !pickup.saving, pickup.pantryRouteAvailable, pickup.pantryReadIsCurrent,
@@ -244,7 +268,7 @@ struct LivePantryHomeView: View {
     var body: some View {
         PantryHomeView(model: model, accessAllowed: true, offersTonight: true, offersStaplePrompts: true,
                        allowsPackageReview: true, household: household, holdsLoadedReview: holdsLoadedReview,
-                       initialSheet: $initialSheet)
+                       initialSheet: $initialSheet, openShelfLot: openShelfLot)
             .onChange(of: newerRevision, initial: true) { _, revision in
                 guard let revision else { return }
                 Task { @MainActor in

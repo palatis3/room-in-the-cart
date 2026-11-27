@@ -215,8 +215,8 @@ struct VoicePantryRow {
                         .accessibilityIdentifier("pantry.use.interrupted")
                     if startingLot == nil || returnFromExpiredLot != nil {
                         Button(pantryText("Return to My Pantry")) {
-                            returnFromExpiredLot?()
-                            dismiss()
+                            if let returnFromExpiredLot { returnFromExpiredLot() }
+                            else { dismiss() }
                         }.frame(minHeight: 44).accessibilityIdentifier("pantry.use.returnToShelf")
                     }
                 } else {
