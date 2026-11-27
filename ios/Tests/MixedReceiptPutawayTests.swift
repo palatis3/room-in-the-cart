@@ -91,6 +91,40 @@ import XCTest
         XCTAssertThrowsError(try files.replace(.putaway(draft), expected: replacement.revision, scope: scope))
     }
 
+    func testProtectedReceiptDraftPreservesAlternativesFromFourPrintedColumns() throws {
+        typealias Line = ReceiptDocumentPage.Line
+        let observations = [("Oats", ["Oat", "Cats"]), ("2", ["1", "3"]),
+                            ("× 20.00", ["× 20.08", "× 28.00"]), ("40.00", ["40.08", "48.00"])]
+        let columns = observations.enumerated().map { index, observed in
+            Line(id: index + 1, text: observed.0, bounds: CGRect(x: CGFloat(index) * 0.24, y: 0.6, width: 0.17, height: 0.03),
+                 wordReadings: ReceiptWordReading.choices(original: observed.0, candidates: observed.1))
+        }
+        let grouped = ExtractedReceiptDocument.groupingQuantityPriceColumns(columns)
+        XCTAssertEqual(grouped.count, 1)
+        var row = try XCTUnwrap(grouped.first)
+        XCTAssertEqual(row.wordReadings.count, 8)
+        let origin = UUID()
+        func archive(_ line: Line) throws -> Data {
+            let document = ExtractedReceiptDocument(digest: Data(repeating: 1, count: 32),
+                                                     pages: [.init(id: 1, method: .imageOCR, lines: [line])])
+            let draft = ReceiptLineDraft(workspaceID: origin, document: document, merchant: "", stage: .receipt,
+                                         selection: [], linkedAmountItems: [], reviewedWording: [:], omittedLines: [])
+            return try JSONEncoder().encode(SavedReceiptDraft(payload: .lines(draft)))
+        }
+        let reopened = try JSONDecoder().decode(SavedReceiptDraft.self, from: archive(row))
+        guard case .lines(let saved) = reopened.payload else { return XCTFail("Expected receipt line review") }
+        XCTAssertEqual(saved.document.pages.first?.lines.first, row)
+        XCTAssertTrue(saved.selection.isEmpty)
+        XCTAssertTrue(saved.reviewedWording.isEmpty)
+        let first = try XCTUnwrap(row.wordReadings.first)
+        row.wordReadings.append(first)
+        XCTAssertThrowsError(try archive(row))
+        row.wordReadings = [.init(word: first.word, replacement: first.replacement, wording: first.wording, wordIndex: 12)]
+        XCTAssertThrowsError(try archive(row))
+        row.wordReadings = [.init(word: first.word, replacement: first.replacement, wording: "a different printed row", wordIndex: 0)]
+        XCTAssertThrowsError(try archive(row))
+    }
+
     func testSavedReceiptConfirmationRecoversBothSidesOfSQLiteCommitAndKeepsLaterDraft() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)

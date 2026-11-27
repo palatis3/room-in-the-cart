@@ -27,7 +27,7 @@ struct ReceiptLineDraft: Codable {
                 characters += line.text.count
                 guard (1...200).contains(line.id), positions.insert(.init(page: page.id, line: line.id)).inserted,
                       !line.text.contains("\0"), characters <= 100_000,
-                      line.wordReadings.count <= 2 else { throw PantryReceiptError.invalid }
+                      validWordReadings(in: line) else { throw PantryReceiptError.invalid }
             }
         }
         let visible = positions.subtracting(omittedLines)
@@ -44,6 +44,21 @@ struct ReceiptLineDraft: Codable {
                   linkedAmountItems.isDisjoint(with: reviewedWording.keys) else { throw PantryReceiptError.invalid }
         }
     }
+    private func validWordReadings(in line: ReceiptDocumentPage.Line) -> Bool {
+        guard !line.wordReadings.isEmpty else { return true }
+        // One observation offers two alternate readings; an assembled printed row can contain four observations.
+        guard line.wordReadings.count <= 8 else { return false }
+        let words = line.text.split(whereSeparator: \.isWhitespace)
+        return line.wordReadings.allSatisfy { reading in
+            guard words.indices.contains(reading.wordIndex), !reading.replacement.isEmpty,
+                  reading.replacement.utf8.count <= 2048, reading.wording.utf8.count <= 4096,
+                  !reading.replacement.contains(where: { $0.isWhitespace || $0 == "\0" }) else { return false }
+            let original = words[reading.wordIndex]
+            return reading.word == original && reading.replacement != original &&
+                line.text.replacingCharacters(in: original.startIndex..<original.endIndex, with: reading.replacement) == reading.wording
+        }
+    }
+
 }
 
 @MainActor
