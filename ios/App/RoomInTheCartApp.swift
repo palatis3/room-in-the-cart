@@ -930,7 +930,7 @@ struct RecordsView: View {
                     }
                     NavigationLink {
                         PlacementRecordsEntryView(household: household)
-                    } label: { Label(PlacementCopy.text("Shared placement reports"), systemImage: "doc.text") }
+                    } label: { Label(PlacementCopy.text("Store order outcomes"), systemImage: "doc.text") }
                     .accessibilityIdentifier("records.sharedPlacementReports")
                     NavigationLink {
                         HistoryRecordsEntryView(household: household)

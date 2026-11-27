@@ -40,7 +40,7 @@ private struct SharedShopContent: View {
                         NavigationLink(StoreQuoteCopy.text("Two entered store quotes")) { SharedStoreQuotesView(household: household) }
                             .accessibilityIdentifier("sharedShop.storeQuotes")
                     }
-                    NavigationLink(PlacementCopy.text("Shared placement reports")) { PlacementRecordsEntryView(household: household) }
+                    NavigationLink(PlacementCopy.text("Store order outcomes")) { PlacementRecordsEntryView(household: household) }
                         .accessibilityIdentifier("sharedShop.placementReports")
                 }
                 delivery

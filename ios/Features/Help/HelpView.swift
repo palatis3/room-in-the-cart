@@ -133,6 +133,8 @@ private struct HelpArticleView: View {
                 }
                 DisclosureGroup(helpText("Requests and permissions")) {
                     paragraph(helpText("A request is received only after the household confirms it. If the response is uncertain, retry the same request. A contributor sees their own request and outcome; household budgets stay private."))
+                    paragraph(helpText("To report a shared message or block its sender, look for Report or block beside the message. For a family request, the assigned shopper can look in Review family requests. Availability depends on your access and the message."))
+                        .accessibilityIdentifier("help.sharedMessageSafety")
                     paragraph(helpText("Only the assigned shopper can commit a shared basket change. Another authorized adult can propose a change for review. A membership seat does not grant shopper authority or budget access."))
                     paragraph(helpText("A current cook view is limited to one shop, selected fields and its expiry. Manage or revoke it through household controls. A dated static message remains a separate copy. Child enrollment requires the configured guardian consent process."))
                 }

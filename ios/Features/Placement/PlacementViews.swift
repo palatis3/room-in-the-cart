@@ -39,7 +39,7 @@ struct PlacementEntryView: View {
             }
         }
         .workingSurface()
-        .navigationTitle(PlacementCopy.text("Shared placement reports"))
+        .navigationTitle(PlacementCopy.text("Store order outcomes"))
         .accessibilityIdentifier("placement.home")
         .task { await model.load() }
         .task {

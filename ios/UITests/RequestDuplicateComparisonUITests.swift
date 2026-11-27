@@ -22,6 +22,7 @@ import XCTest
         let own = app.buttons["household.request.a4444444-4444-4444-8444-444444444442"]
         reveal(sam)
         XCTAssertEqual(app.buttons.matching(identifier: "safety.open").count, 1)
+        XCTAssertEqual(app.buttons["safety.open"].label, "Report or block")
         tap(app.buttons["safety.open"])
         let send = app.buttons["safety.confirm"]
         XCTAssertFalse(send.isEnabled)

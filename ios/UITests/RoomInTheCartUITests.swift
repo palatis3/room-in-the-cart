@@ -864,6 +864,9 @@ final class RoomInTheCartUITests: XCTestCase {
         permissions.tap()
         reveal(rule)
         screenshot("Spanish Help expanded household permissions")
+        let safety = app.staticTexts["help.sharedMessageSafety"]
+        reveal(safety)
+        XCTAssertTrue(safety.label.contains("Reportar o bloquear") && safety.label.contains("Revisar solicitudes de la familia"))
     }
 
     func testEmptyShopToolsRevealFamilySharingAndReturnToPrivateDraft() {

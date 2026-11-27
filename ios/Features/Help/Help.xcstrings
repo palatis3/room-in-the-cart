@@ -1,6 +1,23 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "To report a shared message or block its sender, look for Report or block beside the message. For a family request, the assigned shopper can look in Review family requests. Availability depends on your access and the message.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To report a shared message or block its sender, look for Report or block beside the message. For a family request, the assigned shopper can look in Review family requests. Availability depends on your access and the message."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para reportar un mensaje compartido o bloquear a quien lo envió, busca Reportar o bloquear junto al mensaje. Si se trata de una solicitud, quien se encarga de la compra puede abrir Revisar solicitudes de la familia. La opción depende del acceso de la persona y del mensaje."
+          }
+        }
+      }
+    },
     "Saving a draft during line review keeps all recognized receipt text, including unselected lines, in protected storage on this iPhone. Saving at put-away keeps your selected details and choices. Finish or discard the draft to remove it. To view the original photo or PDF again, select it from its source.": {
       "localizations": {
         "en": {

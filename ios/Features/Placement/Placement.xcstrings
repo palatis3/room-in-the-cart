@@ -1329,18 +1329,18 @@
         }
       }
     },
-    "Shared order reports are unavailable on this iPhone.": {
+    "Store order outcomes are unavailable on this iPhone.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Shared order reports are unavailable on this iPhone."
+            "value": "Store order outcomes are unavailable on this iPhone."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Los reportes de pedidos compartidos no están disponibles en este iPhone."
+            "value": "Los resultados de los pedidos en la tienda no están disponibles en este iPhone."
           }
         }
       }
@@ -1889,18 +1889,18 @@
         }
       }
     },
-    "Shared placement reports": {
+    "Store order outcomes": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Shared placement reports"
+            "value": "Store order outcomes"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reportes de pedidos compartidos"
+            "value": "Resultados de los pedidos en la tienda"
           }
         }
       }
