@@ -15,9 +15,10 @@ struct DinnerShoppingCheckLink: View {
     }
 }
 
-private struct DinnerShoppingCheckView: View {
+struct DinnerShoppingCheckView: View {
     let shopID: UUID
     let occurrenceID: UUID
+    var returnToPlan: (() -> Void)? = nil
     @EnvironmentObject private var ledger: LedgerModel
     @EnvironmentObject private var pickup: PickupModel
     @EnvironmentObject private var access: WorkspaceAccess
@@ -44,6 +45,48 @@ private struct DinnerShoppingCheckView: View {
         return Origin(identity: identity, ledger: id, accessGeneration: access.generation, pantryGeneration: pickup.privatePantryGeneration)
     }
     var body: some View {
+        Group {
+            if let returnToPlan {
+                if let source = amountCorrection {
+                    correctionEditor(source, onFinish: { amountCorrection = nil })
+                } else {
+                    allocationForm.toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button(dinnerText("Back to planned dinner"), action: returnToPlan)
+                                .accessibilityIdentifier("dinner.allocation.backToPlan")
+                        }
+                    }
+                }
+            } else {
+                allocationForm.sheet(item: $amountCorrection) { source in
+                    NavigationStack { correctionEditor(source) }
+                }
+            }
+        }
+            .onChange(of: origin) { _, _ in
+                amountCorrection = nil
+                needsAmounts = false
+            }
+            .task(id: origin) {
+                refreshed = nil
+                guard let current = origin else { return }
+                if admitted == nil { admitted = current }
+                guard admitted == current, pickup.pantryIsActive, pickup.pantryRouteAvailable,
+                      !pickup.saving, !pickup.hasPendingSave, !ledger.saving, !ledger.hasPendingSave else { return }
+                if await pickup.refreshPantryStock(), !Task.isCancelled, origin == current { refreshed = current }
+            }
+    }
+
+    @ViewBuilder private func correctionEditor(_ source: LedgerContribution, onFinish: (() -> Void)? = nil) -> some View {
+        if let admitted, admitted == origin {
+            LedgerContributionEditor(model: ledger, shopID: shopID, contribution: source,
+                                     authorize: { permitsCorrection(source, in: admitted) }, onFinish: onFinish)
+        } else {
+            Text(currentDinnerText("Current dinners could not be verified. Reopen the same pickup and review its saved changes."))
+        }
+    }
+
+    private var allocationForm: some View {
         WorkingForm {
             if let admitted, admitted == origin, let shop = ledger.shop,
                !ledger.saving, !ledger.hasPendingSave, pickup.ready, !pickup.saving, !pickup.hasPendingSave,
@@ -76,30 +119,6 @@ private struct DinnerShoppingCheckView: View {
             }
         }.navigationTitle(dinnerText("Check what to buy")).navigationBarTitleDisplayMode(.inline)
             .privacySensitive()
-            // A successful correction removes its own missing-amount row. Present
-            // from the dinner review itself so that row cannot dismiss the editor.
-            .sheet(item: $amountCorrection) { source in
-                NavigationStack {
-                    if let admitted, admitted == origin {
-                        LedgerContributionEditor(model: ledger, shopID: shopID, contribution: source,
-                            authorize: { permitsCorrection(source, in: admitted) })
-                    } else {
-                        Text(currentDinnerText("Current dinners could not be verified. Reopen the same pickup and review its saved changes."))
-                    }
-                }
-            }
-            .onChange(of: origin) { _, _ in
-                amountCorrection = nil
-                needsAmounts = false
-            }
-            .task(id: origin) {
-                refreshed = nil
-                guard let current = origin else { return }
-                if admitted == nil { admitted = current }
-                guard admitted == current, pickup.pantryIsActive, pickup.pantryRouteAvailable,
-                      !pickup.saving, !pickup.hasPendingSave, !ledger.saving, !ledger.hasPendingSave else { return }
-                if await pickup.refreshPantryStock(), !Task.isCancelled, origin == current { refreshed = current }
-            }
     }
 
     private func permitsCorrection(_ source: LedgerContribution, in scope: Origin) -> Bool {

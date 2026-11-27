@@ -34,6 +34,7 @@ struct TonightRecipeReview: View {
     @State private var candidate: MealTemplate?
     @State private var editingReviewedField: String?
     @State private var savedRecipe: MealTemplate?
+    @State private var savedDinnerDestination: SavedDinnerHandoffLink.Destination?
     @State private var showRestrictions = false
     @AccessibilityFocusState private var savedHeadingFocused: Bool
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -100,6 +101,11 @@ struct TonightRecipeReview: View {
 
     var body: some View {
         ScrollViewReader { scroll in form(scroll) }
+            .sheet(item: $savedDinnerDestination) { destination in
+                if authorized, let savedRecipe {
+                    SavedDinnerHandoffLink.screen(savedRecipe, destination)
+                }
+            }
     }
 
     private func form(_ scroll: ScrollViewProxy) -> some View {
@@ -116,7 +122,7 @@ struct TonightRecipeReview: View {
                                 .id("savedHeading")
                             Text(verbatim: savedRecipe.title).font(.system(.title, design: .serif, weight: .bold))
                             fact(ledgerText("Servings"), amountText(savedRecipe.servings))
-                            SavedDinnerHandoffLink(recipe: savedRecipe)
+                            SavedDinnerHandoffLink.actions { savedDinnerDestination = $0 }
                             Button(ledgerText("Done")) { dismiss() }.accessibilityIdentifier("tonight.recipe.done")
                         }
                         .onAppear {

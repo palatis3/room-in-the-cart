@@ -107,19 +107,27 @@ import CoreDomain
 
 struct SavedDinnerHandoffLink: View {
     let recipe: MealTemplate
-    private enum Destination: Int, Identifiable { case plan, groceries; var id: Int { rawValue } }
+    enum Destination: Int, Identifiable { case plan, groceries; var id: Int { rawValue } }
     @State private var destination: Destination?
+
     var body: some View {
+        Self.actions { destination = $0 }
+            .sheet(item: $destination) { Self.screen(recipe, $0) }
+    }
+
+    static func actions(select: @escaping (Destination) -> Void) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Button(dinnerText("Plan this dinner")) { destination = .plan }
+            Button(dinnerText("Plan this dinner")) { select(.plan) }
                 .buttonStyle(PrimaryAction()).accessibilityIdentifier("dinner.planSaved")
-            Button { destination = .groceries } label: {
+            Button { select(.groceries) } label: {
                 Label(dinnerText("Shop for ingredients only"), systemImage: "checklist")
                     .frame(minHeight: 44, alignment: .leading)
             }.buttonStyle(.borderless).accessibilityIdentifier("dinner.shopSaved")
-        }.sheet(item: $destination) { destination in
-            NavigationStack { SavedDinnerHandoffView(recipe: recipe, selectingGroceries: destination == .groceries) }
         }
+    }
+
+    static func screen(_ recipe: MealTemplate, _ destination: Destination) -> some View {
+        NavigationStack { SavedDinnerHandoffView(recipe: recipe, selectingGroceries: destination == .groceries) }
     }
 }
 
@@ -149,6 +157,11 @@ struct SavedDinnerHandoffView: View {
     @State private var editingPlan = false
     @State private var choosingProducts = false
     @State private var productChoice: SavedDinnerProductChoice?
+    private struct AllocationTarget {
+        let shopID: UUID
+        let occurrenceID: UUID
+    }
+    @State private var allocationTarget: AllocationTarget?
     @State private var review: SavedDinnerReview?
     @State private var error: String?
     @State private var busy = false
@@ -175,6 +188,20 @@ struct SavedDinnerHandoffView: View {
             roleRevision: 0, verifiedAt: now, validUntil: now.addingTimeInterval(30))
     }
     var body: some View {
+        if let target = allocationTarget {
+            if authorized, target.shopID == destinationID, ledger.shop?.id == target.shopID {
+                DinnerShoppingCheckView(shopID: target.shopID, occurrenceID: target.occurrenceID,
+                                        returnToPlan: { allocationTarget = nil })
+            } else {
+                Text(dinnerText("The pickup or dinner plan changed. Make a new preview before applying."))
+                    .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Done")) { dismiss() } } }
+            }
+        } else {
+            planForm
+        }
+    }
+
+    private var planForm: some View {
         WorkingForm {
             if !authorized || destinationID != ledger.workspace.selectedShopID {
                 Text(dinnerText("The pickup or dinner plan changed. Make a new preview before applying."))
@@ -206,8 +233,11 @@ struct SavedDinnerHandoffView: View {
                         }.accessibilityIdentifier("dinner.handoff.openPlan")
                     }
                     if let occurrenceID = review.occurrenceID, review.shopID == destinationID {
-                        DinnerShoppingCheckLink(shopID: review.shopID, occurrenceID: occurrenceID,
-                                                linkedProducts: review.pantryProducts != nil)
+                        Button {
+                            allocationTarget = AllocationTarget(shopID: review.shopID, occurrenceID: occurrenceID)
+                        } label: {
+                            Label(dinnerText(review.pantryProducts != nil ? "Review pantry purchases" : "Check what to buy"), systemImage: "checklist")
+                        }.accessibilityIdentifier("dinner.checkShopping")
                     }
                     NavigationLink(ledgerText("Shopping list")) {
                         LedgerHomeView(model: ledger).navigationTitle(ledgerText("Shopping list")).navigationBarTitleDisplayMode(.inline)

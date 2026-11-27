@@ -1,6 +1,22 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Back to planned dinner": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back to planned dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a la cena planeada"
+          }
+        }
+      }
+    },
     "The missing grocery amounts have been entered. Review shopping allocations again.": {
       "extractionState": "manual",
       "localizations": {
