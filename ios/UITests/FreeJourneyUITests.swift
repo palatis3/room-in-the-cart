@@ -1,4 +1,5 @@
 import UIKit
+import Vision
 import XCTest
 
 /// Shopper journeys use the isolated Debug workspace. Pickup recovery cases seed a placed order.
@@ -2254,7 +2255,7 @@ import XCTest
         checkReceiptSwitch("I checked the purchase date.")
     }
 
-    func testLargestTypeReceiptActionShowsNameAndSelectedTreatmentAtFullWidth() {
+    func testLargestTypeReceiptActionShowsNameAndSelectedTreatmentAtFullWidth() throws {
         openMixedTypedReceipt("Oats 3 count USD 4.20", contentSize: .accessibilityExtraExtraExtraLarge)
         let action = app.buttons["receipt.action.0"]
         reveal(action)
@@ -2267,10 +2268,29 @@ import XCTest
         XCTAssertEqual(action.value as? String, "Put this food away")
         XCTAssertGreaterThanOrEqual(action.frame.width, app.frame.width - 80)
         XCTAssertGreaterThanOrEqual(action.frame.height, 44)
-        // On the 375-point SE the former side-by-side row measured 271.5 points
-        // and split “Receipt” and “away” between lines.
-        XCTAssertLessThan(action.frame.height, 260)
-        capture("AX5 receipt action with the selected treatment")
+        // Verify the visible words that used to break apart. Dynamic Type can
+        // legitimately use more lines on another OS or with a different font.
+        let content = scrollableArea()
+        for _ in 0..<5 {
+            let frame = action.frame
+            if frame.minY >= content.minY && frame.maxY <= content.maxY { break }
+            let offset = frame.midY - content.midY
+            scrollContent(upward: offset > 0, area: content, positioningDistance: abs(offset))
+        }
+        let screenshot = action.screenshot()
+        let attachment = XCTAttachment(screenshot: screenshot)
+        attachment.name = "AX5 receipt action with the selected treatment"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        let request = VNRecognizeTextRequest()
+        request.recognitionLanguages = ["en-US"]
+        request.usesLanguageCorrection = false
+        try VNImageRequestHandler(cgImage: try XCTUnwrap(screenshot.image.cgImage)).perform([request])
+        let words = (request.results ?? []).compactMap { $0.topCandidates(1).first?.string }
+            .joined(separator: " ").lowercased().split(whereSeparator: { !$0.isLetter })
+        for word in ["receipt", "line", "action", "put", "this", "food", "away"] {
+            XCTAssertTrue(words.contains(Substring(word)), "Missing complete visible word: \(word). Read: \(words)")
+        }
         receiptTap(action)
         receiptTap(app.buttons["Ate this"])
         XCTAssertEqual(action.value as? String, "Ate this")

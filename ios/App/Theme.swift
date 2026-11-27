@@ -227,6 +227,7 @@ func journalStackedMenu<Content: View>(_ title: String, value: String, id: Strin
                     .foregroundStyle(Theme.action).accessibilityHidden(true)
             }
         }
+        .multilineTextAlignment(.leading)
         .fixedSize(horizontal: false, vertical: true)
         .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
         .contentShape(Rectangle())
