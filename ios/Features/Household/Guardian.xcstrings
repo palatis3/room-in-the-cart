@@ -337,18 +337,18 @@
         }
       }
     },
-    "Opening child space locks the private workspace on this iPhone. To return, choose “Leave child space”, confirm sign-out, then unlock the workspace.": {
+    "Opening child space locks your private workspace, even if child sign-in is unavailable. To return, leave child space, confirm sign-out, and use Face ID, Touch ID or this iPhone’s passcode.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Opening child space locks the private workspace on this iPhone. To return, choose “Leave child space”, confirm sign-out, then unlock the workspace."
+            "value": "Opening child space locks your private workspace, even if child sign-in is unavailable. To return, leave child space, confirm sign-out, and use Face ID, Touch ID or this iPhone’s passcode."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abrir el espacio del menor bloquea el espacio privado en este iPhone. Para volver, elige «Salir del espacio del menor», confirma el cierre de sesión y desbloquea el espacio privado."
+            "value": "Abrir el espacio del menor bloquea tu espacio privado, aunque el inicio de sesión para menores no esté disponible. Para volver, sal del espacio del menor, confirma el cierre de sesión y usa Face ID, Touch ID o el código de este iPhone."
           }
         }
       }

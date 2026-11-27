@@ -321,6 +321,10 @@ import XCTest
         launch("--guardian-fixture-root",rootSynthetic:synthetic)
         XCTAssertEqual(app.tabBars.count,0)
         app.buttons["Household requests"].tap()
+        let boundary = app.staticTexts["guardian.childEntryBoundary"]
+        XCTAssertTrue(boundary.waitForExistence(timeout: 8))
+        XCTAssertTrue(boundary.label.contains("even if child sign-in is unavailable"))
+        XCTAssertTrue(boundary.label.contains("iPhone’s passcode"))
         tap("household.childInvitation")
         var leave=element("guardian.leaveChildSpace")
         XCTAssertTrue(leave.waitForExistence(timeout:10))
