@@ -102,14 +102,23 @@ final class PrivateReceiptDraftSession: ObservableObject {
         }
     }
 
-    func resume(_ saved: SavedReceiptDraft) -> Bool {
-        guard ready, !busy, self.saved?.revision == saved.revision else { return false }
+    func resume(revision: UUID, model: PantryModel) async -> SavedReceiptDraft? {
+        guard ready, !busy, saved?.revision == revision, model.permitsPrivateReceiptDraft else { return nil }
+        let token = epoch, generation = model.generation
+        await load(model)
+        guard token == epoch, generation == model.generation, model.permitsPrivateReceiptDraft, ready else { return nil }
+        guard let saved, saved.revision == revision else {
+            problem = pantryText(saved == nil
+                ? "This saved draft is no longer available."
+                : "The saved draft changed. Check the updated details and choose Resume again.")
+            return nil
+        }
         lastWritten = saved.payload
         switch saved.payload {
         case .lines(let value): activeReceiptID = value.receiptID
         case .putaway(let value): activeReceiptID = value.draftID
         }
-        return true
+        return saved
     }
 
     func activeRevision(for id: UUID) -> UUID? { activeReceiptID == id ? saved?.revision : nil }

@@ -1,6 +1,40 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "This saved draft is no longer available.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This saved draft is no longer available."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este borrador guardado ya no está disponible."
+          }
+        }
+      }
+    },
+    "The saved draft changed. Check the updated details and choose Resume again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The saved draft changed. Check the updated details and choose Resume again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El borrador guardado cambió. Revisa los detalles actualizados y vuelve a elegir Retomar."
+          }
+        }
+      }
+    },
     "For a receipt in another currency, leave prices blank. You can still put the food away.": {
       "extractionState": "manual",
       "localizations": {

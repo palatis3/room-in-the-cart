@@ -91,6 +91,49 @@ import XCTest
         XCTAssertThrowsError(try files.replace(.putaway(draft), expected: replacement.revision, scope: scope))
     }
 
+    func testResumeOnlyOpensTheChosenCurrentReceiptDraft() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let cleanup = SQLiteFixtureDirectory(root, test: self)
+        let inventory = try ComparisonStore(url: root.appendingPathComponent("shop.sqlite"), inventoryEnabled: true)
+        cleanup.track(inventory)
+        let token = try await inventory.inventorySourceToken()
+        _ = try await inventory.commitInventory(.init(workspaceID: inventory.workspaceID, operationID: UUID(),
+            expectedRevision: 0, request: Data([1]), mode: .activate, sourceToken: token), at: now)
+        let owner = UUID()
+        let repo = PantryRepository(store: inventory, mutationGate: PantryMutationGate(), aliasPersonaID: owner,
+                                    receiptDraftStore: ProtectedReceiptDraftStore(directory: root.appendingPathComponent("Drafts")),
+                                    receiptDraftOwner: owner, authorize: { true })
+        cleanup.track(repo)
+        let model = PantryModel(repository: repo)
+        await model.load()
+        XCTAssertTrue(model.permitsPrivateReceiptDraft)
+        let session = PrivateReceiptDraftSession()
+        let draft = try receipt(store: inventory, lines: ["Bread"])
+        let first = try await repo.saveReceiptDraft(.putaway(draft), replacing: nil)
+        await session.load(model)
+
+        var changed = draft
+        changed.merchant = "Second store"
+        let second = try await repo.saveReceiptDraft(.putaway(changed), replacing: first.revision)
+        let stale = await session.resume(revision: first.revision, model: model)
+        XCTAssertNil(stale)
+        XCTAssertNil(session.activeReceiptID)
+        XCTAssertEqual(session.saved?.revision, second.revision)
+        XCTAssertNotNil(session.problem)
+        let current = await session.resume(revision: second.revision, model: model)
+        guard case .putaway(let opened)? = current?.payload else { return XCTFail("Expected the explicitly reselected draft") }
+        XCTAssertEqual(opened.merchant, "Second store")
+        XCTAssertEqual(session.activeReceiptID, draft.draftID)
+
+        try await repo.discardReceiptDraft(revision: second.revision)
+        let removed = await session.resume(revision: second.revision, model: model)
+        XCTAssertNil(removed)
+        XCTAssertNil(session.saved)
+        XCTAssertNil(session.activeReceiptID)
+        XCTAssertNotNil(session.problem)
+    }
+
     func testProtectedReceiptDraftPreservesAlternativesFromFourPrintedColumns() throws {
         typealias Line = ReceiptDocumentPage.Line
         let observations = [("Oats", ["Oat", "Cats"]), ("2", ["1", "3"]),
