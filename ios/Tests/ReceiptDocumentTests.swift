@@ -189,6 +189,92 @@ import XCTest
         XCTAssertEqual(draft.lines.last?.printed?.kind, .adjustment)
     }
 
+    func testReceiptColumnsPreservePrintedRowsIdentityAndUnconfirmedAmounts() throws {
+        typealias Line = ReceiptDocumentPage.Line
+        func cell(_ id: Int, _ text: String, _ x: CGFloat, _ y: CGFloat, _ width: CGFloat, uncertain: Bool = false) -> Line {
+            .init(id: id, text: text, uncertain: uncertain, bounds: CGRect(x: x, y: y, width: width, height: 0.028))
+        }
+        let item = cell(4, "Tortillas de maíz", 0.05, 0.78, 0.36)
+        var rate = cell(5, "2 х 20.00", 0.54, 0.78, 0.16)
+        rate.wordReadings = [.init(word: "20.00", replacement: "20.08", wording: "2 х 20.08",
+                                   wordIndex: 2, bounds: rate.bounds)]
+        let lines = [item, rate, cell(6, "40.00", 0.85, 0.78, 0.10),
+                     cell(7, "Queso fresco", 0.05, 0.71, 0.32), cell(8, "1 x 45.00", 0.54, 0.71, 0.16),
+                     cell(9, "45.00", 0.85, 0.71, 0.10),
+                     cell(10, "1 х 55.00", 0.54, 0.64, 0.16), cell(11, "Torta de jamón", 0.05, 0.64, 0.32),
+                     cell(12, "55.00", 0.85, 0.64, 0.10),
+                     cell(13, "Bolsa", 0.05, 0.57, 0.14), cell(14, "1x2.00 2.00", 0.54, 0.57, 0.40, uncertain: true),
+                     cell(15, "Whole wheat bread", 0.05, 0.50, 0.35), cell(16, "2 × $2.00", 0.54, 0.50, 0.17),
+                     cell(17, "$4.00", 0.85, 0.50, 0.10)]
+        let grouped = ExtractedReceiptDocument.groupingQuantityPriceColumns(lines)
+        XCTAssertEqual(grouped.map(\.id), [4, 7, 11, 13, 15])
+        XCTAssertEqual(grouped.map(\.text), ["Tortillas de maíz 2 х 20.00 40.00", "Queso fresco 1 x 45.00 45.00",
+            "Torta de jamón 1 х 55.00 55.00", "Bolsa 1x2.00 2.00", "Whole wheat bread 2 × $2.00 $4.00"])
+        XCTAssertTrue(grouped[3].uncertain)
+        XCTAssertEqual(grouped[0].wordReadings.first?.wording, "Tortillas de maíz 2 х 20.08 40.00")
+        XCTAssertEqual(grouped[0].wordReadings.first?.wordIndex, 5)
+        XCTAssertEqual(grouped[0].wordReadings.first?.bounds, rate.bounds)
+        let document = ExtractedReceiptDocument(digest: Data(repeating: 4, count: 32), pages: [.init(id: 1, method: .imageOCR, lines: grouped)])
+        let target = CaptureTarget(workspaceID: UUID(), containerID: UUID(), objectID: UUID(), revision: 1, kind: .receiptEvidence)
+        let source = try document.source(target: target, merchant: "Mercado Prueba", stage: .receipt,
+                                         selection: [.init(page: 1, line: 4)], at: Date())
+        let draft = try ReceiptImportDraft(source: source)
+        XCTAssertEqual(source.receiptLines.first?.originalText, grouped[0].text)
+        XCTAssertEqual(source.receiptLines.first?.documentLine?.ordinal, 3)
+        XCTAssertEqual(draft.lines.first?.name, "Tortillas de maíz")
+        XCTAssertNil(draft.lines.first?.printed?.quantity)
+        XCTAssertNil(draft.lines.first?.printed?.amount)
+        XCTAssertEqual(draft.lines.first?.paid, "")
+        XCTAssertTrue(draft.selectedLines.isEmpty)
+    }
+
+    func testReceiptColumnsRejectCouponsAmbiguousNeighborsAndOtherBaselines() {
+        typealias Line = ReceiptDocumentPage.Line
+        func cell(_ id: Int, _ text: String, _ x: CGFloat, _ y: CGFloat) -> Line {
+            .init(id: id, text: text, bounds: CGRect(x: x, y: y, width: 0.18, height: 0.04))
+        }
+        let beans = cell(1, "Beans", 0.04, 0.70)
+        let rate = cell(2, "2 x 1.00", 0.37, 0.70)
+        let total = cell(3, "2.00", 0.78, 0.70)
+        let adverse: [[Line]] = [
+            [cell(1, "Cupón", 0.04, 0.70), rate, total], [cell(1, "Coupon", 0.04, 0.70), rate, total],
+            [cell(1, "TOTAL", 0.04, 0.70), rate, total], [cell(1, "Void beans", 0.04, 0.70), rate, total],
+            [beans, rate, cell(3, "-2.00", 0.78, 0.70)], [beans, cell(2, "3 kg", 0.37, 0.70), total],
+            [beans, cell(2, "2 x 1.00", 0.37, 0.65), total], [beans, rate, cell(3, "2.00", 0.78, 0.65)],
+            [beans, rate, cell(4, "Oats", 0.57, 0.70), total], [beans, rate, total, cell(4, "Tea", 0.05, 0.675)],
+            [beans, cell(2, "2 x 1.00", 0.15, 0.70), total],
+            [beans, Line(id: 2, text: "2 x 1.00"), total], [beans, total]
+        ]
+        for input in adverse {
+            XCTAssertEqual(ExtractedReceiptDocument.groupingQuantityPriceColumns(input).map(\.text), input.map(\.text))
+        }
+    }
+
+    func testMercadoPhotoKeepsThePrintedQuantityRateAndTotalOnTheItem() async throws {
+        let size = CGSize(width: 1050, height: 1400)
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let image = UIGraphicsImageRenderer(size: size, format: format).image { _ in
+            UIColor.white.setFill()
+            UIRectFill(CGRect(origin: .zero, size: size))
+            let rows = ["MERCADO PRUEBA", "Ticket 7021", "26/11/2026  13:15", "",
+                        "Tortillas de maíz  2 x 20.00   40.00", "Queso fresco        1 x 45.00   45.00",
+                        "Torta de jamón      1 x 55.00   55.00", "Bolsa               1 x  2.00    2.00",
+                        "", "TOTAL MXN                     142.00"]
+            for (index, row) in rows.enumerated() {
+                let font = UIFont.monospacedSystemFont(ofSize: index == 0 ? 47 : 38, weight: index == 0 ? .bold : .regular)
+                (row as NSString).draw(at: CGPoint(x: 60, y: 150 + 80 * index), withAttributes: [.font: font, .foregroundColor: UIColor.black])
+            }
+        }
+        let document = try await ReceiptDocumentReader().extract(.init(data: XCTUnwrap(image.pngData()), kind: .image))
+        let rows = try XCTUnwrap(document.pages.first).lines.map(\.text)
+        for (name, rate, total) in [("Tortillas", "20.00", "40.00"), ("Queso", "45.00", "45.00"), ("Torta", "55.00", "55.00")] {
+            let item = try XCTUnwrap(rows.first { $0.localizedCaseInsensitiveContains(name) }, rows.joined(separator: " | "))
+            XCTAssertTrue(item.contains(rate) && item.hasSuffix(total), item)
+            XCTAssertEqual(item.components(separatedBy: rate).count - 1, rate == total ? 2 : 1, item)
+        }
+    }
+
     func testGardenMarketOCRLinksOnlyMatchingPrintedRowsAndLeavesReceiptUnconfirmed() async throws {
         // The audit receipt separates the item and amount into distant printed columns.
         let size = CGSize(width: 760, height: 560)

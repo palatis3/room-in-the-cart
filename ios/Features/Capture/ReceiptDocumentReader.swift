@@ -201,6 +201,50 @@ struct ExtractedReceiptDocument: Sendable {
             && abs(first.midY - second.midY) <= minHeight * 0.35
     }
 
+    /// Group only an unambiguous item / quantity × unit price / line total.
+    /// Keep the original item position so subsequent receipt lines retain their IDs.
+    static func groupingQuantityPriceColumns(_ lines: [ReceiptDocumentPage.Line]) -> [ReceiptDocumentPage.Line] {
+        guard lines.count >= 2, lines.allSatisfy({ $0.bounds?.isEmpty == false }) else { return lines }
+        var replacements: [Int: ReceiptDocumentPage.Line] = [:]
+        var absorbed = Set<Int>()
+        for item in lines {
+            guard let box = item.bounds, item.text.first?.isLetter == true else { continue }
+            let neighbors = lines.filter { line in
+                guard let other = line.bounds else { return false }
+                // Also inspect partial overlaps: a second offset column or a row
+                // between baselines makes reconstruction ambiguous.
+                return min(box.maxY, other.maxY) - max(box.minY, other.minY) > min(box.height, other.height) * 0.20
+            }.sorted { ($0.bounds?.minX ?? 0) < ($1.bounds?.minX ?? 0) }
+            guard (2...4).contains(neighbors.count), neighbors.first?.id == item.id,
+                  neighbors.allSatisfy({ $0.bounds.map { samePrintedRow(box, $0) } == true }),
+                  zip(neighbors, neighbors.dropFirst()).allSatisfy({ left, right in
+                      guard let lhs = left.bounds, let rhs = right.bounds else { return false }
+                      return lhs.maxX <= rhs.minX && samePrintedRow(lhs, rhs)
+                  }) else { continue }
+            let parts = neighbors.map(\.text)
+            let wording = parts.joined(separator: " ")
+            guard wording.utf8.count <= 2048,
+                  ReceiptPrintedEvidence.itemBeforeQuantityPriceColumns(wording) == item.text else { continue }
+            let combinedBounds = neighbors.compactMap(\.bounds).reduce(CGRect.null) { $0.union($1) }
+            var choices: [ReceiptWordReading] = []
+            var wordOffset = 0
+            for (index, column) in neighbors.enumerated() {
+                for choice in column.wordReadings {
+                    var corrected = parts
+                    corrected[index] = choice.wording
+                    choices.append(.init(word: choice.word, replacement: choice.replacement,
+                                         wording: corrected.joined(separator: " "), wordIndex: wordOffset + choice.wordIndex,
+                                         bounds: choice.bounds))
+                }
+                wordOffset += column.text.split(whereSeparator: \.isWhitespace).count
+            }
+            replacements[item.id] = .init(id: item.id, text: wording, uncertain: neighbors.contains(where: \.uncertain),
+                                          bounds: combinedBounds, wordReadings: choices)
+            absorbed.formUnion(neighbors.dropFirst().map(\.id))
+        }
+        return lines.compactMap { absorbed.contains($0.id) ? nil : replacements[$0.id] ?? $0 }
+    }
+
     func source(target: CaptureTarget, merchant: String, stage: ReceiptAcquisition.DocumentLine.Stage,
                 selection: Set<Selection>, linkedAmountItems: Set<Selection> = [], reviewedWording: [Selection: String] = [:], at date: Date) throws -> SourceMediaRecord {
         var associations: [Selection: Selection] = [:]
@@ -316,6 +360,9 @@ struct ReceiptDocumentReader: Sendable {
                 let bounds = reading.bounds.indices.contains(index) ? reading.bounds[index] : nil
                 lines.append(.init(id: index + 1, text: String(row), uncertain: reading.uncertain.contains(String(row)), bounds: bounds,
                                    wordReadings: reading.wordReadings.indices.contains(index) ? reading.wordReadings[index] : []))
+            }
+            if method == .imageOCR || method == .pdfOCR {
+                lines = ExtractedReceiptDocument.groupingQuantityPriceColumns(lines)
             }
             return .init(id: number, method: method, lines: lines)
         }

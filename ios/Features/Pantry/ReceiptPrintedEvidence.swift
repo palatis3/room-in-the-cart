@@ -112,6 +112,20 @@ struct ReceiptPrintedEvidence: Equatable {
             && !wording.contains(#/(?i)\b(?:unusable|inservibles?|falt[oó]|no lleg[oó]|sin recibir|prepared|preparad[oa]s?|hot lunch|almuerzo caliente|a medio comer)\b/#)
     }
 
+    // A count × price and a final amount may be printed as separate OCR columns.
+    // Preserve that wording, including a Cyrillic х read by Vision. Column layout
+    // alone does not establish the amount received, a currency or a paid price.
+    private static let quantityPriceColumns = #/(?i)^(.+?)\s+([1-9][0-9]{0,3})\s*[x×х]\s*(?:[$£€]\s*)?[0-9]{1,7}[.,][0-9]{2}\s+(?:[$£€]\s*)?[0-9]{1,7}[.,][0-9]{2}$/#
+
+    static func itemBeforeQuantityPriceColumns(_ text: String) -> String? {
+        guard let match = text.wholeMatch(of: quantityPriceColumns) else { return nil }
+        let name = String(match.1)
+        guard name.contains(where: \.isLetter),
+              name.allSatisfy({ $0.isLetter || $0.isWhitespace || "-'’".contains($0) }),
+              !name.contains(nonItem), !name.contains(mixed), !isVoidedOrUnreceived(name) else { return nil }
+        return name
+    }
+
     static func canSuggestAmount(for wording: String) -> Bool {
         guard !wording.contains(nonItem), !wording.contains(rateByUnit), !wording.contains(mixed),
               !wording.contains(signedValue), !wording.contains(otherNumbers) else { return false }
@@ -134,6 +148,11 @@ struct ReceiptPrintedEvidence: Equatable {
         guard !text.isEmpty, text.count <= 512, text.contains(where: \.isLetter),
               !text.contains("?"), !text.contains("�"), row.uncertainOCR != true else { kind = .unclear; uncertain = true; return }
         kind = .item
+        if let item = Self.itemBeforeQuantityPriceColumns(text) {
+            name = item
+            uncertain = true
+            return
+        }
         guard !text.contains(Self.mixed), !text.contains(Self.signedValue) else { uncertain = true; return }
         var candidate = text
         Self.removeUnitPrice(from: &candidate)
