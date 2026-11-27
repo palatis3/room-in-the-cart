@@ -170,7 +170,8 @@ import XCTest
         XCTAssertTrue(closed.label.contains("no hubieras confirmado"), closed.label)
         XCTAssertFalse(element("pantry.voiceSummary.0").exists)
         XCTAssertFalse(app.buttons["pantry.voiceConfirm"].exists)
-        let returnButton = app.buttons["pantry.use.returnToShelf"]
+        let returnButton = app.buttons["pantry.use.backToItem"]
+        XCTAssertEqual(returnButton.label, "Volver al alimento de la despensa")
         XCTAssertTrue(returnButton.isHittable)
         let bar = app.navigationBars["Registrar uso"]
         XCTAssertTrue(bar.exists)
@@ -178,6 +179,16 @@ import XCTest
         XCTAssertGreaterThanOrEqual(returnButton.frame.height, 44)
         returnButton.tap()
         XCTAssertTrue(closed.waitForNonExistence(timeout: 8))
+        let guidance = element("pantry.lot.returnGuidance")
+        XCTAssertTrue(guidance.waitForExistence(timeout: 8))
+        XCTAssertTrue(guidance.label.contains("Atrás"))
+        let itemBar = app.navigationBars["Alimento de la despensa"]
+        let back = itemBar.buttons.element(boundBy: 0)
+        XCTAssertTrue(back.isHittable)
+        back.tap()
+        XCTAssertTrue(guidance.waitForNonExistence(timeout: 8))
+        let tabs = app.tabBars.firstMatch
+        XCTAssertTrue(tabs.buttons["Despensa"].wait(for: \.isHittable, toEqual: true, timeout: 8))
         XCTAssertTrue(app.buttons["pantry.add"].wait(for: \.isHittable, toEqual: true, timeout: 10))
         assertLot(batch, contains: "2 unidades")
         tap(app.buttons[batch])
@@ -186,6 +197,11 @@ import XCTest
         XCTAssertTrue(count.waitForExistence(timeout: 8))
         XCTAssertTrue(count.label.contains("0") || (count.value as? String)?.contains("0") == true)
         XCTAssertFalse(element("pantry.usageEvent.0").exists)
+        tap(tabs.buttons["Compras"])
+        XCTAssertTrue(tabs.buttons["Compras"].isSelected)
+        tap(tabs.buttons["Despensa"])
+        XCTAssertTrue(tabs.buttons["Despensa"].isSelected)
+        XCTAssertTrue(count.waitForExistence(timeout: 8))
     }
 
     func testEnglishLowStockKeepsItsWordingAndOffersRestockingSeparately() {

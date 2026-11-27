@@ -120,6 +120,40 @@
         }
       }
     },
+    "Back to pantry item": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back to pantry item"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver al alimento de la despensa"
+          }
+        }
+      }
+    },
+    "Use Back to return to My Pantry and open the item again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use Back to return to My Pantry and open the item again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usa el botón Atrás para volver a Mi despensa y abrir el alimento de nuevo."
+          }
+        }
+      }
+    },
     "Return to My Pantry": {
       "extractionState": "manual",
       "localizations": {

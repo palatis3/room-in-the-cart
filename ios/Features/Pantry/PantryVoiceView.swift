@@ -90,7 +90,6 @@ struct VoicePantryRow {
     @ObservedObject var household: HouseholdModel
     let origin: UUID
     var startingLot: InventoryLot? = nil
-    var returnFromExpiredLot: (() -> Void)? = nil
     @State private var previouslyOpened = false
     @EnvironmentObject private var access: WorkspaceAccess
     @EnvironmentObject private var pickup: PickupModel
@@ -213,16 +212,15 @@ struct VoicePantryRow {
                 if previouslyOpened {
                     Text(pantryText("This review closed. Any change you hadn’t confirmed was discarded."))
                         .accessibilityIdentifier("pantry.use.interrupted")
-                    if startingLot == nil || returnFromExpiredLot != nil {
-                        Button {
-                            if let returnFromExpiredLot { returnFromExpiredLot() }
-                            else { dismiss() }
-                        } label: {
-                            Text(pantryText("Return to My Pantry"))
-                                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                                .contentShape(Rectangle())
-                        }.accessibilityIdentifier("pantry.use.returnToShelf")
+                    Button {
+                        erase()
+                        dismiss()
+                    } label: {
+                        Text(pantryText(startingLot == nil ? "Return to My Pantry" : "Back to pantry item"))
+                            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                            .contentShape(Rectangle())
                     }
+                    .accessibilityIdentifier(startingLot == nil ? "pantry.use.returnToShelf" : "pantry.use.backToItem")
                 } else {
                     Text(pantryText("Unlock the authorized private workspace to view pantry food."))
                 }

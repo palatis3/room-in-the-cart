@@ -438,7 +438,6 @@ private extension PickupModel {
 
 /// A tab can be selected while the private stores are opening or the pantry is retired.
 struct AdultPantryTab: View {
-    var returnToShelf: (() -> Void)? = nil
     @EnvironmentObject private var pickup: PickupModel
     @EnvironmentObject private var ledger: LedgerModel
     @EnvironmentObject private var access: WorkspaceAccess
@@ -449,7 +448,7 @@ struct AdultPantryTab: View {
     var body: some View {
         Group {
             if pickup.pantryRouteAvailable || voicePrompt?.holdsPresentation() == true {
-                PantrySetupView(pickup: pickup, ledger: ledger, returnToCurrentShelf: returnToShelf)
+                PantrySetupView(pickup: pickup, ledger: ledger)
             } else if pickup.pantryRestartAvailable {
                 WorkingForm { PantryRestartButton(pickup: pickup) }
                     .navigationTitle(quickGroceryText("Pantry"))
