@@ -13,6 +13,33 @@ import XCTest
         capture(testRun?.failureCount ?? 0 > 0 ? "S23-duplicate-comparison-failure" : "S23-duplicate-comparison-completed")
         app.terminate()
     }
+    func testAssignedShopperCanReportThenBlockOnlyTheOtherAuthorsRequest() {
+        launch(language: "en", locale: "en_US")
+        XCTAssertFalse(app.buttons["safety.open"].exists)
+        app.terminate()
+        launch(language: "en", locale: "en_US", extraArguments: ["--s23-shopper-request-safety"])
+        let sam = app.buttons["household.request.a4444444-4444-4444-8444-444444444441"]
+        let own = app.buttons["household.request.a4444444-4444-4444-8444-444444444442"]
+        reveal(sam)
+        XCTAssertEqual(app.buttons.matching(identifier: "safety.open").count, 1)
+        tap(app.buttons["safety.open"])
+        let send = app.buttons["safety.confirm"]
+        XCTAssertFalse(send.isEnabled)
+        tap(element("safety.reason"))
+        tap(element("Another reason"))
+        XCTAssertFalse(element("safety.excerpt").exists)
+        tap(send)
+        XCTAssertTrue(app.staticTexts["Your private report was received."].waitForExistence(timeout: 10))
+        tap(app.buttons["Block sender"])
+        tap(send)
+        XCTAssertTrue(app.staticTexts["Sender blocked."].waitForExistence(timeout: 10))
+        tap(app.buttons["Close"])
+        XCTAssertTrue(sam.waitForNonExistence(timeout: 10))
+        reveal(own)
+        XCTAssertFalse(app.buttons["safety.open"].exists)
+        XCTAssertEqual(element("fixture.s23.commands").label, "Fixture applied decisions: 0")
+    }
+
     func testSameItemReviewsAnUnboundMealAndHandlesOnlyTheSelectedRequest() {
         launch(language:"en",locale:"en_US",meal:true)
         openRequest(element("household.request.a4444444-4444-4444-8444-444444444441"),step:"unbound-meal")

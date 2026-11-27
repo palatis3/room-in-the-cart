@@ -58,6 +58,8 @@ final class S23DuplicateFixtureServer: @unchecked Sendable {
     private var clarifications: [String: String] = [:]
     private var applied: [String] = []
     private var previews = 0
+    private let requestSafety: Bool
+    private var samBlocked = false
     private let pageBoundary: Bool
     private let basketName: String
     private let mealNames: [String]
@@ -67,7 +69,8 @@ final class S23DuplicateFixtureServer: @unchecked Sendable {
     private var activePair: (operation: String, relationship: String)?
     private var supportsPairs: Bool { pairMode != .off && pairMode != .olderServer }
     private let repeatsBasketLine: Bool
-    init(pageBoundary: Bool = false, basketName: String = "Cereal already in the basket", mealNames: [String] = [], repeatsBasketLine: Bool = false, supportsSameItem: Bool = true, pairMode: PairMode = .off) {
+    init(pageBoundary: Bool = false, basketName: String = "Cereal already in the basket", mealNames: [String] = [], repeatsBasketLine: Bool = false, supportsSameItem: Bool = true, pairMode: PairMode = .off, requestSafety: Bool = false) {
+        self.requestSafety = requestSafety
         self.pairMode = pairMode
         self.supportsSameItem = supportsSameItem
         self.repeatsBasketLine = repeatsBasketLine
@@ -99,10 +102,48 @@ final class S23DuplicateFixtureServer: @unchecked Sendable {
         if path == "/auth/v1/verify" { return try json(["access_token":"fixture-access", "refresh_token":"fixture-refresh", "expires_in":3600, "user":["id":"s23-fictional-adult", "email_confirmed_at":"date"]]) }
         if path == "/auth/v1/user" { return try json(["id":"s23-fictional-adult", "email_confirmed_at":"date"]) }
         if path.hasSuffix("/devices") { return try json(["deviceId":"fixture-device", "deviceToken":"fixture-device-token"]) }
+        let hasSafety = requestSafety && request.value(forHTTPHeaderField: "X-Shared-Content-Safety") == "1"
         if path.hasSuffix("/bootstrap") {
-            return try json(["household":["id":Self.householdID, "label":"S23 Fictional Household"], "memberId":Self.memberID, "role":"shopper", "shopId":Self.shopID, "enrolled":true, "queueConsent":false, "capabilities":["shopper_inbox", "request_preview", "shopper_commands"] + (supportsSameItem ? ["request_same_item"] : []) + (supportsPairs ? ["request_pair_review"] : [])])
+            var capabilities = ["shopper_inbox", "request_preview", "shopper_commands"]
+            if supportsSameItem { capabilities.append("request_same_item") }
+            if supportsPairs { capabilities.append("request_pair_review") }
+            if hasSafety { capabilities.append("shared_content_safety") }
+            return try json(["household":["id":Self.householdID, "label":"S23 Fictional Household"], "memberId":Self.memberID, "role":"shopper", "shopId":Self.shopID, "enrolled":true, "queueConsent":false, "capabilities":capabilities])
+        }
+        if path.hasSuffix("/moderation/actions") {
+            guard hasSafety, request.httpMethod == "POST",
+                  path == "/v1/households/" + Self.householdID + "/moderation/actions",
+                  request.value(forHTTPHeaderField: "X-Device-Token") == "fixture-device-token",
+                  request.value(forHTTPHeaderField: "X-View-Grant-ID") == nil,
+                  let source = input["source"] as? [String: Any], Set(source.keys) == ["kind", "id", "revision", "field"],
+                  source["kind"] as? String == "request", source["id"] as? String == Self.samID,
+                  source["revision"] as? Int == revisions[Self.samID, default: 1],
+                  let field = source["field"] as? String, ["item", "amount"].contains(field),
+                  let key = input["clientKey"] as? String, UUID(uuidString: key) != nil else {
+                throw URLError(.badServerResponse)
+            }
+            switch input["action"] as? String {
+            case "report":
+                let expected = field == "item" ? "Cereal" : "1 box for breakfasts"
+                guard !samBlocked, let reason = input["reason"] as? String, ["harassment", "unsafe", "other"].contains(reason),
+                      input["text"] == nil || input["text"] as? String == expected else { throw URLError(.badServerResponse) }
+                return try json(["receiptId": key, "status": "received"])
+            case "block":
+                guard input["text"] == nil, input["reason"] == nil else { throw URLError(.badServerResponse) }
+                samBlocked = true
+                return try json(["receiptId": key, "status": "blocked"])
+            default: throw URLError(.badServerResponse)
+            }
         }
         if path.hasSuffix("/inbox") {
+            if requestSafety {
+                // This shopper authored Wraps. Only Sam's separate request is reportable.
+                var rows = Array(requestRows().prefix(2))
+                rows[1]["authorAlias"] = "Assigned shopper"
+                if hasSafety { rows[0]["canReportContent"] = true }
+                if samBlocked { rows.removeFirst() }
+                return try json(["requests": rows, "nextCursor": NSNull()])
+            }
             let cursor = URLComponents(url:request.url!,resolvingAgainstBaseURL:false)?.queryItems?.first { $0.name == "cursor" }?.value
             if pageBoundary {
                 let rows = requestRows()
