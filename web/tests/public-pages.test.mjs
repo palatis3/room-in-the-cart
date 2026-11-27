@@ -89,6 +89,17 @@ test('policy bookmarks open the published policy or Apple license and retain a s
     assert.equal(dom.window.location.search, '?lang=' + language);
     assert.equal(dom.window.location.hash, '');
     assert.ok(root.querySelector('main a[href="/support?lang=' + language + '"]'));
+    if (route === 'terms') {
+      const destination = root.querySelector('main a[href*="#public-section-3"]');
+      const support = setup(destination.pathname + destination.search + destination.hash);
+      const topic = support.dom.window.document.activeElement;
+      assert.equal(topic.querySelector('h2').textContent, language === 'en' ? 'Membership help' : 'Ayuda con la membresía');
+      for (const phrase of language === 'en'
+        ? ['Restore Purchases', 'renews automatically', 'does not cancel your Apple subscription']
+        : ['Restaurar compras', 'se renueva automáticamente', 'no cancela tu suscripción de Apple']) {
+        assert.ok(topic.textContent.includes(phrase), phrase);
+      }
+    }
     assert.equal(root.querySelector('footer a').getAttribute('href'), '/requests?lang=' + language);
     assert.doesNotMatch(root.textContent, /still pending|staging hosting|siguen pendientes|alojamiento de pruebas/i);
     const select = root.querySelector('select');

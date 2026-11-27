@@ -324,8 +324,8 @@ export const publicPages = {
         },
         "paragraphs": [
           {
-            "en": "Use the original purchasing account and household, then Restore Purchases in Settings, Household membership. If the app reports unconfirmed delivery, retry or restore without purchasing again. Manage or cancel through Apple subscriptions.",
-            "es": "Usa la cuenta compradora y el hogar originales, y luego Restaurar compras en Configuración, Membresía del hogar. Si la app indica una entrega sin confirmar, reintenta o restaura sin comprar otra vez. Administra o cancela desde las suscripciones de Apple."
+            "en": "Use the original purchasing account and household, then Restore Purchases in Settings, Household membership. If the app reports unconfirmed delivery, retry or restore without purchasing again. The membership renews automatically until canceled. Deleting your Room in the Cart account does not cancel your Apple subscription. Use Apple Subscriptions to check the renewal date or cancel.",
+            "es": "Usa la cuenta compradora y el hogar originales, y luego Restaurar compras en Configuración, Membresía del hogar. Si la app indica una entrega sin confirmar, reintenta o restaura sin comprar otra vez. La membresía se renueva automáticamente hasta que la canceles. Eliminar tu cuenta de Room in the Cart no cancela tu suscripción de Apple. En Suscripciones de Apple puedes consultar la fecha de renovación o cancelar."
           }
         ]
       }

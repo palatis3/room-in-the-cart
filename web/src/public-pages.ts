@@ -15,6 +15,7 @@ const labels = {
   policy: { en: 'Read the privacy policy', es: 'Leer la política de privacidad' },
   license: { en: 'Read Apple’s standard license agreement', es: 'Leer el contrato de licencia estándar de Apple' },
   supportSite: { en: 'Visit the support website', es: 'Visitar el sitio de soporte' },
+  membershipHelp: { en: 'Get help with renewal, cancellation or restoring a purchase', es: 'Obtener ayuda para renovar, cancelar o restaurar una compra' },
   fallback: { en: 'If the page does not open, contact support.', es: 'Si la página no se abre, contacta a soporte.' },
   support: { en: 'Contact support', es: 'Contactar con soporte' },
   emailSupport: { en: 'Email support', es: 'Enviar correo a soporte' },
@@ -146,6 +147,12 @@ export function mountPublicPage(root: HTMLElement, configuration: PublicSiteConf
         ? resourceLink(labels.policy[language], 'https://help.roominthecart.com/privacy?lang=' + language)
         : resourceLink(labels.license[language], 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/');
       introduction.append(resource);
+      if (key === 'terms') {
+        const membership = element('p');
+        const link = element('a', labels.membershipHelp[language]);
+        link.href = '/support?lang=' + language + '#public-section-3';
+        membership.append(link); introduction.append(membership);
+      }
       const fallback = element('p');
       const link = element('a', labels.fallback[language]); link.href = '/support?lang=' + language;
       fallback.append(link); introduction.append(fallback);
