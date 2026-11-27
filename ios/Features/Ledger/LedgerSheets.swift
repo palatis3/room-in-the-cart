@@ -408,9 +408,8 @@ struct LedgerImportView: View {
 
     private func nextReviewLine(in preview: StagedListImport, review: LedgerImportReview) -> Int? {
         preview.lines.firstIndex { row in
-            guard review.choices[row.id] != .skip else { return false }
-            return review.choices[row.id] == nil || row.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
-                invalidAmounts[row.id] != nil
+            review.choices[row.id] == nil || row.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+                (review.choices[row.id] != .skip && invalidAmounts[row.id] != nil)
         }
     }
 
