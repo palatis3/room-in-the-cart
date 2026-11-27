@@ -1,4 +1,5 @@
 #if DEBUG && targetEnvironment(simulator)
+import Vision
 import XCTest
 
 /// Uses the normal empty local workspace and production pantry setup. No seeded
@@ -229,13 +230,13 @@ import XCTest
         XCTAssertTrue(app.buttons["Save meal allocations"].waitForExistence(timeout: 8))
     }
 
-    func testPlanSavedEggsForTwoInNamedPickupAndReopenDinner() {
+    private func startPrivatePantryDinner(food: String, recipe: String) {
         app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
         tap(app.tabBars.buttons["Pantry"])
         tap(app.buttons["pantry.setup.apply"])
         tap(app.buttons["pantry.add"])
-        for (field, wording) in [("pantry.foodName", "Eggs"), ("pantry.amount", "4")] {
+        for (field, wording) in [("pantry.foodName", food), ("pantry.amount", "4")] {
             let input = app.textFields[field]
             tap(input)
             input.typeText(wording + "\n")
@@ -246,10 +247,10 @@ import XCTest
         XCTAssertTrue(app.buttons["pantry.confirm"].waitForNonExistence(timeout: 8))
         tap(app.tabBars.buttons["Dinners"])
         tap(app.buttons["dinner.saveFirstRecipe"])
-        fill(app.textFields["tonight.recipe.title"], "Scrambled eggs")
+        fill(app.textFields["tonight.recipe.title"], recipe)
         fill(app.textFields["tonight.recipe.servings"], "2")
         fill(app.textFields["tonight.recipe.minutes"], "10")
-        fill(app.textFields["tonight.recipe.ingredient"], "Eggs")
+        fill(app.textFields["tonight.recipe.ingredient"], food)
         fill(app.textFields["Amount (required)"], "4")
         tap(app.buttons["tonight.recipe.review"])
         XCTAssertTrue(app.descendants(matching: .any)["tonight.recipe.reviewedMinutes"].exists)
@@ -263,6 +264,68 @@ import XCTest
         XCTAssertTrue(createPickup.waitForExistence(timeout: 5))
         XCTAssertEqual(createPickup.label, "Create shopping list")
         tap(createPickup)
+    }
+
+    func testLargestTypeIngredientMatchShowsWholeWordsAndPreservesProductChoices() throws {
+        startPrivatePantryDinner(food: "Cheddar cheese", recipe: "Toast")
+        let destination = app.descendants(matching: .any)["dinner.handoff.destination"]
+        reveal(destination)
+        XCTAssertTrue(destination.label.contains("Groceries for Toast"))
+        // Change text size on a fresh launch with the same saved pantry product,
+        // recipe and shopping list. No dinner or product match has been applied.
+        app.terminate()
+        app.launchArguments.removeAll { $0 == "--reset-test-workspace" }
+        app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+        app.launch()
+        tap(app.tabBars.buttons["Dinners"])
+        tap(app.buttons["dinner.planSaved"].firstMatch)
+        tap(app.buttons["dinner.handoff.matchPantry"])
+        let picker = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "dinner.handoff.pantryProduct.")).firstMatch
+        reveal(picker)
+        XCTAssertEqual(picker.label, "Cheddar cheese")
+        XCTAssertEqual(picker.value as? String, "Not matched")
+        XCTAssertGreaterThanOrEqual(picker.frame.width, app.frame.width - 80)
+        XCTAssertGreaterThanOrEqual(picker.frame.height, 44)
+
+        let top = app.navigationBars["Match food at home"].frame.maxY
+        let form = CGRect(x: app.frame.minX + 8, y: top, width: app.frame.width - 16, height: app.frame.maxY - top - 20)
+        for _ in 0..<8 {
+            let frame = picker.frame
+            if form.minY <= frame.minY && frame.maxY <= form.maxY { break }
+            let offset = frame.midY - form.midY
+            let distance = min(abs(offset), form.height * 0.35)
+            let start = app.coordinate(withNormalizedOffset: .zero)
+                .withOffset(CGVector(dx: form.minX, dy: form.midY))
+            let end = start.withOffset(CGVector(dx: 0, dy: offset > 0 ? -distance : distance))
+            start.press(forDuration: 0.05, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.15)
+        }
+        let shot = picker.screenshot()
+        let attachment = XCTAttachment(screenshot: shot)
+        attachment.name = "Largest type dinner ingredient and unmatched pantry product"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        let recognition = VNRecognizeTextRequest()
+        recognition.recognitionLanguages = ["en-US"]
+        recognition.usesLanguageCorrection = false
+        try VNImageRequestHandler(cgImage: try XCTUnwrap(shot.image.cgImage)).perform([recognition])
+        let words = (recognition.results ?? []).compactMap { $0.topCandidates(1).first?.string }
+            .joined(separator: " ").lowercased().split(whereSeparator: { !$0.isLetter })
+        for word in ["cheddar", "cheese", "not", "matched"] {
+            XCTAssertTrue(words.contains(Substring(word)), "Missing whole word \(word) from \(words)")
+        }
+        tap(picker)
+        let food = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Cheddar cheese · ")).firstMatch
+        XCTAssertTrue(food.waitForExistence(timeout: 5))
+        let productName = food.label
+        tap(food)
+        XCTAssertEqual(picker.value as? String, productName)
+        tap(picker)
+        tap(app.buttons["Not matched"])
+        XCTAssertEqual(picker.value as? String, "Not matched")
+    }
+
+    func testPlanSavedEggsForTwoInNamedPickupAndReopenDinner() {
+        startPrivatePantryDinner(food: "Eggs", recipe: "Scrambled eggs")
         let confirm = app.buttons["dinner.handoff.confirm"]
         let destination = app.descendants(matching: .any)["dinner.handoff.destination"]
         reveal(destination)

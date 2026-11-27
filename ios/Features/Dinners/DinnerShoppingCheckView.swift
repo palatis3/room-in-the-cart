@@ -209,14 +209,10 @@ private struct DinnerShoppingEstimate: View {
             Section(dinnerText("Match food at home")) {
                 Text(dinnerText("Choose the pantry product for each ingredient you have. Only its unreserved amount counts. Unmatched ingredients show their full planned amount."))
                 ForEach(check.recipe.ingredients.filter { $0.quantity != nil }) { ingredient in
-                    Picker(ingredient.name, selection: Binding(get: { matches[ingredient.id] }, set: { matches[ingredient.id] = $0 })) {
-                        Text(tonightText("Not matched")).tag(UUID?.none)
-                        ForEach(current.foods) { food in
-                            let duplicate = (names[food.name]?.count ?? 0) > 1
-                            Text(verbatim: duplicate ? food.name + " · " + food.detail + " · " + food.id.uuidString.suffix(6) : food.name)
-                                .tag(Optional(food.id))
-                        }
-                    }.pickerStyle(.menu).accessibilityIdentifier("dinner.shoppingMatch." + ingredient.id.uuidString)
+                    DinnerPantryMatchMenu(title: ingredient.name, identifier: "dinner.shoppingMatch." + ingredient.id.uuidString,
+                        selection: Binding(get: { matches[ingredient.id] }, set: { matches[ingredient.id] = $0 }), foods: current.foods) { food in
+                        (names[food.name]?.count ?? 0) > 1 ? food.name + " · " + food.detail + " · " + food.id.uuidString.suffix(6) : food.name
+                    }
                 }
             }
         }
@@ -374,6 +370,31 @@ struct DinnerPantryReviewSection: View {
     }
 }
 
+private struct DinnerPantryMatchMenu: View {
+    let title: String
+    let identifier: String
+    @Binding var selection: UUID?
+    let foods: [TonightMealModel.Food]
+    let name: (TonightMealModel.Food) -> String
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    var body: some View {
+        let unmatched = tonightText("Not matched")
+        let picker = Picker(title, selection: $selection) {
+            Text(verbatim: unmatched).tag(UUID?.none)
+            ForEach(foods) { food in
+                Text(verbatim: name(food)).tag(Optional(food.id))
+            }
+        }
+        if typeSize.isAccessibilitySize {
+            let value = foods.first { $0.id == selection }.map(name) ?? unmatched
+            journalStackedMenu(title, value: value, id: identifier) { picker.pickerStyle(.inline) }
+        } else {
+            picker.pickerStyle(.menu).accessibilityIdentifier(identifier)
+        }
+    }
+}
+
 struct SavedDinnerProductChoice {
     let reservedFoods: Set<UUID>
     let match: PantryMealMatcher.Review
@@ -398,14 +419,10 @@ struct SavedDinnerProductPicker: View {
             if authorize(), let input {
                 Text(dinnerText("Choose each pantry product you want to use. Only a separately confirmed allocation can remove a purchase."))
                 ForEach(recipe.ingredients.filter { !omitted.contains($0.id) && ($0.quantity?.amount ?? .zero) > .zero }) { row in
-                    Picker(row.name, selection: Binding(get: { matches[row.id] }, set: { matches[row.id] = $0 })) {
-                        Text(tonightText("Not matched")).tag(UUID?.none)
-                        ForEach(input.foods) { food in
-                            Text(verbatim: food.name + " · " + food.detail + " · " + food.id.uuidString.suffix(6))
-                                .tag(Optional(food.id))
-                        }
-                    }.pickerStyle(.menu)
-                        .accessibilityIdentifier("dinner.handoff.pantryProduct." + row.id.uuidString)
+                    DinnerPantryMatchMenu(title: row.name, identifier: "dinner.handoff.pantryProduct." + row.id.uuidString,
+                        selection: Binding(get: { matches[row.id] }, set: { matches[row.id] = $0 }), foods: input.foods) { food in
+                        food.name + " · " + food.detail + " · " + food.id.uuidString.suffix(6)
+                    }
                 }
                 Button(dinnerText("Use these product matches")) {
                     do {
