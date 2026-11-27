@@ -1,6 +1,23 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "For a receipt in another currency, leave prices blank. You can still put the food away.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For a receipt in another currency, leave prices blank. You can still put the food away."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si el recibo está en otra moneda, deja los precios en blanco. Puedes guardar los alimentos de todos modos."
+          }
+        }
+      }
+    },
     "This review closed. Any change you hadn’t confirmed was discarded.": {
       "extractionState": "manual",
       "localizations": {

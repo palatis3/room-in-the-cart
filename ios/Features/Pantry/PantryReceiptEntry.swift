@@ -842,6 +842,7 @@ struct ReceiptPurchaseDateFields: View {
 }
 
 struct ReceiptCurrencyPicker: View {
+    @Environment(\.locale) private var locale
     @Binding var draft: ReceiptImportDraft
     var lockedByComparison = false
 
@@ -854,6 +855,10 @@ struct ReceiptCurrencyPicker: View {
         .accessibilityIdentifier("receipt.currency")
         if locked {
             Text(pantryText("Clear the entered receipt prices and priced trip links to change currency."))
+                .font(.footnote)
+        } else if locale.currency.map({ Currency(rawValue: $0.identifier) == nil }) == true
+                    || draft.lines.contains(where: { $0.printed?.hasConflictingCurrency == true }) {
+            Text(pantryText("For a receipt in another currency, leave prices blank. You can still put the food away."))
                 .font(.footnote)
         }
     }
