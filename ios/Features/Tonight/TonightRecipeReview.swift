@@ -41,6 +41,7 @@ struct TonightRecipeReview: View {
     @State private var invalidAmountID: UUID?
     @FocusState private var focusedInput: String?
     @State private var busy = false
+    @State private var confirmDiscard = false
     private struct Ingredient: Identifiable {
         var id = UUID()
         var name = ""
@@ -64,6 +65,21 @@ struct TonightRecipeReview: View {
     private var authorized: Bool {
         identity != nil && currentIdentity() == identity && ledger.sourceWorkspaceID == origin
     }
+    private var isNewManualRecipe: Bool { source == nil && template == nil && !pasteEntry }
+
+    private var hasUnsavedManualRecipe: Bool {
+        guard isNewManualRecipe, savedRecipe == nil, authorized else { return false }
+        func hasText(_ text: String) -> Bool { text.contains { !$0.isWhitespace } }
+        return [title, servings, minutes, sourceInstructions].contains(where: hasText)
+            || detailsReviewed || appliancesReviewed || brandsReviewed || effort != nil
+            || ingredients.contains { hasText($0.name) || hasText($0.amount) || $0.unit != .count || $0.checkedWithoutAmount }
+    }
+
+    private func cancel() {
+        guard !busy else { return }
+        if hasUnsavedManualRecipe { confirmDiscard = true } else { dismiss() }
+    }
+
     // Preserve imported links and timers on structured steps. Plain native instructions can be entered or revised here.
     private var editsPlainSteps: Bool {
         source == nil && template?.recipeSteps?.contains(where: \.hasReviewedDetails) != true
@@ -191,6 +207,11 @@ struct TonightRecipeReview: View {
                             }
                         }
                         Section(tonightText("Recipe")) {
+                            if isNewManualRecipe {
+                                Text(tonightText("Review the recipe, then save it on this iPhone. Closing the editor or restarting the app clears unsaved entries."))
+                                    .font(.subheadline)
+                                    .accessibilityIdentifier("tonight.recipe.saveNotice")
+                            }
                             WorkingField(ledgerText("Dinner title")) {
                                 TextField(ledgerText("Dinner title"), text: $title, prompt: Text(verbatim: ""))
                                     .focused($focusedInput, equals: "title")
@@ -338,9 +359,18 @@ struct TonightRecipeReview: View {
         }.navigationTitle(screenTitle)
             .navigationBarTitleDisplayMode(.inline)
             .privacySensitive()
+            .interactiveDismissDisabled(hasUnsavedManualRecipe || (isNewManualRecipe && busy))
+            .alert(tonightText("Discard this unsaved recipe?"), isPresented: $confirmDiscard) {
+                Button(tonightText("Keep editing"), role: .cancel) {}
+                Button(tonightText("Discard recipe"), role: .destructive) { dismiss() }
+            }
             .toolbar {
                 if savedRecipe == nil || !authorized {
-                    ToolbarItem(placement: .cancellationAction) { Button(tonightText("Cancel")) { dismiss() }.disabled(busy) }
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button(tonightText("Cancel"), action: cancel)
+                            .disabled(busy)
+                            .accessibilityIdentifier("tonight.recipe.cancel")
+                    }
                 }
             }
             .onAppear {

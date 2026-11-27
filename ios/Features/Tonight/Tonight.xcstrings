@@ -1,6 +1,57 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Review the recipe, then save it on this iPhone. Closing the editor or restarting the app clears unsaved entries.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the recipe, then save it on this iPhone. Closing the editor or restarting the app clears unsaved entries."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa la receta y luego guárdala en este iPhone. Si cierras el editor o reinicias la app, se borran los datos que aún no hayas guardado."
+          }
+        }
+      }
+    },
+    "Discard this unsaved recipe?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard this unsaved recipe?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Descartar esta receta sin guardar?"
+          }
+        }
+      }
+    },
+    "Discard recipe": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard recipe"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descartar receta"
+          }
+        }
+      }
+    },
     "Matched at home for purchase review": {
       "extractionState": "manual",
       "localizations": {

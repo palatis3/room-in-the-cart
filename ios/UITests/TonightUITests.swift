@@ -13,6 +13,51 @@ import XCTest
         }
         app.terminate()
     }
+    func testNewManualRecipeWarnsBeforeDiscardAndKeepsTheEnteredFields() {
+        app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        tap(app.tabBars.buttons["Dinners"])
+        let open = app.buttons["dinner.saveFirstRecipe"]
+        let editor = app.navigationBars["Enter a recipe"]
+        let cancel = editor.buttons["tonight.recipe.cancel"]
+        tap(open)
+        let notice = app.staticTexts["tonight.recipe.saveNotice"]
+        XCTAssertTrue(notice.waitForExistence(timeout: 8))
+        XCTAssertTrue(notice.label.contains("restarting the app clears unsaved entries"))
+        tap(cancel)
+        XCTAssertTrue(editor.waitForNonExistence(timeout: 8))
+
+        tap(open)
+        let servings = app.textFields["tonight.recipe.servings"]
+        let ingredient = app.textFields["tonight.recipe.ingredient"]
+        fill(servings, "2")
+        fill(ingredient, "Bread")
+        let start = editor.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2))
+        let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.9))
+        start.press(forDuration: 0.1, thenDragTo: end)
+        XCTAssertTrue(cancel.isHittable, "The sheet must remain open after a dismissal gesture.")
+
+        tap(cancel)
+        let alert = app.alerts["Discard this unsaved recipe?"]
+        XCTAssertTrue(alert.waitForExistence(timeout: 5))
+        alert.buttons["Keep editing"].tap()
+        XCTAssertTrue(alert.waitForNonExistence(timeout: 5))
+        reveal(servings)
+        XCTAssertEqual(servings.value as? String, "2")
+        reveal(ingredient)
+        XCTAssertEqual(ingredient.value as? String, "Bread")
+        tap(cancel)
+        alert.buttons["Discard recipe"].tap()
+        XCTAssertTrue(editor.waitForNonExistence(timeout: 8))
+        tap(open)
+        XCTAssertTrue(servings.waitForExistence(timeout: 8))
+        XCTAssertEqual(servings.value as? String ?? "", "")
+        reveal(ingredient)
+        XCTAssertEqual(ingredient.value as? String ?? "", "")
+        tap(cancel)
+        XCTAssertTrue(editor.waitForNonExistence(timeout: 8))
+    }
+
     func testDinnersCanSaveAndReopenRecipeBeforeStartingPickupOrPantry() throws {
         app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
