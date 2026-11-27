@@ -107,7 +107,7 @@ struct TripItemDetail<SourceContent: View>: View {
                     if let measure {
                         let remaining = try? shop.outstandingQuantity(forLineID: lineID)
                         let value = measure.physicalAmount(amount).flatMap { $0 <= (remaining?.amount ?? .zero) ? $0 : nil }
-                        partialPickSection(unit: measure.unit, keyboard: .numbersAndPunctuation, value: value, revision: shop.revisionID) { value, revision in
+                        partialPickSection(unit: measure.unit, maximum: remaining.map { measure.display($0.amount) }, wholePackages: measure.perPack != nil, keyboard: .numbersAndPunctuation, value: value, revision: shop.revisionID) { value, revision in
                             save(shop) { try $0.pickPart(lineID: lineID, amount: value, expectedRevision: revision) }
                         }
                     } else if let need = GroceryPackageCount(reviewedSources: shop.contributions(forLineID: lineID)),
@@ -115,7 +115,7 @@ struct TripItemDetail<SourceContent: View>: View {
                         let value = Int64(amount.trimmingCharacters(in: .whitespacesAndNewlines)).flatMap {
                             $0 > 0 && $0 <= remaining.count ? GroceryPackageCount(count: $0, kind: need.kind) : nil
                         }
-                        partialPickSection(unit: need.kind.label(), keyboard: .numberPad, value: value, revision: shop.revisionID) { value, revision in
+                        partialPickSection(unit: need.kind.label(), maximum: remaining.shoppingLabel, wholePackages: true, keyboard: .numberPad, value: value, revision: shop.revisionID) { value, revision in
                             save(shop) { try $0.pickPackages(lineID: lineID, packages: value, expectedRevision: revision) }
                         }
                     }
@@ -146,12 +146,22 @@ struct TripItemDetail<SourceContent: View>: View {
         .keyboardDoneAction(visible: editing, title: quickGroceryText("Dismiss keyboard"), identifier: "tripPartKeyboardDone") { editing = false }
     }
 
-    private func partialPickSection<Value>(unit: String, keyboard: UIKeyboardType, value: Value?, revision: UUID,
+    private func partialPickSection<Value>(unit: String, maximum: String?, wholePackages: Bool, keyboard: UIKeyboardType, value: Value?, revision: UUID,
                                            onSave: @escaping (Value, UUID) -> Void) -> some View {
         Section {
             if editingPart {
                 workingTextField(tripFormat("Amount picked (%@)", unit), text: $amount)
                     .keyboardType(keyboard).focused($editing).accessibilityIdentifier("tripPartialAmount")
+                if reviewedRevision != revision {
+                    Text(tripText("The list changed. Reopen this item to check the amount."))
+                        .font(.footnote)
+                } else if value == nil, let maximum {
+                    Text(wholePackages
+                        ? tripFormat("Enter a whole number from 1 up to %@.", maximum)
+                        : tripFormat("Enter an amount greater than zero, up to %@.", maximum))
+                        .font(.footnote)
+                        .accessibilityIdentifier("tripPartialAmountGuidance")
+                }
                 Button(tripText("Save picked amount")) {
                     guard let value, let reviewedRevision, revision == reviewedRevision else { return }
                     onSave(value, reviewedRevision)

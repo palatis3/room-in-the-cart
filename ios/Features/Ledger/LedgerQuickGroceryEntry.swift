@@ -307,6 +307,11 @@ private struct QuickGroceryField: View {
                     .accessibilityIdentifier("quickGrocery.add")
                     .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || busy)
             }
+            if prominent, model.shop == nil {
+                Text(quickGroceryFormat("List: %@. Works offline without an account.", ledgerText("Pickup")))
+                    .font(.footnote).foregroundStyle(Theme.secondary)
+                    .accessibilityIdentifier("quickGrocery.firstDestination")
+            }
             if let openBatch {
                 Button {
                     guard let draft = currentDraft, authorize(), !busy else { return }

@@ -2,7 +2,7 @@ import Foundation
 import CoreGraphics
 
 /// A candidate changes one word or amount within one Vision observation.
-struct ReceiptWordReading: Equatable, Sendable {
+struct ReceiptWordReading: Equatable, Codable, Sendable {
     let word: String
     let replacement: String
     let wording: String

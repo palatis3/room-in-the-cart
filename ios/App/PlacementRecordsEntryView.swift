@@ -11,7 +11,7 @@ struct PlacementRecordsEntryView: View {
         Group {
             if activeNativeAccount || household.placementEvidenceUnlocked {
                 if let model { PlacementEntryView(model: model) }
-                else { Text(PlacementCopy.text("Shared order reports are unavailable on this iPhone.")) }
+                else { Text(PlacementCopy.text("Store order outcomes are unavailable on this iPhone.")) }
             } else {
                 JournalList {
                     if household.canUnlockPlacementEvidence {
@@ -22,7 +22,7 @@ struct PlacementRecordsEntryView: View {
                     }
                     Text(PlacementCopy.text("Connect your household to report an external placement or review a pending report."))
                     NavigationLink(PlacementCopy.text("Open household")) { HouseholdSettingsView(model: household, continuesAfterWorkspaceLock: true) }
-                }.navigationTitle(PlacementCopy.text("Shared placement reports"))
+                }.navigationTitle(PlacementCopy.text("Store order outcomes"))
             }
         }
         .task { if model == nil { model = household.makePlacementModel() } }

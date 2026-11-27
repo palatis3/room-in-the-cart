@@ -1,6 +1,90 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Back to planned dinner": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back to planned dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a la cena planeada"
+          }
+        }
+      }
+    },
+    "The missing grocery amounts have been entered. Review shopping allocations again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The missing grocery amounts have been entered. Review shopping allocations again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya se ingresaron las cantidades que faltaban. Vuelve a revisar las asignaciones de la compra."
+          }
+        }
+      }
+    },
+    "Kept in the recipe. You can put it back on the shopping list in Handled.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kept in the recipe. You can put it back on the shopping list in Handled."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se conserva en la receta. Puedes volver a ponerlo en la lista de compras desde Atendidos."
+          }
+        }
+      }
+    },
+    "Already at home for this dinner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already at home for this dinner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya en casa para esta cena"
+          }
+        }
+      }
+    },
+    "I have this at home. Leave it off this shopping list.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I have this at home. Leave it off this shopping list."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya lo tengo en casa. Dejar fuera de esta lista de compras."
+          }
+        }
+      }
+    },
     "Split receipt quantity: %@": {
       "localizations": {
         "en": {
@@ -1046,6 +1130,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Si los vuelves a poner en la lista, se restauran las compras. La comida conserva su asignación en la copia de compra."
+          }
+        }
+      }
+    },
+    "Shopping list quantities for %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shopping list quantities for %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidades en la lista de compras %@"
+          }
+        }
+      }
+    },
+    "After saving the dinner, you can review which linked ingredients to remove from the shopping list.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After saving the dinner, you can review which linked ingredients to remove from the shopping list."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Después de guardar la cena, puedes revisar qué ingredientes vinculados quitar de la lista de compras."
           }
         }
       }
@@ -13659,18 +13777,18 @@
         }
       }
     },
-    "Find a dinner from the pantry": {
+    "Match my recipes to My Pantry": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Find a dinner from the pantry"
+            "value": "Match my recipes to My Pantry"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Buscar una cena con lo que hay en la despensa"
+            "value": "Comparar mis recetas con Mi despensa"
           }
         }
       }
@@ -15502,6 +15620,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esta sesión cambió después de aprobar las compras. Revisa la cena actual antes de usar el plan de porciones."
+          }
+        }
+      }
+    },
+    "This review includes your whole shopping list. Check these grocery amounts, then review the allocations again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This review includes your whole shopping list. Check these grocery amounts, then review the allocations again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta revisión incluye toda tu lista de compras. Revisa las cantidades de estos productos y vuelve a revisar las asignaciones."
+          }
+        }
+      }
+    },
+    "Set amount for %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set amount for %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indicar la cantidad de %@"
           }
         }
       }

@@ -143,6 +143,74 @@ import XCTest
         assertLot(unrecorded, contains: "3 unidades")
     }
 
+    func testSpanishInterruptedExactUseReturnsToCurrentShelfWithoutSaving() {
+        openPantry(reset: true, spanish: true)
+        let batch = addLot("Avena S7", amount: "2")
+        app.terminate()
+        openPantry(reset: false, spanish: true)
+        tap(app.buttons[batch])
+        let use = app.buttons["pantry.voiceUsedSome"]
+        tap(use)
+        XCTAssertTrue(app.navigationBars["Registrar uso"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["pantry.voiceUseAmount.0"].waitForExistence(timeout: 8))
+        tap(app.buttons["pantry.voiceCancel"])
+        XCTAssertTrue(use.wait(for: \.isHittable, toEqual: true, timeout: 8))
+        tap(use)
+        tap(app.buttons["pantry.voiceUseAmount.0"])
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 8))
+        app.typeText("1")
+        tap(app.buttons["pantry.voiceKeyboardDone"])
+        tap(app.buttons["pantry.voicePreview"])
+        XCTAssertTrue(element("pantry.voiceSummary.0").waitForExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["pantry.voiceConfirm"].exists)
+        XCUIDevice.shared.press(.home)
+        app.activate()
+        let closed = element("pantry.use.interrupted")
+        XCTAssertTrue(closed.waitForExistence(timeout: 10))
+        XCTAssertTrue(closed.label.contains("no hubieras confirmado"), closed.label)
+        XCTAssertFalse(element("pantry.voiceSummary.0").exists)
+        XCTAssertFalse(app.buttons["pantry.voiceConfirm"].exists)
+        let returnButton = app.buttons["pantry.use.backToItem"]
+        XCTAssertEqual(returnButton.label, "Volver al alimento de la despensa")
+        XCTAssertTrue(returnButton.isHittable)
+        let bar = app.navigationBars["Registrar uso"]
+        XCTAssertTrue(bar.exists)
+        XCTAssertGreaterThanOrEqual(closed.frame.minY, bar.frame.maxY - 1)
+        XCTAssertGreaterThanOrEqual(returnButton.frame.height, 44)
+        returnButton.tap()
+        XCTAssertTrue(closed.waitForNonExistence(timeout: 8))
+        let guidance = element("pantry.lot.returnGuidance")
+        XCTAssertTrue(guidance.waitForExistence(timeout: 8))
+        XCTAssertEqual(guidance.label, "Usa el botón Atrás para volver a Mi despensa y abrir el alimento de nuevo.")
+        XCTAssertFalse(app.staticTexts["Desbloquea el espacio privado autorizado para ver los alimentos de la despensa."].exists)
+        XCTAssertFalse(app.buttons["pantry.voiceUsedSome"].exists)
+        let itemBar = app.navigationBars["Alimento de la despensa"]
+        XCTAssertTrue(guidance.isHittable)
+        XCTAssertGreaterThanOrEqual(guidance.frame.minY, itemBar.frame.maxY - 1)
+        XCTAssertLessThan(guidance.frame.maxY, app.frame.midY)
+        let back = itemBar.buttons.element(boundBy: 0)
+        XCTAssertTrue(back.isHittable)
+        back.tap()
+        XCTAssertTrue(guidance.waitForNonExistence(timeout: 8))
+        let tabs = app.tabBars.firstMatch
+        for tab in ["Compras", "Despensa", "Cenas", "Historial"] {
+            XCTAssertTrue(tabs.buttons[tab].wait(for: \.isHittable, toEqual: true, timeout: 8), tab)
+        }
+        XCTAssertTrue(app.buttons["pantry.add"].wait(for: \.isHittable, toEqual: true, timeout: 10))
+        assertLot(batch, contains: "2 unidades")
+        tap(app.buttons[batch])
+        tap(app.buttons["pantry.usageHistory"])
+        let count = element("pantry.usageCount")
+        XCTAssertTrue(count.waitForExistence(timeout: 8))
+        XCTAssertTrue(count.label.contains("0") || (count.value as? String)?.contains("0") == true)
+        XCTAssertFalse(element("pantry.usageEvent.0").exists)
+        tap(tabs.buttons["Compras"])
+        XCTAssertTrue(tabs.buttons["Compras"].isSelected)
+        tap(tabs.buttons["Despensa"])
+        XCTAssertTrue(tabs.buttons["Despensa"].isSelected)
+        XCTAssertTrue(count.waitForExistence(timeout: 8))
+    }
+
     func testEnglishLowStockKeepsItsWordingAndOffersRestockingSeparately() {
         checkLowStock(spanish: false)
     }
@@ -547,6 +615,22 @@ import XCTest
         tap(app.buttons["pantry.usageHistory"])
         XCTAssertTrue(element("pantry.usageEvent.0").waitForExistence(timeout: 8))
         XCTAssertFalse(element("pantry.usageEvent.1").exists)
+    }
+
+    func testLargestTextHalfLeftConfirmationHasOneAccessibleSentence() {
+        openPantry(reset: true)
+        let lotID = addLot("Sourdough sandwich bread", amount: "2")
+        app.terminate()
+        openPantry(reset: false, accessibilityText: true, locale: "en_CA")
+        tap(app.buttons[lotID])
+        tap(app.buttons["pantry.voiceUsedSome"])
+        tap(app.buttons["pantry.voiceHalf.0"])
+        tap(app.buttons["pantry.voicePreview"])
+        tap(app.buttons["pantry.voiceConfirm"])
+
+        let status = app.staticTexts["pantry.voiceSaved"]
+        XCTAssertTrue(status.waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertEqual(status.label, "Recorded one use of Sourdough sandwich bread.")
     }
 
     func testUsedSomeFromBatchAndTypedUseProduceTwoPrivateHistoryEntries() {

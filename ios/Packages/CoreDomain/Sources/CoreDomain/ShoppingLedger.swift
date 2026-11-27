@@ -353,6 +353,7 @@ public struct ShoppingLine: Codable, Equatable, Sendable, Identifiable {
     public var checkedAt: Date?
     public var handledBy: String?
     public var handledAt: Date?
+    public internal(set) var dinnerAtHomeAt: Date? = nil
     public var trashedAt: Date?
     public internal(set) var pickedPrice: PickedLinePrice? = nil
     public internal(set) var flexiblePick: Bool? = nil
@@ -365,7 +366,7 @@ public struct ShoppingLine: Codable, Equatable, Sendable, Identifiable {
     public internal(set) var emptyJug: EmptyJugReminder?
     public var stapleApproval: StapleApproval?
     public var isChecked: Bool { checkedAt != nil }
-    public var isHandled: Bool { handledAt != nil }
+    public var isHandled: Bool { handledAt != nil || dinnerAtHomeAt != nil }
     public var isTrashed: Bool { trashedAt != nil }
 }
 
@@ -1235,6 +1236,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     private mutating func markHandled(_ lineID: UUID, by: String, at date: Date) throws {
         try ledgerText(by, nonempty: true, maximum: 512)
         let index = try self.lineIndex(lineID)
+        lines[index].dinnerAtHomeAt = nil
         lines[index].handledBy = by; lines[index].handledAt = date
     }
     public mutating func reopen(lineID: UUID, at: Date = Date()) throws {
@@ -1243,6 +1245,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
             next.lines[index].tripPick = nil; next.lines[index].packagePick = nil
             next.lines[index].tripUndo = nil; next.lines[index].stopObservation = nil
             next.lines[index].checkedAt = nil; next.lines[index].handledBy = nil; next.lines[index].handledAt = nil
+            next.lines[index].dinnerAtHomeAt = nil
         }
     }
     public mutating func trash(lineID: UUID, at: Date = Date()) throws {
@@ -1511,6 +1514,13 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         let edgesByLine = Dictionary(grouping: allocations) { sources[$0.demandContributionID]?.lineID }
         for line in lines {
             let members = membersByLine[line.id] ?? []
+            if let checked = line.dinnerAtHomeAt {
+                try ledgerDate(checked)
+                guard members.count == 1, members[0].isHandCheckedUnmeasuredIngredient, !line.isChecked,
+                      line.handledAt == nil, line.tripPick == nil, line.packagePick == nil else {
+                    throw LedgerError.invalid("atHomeIngredient")
+                }
+            }
             let requested = try quantity(for: line, members: members, edges: edgesByLine[line.id] ?? [])
             try line.packagePick?.validate(members: members, physical: line.tripPick, checkedAt: line.checkedAt)
             try line.tripUndo?.packagePick?.validate(members: members, physical: line.tripUndo?.pick, checkedAt: line.tripUndo?.checkedAt)
@@ -1565,6 +1575,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
                     guard touchedMeals.insert(dinner.occurrenceID).inserted,
                           !next.mealOccurrences.contains(where: { $0.id == dinner.occurrenceID }) else { throw DinnerPlanningError.operationConflict }
                     let included = dinner.includedIngredientIndices
+                    let atHome = Set(dinner.confirmedAtHomeIngredientIDs ?? [])
                     for index in included {
                         let ingredient = dinner.template.ingredients[index]
                         let lineID: UUID
@@ -1578,6 +1589,10 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
                             else { throw DinnerPlanningError.reviewRequired("groceryMatch") }
                             lineID = reviewed
                         } else { lineID = next.appendLine(id: dinner.lineIDs[index], name: ingredient.name, notes: ingredient.notes) }
+                        if atHome.contains(ingredient.id) {
+                            let index = try next.lineIndex(lineID)
+                            next.lines[index].dinnerAtHomeAt = at
+                        }
                         next.contributions.append(LedgerContribution(id: dinner.contributionIDs[index], lineID: lineID,
                             source: .meal(occurrenceID: dinner.occurrenceID), productName: ingredient.name, quantity: ingredient.quantity,
                             originalText: ingredient.contributionWording, notes: ingredient.notes,
@@ -1701,7 +1716,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     /// A later edit may change what is needed. Preserve an observed pick in a
     /// compatible unit, reopen an increased need, and retire its old undo review.
     private mutating func reconcileTripNeeds(previous: Self) throws {
-        let tracked = lines.indices.filter { lines[$0].tripPick != nil || lines[$0].packagePick != nil || lines[$0].tripUndo != nil || lines[$0].stopObservation != nil }
+        let tracked = lines.indices.filter { lines[$0].tripPick != nil || lines[$0].packagePick != nil || lines[$0].tripUndo != nil || lines[$0].stopObservation != nil || lines[$0].dinnerAtHomeAt != nil }
         guard !tracked.isEmpty else { return }
         let old = Dictionary(uniqueKeysWithValues: previous.lines.map { ($0.id, $0) })
         let changedSources = contributions != previous.contributions || allocations != previous.allocations
@@ -1723,6 +1738,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
             }
             guard identityChanged || membersChanged || edgesChanged else { continue }
             lines[index].stopObservation = nil
+            lines[index].dinnerAtHomeAt = nil
             let members = (newMembers[line.id] ?? []).filter { $0.removedAt == nil }
             if let pick = line.packagePick {
                 if !identityChanged, let total = GroceryPackageCount(reviewedSources: members), total.kind == pick.packages.kind {

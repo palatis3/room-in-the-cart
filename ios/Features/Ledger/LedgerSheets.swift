@@ -53,6 +53,10 @@ struct LedgerImportView: View {
     let onSaved: ((UUID) -> Void)?
     let authorizeEntry: @MainActor () -> Bool
     private let prefill: String
+    private var singleGroceryReview: Bool {
+        quickDraft != nil && !directDictation && !prefill.isEmpty && !original.isEmpty
+            && !original.contains(where: \.isNewline) && incomingWording == nil
+    }
     private let opensListAfterSave: Bool
     private let pantryFoodPrefill: Bool
     private let pantrySuggestedAmount: Quantity?
@@ -188,7 +192,7 @@ struct LedgerImportView: View {
                     }
                 } else {
                     Section {
-                        Text(ledgerText("Type or paste your list")).marketJournalTitle(.title2)
+                        Text(singleGroceryReview ? quickGroceryText("Check the grocery name and amount") : ledgerText("Type or paste your list")).marketJournalTitle(.title2)
                         TextEditor(text: $original)
                             .frame(height: min(importEditorHeight, 240))
                             .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Theme.controlEdge).allowsHitTesting(false))
@@ -246,7 +250,7 @@ struct LedgerImportView: View {
                 form
             }
                 .background(Theme.canvas)
-                .navigationTitle(ledgerText("Bring the list"))
+                .navigationTitle(singleGroceryReview ? quickGroceryText("Review grocery") : ledgerText("Bring the list"))
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbarBackground(Theme.canvas, for: .navigationBar)
                 .toolbarBackground(.visible, for: .navigationBar)
@@ -259,10 +263,19 @@ struct LedgerImportView: View {
                                     compactConfirmation(preview, review: review, totals: totals, scroll: scroll)
                                 } else {
                                     VStack(spacing: 4) {
-                                        Text(totals.summary)
-                                            .font(.subheadline).foregroundStyle(Theme.secondary)
-                                            .fixedSize(horizontal: false, vertical: true)
-                                            .accessibilityIdentifier("ledgerImportSummary")
+                                        HStack {
+                                            Text(totals.summary)
+                                                .font(.subheadline).foregroundStyle(Theme.secondary)
+                                                .fixedSize(horizontal: false, vertical: true)
+                                                .accessibilityIdentifier("ledgerImportSummary")
+                                            if let index = nextReviewLine(in: preview, review: review) {
+                                                Button(ledgerFormat("Review line %lld", Int64(index + 1))) {
+                                                    scroll.scrollTo(preview.lines[index].id, anchor: .top)
+                                                }
+                                                .frame(minHeight: 44)
+                                                .accessibilityIdentifier("ledgerNextReviewLine")
+                                            }
+                                        }
                                         importConfirmation(preview, review: review)
                                     }
                                 }
@@ -397,12 +410,16 @@ struct LedgerImportView: View {
         }).accessibilityFocused($focus, equals: .status)
     }
 
-    private func compactConfirmation(_ preview: StagedListImport, review: LedgerImportReview,
-                                     totals: (included: Int, summary: String), scroll: ScrollViewProxy) -> some View {
-        let needsReview = preview.lines.firstIndex { row in
+    private func nextReviewLine(in preview: StagedListImport, review: LedgerImportReview) -> Int? {
+        preview.lines.firstIndex { row in
             review.choices[row.id] == nil || row.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
                 (review.choices[row.id] != .skip && invalidAmounts[row.id] != nil)
         }
+    }
+
+    private func compactConfirmation(_ preview: StagedListImport, review: LedgerImportReview,
+                                     totals: (included: Int, summary: String), scroll: ScrollViewProxy) -> some View {
+        let needsReview = nextReviewLine(in: preview, review: review)
         let title = ledgerText("Review totals")
         return HStack(spacing: 8) {
             Button { showingReviewTotals = true } label: {

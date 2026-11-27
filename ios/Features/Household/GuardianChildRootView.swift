@@ -67,8 +67,9 @@ struct GuardianChildEntryButton: View {
     @EnvironmentObject private var surfaces: DeviceSurfacesComposition
     var body: some View {
         if let coordinator, coordinator.canOpenInvitation {
-            Text(GuardianCopy.text("Opening child space locks the private workspace on this iPhone. To return, choose “Leave child space”, confirm sign-out, then unlock the workspace."))
+            Text(GuardianCopy.text("Opening child space locks your private workspace, even if child sign-in is unavailable. To return, leave child space, confirm sign-out, and use Face ID, Touch ID or this iPhone’s passcode."))
                 .foregroundStyle(Theme.secondary)
+                .accessibilityIdentifier("guardian.childEntryBoundary")
             Button {
                 coordinator.open(adult: household, access: access, surfaces: surfaces)
             } label: {

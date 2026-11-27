@@ -133,6 +133,8 @@ private struct HelpArticleView: View {
                 }
                 DisclosureGroup(helpText("Requests and permissions")) {
                     paragraph(helpText("A request is received only after the household confirms it. If the response is uncertain, retry the same request. A contributor sees their own request and outcome; household budgets stay private."))
+                    paragraph(helpText("To report a shared message or block its sender, look for Report or block beside the message. For a family request, the assigned shopper can look in Review family requests. Availability depends on your access and the message."))
+                        .accessibilityIdentifier("help.sharedMessageSafety")
                     paragraph(helpText("Only the assigned shopper can commit a shared basket change. Another authorized adult can propose a change for review. A membership seat does not grant shopper authority or budget access."))
                     paragraph(helpText("A current cook view is limited to one shop, selected fields and its expiry. Manage or revoke it through household controls. A dated static message remains a separate copy. Child enrollment requires the configured guardian consent process."))
                 }
@@ -175,10 +177,9 @@ private struct MembershipHelpAccess: View {
         if household.canOpenMembership && child?.presented != true {
             if let model = membership.model(for: household.membershipSession) {
                 MembershipHelpControls(model: model)
-            } else if !household.configured {
-                Text(mtr("Your private lists and dinners work without an account. Household sign-in is unavailable on this iPhone."))
             } else if household.membershipSession == nil {
-                Text(helpText("Household is a paid subscription. Choose your household to check planning access and see the App Store price if an offer is available."))
+                Text(household.membershipEntryRoute.priceGuidance)
+                    .accessibilityIdentifier("help.membershipPriceGuidance")
             } else {
                 Text(helpText("Open Household membership to check your current access."))
             }
@@ -241,6 +242,7 @@ struct HelpPrivacyView: View {
                 Text(helpText("Apple handles subscription payment credentials. The app and household service use transaction evidence to deliver and restore membership; they do not receive your payment card or bank account number."))
             }
             Section(helpText("Photos and speech")) {
+                Text(helpText("Saving a draft during line review keeps all recognized receipt text, including unselected lines, in protected storage on this iPhone. Saving a put-away draft keeps every line in that review, including lines you skip, along with the amounts and storage choices you entered. Finish or discard the draft to remove it. To view the original photo or PDF again, select it from its source."))
                 Text(helpText("Ordinary dictation and photo text recognition run on this iPhone. Your private evidence photos are saved in protected local storage. Apple may retrieve a selected iCloud photo. You can include reviewed photos in an encrypted recovery file."))
                 Text(helpText("If product references are available, an adult can choose to share a description, brand, size or barcode with the named shopper. When photo sharing is enabled separately, the service receives only the crop you review, without location metadata. An authorized moderator reviews it before the shopper can see it. You can remove a shared reference. Access expires within seven days."))
                 Text(helpText("When online assistance is available, an authorized adult can review and send a selected excerpt, a cropped image or a separate voice recording to OpenAI through Room in the Cart. Listen to the recording or inspect the crop before sending. You can keep using the local editor."))

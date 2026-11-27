@@ -1,4 +1,5 @@
 #if DEBUG && targetEnvironment(simulator)
+import Vision
 import XCTest
 
 /// Uses the normal empty local workspace and production pantry setup. No seeded
@@ -13,6 +14,51 @@ import XCTest
         }
         app.terminate()
     }
+    func testNewManualRecipeWarnsBeforeDiscardAndKeepsTheEnteredFields() {
+        app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        tap(app.tabBars.buttons["Dinners"])
+        let open = app.buttons["dinner.saveFirstRecipe"]
+        let editor = app.navigationBars["Enter a recipe"]
+        let cancel = editor.buttons["tonight.recipe.cancel"]
+        tap(open)
+        let notice = app.staticTexts["tonight.recipe.saveNotice"]
+        XCTAssertTrue(notice.waitForExistence(timeout: 8))
+        XCTAssertTrue(notice.label.contains("restarting the app clears unsaved entries"))
+        tap(cancel)
+        XCTAssertTrue(editor.waitForNonExistence(timeout: 8))
+
+        tap(open)
+        let servings = app.textFields["tonight.recipe.servings"]
+        let ingredient = app.textFields["tonight.recipe.ingredient"]
+        fill(servings, "2")
+        fill(ingredient, "Bread")
+        let start = editor.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2))
+        let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.9))
+        start.press(forDuration: 0.1, thenDragTo: end)
+        XCTAssertTrue(cancel.isHittable, "The sheet must remain open after a dismissal gesture.")
+
+        tap(cancel)
+        let alert = app.alerts["Discard this unsaved recipe?"]
+        XCTAssertTrue(alert.waitForExistence(timeout: 5))
+        alert.buttons["Keep editing"].tap()
+        XCTAssertTrue(alert.waitForNonExistence(timeout: 5))
+        reveal(servings)
+        XCTAssertEqual(servings.value as? String, "2")
+        reveal(ingredient)
+        XCTAssertEqual(ingredient.value as? String, "Bread")
+        tap(cancel)
+        alert.buttons["Discard recipe"].tap()
+        XCTAssertTrue(editor.waitForNonExistence(timeout: 8))
+        tap(open)
+        XCTAssertTrue(servings.waitForExistence(timeout: 8))
+        XCTAssertEqual(servings.value as? String ?? "", "")
+        reveal(ingredient)
+        XCTAssertEqual(ingredient.value as? String ?? "", "")
+        tap(cancel)
+        XCTAssertTrue(editor.waitForNonExistence(timeout: 8))
+    }
+
     func testDinnersCanSaveAndReopenRecipeBeforeStartingPickupOrPantry() throws {
         app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
@@ -122,15 +168,119 @@ import XCTest
         XCTAssertEqual(app.textFields["tonight.recipe.title"].value as? String, "Sopa")
     }
 
-    func testPlanSavedEggsForTwoInNamedPickupAndReopenDinner() {
+    func testJustPlannedDinnerKeepsAllocationReviewWhenMissingListAmountsAreSaved() {
+        app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", "(en)", "-AppleLocale", "en_CA"]
+        app.launch()
+        for name in ["Milk", "Oats"] {
+            let grocery = app.descendants(matching: .any).matching(identifier: "quickGrocery.name").element
+            tap(grocery)
+            grocery.typeText(name)
+            tap(app.buttons["quickGrocery.add"])
+            XCTAssertTrue(app.buttons["quickGrocery.undo"].waitForExistence(timeout: 8))
+        }
+        tap(app.tabBars.buttons["Pantry"])
+        tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.add"])
+        for (id, value) in [("pantry.foodName", "Bread"), ("pantry.amount", "1")] {
+            let field = app.textFields[id]
+            tap(field)
+            field.typeText(value + "\n")
+        }
+        tap(app.buttons["pantry.review"])
+        tap(app.buttons["pantry.confirm"])
+        XCTAssertTrue(app.buttons["pantry.confirm"].waitForNonExistence(timeout: 8))
+        tap(app.tabBars.buttons["Dinners"])
+        tap(app.buttons["dinner.tonight"])
+        tap(app.buttons["tonight.addRecipe"])
+        fill(app.textFields["tonight.recipe.title"], "Cheese toast")
+        fill(app.textFields["tonight.recipe.servings"], "1")
+        let ingredients = app.textFields.matching(identifier: "tonight.recipe.ingredient")
+        let amounts = app.textFields.matching(NSPredicate(format: "label == %@", "Amount (required)"))
+        fill(ingredients.firstMatch, "Bread")
+        fill(amounts.firstMatch, "1")
+        tap(app.buttons["Add ingredient"])
+        fill(ingredients.element(boundBy: 1), "Cheese")
+        fill(amounts.element(boundBy: 1), "1")
+        tap(app.buttons["tonight.recipe.review"])
+        tap(app.buttons["tonight.recipe.save"])
+        // iOS 17 includes the Dinners tab and Tonight list behind this sheet.
+        let savedRecipe = app.collectionViews.containing(.any, identifier: "tonight.recipe.saved").element
+        tap(savedRecipe.buttons["dinner.planSaved"])
+        tap(app.buttons["dinner.handoff.matchPantry"])
+        let bread = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label BEGINSWITH %@",
+                                                     "dinner.handoff.pantryProduct.", "Bread")).element
+        tap(bread)
+        tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Bread · ")).element)
+        tap(app.buttons["Use these product matches"])
+        tap(app.buttons["dinner.handoff.confirm"])
+        let savedOccurrence = app.collectionViews.containing(.any, identifier: "dinner.handoff.saved").element
+        XCTAssertTrue(savedOccurrence.waitForExistence(timeout: 10))
+        tap(savedOccurrence.buttons["dinner.checkShopping"])
+        let review = app.buttons["Review shopping allocations"]
+        tap(review)
+        let screen = app.navigationBars["Check what to buy"]
+        for name in ["Milk", "Oats"] {
+            tap(app.buttons["Set amount for " + name])
+            let field = app.textFields["Quantity (optional)"]
+            tap(field)
+            field.typeText("1")
+            tap(app.buttons["ledgerSaveContributionChanges"])
+            XCTAssertTrue(app.navigationBars["Quantity and notes"].waitForNonExistence(timeout: 8))
+            XCTAssertTrue(screen.exists && screen.isHittable, "Saving must return to this dinner's allocation review.")
+            XCTAssertFalse(app.buttons["Set amount for " + name].exists)
+        }
+        tap(review)
+        let save = app.buttons["Save meal allocations"]
+        XCTAssertTrue(save.waitForExistence(timeout: 8))
+        tap(save)
+        let reviewFood = app.buttons["Review food to use at home"]
+        XCTAssertTrue(reviewFood.waitForExistence(timeout: 10))
+        XCTAssertFalse(save.exists)
+        tap(reviewFood)
+        tap(app.buttons["Use the allocated food"])
+        let restorePurchase = app.buttons["Put these ingredients back on the shopping list"]
+        XCTAssertTrue(restorePurchase.waitForExistence(timeout: 10),
+                      "This dinner should now have a saved at-home purchase decision.")
+        let savedAllocation = app.collectionViews.containing(.button, identifier: restorePurchase.label).element
+        tap(savedAllocation.buttons["Shopping list"])
+        let pickup = app.buttons.matching(NSPredicate(format: "identifier == %@ AND label == %@", "ledgerShopPicker", "Pickup")).element
+        XCTAssertTrue(pickup.waitForExistence(timeout: 8))
+        let checkBread = app.fullListCheck(labeled: "Check Bread")
+        for name in ["Milk", "Oats", "Cheese"] {
+            let check = app.fullListCheck(labeled: "Check " + name)
+            reveal(check)
+            XCTAssertTrue(check.isEnabled)
+            XCTAssertFalse(checkBread.exists, "The reserved bread is not an active purchase.")
+        }
+        let shoppingList = app.collectionViews.containing(NSPredicate(format: "identifier BEGINSWITH %@", "ledgerCheck-")).element
+        let home = shoppingList.staticTexts.matching(NSPredicate(format: "label ==[c] %@", "Using food at home")).element
+        reveal(home)
+        let reservedBread = shoppingList.staticTexts["Bread"]
+        reveal(reservedBread)
+        XCTAssertFalse(checkBread.exists)
+    }
+
+    private func startPrivatePantryDinner(food: String, recipe: String) {
         app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
+        tap(app.tabBars.buttons["Pantry"])
+        tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.add"])
+        for (field, wording) in [("pantry.foodName", food), ("pantry.amount", "4")] {
+            let input = app.textFields[field]
+            tap(input)
+            input.typeText(wording + "\n")
+            XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+        }
+        tap(app.buttons["pantry.review"])
+        tap(app.buttons["pantry.confirm"])
+        XCTAssertTrue(app.buttons["pantry.confirm"].waitForNonExistence(timeout: 8))
         tap(app.tabBars.buttons["Dinners"])
         tap(app.buttons["dinner.saveFirstRecipe"])
-        fill(app.textFields["tonight.recipe.title"], "Scrambled eggs")
+        fill(app.textFields["tonight.recipe.title"], recipe)
         fill(app.textFields["tonight.recipe.servings"], "2")
         fill(app.textFields["tonight.recipe.minutes"], "10")
-        fill(app.textFields["tonight.recipe.ingredient"], "Eggs")
+        fill(app.textFields["tonight.recipe.ingredient"], food)
         fill(app.textFields["Amount (required)"], "4")
         tap(app.buttons["tonight.recipe.review"])
         XCTAssertTrue(app.descendants(matching: .any)["tonight.recipe.reviewedMinutes"].exists)
@@ -144,10 +294,91 @@ import XCTest
         XCTAssertTrue(createPickup.waitForExistence(timeout: 5))
         XCTAssertEqual(createPickup.label, "Create shopping list")
         tap(createPickup)
+    }
+
+    func testLargestTypeIngredientMatchShowsWholeWordsAndPreservesProductChoices() throws {
+        startPrivatePantryDinner(food: "Cheddar cheese", recipe: "Toast")
+        let destination = app.descendants(matching: .any)["dinner.handoff.destination"]
+        reveal(destination)
+        XCTAssertTrue(destination.label.contains("Groceries for Toast"))
+        // Change text size on a fresh launch with the same saved pantry product,
+        // recipe and shopping list. No dinner or product match has been applied.
+        app.terminate()
+        app.launchArguments.removeAll { $0 == "--reset-test-workspace" }
+        app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+        app.launch()
+        tap(app.tabBars.buttons["Dinners"])
+        tap(app.buttons["dinner.planSaved"].firstMatch)
+        tap(app.buttons["dinner.handoff.matchPantry"])
+        let picker = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "dinner.handoff.pantryProduct.")).firstMatch
+        reveal(picker)
+        XCTAssertEqual(picker.label, "Cheddar cheese")
+        XCTAssertEqual(picker.value as? String, "Not matched")
+        XCTAssertGreaterThanOrEqual(picker.frame.width, app.frame.width - 80)
+        XCTAssertGreaterThanOrEqual(picker.frame.height, 44)
+
+        let top = app.navigationBars["Match food at home"].frame.maxY
+        let form = CGRect(x: app.frame.minX + 8, y: top, width: app.frame.width - 16, height: app.frame.maxY - top - 20)
+        for _ in 0..<8 {
+            let frame = picker.frame
+            if form.minY <= frame.minY && frame.maxY <= form.maxY { break }
+            let offset = frame.midY - form.midY
+            let distance = min(abs(offset), form.height * 0.35)
+            let start = app.coordinate(withNormalizedOffset: .zero)
+                .withOffset(CGVector(dx: form.minX, dy: form.midY))
+            let end = start.withOffset(CGVector(dx: 0, dy: offset > 0 ? -distance : distance))
+            start.press(forDuration: 0.05, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.15)
+        }
+        let shot = picker.screenshot()
+        let attachment = XCTAttachment(screenshot: shot)
+        attachment.name = "Largest type dinner ingredient and unmatched pantry product"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        let recognition = VNRecognizeTextRequest()
+        recognition.recognitionLanguages = ["en-US"]
+        recognition.usesLanguageCorrection = false
+        try VNImageRequestHandler(cgImage: try XCTUnwrap(shot.image.cgImage)).perform([recognition])
+        let words = (recognition.results ?? []).compactMap { $0.topCandidates(1).first?.string }
+            .joined(separator: " ").lowercased().split(whereSeparator: { !$0.isLetter })
+        for word in ["cheddar", "cheese", "not", "matched"] {
+            XCTAssertTrue(words.contains(Substring(word)), "Missing whole word \(word) from \(words)")
+        }
+        tap(picker)
+        let food = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Cheddar cheese · ")).firstMatch
+        XCTAssertTrue(food.waitForExistence(timeout: 5))
+        let productName = food.label
+        tap(food)
+        XCTAssertEqual(picker.value as? String, productName)
+        tap(picker)
+        tap(app.buttons["Not matched"])
+        XCTAssertEqual(picker.value as? String, "Not matched")
+    }
+
+    func testPlanSavedEggsForTwoInNamedPickupAndReopenDinner() {
+        startPrivatePantryDinner(food: "Eggs", recipe: "Scrambled eggs")
         let confirm = app.buttons["dinner.handoff.confirm"]
         let destination = app.descendants(matching: .any)["dinner.handoff.destination"]
         reveal(destination)
         XCTAssertTrue(destination.label.contains("Groceries for Scrambled eggs"))
+        let match = app.buttons["dinner.handoff.matchPantry"]
+        reveal(match)
+        let choices = app.buttons["dinner.handoff.chooseIngredients"]
+        XCTAssertTrue(choices.waitForExistence(timeout: 5))
+        XCTAssertLessThan(match.frame.maxY, choices.frame.midY)
+        match.tap()
+        let picker = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "dinner.handoff.pantryProduct.")).firstMatch
+        XCTAssertTrue(picker.waitForExistence(timeout: 8))
+        let useMatches = app.buttons["Use these product matches"]
+        XCTAssertFalse(useMatches.isEnabled)
+        tap(picker)
+        let food = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Eggs · ")).firstMatch
+        tap(food)
+        XCTAssertTrue(useMatches.isEnabled)
+        tap(app.navigationBars["Match food at home"].buttons["Cancel"])
+        XCTAssertTrue(app.navigationBars["Match food at home"].waitForNonExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["Clear product matches"].exists)
+        let quantities = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] %@", "Shopping list quantities for Groceries for Scrambled eggs")).firstMatch
+        XCTAssertTrue(quantities.exists)
         revealFollowingAction(confirm)
         XCTAssertEqual(confirm.label, "Plan for tonight")
         confirm.tap()
@@ -339,9 +570,14 @@ import XCTest
         XCTAssertEqual(app.descendants(matching: .any)["ledgerShopName"].label, "Shopping list name (required)")
         tap(createList)
         XCTAssertTrue(app.navigationBars["Shop for ingredients only"].waitForExistence(timeout: 5))
-        let changeList = app.buttons["dinner.handoff.pickup"]
+        let changeList = app.descendants(matching: .any).matching(identifier: "dinner.handoff.pickup").firstMatch
         XCTAssertTrue(changeList.waitForExistence(timeout: 5))
         XCTAssertEqual(changeList.label, "Change list")
+        tap(changeList, at: CGVector(dx: 0.8, dy: 0.5))
+        let createAnotherList = app.buttons["Create shopping list"]
+        XCTAssertTrue(createAnotherList.waitForExistence(timeout: 5), "The trailing area of Change list must open its menu.")
+        tap(createAnotherList)
+        tap(app.navigationBars["Create shopping list"].buttons["Cancel"])
         let select = app.switches.matching(NSPredicate(format: "identifier BEGINSWITH 'dinner.handoff.ingredient.' AND label CONTAINS %@", "Lemon")).firstMatch
         let chickpeas = app.switches.matching(NSPredicate(format: "identifier BEGINSWITH 'dinner.handoff.ingredient.' AND label CONTAINS %@", "Chickpeas")).firstMatch
         tap(select, at: CGVector(dx: 0.22, dy: 0.5))
@@ -370,7 +606,7 @@ import XCTest
         tap(app.buttons["pantry.setup.apply"])
         tap(app.buttons["pantry.tonight"])
         XCTAssertTrue(app.navigationBars["Tonight"].waitForExistence(timeout: 12))
-        let empty = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "No reviewed recipes are available.")).firstMatch
+        let empty = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Save a recipe you cook.")).firstMatch
         XCTAssertTrue(empty.waitForExistence(timeout: 12))
         tap(app.buttons["tonight.addRecipe"])
         XCTAssertTrue(app.navigationBars["Enter a recipe"].waitForExistence(timeout: 8))

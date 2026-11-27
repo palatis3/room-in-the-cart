@@ -3,14 +3,16 @@ import Foundation
 import LocalStore
 
 /// Proposals for one printed row. Physical receipt, usability and payment are always separate decisions.
-struct ReceiptPrintedEvidence: Equatable {
-    enum Kind { case item, adjustment, date, unclear }
+struct ReceiptPrintedEvidence: Equatable, Codable {
+    enum Kind: String, Codable { case item, adjustment, date, unclear }
     let kind: Kind
     var name: String?
     var quantity: String?
     var unit: UnitOfMeasure?
     var amount: String?
     var priceWording: String?
+    /// The selected document line, including any shopper correction. Display only.
+    private(set) var reviewedRateLine: String?
     var storage: InventoryLocation?
     var uncertain = false
     private(set) var acceptsFieldNotes = false
@@ -112,6 +114,36 @@ struct ReceiptPrintedEvidence: Equatable {
             && !wording.contains(#/(?i)\b(?:unusable|inservibles?|falt[oó]|no lleg[oó]|sin recibir|prepared|preparad[oa]s?|hot lunch|almuerzo caliente|a medio comer)\b/#)
     }
 
+    // A count × price and a final amount may be printed as separate OCR columns.
+    // Preserve that wording, including a Cyrillic х read by Vision. Column layout
+    // alone does not establish the amount received, a currency or a paid price.
+    private static let quantityPriceColumns = #/(?i)^(.+?)\s+([1-9][0-9]{0,3})\s*[x×х]\s*(?:[$£€]\s*)?[0-9]{1,7}[.,][0-9]{2}\s+((?:[$£€]\s*)?[0-9]{1,7}[.,][0-9]{2})$/#
+
+    static func printedQuantityPriceColumns(_ text: String) -> (item: String, total: Substring)? {
+        guard let match = text.wholeMatch(of: quantityPriceColumns) else { return nil }
+        let name = String(match.1)
+        return isPlainColumnItem(name) ? (name, match.3) : nil
+    }
+
+    private static let promotionalWords: Set<String> = [
+        "saving", "savings", "rebate", "rebates", "promotion", "promocion", "ahorro", "ahorros", "bonificacion"
+    ]
+
+    static func isPlainColumnItem(_ name: String) -> Bool {
+        let words = name.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: Locale(identifier: "en_US_POSIX"))
+            .split(whereSeparator: { !$0.isLetter }).map(String.init)
+        return name.contains(where: \.isLetter)
+            && name.allSatisfy { $0.isLetter || $0.isWhitespace || "-'’".contains($0) }
+            && !name.contains(nonItem) && !name.contains(mixed) && !name.contains(adjustment)
+            && promotionalWords.isDisjoint(with: words)
+            && !zip(words, words.dropFirst()).contains { $0 == "special" && $1 == "offer" }
+            && !isVoidedOrUnreceived(name)
+    }
+
+    static func isBareCountColumn(_ text: String) -> Bool {
+        text.wholeMatch(of: #/[1-9][0-9]{0,2}/#) != nil
+    }
+
     static func canSuggestAmount(for wording: String) -> Bool {
         guard !wording.contains(nonItem), !wording.contains(rateByUnit), !wording.contains(mixed),
               !wording.contains(signedValue), !wording.contains(otherNumbers) else { return false }
@@ -131,9 +163,31 @@ struct ReceiptPrintedEvidence: Equatable {
         }
         if text.contains(Self.adjustment) { kind = .adjustment; return }
         if ReceiptPrintedDate.looksLikeDate(text) { kind = .date; return }
+        let rateColumns = text.count <= 512 ? Self.printedQuantityPriceColumns(text) : nil
+        if let document = row.documentLine, document.stage != .order, rateColumns != nil,
+           row.reviewedText.utf8.count <= 4096 {
+            reviewedRateLine = row.reviewedText
+        }
         guard !text.isEmpty, text.count <= 512, text.contains(where: \.isLetter),
               !text.contains("?"), !text.contains("�"), row.uncertainOCR != true else { kind = .unclear; uncertain = true; return }
         kind = .item
+        if let item = row.printedItemColumn, row.reviewedText == row.originalText,
+           row.documentLine?.method == .imageOCR || row.documentLine?.method == .pdfOCR,
+           Self.isPlainColumnItem(item), text.hasPrefix(item + " ") {
+            let columns = text.dropFirst(item.count + 1).split(separator: " ", maxSplits: 1)
+            if columns.count == 2, Self.isBareCountColumn(String(columns[0])),
+               Self.isStandaloneAmount(String(columns[1])) {
+                // A printed count and price do not establish received units or paid money.
+                name = item
+                uncertain = true
+                return
+            }
+        }
+        if let item = rateColumns?.item {
+            name = item
+            uncertain = true
+            return
+        }
         guard !text.contains(Self.mixed), !text.contains(Self.signedValue) else { uncertain = true; return }
         var candidate = text
         Self.removeUnitPrice(from: &candidate)
@@ -241,7 +295,7 @@ struct ReceiptPrintedEvidence: Equatable {
 
 }
 
-struct ReceiptPrintedDate: Equatable {
+struct ReceiptPrintedDate: Equatable, Codable {
     let day: Date
     let wording: String
     private static let pattern = #/(?i)^\s*(?:(?:purchase date|transaction date|sale date|purchased|date|fecha de compra|fecha de venta|fecha)\s*[:#-]?\s*)?([0-9]{4}[-\/]\d{1,2}[-\/]\d{1,2}|\d{1,2}[-\/]\d{1,2}[-\/]\d{4})(?:\s+[0-2]?\d:\d{2}(?::\d{2})?(?:\s*[ap]m)?)?\s*$/#

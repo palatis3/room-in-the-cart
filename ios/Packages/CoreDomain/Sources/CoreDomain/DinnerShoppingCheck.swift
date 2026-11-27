@@ -5,6 +5,7 @@ import Foundation
 public struct DinnerShoppingCheck {
     public let recipe: MealTemplate
     public let lineIDs: Set<UUID>
+    public let confirmedAtHomeIngredientIDs: Set<UUID>
     private let shopID: UUID
 
     public init(shop: ShoppingLedger, occurrenceID: UUID, savedTemplates: [MealTemplate]) throws {
@@ -31,6 +32,8 @@ public struct DinnerShoppingCheck {
         shopID = shop.id
         recipe = current
         lineIDs = Set(rows.map(\.lineID))
+        let atHome = Set(shop.lines.filter { $0.dinnerAtHomeAt != nil }.map(\.id))
+        confirmedAtHomeIngredientIDs = Set(rows.filter { atHome.contains($0.lineID) }.map(\.id))
     }
 
     /// Ledger-only meal and lunch commitments may precede physical allocation.

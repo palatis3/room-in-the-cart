@@ -331,8 +331,22 @@ import XCTest
             reveal(original)
             XCTAssertEqual(original.label, String(line))
         }
-        enableSwitch("I checked the printed lines.")
-        tap(app.buttons["scan.receipt.review"])
+        // The printed-lines acknowledgment follows all three editable rows. Its
+        // VoiceOver representation can expose a child outside the physical switch.
+        let checkedLines = app.switches["I checked the printed lines."]
+        let thumb = checkedLines.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5))
+        for _ in 0..<16 {
+            if checkedLines.exists && checkedLines.isHittable && scrollableArea().contains(thumb.screenPoint) { break }
+            scrollContent(upward: true)
+        }
+        XCTAssertTrue(checkedLines.exists && checkedLines.isHittable)
+        XCTAssertTrue(scrollableArea().contains(thumb.screenPoint))
+        XCTAssertEqual(checkedLines.value as? String, "0")
+        thumb.tap()
+        XCTAssertEqual(checkedLines.value as? String, "1")
+        let reviewReceipt = app.buttons["scan.receipt.review"]
+        XCTAssertTrue(reviewReceipt.isEnabled)
+        tap(reviewReceipt)
         enableSwitch("I checked the purchase date.")
         for (ordinal, usable) in [(0, "2"), (1, "4")] {
             tap(app.buttons["receipt.action.\(ordinal)"])

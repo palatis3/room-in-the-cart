@@ -90,6 +90,7 @@ struct VoicePantryRow {
     @ObservedObject var household: HouseholdModel
     let origin: UUID
     var startingLot: InventoryLot? = nil
+    @State private var previouslyOpened = false
     @EnvironmentObject private var access: WorkspaceAccess
     @EnvironmentObject private var pickup: PickupModel
     @Environment(\.guardianChildCoordinator) private var child
@@ -208,7 +209,21 @@ struct VoicePantryRow {
     private var voiceForm: some View {
         WorkingForm {
             if !boundScope {
-                Text(pantryText("Unlock the authorized private workspace to view pantry food."))
+                if previouslyOpened {
+                    Text(pantryText("This review closed. Any change you hadn’t confirmed was discarded."))
+                        .accessibilityIdentifier("pantry.use.interrupted")
+                    Button {
+                        erase()
+                        dismiss()
+                    } label: {
+                        Text(pantryText(startingLot == nil ? "Return to My Pantry" : "Back to pantry item"))
+                            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                            .contentShape(Rectangle())
+                    }
+                    .accessibilityIdentifier(startingLot == nil ? "pantry.use.returnToShelf" : "pantry.use.backToItem")
+                } else {
+                    Text(pantryText("Unlock the authorized private workspace to view pantry food."))
+                }
             } else if let pending = model.pending {
                 if working || model.busy {
                     ProgressView(pantryText("Saving your change…"))
@@ -355,6 +370,7 @@ struct VoicePantryRow {
             }
         }
         .navigationTitle(pantryText(stage == .review ? "Review pantry changes" : (startingLot == nil ? "Talk or type" : "Record use")))
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
         .privacySensitive()
         .keyboardDoneAction(visible: editing && stage != .entry, title: pantryText("Done"), identifier: "pantry.voiceKeyboardDone") { focusedEditor = nil }
@@ -386,8 +402,9 @@ struct VoicePantryRow {
             }
         }
         .onAppear {
-            if identity == nil, scene == .active {
+            if identity == nil, !previouslyOpened, scene == .active {
                 identity = currentIdentity; generation = pickup.privatePantryGeneration
+                if identity != nil { previouslyOpened = true }
                 if let startingLot, authorized, model.canEdit, lots.contains(startingLot) {
                     basis = model.snapshot?.state
                     rows = [.init(food: startingLot.name, original: startingLot.name, lotID: startingLot.id, mode: .usedSome)]

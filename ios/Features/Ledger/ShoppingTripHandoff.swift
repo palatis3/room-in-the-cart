@@ -86,12 +86,13 @@ struct TripHandoffEntry: View {
                         ForEach(rows) { row in
                             Toggle(isOn: binding(row.id, in: $selected)) {
                                 Text(verbatim: row.text(includePack: false)).fixedSize(horizontal: false, vertical: true)
-                            }.frame(minHeight: 44)
+                            }
                             if selected.contains(row.id), let pack = row.packNote {
-                                Toggle(tripFormat("Include %@", pack), isOn: binding(row.id, in: $includePack)).frame(minHeight: 44)
+                                Toggle(tripFormat("Include %@", pack), isOn: binding(row.id, in: $includePack))
                             }
                         }
                     }
+                    .toggleStyle(LabeledRowToggleStyle())
                     Button(tripText("Preview message")) {
                         let content = rows.filter { selected.contains($0.id) }.map { $0.text(includePack: includePack.contains($0.id)) }
                         guard authorize(), !content.isEmpty, model.shop?.revisionID == shop.revisionID else { return }

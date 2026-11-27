@@ -368,7 +368,8 @@ struct GroceryWindow: View {
         do {
             let persona = ReceiptAcquisition.identity(["private-receipt-aliases", identity.actorID.uuidString,
                 identity.subject ?? "", identity.householdID ?? "", identity.memberID ?? ""])
-            try await pickup.bindPrivatePantry(ledger: ledger, receiptAliasPersona: persona,
+            let draftOwner = ReceiptAcquisition.identity(["private-receipt-drafts", persona.uuidString, identity.role ?? "local"])
+            try await pickup.bindPrivatePantry(ledger: ledger, receiptAliasPersona: persona, receiptDraftOwner: draftOwner,
                 privateDinnerActorID: identity.subject == nil && identity.householdID == nil ? identity.actorID : nil, authorize: authorize)
             if !pickup.ready { await pickup.load() }
             if pickup.pantryRouteAvailable { Diagnostics.record(.pantryRouteReady) }
@@ -612,11 +613,6 @@ struct ShopView: View {
                     }
                     Label(quickGroceryText("Private on this iPhone"), systemImage: "lock")
                         .font(.footnote).foregroundStyle(Theme.secondary)
-                    if ledger.shop == nil {
-                        Text(quickGroceryFormat("Add a grocery to start your “%@” list. Works offline without an account.", ledgerText("Pickup")))
-                            .accessibilityIdentifier("quickGrocery.firstDestination")
-                            .font(.footnote).foregroundStyle(Theme.secondary)
-                    }
                 }
                 tripSummary
                 shopTools
@@ -933,7 +929,7 @@ struct RecordsView: View {
                     }
                     NavigationLink {
                         PlacementRecordsEntryView(household: household)
-                    } label: { Label(PlacementCopy.text("Shared placement reports"), systemImage: "doc.text") }
+                    } label: { Label(PlacementCopy.text("Store order outcomes"), systemImage: "doc.text") }
                     .accessibilityIdentifier("records.sharedPlacementReports")
                     NavigationLink {
                         HistoryRecordsEntryView(household: household)

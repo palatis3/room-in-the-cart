@@ -8,7 +8,9 @@ import SwiftUI
     private let server: S23DuplicateFixtureServer
     init() {
         let args = ProcessInfo.processInfo.arguments
-        if args.contains("--s23-request-pair") {
+        if args.contains("--s23-shopper-request-safety") {
+            server = S23DuplicateFixtureServer(requestSafety: true)
+        } else if args.contains("--s23-request-pair") {
             server = S23DuplicateFixtureServer(pairMode: args.contains("--s23-older-server") ? .olderServer : .available)
         } else {
             server = S23DuplicateFixtureServer(pageBoundary: true, mealNames: args.contains("--s23-same-meal") ? ["Cereal"] : [])

@@ -47,6 +47,7 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
     @Published private(set) var requiresFreshReview = false
     @Published private(set) var savedLotID: UUID?
     @Published private(set) var pendingWasCommitted = false
+    private var draftPresentationErased = false
     private let repository: PantryRepository
     private let clock: () -> Date
     private let receiptTripOptions: @MainActor (InventoryState) -> [ReceiptTripPlan]
@@ -73,7 +74,7 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
         repository.observeErasure(self)
     }
     func invalidatePantryPresentation(origin: UUID, initiatedHere: Bool) {
-        if repository.originID == origin { accessLost() }
+        if repository.originID == origin { draftPresentationErased = true; accessLost() }
     }
 
     var canEdit: Bool { phase == .ready && snapshot != nil && !busy && pending == nil && review == nil && !requiresFreshReview }
@@ -223,14 +224,42 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
         }
     }
 
-    func saveReceipt(_ review: PantryReceiptReview) async throws {
+    var permitsPrivateReceiptDraft: Bool { !draftPresentationErased && phase == .ready && repository.permitsPrivateReceiptDraft }
+
+    func savedReceiptDraft() async throws -> SavedReceiptDraft? {
+        guard permitsPrivateReceiptDraft else { throw PantryReceiptError.stale }
+        let token = generation
+        let draft = try await repository.savedReceiptDraft()
+        guard generation == token, permitsPrivateReceiptDraft else { throw PantryReceiptError.stale }
+        return draft
+    }
+
+    func saveReceiptDraft(_ payload: SavedReceiptDraft.Payload, replacing revision: UUID?) async throws -> SavedReceiptDraft {
+        guard canEdit, permitsPrivateReceiptDraft else { throw PantryReceiptError.stale }
+        let token = generation
+        let draft = try await repository.saveReceiptDraft(payload, replacing: revision)
+        guard generation == token, permitsPrivateReceiptDraft else { throw PantryReceiptError.stale }
+        return draft
+    }
+
+    func discardReceiptDraft(revision: UUID) async throws {
+        guard canEdit, permitsPrivateReceiptDraft else { throw PantryReceiptError.stale }
+        try await repository.discardReceiptDraft(revision: revision)
+    }
+
+    func saveReceipt(_ review: PantryReceiptReview, finishingDraft revision: UUID? = nil) async throws {
         guard canEdit else { throw PantryReceiptError.stale }
         let token = generation
         dismissConsumptionReceipt()
         busy = true
         defer { if token == generation { busy = false } }
         willMutateOrRecover?()
-        try await repository.applyReceipt(review, at: clock())
+        if let revision {
+            guard permitsPrivateReceiptDraft else { throw PantryReceiptError.stale }
+            try await repository.applyReceipt(review, finishingDraft: revision, at: clock())
+        } else {
+            try await repository.applyReceipt(review, at: clock())
+        }
         let result = try await repository.load(at: clock())
         guard token == generation else { throw PantryReceiptError.stale }
         snapshot = result
@@ -334,6 +363,15 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
         let result = try await repository.putawayDecisions(receiptID: id, after: after)
         guard token == generation, canEdit else { throw PantryReceiptError.stale }
         return result
+    }
+
+    func currentPurchaseDecisions(_ header: ReviewedReceiptHeader, after cursor: UUID?,
+                                  expected: InventoryState) async throws -> [ReviewedReceiptDecision] {
+        guard canEdit, snapshot?.state == expected else { throw PantryReceiptError.stale }
+        let token = generation
+        let rows = try await repository.currentPurchaseDecisions(header, after: cursor, expected: expected)
+        guard token == generation, canEdit, snapshot?.state == expected else { throw PantryReceiptError.stale }
+        return rows
     }
 
     func receiptHistory(after: UUID? = nil, receiptID: UUID? = nil) async throws -> [ReceiptAcquisition] {

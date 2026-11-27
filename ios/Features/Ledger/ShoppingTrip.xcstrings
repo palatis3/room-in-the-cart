@@ -1,6 +1,54 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Enter an amount greater than zero, up to %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter an amount greater than zero, up to %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe una cantidad mayor que cero, hasta %@."
+          }
+        }
+      }
+    },
+    "Enter a whole number from 1 up to %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a whole number from 1 up to %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe un número entero desde 1 hasta %@."
+          }
+        }
+      }
+    },
+    "The list changed. Reopen this item to check the amount.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The list changed. Reopen this item to check the amount."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La lista cambió. Vuelve a abrir este producto para revisar la cantidad."
+          }
+        }
+      }
+    },
     "%@ %@ per pack": {
       "localizations": {
         "en": {

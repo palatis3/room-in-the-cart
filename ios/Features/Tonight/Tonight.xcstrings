@@ -1,6 +1,57 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Review the recipe, then save it on this iPhone. Closing the editor or restarting the app clears unsaved entries.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the recipe, then save it on this iPhone. Closing the editor or restarting the app clears unsaved entries."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa la receta y luego guárdala en este iPhone. Si cierras el editor o reinicias la app, se borran los datos que aún no hayas guardado."
+          }
+        }
+      }
+    },
+    "Discard this unsaved recipe?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard this unsaved recipe?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Descartar esta receta sin guardar?"
+          }
+        }
+      }
+    },
+    "Discard recipe": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard recipe"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descartar receta"
+          }
+        }
+      }
+    },
     "Matched at home for purchase review": {
       "extractionState": "manual",
       "localizations": {
@@ -919,19 +970,19 @@
         }
       }
     },
-    "No reviewed recipes are available. Add a familiar recipe or review a saved import’s servings and ingredient amounts. Browsing does not start a pickup.": {
+    "Save a recipe you cook. You can then see which ingredients are in My Pantry and which you need.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No reviewed recipes are available. Add a familiar recipe or review a saved import’s servings and ingredient amounts. Browsing does not start a pickup."
+            "value": "Save a recipe you cook. You can then see which ingredients are in My Pantry and which you need."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "No hay recetas revisadas. Añade una receta conocida o revisa las raciones y cantidades de una importación guardada. Explorar no inicia una recogida."
+            "value": "Guarda una receta que prepares. Así podrás ver qué ingredientes tienes en Mi despensa y cuáles te faltan."
           }
         }
       }

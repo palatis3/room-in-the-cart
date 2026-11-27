@@ -23,6 +23,16 @@ private func receiptStage(_ stage: ReceiptAcquisition.DocumentLine.Stage) -> Str
     }
 }
 
+struct UnsavedReceiptReviewNotice: View {
+    var body: some View {
+        Text(pantryText("Leaving the app clears this unsaved review. Reopen or rescan the receipt to start again."))
+            .font(.subheadline)
+            .foregroundStyle(Theme.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityIdentifier("receipt.unsavedReviewNotice")
+    }
+}
+
 struct PantryReceiptDocuments: View {
     var model: PantryModel? = nil
     let target: CaptureTarget
@@ -30,6 +40,8 @@ struct PantryReceiptDocuments: View {
     var reviewsPrivateReceipt = false
     var initialInput: ReceiptDocumentBytes? = nil
     var initialDocument: ExtractedReceiptDocument? = nil
+    var resumedDraft: ReceiptLineDraft? = nil
+    @Environment(\.privateReceiptDraft) private var draftContext
     var sectionPreviews: [Data?] = []
     var omittedLines: Set<ExtractedReceiptDocument.Selection> = []
     var backToSections: (() -> Void)? = nil
@@ -54,7 +66,7 @@ struct PantryReceiptDocuments: View {
     @State private var job: Task<Void, Never>?
     @State private var generation = UUID()
     @State private var document: ExtractedReceiptDocument?
-    @State private var documentDateWording: String?
+    @State private var purchaseDateEvidence: ExtractedReceiptDocument.PurchaseDateEvidence?
     @State private var reviewedWording: [ExtractedReceiptDocument.Selection: String] = [:]
     @State private var inspectedLine: ExtractedReceiptDocument.Selection?
     @State private var savedFileReceipt: ReviewedReceiptHeader?
@@ -65,6 +77,7 @@ struct PantryReceiptDocuments: View {
     @State private var linkedAmountItems = Set<ExtractedReceiptDocument.Selection>()
     @State private var storeFocusRequest: UUID?
     @State private var stage: ReceiptAcquisition.DocumentLine.Stage = .receipt
+    @State private var restoringStage: ReceiptAcquisition.DocumentLine.Stage?
     @State private var merchant = ""
     @State private var confirmed = false
     @State private var error: String?
@@ -110,6 +123,16 @@ struct PantryReceiptDocuments: View {
                     })
                 }
                 Section(pantryText("Receipt source")) {
+                    if let context = draftContext, reviewsPrivateReceipt, openedShare == nil,
+                       context.model.permitsPrivateReceiptDraft {
+                        let snapshot = ReceiptLineDraft(workspaceID: target.workspaceID, document: document, merchant: merchant,
+                            stage: stage, selection: selection, linkedAmountItems: linkedAmountItems,
+                            reviewedWording: reviewedWording, omittedLines: omittedLines)
+                        PrivateReceiptDraftSave(session: context.session, model: context.model, id: snapshot.receiptID,
+                                                isLineSelection: true) { .lines(snapshot) }
+                    } else {
+                        UnsavedReceiptReviewNotice()
+                    }
                     let name = captureText("Store or receipt name (required)")
                     WorkingField(name) {
                         TextField(name, text: $merchant, prompt: Text(""))
@@ -137,10 +160,26 @@ struct PantryReceiptDocuments: View {
                         .frame(minHeight: 44)
                         .accessibilityIdentifier("receipt.document.usePrintedName")
                     }
-                    if let dateWording = documentDateWording, stage != .order {
+                    if let purchaseDateEvidence, stage != .order {
                         LabeledContent(pantryText("Date wording on the receipt")) {
-                            Text(verbatim: dateWording).font(.system(.subheadline, design: .monospaced))
+                            Text(verbatim: purchaseDateEvidence.wording).font(.system(.subheadline, design: .monospaced))
                         }
+                        if let position = purchaseDateEvidence.position, !omittedLines.contains(position), reviewedWording[position] == nil {
+                            Toggle(putawayText("Use this printed date for the purchase"), isOn: Binding(
+                                get: { selection.contains(position) },
+                                set: { include in
+                                    guard authorize(), !include || included.contains(position) || included.count < 200 else { return }
+                                    if include { selection.insert(position) } else { selection.remove(position) }
+                                    confirmed = false
+                                }
+                            ))
+                            .disabled(!authorize() || !selection.contains(position) && included.count >= 200)
+                            .accessibilityIdentifier("receipt.document.usePrintedDate")
+                        }
+                    }
+                    if resumedDraft != nil {
+                        Text(pantryText("The original photo or file is unavailable in a saved draft."))
+                            .font(.footnote).foregroundStyle(Theme.secondary)
                     }
                     if let changePhoto {
                         Menu {
@@ -219,7 +258,7 @@ struct PantryReceiptDocuments: View {
                     }.buttonStyle(PrimaryAction()).disabled(!authorize() || changePhoto?.busy == true || (!reviewsEvidenceOnly && !confirmed) || selection.isEmpty || storeIssue != nil)
                         .accessibilityIdentifier("receipt.document.accept")
                     if let backToSections { Button(captureText("Back to receipt sections"), action: backToSections) }
-                    if initialDocument == nil { Button(pantryText("Choose another document")) { cancel() } }
+                    if initialDocument == nil && resumedDraft == nil { Button(pantryText("Choose another document")) { cancel() } }
                 }
             } else {
                 if let model, !inbox.isEmpty {
@@ -300,13 +339,15 @@ struct PantryReceiptDocuments: View {
                 return try input.bytes
             }
         }
-        .onChange(of: document?.digest) { _, _ in
-            let dates = (document?.pages ?? []).flatMap(\.lines)
-                .filter { !$0.uncertain && ReceiptPrintedDate.looksLikeDate($0.text) }
-            documentDateWording = Set(dates.map(\.text)).count == 1 ? dates.first?.text : nil
+        .onChange(of: document) { _, newDocument in
+            purchaseDateEvidence = newDocument?.purchaseDateEvidence(at: Date())
         }
         .onChange(of: merchant) { _, _ in confirmed = false }
-        .onChange(of: stage) { _, _ in confirmed = false; linkedAmountItems = [] }
+        .onChange(of: stage) { _, newStage in
+            confirmed = false
+            if restoringStage == newStage { restoringStage = nil }
+            else { linkedAmountItems = [] }
+        }
         .onChange(of: scenePhase) { _, phase in if phase == .background { cancel() } }
         .alert(item: $discard) { item in
             Alert(title: Text(pantryText("Discard this shared receipt?")),
@@ -324,7 +365,19 @@ struct PantryReceiptDocuments: View {
             if changePhoto == nil && openedSavedReceipt == nil { cancel() }
             inbox = []
         }
-        .task { if let initialDocument { document = initialDocument } else { await loadInbox() } }
+        .task {
+            guard authorize() else { return }
+            if let resumedDraft, resumedDraft.workspaceID == target.workspaceID {
+                document = resumedDraft.document
+                merchant = resumedDraft.merchant
+                restoringStage = stage == resumedDraft.stage ? nil : resumedDraft.stage
+                stage = resumedDraft.stage
+                selection = resumedDraft.selection
+                linkedAmountItems = resumedDraft.linkedAmountItems
+                reviewedWording = resumedDraft.reviewedWording
+                confirmed = false
+            } else if let initialDocument { document = initialDocument } else { await loadInbox() }
+        }
         .task { if let initialInput, document == nil, job == nil { start { initialInput } } }
     }
 
@@ -512,7 +565,7 @@ struct PantryReceiptDocuments: View {
 }
 
 
-/// The inspector is read-only. Including a line in the receipt is a separate choice.
+/// Wording corrections are independent of the choice to include a receipt line.
 struct ReceiptPrintedLineInspector: View {
     let lines: [ReceiptDocumentPage.Line]
     let pageNumber: Int?
@@ -529,7 +582,16 @@ struct ReceiptPrintedLineInspector: View {
     @State private var cropPage: CGImage?
 
     private var selected: ReceiptDocumentPage.Line { lines[index] }
-    private var hasEdit: Bool { edited != nil && edited != reviewed }
+    private var canReviewWording: Bool { printedCrop != nil && reviewed != nil && apply != nil }
+    private var pendingWording: String? {
+        guard !showSource, let edited, edited != reviewed else { return nil }
+        return edited
+    }
+    private var invalidWording: Bool {
+        guard let pendingWording else { return false }
+        return pendingWording.trimmingCharacters(in: .whitespaces).isEmpty
+            || pendingWording.contains(where: \.isNewline) || pendingWording.utf8.count > 2048
+    }
     private var wording: Binding<String> {
         Binding(get: { edited ?? reviewed ?? selected.text }, set: { edited = $0 })
     }
@@ -557,23 +619,27 @@ struct ReceiptPrintedLineInspector: View {
         .navigationTitle(showSource ? pantryText("Original page") : pantryText("Printed line"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            if hasEdit && !showSource {
+            if canReviewWording && !showSource {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(pantryText("Cancel")) { dismiss() }
+                        .disabled(pendingWording == nil)
                 }
             }
             ToolbarItem(placement: .confirmationAction) {
-                if hasEdit, !showSource, let edited, let apply {
-                    Button(pantryText("Done")) { apply(edited) }
-                        .accessibilityLabel(captureText("Use reviewed wording"))
-                        .accessibilityIdentifier("receipt.reading.apply")
-                        .disabled(edited.trimmingCharacters(in: .whitespaces).isEmpty
-                            || edited.contains(where: \.isNewline) || edited.utf8.count > 2048)
-                } else {
-                    Button(pantryText("Done")) {
-                        if showSource { showSource = false } else { dismiss() }
+                Button(pantryText("Done")) {
+                    if showSource {
+                        showSource = false
+                    } else if let pendingWording, let apply {
+                        apply(pendingWording)
+                    } else {
+                        dismiss()
                     }
                 }
+                .accessibilityIdentifier(canReviewWording && !showSource ? "receipt.reading.apply" : "receipt.reading.done")
+                .accessibilityHint(pendingWording == nil ? "" : captureText("Use reviewed wording"))
+                .accessibilityInputLabels(pendingWording == nil ? [Text(pantryText("Done"))]
+                    : [Text(pantryText("Done")), Text(captureText("Use reviewed wording"))])
+                .disabled(invalidWording)
             }
         }
         .privacySensitive()

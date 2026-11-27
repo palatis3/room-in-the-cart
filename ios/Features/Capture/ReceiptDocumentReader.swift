@@ -8,7 +8,7 @@ import PDFKit
 import UniformTypeIdentifiers
 
 enum ReceiptDocumentKind: String, Codable, Sendable { case pdf, image, text }
-enum ReceiptDocumentFailure: Error, Equatable, Sendable { case size, pages, pixels, characters, lineLimit, selection, locked, unsupported, unavailable, timeout, duplicateSection }
+enum ReceiptDocumentFailure: String, Error, Codable, Sendable { case size, pages, pixels, characters, lineLimit, selection, locked, unsupported, unavailable, timeout, duplicateSection }
 
 enum ReceiptPhotoSelection: Sendable, Transferable {
     case selected(ReceiptDocumentBytes)
@@ -73,32 +73,53 @@ struct ReceiptDocumentBytes: Sendable {
     }
 }
 
-struct ReceiptDocumentPage: Identifiable, Sendable {
+struct ReceiptDocumentPage: Identifiable, Equatable, Codable, Sendable {
     let id: Int
     let method: ReceiptAcquisition.DocumentLine.Method
-    struct Line: Identifiable, Sendable {
+    struct Line: Identifiable, Equatable, Codable, Sendable {
         let id: Int
         let text: String
         var uncertain = false
         var bounds: CGRect?
         var wordReadings: [ReceiptWordReading] = []
+        var printedItemColumn: String?
     }
     let lines: [Line]
     var skipped: ReceiptDocumentFailure? = nil
 }
 
-struct ExtractedReceiptDocument: Sendable {
+struct ExtractedReceiptDocument: Equatable, Codable, Sendable {
     let digest: Data
     let pages: [ReceiptDocumentPage]
     var firstSectionDigest: Data? = nil
 
-    struct Selection: Hashable, Identifiable {
+    struct Selection: Hashable, Identifiable, Codable, Sendable {
         let page: Int
         let line: Int
         var id: Self { self }
     }
 
-    struct PrintedPaidTotal: Equatable, Sendable {
+    struct PurchaseDateEvidence: Equatable {
+        let wording: String
+        let position: Selection?
+    }
+
+    /// Keep ambiguous wording available for inspection. Only one clear source
+    /// position can be offered for inclusion with the shopper's food selection.
+    func purchaseDateEvidence(at now: Date, calendar: Calendar = .current) -> PurchaseDateEvidence? {
+        let dates = pages.flatMap { page in
+            page.lines.filter { ReceiptPrintedDate.looksLikeDate($0.text) }.map {
+                (position: Selection(page: page.id, line: $0.id), line: $0)
+            }
+        }
+        let readable = dates.filter { !$0.line.uncertain }
+        guard let first = readable.first, readable.allSatisfy({ $0.line.text == first.line.text }) else { return nil }
+        let offersDate = dates.count == 1 && pages.allSatisfy { $0.skipped == nil }
+            && ReceiptPrintedDate.unique(in: [.init(originalText: first.line.text)], now: now, calendar: calendar) != nil
+        return .init(wording: first.line.text, position: offersDate ? first.position : nil)
+    }
+
+    struct PrintedPaidTotal: Equatable, Codable, Sendable {
         let wording: String
         let amount: String
     }
@@ -201,6 +222,127 @@ struct ExtractedReceiptDocument: Sendable {
             && abs(first.midY - second.midY) <= minHeight * 0.35
     }
 
+    /// Reconstruct observed columns in physical order. A bare count needs a second
+    /// merchandise row with matching count and currency columns to establish the layout.
+    /// Keep the original item position so subsequent receipt lines retain their IDs.
+    static func groupingQuantityPriceColumns(_ lines: [ReceiptDocumentPage.Line],
+                                             photo: () -> CGImage? = { nil }) -> [ReceiptDocumentPage.Line] {
+        lazy var normalizedPhoto = photo()
+        guard lines.count >= 2, lines.allSatisfy({ $0.bounds?.isEmpty == false }) else { return lines }
+        var rateRows: [[ReceiptDocumentPage.Line]] = []
+        var countRows: [[ReceiptDocumentPage.Line]] = []
+        for item in lines {
+            guard let box = item.bounds, item.text.first?.isLetter == true else { continue }
+            let neighbors = lines.filter { line in
+                guard let other = line.bounds else { return false }
+                // Also inspect partial overlaps: a second offset column or a row
+                // between baselines makes reconstruction ambiguous.
+                return min(box.maxY, other.maxY) - max(box.minY, other.minY) > min(box.height, other.height) * 0.20
+            }.sorted { ($0.bounds?.minX ?? 0) < ($1.bounds?.minX ?? 0) }
+            guard (2...4).contains(neighbors.count), neighbors.first?.id == item.id,
+                  neighbors.allSatisfy({ $0.bounds.map { samePrintedRow(box, $0) } == true }),
+                  zip(neighbors, neighbors.dropFirst()).allSatisfy({ left, right in
+                      guard let lhs = left.bounds, let rhs = right.bounds else { return false }
+                      return samePrintedRow(lhs, rhs)
+                  }) else { continue }
+            let separate = zip(neighbors, neighbors.dropFirst()).allSatisfy { left, right in
+                guard let lhs = left.bounds, let rhs = right.bounds else { return false }
+                return lhs.maxX <= rhs.minX
+            }
+            let wording = neighbors.map(\.text).joined(separator: " ")
+            guard wording.utf8.count <= 2048 else { continue }
+            // Vision sometimes includes the count and rate in the name observation.
+            // In that layout the only other cell must be the complete printed total.
+            if let fields = ReceiptPrintedEvidence.printedQuantityPriceColumns(wording),
+               fields.item == item.text || (neighbors.count == 2 && fields.total == neighbors[1].text) {
+                if !separate {
+                    // OCR can pad the name and rate into the same blank gutter. Only
+                    // the original photo can establish separation when boxes overlap.
+                    guard neighbors.count == 3, fields.item == item.text, fields.total == neighbors[2].text,
+                          !neighbors.contains(where: \.uncertain), let rate = neighbors[1].bounds,
+                          let total = neighbors[2].bounds, rate.maxX <= total.minX,
+                          let photo = normalizedPhoto, printedGutterSeparates(box, rate, in: photo) else { continue }
+                }
+                rateRows.append(neighbors)
+            } else if separate, neighbors.count == 3, !neighbors.contains(where: \.uncertain),
+                      ReceiptPrintedEvidence.isPlainColumnItem(item.text),
+                      ReceiptPrintedEvidence.isBareCountColumn(neighbors[1].text),
+                      let countBox = neighbors[1].bounds, let amountBox = neighbors[2].bounds,
+                      countBox.minX - box.maxX >= box.height,
+                      amountBox.minX - countBox.maxX >= box.height,
+                      ReceiptPrintedEvidence.isStandaloneAmount(neighbors[2].text) {
+                countRows.append(neighbors)
+            }
+        }
+        let alignedCountRows = countRows.filter { row in
+            guard let count = row[1].bounds, let amount = row[2].bounds else { return false }
+            return countRows.contains { other in
+                guard other[0].id != row[0].id, let otherCount = other[1].bounds,
+                      let otherAmount = other[2].bounds else { return false }
+                let tolerance = min(count.height, otherCount.height)
+                return abs(count.maxX - otherCount.maxX) <= tolerance
+                    && abs(amount.maxX - otherAmount.maxX) <= tolerance
+            }
+        }
+
+        let countItemIDs = Set(alignedCountRows.map { $0[0].id })
+        var replacements: [Int: ReceiptDocumentPage.Line] = [:]
+        var absorbed = Set<Int>()
+        for neighbors in rateRows + alignedCountRows {
+            let item = neighbors[0]
+            let parts = neighbors.map(\.text)
+            let wording = parts.joined(separator: " ")
+            let combinedBounds = neighbors.compactMap(\.bounds).reduce(CGRect.null) { $0.union($1) }
+            var choices: [ReceiptWordReading] = []
+            var wordOffset = 0
+            for (index, column) in neighbors.enumerated() {
+                for choice in column.wordReadings {
+                    var corrected = parts
+                    corrected[index] = choice.wording
+                    choices.append(.init(word: choice.word, replacement: choice.replacement,
+                                         wording: corrected.joined(separator: " "), wordIndex: wordOffset + choice.wordIndex,
+                                         bounds: choice.bounds))
+                }
+                wordOffset += column.text.split(whereSeparator: \.isWhitespace).count
+            }
+            replacements[item.id] = .init(id: item.id, text: wording, uncertain: neighbors.contains(where: \.uncertain),
+                                          bounds: combinedBounds, wordReadings: choices,
+                                          printedItemColumn: countItemIDs.contains(item.id) ? item.text : nil)
+            absorbed.formUnion(neighbors.dropFirst().map(\.id))
+        }
+        return lines.compactMap { absorbed.contains($0.id) ? nil : replacements[$0.id] ?? $0 }
+    }
+
+    /// Check the full overlapping strip and both inked sides in the upright OCR input.
+    private static func printedGutterSeparates(_ item: CGRect, _ rate: CGRect, in image: CGImage) -> Bool {
+        guard item.minX < rate.minX, item.maxX < rate.maxX, item.maxX > rate.minX,
+              let left = ReceiptWordReading.pixels(for: item, width: image.width, height: image.height),
+              let right = ReceiptWordReading.pixels(for: rate, width: image.width, height: image.height) else { return false }
+        let overlap = left.maxX - right.minX
+        guard overlap > 0, overlap <= min(left.height, right.height) / 4 else { return false }
+        let area = left.union(right)
+        guard area.width * area.height <= 250_000, let strip = image.cropping(to: area),
+              let context = CGContext(data: nil, width: strip.width, height: strip.height, bitsPerComponent: 8,
+                                      bytesPerRow: strip.width, space: CGColorSpaceCreateDeviceGray(),
+                                      bitmapInfo: CGImageAlphaInfo.none.rawValue),
+              let data = context.data else { return false }
+        context.draw(strip, in: CGRect(x: 0, y: 0, width: strip.width, height: strip.height))
+        let pixels = data.assumingMemoryBound(to: UInt8.self)
+        let first = Int(right.minX - area.minX) - 1
+        let last = Int(left.maxX - area.minX)
+        guard first > 0, last < strip.width - 1 else { return false }
+        var leftInk = false, rightInk = false
+        for y in 0..<strip.height {
+            for x in 0..<strip.width {
+                let gray = pixels[y * context.bytesPerRow + x]
+                if x < first { leftInk = leftInk || gray < 128 }
+                else if x > last { rightInk = rightInk || gray < 128 }
+                else if gray < 248 { return false }
+            }
+        }
+        return leftInk && rightInk
+    }
+
     func source(target: CaptureTarget, merchant: String, stage: ReceiptAcquisition.DocumentLine.Stage,
                 selection: Set<Selection>, linkedAmountItems: Set<Selection> = [], reviewedWording: [Selection: String] = [:], at date: Date) throws -> SourceMediaRecord {
         var associations: [Selection: Selection] = [:]
@@ -221,6 +363,7 @@ struct ExtractedReceiptDocument: Sendable {
                 let place = ReceiptAcquisition.DocumentLine(method: page.method, stage: stage, page: page.id, line: line.id)
                 var row = ScanReceiptLine(id: ReceiptAcquisition.lineID(receiptID: id, ordinal: place.ordinal), originalText: line.text)
                 if line.uncertain { row.uncertainOCR = true }
+                row.printedItemColumn = line.printedItemColumn
                 row.documentLine = place
                 let position = Selection(page: page.id, line: line.id)
                 if let correction = reviewedWording[position] {
@@ -306,7 +449,7 @@ struct ReceiptDocumentReader: Sendable {
 
     private func readPages(_ input: ReceiptDocumentBytes) async throws -> [ReceiptDocumentPage] {
         var characterCount = 0
-        func page(_ number: Int, method: ReceiptAcquisition.DocumentLine.Method, reading: Reading) throws -> ReceiptDocumentPage {
+        func page(_ number: Int, method: ReceiptAcquisition.DocumentLine.Method, reading: Reading, photo: Data? = nil) throws -> ReceiptDocumentPage {
             characterCount += reading.text.count
             guard characterCount <= 100_000, !reading.text.contains("\0") else { throw ReceiptDocumentFailure.characters }
             var lines: [ReceiptDocumentPage.Line] = []
@@ -317,6 +460,12 @@ struct ReceiptDocumentReader: Sendable {
                 lines.append(.init(id: index + 1, text: String(row), uncertain: reading.uncertain.contains(String(row)), bounds: bounds,
                                    wordReadings: reading.wordReadings.indices.contains(index) ? reading.wordReadings[index] : []))
             }
+            if method == .imageOCR || method == .pdfOCR {
+                lines = ExtractedReceiptDocument.groupingQuantityPriceColumns(lines) {
+                    guard let photo, let source = CGImageSourceCreateWithData(photo as CFData, nil) else { return nil }
+                    return CGImageSourceCreateImageAtIndex(source, 0, nil)
+                }
+            }
             return .init(id: number, method: method, lines: lines)
         }
         switch input.kind {
@@ -326,7 +475,7 @@ struct ReceiptDocumentReader: Sendable {
         case .image:
             try Self.checkPixels(input.data)
             let jpeg = try ScanImageNormalizer.normalize(input.data)
-            return [try page(1, method: .imageOCR, reading: try await readImage(jpeg))]
+            return [try page(1, method: .imageOCR, reading: try await readImage(jpeg), photo: jpeg)]
         case .pdf:
             guard let pdf = PDFDocument(data: input.data) else { throw ReceiptDocumentFailure.unsupported }
             guard !pdf.isLocked else { throw ReceiptDocumentFailure.locked }

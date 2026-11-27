@@ -20,6 +20,258 @@ import XCTest
         return result
     }
 
+    func testProtectedReceiptDraftRequiresOptInAndMatchesActorOriginAndVersion() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let cleanup = SQLiteFixtureDirectory(root, test: self)
+        let store = try ComparisonStore(url: root.appendingPathComponent("shop.sqlite"), inventoryEnabled: true)
+        cleanup.track(store)
+        let privateFolder = root.appendingPathComponent("ReceiptDrafts")
+        let files = ProtectedReceiptDraftStore(directory: privateFolder)
+        let owner = UUID(), other = UUID()
+        let scope = ProtectedReceiptDraftStore.Scope(origin: store.workspaceID, owner: owner)
+        let otherScope = ProtectedReceiptDraftStore.Scope(origin: store.workspaceID, owner: other)
+        var allowed = true
+        let gate = PantryMutationGate()
+        let repo = PantryRepository(store: store, mutationGate: gate, aliasPersonaID: owner,
+                                   receiptDraftStore: files, receiptDraftOwner: owner, authorize: { allowed })
+        cleanup.track(repo)
+        let empty = try await repo.savedReceiptDraft()
+        XCTAssertNil(empty)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: privateFolder.path))
+
+        var draft = try receipt(store: store, lines: ["Frijoles 2 unidades MXN $40,50", "Del pedido"])
+        draft.lines[0].received = "2"; draft.lines[0].usable = "1"; draft.lines[0].paid = "40,50"
+        draft.lines[0].treatment = .keptSome; draft.lines[0].checkedPack = true
+        draft.lines[0].confirmedPackID = UUID(); draft.lines[1].treatment = .link(UUID())
+        draft.printedPaidTotal = .init(wording: "TOTAL PAGADO MXN $40,50", amount: "40,50")
+        draft.printedDate = .init(day: now, wording: "Fecha 2026-11-26")
+        let saved = try await repo.saveReceiptDraft(.putaway(draft), replacing: nil)
+        let reopened = try XCTUnwrap(files.read(scope)?.draft)
+        XCTAssertEqual(saved.revision, reopened.revision)
+        guard case .putaway(let editable) = reopened.payload else { return XCTFail("Expected reviewed fields") }
+        XCTAssertEqual(editable.lines[0].id, draft.lines[0].id)
+        XCTAssertEqual(editable.lines[0].original, draft.lines[0].original)
+        XCTAssertEqual(editable.lines[0].usable, "1")
+        XCTAssertEqual(editable.lines[0].paid, "40,50")
+        XCTAssertEqual(editable.printedPaidTotal, draft.printedPaidTotal)
+        XCTAssertEqual(editable.printedDate, draft.printedDate)
+        XCTAssertFalse(editable.dateConfirmed)
+        XCTAssertFalse(editable.lines[0].checkedPack)
+        XCTAssertNil(editable.lines[0].confirmedPackID)
+        XCTAssertEqual(editable.lines[1].treatment, .skip)
+        XCTAssertNil(try files.read(otherScope))
+        XCTAssertNil(try files.read(.init(origin: UUID(), owner: owner)))
+        let file = try XCTUnwrap(FileManager.default.contentsOfDirectory(at: privateFolder, includingPropertiesForKeys: nil).first { $0.pathExtension == "draft" })
+        XCTAssertEqual(try file.resourceValues(forKeys: [.isExcludedFromBackupKey]).isExcludedFromBackup, true)
+        let attributes = try FileManager.default.attributesOfItem(atPath: file.path)
+        XCTAssertEqual((attributes[.posixPermissions] as? NSNumber)?.intValue, 0o600)
+        let directoryAttributes = try FileManager.default.attributesOfItem(atPath: privateFolder.path)
+        XCTAssertEqual((directoryAttributes[.posixPermissions] as? NSNumber)?.intValue, 0o700)
+        let protection = (attributes[.protectionKey] as? FileProtectionType)?.rawValue ?? attributes[.protectionKey] as? String
+        #if targetEnvironment(simulator)
+        // Some simulator runtimes omit Data Protection metadata even when the write requested complete protection.
+        if let protection { XCTAssertEqual(protection, FileProtectionType.complete.rawValue) }
+        #else
+        XCTAssertEqual(protection, FileProtectionType.complete.rawValue)
+        #endif
+        // Skipping a row excludes it from confirmed receipt changes. The shopper
+        // still needs its original text and edits when reopening this optional draft.
+        draft.lines[0].treatment = .skip
+        let replacement = try await repo.saveReceiptDraft(.putaway(draft), replacing: saved.revision)
+        XCTAssertNotEqual(replacement.revision, saved.revision)
+        guard case .putaway(let updated)? = try files.read(scope)?.draft.payload else { return XCTFail("Expected the updated review") }
+        let skipped = try XCTUnwrap(updated.lines.first { $0.id == draft.lines[0].id })
+        XCTAssertEqual(skipped.treatment, .skip)
+        XCTAssertEqual(skipped.original, draft.lines[0].original)
+        XCTAssertEqual(skipped.paid, draft.lines[0].paid)
+        XCTAssertFalse(updated.selectedLines.contains(where: { $0.id == skipped.id }))
+        XCTAssertThrowsError(try files.replace(.putaway(draft), expected: nil, scope: scope))
+        XCTAssertThrowsError(try files.remove(scope, revision: saved.revision))
+        allowed = false
+        do { _ = try await repo.savedReceiptDraft(); XCTFail("A locked or changed adult read a private receipt") } catch {}
+        do { _ = try await repo.saveReceiptDraft(.putaway(draft), replacing: replacement.revision); XCTFail("A changed adult replaced the private receipt") } catch {}
+        do { try await repo.discardReceiptDraft(revision: replacement.revision); XCTFail("A locked or changed adult discarded a receipt") } catch {}
+        XCTAssertEqual(try files.read(scope)?.draft.revision, replacement.revision)
+        _ = try files.replace(.putaway(draft), expected: nil, scope: otherScope)
+        try files.erase(origin: store.workspaceID)
+        XCTAssertNil(try files.read(scope))
+        XCTAssertNil(try files.read(otherScope))
+        XCTAssertThrowsError(try files.replace(.putaway(draft), expected: replacement.revision, scope: scope))
+    }
+
+    func testResumeOnlyOpensTheChosenCurrentReceiptDraft() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let cleanup = SQLiteFixtureDirectory(root, test: self)
+        let inventory = try ComparisonStore(url: root.appendingPathComponent("shop.sqlite"), inventoryEnabled: true)
+        cleanup.track(inventory)
+        let token = try await inventory.inventorySourceToken()
+        _ = try await inventory.commitInventory(.init(workspaceID: inventory.workspaceID, operationID: UUID(),
+            expectedRevision: 0, request: Data([1]), mode: .activate, sourceToken: token), at: now)
+        let owner = UUID()
+        let repo = PantryRepository(store: inventory, mutationGate: PantryMutationGate(), aliasPersonaID: owner,
+                                    receiptDraftStore: ProtectedReceiptDraftStore(directory: root.appendingPathComponent("Drafts")),
+                                    receiptDraftOwner: owner, authorize: { true })
+        cleanup.track(repo)
+        let model = PantryModel(repository: repo)
+        await model.load()
+        XCTAssertTrue(model.permitsPrivateReceiptDraft)
+        let session = PrivateReceiptDraftSession()
+        let draft = try receipt(store: inventory, lines: ["Bread"])
+        let first = try await repo.saveReceiptDraft(.putaway(draft), replacing: nil)
+        await session.load(model)
+
+        var changed = draft
+        changed.merchant = "Second store"
+        let second = try await repo.saveReceiptDraft(.putaway(changed), replacing: first.revision)
+        let stale = await session.resume(revision: first.revision, model: model)
+        XCTAssertNil(stale)
+        XCTAssertNil(session.activeReceiptID)
+        XCTAssertEqual(session.saved?.revision, second.revision)
+        XCTAssertNotNil(session.problem)
+        let current = await session.resume(revision: second.revision, model: model)
+        guard case .putaway(let opened)? = current?.payload else { return XCTFail("Expected the explicitly reselected draft") }
+        XCTAssertEqual(opened.merchant, "Second store")
+        XCTAssertEqual(session.activeReceiptID, draft.draftID)
+
+        try await repo.discardReceiptDraft(revision: second.revision)
+        let removed = await session.resume(revision: second.revision, model: model)
+        XCTAssertNil(removed)
+        XCTAssertNil(session.saved)
+        XCTAssertNil(session.activeReceiptID)
+        XCTAssertNotNil(session.problem)
+    }
+
+    func testPutawayShowsReviewedRateLinesWithoutInferringStockOrMoney() throws {
+        let position = ExtractedReceiptDocument.Selection(page: 1, line: 1)
+        let other = ExtractedReceiptDocument.Selection(page: 1, line: 2)
+        let original = "Tortillas de maíz"
+        let correction = "Tortillas de maíz 2 x 20.00 40.00"
+        let cheese = "Queso fresco 1 х 45.00 45.00"
+        let doc = ExtractedReceiptDocument(digest: Data(repeating: 4, count: 32),
+            pages: [.init(id: 1, method: .imageOCR, lines: [.init(id: 1, text: original, uncertain: true), .init(id: 2, text: cheese)])])
+        let target = CaptureTarget(workspaceID: UUID(), containerID: UUID(), objectID: UUID(), revision: 1, kind: .receiptEvidence)
+        let source = try doc.source(target: target, merchant: "Mercado Prueba", stage: .receipt,
+            selection: [position, other], reviewedWording: [position: correction], at: now)
+        let draft = try ReceiptImportDraft(source: source, now: now)
+        XCTAssertEqual(draft.lines.map(\.original), [original, cheese])
+        XCTAssertEqual(draft.lines.compactMap { $0.printed?.reviewedRateLine }, [correction, cheese])
+        XCTAssertTrue(draft.lines.allSatisfy { $0.received.isEmpty && $0.usable.isEmpty && $0.paid.isEmpty && $0.treatment == .skip })
+        XCTAssertTrue(draft.lines.allSatisfy { $0.printed?.quantity == nil && $0.printed?.amount == nil && $0.printed?.currencyEvidence == .unspecified })
+        XCTAssertFalse(draft.dateConfirmed)
+        XCTAssertTrue(draft.receiptTotal.isEmpty)
+        let saved = try JSONEncoder().encode(SavedReceiptDraft(payload: .putaway(draft)))
+        guard case .putaway(let decoded) = try JSONDecoder().decode(SavedReceiptDraft.self, from: saved).payload else {
+            return XCTFail("Expected put-away draft")
+        }
+        XCTAssertEqual(decoded.lines.map(\.original), [original, cheese])
+        XCTAssertEqual(decoded.lines.compactMap { $0.printed?.reviewedRateLine }, [correction, cheese])
+
+        let printed = try XCTUnwrap(draft.lines.last?.printed)
+        var old = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(printed)) as? [String: Any])
+        old.removeValue(forKey: "reviewedRateLine")
+        let legacy = try JSONDecoder().decode(ReceiptPrintedEvidence.self, from: JSONSerialization.data(withJSONObject: old))
+        XCTAssertNil(legacy.reviewedRateLine)
+        for text in ["Queso fresco", "Cupón 2 x 20.00 40.00", "Queso 2 x 20.00"] {
+            var row = ScanReceiptLine(originalText: text)
+            row.documentLine = source.receiptLines[0].documentLine
+            XCTAssertNil(ReceiptPrintedEvidence(row, knownStorage: [:]).reviewedRateLine)
+        }
+    }
+
+    func testProtectedReceiptDraftPreservesAlternativesFromFourPrintedColumns() throws {
+        typealias Line = ReceiptDocumentPage.Line
+        let observations = [("Oats", ["Oat", "Cats"]), ("2", ["1", "3"]),
+                            ("× 20.00", ["× 20.08", "× 28.00"]), ("40.00", ["40.08", "48.00"])]
+        let columns = observations.enumerated().map { index, observed in
+            Line(id: index + 1, text: observed.0, bounds: CGRect(x: CGFloat(index) * 0.24, y: 0.6, width: 0.17, height: 0.03),
+                 wordReadings: ReceiptWordReading.choices(original: observed.0, candidates: observed.1))
+        }
+        let grouped = ExtractedReceiptDocument.groupingQuantityPriceColumns(columns)
+        XCTAssertEqual(grouped.count, 1)
+        var row = try XCTUnwrap(grouped.first)
+        XCTAssertEqual(row.wordReadings.count, 8)
+        let origin = UUID()
+        func archive(_ line: Line) throws -> Data {
+            let document = ExtractedReceiptDocument(digest: Data(repeating: 1, count: 32),
+                                                     pages: [.init(id: 1, method: .imageOCR, lines: [line])])
+            let draft = ReceiptLineDraft(workspaceID: origin, document: document, merchant: "", stage: .receipt,
+                                         selection: [], linkedAmountItems: [], reviewedWording: [:], omittedLines: [])
+            return try JSONEncoder().encode(SavedReceiptDraft(payload: .lines(draft)))
+        }
+        let reopened = try JSONDecoder().decode(SavedReceiptDraft.self, from: archive(row))
+        guard case .lines(let saved) = reopened.payload else { return XCTFail("Expected receipt line review") }
+        XCTAssertEqual(saved.document.pages.first?.lines.first, row)
+        XCTAssertTrue(saved.selection.isEmpty)
+        XCTAssertTrue(saved.reviewedWording.isEmpty)
+        let first = try XCTUnwrap(row.wordReadings.first)
+        row.wordReadings.append(first)
+        XCTAssertThrowsError(try archive(row))
+        row.wordReadings = [.init(word: first.word, replacement: first.replacement, wording: first.wording, wordIndex: 12)]
+        XCTAssertThrowsError(try archive(row))
+        row.wordReadings = [.init(word: first.word, replacement: first.replacement, wording: "a different printed row", wordIndex: 0)]
+        XCTAssertThrowsError(try archive(row))
+    }
+
+    func testSavedReceiptConfirmationRecoversBothSidesOfSQLiteCommitAndKeepsLaterDraft() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let cleanup = SQLiteFixtureDirectory(root, test: self)
+        let inventory = try ComparisonStore(url: root.appendingPathComponent("shop.sqlite"), inventoryEnabled: true)
+        cleanup.track(inventory)
+        let token = try await inventory.inventorySourceToken()
+        _ = try await inventory.commitInventory(.init(workspaceID: inventory.workspaceID, operationID: UUID(), expectedRevision: 0,
+                                                     request: Data([1]), mode: .activate, sourceToken: token), at: now)
+        let files = ProtectedReceiptDraftStore(directory: root.appendingPathComponent("ReceiptDrafts"))
+        let owner = UUID(), gate = PantryMutationGate()
+        let scope = ProtectedReceiptDraftStore.Scope(origin: inventory.workspaceID, owner: owner)
+        let repo = PantryRepository(store: inventory, mutationGate: gate, aliasPersonaID: owner,
+                                   receiptDraftStore: files, receiptDraftOwner: owner, authorize: { true })
+        cleanup.track(repo)
+        let initial = try await repo.load(at: now)
+        var draft = try receipt(store: inventory, lines: ["Dry beans"])
+        draft.lines[0].treatment = .add; draft.lines[0].received = "2"; draft.lines[0].usable = "1"
+        let saved = try await repo.saveReceiptDraft(.putaway(draft), replacing: nil)
+        let preview = try await repo.reviewReceipt(draft, expected: initial.state, at: now)
+        let batch = try XCTUnwrap(preview.batch)
+        let marker = ProtectedReceiptDraftStore.Pending(operation: batch.operationID, request: batch.request)
+        try files.mark(scope, revision: saved.revision, expected: nil, next: marker)
+        let beforeCommit = try await repo.savedReceiptDraft()
+        XCTAssertEqual(beforeCommit?.revision, saved.revision)
+        XCTAssertNil(try files.read(scope)?.finishing)
+        let stillEmpty = try await repo.load(at: now)
+        XCTAssertTrue(stillEmpty.lots.isEmpty)
+        // Simulate a process stop immediately after the durable stock write.
+        try files.mark(scope, revision: saved.revision, expected: nil, next: marker)
+        try await repo.applyReceipt(preview, at: now)
+        let afterCommit = try await repo.savedReceiptDraft()
+        XCTAssertNil(afterCommit)
+        var another = try receipt(store: inventory, lines: ["Brown rice"])
+        another.reference = "TICKET-19"
+        let next = try await repo.saveReceiptDraft(.putaway(another), replacing: nil)
+        try await repo.applyReceipt(preview, finishingDraft: saved.revision, at: now)
+        XCTAssertEqual(try files.read(scope)?.draft.revision, next.revision)
+        let final = try await repo.load(at: now)
+        XCTAssertEqual(final.state.revision, initial.state.revision + 1)
+        XCTAssertEqual(final.lots.map(\.name), ["Dry beans"])
+        another.lines[0].treatment = .add; another.lines[0].received = "1"; another.lines[0].usable = "1"
+        let reviewedAnother = try await repo.reviewReceipt(another, expected: final.state, at: now)
+        do {
+            try await repo.applyReceipt(reviewedAnother, finishingDraft: saved.revision, at: now)
+            XCTFail("An editor with an obsolete revision finished a different receipt")
+        } catch ProtectedReceiptDraftStore.Failure.changed {}
+        try await repo.applyReceipt(reviewedAnother, finishingDraft: next.revision, at: now)
+        try await repo.applyReceipt(reviewedAnother, finishingDraft: next.revision, at: now)
+        let finalTwo = try await repo.load(at: now)
+        XCTAssertEqual(finalTwo.state.revision, initial.state.revision + 2)
+        XCTAssertEqual(Set(finalTwo.lots.map(\.name)), ["Dry beans", "Brown rice"])
+        XCTAssertNil(try files.read(scope))
+        let discard = try await repo.saveReceiptDraft(.putaway(another), replacing: nil)
+        try await repo.discardReceiptDraft(revision: discard.revision)
+        XCTAssertNil(try files.read(scope))
+    }
+
     func testPesoPricesSaveWithReceiptAndPutawayQuantities() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -178,6 +430,68 @@ import XCTest
         }
         allowed = false
         XCTAssertFalse(model.permitsReceiptCopy(header))
+    }
+
+    func testCurrentPurchaseAndSelectiveCopyFollowPriceCorrectionAndRemovalWithoutChangingHistoryOrTotal() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let cleanup = SQLiteFixtureDirectory(directory, test: self)
+        let store = try ComparisonStore(url: directory.appendingPathComponent("pantry.sqlite"), inventoryEnabled: true)
+        cleanup.track(store)
+        let token = try await store.inventorySourceToken()
+        try await store.commitInventory(.init(workspaceID: store.workspaceID, operationID: UUID(), expectedRevision: 0,
+            request: Data([1]), mode: .activate, sourceToken: token), at: now)
+        let owner = UUID()
+        let repo = PantryRepository(store: store, aliasPersonaID: owner, authorize: { true })
+        cleanup.track(repo)
+        let model = PantryModel(repository: repo, clock: { self.now })
+        await model.load()
+        var draft = try receipt(store: store, lines: ["OAT MILK", "OAT MILK"])
+        draft.currency = .usd
+        draft.lines[0].treatment = .add
+        draft.lines[0].received = "1"; draft.lines[0].usable = "1"
+        draft.lines[1].treatment = .eaten
+        let review = try await model.reviewReceipt(draft)
+        try await model.saveReceipt(review)
+        let headers = try await model.reviewedReceiptHeaders(after: nil)
+        let header = try XCTUnwrap(headers.first)
+        let original = try XCTUnwrap(review.facts.first)
+        let firstState = try XCTUnwrap(model.snapshot?.state)
+        let originalRows = try await model.currentPurchaseDecisions(header, after: nil, expected: firstState)
+        XCTAssertEqual(originalRows.count, 2)
+        XCTAssertTrue(originalRows.allSatisfy { $0.paidMinor == nil })
+        try await model.correctReceiptPrice(original, total: Money(minorUnits: 329), reviewedState: firstState)
+        let updated = try XCTUnwrap(model.snapshot?.state)
+        let rows = try await model.currentPurchaseDecisions(header, after: nil, expected: updated)
+        XCTAssertEqual(rows.first { $0.id == original.lineID }?.paidMinor, 329)
+        XCTAssertNil(try XCTUnwrap(rows.first { $0.id != original.lineID }).paidMinor)
+        XCTAssertNil(header.totalMinor)
+        var selection = ReviewedReceiptCopySelection()
+        selection.total = true
+        XCTAssertEqual(selection.text(header: header, purchaseDay: "", rows: rows), "")
+        selection.amounts.insert(original.lineID)
+        XCTAssertEqual(selection.text(header: header, purchaseDay: "", rows: rows),
+                       pantryFormat("Paid line total %@", receiptMoney(Money(minorUnits: 329))))
+        let historical = try await model.reviewedReceiptDecisions(header.id, after: nil)
+        XCTAssertEqual(historical, originalRows)
+        let facts = try await model.receiptHistory(receiptID: header.id)
+        XCTAssertEqual(facts.map(\.revision).sorted(), [1, 2])
+        let latest = try XCTUnwrap(facts.first { $0.revision == 2 })
+        let other = PantryRepository(store: store, aliasPersonaID: UUID(), authorize: { true })
+        cleanup.track(other)
+        do {
+            _ = try await other.currentPurchaseDecisions(header, after: nil, expected: updated)
+            XCTFail("Another adult could read the corrected amount")
+        } catch PantryRepository.Failure.unauthorized {}
+        try await model.correctReceiptPrice(latest, total: nil, reviewedState: updated)
+        let afterRemoval = try XCTUnwrap(model.snapshot?.state)
+        let cleared = try await model.currentPurchaseDecisions(header, after: nil, expected: afterRemoval)
+        XCTAssertNil(try XCTUnwrap(cleared.first { $0.id == original.lineID }).paidMinor)
+        XCTAssertEqual(selection.text(header: header, purchaseDay: "", rows: cleared), "")
+        XCTAssertNil(header.totalMinor)
+        let allFacts = try await model.receiptHistory(receiptID: header.id)
+        XCTAssertEqual(allFacts.map(\.revision).sorted(), [1, 2, 3])
+        XCTAssertEqual(allFacts.first { $0.revision == 2 }?.paidLineTotal?.minorUnits, 329)
     }
 
     func testPurchaseDayReopensAndExportsInBothLanguagesAndRescansAcrossTimeZones() async throws {

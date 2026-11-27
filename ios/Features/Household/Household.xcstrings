@@ -1,6 +1,40 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "To report a message or block its sender, open Review family requests. Choose Report or block beside an eligible request from someone else.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To report a message or block its sender, open Review family requests. Choose Report or block beside an eligible request from someone else."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para reportar un mensaje o bloquear a quien lo envió, abre Revisar solicitudes de la familia. Si la solicitud de otra persona muestra Reportar o bloquear, elige esa opción."
+          }
+        }
+      }
+    },
+    "Reporting messages and blocking senders are unavailable with your current household access. You can find Support under Help and privacy.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reporting messages and blocking senders are unavailable with your current household access. You can find Support under Help and privacy."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu acceso actual al hogar no permite reportar mensajes ni bloquear a quienes los envían. Encontrarás Soporte en Ayuda y privacidad."
+          }
+        }
+      }
+    },
     "Shared week costs": {
       "localizations": {
         "en": {

@@ -938,7 +938,8 @@ struct LedgerHistoryView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text(line.name)
                         if let who = line.handledBy { Text(ledgerFormat("Handled by %@", who)) }
-                        if let date = line.trashedAt ?? line.handledAt ?? line.checkedAt {
+                        if line.dinnerAtHomeAt != nil { Text(dinnerText("Already at home for this dinner")) }
+                        if let date = line.trashedAt ?? line.handledAt ?? line.dinnerAtHomeAt ?? line.checkedAt {
                             Text(date, format: .dateTime.year().month(.abbreviated).day().hour().minute())
                                 .font(.subheadline).foregroundStyle(Theme.secondary)
                         }

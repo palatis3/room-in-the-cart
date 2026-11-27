@@ -1,6 +1,74 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Use this printed date for the purchase": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use this printed date for the purchase"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar esta fecha impresa como fecha de compra"
+          }
+        }
+      }
+    },
+    "Original receipt reading": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original receipt reading"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lectura original del recibo"
+          }
+        }
+      }
+    },
+    "Your corrected receipt line": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your corrected receipt line"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Línea del recibo que corregiste"
+          }
+        }
+      }
+    },
+    "Check these figures against the receipt. Enter what you actually received. If you know what you paid for this line, check the currency and enter that amount.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check these figures against the receipt. Enter what you actually received. If you know what you paid for this line, check the currency and enter that amount."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compara estas cifras con el recibo. Indica cuánto recibiste. Si sabes cuánto pagaste por esta línea, revisa la moneda e ingresa el importe."
+          }
+        }
+      }
+    },
     "Lines adding pantry stock": {
       "extractionState": "manual",
       "localizations": {

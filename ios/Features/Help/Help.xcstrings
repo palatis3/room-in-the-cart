@@ -1,6 +1,39 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "To report a shared message or block its sender, look for Report or block beside the message. For a family request, the assigned shopper can look in Review family requests. Availability depends on your access and the message.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To report a shared message or block its sender, look for Report or block beside the message. For a family request, the assigned shopper can look in Review family requests. Availability depends on your access and the message."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para reportar un mensaje compartido o bloquear a quien lo envió, busca Reportar o bloquear junto al mensaje. Si se trata de una solicitud, quien se encarga de la compra puede abrir Revisar solicitudes de la familia. La opción depende del acceso de la persona y del mensaje."
+          }
+        }
+      }
+    },
+    "Saving a draft during line review keeps all recognized receipt text, including unselected lines, in protected storage on this iPhone. Saving a put-away draft keeps every line in that review, including lines you skip, along with the amounts and storage choices you entered. Finish or discard the draft to remove it. To view the original photo or PDF again, select it from its source.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving a draft during line review keeps all recognized receipt text, including unselected lines, in protected storage on this iPhone. Saving a put-away draft keeps every line in that review, including lines you skip, along with the amounts and storage choices you entered. Finish or discard the draft to remove it. To view the original photo or PDF again, select it from its source."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si guardas un borrador al revisar los renglones, todo el texto reconocido del recibo, incluidos los renglones sin seleccionar, se guarda en el almacenamiento protegido de este iPhone. Si guardas el borrador al registrar los alimentos, se conservan todos los renglones de esa revisión, incluso los que omitas, además de las cantidades, los importes y los lugares de almacenamiento que hayas indicado. El borrador se elimina cuando terminas o lo descartas. Para volver a ver la foto o el PDF original, selecciónalo desde su origen."
+          }
+        }
+      }
+    },
     "Choose US dollars (USD) or Mexican pesos (MXN) before entering prices. Use the same currency for both packs. A saved comparison keeps its original currency.": {
       "localizations": {
         "en": {
@@ -2846,34 +2879,66 @@
         }
       }
     },
-    "Household is a paid subscription. The App Store price is unavailable on this iPhone.": {
+    "Household is an annual subscription. Household sign-in and the App Store price are unavailable on this iPhone. You can keep planning for free.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Household is a paid subscription. The App Store price is unavailable on this iPhone."
+            "value": "Household is an annual subscription. Household sign-in and the App Store price are unavailable on this iPhone. You can keep planning for free."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "La membresía del hogar es una suscripción de pago. El precio del App Store no está disponible en este iPhone."
+            "value": "La membresía del hogar es una suscripción anual. En este iPhone no se puede iniciar sesión en el hogar ni consultar el precio del App Store. Puedes seguir planificando gratis."
           }
         }
       }
     },
-    "Household is a paid subscription. Choose your household to check planning access and see the App Store price if an offer is available.": {
+    "Household is an annual subscription. Email sign-in is unavailable. If you have an adult account saved on this iPhone, resume it in Saved adult account options to check for an App Store offer. Without a saved account, the price is unavailable here.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Household is a paid subscription. Choose your household to check planning access and see the App Store price if an offer is available."
+            "value": "Household is an annual subscription. Email sign-in is unavailable. If you have an adult account saved on this iPhone, resume it in Saved adult account options to check for an App Store offer. Without a saved account, the price is unavailable here."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "La membresía del hogar es una suscripción de pago. Elige tu hogar para comprobar tu acceso a la planificación y ver el precio del App Store si hay una oferta disponible."
+            "value": "La membresía del hogar es una suscripción anual. No se puede iniciar sesión por correo. Si tienes una cuenta de adulto guardada en este iPhone, retómala en «Opciones de la cuenta de adulto guardada» para consultar si hay una oferta del App Store. Sin una cuenta guardada, aquí no puedes consultar el precio."
+          }
+        }
+      }
+    },
+    "Household is an annual subscription. Open adult household setup to sign in. Once you open your household, you can see the App Store price if an offer is available.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household is an annual subscription. Open adult household setup to sign in. Once you open your household, you can see the App Store price if an offer is available."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La membresía del hogar es una suscripción anual. Abre la configuración del hogar para adultos e inicia sesión. Al entrar a tu hogar, podrás ver el precio del App Store si hay una oferta disponible."
+          }
+        }
+      }
+    },
+    "Household is an annual subscription. Open adult household setup to review your household options. You can see the App Store price if an offer is available for your household.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household is an annual subscription. Open adult household setup to review your household options. You can see the App Store price if an offer is available for your household."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La membresía del hogar es una suscripción anual. Abre la configuración del hogar para adultos y revisa las opciones de tu hogar. Podrás ver el precio del App Store si hay una oferta disponible para tu hogar."
           }
         }
       }

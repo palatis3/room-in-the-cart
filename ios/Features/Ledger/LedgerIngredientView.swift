@@ -370,6 +370,8 @@ struct LedgerContributionEditor: View {
     @ObservedObject var model: LedgerModel
     let shopID: UUID
     let contribution: LedgerContribution
+    let authorize: (@MainActor () -> Bool)?
+    private let onFinish: (() -> Void)?
     @Environment(\.dismiss) private var dismiss
     @State private var amount: String
     @State private var unit: GroceryEntryUnit
@@ -381,7 +383,10 @@ struct LedgerContributionEditor: View {
         amount != contribution.editableAmount || unit != GroceryEntryUnit(contribution) || notes != ledgerEditableNote(contribution)
     }
 
-    init(model: LedgerModel, shopID: UUID, contribution: LedgerContribution) {
+    init(model: LedgerModel, shopID: UUID, contribution: LedgerContribution,
+         authorize: (@MainActor () -> Bool)? = nil, onFinish: (() -> Void)? = nil) {
+        self.onFinish = onFinish
+        self.authorize = authorize
         self.model = model; self.shopID = shopID; self.contribution = contribution
         _amount = State(initialValue: contribution.editableAmount)
         _unit = State(initialValue: GroceryEntryUnit(contribution))
@@ -414,10 +419,10 @@ struct LedgerContributionEditor: View {
                 .foregroundStyle(Theme.error)
                 .disabled(model.saving || model.hasPendingSave)
             if let validation { Text(validation).foregroundStyle(Theme.warning) }
-            GroceryEditStatus(model: model, hasEdits: hasEdits, onRetried: { dismiss() })
+            GroceryEditStatus(model: model, hasEdits: hasEdits, onRetried: { finish() })
         }.scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(quickGroceryText("Quantity and notes"))
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() }.disabled(model.saving) }
+                ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { finish() }.disabled(model.saving) }
             }
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 HStack(spacing: 12) {
@@ -441,9 +446,13 @@ struct LedgerContributionEditor: View {
             .interactiveDismissDisabled(model.saving)
             .confirmationDialog(ledgerText("Remove only this contribution?"), isPresented: $confirmingRemoval, titleVisibility: .visible) {
                 Button(ledgerText("Remove contribution"), role: .destructive) {
-                    Task { if await model.editShop(key: "remove-source-\(contribution.id)", shopID: shopID, { try $0.removeContribution(contributionID: contribution.id) }) { dismiss() } }
+                    Task { if await model.editShop(key: "remove-source-\(contribution.id)", shopID: shopID, authorize: authorize, { try $0.removeContribution(contributionID: contribution.id) }) { finish() } }
                 }
             } message: { Text(ledgerText("Other sources remain saved. Needs linked to this quantity may require another source.")) }
+    }
+
+    private func finish() {
+        if let onFinish { onFinish() } else { dismiss() }
     }
 
     private func save() {
@@ -458,10 +467,10 @@ struct LedgerContributionEditor: View {
         let savedNotes = notes == ledgerEditableNote(contribution) ? contribution.notes : notes
         focusedField = nil
         Task {
-            let saved = await model.editShop(key: "contribution-\(contribution.id)", shopID: shopID) { current in
+            let saved = await model.editShop(key: "contribution-\(contribution.id)", shopID: shopID, authorize: authorize) { current in
                 try current.updateContribution(contributionID: contribution.id, quantity: quantity, notes: savedNotes, reviewedPackages: packages)
             }
-            if saved { dismiss() }
+            if saved { finish() }
         }
     }
 }

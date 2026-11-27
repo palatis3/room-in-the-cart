@@ -10,6 +10,10 @@ struct PantryReceiptEntry: View {
     var didSaveReceipt: () -> Void = {}
     var initialSource: SourceMediaRecord? = nil
     var verifySource: @MainActor () async throws -> Void = {}
+    @StateObject private var draftSession = PrivateReceiptDraftSession()
+    @State private var resumedLines: ReceiptLineDraft?
+    @State private var discardVersion: UUID?
+    @State private var importedPrivateDelivery = false
     @State private var aliases: [InventoryReceiptAlias] = []
     private struct AliasScope: Equatable {
         let merchant: String?
@@ -37,6 +41,9 @@ struct PantryReceiptEntry: View {
     @State private var review: PantryReceiptReview?
     @State private var working = false
     @State private var message: String?
+    @State private var previewFailureRequest: UUID?
+    @State private var historyGeneration: UUID?
+    @State private var inspectingHistory = false
     @State private var expandedLines = Set<UUID>()
     @State private var discardDraft = false
     @State private var amountCorrection: ReceiptAmountCorrection?
@@ -58,15 +65,40 @@ struct PantryReceiptEntry: View {
                 guard request != nil, let issue = amountCorrection else { return }
                 proxy.scrollTo(issue.focusKey, anchor: .center)
             }
+            .task(id: previewFailureRequest) {
+                guard let request = previewFailureRequest else { return }
+                await Task.yield()
+                guard !Task.isCancelled, request == previewFailureRequest, message != nil else { return }
+                proxy.scrollTo("receipt.status", anchor: .center)
+                await Task.yield()
+                if !Task.isCancelled, request == previewFailureRequest { resultFocused = true }
+            }
             .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { receiptViewport = $0 }
+            .environment(\.privateReceiptDraft, initialSource == nil && model.permitsPrivateReceiptDraft
+                         ? PrivateReceiptDraftContext(model: model, session: draftSession) : nil)
         }
+    }
+
+    private var showsFailureAtPreview: Bool {
+        previewFailureRequest != nil && draft != nil && overlap == nil && rescan == nil && review == nil && savedLotIDs == nil
+    }
+
+    private var canInspectPreviewHistory: Bool {
+        showsFailureAtPreview && historyGeneration == model.generation && model.permitsReceiptSource &&
+            model.snapshot?.state.workspaceID == draft?.workspaceID
+    }
+
+    private func status(_ text: String) -> some View {
+        Text(verbatim: text)
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityFocused($resultFocused)
+            .accessibilityIdentifier("receipt.status")
+            .id("receipt.status")
     }
 
     private func form(_ proxy: ScrollViewProxy) -> some View {
         WorkingForm {
-            if let message {
-                Text(message).accessibilityFocused($resultFocused).accessibilityIdentifier("receipt.status")
-            }
+            if let message, !showsFailureAtPreview { status(message) }
             if let savedLotIDs {
                 let byID = Dictionary(uniqueKeysWithValues: (model.snapshot?.lots ?? []).map { ($0.id, $0) })
                 let lots = savedLotIDs.compactMap { byID[$0] }
@@ -119,8 +151,9 @@ struct PantryReceiptEntry: View {
                     }
                     Text(pantryText("Saving receipt evidence does not post a payment."))
                         .font(.footnote).foregroundStyle(Theme.secondary)
-                    Button(review.putaway.map { _ in putawayActionTitle(review.newStockLineCount) } ?? pantryText("Confirm pantry changes")) { commit(review) }.buttonStyle(PrimaryAction()).disabled(working || !model.canEdit)
+                    Button(review.putaway.map { _ in putawayActionTitle(review.newStockLineCount) } ?? pantryText("Confirm pantry changes")) { commit(review) }.buttonStyle(PrimaryAction()).disabled(working || draftSession.busy || !model.canEdit)
                         .accessibilityIdentifier("receipt.commit")
+                    if let value = draft { privatePutawaySave(value, atConfirmation: true).disabled(working) }
                     Button(pantryText("Edit receipt lines")) { self.review = nil; message = nil }.disabled(working)
                 }
             } else if let overlap, let proposed = draft {
@@ -140,10 +173,15 @@ struct PantryReceiptEntry: View {
                     self.rescan = nil; draft?.rescanDecision = nil; message = nil
                 }.id(rescan.basis).disabled(working)
             } else if let displayed = draft {
+                Section { privatePutawaySave(displayed) }
                 // SwiftUI may read a field during removal of its form. Retain the
                 // displayed value for that transition and ignore stale setters.
                 let value = Binding(get: { draft ?? displayed }, set: { updated in
                     guard draft?.draftID == displayed.draftID else { return }
+                    if previewFailureRequest != nil {
+                        previewFailureRequest = nil
+                        message = nil
+                    }
                     draft = updated
                 })
                 let storeIssue = receiptStoreIssue(displayed.merchant)
@@ -274,6 +312,13 @@ struct PantryReceiptEntry: View {
                     Text(putawayText("Choose what to include from at least one receipt line."))
                         .foregroundStyle(Theme.secondary)
                 }
+                if let message, showsFailureAtPreview {
+                    status(message)
+                    if canInspectPreviewHistory {
+                        Button(pantryText("Receipt history")) { inspectingHistory = true }
+                            .accessibilityIdentifier("receipt.preview.history")
+                    }
+                }
                 Button(displayed.tracksPutaway ? putawayText("Preview receipt changes") : pantryText("Review selected food")) {
                     guard storeIssue == nil else { return }
                     prepare(value.wrappedValue)
@@ -281,6 +326,31 @@ struct PantryReceiptEntry: View {
                     .disabled(working || !model.canEdit || storeIssue != nil || !displayed.dateConfirmed || displayed.selectedLines.isEmpty)
                 .accessibilityIdentifier("receipt.review")
             } else {
+                if initialSource == nil, model.permitsPrivateReceiptDraft {
+                    if let saved = draftSession.saved {
+                        Section(pantryText("Saved draft on this iPhone")) {
+                            switch saved.payload {
+                            case .lines(let value):
+                                LabeledContent(pantryText("Printed lines selected"), value: value.selection.count.formatted())
+                                if !value.merchant.isEmpty { Text(verbatim: value.merchant) }
+                            case .putaway(let value):
+                                LabeledContent(pantryText("Receipt lines to review"), value: value.lines.count.formatted())
+                                if !value.merchant.isEmpty { Text(verbatim: value.merchant) }
+                            }
+                            Text(pantryText("Resume to review it. Nothing has been added to the pantry by saving a draft."))
+                                .font(.subheadline)
+                            Button(pantryText("Resume saved receipt draft")) { Task { await resume(revision: saved.revision) } }
+                                .disabled(!draftSession.ready)
+                                .accessibilityIdentifier("receipt.draft.resume")
+                            Button(pantryText("Discard saved draft"), role: .destructive) { discardVersion = saved.revision }
+                                .accessibilityIdentifier("receipt.draft.discard")
+                        }
+                    }
+                    if let problem = draftSession.problem {
+                        Text(verbatim: problem).foregroundStyle(Theme.warning)
+                        Button(pantryText("Try again")) { Task { await draftSession.load(model) } }
+                    }
+                }
                 Section {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(pantryText("Private receipt draft")).marketJournalTitle()
@@ -318,6 +388,23 @@ struct PantryReceiptEntry: View {
                 amountCorrection = nil
             }
         }
+        .disabled(draftSession.busy || (working && review != nil))
+        .task(id: model.permitsPrivateReceiptDraft) {
+            if initialSource == nil, model.permitsPrivateReceiptDraft { await draftSession.load(model) }
+        }
+        .onChange(of: model.generation) { _, _ in
+            draftSession.reset()
+            resumedLines = nil
+            discardVersion = nil
+        }
+        .confirmationDialog(pantryText("Permanently discard the saved receipt draft?"), isPresented: Binding(
+            get: { discardVersion != nil }, set: { if !$0 { discardVersion = nil } }
+        ), titleVisibility: .visible, presenting: discardVersion) { version in
+            Button(pantryText("Discard saved draft"), role: .destructive) {
+                Task { await draftSession.discard(version, model: model) }
+            }.accessibilityIdentifier("receipt.draft.confirmDiscard")
+            Button(pantryText("Cancel"), role: .cancel) {}
+        }
         .onChange(of: field) { _, focused in
             if focused != nil { correctionRequest = nil }
         }
@@ -333,8 +420,10 @@ struct PantryReceiptEntry: View {
                 }.disabled(working)
             }
         }
-        .alert(putawayText("Discard this receipt draft?"), isPresented: $discardDraft) {
-            Button(pantryText("Discard draft"), role: .destructive) { dismiss() }
+        .alert(draft.flatMap { draftSession.activeRevision(for: $0.draftID) } == nil
+               ? putawayText("Discard this receipt draft?") : pantryText("Close review and keep the last saved draft?"), isPresented: $discardDraft) {
+            Button(draft.flatMap { draftSession.activeRevision(for: $0.draftID) } == nil
+                   ? pantryText("Discard draft") : pantryText("Close review"), role: .destructive) { dismiss() }
             Button(pantryText("Cancel"), role: .cancel) {}
         }
         .interactiveDismissDisabled(working || draft != nil)
@@ -350,7 +439,10 @@ struct PantryReceiptEntry: View {
         .onChange(of: model.snapshot?.state.workspaceID) { _, origin in
             if origin != draft?.workspaceID || origin == nil { reviewedSourceImage = nil; assistance = nil; draft = nil; review = nil; rescan = nil; overlap = nil; scan = false; fileSource = false; sharedSource = nil; savedLotIDs = nil; savedHeader = nil; savedPickupID = nil }
         }
-        .onChange(of: draft?.draftID) { _, _ in receiptTripReview = .init() }
+        .onChange(of: draft?.draftID) { _, _ in
+            receiptTripReview = .init()
+            if previewFailureRequest != nil { previewFailureRequest = nil; message = nil }
+        }
         .task(id: aliasScope) {
             let scope = aliasScope
             aliases = []
@@ -358,6 +450,14 @@ struct PantryReceiptEntry: View {
             do { try await Task.sleep(for: .milliseconds(180)) } catch { return }
             let matches = try? await model.receiptAliases(merchant: merchant, language: language)
             if !Task.isCancelled, scope == aliasScope { aliases = matches ?? [] }
+        }
+        .onChange(of: canInspectPreviewHistory) { _, permitted in
+            if !permitted { inspectingHistory = false }
+        }
+        .sheet(isPresented: $inspectingHistory) {
+            if canInspectPreviewHistory {
+                NavigationStack { PantryReceiptHistory(model: model, isReadOnly: true) }
+            }
         }
         .sheet(item: $assistance) { basis in
             AssistedCaptureLineReview(line: basis.line, sourceImage: reviewedSourceImage, authorized: { assistanceCurrent(basis) }, checkSource: verifySource) { suggestion, input, received in
@@ -377,13 +477,13 @@ struct PantryReceiptEntry: View {
                 }
             }
         }
-        .sheet(isPresented: $fileSource) {
+        .sheet(isPresented: $fileSource, onDismiss: { resumedLines = nil }) {
             if let state = model.snapshot?.state {
                 NavigationStack {
                     PantryReceiptDocuments(model: model, target: .init(workspaceID: state.workspaceID, containerID: targetID,
                         objectID: targetID, revision: state.revision, kind: .receiptEvidence), authorize: {
                         model.permitsReceiptSource && model.snapshot?.state.workspaceID == state.workspaceID
-                    }, reviewsPrivateReceipt: true) { source, share, printedTotal in
+                    }, reviewsPrivateReceipt: true, resumedDraft: resumedLines, omittedLines: resumedLines?.omittedLines ?? []) { source, share, printedTotal in
                         accept(source, printedPaidTotal: printedTotal)
                         sharedSource = share
                     }
@@ -401,6 +501,31 @@ struct PantryReceiptEntry: View {
                         }
                 }
             }
+        }
+    }
+
+    @ViewBuilder private func privatePutawaySave(_ value: ReceiptImportDraft, atConfirmation: Bool = false) -> some View {
+        if initialSource == nil, sharedSource == nil, !importedPrivateDelivery, model.permitsPrivateReceiptDraft {
+            PrivateReceiptDraftSave(session: draftSession, model: model, id: value.draftID,
+                                    isLineSelection: false, atConfirmation: atConfirmation) { .putaway(value) }
+        } else if value.documentLayoutID != nil {
+            UnsavedReceiptReviewNotice()
+        }
+    }
+
+    private func resume(revision: UUID) async {
+        guard initialSource == nil, draft == nil, let saved = await draftSession.resume(revision: revision, model: model),
+              model.permitsPrivateReceiptDraft, draft == nil else { return }
+        switch saved.payload {
+        case .lines(let source):
+            guard model.snapshot?.state.workspaceID == source.workspaceID else { return }
+            resumedLines = source
+            fileSource = true
+        case .putaway(let source):
+            guard model.snapshot?.state.workspaceID == source.workspaceID else { return }
+            draft = source
+            review = nil
+            message = nil
         }
     }
 
@@ -499,6 +624,9 @@ struct PantryReceiptEntry: View {
     private func prepare(_ input: ReceiptImportDraft) {
         var proposed = input
         guard !working else { return }
+        field = nil
+        resultFocused = false
+        historyGeneration = nil
         working = true
         Task {
             defer { working = false }
@@ -532,7 +660,7 @@ struct PantryReceiptEntry: View {
                 }
                 let result = try await model.reviewReceipt(proposed)
                 guard model.permitsReceiptSource, draft?.draftID == proposed.draftID else { return }
-                review = result; draft = proposed; rescan = nil; overlap = nil; message = nil
+                review = result; draft = proposed; rescan = nil; overlap = nil; previewFailureRequest = nil; message = nil
             } catch let issue as ReceiptAmountCorrection {
                 guard model.permitsReceiptSource, draft?.draftID == proposed.draftID,
                       draft?.lines.first(where: { $0.id == issue.lineID })?.amountCorrection == issue else { return }
@@ -547,13 +675,18 @@ struct PantryReceiptEntry: View {
                 guard model.permitsReceiptSource, draft?.draftID == proposed.draftID else { return }
                 overlap = nil; rescan = prompt
                 message = proposed.rescanDecision == nil ? nil : pantryText("Choose each saved line once. An additional line must be distinct.")
-                resultFocused = true
+                if message != nil { previewFailureRequest = UUID() }
             } catch {
                 if receiptBasisChanged(error) { rescan = nil; draft?.rescanDecision = nil; await model.load() }
+                guard model.permitsReceiptSource, draft?.draftID == proposed.draftID else { return }
                 if rescan != nil, case PantryReceiptError.changedEvidence = error {
                     message = pantryText("The printed wording, quantity, price or storage differs from the original. Open the original for corrections, edit your selections, or review a separate purchase.")
-                } else { message = receiptError(error) }
-                resultFocused = true
+                } else {
+                    message = receiptError(error)
+                    if case PantryReceiptError.changedEvidence = error { historyGeneration = model.generation }
+                    if (error as? ComparisonStoreError) == .payloadTooLarge { historyGeneration = model.generation }
+                }
+                previewFailureRequest = UUID()
             }
         }
     }
@@ -561,6 +694,7 @@ struct PantryReceiptEntry: View {
     private func acceptDelivery(_ source: SourceMediaRecord, original: PrivateDeliveryRevision, selected: Set<Int>) {
         accept(source)
         guard var current = draft, current.draftID == source.id else { return }
+        importedPrivateDelivery = true
         current.tracksPutaway = false
         if let currency = Currency(rawValue: original.currencyCode) { current.changeCurrency(currency) }
         current.reference = original.order
@@ -592,12 +726,18 @@ struct PantryReceiptEntry: View {
         catch { message = receiptError(error) }
     }
     private func commit(_ value: PantryReceiptReview) {
+        guard !working, !draftSession.busy, model.canEdit else { return }
         working = true
         Task {
             defer { working = false }
             do {
                 try await verifySource()
-                try await model.saveReceipt(value)
+                if let id = draft?.draftID, let revision = draftSession.activeRevision(for: id) {
+                    try await model.saveReceipt(value, finishingDraft: revision)
+                    draftSession.reset()
+                } else {
+                    try await model.saveReceipt(value)
+                }
                 didSaveReceipt()
                 savedHeader = value.putaway?.header
                 savedPickupID = draft?.savedPickup?.id
@@ -759,6 +899,7 @@ struct ReceiptPurchaseDateFields: View {
 }
 
 struct ReceiptCurrencyPicker: View {
+    @Environment(\.locale) private var locale
     @Binding var draft: ReceiptImportDraft
     var lockedByComparison = false
 
@@ -771,6 +912,10 @@ struct ReceiptCurrencyPicker: View {
         .accessibilityIdentifier("receipt.currency")
         if locked {
             Text(pantryText("Clear the entered receipt prices and priced trip links to change currency."))
+                .font(.footnote)
+        } else if locale.currency.map({ Currency(rawValue: $0.identifier) == nil }) == true
+                    || draft.lines.contains(where: { $0.printed?.hasConflictingCurrency == true }) {
+            Text(pantryText("For a receipt in another currency, leave prices blank. You can still put the food away."))
                 .font(.footnote)
         }
     }
@@ -881,9 +1026,22 @@ struct PantryReceiptLineEditor: View {
                 .accessibilityIdentifier("receipt.putAway.\(line.ordinal)")
             } else if !grouped { Text(verbatim: line.name).font(.headline) }
         }
-        ReceiptPaperLine(wording: line.original, provenance: line.documentLine.map(receiptProvenance),
-                         title: permitsPutaway ? putawayText("Original wording and price") : pantryText("Printed line"))
-        if let printed = line.printed {
+        let rateWording = permitsPutaway ? line.printed?.reviewedRateLine : nil
+        if let wording = rateWording {
+            ReceiptPaperLine(wording: line.original, provenance: line.documentLine.map(receiptProvenance),
+                             title: putawayText("Original receipt reading"))
+            if wording != line.original {
+                ReceiptPaperLine(wording: wording, title: putawayText("Your corrected receipt line"))
+                    .accessibilityIdentifier("receipt.correctedRateLine.\(line.ordinal)")
+            }
+            Text(putawayText("Check these figures against the receipt. Enter what you actually received. If you know what you paid for this line, check the currency and enter that amount."))
+                .font(.subheadline)
+                .accessibilityIdentifier("receipt.reviewedRateGuidance.\(line.ordinal)")
+        } else {
+            ReceiptPaperLine(wording: line.original, provenance: line.documentLine.map(receiptProvenance),
+                             title: permitsPutaway ? putawayText("Original wording and price") : pantryText("Printed line"))
+        }
+        if let printed = line.printed, rateWording == nil {
             switch printed.kind {
             case .adjustment: Text(pantryText("Charge, credit or receipt summary. This line starts skipped.")).font(.caption)
             case .date: Text(pantryText("Receipt date wording. This line starts skipped.")).font(.caption)
@@ -910,28 +1068,7 @@ struct PantryReceiptLineEditor: View {
                 }.accessibilityIdentifier("receipt.savePrintedDiscount.\(line.ordinal)")
             }
         }
-        Picker(pantryText("Receipt line action"), selection: $line.treatment) {
-            Text(pantryText("Skip this line")).tag(ReceiptImportDraft.Treatment.skip)
-            if !permitsPutaway || line.printed?.kind != .adjustment && line.printed?.kind != .date {
-                Text(putawayText("Put this food away")).tag(ReceiptImportDraft.Treatment.add)
-                if permitsPutaway {
-                    Text(putawayText("Ate this")).tag(ReceiptImportDraft.Treatment.eaten)
-                    Text(putawayText("Kept some")).tag(ReceiptImportDraft.Treatment.keptSome)
-                    Text(putawayText("Missing or unusable")).tag(ReceiptImportDraft.Treatment.missing)
-                }
-            }
-            if permitsPutaway {
-                Text(putawayText("Fee, adjustment or return")).tag(ReceiptImportDraft.Treatment.chargeOrReturn)
-            }
-            ForEach(lots.filter { PantryReceiptDelivery.fragment(of: $0) != nil }) { lot in
-                Text(label(lot))
-                    .tag(ReceiptImportDraft.Treatment.link(lot.id))
-            }
-            ForEach(householdDeliveries) { lot in
-                Text(pantryFormat("Link delivery: %@ · %@", lot.foodName, String(lot.id.uuidString.suffix(8))))
-                    .tag(ReceiptImportDraft.Treatment.link(lot.id))
-            }
-        }
+        receiptActionPicker
         .onChange(of: line.treatment) { _, next in
             line.clearAlias()
             if next != .add { line.selectedIntact = false }
@@ -946,7 +1083,6 @@ struct PantryReceiptLineEditor: View {
         .onChange(of: line.unit) { _, unit in
             if line.selectedIntact && unit != line.printed?.unit { line.selectedIntact = false }
         }
-        .accessibilityIdentifier("receipt.action.\(line.ordinal)")
         if line.treatment != .skip {
             if line.selectedIntact && !grouped {
                 Button(putawayText("Edit amount")) { expanded.toggle() }
@@ -963,10 +1099,48 @@ struct PantryReceiptLineEditor: View {
         }
     }
 
+    @ViewBuilder private var receiptActionPicker: some View {
+        let title = pantryText("Receipt line action")
+        let id = "receipt.action.\(line.ordinal)"
+        let choices = receiptActions
+        let picker = Picker(title, selection: $line.treatment) {
+            ForEach(choices.indices, id: \.self) { index in
+                Text(verbatim: choices[index].label).tag(choices[index].treatment)
+            }
+        }
+        if typeSize.isAccessibilitySize {
+            let selection = choices.first { $0.treatment == line.treatment }?.label ?? ht("Choose an action")
+            journalStackedMenu(title, value: selection, id: id) { picker.pickerStyle(.inline) }
+        } else {
+            picker.accessibilityIdentifier(id)
+        }
+    }
+
+    private var receiptActions: [(treatment: ReceiptImportDraft.Treatment, label: String)] {
+        var choices: [(ReceiptImportDraft.Treatment, String)] = [(.skip, pantryText("Skip this line"))]
+        if !permitsPutaway || line.printed?.kind != .adjustment && line.printed?.kind != .date {
+            choices.append((.add, putawayText("Put this food away")))
+            if permitsPutaway {
+                choices.append((.eaten, putawayText("Ate this")))
+                choices.append((.keptSome, putawayText("Kept some")))
+                choices.append((.missing, putawayText("Missing or unusable")))
+            }
+        }
+        if permitsPutaway { choices.append((.chargeOrReturn, putawayText("Fee, adjustment or return"))) }
+        for lot in lots where PantryReceiptDelivery.fragment(of: lot) != nil {
+            choices.append((.link(lot.id), label(lot)))
+        }
+        for lot in householdDeliveries {
+            let name = pantryFormat("Link delivery: %@ · %@", lot.foodName, String(lot.id.uuidString.suffix(8)))
+            choices.append((.link(lot.id), name))
+        }
+        return choices
+    }
+
     @ViewBuilder private var receivedFields: some View {
         let received = labeledField(pantryText("Amount actually received"), text: $line.received, focusKey: "received-\(line.ordinal)",
                                     identifier: "receipt.received.\(line.ordinal)", keyboard: .numbersAndPunctuation,
-                                    stacked: line.printed?.quantity != nil && line.printed?.unit != nil)
+                                    stacked: true)
         if let printed = line.printed, let quantity = printed.quantity, let unit = printed.unit {
             let layout = typeSize.isAccessibilitySize
                 ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8))
@@ -1015,7 +1189,7 @@ struct PantryReceiptLineEditor: View {
                          focusKey: "name-\(line.ordinal)", identifier: "receipt.name.\(line.ordinal)", axis: .vertical)
             receivedFields
             labeledField(line.treatment == .keptSome ? putawayText("Usable portion taken home") : pantryText("Amount usable"), text: $line.usable, focusKey: "usable-\(line.ordinal)",
-                         identifier: "receipt.usable.\(line.ordinal)", keyboard: .numbersAndPunctuation)
+                         identifier: "receipt.usable.\(line.ordinal)", keyboard: .numbersAndPunctuation, stacked: true)
                 .id("usable-\(line.ordinal)")
                 .listRowBackground(Theme.selection)
             Picker(pantryText("Unit"), selection: $line.unit) { ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pantryUnit($0)).tag($0) } }
@@ -1024,9 +1198,13 @@ struct PantryReceiptLineEditor: View {
                     LabeledContent(pantryText("Suggested storage to check"), value: pantryLocationName(storage))
                 } else if line.treatment == .keptSome { Text(putawayText("Choose where you stored the portion you kept.")).font(.caption) }
                 else { Text(pantryText("Choose where you put this food. The initial selection is cupboard.")).font(.caption) }
-                Picker(putawayText("Destination in My Pantry"), selection: $line.location) {
-                    ForEach(InventoryLocation.allCases, id: \.self) { Text(pantryLocationName($0)).tag($0) }
-                }.accessibilityIdentifier("receipt.storage.\(line.ordinal)")
+                let destination = putawayText("Destination in My Pantry")
+                journalStackedMenu(destination, value: pantryLocationName(line.location), id: "receipt.storage.\(line.ordinal)") {
+                    Picker(destination, selection: $line.location) {
+                        ForEach(InventoryLocation.allCases, id: \.self) { Text(pantryLocationName($0)).tag($0) }
+                    }
+                    .pickerStyle(.inline)
+                }
             }
             if permitsPutaway, line.treatment == .add, !line.selectedIntact, line.usable.isEmpty,
                let received = try? ComparisonModel.quantity(line.received, line.unit), received.amount > .zero {
@@ -1096,6 +1274,7 @@ struct PantryReceiptHistory: View {
     var receiptID: UUID? = nil
     var permittedLines: Set<UUID>? = nil
     var showsDone = true
+    var isReadOnly = false
     @State private var hasPutaway = false
     @State private var lastReadID: UUID?
     @State private var facts: [ReceiptAcquisition] = []
@@ -1119,7 +1298,7 @@ struct PantryReceiptHistory: View {
             if loading && facts.isEmpty { ProgressView(pantryText("Working…")) }
             if hasPutaway, receiptID == nil, permittedLines == nil, model.canEdit {
                 NavigationLink {
-                    PutawayHistory(model: model)
+                    PutawayHistory(model: model, isReadOnly: isReadOnly)
                 } label: {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(putawayText("Reviewed purchases"))
@@ -1131,7 +1310,7 @@ struct PantryReceiptHistory: View {
             if facts.isEmpty && !hasPutaway && !loading && !hasMore && model.phase == .ready {
                 Section {
                     Text(pantryText("No confirmed receipt lines yet.")).font(.headline)
-                    if receiptID == nil, model.canEdit {
+                    if !isReadOnly, receiptID == nil, model.canEdit {
                         Button { newReceipt = true } label: { Label(pantryText("Review a receipt"), systemImage: pantryReceiptSymbol) }
                             .accessibilityIdentifier("receipt.history.start")
                     }
@@ -1154,18 +1333,20 @@ struct PantryReceiptHistory: View {
                     if let paid = row.paidLineTotal { Text(pantryFormat("Paid line total %@", receiptMoney(paid))) }
                     else { Text(pantryText("Paid price unknown")) }
                     Text(pantryFormat("Receipt revision %@", String(row.revision)))
-                    if model.supportsReceiptAliases {
-                        Button(pantryText("Remember this product spelling")) { learning = row }
-                            .buttonStyle(.borderless).disabled(!model.canEdit || busy)
-                    }
-                    Button(pantryText("Correct this paid total")) {
-                        Task {
-                            do {
-                                correcting = try await model.latestReceiptRevision(row)
-                                price = ""; correctionMessage = nil; reviewedState = model.snapshot?.state
-                            } catch { message = receiptError(error) }
+                    if !isReadOnly {
+                        if model.supportsReceiptAliases {
+                            Button(pantryText("Remember this product spelling")) { learning = row }
+                                .buttonStyle(.borderless).disabled(!model.canEdit || busy)
                         }
-                    }.buttonStyle(.borderless).disabled(!model.canEdit || busy)
+                        Button(pantryText("Correct this paid total")) {
+                            Task {
+                                do {
+                                    correcting = try await model.latestReceiptRevision(row)
+                                    price = ""; correctionMessage = nil; reviewedState = model.snapshot?.state
+                                } catch { message = receiptError(error) }
+                            }
+                        }.buttonStyle(.borderless).disabled(!model.canEdit || busy)
+                    }
                 }
                 .listRowBackground(Theme.surface)
             }

@@ -9,6 +9,35 @@ struct MembershipSession: Equatable, Sendable {
     let householdID: String
     let householdName: String
     let serviceURL: URL
+
+    init(subjectID: String, memberID: String, accountName: String?, householdID: String, householdName: String, serviceURL: URL) {
+        self.subjectID = subjectID
+        self.memberID = memberID
+        self.householdID = householdID
+        self.householdName = householdName
+        self.serviceURL = serviceURL
+        self.accountName = Self.displayName(accountName, memberID: memberID, subjectID: subjectID) ?? mtr("You")
+    }
+
+    func householdRoleNames(role: String, canAdminister: Bool, hasShop: Bool,
+                            snapshot: MembershipSnapshot?) -> (organizer: String?, shopper: String?)? {
+        guard ["organizer", "shopper", "contributor"].contains(role), canAdminister || role == "shopper" else { return nil }
+        let name = householdRoleName(in: snapshot)
+        return (canAdminister ? name : nil, role == "shopper" && hasShop ? name : nil)
+    }
+
+    private func householdRoleName(in snapshot: MembershipSnapshot?) -> String {
+        guard let snapshot, snapshot.householdID == householdID,
+              let seat = snapshot.seats.first(where: { $0.isAdult && $0.userID == memberID }) else { return accountName }
+        return Self.displayName(seat.displayName, memberID: memberID, subjectID: subjectID) ?? accountName
+    }
+
+    private static func displayName(_ supplied: String?, memberID: String, subjectID: String) -> String? {
+        guard let name = supplied?.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty,
+              name.caseInsensitiveCompare(memberID) != .orderedSame, name.caseInsensitiveCompare(subjectID) != .orderedSame,
+              UUID(uuidString: name) == nil else { return nil }
+        return name
+    }
 }
 
 enum MembershipSessionEvent: Equatable { case projection, identity, lock }

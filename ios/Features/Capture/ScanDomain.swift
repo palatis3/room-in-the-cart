@@ -37,6 +37,8 @@ struct ScanReceiptLine: Codable, Equatable, Identifiable, Sendable {
     let id: UUID
     let originalText: String
     var uncertainOCR: Bool?
+    /// Exact wording from an isolated name/count/amount layout in the source image.
+    var printedItemColumn: String?
     var documentLine: ReceiptAcquisition.DocumentLine?
     var linkedAmountLineID: UUID?
     var reviewedText: String

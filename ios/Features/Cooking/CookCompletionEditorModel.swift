@@ -11,6 +11,7 @@ import CoreDomain
     enum LeftoverChoice: String, CaseIterable { case undecided, none, recorded }
     enum Notice: Equatable {
         case unavailable, invalidEntry, invalidPortionHolds, reviewChanged, insufficientStock, uncertain, saved, undoChanged, undoUncertain, undone
+        case leftoversExceedServings(counted: Rational?, made: Rational)
         case undoIndependentCount(String?), undoAmendedInputChanged(String?)
     }
     enum Failure: Error { case incomplete, invalidPortionHolds, stale, denied }
@@ -317,8 +318,15 @@ import CoreDomain
         } catch {
             guard token == generation else { return }
             if !authorize() { invalidate(); return }
-            if case InventoryError.invalid("cookUseExceedsAvailable") = error { notice = .insufficientStock }
-            else { notice = .reviewChanged }
+            switch error {
+            case InventoryError.invalid("cookedPortions"):
+                let counted = try? draft.leftovers.reduce(Rational.zero) { try $0.adding($1.portions) }
+                notice = .leftoversExceedServings(counted: counted, made: draft.servingsMade)
+            case InventoryError.invalid("cookUseExceedsAvailable"):
+                notice = .insufficientStock
+            default:
+                notice = .reviewChanged
+            }
         }
     }
     func confirm() async {

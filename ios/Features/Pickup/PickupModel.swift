@@ -449,6 +449,7 @@ struct PickupPersistenceLocation {
     let usesLivePantry: Bool
     private(set) var privatePantryGeneration = UUID()
     private var receiptAliasPersona: UUID?
+    private var receiptDraftOwner: UUID?
     private var livePantryScope: (@MainActor () -> Bool)?
     @Published private(set) var retiredPantryOrigins: Set<UUID> = []
     @Published private var retiredPantryReceipt: InventoryErasureReceipt?
@@ -539,7 +540,7 @@ struct PickupPersistenceLocation {
 
     /// Every window shares the paired-store gate. Each foreground adult session
     /// gets a distinct authority, even when it reopens the same physical stores.
-    func bindPrivatePantry(ledger: LedgerModel, receiptAliasPersona: UUID? = nil, privateDinnerActorID: UUID? = nil, authorize: @escaping @MainActor () -> Bool) async throws {
+    func bindPrivatePantry(ledger: LedgerModel, receiptAliasPersona: UUID? = nil, receiptDraftOwner: UUID? = nil, privateDinnerActorID: UUID? = nil, authorize: @escaping @MainActor () -> Bool) async throws {
         guard usesLivePantry, let gate = mutationGate, authorize(),
               let ledgerStore = ledger.pantryBackingStore(gate: gate) else { throw PickupModelError.missing }
         cookLedger = ledger
@@ -552,13 +553,15 @@ struct PickupPersistenceLocation {
         let resolved = try await locator.resolve(from: initial, previous: retiredPantryOrigins)
         guard authorize(), ledger.pantryBackingStore(gate: gate) === ledgerStore else { throw PickupModelError.missing }
         if let configuration = pantryConfiguration, configuration.erasureAuthorization(), configuration.ledger === ledgerStore,
-           configuration.pendingStore.inventoryWorkspaceID == resolved.store.workspaceID, self.receiptAliasPersona == receiptAliasPersona, configuration.privateDinnerActorID == privateDinnerActorID { return }
+           configuration.pendingStore.inventoryWorkspaceID == resolved.store.workspaceID, self.receiptAliasPersona == receiptAliasPersona,
+           self.receiptDraftOwner == receiptDraftOwner, configuration.privateDinnerActorID == privateDinnerActorID { return }
         guard store === initial || store?.workspaceID == resolved.store.workspaceID else { throw PickupModelError.missing }
         let originChanged = initial.workspaceID != resolved.store.workspaceID
         suspendPrivatePantry()
         if originChanged { pantryIsActive = false; selectedID = nil; appliedStockReviewRevisions = [:] }
         store = resolved.store; retiredPantryOrigins = resolved.retired
         self.receiptAliasPersona = receiptAliasPersona
+        self.receiptDraftOwner = receiptDraftOwner
         livePantryScope = authorize
         let directory = location.databaseURL.deletingLastPathComponent().appendingPathComponent("PantryPending", isDirectory: true)
         let journal = try PantryPickupPendingStore(directory: directory, inventoryWorkspaceID: resolved.store.workspaceID, ledgerWorkspaceID: ledgerStore.workspaceID)
@@ -587,7 +590,7 @@ struct PickupPersistenceLocation {
             _ = try await locator.start(after: receipt, previous: retiredPantryOrigins,
                 authorize: { configuration.authorize() && authorize() })
         }
-        try await bindPrivatePantry(ledger: ledger, receiptAliasPersona: receiptAliasPersona, privateDinnerActorID: configuration.privateDinnerActorID, authorize: scope)
+        try await bindPrivatePantry(ledger: ledger, receiptAliasPersona: receiptAliasPersona, receiptDraftOwner: receiptDraftOwner, privateDinnerActorID: configuration.privateDinnerActorID, authorize: scope)
         guard sourceWorkspaceID != receipt.workspaceID else { throw PickupModelError.missing }
         await load()
         guard ready else { throw PickupModelError.missing }
@@ -629,7 +632,7 @@ struct PickupPersistenceLocation {
     func suspendPrivatePantry() {
         guard usesLivePantry, pantryConfiguration != nil else { return }
         privatePantryGeneration = UUID()
-        receiptAliasPersona = nil; livePantryScope = nil; retiredPantryReceipt = nil
+        receiptAliasPersona = nil; receiptDraftOwner = nil; livePantryScope = nil; retiredPantryReceipt = nil
         pantryOriginReadable = false; pantrySetupIsStaging = false
         pantryConfiguration = nil
         cookLedger?.suspendPrivatePantryBinding()
@@ -893,7 +896,9 @@ struct PickupPersistenceLocation {
             guard pending.inventoryWorkspaceID == store.workspaceID,
                   pending.fileURL == defaultPending.fileURL else { throw PickupModelError.missing }
             return PantryModel(repository: PantryRepository(store: store, mutationGate: configuration.gate,
-                pendingStore: pending, aliasPersonaID: receiptAliasPersona, authorize: configuration.authorize), clock: clock,
+                pendingStore: pending, aliasPersonaID: receiptAliasPersona,
+                receiptDraftStore: PantryDigestStore.shared.receiptDrafts, receiptDraftOwner: receiptDraftOwner,
+                authorize: configuration.authorize), clock: clock,
                 receiptTrips: { [weak self] state in
                     guard let self, self.ready, self.pantryIsActive, self.pantryReadIsCurrent, !self.saving,
                           !self.hasPendingSave, self.pantryConfiguration?.authorize() == true, self.pantrySnapshot?.state == state else { return [] }

@@ -450,6 +450,7 @@ import CoreDomain
                     }
                 }
                 Toggle(captureText("I checked the printed lines."), isOn: $model.confirmed)
+                    .toggleStyle(LabeledRowToggleStyle())
                 if let storeIssue {
                     Button {
                         storeFocusRequest = UUID()

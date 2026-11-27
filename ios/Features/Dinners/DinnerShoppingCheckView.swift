@@ -15,9 +15,10 @@ struct DinnerShoppingCheckLink: View {
     }
 }
 
-private struct DinnerShoppingCheckView: View {
+struct DinnerShoppingCheckView: View {
     let shopID: UUID
     let occurrenceID: UUID
+    var returnToPlan: (() -> Void)? = nil
     @EnvironmentObject private var ledger: LedgerModel
     @EnvironmentObject private var pickup: PickupModel
     @EnvironmentObject private var access: WorkspaceAccess
@@ -26,6 +27,8 @@ private struct DinnerShoppingCheckView: View {
     @Environment(\.scenePhase) private var scene
     @State private var admitted: Origin?
     @State private var refreshed: Origin?
+    @State private var amountCorrection: LedgerContribution?
+    @State private var needsAmounts = false
 
     private struct Origin: Equatable {
         let identity: CapturePrivateIdentity
@@ -42,6 +45,53 @@ private struct DinnerShoppingCheckView: View {
         return Origin(identity: identity, ledger: id, accessGeneration: access.generation, pantryGeneration: pickup.privatePantryGeneration)
     }
     var body: some View {
+        Group {
+            if let returnToPlan {
+                if let source = amountCorrection {
+                    correctionEditor(source, onFinish: { amountCorrection = nil })
+                } else {
+                    allocationForm.toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button(action: returnToPlan) {
+                                Label(dinnerText("Back to planned dinner"), systemImage: "chevron.backward")
+                                    .labelStyle(.iconOnly)
+                                    .frame(minWidth: 44, minHeight: 44)
+                                    .contentShape(Rectangle())
+                            }
+                            .accessibilityIdentifier("dinner.allocation.backToPlan")
+                        }
+                    }
+                }
+            } else {
+                allocationForm.sheet(item: $amountCorrection) { source in
+                    NavigationStack { correctionEditor(source) }
+                }
+            }
+        }
+            .onChange(of: origin) { _, _ in
+                amountCorrection = nil
+                needsAmounts = false
+            }
+            .task(id: origin) {
+                refreshed = nil
+                guard let current = origin else { return }
+                if admitted == nil { admitted = current }
+                guard admitted == current, pickup.pantryIsActive, pickup.pantryRouteAvailable,
+                      !pickup.saving, !pickup.hasPendingSave, !ledger.saving, !ledger.hasPendingSave else { return }
+                if await pickup.refreshPantryStock(), !Task.isCancelled, origin == current { refreshed = current }
+            }
+    }
+
+    @ViewBuilder private func correctionEditor(_ source: LedgerContribution, onFinish: (() -> Void)? = nil) -> some View {
+        if let admitted, admitted == origin {
+            LedgerContributionEditor(model: ledger, shopID: shopID, contribution: source,
+                                     authorize: { permitsCorrection(source, in: admitted) }, onFinish: onFinish)
+        } else {
+            Text(currentDinnerText("Current dinners could not be verified. Reopen the same pickup and review its saved changes."))
+        }
+    }
+
+    private var allocationForm: some View {
         WorkingForm {
             if let admitted, admitted == origin, let shop = ledger.shop,
                !ledger.saving, !ledger.hasPendingSave, pickup.ready, !pickup.saving, !pickup.hasPendingSave,
@@ -55,7 +105,8 @@ private struct DinnerShoppingCheckView: View {
                    admitted.identity.subject == nil, admitted.identity.householdID == nil,
                    refreshed == admitted {
                     DinnerPurchaseChoices(ledger: ledger, pickup: pickup, shop: shop, occurrenceID: occurrenceID,
-                        linked: linked, identity: admitted.identity, authorize: { origin == admitted })
+                        linked: linked, identity: admitted.identity, needsAmounts: $needsAmounts,
+                        correctAmount: { amountCorrection = $0 }, authorize: { origin == admitted })
                     NavigationLink(ledgerText("Shopping list")) { LedgerHomeView(model: ledger) }
                 } else if needsListReview(shop: shop, check: check) {
                     Text(dinnerText("Review the current shopping list for this dinner’s purchases and allocations."))
@@ -73,21 +124,25 @@ private struct DinnerShoppingCheckView: View {
             }
         }.navigationTitle(dinnerText("Check what to buy")).navigationBarTitleDisplayMode(.inline)
             .privacySensitive()
-            .task(id: origin) {
-                refreshed = nil
-                guard let current = origin else { return }
-                if admitted == nil { admitted = current }
-                guard admitted == current, pickup.pantryIsActive, pickup.pantryRouteAvailable,
-                      !pickup.saving, !pickup.hasPendingSave, !ledger.saving, !ledger.hasPendingSave else { return }
-                if await pickup.refreshPantryStock(), !Task.isCancelled, origin == current { refreshed = current }
-            }
+    }
+
+    private func permitsCorrection(_ source: LedgerContribution, in scope: Origin) -> Bool {
+        guard origin == scope, scope.identity.subject == nil, scope.identity.householdID == nil,
+              pickup.currentDinnerActorID == scope.identity.actorID, pickup.pantryRouteAvailable,
+              let pantryID = pickup.sourceWorkspaceID, !pickup.journeys.contains(where: { $0.id == shopID }),
+              let shop = ledger.shop, !ledger.workspace.dinnerPantryLines(shop: shop, workspaceID: scope.ledger,
+                  originID: pantryID, actorID: scope.identity.actorID.uuidString, occurrenceID: occurrenceID).isEmpty,
+              let line = shop.purchaseReviewLines.first(where: { $0.id == source.lineID }),
+              shop.belongsInCurrentBasket(line), (try? shop.quantity(forLineID: line.id)) == nil else { return false }
+        return shop.ordinaryQuantitySource(for: line, contributions: shop.contributions(forLineID: line.id),
+                                           typedItemBatches: shop.typedItemBatchIDs) == source
     }
 
     // Free stock has already had existing allocations subtracted. A meal that
     // has reached checkout must use its real purchase and allocation review.
     private func needsListReview(shop: ShoppingLedger, check: DinnerShoppingCheck) -> Bool {
         let started = shop.lines.contains { line in
-            check.lineIDs.contains(line.id) && (line.isTrashed || line.isChecked || line.isHandled ||
+            check.lineIDs.contains(line.id) && (line.isTrashed || line.isChecked || (line.isHandled && line.dinnerAtHomeAt == nil) ||
                 line.tripPick != nil || line.packagePick != nil || line.stopObservation != nil)
         }
         if started { return true }
@@ -130,7 +185,7 @@ private struct DinnerShoppingEstimate: View {
             input = try? TonightMealModel.input(workspace: workspace, ledgerRevision: ledgerRevision, context: context, sources: [])
         }
         if let review, review.eligibility.eligible {
-            let remaining = review.ingredients.filter { DinnerShoppingCheck.remainder($0) != .covered }
+            let remaining = review.ingredients.filter { !check.confirmedAtHomeIngredientIDs.contains($0.id) && DinnerShoppingCheck.remainder($0) != .covered }
             Section(dinnerText("Still to buy or check")) {
                 if review.ingredients.isEmpty {
                     Text(dinnerText("This dinner has no planned ingredients."))
@@ -147,11 +202,18 @@ private struct DinnerShoppingEstimate: View {
             }.accessibilityIdentifier("dinner.shoppingRemainder")
         } else {
             Section(dinnerText("Planned ingredients")) {
-                ForEach(check.recipe.ingredients) { ingredient in
+                ForEach(check.recipe.ingredients.filter { !check.confirmedAtHomeIngredientIDs.contains($0.id) }) { ingredient in
                     LabeledContent(ingredient.name, value: ingredient.reviewedAmountLabel)
                 }
                 Text(dinnerText(current == nil ? "Pantry availability could not be verified." :
                     "Check meal preferences and ingredient details before using these pantry matches."))
+            }
+        }
+        if !check.confirmedAtHomeIngredientIDs.isEmpty {
+            Section(dinnerText("Already at home for this dinner")) {
+                ForEach(check.recipe.ingredients.filter { check.confirmedAtHomeIngredientIDs.contains($0.id) }) { ingredient in
+                    Text(verbatim: ingredient.name)
+                }
             }
         }
         if let current, !current.foods.isEmpty {
@@ -159,14 +221,10 @@ private struct DinnerShoppingEstimate: View {
             Section(dinnerText("Match food at home")) {
                 Text(dinnerText("Choose the pantry product for each ingredient you have. Only its unreserved amount counts. Unmatched ingredients show their full planned amount."))
                 ForEach(check.recipe.ingredients.filter { $0.quantity != nil }) { ingredient in
-                    Picker(ingredient.name, selection: Binding(get: { matches[ingredient.id] }, set: { matches[ingredient.id] = $0 })) {
-                        Text(tonightText("Not matched")).tag(UUID?.none)
-                        ForEach(current.foods) { food in
-                            let duplicate = (names[food.name]?.count ?? 0) > 1
-                            Text(verbatim: duplicate ? food.name + " · " + food.detail + " · " + food.id.uuidString.suffix(6) : food.name)
-                                .tag(Optional(food.id))
-                        }
-                    }.pickerStyle(.menu).accessibilityIdentifier("dinner.shoppingMatch." + ingredient.id.uuidString)
+                    DinnerPantryMatchMenu(title: ingredient.name, identifier: "dinner.shoppingMatch." + ingredient.id.uuidString,
+                        selection: Binding(get: { matches[ingredient.id] }, set: { matches[ingredient.id] = $0 }), foods: current.foods) { food in
+                        (names[food.name]?.count ?? 0) > 1 ? food.name + " · " + food.detail + " · " + food.id.uuidString.suffix(6) : food.name
+                    }
                 }
             }
         }
@@ -324,6 +382,31 @@ struct DinnerPantryReviewSection: View {
     }
 }
 
+private struct DinnerPantryMatchMenu: View {
+    let title: String
+    let identifier: String
+    @Binding var selection: UUID?
+    let foods: [TonightMealModel.Food]
+    let name: (TonightMealModel.Food) -> String
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    var body: some View {
+        let unmatched = tonightText("Not matched")
+        let picker = Picker(title, selection: $selection) {
+            Text(verbatim: unmatched).tag(UUID?.none)
+            ForEach(foods) { food in
+                Text(verbatim: name(food)).tag(Optional(food.id))
+            }
+        }
+        if typeSize.isAccessibilitySize {
+            let value = foods.first { $0.id == selection }.map(name) ?? unmatched
+            journalStackedMenu(title, value: value, id: identifier) { picker.pickerStyle(.inline) }
+        } else {
+            picker.pickerStyle(.menu).accessibilityIdentifier(identifier)
+        }
+    }
+}
+
 struct SavedDinnerProductChoice {
     let reservedFoods: Set<UUID>
     let match: PantryMealMatcher.Review
@@ -348,13 +431,10 @@ struct SavedDinnerProductPicker: View {
             if authorize(), let input {
                 Text(dinnerText("Choose each pantry product you want to use. Only a separately confirmed allocation can remove a purchase."))
                 ForEach(recipe.ingredients.filter { !omitted.contains($0.id) && ($0.quantity?.amount ?? .zero) > .zero }) { row in
-                    Picker(row.name, selection: Binding(get: { matches[row.id] }, set: { matches[row.id] = $0 })) {
-                        Text(tonightText("Not matched")).tag(UUID?.none)
-                        ForEach(input.foods) { food in
-                            Text(verbatim: food.name + " · " + food.detail + " · " + food.id.uuidString.suffix(6))
-                                .tag(Optional(food.id))
-                        }
-                    }.pickerStyle(.menu)
+                    DinnerPantryMatchMenu(title: row.name, identifier: "dinner.handoff.pantryProduct." + row.id.uuidString,
+                        selection: Binding(get: { matches[row.id] }, set: { matches[row.id] = $0 }), foods: input.foods) { food in
+                        food.name + " · " + food.detail + " · " + food.id.uuidString.suffix(6)
+                    }
                 }
                 Button(dinnerText("Use these product matches")) {
                     do {
@@ -391,6 +471,8 @@ private struct DinnerPurchaseChoices: View {
     let occurrenceID: UUID
     let linked: Set<UUID>
     let identity: CapturePrivateIdentity
+    @Binding var needsAmounts: Bool
+    let correctAmount: (LedgerContribution) -> Void
     let authorize: @MainActor () -> Bool
     @State private var servingReview: DinnerServingAllocationReview?
     @State private var allocation: DinnerAllocationChoice?
@@ -425,7 +507,14 @@ private struct DinnerPurchaseChoices: View {
                             allocation = try DinnerAllocationChoice(ledger: ledger, pickup: pickup, shop: shop,
                                 occurrenceID: occurrenceID, identity: identity, linked: linked)
                             failed = false
-                        } catch { failed = true }
+                            needsAmounts = false
+                        } catch LedgerCheckoutError.missingQuantity {
+                            needsAmounts = true
+                            failed = true
+                        } catch {
+                            needsAmounts = false
+                            failed = true
+                        }
                     }
                 }
             } else if pickup.journeys.first(where: { $0.id == shop.id })?.ledgerSourceRevisionID != shop.revisionID {
@@ -501,8 +590,29 @@ private struct DinnerPurchaseChoices: View {
                     } catch { failed = true }
                 }
             }
-            if failed {
-                Text(dinnerText("Check the product, available amount and other list commitments before trying again."))
+            if failed || needsAmounts {
+                let unresolved = needsAmounts ? shop.purchaseReviewLines.filter {
+                    shop.belongsInCurrentBasket($0) && (try? shop.quantity(forLineID: $0.id)) == nil
+                } : []
+                if !unresolved.isEmpty {
+                    Text(dinnerText("This review includes your whole shopping list. Check these grocery amounts, then review the allocations again."))
+                    ForEach(unresolved) { line in
+                        if let source = shop.ordinaryQuantitySource(for: line, contributions: shop.contributions(forLineID: line.id),
+                                                                   typedItemBatches: shop.typedItemBatchIDs) {
+                            Button(dinnerFormat("Set amount for %@", line.name)) {
+                                guard authorize(), ledger.shop?.id == shop.id else { return }
+                                correctAmount(source)
+                            }
+                            .accessibilityIdentifier("dinner.allocation.amount." + line.id.uuidString)
+                        } else {
+                            Text(verbatim: line.name)
+                        }
+                    }
+                } else if needsAmounts {
+                    Text(dinnerText("The missing grocery amounts have been entered. Review shopping allocations again."))
+                } else {
+                    Text(dinnerText("Check the product, available amount and other list commitments before trying again."))
+                }
             }
         }
     }

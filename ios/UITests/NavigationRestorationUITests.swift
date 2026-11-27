@@ -264,6 +264,10 @@ import XCTest
         tap(app.buttons["tripPickPart"])
         let picked = app.textFields["tripPartialAmount"]
         tap(picked)
+        let guidance = app.staticTexts["tripPartialAmountGuidance"]
+        XCTAssertTrue(guidance.waitForExistence(timeout: 5))
+        XCTAssertTrue(guidance.label.contains("4"), guidance.label)
+        XCTAssertFalse(app.buttons["tripSavePart"].isEnabled)
         let one = app.keyboards.keys["1"]
         XCTAssertTrue(one.waitForExistence(timeout: 5), "The first keyboard should offer numbers for the picked amount.")
         one.tap()

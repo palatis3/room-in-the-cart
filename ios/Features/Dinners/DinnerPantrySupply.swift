@@ -14,6 +14,12 @@ enum DinnerPantrySupply {
         let representedNeedIDs: Set<UUID>
     }
 
+    /// Private matching choices use the same current observation wording as the pantry shelf.
+    static func lotDetail(_ lot: InventoryLot) -> String {
+        [pantryLocationName(lot.location), pantryCount(lot.count, estimate: lot.countWording),
+         lot.confirmedAt.formatted(date: .abbreviated, time: .shortened)].joined(separator: " · ")
+    }
+
     @MainActor static func read(pickup: PickupModel, workspaceID: UUID?, linkedWorkspaceID: UUID?,
                                shopID: UUID) throws -> Snapshot? {
         guard pickup.pantryIsActive else { return nil }
@@ -27,9 +33,7 @@ enum DinnerPantrySupply {
         let basis = Basis(originID: live.basis.originID, inventoryRevision: live.basis.inventoryRevision,
             sourceHeads: live.basis.sourceHeads.map { .init(journeyID: $0.journeyID, revision: $0.storeRevision) })
         let foods = live.lots.map { row in
-            IdeaSupplyFood(id: row.current.foodID, name: row.current.name,
-                detail: [pantryLocationName(row.current.location), pantryCount(row.current.count),
-                    row.current.confirmedAt.formatted(date: .abbreviated, time: .shortened)].joined(separator: " · "))
+            IdeaSupplyFood(id: row.current.foodID, name: row.current.name, detail: lotDetail(row.current))
         }
         var reservations: [UUID: [IdeaSupplyReservation]] = [:]
         for claim in context.snapshot.reservations where claim.state != .released {

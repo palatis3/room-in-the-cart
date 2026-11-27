@@ -110,6 +110,15 @@ struct HouseholdSettingsView: View {
                         }
                         if model.canReviewHouseholdRequests {
                             NavigationLink(ht("Review family requests")) { HouseholdInboxView(model: model) }
+                            if !model.guardianChildOnly, projection.grantId == nil {
+                                if model.sharedSafetyChannel() != nil {
+                                    Text(ht("To report a message or block its sender, open Review family requests. Choose Report or block beside an eligible request from someone else."))
+                                        .accessibilityIdentifier("household.requestSafety.available")
+                                } else {
+                                    Text(ht("Reporting messages and blocking senders are unavailable with your current household access. You can find Support under Help and privacy."))
+                                        .accessibilityIdentifier("household.requestSafety.unavailable")
+                                }
+                            }
                         }
                     }
                     if projection.capabilities.contains("own_requests"), projection.shopId != nil || model.selectedRequestPickupID != nil || model.editing != nil || model.followingUp != nil {
@@ -263,7 +272,7 @@ struct HouseholdSettingsView: View {
             }
             if !model.locked, model.identity != nil, model.projection?.grantId == nil {
                 Section {
-                    NavigationLink(PlacementCopy.text("Shared placement reports")) { PlacementRecordsEntryView(household: model) }
+                    NavigationLink(PlacementCopy.text("Store order outcomes")) { PlacementRecordsEntryView(household: model) }
                         .accessibilityIdentifier("household.placementReports")
                 }
             }

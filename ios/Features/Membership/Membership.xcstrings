@@ -1,6 +1,24 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "You": {
+      "comment": "The signed-in adult shown beside their own account or verified household role when no display name is available.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tú"
+          }
+        }
+      }
+    },
     "Your private lists and dinners work without an account. Household sign-in is unavailable on this iPhone.": {
       "extractionState": "manual",
       "localizations": {

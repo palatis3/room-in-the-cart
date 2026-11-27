@@ -178,6 +178,7 @@ struct PutawayOverlapReview: View {
 
 struct PutawayHistory: View {
     @ObservedObject var model: PantryModel
+    var isReadOnly = false
     @State private var headers: [ReviewedReceiptHeader] = []
     @State private var more = true
     @State private var busy = false
@@ -187,7 +188,7 @@ struct PutawayHistory: View {
         List {
             if model.canEdit {
                 ForEach(headers) { header in
-                    NavigationLink { PutawayHistoryDetail(model: model, header: header) } label: {
+                    NavigationLink { PutawayHistoryDetail(model: model, header: header, isReadOnly: isReadOnly) } label: {
                         ReviewedReceiptHeading(header: header)
                     }
                     .listRowBackground(Theme.surface)
@@ -220,18 +221,21 @@ struct PutawayHistory: View {
 struct PutawayHistoryDetail: View {
     @ObservedObject var model: PantryModel
     let header: ReviewedReceiptHeader
+    var isReadOnly = false
     @State private var rows: [ReviewedReceiptDecision] = []
     @State private var more = true
-    @State private var busy = false
+    @State private var activeLoad: UUID?
+    @State private var pageState: InventoryState?
+    private var busy: Bool { activeLoad != nil }
     @State private var failed = false
     @State private var copyScope: ReceiptCopyScope?
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         List {
-            if model.canEdit {
+            if model.canEdit, let state = model.snapshot?.state {
                 ReviewedReceiptHeading(header: header).listRowBackground(Theme.surface)
-                if model.permitsReceiptCopy(header), let state = model.snapshot?.state, !rows.isEmpty {
+                if !isReadOnly, pageState == state, model.permitsReceiptCopy(header), !rows.isEmpty {
                     Button {
                         copyScope = ReceiptCopyScope(id: model.generation, inventory: state)
                     } label: {
@@ -239,16 +243,20 @@ struct PutawayHistoryDetail: View {
                     }
                     .accessibilityIdentifier("receipt.copy.choose")
                 }
-                let token = model.generation
-                ReceiptCouponReviewLink(source: .purchase(model, header), pickupID: nil, authorize: {
-                    model.permitsReceiptSource && model.generation == token
-                })
-                ForEach(rows.sorted { $0.ordinal < $1.ordinal }) { row in
-                    PutawayDecisionLabel(row: row, currencyCode: header.currencyCode).listRowBackground(Theme.surface)
+                if !isReadOnly {
+                    let token = model.generation
+                    ReceiptCouponReviewLink(source: .purchase(model, header), pickupID: nil, authorize: {
+                        model.permitsReceiptSource && model.generation == token
+                    })
+                }
+                if pageState == state {
+                    ForEach(rows.sorted { $0.ordinal < $1.ordinal }) { row in
+                        PutawayDecisionLabel(row: row, currencyCode: header.currencyCode).listRowBackground(Theme.surface)
+                    }
                 }
                 if rows.contains(where: { $0.lotID != nil }) {
                     NavigationLink(putawayText("Pantry quantities and price revisions")) {
-                        PantryReceiptHistory(model: model, receiptID: header.id, showsDone: false)
+                        PantryReceiptHistory(model: model, receiptID: header.id, showsDone: false, isReadOnly: isReadOnly)
                     }
                 }
                 if failed { Text(putawayText("Could not load receipt decisions.")) }
@@ -265,20 +273,32 @@ struct PutawayHistoryDetail: View {
                     more: more, loading: busy, failed: failed, loadMore: load)
             }
         }
-        .task { await load() }
+        .task(id: model.snapshot?.state) {
+            activeLoad = nil
+            more = true
+            failed = false
+            pageState = nil
+            await load()
+        }
         .onChange(of: model.snapshot?.state.workspaceID) { _, _ in rows = []; dismiss() }
     }
 
     private func load() async {
-        guard !busy, more, model.canEdit else { return }
-        busy = true
-        defer { busy = false }
+        guard !busy, more, model.canEdit, let state = model.snapshot?.state else { return }
+        let firstPage = pageState != state
+        let request = UUID()
+        activeLoad = request
+        defer { if activeLoad == request { activeLoad = nil } }
         do {
-            let page = try await model.reviewedReceiptDecisions(header.id, after: rows.last?.id)
-            rows += page
+            let page = try await model.currentPurchaseDecisions(header, after: firstPage ? nil : rows.last?.id, expected: state)
+            guard activeLoad == request, model.snapshot?.state == state, !Task.isCancelled else { return }
+            if firstPage { rows = page } else { rows += page }
+            pageState = state
             more = page.count == 50
             failed = false
-        } catch { failed = true }
+        } catch {
+            if activeLoad == request, !Task.isCancelled { failed = true }
+        }
     }
 }
 

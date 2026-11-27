@@ -300,7 +300,7 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
 
     private var tonightLabel: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Label(dinnerText("Find a dinner from the pantry"), systemImage: "carrot")
+            Label(dinnerText("Match my recipes to My Pantry"), systemImage: "carrot")
             if needsPantrySetup { Text(dinnerText("Set up My Pantry to use food you have at home.")).font(.footnote).foregroundStyle(Theme.secondary) }
         }
     }
@@ -640,6 +640,7 @@ struct DinnerPreviewView: View {
                             }
                         }
                     }
+                    let atHome = preview.confirmedAtHomeLineIDs
                     Section(dinnerText("Grocery needs")) {
                         if preview.changedContributionIDs.isEmpty, preview.proposal.changes.contains(where: { change in
                             if case .adjust = change { return true }
@@ -647,7 +648,7 @@ struct DinnerPreviewView: View {
                         }) {
                             Text(dinnerText("The grocery amounts on this list stay the same."))
                         }
-                        ForEach(preview.projectedContributions.filter { preview.changedContributionIDs.contains($0.id) }) { source in
+                        ForEach(preview.projectedContributions.filter { preview.changedContributionIDs.contains($0.id) && !atHome.contains($0.lineID) }) { source in
                             VStack(alignment: .leading, spacing: 5) {
                                 Text(source.productName).font(.headline)
                                 if let old = model.shop?.contributions.first(where: { $0.id == source.id }) {
@@ -665,6 +666,13 @@ struct DinnerPreviewView: View {
                                     }
                                 }
                             }.accessibilityElement(children: .combine).accessibilityIdentifier("dinnerPreviewNeed-\(source.id)")
+                        }
+                    }
+                    let homeRows = preview.projectedContributions.filter { preview.changedContributionIDs.contains($0.id) && atHome.contains($0.lineID) }
+                    if !homeRows.isEmpty {
+                        Section(dinnerText("Already at home for this dinner")) {
+                            ForEach(homeRows) { source in Text(verbatim: source.productName) }
+                            Text(dinnerText("Kept in the recipe. You can put it back on the shopping list in Handled."))
                         }
                     }
                     if preview.reviewsGuestPurchases {

@@ -94,6 +94,8 @@ public struct PlannedDinner: Codable, Equatable, Sendable {
     public var plannedServings: Rational?
     public var lunchHold: ServingGroup?
     public var reviewedGroceryLines: [Int: UUID]?
+    /// Keeps an unmeasured ingredient in cooking and marks only its new list row as handled.
+    public private(set) var confirmedAtHomeIngredientIDs: [UUID]? = nil
     /// The accepted template remains intact; only this occurrence drops reviewed extras.
     public internal(set) var omittedIngredientIDs: [UUID]? = nil
     var includedIngredientIndices: [Int] {
@@ -102,13 +104,22 @@ public struct PlannedDinner: Codable, Equatable, Sendable {
     }
     public internal(set) var pantryProducts: DinnerPantryProducts? = nil
     public init(acceptedDinnerID: UUID? = nil, template: MealTemplate, occurrenceID: UUID = UUID(),
-                lineIDs: [UUID]? = nil, contributionIDs: [UUID]? = nil, day: MealDay? = nil) {
+                lineIDs: [UUID]? = nil, contributionIDs: [UUID]? = nil, day: MealDay? = nil,
+                confirmedAtHome: Set<UUID> = []) {
+        confirmedAtHomeIngredientIDs = confirmedAtHome.isEmpty ? nil : confirmedAtHome.sorted { $0.uuidString < $1.uuidString }
         self.acceptedDinnerID = acceptedDinnerID; self.template = template; self.occurrenceID = occurrenceID
         self.lineIDs = lineIDs ?? template.ingredients.map { _ in UUID() }
         self.contributionIDs = contributionIDs ?? template.ingredients.map { _ in UUID() }; self.day = day
     }
     func validate() throws {
         try template.validate(); try day?.validate()
+        if let ids = confirmedAtHomeIngredientIDs {
+            let eligible = template.ingredients.filter { $0.checkedWithoutAmount == true && $0.quantity == nil }.map(\.id)
+            guard !ids.isEmpty, Set(ids).count == ids.count, Set(ids).isSubset(of: Set(eligible)),
+                  omittedIngredientIDs == nil, reviewedGroceryLines == nil, pantryProducts == nil else {
+                throw DinnerPlanningError.invalid("atHomeIngredient")
+            }
+        }
         if let omittedIngredientIDs {
             let ids = Set(omittedIngredientIDs)
             guard ids.count == omittedIngredientIDs.count, ids.isSubset(of: Set(template.ingredients.map(\.id))) else { throw DinnerPlanningError.invalid("optionalIngredients") }
@@ -261,6 +272,7 @@ public struct DinnerPreview: Equatable, Sendable {
     public let projectedMeals: [MealOccurrence]
     public let projectedContributions: [LedgerContribution]
     public let budgetBasis: ShopBasis?
+    public var confirmedAtHomeLineIDs: Set<UUID> { Set(projectedLedger.lines.filter { $0.dinnerAtHomeAt != nil }.map(\.id)) }
     public let changedContributionIDs: [UUID]
     public let changedOccurrenceIDs: [UUID]
     public let needsPurchaseAmendment: Bool
@@ -414,6 +426,12 @@ public struct DinnerPlanningState: Codable, Equatable, Sendable {
             switch change {
             case .choose(let dinner):
                 try dinner.validate()
+                if dinner.confirmedAtHomeIngredientIDs != nil {
+                    guard proposal.tool == .manual, proposal.changes.count == 1, proposal.repeatWeek == nil,
+                          proposal.swapOriginalID == nil, proposal.namespace.hasPrefix("local:") else {
+                        throw DinnerPlanningError.invalid("atHomeIngredient")
+                    }
+                }
                 if dinner.plannedServings != nil {
                     guard proposal.changes.count == 1, proposal.repeatWeek == nil, proposal.swapOriginalID == nil,
                           [.manual, .reusableDinner].contains(proposal.tool) else { throw DinnerPlanningError.invalid("plannedServings") }

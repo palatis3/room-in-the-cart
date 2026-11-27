@@ -107,19 +107,27 @@ import CoreDomain
 
 struct SavedDinnerHandoffLink: View {
     let recipe: MealTemplate
-    private enum Destination: Int, Identifiable { case plan, groceries; var id: Int { rawValue } }
+    enum Destination: Int, Identifiable { case plan, groceries; var id: Int { rawValue } }
     @State private var destination: Destination?
+
     var body: some View {
+        Self.actions { destination = $0 }
+            .sheet(item: $destination) { Self.screen(recipe, $0) }
+    }
+
+    static func actions(select: @escaping (Destination) -> Void) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Button(dinnerText("Plan this dinner")) { destination = .plan }
+            Button(dinnerText("Plan this dinner")) { select(.plan) }
                 .buttonStyle(PrimaryAction()).accessibilityIdentifier("dinner.planSaved")
-            Button { destination = .groceries } label: {
+            Button { select(.groceries) } label: {
                 Label(dinnerText("Shop for ingredients only"), systemImage: "checklist")
                     .frame(minHeight: 44, alignment: .leading)
             }.buttonStyle(.borderless).accessibilityIdentifier("dinner.shopSaved")
-        }.sheet(item: $destination) { destination in
-            NavigationStack { SavedDinnerHandoffView(recipe: recipe, selectingGroceries: destination == .groceries) }
         }
+    }
+
+    static func screen(_ recipe: MealTemplate, _ destination: Destination) -> some View {
+        NavigationStack { SavedDinnerHandoffView(recipe: recipe, selectingGroceries: destination == .groceries) }
     }
 }
 
@@ -149,6 +157,11 @@ struct SavedDinnerHandoffView: View {
     @State private var editingPlan = false
     @State private var choosingProducts = false
     @State private var productChoice: SavedDinnerProductChoice?
+    private struct AllocationTarget {
+        let shopID: UUID
+        let occurrenceID: UUID
+    }
+    @State private var allocationTarget: AllocationTarget?
     @State private var review: SavedDinnerReview?
     @State private var error: String?
     @State private var busy = false
@@ -175,6 +188,20 @@ struct SavedDinnerHandoffView: View {
             roleRevision: 0, verifiedAt: now, validUntil: now.addingTimeInterval(30))
     }
     var body: some View {
+        if let target = allocationTarget {
+            if authorized, target.shopID == destinationID, ledger.shop?.id == target.shopID {
+                DinnerShoppingCheckView(shopID: target.shopID, occurrenceID: target.occurrenceID,
+                                        returnToPlan: { allocationTarget = nil })
+            } else {
+                Text(dinnerText("The pickup or dinner plan changed. Make a new preview before applying."))
+                    .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Done")) { dismiss() } } }
+            }
+        } else {
+            planForm
+        }
+    }
+
+    private var planForm: some View {
         WorkingForm {
             if !authorized || destinationID != ledger.workspace.selectedShopID {
                 Text(dinnerText("The pickup or dinner plan changed. Make a new preview before applying."))
@@ -205,8 +232,12 @@ struct SavedDinnerHandoffView: View {
                             DinnerOccurrenceView(model: planner, occurrenceID: occurrenceID)
                         }.accessibilityIdentifier("dinner.handoff.openPlan")
                     }
-                    if let occurrenceID = review.occurrenceID {
-                        DinnerShoppingCheckLink(shopID: review.shopID, occurrenceID: occurrenceID, linkedProducts: review.pantryProducts != nil)
+                    if let occurrenceID = review.occurrenceID, review.shopID == destinationID {
+                        Button {
+                            allocationTarget = AllocationTarget(shopID: review.shopID, occurrenceID: occurrenceID)
+                        } label: {
+                            Label(dinnerText(review.pantryProducts != nil ? "Review pantry purchases" : "Check what to buy"), systemImage: "checklist")
+                        }.accessibilityIdentifier("dinner.checkShopping")
                     }
                     NavigationLink(ledgerText("Shopping list")) {
                         LedgerHomeView(model: ledger).navigationTitle(ledgerText("Shopping list")).navigationBarTitleDisplayMode(.inline)
@@ -251,33 +282,32 @@ struct SavedDinnerHandoffView: View {
                             .accessibilityIdentifier("dinner.handoff.startPickup")
                     }
                 } else if let review {
-                    Section(dinnerText(review.plansDinner ? "Ingredients for the whole dinner" : "Selected groceries")) {
+                    Section(review.plansDinner ? dinnerFormat("Shopping list quantities for %@", review.destinationTitle) : dinnerText("Selected groceries")) {
+                        if review.plansDinner && privateProductAccess() {
+                            Button(dinnerText("Match food at home")) { choosingProducts = true }
+                                .accessibilityIdentifier("dinner.handoff.matchPantry")
+                                .disabled(busy || ledger.saving || ledger.hasPendingSave)
+                            if productChoice != nil {
+                                Button(dinnerText("Clear product matches")) { productChoice = nil; prepare(.planTonight) }
+                                    .disabled(busy || ledger.saving || ledger.hasPendingSave)
+                            }
+                            Text(dinnerText("After saving the dinner, you can review which linked ingredients to remove from the shopping list."))
+                                .font(.subheadline).foregroundStyle(Theme.secondary)
+                        }
                         receiptRows(review.receipt)
                         if review.plansDinner { ingredientChoices }
-
                     }
                     Section {
                         if let day = review.plannedDay, let count = review.plannedServings {
                             Text(planSummary(day, count)).font(.headline)
                             Text(dinnerFormat("Planning adds all the ingredient amounts shown to %@.", review.destinationTitle))
-                            if review.pantryProducts != nil {
-                                Text(dinnerText("Review the linked products after saving the dinner to choose which purchases to remove."))
-                            }
                         } else {
                             Text(dinnerText("Only the selected groceries go on this list. Your dinner schedule stays as it is."))
                         }
                         Button(review.plansDinner ? dinnerText(isTonight(review) ? "Plan for tonight" : "Plan for this day") : countLabel(review)) {
                             Task { await apply(review) }
                         }.buttonStyle(PrimaryAction()).accessibilityIdentifier("dinner.handoff.confirm")
-                        if review.plansDinner {
-                            if privateProductAccess() {
-                                Button(dinnerText("Match food at home")) { choosingProducts = true }
-                                if productChoice != nil {
-                                    Button(dinnerText("Clear product matches")) { productChoice = nil; prepare(.planTonight) }
-                                }
-                            }
-                            shopInstead
-                        }
+                        if review.plansDinner { shopInstead }
                         else { Button(tonightText("Keep editing")) { self.review = nil; error = nil } }
                     }.disabled(busy || ledger.saving || ledger.hasPendingSave)
                 } else if selectingGroceries {
@@ -287,7 +317,7 @@ struct SavedDinnerHandoffView: View {
                             Toggle(isOn: Binding(get: { selected.contains(ingredient.id) }, set: { included in
                                 if included { selected.insert(ingredient.id) } else { selected.remove(ingredient.id) }
                             })) { ingredientRow(ingredient) }
-                                .toggleStyle(DinnerRowToggleStyle())
+                                .toggleStyle(LabeledRowToggleStyle())
                                 .accessibilityIdentifier("dinner.handoff.ingredient." + ingredient.id.uuidString)
                         }
                         Button(dinnerText("Review selected groceries")) { prepare(.groceries(selected)) }
@@ -404,6 +434,8 @@ struct SavedDinnerHandoffView: View {
         } label: {
             Label(dinnerText(ledger.shop == nil ? "Choose a shopping list" : "Change list"),
                   systemImage: "chevron.up.chevron.down")
+                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                .contentShape(Rectangle())
         }
         .disabled(busy || ledger.saving || ledger.hasPendingSave)
         .accessibilityIdentifier("dinner.handoff.pickup")

@@ -1,6 +1,40 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Review grocery": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review grocery"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar producto"
+          }
+        }
+      }
+    },
+    "Check the grocery name and amount": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the grocery name and amount"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa el nombre y la cantidad del producto"
+          }
+        }
+      }
+    },
     "Show next groceries": {
       "localizations": {
         "en": {
@@ -705,18 +739,18 @@
         }
       }
     },
-    "Add a grocery to start your “%@” list. Works offline without an account.": {
+    "List: %@. Works offline without an account.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add a grocery to start your “%@” list. Works offline without an account."
+            "value": "List: %@. Works offline without an account."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El primer producto crea la lista «%@». Funciona sin conexión y sin cuenta."
+            "value": "Lista: %@. Funciona sin conexión y sin cuenta."
           }
         }
       }

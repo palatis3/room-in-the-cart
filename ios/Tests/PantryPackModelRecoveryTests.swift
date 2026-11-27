@@ -444,6 +444,86 @@ extension PantryPackModelRecoveryTests {
         XCTAssertEqual(confirmedStock.lots, before.lots)
     }
 
+    func testMixedDinnerAllocationRetriesAfterEachUnrelatedUnknownAmountIsReviewed() async throws {
+        let actorID = UUID(), f = try await fixture(privateDinnerActorID: actorID)
+        try await f.ledger.configurePantryPackRecovery(f.port)
+        let pantry = PantryRepository(store: f.inventory, mutationGate: f.gate, authorize: { f.state.allowed })
+        f.cleanup.track(pantry)
+        let origin = f.inventory.workspaceID, food = UUID(), lot = UUID()
+        let empty = try await pantry.load(at: now)
+        _ = try await pantry.apply(.init(id: UUID(), originID: origin, lotID: lot, eventID: UUID(),
+            expectedRevision: nil, occurredAt: now, change: .create(.init(foodID: food, name: "Bread",
+                source: .manual(originID: origin, sourceID: UUID()), location: .cupboard, unit: .count,
+                count: .exact(q(2))), observationID: UUID())), reviewedInventoryRevision: empty.state.revision, at: now)
+        let recipe = MealTemplate(title: "Cheese toast", ingredients: [
+            .init(name: "Bread", quantity: q(1)), .init(name: "Cheese", quantity: q(1))])
+        var market = ShoppingLedger(title: "Ordinary groceries")
+        let milk = try market.addManualLine(name: "Milk", quantity: nil)
+        let oats = try market.addManualLine(name: "Oats", quantity: nil)
+        let seeded = await f.ledger.change(key: "unmeasured groceries") {
+            $0.shops.append(market); $0.selectedShopID = market.id; $0.mealTemplates.append(recipe)
+        }
+        XCTAssertTrue(seeded)
+        let refreshed = await f.pickup.refreshPantryStock()
+        XCTAssertTrue(refreshed)
+        let context = try XCTUnwrap(f.pickup.pantryReviewContext())
+        let input = try TonightMealModel.input(workspace: f.ledger.workspace, ledgerRevision: f.ledger.revision,
+                                               context: context, sources: [])
+        let finder = TonightMealModel()
+        await finder.refresh(authorize: { true }) { input }
+        try finder.match(recipeID: recipe.id, ingredientID: recipe.ingredients[0].id, foodID: food)
+        let match = try XCTUnwrap(finder.reviews.first { $0.recipe == recipe })
+        let actor = CapturePrivateIdentity(actorID: actorID, subject: nil, householdID: nil, memberID: nil, role: nil)
+        let choice = try TonightPlanChoice.prepare(match: match, pantryBasis: input.basis, destinationShopID: market.id,
+            newShopTitle: "", ledger: f.ledger, pickup: f.pickup, currentIdentity: { actor })
+        let planned = await TonightPlanChoice.apply(choice, ledger: f.ledger, pickup: f.pickup, currentIdentity: { actor })
+        XCTAssertTrue(planned)
+        let original = try XCTUnwrap(f.ledger.shop)
+        let meal = try XCTUnwrap(original.mealOccurrences.first)
+        let before = try await pantry.load(at: now)
+        func allocation() throws -> DinnerAllocationChoice {
+            let current = try XCTUnwrap(f.ledger.shop)
+            let linked = f.ledger.workspace.dinnerPantryLines(shop: current, workspaceID: f.ledgerStore.workspaceID,
+                originID: origin, actorID: actorID.uuidString, occurrenceID: meal.id)
+            XCTAssertEqual(linked, [food])
+            return try DinnerAllocationChoice(ledger: f.ledger, pickup: f.pickup, shop: current, occurrenceID: meal.id,
+                                              identity: actor, linked: linked)
+        }
+        for lineID in [milk, oats] {
+            XCTAssertThrowsError(try allocation()) { XCTAssertEqual($0 as? LedgerCheckoutError, .missingQuantity) }
+            XCTAssertFalse(f.pickup.journeys.contains { $0.id == market.id })
+            let current = try XCTUnwrap(f.ledger.shop)
+            let source = try XCTUnwrap(current.contributions(forLineID: lineID).first)
+            let edited = await f.ledger.editShop(key: "review ordinary amount", shopID: market.id) {
+                try $0.updateContribution(contributionID: source.id, quantity: self.q(1), notes: source.notes, reviewedPackages: nil)
+            }
+            XCTAssertTrue(edited)
+        }
+        let current = try XCTUnwrap(f.ledger.shop)
+        XCTAssertEqual(current.mealOccurrences, original.mealOccurrences)
+        XCTAssertEqual(CookCompletionDraft.activeIngredientIDs(for: meal, in: current), meal.ingredientContributionIDs)
+        let review = try allocation()
+        XCTAssertEqual(Set(review.checkout.lines.map(\.name)), ["Milk", "Oats", "Bread", "Cheese"])
+        let applied = try await LedgerCheckoutAdapter.apply(review.checkout, ledger: f.ledger, pickup: f.pickup,
+            freshDinnerBasis: review.basis, authorize: { true })
+        XCTAssertTrue(applied)
+        let after = try await pantry.load(at: now)
+        XCTAssertEqual(after.lots, before.lots)
+        let claims = after.reservations.filter { $0.foodID == food && $0.state != .released }
+        XCTAssertEqual(claims.count, 1)
+        XCTAssertEqual(claims.first?.amount?.amount, .one)
+        let decision = try DinnerPurchaseDecision(ledger: f.ledger, pickup: f.pickup, shop: current,
+                                                  occurrenceID: meal.id, identity: actor, linked: [food])
+        let saved = await decision.save(ledger: f.ledger, authorize: { true })
+        XCTAssertTrue(saved)
+        let covered = DinnerPantryPurchases.lines(ledger: f.ledger, pickup: f.pickup, shop: current, identity: actor)
+        XCTAssertEqual(covered, [food])
+        XCTAssertEqual(Set(f.ledger.workspace.listLayout.groups(shop: current, excluding: covered).flatMap(\.lines).map(\.name)),
+                       ["Milk", "Oats", "Cheese"])
+        let finished = try await pantry.load(at: now)
+        XCTAssertEqual(finished.lots, before.lots)
+    }
+
     private func addBowlStock(_ name: String, cups: Int64, pantry: PantryRepository, origin: UUID) async throws -> (food: UUID, lot: UUID) {
         let food = UUID(), lot = UUID()
         let quantity = Quantity(amount: try Rational(cups), unit: .cup, originalLiteral: String(cups))

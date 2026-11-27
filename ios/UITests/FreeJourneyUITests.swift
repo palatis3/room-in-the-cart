@@ -1,4 +1,5 @@
 import UIKit
+import Vision
 import XCTest
 
 /// Shopper journeys use the isolated Debug workspace. Pickup recovery cases seed a placed order.
@@ -42,6 +43,10 @@ import XCTest
             if existingAccountsOnly {
                 XCTAssertEqual(account.label, "Saved adult account options")
                 XCTAssertLessThan(free.frame.maxY, account.frame.minY, "Free should come first when new accounts cannot sign in.")
+                let guidance = app.staticTexts["membership.priceGuidance"]
+                XCTAssertTrue(guidance.waitForExistence(timeout: 5))
+                XCTAssertTrue(guidance.label.contains("annual subscription"))
+                XCTAssertTrue(guidance.label.contains("Without a saved account, the price is unavailable here."))
             }
         }
 
@@ -860,6 +865,34 @@ import XCTest
             options: [.usesLineFragmentOrigin, .usesFontLeading], attributes: [.font: font], context: nil)
         capture("Spanish receipt unit guide at Extra Large")
         XCTAssertGreaterThanOrEqual(frame.height + 2, required.height, "The visible hint must contain the entire unit example")
+    }
+
+    func testLargestTypePantryLocationUsesFullWidthAndAmountRowCenterAcceptsInput() {
+        launch(reset: true, region: "CA", contentSize: .accessibilityExtraExtraExtraLarge)
+        tap(app.tabBars.buttons["Pantry"])
+        tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.add"])
+        fill("Sandwich bread", into: "pantry.foodName", useVisibleCenter: true)
+        let location = app.buttons["pantry.foodLocation"]
+        reveal(location)
+        XCTAssertEqual(location.label, "Storage location")
+        XCTAssertEqual(location.value as? String, "Cupboard")
+        // On the 375-point SE the compressed two-column control was 271.5 points tall.
+        XCTAssertLessThan(location.frame.height, 250)
+        tap(location)
+        tap(app.buttons["Freezer"])
+        XCTAssertEqual(location.value as? String, "Freezer")
+        fill("2", into: "pantry.amount", useVisibleCenter: true)
+        XCTAssertEqual(app.textFields["pantry.amount"].value as? String, "2")
+        tap(app.buttons["pantry.review"])
+
+        let readout = element("pantry.reviewLocation")
+        reveal(readout)
+        let description = readout.label + " " + (readout.value as? String ?? "")
+        XCTAssertTrue(description.contains("Storage location"))
+        XCTAssertTrue(description.contains("Freezer"))
+        XCTAssertLessThan(readout.frame.height, 250)
+        capture("AX5 pantry reviewed location")
     }
 
     func testPrivatePantryFromEmptyShopSavesFoodAndReopensAfterRelaunch() throws {
@@ -1699,12 +1732,12 @@ import XCTest
         capture("Checkout review preserves original OCR, accepted crop and shopper amount")
     }
 
-    private func openReceiptScreenshotFromPhotos() throws {
+    private func openReceiptScreenshotFromPhotos(spanish: Bool = false) throws {
         app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
         SimulatorPhotosFixture(app: app).saveSourcePhoto()
         app.terminate()
-        launch(reset: true)
+        launch(reset: true, spanish: spanish)
         tap(app.shopToolButton("shop.myPantry")); tap(app.buttons["pantry.setup.apply"])
         tap(app.buttons["pantry.receipt"])
         let screenshot = app.buttons["receipt.chooseScreenshot"]
@@ -1716,12 +1749,14 @@ import XCTest
     func testFeeOnlyScreenshotCanBeSavedWithoutConfirmingReceivedFood() throws {
         try openReceiptScreenshotFromPhotos()
         let fee = app.switches["receipt.document.line.1.2"]
-        XCTAssertTrue(fee.waitForExistence(timeout: 25), app.debugDescription)
+        XCTAssertTrue(app.staticTexts["receipt.unsavedReviewNotice"].waitForExistence(timeout: 25))
+        reveal(fee)
         XCTAssertTrue(fee.label.uppercased().contains("SERVICE FEE"))
         enableSwitch("receipt.document.line.1.2")
         fill("Room Market", into: "receipt.document.store", control: app.textFields["receipt.document.store"])
         XCTAssertFalse(app.switches["I checked these printed lines and physically received food from this purchase."].exists)
         let sourceReview = app.buttons["receipt.document.accept"]
+        reveal(sourceReview)
         XCTAssertEqual(sourceReview.label, "Use selected receipt lines")
         tap(sourceReview)
         checkReceiptSwitch("I checked the purchase date.")
@@ -1752,36 +1787,205 @@ import XCTest
         reveal(contrast)
         contrast.tap()
         let field = app.textFields["receipt.reading.edit"]
-        reveal(field)
-        field.tap()
-        field.typeText(" organic")
+        let endOfField = CGVector(dx: 0.90, dy: 0.67)
+        reveal(field, requiredHit: endOfField)
+        let printed = try XCTUnwrap(field.value as? String)
+        XCTAssertFalse(app.keyboards.firstMatch.exists)
+        field.coordinate(withNormalizedOffset: endOfField).tap()
+        let keyboard = app.keyboards.firstMatch
+        XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
+        let suffix = " GBP 1.20"
+        app.typeText(suffix)
+        XCTAssertEqual(field.value as? String, printed + suffix)
+        XCTAssertTrue(keyboard.exists, "The first edit must leave the wording field ready for more typing.")
         let apply = app.buttons["receipt.reading.apply"]
+        XCTAssertEqual(apply.label, "Done", "The visible confirmation must be available by its spoken name.")
         tap(apply)
         XCTAssertTrue(inspect.waitForExistence(timeout: 5))
         XCTAssertEqual(inspect.label, original)
         XCTAssertEqual(app.switches["receipt.document.line.1.1"].value as? String, "0")
         tap(inspect)
         XCTAssertTrue(field.waitForExistence(timeout: 5))
-        XCTAssertTrue((field.value as? String)?.contains("organic") == true)
-        tap(app.buttons["Restore original wording"])
+        XCTAssertEqual(field.value as? String, printed + suffix)
+        let restore = app.buttons["Restore original wording"]
+        tap(restore)
+        XCTAssertEqual(field.value as? String, printed)
+        tap(app.navigationBars.buttons["Cancel"])
+        tap(inspect)
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        XCTAssertEqual(field.value as? String, printed + suffix)
+        tap(restore)
         tap(apply)
         XCTAssertTrue(inspect.waitForExistence(timeout: 5))
         XCTAssertEqual(inspect.label, original)
+        XCTAssertEqual(app.switches["receipt.document.line.1.1"].value as? String, "0")
+        tap(inspect)
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        XCTAssertEqual(field.value as? String, printed)
+    }
+
+    func testSpanishInterruptedPhotoReviewReturnsToPantryAndRequiresReselection() throws {
+        try openReceiptScreenshotFromPhotos(spanish: true)
+        let notice = app.staticTexts["receipt.unsavedReviewNotice"]
+        XCTAssertTrue(notice.waitForExistence(timeout: 25))
+        XCTAssertEqual(notice.label, "Al salir de la app se borra esta revisión sin guardar. Para empezar de nuevo, vuelve a abrir o escanear el recibo.")
+        let store = app.textFields["receipt.document.store"]
+        receiptTap(store)
+        app.typeText("Mercado Familiar")
+        XCTAssertEqual(store.value as? String, "Mercado Familiar")
+        XCUIDevice.shared.press(.home)
+        app.activate()
+        let start = app.buttons["pantry.receipt"]
+        XCTAssertTrue(start.waitForExistence(timeout: 12))
+        receiptTap(start)
+        let choose = app.buttons["receipt.chooseScreenshot"]
+        XCTAssertTrue(choose.waitForExistence(timeout: 8))
+        XCTAssertFalse(notice.exists)
+        XCTAssertFalse(store.exists)
+        XCTAssertFalse(app.buttons["receipt.draft.resume"].exists)
+        choose.tap()
+        try SimulatorPhotosFixture(app: app).chooseNewestSourcePhoto()
+        XCTAssertTrue(notice.waitForExistence(timeout: 25))
+        XCTAssertNotEqual(store.value as? String, "Mercado Familiar")
+        let unselected = app.switches["receipt.document.line.1.1"]
+        reveal(unselected)
+        XCTAssertEqual(unselected.value as? String, "0")
+    }
+
+    func testPrivateReceiptLineDraftSurvivesRelaunchAndCanBeDiscarded() throws {
+        try openReceiptScreenshotFromPhotos()
+        let store = app.textFields["receipt.document.store"]
+        XCTAssertTrue(store.waitForExistence(timeout: 25))
+        fill("Park Market", into: "receipt.document.store", control: store)
+        enableSwitch("receipt.document.line.1.1")
+        tapReceiptFormCenter(app.buttons["receipt.draft.save"], initiallyUpward: false)
+        waitForReceiptDraftSave(spanish: false)
+        XCUIDevice.shared.press(.home)
+        app.terminate()
+        launch(reset: false)
+        reopenPrivateReceiptEntry()
+        receiptTap(app.buttons["receipt.draft.resume"])
+        XCTAssertTrue(store.waitForExistence(timeout: 8))
+        XCTAssertEqual(store.value as? String, "Park Market")
+        let oats = app.switches["receipt.document.line.1.1"]
+        let fee = app.switches["receipt.document.line.1.2"]
+        reveal(oats)
+        XCTAssertEqual(oats.value as? String, "1")
+        reveal(fee)
+        XCTAssertEqual(fee.value as? String, "0")
+        XCTAssertFalse(app.buttons["receipt.commit"].exists)
+        receiptTap(app.buttons["receipt.document.close"])
+        let discard = app.buttons["receipt.draft.discard"]
+        receiptTap(discard)
+        let dialog = app.sheets["Permanently discard the saved receipt draft?"]
+        XCTAssertTrue(dialog.waitForExistence(timeout: 8))
+        let confirmID = "receipt.draft.confirmDiscard"
+        let action = dialog.buttons.matching(identifier: confirmID).firstMatch
+        // Some runtimes expose the destructive action as a button inside an identically named button.
+        let nestedButton = action.children(matching: .button).matching(identifier: confirmID).firstMatch
+        receiptTap(nestedButton.exists ? nestedButton : action)
+        XCTAssertTrue(app.buttons["receipt.draft.resume"].waitForNonExistence(timeout: 8))
+    }
+
+    func testEnglishFirstDraftAtFinalPutawayReopensBeforeConfirmation() throws {
+        try checkDraftAtFinalConfirmation(spanish: false, saveAtLineSelection: false)
+    }
+
+    func testSpanishSavedPutawayDraftReopensForReviewBeforeConfirmation() throws {
+        try checkDraftAtFinalConfirmation(spanish: true, saveAtLineSelection: true)
+    }
+
+    private func checkDraftAtFinalConfirmation(spanish: Bool, saveAtLineSelection: Bool) throws {
+        try openReceiptScreenshotFromPhotos(spanish: spanish)
+        let store = app.textFields["receipt.document.store"]
+        XCTAssertTrue(store.waitForExistence(timeout: 25))
+        fill("Mercado Familiar", into: "receipt.document.store", control: store)
+        enableSwitch("receipt.document.line.1.2")
+        if saveAtLineSelection {
+            tapReceiptFormCenter(app.buttons["receipt.draft.save"], initiallyUpward: false)
+            waitForReceiptDraftSave(spanish: spanish)
+        }
+        receiptTap(app.buttons["receipt.document.accept"])
+        let reference = app.textFields["receipt.transactionReference"]
+        enterReceiptField("FAMILIA27", id: "receipt.transactionReference")
+        enableSwitch("receipt.purchaseDateConfirmation")
+        receiptTap(app.buttons["receipt.action.1"])
+        receiptTap(app.buttons[spanish ? "Cargo, ajuste o devolución" : "Fee, adjustment or return"])
+        receiptTap(app.buttons["receipt.review"])
+        let commit = app.buttons["receipt.commit"]
+        reveal(commit)
+        let save = app.buttons["receipt.draft.save"]
+        reveal(save)
+        let status = app.staticTexts[saveAtLineSelection ? "receipt.draft.saved" : "receipt.unsavedReviewNotice"]
+        XCTAssertEqual(status.label, saveAtLineSelection
+            ? "Al salir, solo se conserva el último borrador guardado. Actualízalo para conservar estos cambios."
+            : "Leaving the app clears this review unless you save a draft.")
+        XCTAssertEqual(save.label, saveAtLineSelection ? "Actualizar el borrador guardado" : "Save draft on this iPhone")
+        XCTAssertGreaterThanOrEqual(status.frame.minY, commit.frame.maxY - 1)
+        XCTAssertGreaterThanOrEqual(save.frame.minY, status.frame.maxY - 1)
+        XCTAssertLessThan(save.frame.minY - commit.frame.maxY, 200, "The shopper must see the draft choice beside the final action")
+        tapReceiptFormCenter(save)
+        waitForReceiptDraftSave(spanish: spanish)
+        XCUIDevice.shared.press(.home)
+        app.terminate()
+        launch(reset: false, spanish: spanish)
+        reopenPrivateReceiptEntry()
+        receiptTap(app.buttons["receipt.draft.resume"])
+        reveal(reference)
+        XCTAssertEqual(reference.value as? String, "FAMILIA27")
+        let resumedStore = app.textFields["receipt.store"]
+        reveal(resumedStore, initiallyUpward: false)
+        XCTAssertEqual(resumedStore.value as? String, "Mercado Familiar")
+        let dateConfirmation = app.switches["receipt.purchaseDateConfirmation"]
+        reveal(dateConfirmation)
+        XCTAssertEqual(dateConfirmation.value as? String, "0")
+        XCTAssertFalse(app.buttons["receipt.commit"].exists)
+        enableSwitch("receipt.purchaseDateConfirmation")
+        receiptTap(app.buttons["receipt.review"])
+        let confirm = app.buttons["receipt.commit"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 8))
+        receiptTap(confirm)
+        XCTAssertTrue(app.staticTexts["receipt.status"].waitForExistence(timeout: 8))
+        receiptTap(app.buttons[spanish ? "Listo" : "Done"])
+        reopenPrivateReceiptEntry()
+        XCTAssertTrue(app.buttons["receipt.chooseScreenshot"].waitForExistence(timeout: 8))
+        XCTAssertFalse(app.buttons["receipt.draft.resume"].exists)
+    }
+
+    private func reopenPrivateReceiptEntry() {
+        let start = app.buttons["pantry.receipt"]
+        if !start.waitForExistence(timeout: 2) {
+            receiptTap(app.shopToolButton("shop.myPantry"))
+        }
+        receiptTap(start)
+    }
+
+    private func waitForReceiptDraftSave(spanish: Bool) {
+        let status = app.staticTexts["receipt.draft.saved"]
+        let text = spanish ? "Borrador guardado en este iPhone." : "Draft saved on this iPhone."
+        reveal(status, initiallyUpward: false)
+        let saved = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND label == %@", text), object: status)
+        XCTAssertEqual(XCTWaiter.wait(for: [saved], timeout: 10), .completed)
     }
 
     func testSystemPhotosReceiptKeepsRecognizedLinesUnselected() throws {
         try openReceiptScreenshotFromPhotos()
+        let notice = app.staticTexts["receipt.unsavedReviewNotice"]
+        XCTAssertTrue(notice.waitForExistence(timeout: 25))
+        XCTAssertEqual(notice.label, "Leaving the app clears this unsaved review. Reopen or rescan the receipt to start again.")
         let oats = app.switches["receipt.document.line.1.1"]
         XCTAssertTrue(oats.waitForExistence(timeout: 25), app.debugDescription)
         XCTAssertTrue(oats.label.uppercased().contains("OATS"))
         reveal(element("receipt.document.ocrGuidance.1"), initiallyUpward: false)
+        reveal(oats)
         XCTAssertEqual(oats.value as? String, "0")
         let fee = app.switches["receipt.document.line.1.2"]
-        XCTAssertTrue(fee.exists && fee.label.uppercased().contains("SERVICE FEE"))
+        reveal(fee)
+        XCTAssertTrue(fee.label.uppercased().contains("SERVICE FEE"), fee.debugDescription)
         XCTAssertEqual(fee.value as? String, "0")
         XCTAssertFalse(app.buttons["receipt.commit"].exists)
 
-        tap(app.buttons["receipt.document.inspect.1.1"])
+        receiptTap(app.buttons["receipt.document.inspect.1.1"], initiallyUpward: false)
         XCTAssertTrue(app.staticTexts["Selected printed line"].waitForExistence(timeout: 5))
         tap(app.buttons["receipt.original.open"])
         let canvas = element("receipt.original.canvas")
@@ -1800,7 +2004,9 @@ import XCTest
         tap(app.buttons["Done"])
         XCTAssertTrue(app.staticTexts["Selected printed line"].waitForExistence(timeout: 5))
         tap(app.buttons["Done"])
+        reveal(oats, initiallyUpward: false)
         XCTAssertEqual(oats.value as? String, "0")
+        reveal(fee)
         XCTAssertEqual(fee.value as? String, "0")
         enableSwitch("receipt.document.line.1.1")
         let storeIssue = app.buttons["receipt.document.storeIssue"]
@@ -1960,6 +2166,18 @@ import XCTest
         tap(app.buttons["pantry.receipt"])
     }
 
+    // A partially clipped row can report hittable beneath a sheet navigation bar.
+    // Position the exact center in the content, then tap that same point once.
+    private func tapReceiptFormCenter(_ control: XCUIElement, initiallyUpward: Bool = true) {
+        let center = CGVector(dx: 0.5, dy: 0.5)
+        reveal(control, initiallyUpward: initiallyUpward, requiredHit: center)
+        let point = control.coordinate(withNormalizedOffset: center)
+        guard scrollableArea().contains(point.screenPoint) else {
+            return XCTFail("Receipt control center is outside its visible form: " + control.debugDescription)
+        }
+        point.tap()
+    }
+
     private func receiptTap(_ control: XCUIElement, initiallyUpward: Bool = true) {
         reveal(control, initiallyUpward: initiallyUpward)
         control.tap()
@@ -1985,7 +2203,7 @@ import XCTest
         })
     }
 
-    private func reviewManualOatsAtMarket(checkAssistance: Bool = false, storage: String? = nil, paidPrintedTotal: Bool = false, usableAmount: String = "2", correctedName: String? = nil) {
+    private func reviewManualOatsAtMarket(checkAssistance: Bool = false, storage: String? = nil, paidPrintedTotal: Bool = false, usableAmount: String = "2", correctedName: String? = nil, transactionReference: String? = nil) {
         receiptTap(app.buttons["receipt.scan"])
         let wording = app.textViews["scan.sourceEditor"]
         XCTAssertTrue(wording.waitForExistence(timeout: 8))
@@ -2006,11 +2224,12 @@ import XCTest
         let reviewDetails = app.buttons["scan.receipt.review"]
         reveal(reviewDetails)
         XCTAssertEqual(reviewDetails.label, "Review receipt details")
-        receiptTap(reviewDetails)
+        tapReceiptFormCenter(reviewDetails)
         let reference = app.textFields["receipt.transactionReference"]
-        XCTAssertTrue(reference.waitForExistence(timeout: 5))
+        reveal(reference)
         XCTAssertEqual(reference.label, "Transaction reference (optional)")
         XCTAssertGreaterThanOrEqual(reference.frame.height, 44)
+        if let transactionReference { enterReceiptField(transactionReference, id: "receipt.transactionReference") }
         if checkAssistance {
             receiptTap(app.buttons["receipt.assistance.0"])
             let offline = app.staticTexts["For optional online help, open an authorized adult account. You can keep editing the receipt here."]
@@ -2028,8 +2247,14 @@ import XCTest
         XCTAssertGreaterThanOrEqual(received.frame.height, 44)
         enterReceiptField(usableAmount, id: "receipt.usable.0")
         if let storage {
-            receiptTap(app.buttons["receipt.storage.0"])
+            let destination = app.buttons["receipt.storage.0"]
+            reveal(destination)
+            XCTAssertEqual(destination.label, "Destination in My Pantry")
+            XCTAssertEqual(destination.value as? String, "Cupboard")
+            receiptTap(destination)
             receiptTap(app.buttons[storage])
+            XCTAssertEqual(destination.value as? String, storage)
+            XCTAssertEqual(received.value as? String, "3")
         }
         let printedPrice = app.buttons["receipt.printedPrice.0"]
         reveal(printedPrice)
@@ -2038,8 +2263,8 @@ import XCTest
         receiptTap(app.buttons["receipt.review"])
     }
 
-    private func openMixedTypedReceipt(_ lines: String) {
-        launch(reset: true)
+    private func openMixedTypedReceipt(_ lines: String, contentSize: UIContentSizeCategory? = nil) {
+        launch(reset: true, contentSize: contentSize)
         receiptTap(app.shopToolButton("shop.myPantry"))
         openReceiptAfterPantrySetup()
         receiptTap(app.buttons["receipt.scan"])
@@ -2052,10 +2277,59 @@ import XCTest
         label.typeText("Market")
         if app.buttons["scan.sourceDone"].exists { app.buttons["scan.sourceDone"].tap() }
         receiptTap(app.buttons["Review printed lines"])
-        checkReceiptSwitch("I checked the printed lines.")
+        let checked = app.switches["I checked the printed lines."]
+        let labelSide = CGVector(dx: 0.25, dy: 0.5)
+        reveal(checked, requiredHit: labelSide)
+        XCTAssertEqual(checked.value as? String, "0")
+        checked.coordinate(withNormalizedOffset: labelSide).tap()
+        let on = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "1"), object: checked)
+        XCTAssertEqual(XCTWaiter.wait(for: [on], timeout: 5), .completed,
+                       "Tapping the printed-lines label must confirm once, even away from the switch thumb.")
         receiptTap(app.buttons["scan.receipt.review"])
 
         checkReceiptSwitch("I checked the purchase date.")
+    }
+
+    func testLargestTypeReceiptActionShowsNameAndSelectedTreatmentAtFullWidth() throws {
+        openMixedTypedReceipt("Oats 3 count USD 4.20", contentSize: .accessibilityExtraExtraExtraLarge)
+        let action = app.buttons["receipt.action.0"]
+        reveal(action)
+        XCTAssertEqual(action.label, "Receipt line action")
+        XCTAssertEqual(action.value as? String, "Skip this line")
+        receiptTap(action)
+        receiptTap(app.buttons["Put this food away"])
+        reveal(action)
+        XCTAssertEqual(action.label, "Receipt line action")
+        XCTAssertEqual(action.value as? String, "Put this food away")
+        XCTAssertGreaterThanOrEqual(action.frame.width, app.frame.width - 80)
+        XCTAssertGreaterThanOrEqual(action.frame.height, 44)
+        // Verify the visible words that used to break apart. Dynamic Type can
+        // legitimately use more lines on another OS or with a different font.
+        let content = scrollableArea()
+        for _ in 0..<5 {
+            let frame = action.frame
+            if frame.minY >= content.minY && frame.maxY <= content.maxY { break }
+            let offset = frame.midY - content.midY
+            scrollContent(upward: offset > 0, area: content, positioningDistance: abs(offset))
+        }
+        let screenshot = action.screenshot()
+        let attachment = XCTAttachment(screenshot: screenshot)
+        attachment.name = "AX5 receipt action with the selected treatment"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        let request = VNRecognizeTextRequest()
+        request.recognitionLanguages = ["en-US"]
+        request.usesLanguageCorrection = false
+        try VNImageRequestHandler(cgImage: try XCTUnwrap(screenshot.image.cgImage)).perform([request])
+        let words = (request.results ?? []).compactMap { $0.topCandidates(1).first?.string }
+            .joined(separator: " ").lowercased().split(whereSeparator: { !$0.isLetter })
+        for word in ["receipt", "line", "action", "put", "this", "food", "away"] {
+            XCTAssertTrue(words.contains(Substring(word)), "Missing complete visible word: \(word). Read: \(words)")
+        }
+        receiptTap(action)
+        receiptTap(app.buttons["Ate this"])
+        XCTAssertEqual(action.value as? String, "Ate this")
+        XCTAssertFalse(app.textFields["receipt.received.0"].exists)
     }
 
     func testReviewReopensKeptPortionAndFocusesItsMissingAmount() {
@@ -2116,6 +2390,51 @@ import XCTest
         let lots = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "pantry.lot."))
         XCTAssertTrue(lots.matching(NSPredicate(format: "label CONTAINS %@", "Jars")).firstMatch.waitForExistence(timeout: 8))
         XCTAssertFalse(lots.matching(NSPredicate(format: "label CONTAINS %@", "Sandwich")).firstMatch.exists)
+    }
+
+    func testConflictingReceiptPriceIsVisibleAtPreviewAndLeavesOriginalStockAlone() {
+        launch(reset: true)
+        receiptTap(app.shopToolButton("shop.myPantry"))
+        openReceiptAfterPantrySetup()
+        reviewManualOatsAtMarket(transactionReference: "MARKET-17")
+        receiptTap(app.buttons["receipt.commit"])
+        XCTAssertTrue(app.staticTexts["receipt.status"].waitForExistence(timeout: 8))
+        receiptTap(app.buttons["Done"])
+
+        reopenPrivateReceiptEntry()
+        reviewManualOatsAtMarket(paidPrintedTotal: true, transactionReference: "MARKET-17")
+        let notice = app.staticTexts["receipt.status"]
+        let receiptBar = app.navigationBars["Review a receipt"]
+        let shown = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard notice.exists, notice.isHittable, receiptBar.exists else { return false }
+            let frame = notice.frame
+            return frame.minY >= receiptBar.frame.maxY && frame.maxY <= self.app.frame.maxY - 12
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [shown], timeout: 8), .completed, app.debugDescription)
+        XCTAssertEqual(notice.label, "This receipt line already has different confirmed evidence. Open Receipt history to review it.")
+        XCTAssertFalse(app.buttons["receipt.commit"].exists)
+        capture("Conflicting paid evidence at the receipt preview action")
+
+        receiptTap(app.buttons["receipt.preview.history"])
+        let historyBar = app.navigationBars["Receipt history"]
+        XCTAssertTrue(historyBar.waitForExistence(timeout: 8))
+        assertText("Paid price unknown")
+        assertText("Receipt revision 1")
+        XCTAssertFalse(app.buttons["Correct this paid total"].exists)
+        XCTAssertFalse(app.buttons["receipt.history.start"].exists)
+        receiptTap(historyBar.buttons["Done"])
+        XCTAssertTrue(receiptBar.waitForExistence(timeout: 8))
+        let proposedPrice = app.textFields["Confirmed paid line total in USD, optional"]
+        reveal(proposedPrice, initiallyUpward: false)
+        XCTAssertEqual(proposedPrice.value as? String, "4.20")
+        XCTAssertFalse(app.buttons["receipt.commit"].exists)
+
+        receiptTap(receiptBar.buttons["Close"])
+        receiptTap(app.alerts.buttons["Discard draft"])
+        let oats = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS[c] %@", "pantry.lot.", "Oats"))
+        XCTAssertTrue(oats.firstMatch.waitForExistence(timeout: 8), app.debugDescription)
+        XCTAssertEqual(oats.count, 1)
+        XCTAssertTrue(oats.firstMatch.label.contains("2 units"), oats.firstMatch.label)
     }
 
     func testRescanReviewRequiresChoosingTheOriginalBeforeSaving() {
@@ -5743,7 +6062,7 @@ extension FreeJourneyUITests {
     func systemPhotoPicker() throws -> XCUIElement {
         let identifiedGrid = app.scrollViews["photosView_content_scroll_view"]
         // iOS 17 presents an unlabelled grid beneath the native Photos navigation bar.
-        let photosBar = app.navigationBars["Photos"]
+        let photosBar = app.navigationBars.matching(NSPredicate(format: "identifier IN %@", ["Photos", "Fotos"])).firstMatch
         let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
             identifiedGrid.exists || photosBar.exists
         }, object: nil)
@@ -5757,7 +6076,7 @@ extension FreeJourneyUITests {
         // Its snapshot still exposes each photo's label and actual tap target.
         func firstPhoto(in node: any XCUIElementSnapshot) -> CGRect? {
             if (node.elementType == .image || node.elementType == .cell),
-               node.label.hasPrefix("Photo,"), !node.frame.isEmpty { return node.frame }
+               (node.label.hasPrefix("Photo,") || node.label.hasPrefix("Foto,")), !node.frame.isEmpty { return node.frame }
             for child in node.children {
                 if let frame = firstPhoto(in: child) { return frame }
             }

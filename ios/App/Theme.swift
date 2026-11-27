@@ -227,6 +227,7 @@ func journalStackedMenu<Content: View>(_ title: String, value: String, id: Strin
                     .foregroundStyle(Theme.action).accessibilityHidden(true)
             }
         }
+        .multilineTextAlignment(.leading)
         .fixedSize(horizontal: false, vertical: true)
         .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
         .contentShape(Rectangle())
@@ -374,6 +375,30 @@ struct PrimaryActionLabel<Label: View>: View {
                         .strokeBorder(Theme.focus, lineWidth: 3)
                 }
             }
+    }
+}
+
+/// The native switch handles thumb taps and drags. On small iOS 17 forms the
+/// displayed label can wrap far from the thumb, so give it its own tap target.
+struct LabeledRowToggleStyle: ToggleStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 0) {
+            Button { configuration.isOn.toggle() } label: {
+                configuration.label
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                    .padding(.trailing, 12)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            Toggle(isOn: configuration.$isOn) { EmptyView() }
+                .toggleStyle(.switch)
+                .labelsHidden()
+                .fixedSize()
+        }
+        .accessibilityRepresentation {
+            Toggle(isOn: configuration.$isOn) { configuration.label }
+                .toggleStyle(.switch)
+        }
     }
 }
 

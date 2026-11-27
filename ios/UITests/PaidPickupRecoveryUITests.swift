@@ -14,6 +14,26 @@ import XCTest
         app.terminate()
     }
 
+    func testSpanishShopperCanDistinguishStoreOrdersFromUnavailableMessageReporting() {
+        app.launchArguments = ["--ui-testing", "--paid-pickup-recovery", "--reset-test-workspace", "--seed-private-recovery",
+                               "-AppleLanguages", "(es)", "-AppleLocale", "es_MX"]
+        app.launch()
+        let tellCook = app.buttons["Avisar a quien cocina"]
+        XCTAssertTrue(tellCook.waitForExistence(timeout: 20))
+        tap(tellCook)
+        tap(app.buttons["Preparar una vista compartida actual"])
+        tap(app.buttons["Acceso al hogar"])
+        let unavailable = app.staticTexts["household.requestSafety.unavailable"]
+        show(unavailable)
+        XCTAssertTrue(unavailable.label.contains("no permite reportar mensajes") && unavailable.label.contains("Soporte"))
+        XCTAssertFalse(app.staticTexts["household.requestSafety.available"].exists)
+        let orders = app.buttons["household.placementReports"]
+        show(orders)
+        XCTAssertEqual(orders.label, "Resultados de los pedidos en la tienda")
+        orders.tap()
+        XCTAssertTrue(app.navigationBars["Resultados de los pedidos en la tienda"].waitForExistence(timeout: 8))
+    }
+
     func testNamedSeatCanApplyAcceptedRecipeAndExpiredSeatCanReadSavedCookCopy() throws {
         launch(fresh: true)
         tap(app.buttons["Repair a meal"])
