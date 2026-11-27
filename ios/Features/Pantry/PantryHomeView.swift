@@ -362,25 +362,17 @@ struct PantryLotEntryView: View {
     var availabilityNeedsReview = false
     var household: HouseholdModel? = nil
     var recoveredHistoryAccess: (@MainActor () -> Bool)? = nil
-    var openedFromShelf = false
+    var originalShelf: PantryDigestScope? = nil
     @State private var sheet: PantrySheet?
 
     var body: some View {
         PantryLotView(model: model, lotID: lotID, accessAllowed: accessAllowed, offersTonight: offersTonight,
                       availabilityNeedsReview: availabilityNeedsReview, household: household,
-                      recoveredHistoryAccess: recoveredHistoryAccess) { sheet = .recount(lotID) }
+                      recoveredHistoryAccess: recoveredHistoryAccess, originalShelf: originalShelf) { sheet = .recount(lotID) }
             .safeAreaInset(edge: .bottom) {
                 if accessAllowed, model.pending != nil {
                     Button(pantryText("Review pending save")) { sheet = .review }
                         .frame(minHeight: 44).buttonStyle(.borderedProminent)
-                } else if openedFromShelf, !accessAllowed || model.phase == .accessDenied {
-                    // The system Back control pops this retained native destination even
-                    // when Home has retired the shelf and its old selection binding.
-                    Text(pantryText("Use Back to return to My Pantry and open the item again."))
-                        .font(.body)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding()
-                        .accessibilityIdentifier("pantry.lot.returnGuidance")
                 } else if accessAllowed, model.phase != .ready, model.phase != .accessDenied {
                     Button(pantryText("Refresh pantry")) { Task { await model.load() } }
                         .frame(minHeight: 44).disabled(model.busy)
@@ -636,6 +628,7 @@ private struct PantryLotView: View {
     var availabilityNeedsReview = false
     var household: HouseholdModel?
     var recoveredHistoryAccess: (@MainActor () -> Bool)?
+    var originalShelf: PantryDigestScope? = nil
     let recount: () -> Void
     @FocusState private var reservationAmountFocused: Bool
     @AccessibilityFocusState private var resultFocused: Bool
@@ -741,6 +734,14 @@ private struct PantryLotView: View {
                                    value: lot.confirmedAt.formatted(date: .abbreviated, time: .shortened))
                 }
                 if let notice = model.notice { Text(pantryNotice(notice)).accessibilityFocused($resultFocused) }
+            } else if !accessAllowed || model.phase == .accessDenied,
+                      let originalShelf, let digestAccess,
+                      digestAccess.scope == originalShelf, digestAccess.authorized() {
+                // A fresh read is available to this same adult and workspace. Keep the
+                // expired item redacted and send the shopper back through the native shelf.
+                Text(pantryText("Use Back to return to My Pantry and open the item again."))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("pantry.lot.returnGuidance")
             } else if !accessAllowed {
                 Text(pantryText("Unlock the authorized private workspace to view pantry food."))
             } else if model.phase != .ready {

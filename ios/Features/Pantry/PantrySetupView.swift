@@ -148,7 +148,7 @@ struct PantrySetupView: View {
         .navigationDestination(item: $shelfLot) { lot in
             PantryLotEntryView(model: lot.model, lotID: lot.id, accessAllowed: scope == lot.scope,
                                offersTonight: true, household: household,
-                               openedFromShelf: true)
+                               originalShelf: PantryDigestScope(origin: lot.scope.inventory, identity: lot.scope.adult))
         }
         .privacySensitive()
         .navigationTitle(title)
