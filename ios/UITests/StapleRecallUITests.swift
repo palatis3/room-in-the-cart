@@ -569,7 +569,8 @@ import XCTest
         frame.lifetime = .keepAlways
         add(frame)
         detail.tap()
-        XCTAssertTrue(app.navigationBars[spanish ? "Detalles del artículo" : "Item details"].waitForExistence(timeout: 8))
+        let detailBar = app.navigationBars[spanish ? "Detalles del artículo" : "Item details"]
+        XCTAssertTrue(detailBar.waitForExistence(timeout: 8))
         // Native sheets can leave their presenting window in the diagnostic tree.
         // The background grocery must not be actionable while its detail is frontmost.
         let coveredCheck = app.buttons["inStoreCheck-" + id]
@@ -582,8 +583,8 @@ import XCTest
         detailFrame.lifetime = .keepAlways
         add(detailFrame)
         if !spanish, #available(iOS 27, *) { try assertModalSourceSpeech() }
-        let close = app.navigationBars.buttons[spanish ? "Listo" : "Done"]
-        close.tap()
+        detailBar.buttons[spanish ? "Listo" : "Done"].tap()
+        XCTAssertTrue(detailBar.waitForNonExistence(timeout: 8))
         XCTAssertTrue(detail.waitForExistence(timeout: 8))
 
         // A full note can consume the entire largest-type viewport. Reach the
