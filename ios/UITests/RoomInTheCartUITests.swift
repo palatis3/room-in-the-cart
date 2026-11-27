@@ -793,8 +793,18 @@ final class RoomInTheCartUITests: XCTestCase {
         share.tap()
         let row = app.switches.matching(NSPredicate(format: "label CONTAINS %@", name)).firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 8))
-        row.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
-        tap(app.buttons["Preview message"])
+        let compose = app.buttons["Preview message"]
+        XCTAssertFalse(compose.isEnabled)
+        XCTAssertGreaterThan(row.frame.width, app.frame.width / 2)
+        let label = row.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.5))
+        let thumb = row.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5))
+        label.tap()
+        XCTAssertTrue(compose.wait(for: \.isEnabled, toEqual: true, timeout: 5))
+        thumb.tap()
+        XCTAssertTrue(compose.wait(for: \.isEnabled, toEqual: false, timeout: 5))
+        thumb.tap()
+        XCTAssertTrue(compose.wait(for: \.isEnabled, toEqual: true, timeout: 5))
+        tap(compose)
         let preview = app.staticTexts["tripShareBody"]
         XCTAssertTrue(preview.waitForExistence(timeout: 8))
         XCTAssertTrue(preview.label.hasPrefix("Shopping list copy · "))
