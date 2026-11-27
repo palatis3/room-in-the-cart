@@ -120,10 +120,19 @@ struct ReceiptPrintedEvidence: Equatable {
     static func itemBeforeQuantityPriceColumns(_ text: String) -> String? {
         guard let match = text.wholeMatch(of: quantityPriceColumns) else { return nil }
         let name = String(match.1)
-        guard name.contains(where: \.isLetter),
-              name.allSatisfy({ $0.isLetter || $0.isWhitespace || "-'’".contains($0) }),
-              !name.contains(nonItem), !name.contains(mixed), !isVoidedOrUnreceived(name) else { return nil }
-        return name
+        return isPlainColumnItem(name) ? name : nil
+    }
+
+    static func isPlainColumnItem(_ name: String) -> Bool {
+        name.contains(where: \.isLetter)
+            && name.allSatisfy { $0.isLetter || $0.isWhitespace || "-'’".contains($0) }
+            && !name.contains(nonItem) && !name.contains(mixed) && !name.contains(adjustment)
+            && !name.contains(#/(?i)\b(?:savings?|rebates?|special offer|promotion|promoci[oó]n|ahorros?|bonificaci[oó]n)\b/#)
+            && !isVoidedOrUnreceived(name)
+    }
+
+    static func isBareCountColumn(_ text: String) -> Bool {
+        text.wholeMatch(of: #/[1-9][0-9]{0,2}/#) != nil
     }
 
     static func canSuggestAmount(for wording: String) -> Bool {
@@ -148,6 +157,18 @@ struct ReceiptPrintedEvidence: Equatable {
         guard !text.isEmpty, text.count <= 512, text.contains(where: \.isLetter),
               !text.contains("?"), !text.contains("�"), row.uncertainOCR != true else { kind = .unclear; uncertain = true; return }
         kind = .item
+        if let item = row.printedItemColumn, row.reviewedText == row.originalText,
+           row.documentLine?.method == .imageOCR || row.documentLine?.method == .pdfOCR,
+           Self.isPlainColumnItem(item), text.hasPrefix(item + " ") {
+            let columns = text.dropFirst(item.count + 1).split(separator: " ", maxSplits: 1)
+            if columns.count == 2, Self.isBareCountColumn(String(columns[0])),
+               Self.isStandaloneAmount(String(columns[1])) {
+                // A printed count and price do not establish received units or paid money.
+                name = item
+                uncertain = true
+                return
+            }
+        }
         if let item = Self.itemBeforeQuantityPriceColumns(text) {
             name = item
             uncertain = true

@@ -250,6 +250,74 @@ import XCTest
         }
     }
 
+    func testAlignedBareCountColumnsKeepTheOriginalItemIDAndNoPaidOrReceivedAmount() throws {
+        typealias Line = ReceiptDocumentPage.Line
+        func cell(_ id: Int, _ text: String, _ x: CGFloat, _ y: CGFloat, _ width: CGFloat) -> Line {
+            .init(id: id, text: text, bounds: CGRect(x: x / 860, y: (940 - y - 36) / 940,
+                                                      width: width / 860, height: 36 / 940))
+        }
+        // The 860 × 940 North Street image prints name/count/price. Vision returned
+        // the isolated count first for each grocery, and the name first for the fee.
+        let lines = [
+            cell(5, "1", 463, 258, 21), cell(6, "OAT MILK", 47, 258, 205), cell(7, "$3.29", 567, 258, 124),
+            cell(8, "1", 463, 308, 21), cell(9, "WHEAT BREAD", 45, 308, 283), cell(10, "$2.75", 567, 308, 124),
+            cell(11, "1", 463, 358, 21), cell(12, "PREPARED SOUP", 49, 358, 331), cell(13, "$4.25", 567, 358, 124),
+            cell(14, "BAG FEE", 49, 408, 173), cell(15, "1", 463, 408, 21), cell(16, "$0.10", 567, 408, 124),
+            cell(17, "TOTAL", 47, 508, 124), cell(18, "$10.39", 541, 508, 150)
+        ]
+        let grouped = ExtractedReceiptDocument.groupingQuantityPriceColumns(lines)
+        XCTAssertEqual(grouped.map(\.id), [6, 9, 12, 14, 15, 16, 17, 18])
+        XCTAssertEqual(grouped.map(\.text), ["OAT MILK 1 $3.29", "WHEAT BREAD 1 $2.75", "PREPARED SOUP 1 $4.25",
+                                             "BAG FEE", "1", "$0.10", "TOTAL", "$10.39"])
+        let document = ExtractedReceiptDocument(digest: Data(repeating: 6, count: 32),
+                                                pages: [.init(id: 1, method: .imageOCR, lines: grouped)])
+        let selection = Set(grouped.map { ExtractedReceiptDocument.Selection(page: 1, line: $0.id) })
+        XCTAssertNil(document.printedPaidTotal(selected: selection))
+        let target = CaptureTarget(workspaceID: UUID(), containerID: UUID(), objectID: UUID(), revision: 1, kind: .receiptEvidence)
+        let source = try document.source(target: target, merchant: "North Street Market", stage: .receipt, selection: selection, at: Date())
+        let reopened = try JSONDecoder().decode(SourceMediaRecord.self, from: JSONEncoder().encode(source))
+        let draft = try ReceiptImportDraft(source: reopened)
+        XCTAssertEqual(draft.lines.prefix(3).map(\.name), ["OAT MILK", "WHEAT BREAD", "PREPARED SOUP"])
+        for line in draft.lines.prefix(3) {
+            XCTAssertNil(line.printed?.quantity)
+            XCTAssertNil(line.printed?.amount)
+            XCTAssertEqual(line.paid, "")
+        }
+        XCTAssertTrue(draft.selectedLines.isEmpty)
+        XCTAssertFalse(ReceiptPrintedEvidence.permitsPutawayWording(grouped[2].text))
+        let plain = ReceiptPrintedEvidence(.init(originalText: "Formula 1 $3.29"), knownStorage: [:])
+        XCTAssertEqual(plain.name, "Formula 1", "A number in a plain item name has no separate column evidence.")
+    }
+
+    func testBareCountColumnsRequireOtherAlignedGroceriesAndIsolatedReadableCells() {
+        typealias Line = ReceiptDocumentPage.Line
+        func cell(_ id: Int, _ text: String, _ x: CGFloat, _ y: CGFloat, _ width: CGFloat, uncertain: Bool = false) -> Line {
+            .init(id: id, text: text, uncertain: uncertain, bounds: CGRect(x: x, y: y, width: width, height: 0.03))
+        }
+        let item = cell(1, "Milk", 0.05, 0.70, 0.3)
+        let count = cell(2, "1", 0.55, 0.70, 0.04)
+        let price = cell(3, "$3.29", 0.75, 0.70, 0.13)
+        let row = [item, count, price]
+        let peer = [cell(4, "Bread", 0.05, 0.60, 0.25), cell(5, "2", 0.55, 0.60, 0.04), cell(6, "$2.75", 0.75, 0.60, 0.13)]
+        func staysSeparate(_ input: [Line], file: StaticString = #filePath, line: UInt = #line) {
+            let output = ExtractedReceiptDocument.groupingQuantityPriceColumns(input)
+            XCTAssertEqual(output.map(\.id), input.map(\.id), file: file, line: line)
+            XCTAssertEqual(output.map(\.text), input.map(\.text), file: file, line: line)
+        }
+        staysSeparate(row)
+        for label in ["TOTAL", "LOYALTY SAVINGS", "Cupón", "BAG FEE", "VOID BEANS"] {
+            staysSeparate([cell(1, label, 0.05, 0.70, 0.3), count, price] + peer)
+        }
+        staysSeparate([item, cell(2, "1", 0.36, 0.70, 0.04), price] + peer)
+        staysSeparate([item, count, cell(3, "3.29", 0.75, 0.70, 0.13)] + peer)
+        staysSeparate([item, count, cell(3, "-$3.29", 0.75, 0.70, 0.13)] + peer)
+        staysSeparate([item, count, cell(3, "$3.29", 0.75, 0.70, 0.13, uncertain: true)] + peer)
+        staysSeparate([item, count, cell(3, "$3.29", 0.75, 0.68, 0.13)] + peer)
+        staysSeparate(row + [cell(7, "Discount", 0.37, 0.70, 0.11)] + peer)
+        staysSeparate(row + [peer[0], cell(5, "2", 0.43, 0.60, 0.04), peer[2]])
+        staysSeparate(row + [peer[0], peer[1], cell(6, "$2.75", 0.83, 0.60, 0.13)])
+    }
+
     func testMercadoPhotoKeepsThePrintedQuantityRateAndTotalOnTheItem() async throws {
         let size = CGSize(width: 1050, height: 1400)
         let format = UIGraphicsImageRendererFormat()

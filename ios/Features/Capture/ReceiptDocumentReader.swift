@@ -82,6 +82,7 @@ struct ReceiptDocumentPage: Identifiable, Sendable {
         var uncertain = false
         var bounds: CGRect?
         var wordReadings: [ReceiptWordReading] = []
+        var printedItemColumn: String?
     }
     let lines: [Line]
     var skipped: ReceiptDocumentFailure? = nil
@@ -201,12 +202,13 @@ struct ExtractedReceiptDocument: Sendable {
             && abs(first.midY - second.midY) <= minHeight * 0.35
     }
 
-    /// Group only an unambiguous item / quantity × unit price / line total.
+    /// Reconstruct observed columns in physical order. A bare count needs a second
+    /// merchandise row with matching count and currency columns to establish the layout.
     /// Keep the original item position so subsequent receipt lines retain their IDs.
     static func groupingQuantityPriceColumns(_ lines: [ReceiptDocumentPage.Line]) -> [ReceiptDocumentPage.Line] {
         guard lines.count >= 2, lines.allSatisfy({ $0.bounds?.isEmpty == false }) else { return lines }
-        var replacements: [Int: ReceiptDocumentPage.Line] = [:]
-        var absorbed = Set<Int>()
+        var rateRows: [[ReceiptDocumentPage.Line]] = []
+        var countRows: [[ReceiptDocumentPage.Line]] = []
         for item in lines {
             guard let box = item.bounds, item.text.first?.isLetter == true else { continue }
             let neighbors = lines.filter { line in
@@ -221,10 +223,38 @@ struct ExtractedReceiptDocument: Sendable {
                       guard let lhs = left.bounds, let rhs = right.bounds else { return false }
                       return lhs.maxX <= rhs.minX && samePrintedRow(lhs, rhs)
                   }) else { continue }
+            let wording = neighbors.map(\.text).joined(separator: " ")
+            guard wording.utf8.count <= 2048 else { continue }
+            if ReceiptPrintedEvidence.itemBeforeQuantityPriceColumns(wording) == item.text {
+                rateRows.append(neighbors)
+            } else if neighbors.count == 3, !neighbors.contains(where: \.uncertain),
+                      ReceiptPrintedEvidence.isPlainColumnItem(item.text),
+                      ReceiptPrintedEvidence.isBareCountColumn(neighbors[1].text),
+                      let countBox = neighbors[1].bounds, let amountBox = neighbors[2].bounds,
+                      countBox.minX - box.maxX >= box.height,
+                      amountBox.minX - countBox.maxX >= box.height,
+                      ReceiptPrintedEvidence.isStandaloneAmount(neighbors[2].text) {
+                countRows.append(neighbors)
+            }
+        }
+        let alignedCountRows = countRows.filter { row in
+            guard let count = row[1].bounds, let amount = row[2].bounds else { return false }
+            return countRows.contains { other in
+                guard other[0].id != row[0].id, let otherCount = other[1].bounds,
+                      let otherAmount = other[2].bounds else { return false }
+                let tolerance = min(count.height, otherCount.height)
+                return abs(count.maxX - otherCount.maxX) <= tolerance
+                    && abs(amount.maxX - otherAmount.maxX) <= tolerance
+            }
+        }
+
+        let countItemIDs = Set(alignedCountRows.map { $0[0].id })
+        var replacements: [Int: ReceiptDocumentPage.Line] = [:]
+        var absorbed = Set<Int>()
+        for neighbors in rateRows + alignedCountRows {
+            let item = neighbors[0]
             let parts = neighbors.map(\.text)
             let wording = parts.joined(separator: " ")
-            guard wording.utf8.count <= 2048,
-                  ReceiptPrintedEvidence.itemBeforeQuantityPriceColumns(wording) == item.text else { continue }
             let combinedBounds = neighbors.compactMap(\.bounds).reduce(CGRect.null) { $0.union($1) }
             var choices: [ReceiptWordReading] = []
             var wordOffset = 0
@@ -239,7 +269,8 @@ struct ExtractedReceiptDocument: Sendable {
                 wordOffset += column.text.split(whereSeparator: \.isWhitespace).count
             }
             replacements[item.id] = .init(id: item.id, text: wording, uncertain: neighbors.contains(where: \.uncertain),
-                                          bounds: combinedBounds, wordReadings: choices)
+                                          bounds: combinedBounds, wordReadings: choices,
+                                          printedItemColumn: countItemIDs.contains(item.id) ? item.text : nil)
             absorbed.formUnion(neighbors.dropFirst().map(\.id))
         }
         return lines.compactMap { absorbed.contains($0.id) ? nil : replacements[$0.id] ?? $0 }
@@ -265,6 +296,7 @@ struct ExtractedReceiptDocument: Sendable {
                 let place = ReceiptAcquisition.DocumentLine(method: page.method, stage: stage, page: page.id, line: line.id)
                 var row = ScanReceiptLine(id: ReceiptAcquisition.lineID(receiptID: id, ordinal: place.ordinal), originalText: line.text)
                 if line.uncertain { row.uncertainOCR = true }
+                row.printedItemColumn = line.printedItemColumn
                 row.documentLine = place
                 let position = Selection(page: page.id, line: line.id)
                 if let correction = reviewedWording[position] {
