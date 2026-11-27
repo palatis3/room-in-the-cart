@@ -41,6 +41,7 @@ struct PantryReceiptEntry: View {
     @State private var review: PantryReceiptReview?
     @State private var working = false
     @State private var message: String?
+    @State private var previewFailureRequest: UUID?
     @State private var expandedLines = Set<UUID>()
     @State private var discardDraft = false
     @State private var amountCorrection: ReceiptAmountCorrection?
@@ -62,17 +63,35 @@ struct PantryReceiptEntry: View {
                 guard request != nil, let issue = amountCorrection else { return }
                 proxy.scrollTo(issue.focusKey, anchor: .center)
             }
+            .task(id: previewFailureRequest) {
+                guard let request = previewFailureRequest else { return }
+                await Task.yield()
+                guard !Task.isCancelled, request == previewFailureRequest, message != nil else { return }
+                proxy.scrollTo("receipt.status", anchor: .center)
+                await Task.yield()
+                if !Task.isCancelled, request == previewFailureRequest { resultFocused = true }
+            }
             .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { receiptViewport = $0 }
             .environment(\.privateReceiptDraft, initialSource == nil && model.permitsPrivateReceiptDraft
                          ? PrivateReceiptDraftContext(model: model, session: draftSession) : nil)
         }
     }
 
+    private var showsFailureAtPreview: Bool {
+        previewFailureRequest != nil && draft != nil && overlap == nil && rescan == nil && review == nil && savedLotIDs == nil
+    }
+
+    private func status(_ text: String) -> some View {
+        Text(verbatim: text)
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityFocused($resultFocused)
+            .accessibilityIdentifier("receipt.status")
+            .id("receipt.status")
+    }
+
     private func form(_ proxy: ScrollViewProxy) -> some View {
         WorkingForm {
-            if let message {
-                Text(message).accessibilityFocused($resultFocused).accessibilityIdentifier("receipt.status")
-            }
+            if let message, !showsFailureAtPreview { status(message) }
             if let savedLotIDs {
                 let byID = Dictionary(uniqueKeysWithValues: (model.snapshot?.lots ?? []).map { ($0.id, $0) })
                 let lots = savedLotIDs.compactMap { byID[$0] }
@@ -152,6 +171,10 @@ struct PantryReceiptEntry: View {
                 // displayed value for that transition and ignore stale setters.
                 let value = Binding(get: { draft ?? displayed }, set: { updated in
                     guard draft?.draftID == displayed.draftID else { return }
+                    if previewFailureRequest != nil {
+                        previewFailureRequest = nil
+                        message = nil
+                    }
                     draft = updated
                 })
                 let storeIssue = receiptStoreIssue(displayed.merchant)
@@ -282,6 +305,7 @@ struct PantryReceiptEntry: View {
                     Text(putawayText("Choose what to include from at least one receipt line."))
                         .foregroundStyle(Theme.secondary)
                 }
+                if let message, showsFailureAtPreview { status(message) }
                 Button(displayed.tracksPutaway ? putawayText("Preview receipt changes") : pantryText("Review selected food")) {
                     guard storeIssue == nil else { return }
                     prepare(value.wrappedValue)
@@ -402,7 +426,10 @@ struct PantryReceiptEntry: View {
         .onChange(of: model.snapshot?.state.workspaceID) { _, origin in
             if origin != draft?.workspaceID || origin == nil { reviewedSourceImage = nil; assistance = nil; draft = nil; review = nil; rescan = nil; overlap = nil; scan = false; fileSource = false; sharedSource = nil; savedLotIDs = nil; savedHeader = nil; savedPickupID = nil }
         }
-        .onChange(of: draft?.draftID) { _, _ in receiptTripReview = .init() }
+        .onChange(of: draft?.draftID) { _, _ in
+            receiptTripReview = .init()
+            if previewFailureRequest != nil { previewFailureRequest = nil; message = nil }
+        }
         .task(id: aliasScope) {
             let scope = aliasScope
             aliases = []
@@ -576,6 +603,8 @@ struct PantryReceiptEntry: View {
     private func prepare(_ input: ReceiptImportDraft) {
         var proposed = input
         guard !working else { return }
+        field = nil
+        resultFocused = false
         working = true
         Task {
             defer { working = false }
@@ -609,7 +638,7 @@ struct PantryReceiptEntry: View {
                 }
                 let result = try await model.reviewReceipt(proposed)
                 guard model.permitsReceiptSource, draft?.draftID == proposed.draftID else { return }
-                review = result; draft = proposed; rescan = nil; overlap = nil; message = nil
+                review = result; draft = proposed; rescan = nil; overlap = nil; previewFailureRequest = nil; message = nil
             } catch let issue as ReceiptAmountCorrection {
                 guard model.permitsReceiptSource, draft?.draftID == proposed.draftID,
                       draft?.lines.first(where: { $0.id == issue.lineID })?.amountCorrection == issue else { return }
@@ -624,13 +653,14 @@ struct PantryReceiptEntry: View {
                 guard model.permitsReceiptSource, draft?.draftID == proposed.draftID else { return }
                 overlap = nil; rescan = prompt
                 message = proposed.rescanDecision == nil ? nil : pantryText("Choose each saved line once. An additional line must be distinct.")
-                resultFocused = true
+                if message != nil { previewFailureRequest = UUID() }
             } catch {
                 if receiptBasisChanged(error) { rescan = nil; draft?.rescanDecision = nil; await model.load() }
+                guard model.permitsReceiptSource, draft?.draftID == proposed.draftID else { return }
                 if rescan != nil, case PantryReceiptError.changedEvidence = error {
                     message = pantryText("The printed wording, quantity, price or storage differs from the original. Open the original for corrections, edit your selections, or review a separate purchase.")
                 } else { message = receiptError(error) }
-                resultFocused = true
+                previewFailureRequest = UUID()
             }
         }
     }

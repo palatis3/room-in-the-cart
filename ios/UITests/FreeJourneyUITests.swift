@@ -2167,7 +2167,7 @@ import XCTest
         })
     }
 
-    private func reviewManualOatsAtMarket(checkAssistance: Bool = false, storage: String? = nil, paidPrintedTotal: Bool = false, usableAmount: String = "2", correctedName: String? = nil) {
+    private func reviewManualOatsAtMarket(checkAssistance: Bool = false, storage: String? = nil, paidPrintedTotal: Bool = false, usableAmount: String = "2", correctedName: String? = nil, transactionReference: String? = nil) {
         receiptTap(app.buttons["receipt.scan"])
         let wording = app.textViews["scan.sourceEditor"]
         XCTAssertTrue(wording.waitForExistence(timeout: 8))
@@ -2193,6 +2193,7 @@ import XCTest
         XCTAssertTrue(reference.waitForExistence(timeout: 5))
         XCTAssertEqual(reference.label, "Transaction reference (optional)")
         XCTAssertGreaterThanOrEqual(reference.frame.height, 44)
+        if let transactionReference { enterReceiptField(transactionReference, id: "receipt.transactionReference") }
         if checkAssistance {
             receiptTap(app.buttons["receipt.assistance.0"])
             let offline = app.staticTexts["For optional online help, open an authorized adult account. You can keep editing the receipt here."]
@@ -2311,6 +2312,37 @@ import XCTest
         let lots = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "pantry.lot."))
         XCTAssertTrue(lots.matching(NSPredicate(format: "label CONTAINS %@", "Jars")).firstMatch.waitForExistence(timeout: 8))
         XCTAssertFalse(lots.matching(NSPredicate(format: "label CONTAINS %@", "Sandwich")).firstMatch.exists)
+    }
+
+    func testConflictingReceiptPriceIsVisibleAtPreviewAndLeavesOriginalStockAlone() {
+        launch(reset: true)
+        receiptTap(app.shopToolButton("shop.myPantry"))
+        openReceiptAfterPantrySetup()
+        reviewManualOatsAtMarket(transactionReference: "MARKET-17")
+        receiptTap(app.buttons["receipt.commit"])
+        XCTAssertTrue(app.staticTexts["receipt.status"].waitForExistence(timeout: 8))
+        receiptTap(app.buttons["Done"])
+
+        reopenPrivateReceiptEntry()
+        reviewManualOatsAtMarket(paidPrintedTotal: true, transactionReference: "MARKET-17")
+        let notice = app.staticTexts["receipt.status"]
+        let receiptBar = app.navigationBars["Review a receipt"]
+        let shown = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard notice.exists, notice.isHittable, receiptBar.exists else { return false }
+            let frame = notice.frame
+            return frame.minY >= receiptBar.frame.maxY && frame.maxY <= self.app.frame.maxY - 12
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [shown], timeout: 8), .completed, app.debugDescription)
+        XCTAssertEqual(notice.label, "This receipt line already has different confirmed evidence. Open Receipt history to review it.")
+        XCTAssertFalse(app.buttons["receipt.commit"].exists)
+        capture("Conflicting paid evidence at the receipt preview action")
+
+        receiptTap(receiptBar.buttons["Close"])
+        receiptTap(app.alerts.buttons["Discard draft"])
+        let oats = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS[c] %@", "pantry.lot.", "Oats"))
+        XCTAssertTrue(oats.firstMatch.waitForExistence(timeout: 8), app.debugDescription)
+        XCTAssertEqual(oats.count, 1)
+        XCTAssertTrue(oats.firstMatch.label.contains("2 units"), oats.firstMatch.label)
     }
 
     func testRescanReviewRequiresChoosingTheOriginalBeforeSaving() {
