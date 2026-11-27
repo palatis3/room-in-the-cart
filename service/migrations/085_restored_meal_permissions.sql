@@ -13,7 +13,7 @@ $$;
 REVOKE ALL ON FUNCTION ritc.is_final_restore_segment(uuid) FROM PUBLIC;
 
 CREATE FUNCTION ritc.retire_restored_meal_permissions() RETURNS trigger
-LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $$
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog SET row_security=off AS $$
 BEGIN
  IF NOT ritc.is_final_restore_segment(NEW.run_id) THEN RETURN NEW; END IF;
  UPDATE ritc.invite SET revoked_at=statement_timestamp()

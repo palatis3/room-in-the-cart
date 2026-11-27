@@ -1,7 +1,7 @@
 -- Accept signed erasure preimages and finish every archive segment before changing
 -- the remaining families. A backup cannot establish that their permission is current.
 CREATE FUNCTION ritc.retire_restored_guardian_permissions() RETURNS trigger
-LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $$
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog SET row_security=off AS $$
 BEGIN
  IF NOT ritc.is_final_restore_segment(NEW.run_id) THEN RETURN NEW; END IF;
 

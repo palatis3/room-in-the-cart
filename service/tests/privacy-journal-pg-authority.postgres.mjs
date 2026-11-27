@@ -1017,6 +1017,16 @@ test('a backup from before rollover replays both journals in order and preserves
  try{
   const {r,config,operator}=await recoveryFixture(source);
   const firstActor=await actor('Predecessor fixture'),secondActor=await actor('Successor fixture'),unrelated=await actor('Unrelated fixture');
+  const laterInvitation=randomUUID(),independentInvitation=randomUUID();
+  for(const [person,invitation] of [[secondActor,laterInvitation],[unrelated,independentInvitation]]){
+   await source.owner.query(`INSERT INTO ritc.invite(household_id,created_by,invite_id,kind,token_hash,expires_at,
+     dinner_shop_id,dinner_occurrence_id,dinner_authority_epoch)
+     VALUES($1,$2,$3,'adult_contributor',$4,now()+interval '1 day',$5,$6,1)`,
+     [person.householdId,person.memberId,invitation,digest(invitation),randomUUID(),randomUUID()]);
+  }
+  const invitationsOpen=async()=> (await quarantine.query(
+    'SELECT invite_id FROM ritc.invite WHERE invite_id=ANY($1::uuid[]) AND revoked_at IS NULL',
+    [[laterInvitation,independentInvitation]])).rows.map(row=>row.invite_id).sort();
   const dumpPath=join(dir,'pre-rollover.dump'),socketDirectory=source.configuration.connection.host;
   pgTool('pg_dump',['-h',socketDirectory,'-p','55434','-U',ownerRole,'-d','postgres','-Fc','-f',dumpPath]);
   await chmod(dumpPath,0o600);
@@ -1169,6 +1179,7 @@ test('a backup from before rollover replays both journals in order and preserves
    /restore_window_predecessor_pending/);
   assert.throws(()=>restore('gate'),{status:1});
   assert.equal(restore('replay').targetsApplied,1);
+  assert.deepEqual(await invitationsOpen(),[laterInvitation,independentInvitation].sort());
   assert.throws(()=>restore('gate'),{status:1});
   assert.throws(()=>restore('replay'),{status:1});
   const checkedFirst=verifyIndependentRecovery(first.bytes,first.proof,r.f.pins,r.f.writerKeys.publicKey,r.f.authorityKeys.publicKey);
@@ -1182,6 +1193,7 @@ test('a backup from before rollover replays both journals in order and preserves
   assert.throws(()=>cli('privacy-journal.mjs','gate',singlePath),{status:1});
   assert.equal(restore('plan').segment,2);
   assert.equal(restore('replay').targetsApplied,1);
+  assert.deepEqual(await invitationsOpen(),[]);
   assert.equal(restore('replay').targetsApplied,0);
   assert.equal(restore('plan').segment,null);
   assert.deepEqual(restore('gate'),{runId,localAppErasureApplied:true,syntheticProbePermitted:true,providerReconciliationRequired:true,

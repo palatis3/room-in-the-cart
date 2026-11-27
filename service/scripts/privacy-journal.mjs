@@ -84,6 +84,8 @@ function pool(settings,kind){
    throw Error('Separate fixed owner/worker identities required');
  }
  return new pg.Pool({host,port,database:settings.database,user:settings.user,password:()=>'',ssl:false,max:1,
+  // A restore owner must see the complete quarantine or fail the verification.
+  ...(kind==='owner'?{options:'-c row_security=off'}:{}),
   connectionTimeoutMillis:3000,statement_timeout:10000,lock_timeout:2000,query_timeout:12000,application_name:'ritc-local-privacy-journal'});
 }
 
