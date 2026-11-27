@@ -205,9 +205,9 @@ struct SavedDinnerHandoffView: View {
                             DinnerOccurrenceView(model: planner, occurrenceID: occurrenceID)
                         }.accessibilityIdentifier("dinner.handoff.openPlan")
                     }
-                    if let occurrenceID = review.occurrenceID {
-                        DinnerShoppingCheckLink(shopID: review.shopID, occurrenceID: occurrenceID, linkedProducts: review.pantryProducts != nil,
-                                                usesSavedPlanStack: true)
+                    if let occurrenceID = review.occurrenceID, review.shopID == destinationID {
+                        DinnerShoppingCheckLink(shopID: review.shopID, occurrenceID: occurrenceID,
+                                                linkedProducts: review.pantryProducts != nil)
                     }
                     NavigationLink(ledgerText("Shopping list")) {
                         LedgerHomeView(model: ledger).navigationTitle(ledgerText("Shopping list")).navigationBarTitleDisplayMode(.inline)
@@ -312,12 +312,6 @@ struct SavedDinnerHandoffView: View {
             .toolbar { ToolbarItem(placement: .cancellationAction) {
                 Button(ledgerText("Done")) { dismiss() }.disabled(busy || ledger.saving).accessibilityIdentifier("dinner.handoff.done")
             } }
-            // Keep the saved occurrence on the stack while an unrelated grocery edit commits.
-            .navigationDestination(for: DinnerShoppingCheckLink.Destination.self) { target in
-                if authorized, target.shopID == destinationID {
-                    DinnerShoppingCheckView(shopID: target.shopID, occurrenceID: target.occurrenceID)
-                }
-            }
             .interactiveDismissDisabled(busy || ledger.saving)
             .onAppear {
                 guard originalIdentity == nil else { return }

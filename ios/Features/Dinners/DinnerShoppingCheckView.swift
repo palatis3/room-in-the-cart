@@ -6,28 +6,16 @@ struct DinnerShoppingCheckLink: View {
     let occurrenceID: UUID
     var linkedProducts = false
 
-    struct Destination: Hashable {
-        let shopID: UUID
-        let occurrenceID: UUID
-    }
-    var usesSavedPlanStack = false
-
     var body: some View {
-        Group {
-            if usesSavedPlanStack {
-                NavigationLink(value: Destination(shopID: shopID, occurrenceID: occurrenceID)) { label }
-            } else {
-                NavigationLink { DinnerShoppingCheckView(shopID: shopID, occurrenceID: occurrenceID) } label: { label }
-            }
+        NavigationLink {
+            DinnerShoppingCheckView(shopID: shopID, occurrenceID: occurrenceID)
+        } label: {
+            Label(dinnerText(linkedProducts ? "Review pantry purchases" : "Check what to buy"), systemImage: "checklist")
         }.accessibilityIdentifier("dinner.checkShopping")
-    }
-
-    private var label: some View {
-        Label(dinnerText(linkedProducts ? "Review pantry purchases" : "Check what to buy"), systemImage: "checklist")
     }
 }
 
-struct DinnerShoppingCheckView: View {
+private struct DinnerShoppingCheckView: View {
     let shopID: UUID
     let occurrenceID: UUID
     @EnvironmentObject private var ledger: LedgerModel
