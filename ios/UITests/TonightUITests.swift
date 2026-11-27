@@ -203,16 +203,19 @@ import XCTest
         fill(amounts.element(boundBy: 1), "1")
         tap(app.buttons["tonight.recipe.review"])
         tap(app.buttons["tonight.recipe.save"])
-        tap(app.buttons["dinner.planSaved"])
+        // iOS 17 includes the Dinners tab and Tonight list behind this sheet.
+        let savedRecipe = app.collectionViews.containing(.any, identifier: "tonight.recipe.saved").element
+        tap(savedRecipe.buttons["dinner.planSaved"])
         tap(app.buttons["dinner.handoff.matchPantry"])
         let bread = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label BEGINSWITH %@",
-                                                     "dinner.handoff.pantryProduct.", "Bread")).firstMatch
+                                                     "dinner.handoff.pantryProduct.", "Bread")).element
         tap(bread)
-        tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Bread · ")).firstMatch)
+        tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Bread · ")).element)
         tap(app.buttons["Use these product matches"])
         tap(app.buttons["dinner.handoff.confirm"])
-        XCTAssertTrue(app.descendants(matching: .any)["dinner.handoff.saved"].waitForExistence(timeout: 10))
-        tap(app.buttons["dinner.checkShopping"])
+        let savedOccurrence = app.collectionViews.containing(.any, identifier: "dinner.handoff.saved").element
+        XCTAssertTrue(savedOccurrence.waitForExistence(timeout: 10))
+        tap(savedOccurrence.buttons["dinner.checkShopping"])
         let review = app.buttons["Review shopping allocations"]
         tap(review)
         let screen = app.navigationBars["Check what to buy"]
@@ -238,8 +241,9 @@ import XCTest
         let restorePurchase = app.buttons["Put these ingredients back on the shopping list"]
         XCTAssertTrue(restorePurchase.waitForExistence(timeout: 10),
                       "This dinner should now have a saved at-home purchase decision.")
-        tap(app.buttons["Shopping list"])
-        let pickup = app.buttons.matching(NSPredicate(format: "identifier == %@ AND label == %@", "ledgerShopPicker", "Pickup")).firstMatch
+        let savedAllocation = app.collectionViews.containing(.button, identifier: restorePurchase.label).element
+        tap(savedAllocation.buttons["Shopping list"])
+        let pickup = app.buttons.matching(NSPredicate(format: "identifier == %@ AND label == %@", "ledgerShopPicker", "Pickup")).element
         XCTAssertTrue(pickup.waitForExistence(timeout: 8))
         let checkBread = app.fullListCheck(labeled: "Check Bread")
         for name in ["Milk", "Oats", "Cheese"] {
@@ -248,9 +252,10 @@ import XCTest
             XCTAssertTrue(check.isEnabled)
             XCTAssertFalse(checkBread.exists, "The reserved bread is not an active purchase.")
         }
-        let home = app.staticTexts.matching(NSPredicate(format: "label ==[c] %@", "Using food at home")).firstMatch
+        let shoppingList = app.collectionViews.containing(NSPredicate(format: "identifier BEGINSWITH %@", "ledgerCheck-")).element
+        let home = shoppingList.staticTexts.matching(NSPredicate(format: "label ==[c] %@", "Using food at home")).element
         reveal(home)
-        let reservedBread = app.staticTexts["Bread"].firstMatch
+        let reservedBread = shoppingList.staticTexts["Bread"]
         reveal(reservedBread)
         XCTAssertFalse(checkBread.exists)
     }
