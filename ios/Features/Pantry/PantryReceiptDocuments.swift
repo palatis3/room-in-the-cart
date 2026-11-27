@@ -565,7 +565,7 @@ struct PantryReceiptDocuments: View {
 }
 
 
-/// The inspector is read-only. Including a line in the receipt is a separate choice.
+/// Wording corrections are independent of the choice to include a receipt line.
 struct ReceiptPrintedLineInspector: View {
     let lines: [ReceiptDocumentPage.Line]
     let pageNumber: Int?
@@ -582,7 +582,16 @@ struct ReceiptPrintedLineInspector: View {
     @State private var cropPage: CGImage?
 
     private var selected: ReceiptDocumentPage.Line { lines[index] }
-    private var hasEdit: Bool { edited != nil && edited != reviewed }
+    private var canReviewWording: Bool { printedCrop != nil && reviewed != nil && apply != nil }
+    private var pendingWording: String? {
+        guard !showSource, let edited, edited != reviewed else { return nil }
+        return edited
+    }
+    private var invalidWording: Bool {
+        guard let pendingWording else { return false }
+        return pendingWording.trimmingCharacters(in: .whitespaces).isEmpty
+            || pendingWording.contains(where: \.isNewline) || pendingWording.utf8.count > 2048
+    }
     private var wording: Binding<String> {
         Binding(get: { edited ?? reviewed ?? selected.text }, set: { edited = $0 })
     }
@@ -610,24 +619,27 @@ struct ReceiptPrintedLineInspector: View {
         .navigationTitle(showSource ? pantryText("Original page") : pantryText("Printed line"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            if hasEdit && !showSource {
+            if canReviewWording && !showSource {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(pantryText("Cancel")) { dismiss() }
+                        .disabled(pendingWording == nil)
                 }
             }
             ToolbarItem(placement: .confirmationAction) {
-                if hasEdit, !showSource, let edited, let apply {
-                    Button(pantryText("Done")) { apply(edited) }
-                        .accessibilityHint(captureText("Use reviewed wording"))
-                        .accessibilityInputLabels([Text(pantryText("Done")), Text(captureText("Use reviewed wording"))])
-                        .accessibilityIdentifier("receipt.reading.apply")
-                        .disabled(edited.trimmingCharacters(in: .whitespaces).isEmpty
-                            || edited.contains(where: \.isNewline) || edited.utf8.count > 2048)
-                } else {
-                    Button(pantryText("Done")) {
-                        if showSource { showSource = false } else { dismiss() }
+                Button(pantryText("Done")) {
+                    if showSource {
+                        showSource = false
+                    } else if let pendingWording, let apply {
+                        apply(pendingWording)
+                    } else {
+                        dismiss()
                     }
                 }
+                .accessibilityIdentifier(canReviewWording && !showSource ? "receipt.reading.apply" : "receipt.reading.done")
+                .accessibilityHint(pendingWording == nil ? "" : captureText("Use reviewed wording"))
+                .accessibilityInputLabels(pendingWording == nil ? [Text(pantryText("Done"))]
+                    : [Text(pantryText("Done")), Text(captureText("Use reviewed wording"))])
+                .disabled(invalidWording)
             }
         }
         .privacySensitive()

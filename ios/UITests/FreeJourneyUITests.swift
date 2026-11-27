@@ -1784,9 +1784,17 @@ import XCTest
         reveal(contrast)
         contrast.tap()
         let field = app.textFields["receipt.reading.edit"]
-        reveal(field)
-        field.tap()
-        field.typeText(" organic")
+        let endOfField = CGVector(dx: 0.90, dy: 0.67)
+        reveal(field, requiredHit: endOfField)
+        let printed = try XCTUnwrap(field.value as? String)
+        XCTAssertFalse(app.keyboards.firstMatch.exists)
+        field.coordinate(withNormalizedOffset: endOfField).tap()
+        let keyboard = app.keyboards.firstMatch
+        XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
+        let suffix = " GBP 1.20"
+        app.typeText(suffix)
+        XCTAssertEqual(field.value as? String, printed + suffix)
+        XCTAssertTrue(keyboard.exists, "The first edit must leave the wording field ready for more typing.")
         let apply = app.buttons["receipt.reading.apply"]
         XCTAssertEqual(apply.label, "Done", "The visible confirmation must be available by its spoken name.")
         tap(apply)
@@ -1795,11 +1803,22 @@ import XCTest
         XCTAssertEqual(app.switches["receipt.document.line.1.1"].value as? String, "0")
         tap(inspect)
         XCTAssertTrue(field.waitForExistence(timeout: 5))
-        XCTAssertTrue((field.value as? String)?.contains("organic") == true)
-        tap(app.buttons["Restore original wording"])
+        XCTAssertEqual(field.value as? String, printed + suffix)
+        let restore = app.buttons["Restore original wording"]
+        tap(restore)
+        XCTAssertEqual(field.value as? String, printed)
+        tap(app.navigationBars.buttons["Cancel"])
+        tap(inspect)
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        XCTAssertEqual(field.value as? String, printed + suffix)
+        tap(restore)
         tap(apply)
         XCTAssertTrue(inspect.waitForExistence(timeout: 5))
         XCTAssertEqual(inspect.label, original)
+        XCTAssertEqual(app.switches["receipt.document.line.1.1"].value as? String, "0")
+        tap(inspect)
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        XCTAssertEqual(field.value as? String, printed)
     }
 
     func testSpanishInterruptedPhotoReviewReturnsToPantryAndRequiresReselection() throws {
