@@ -1,6 +1,7 @@
 import DeviceSurfaces
 import CryptoKit
 import Foundation
+import UIKit
 import CoreDomain
 import LocalStore
 
@@ -891,16 +892,21 @@ final class PantryRepository {
     }
 
     var permitsPrivateReceiptDraft: Bool {
-        receiptDraftOwner != nil && receiptDraftStore != nil && mutationGate != nil && (try? requireAccess()) != nil
+        receiptDraftOwner != nil && receiptDraftStore != nil && mutationGate != nil && (try? requireDraftAccess()) != nil
+    }
+
+    private func requireDraftAccess() throws {
+        try requireAccess()
+        guard UIApplication.shared.isProtectedDataAvailable else { throw Failure.unauthorized }
     }
 
     private func withDraftAccess<T>(_ operation: (ProtectedReceiptDraftStore, ProtectedReceiptDraftStore.Scope) async throws -> T) async throws -> T {
-        try requireAccess()
+        try requireDraftAccess()
         guard let receiptDraftStore, let receiptDraftOwner, let mutationGate else { throw Failure.unauthorized }
         let lease = try mutationGate.beginExclusiveWrite()
         defer { mutationGate.endExclusiveWrite(lease) }
         let value = try await operation(receiptDraftStore, .init(origin: originID, owner: receiptDraftOwner))
-        try requireAccess()
+        try requireDraftAccess()
         return value
     }
 
@@ -911,7 +917,7 @@ final class PantryRepository {
         guard let entry = try drafts.read(scope) else { return nil }
         guard let pending = entry.finishing else { return entry.draft }
         let committed = try await store.inventoryCommittedOperation(id: pending.operation, request: pending.request)
-        try requireAccess()
+        try requireDraftAccess()
         if committed != nil {
             try drafts.remove(scope, revision: entry.draft.revision, finishing: pending)
             return nil
@@ -927,7 +933,7 @@ final class PantryRepository {
     func saveReceiptDraft(_ payload: SavedReceiptDraft.Payload, replacing revision: UUID?) async throws -> SavedReceiptDraft {
         try await withDraftAccess { drafts, scope in
             _ = try await reconcileDraft(drafts, scope: scope)
-            try requireAccess()
+            try requireDraftAccess()
             return try drafts.replace(payload, expected: revision, scope: scope)
         }
     }
@@ -935,7 +941,7 @@ final class PantryRepository {
     func discardReceiptDraft(revision: UUID) async throws {
         try await withDraftAccess { drafts, scope in
             guard let current = try await reconcileDraft(drafts, scope: scope), current.revision == revision else { throw ProtectedReceiptDraftStore.Failure.changed }
-            try requireAccess()
+            try requireDraftAccess()
             try drafts.remove(scope, revision: revision)
         }
     }
@@ -946,21 +952,21 @@ final class PantryRepository {
                   review.putaway.map({ $0.header.owner == (aliasPersonaID ?? originID) }) ?? true else { throw Failure.unauthorized }
             if let batch = review.batch,
                try await store.inventoryCommittedOperation(id: batch.operationID, request: batch.request) != nil {
-                try requireAccess()
+                try requireDraftAccess()
                 let pending = ProtectedReceiptDraftStore.Pending(operation: batch.operationID, request: batch.request)
                 if let entry = try drafts.read(scope), entry.draft.revision == revision, entry.finishing == pending {
                     try drafts.remove(scope, revision: revision, finishing: pending)
                 }
                 return
             }
-            try requireAccess()
+            try requireDraftAccess()
             guard let saved = try await reconcileDraft(drafts, scope: scope), saved.revision == revision,
                   saved.payload.sourceID == review.sourceDraftID else { throw ProtectedReceiptDraftStore.Failure.changed }
-            try requireAccess()
+            try requireDraftAccess()
             let pending = review.batch.map { ProtectedReceiptDraftStore.Pending(operation: $0.operationID, request: $0.request) }
             if let pending { try drafts.mark(scope, revision: revision, expected: nil, next: pending) }
             try await commitReceiptHoldingLease(review.batch, revision: review.revision, at: now)
-            try requireAccess()
+            try requireDraftAccess()
             try drafts.remove(scope, revision: revision, finishing: pending)
         }
     }

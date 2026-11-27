@@ -44,6 +44,8 @@ import XCTest
         draft.lines[0].received = "2"; draft.lines[0].usable = "1"; draft.lines[0].paid = "40,50"
         draft.lines[0].treatment = .keptSome; draft.lines[0].checkedPack = true
         draft.lines[0].confirmedPackID = UUID(); draft.lines[1].treatment = .link(UUID())
+        draft.printedPaidTotal = .init(wording: "TOTAL PAGADO MXN $40,50", amount: "40,50")
+        draft.printedDate = .init(day: now, wording: "Fecha 2026-11-26")
         let saved = try await repo.saveReceiptDraft(.putaway(draft), replacing: nil)
         let reopened = try XCTUnwrap(files.read(scope)?.draft)
         XCTAssertEqual(saved.revision, reopened.revision)
@@ -52,6 +54,8 @@ import XCTest
         XCTAssertEqual(editable.lines[0].original, draft.lines[0].original)
         XCTAssertEqual(editable.lines[0].usable, "1")
         XCTAssertEqual(editable.lines[0].paid, "40,50")
+        XCTAssertEqual(editable.printedPaidTotal, draft.printedPaidTotal)
+        XCTAssertEqual(editable.printedDate, draft.printedDate)
         XCTAssertFalse(editable.dateConfirmed)
         XCTAssertFalse(editable.lines[0].checkedPack)
         XCTAssertNil(editable.lines[0].confirmedPackID)
@@ -67,6 +71,7 @@ import XCTest
         XCTAssertThrowsError(try files.remove(scope, revision: saved.revision))
         allowed = false
         do { _ = try await repo.savedReceiptDraft(); XCTFail("A locked or changed adult read a private receipt") } catch {}
+        do { _ = try await repo.saveReceiptDraft(.putaway(draft), replacing: replacement.revision); XCTFail("A changed adult replaced the private receipt") } catch {}
         do { try await repo.discardReceiptDraft(revision: replacement.revision); XCTFail("A locked or changed adult discarded a receipt") } catch {}
         XCTAssertEqual(try files.read(scope)?.draft.revision, replacement.revision)
         _ = try files.replace(.putaway(draft), expected: nil, scope: otherScope)
@@ -109,7 +114,7 @@ import XCTest
         try await repo.applyReceipt(preview, at: now)
         let afterCommit = try await repo.savedReceiptDraft()
         XCTAssertNil(afterCommit)
-        var another = try receipt(store: inventory, lines: ["Another receipt"])
+        var another = try receipt(store: inventory, lines: ["Brown rice"])
         another.reference = "TICKET-19"
         let next = try await repo.saveReceiptDraft(.putaway(another), replacing: nil)
         try await repo.applyReceipt(preview, finishingDraft: saved.revision, at: now)
@@ -117,7 +122,20 @@ import XCTest
         let final = try await repo.load(at: now)
         XCTAssertEqual(final.state.revision, initial.state.revision + 1)
         XCTAssertEqual(final.lots.map(\.name), ["Dry beans"])
-        try await repo.discardReceiptDraft(revision: next.revision)
+        another.lines[0].treatment = .add; another.lines[0].received = "1"; another.lines[0].usable = "1"
+        let reviewedAnother = try await repo.reviewReceipt(another, expected: final.state, at: now)
+        do {
+            try await repo.applyReceipt(reviewedAnother, finishingDraft: saved.revision, at: now)
+            XCTFail("An editor with an obsolete revision finished a different receipt")
+        } catch ProtectedReceiptDraftStore.Failure.changed {}
+        try await repo.applyReceipt(reviewedAnother, finishingDraft: next.revision, at: now)
+        try await repo.applyReceipt(reviewedAnother, finishingDraft: next.revision, at: now)
+        let finalTwo = try await repo.load(at: now)
+        XCTAssertEqual(finalTwo.state.revision, initial.state.revision + 2)
+        XCTAssertEqual(Set(finalTwo.lots.map(\.name)), ["Dry beans", "Brown rice"])
+        XCTAssertNil(try files.read(scope))
+        let discard = try await repo.saveReceiptDraft(.putaway(another), replacing: nil)
+        try await repo.discardReceiptDraft(revision: discard.revision)
         XCTAssertNil(try files.read(scope))
     }
 

@@ -58,6 +58,7 @@ struct SavedReceiptDraft: Codable {
             try value.validate()
             try values.encode(Storage.lines(value), forKey: .payload)
         case .putaway(let value):
+            guard value.savedPickup == nil else { throw ProtectedReceiptDraftStore.Failure.invalid }
             let record = ReceiptPutawayDraftRecord(value)
             try record.validate()
             try values.encode(Storage.putaway(record), forKey: .payload)
@@ -82,7 +83,6 @@ private struct ReceiptPutawayDraftRecord: Codable {
     }
     let draftID: UUID
     let workspaceID: UUID
-    let savedPickup: ReceiptAcquisition.SavedPickup?
     let digest: Data?
     let sectionDigest: Data?
     let layout: UUID?
@@ -93,16 +93,19 @@ private struct ReceiptPutawayDraftRecord: Codable {
     let currency: Currency
     let tracksPutaway: Bool
     let receiptTotal: String
+    let printedPaidTotal: ExtractedReceiptDocument.PrintedPaidTotal?
+    let printedDate: ReceiptPrintedDate?
     let purchaseDate: Date
     let zone: String?
     let lines: [Row]
 
     init(_ draft: ReceiptImportDraft) {
-        draftID = draft.draftID; workspaceID = draft.workspaceID; savedPickup = draft.savedPickup
+        draftID = draft.draftID; workspaceID = draft.workspaceID
         digest = draft.imageDigest; sectionDigest = draft.firstSectionDigest; layout = draft.documentLayoutID
         supportsRescan = draft.supportsRescan; merchant = draft.merchant; reference = draft.reference
         language = draft.language; currency = draft.currency; tracksPutaway = draft.tracksPutaway
         receiptTotal = draft.receiptTotal; purchaseDate = draft.purchaseDate
+        printedPaidTotal = draft.printedPaidTotal; printedDate = draft.printedDate
         zone = draft.purchaseTimeZone?.identifier
         lines = draft.lines.map { line in
             let treatment: ReceiptImportDraft.Treatment
@@ -117,7 +120,8 @@ private struct ReceiptPutawayDraftRecord: Codable {
         func fits(_ value: String, _ limit: Int) -> Bool { value.utf8.count <= limit && !value.contains("\0") }
         guard (1...200).contains(lines.count), Set(lines.map(\.id)).count == lines.count,
               Set(lines.map(\.ordinal)).count == lines.count,
-              savedPickup.map({ $0.originID == workspaceID }) ?? true,
+              printedPaidTotal.map({ fits($0.wording, 4096) && fits($0.amount, 80) }) ?? true,
+              printedDate.map({ fits($0.wording, 4096) && $0.day.timeIntervalSinceReferenceDate.isFinite }) ?? true,
               [digest, sectionDigest].compactMap({ $0 }).allSatisfy({ $0.count == 32 }),
               fits(merchant, 512), fits(reference, 512), fits(language, 20), fits(receiptTotal, 80),
               purchaseDate.timeIntervalSinceReferenceDate.isFinite,
@@ -133,11 +137,12 @@ private struct ReceiptPutawayDraftRecord: Codable {
 
 extension ReceiptImportDraft {
     fileprivate init(protectedDraft record: ReceiptPutawayDraftRecord) {
-        draftID = record.draftID; workspaceID = record.workspaceID; savedPickup = record.savedPickup
+        draftID = record.draftID; workspaceID = record.workspaceID; savedPickup = nil
         imageDigest = record.digest; documentLayoutID = record.layout; firstSectionDigest = record.sectionDigest
         supportsRescan = record.supportsRescan; merchant = record.merchant; reference = record.reference
         language = record.language; currency = record.currency; tracksPutaway = record.tracksPutaway
         receiptTotal = record.receiptTotal; purchaseDate = record.purchaseDate
+        printedPaidTotal = record.printedPaidTotal; printedDate = record.printedDate
         purchaseTimeZone = record.zone.flatMap(TimeZone.init(identifier:)); dateConfirmed = false
         lines = record.lines.map { row in
             Line(id: row.id, ordinal: row.ordinal, original: row.original, documentLine: row.document,
@@ -174,10 +179,10 @@ extension ReceiptImportDraft {
         directory.appendingPathComponent(scope.origin.uuidString + "-" + scope.owner.uuidString + ".draft")
     }
 
-    private func exists(_ url: URL) throws -> Bool {
+    private func exists(_ url: URL, type: mode_t = S_IFREG) throws -> Bool {
         var info = stat()
         if lstat(url.path, &info) == 0 {
-            guard info.st_mode & S_IFMT == S_IFREG else { throw Failure.invalid }
+            guard info.st_mode & S_IFMT == type else { throw Failure.invalid }
             return true
         }
         guard errno == ENOENT else { throw Failure.unavailable }
@@ -186,11 +191,9 @@ extension ReceiptImportDraft {
 
     private func locked<T>(_ work: () throws -> T) throws -> T {
         try PantryArchiveFiles.directory(directory, create: true)
-        let url = directory.appendingPathComponent("receipt-drafts.lock")
-        let fd = Darwin.open(url.path, O_CREAT | O_RDWR | O_NOFOLLOW, S_IRUSR | S_IWUSR)
+        let fd = Darwin.open(directory.path, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC)
         guard fd >= 0 else { throw Failure.unavailable }
         defer { Darwin.close(fd) }
-        try PantryArchiveFiles.protect(url, permissions: 0o600)
         guard flock(fd, LOCK_EX) == 0 else { throw Failure.unavailable }
         defer { flock(fd, LOCK_UN) }
         // A terminated process may have protected its replacement but not renamed it.
@@ -211,6 +214,13 @@ extension ReceiptImportDraft {
         return entry
     }
 
+    private func syncDirectory() throws {
+        let fd = Darwin.open(directory.path, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC)
+        guard fd >= 0 else { throw Failure.unavailable }
+        defer { Darwin.close(fd) }
+        guard fsync(fd) == 0 else { throw Failure.unavailable }
+    }
+
     private func write(_ value: Entry, to url: URL) throws {
         let data = try JSONEncoder().encode(value)
         guard data.count <= maximum else { throw Failure.invalid }
@@ -219,10 +229,11 @@ extension ReceiptImportDraft {
         defer { try? FileManager.default.removeItem(at: temp) }
         try PantryArchiveFiles.write(data, to: temp)
         guard Darwin.rename(temp.path, url.path) == 0 else { throw Failure.unavailable }
+        try syncDirectory()
     }
 
     func read(_ scope: Scope) throws -> Entry? {
-        guard try exists(path(scope)) else { return nil }
+        guard try exists(directory, type: S_IFDIR) else { return nil }
         return try locked { try readUnlocked(scope) }
     }
 
@@ -250,16 +261,19 @@ extension ReceiptImportDraft {
         try locked {
             guard let entry = try readUnlocked(scope), entry.draft.revision == revision, entry.finishing == finishing else { throw Failure.changed }
             try FileManager.default.removeItem(at: path(scope))
+            try syncDirectory()
         }
     }
 
     func erase(origin: UUID) throws {
+        guard try exists(directory, type: S_IFDIR) else { return }
         try locked {
             let prefix = origin.uuidString + "-"
             for file in try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
                 where file.lastPathComponent.hasPrefix(prefix) && ["draft", "new"].contains(file.pathExtension) {
                 try FileManager.default.removeItem(at: file)
             }
+            try syncDirectory()
         }
     }
 }
