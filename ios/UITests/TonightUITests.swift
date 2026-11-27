@@ -125,6 +125,18 @@ import XCTest
     func testPlanSavedEggsForTwoInNamedPickupAndReopenDinner() {
         app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
+        tap(app.tabBars.buttons["Pantry"])
+        tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.add"])
+        for (field, wording) in [("pantry.foodName", "Eggs"), ("pantry.amount", "4")] {
+            let input = app.textFields[field]
+            tap(input)
+            input.typeText(wording + "\n")
+            XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+        }
+        tap(app.buttons["pantry.review"])
+        tap(app.buttons["pantry.confirm"])
+        XCTAssertTrue(app.buttons["pantry.confirm"].waitForNonExistence(timeout: 8))
         tap(app.tabBars.buttons["Dinners"])
         tap(app.buttons["dinner.saveFirstRecipe"])
         fill(app.textFields["tonight.recipe.title"], "Scrambled eggs")
@@ -148,6 +160,25 @@ import XCTest
         let destination = app.descendants(matching: .any)["dinner.handoff.destination"]
         reveal(destination)
         XCTAssertTrue(destination.label.contains("Groceries for Scrambled eggs"))
+        let match = app.buttons["dinner.handoff.matchPantry"]
+        reveal(match)
+        let choices = app.buttons["dinner.handoff.chooseIngredients"]
+        XCTAssertTrue(choices.waitForExistence(timeout: 5))
+        XCTAssertLessThan(match.frame.maxY, choices.frame.midY)
+        match.tap()
+        let picker = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "dinner.handoff.pantryProduct.")).firstMatch
+        XCTAssertTrue(picker.waitForExistence(timeout: 8))
+        let useMatches = app.buttons["Use these product matches"]
+        XCTAssertFalse(useMatches.isEnabled)
+        tap(picker)
+        let food = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Eggs · ")).firstMatch
+        tap(food)
+        XCTAssertTrue(useMatches.isEnabled)
+        tap(app.navigationBars["Match food at home"].buttons["Cancel"])
+        XCTAssertTrue(app.navigationBars["Match food at home"].waitForNonExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["Clear product matches"].exists)
+        let quantities = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] %@", "Shopping list quantities for Groceries for Scrambled eggs")).firstMatch
+        XCTAssertTrue(quantities.exists)
         revealFollowingAction(confirm)
         XCTAssertEqual(confirm.label, "Plan for tonight")
         confirm.tap()

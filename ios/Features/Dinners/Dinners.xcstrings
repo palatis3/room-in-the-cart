@@ -1050,6 +1050,40 @@
         }
       }
     },
+    "Shopping list quantities for %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shopping list quantities for %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidades en la lista de compras %@"
+          }
+        }
+      }
+    },
+    "After saving the dinner, you can review which linked ingredients to remove from the shopping list.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After saving the dinner, you can review which linked ingredients to remove from the shopping list."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Después de guardar la cena, puedes revisar qué ingredientes vinculados quitar de la lista de compras."
+          }
+        }
+      }
+    },
     "Review the linked products after saving the dinner to choose which purchases to remove.": {
       "extractionState": "manual",
       "localizations": {

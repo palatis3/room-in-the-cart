@@ -251,33 +251,32 @@ struct SavedDinnerHandoffView: View {
                             .accessibilityIdentifier("dinner.handoff.startPickup")
                     }
                 } else if let review {
-                    Section(dinnerText(review.plansDinner ? "Ingredients for the whole dinner" : "Selected groceries")) {
+                    Section(review.plansDinner ? dinnerFormat("Shopping list quantities for %@", review.destinationTitle) : dinnerText("Selected groceries")) {
+                        if review.plansDinner && privateProductAccess() {
+                            Button(dinnerText("Match food at home")) { choosingProducts = true }
+                                .accessibilityIdentifier("dinner.handoff.matchPantry")
+                                .disabled(busy || ledger.saving || ledger.hasPendingSave)
+                            if productChoice != nil {
+                                Button(dinnerText("Clear product matches")) { productChoice = nil; prepare(.planTonight) }
+                                    .disabled(busy || ledger.saving || ledger.hasPendingSave)
+                            }
+                            Text(dinnerText("After saving the dinner, you can review which linked ingredients to remove from the shopping list."))
+                                .font(.subheadline).foregroundStyle(Theme.secondary)
+                        }
                         receiptRows(review.receipt)
                         if review.plansDinner { ingredientChoices }
-
                     }
                     Section {
                         if let day = review.plannedDay, let count = review.plannedServings {
                             Text(planSummary(day, count)).font(.headline)
                             Text(dinnerFormat("Planning adds all the ingredient amounts shown to %@.", review.destinationTitle))
-                            if review.pantryProducts != nil {
-                                Text(dinnerText("Review the linked products after saving the dinner to choose which purchases to remove."))
-                            }
                         } else {
                             Text(dinnerText("Only the selected groceries go on this list. Your dinner schedule stays as it is."))
                         }
                         Button(review.plansDinner ? dinnerText(isTonight(review) ? "Plan for tonight" : "Plan for this day") : countLabel(review)) {
                             Task { await apply(review) }
                         }.buttonStyle(PrimaryAction()).accessibilityIdentifier("dinner.handoff.confirm")
-                        if review.plansDinner {
-                            if privateProductAccess() {
-                                Button(dinnerText("Match food at home")) { choosingProducts = true }
-                                if productChoice != nil {
-                                    Button(dinnerText("Clear product matches")) { productChoice = nil; prepare(.planTonight) }
-                                }
-                            }
-                            shopInstead
-                        }
+                        if review.plansDinner { shopInstead }
                         else { Button(tonightText("Keep editing")) { self.review = nil; error = nil } }
                     }.disabled(busy || ledger.saving || ledger.hasPendingSave)
                 } else if selectingGroceries {

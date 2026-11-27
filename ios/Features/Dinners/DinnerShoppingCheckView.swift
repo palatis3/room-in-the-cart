@@ -355,6 +355,7 @@ struct SavedDinnerProductPicker: View {
                                 .tag(Optional(food.id))
                         }
                     }.pickerStyle(.menu)
+                        .accessibilityIdentifier("dinner.handoff.pantryProduct." + row.id.uuidString)
                 }
                 Button(dinnerText("Use these product matches")) {
                     do {
