@@ -42,6 +42,8 @@ struct PantryReceiptEntry: View {
     @State private var working = false
     @State private var message: String?
     @State private var previewFailureRequest: UUID?
+    @State private var historyGeneration: UUID?
+    @State private var inspectingHistory = false
     @State private var expandedLines = Set<UUID>()
     @State private var discardDraft = false
     @State private var amountCorrection: ReceiptAmountCorrection?
@@ -79,6 +81,11 @@ struct PantryReceiptEntry: View {
 
     private var showsFailureAtPreview: Bool {
         previewFailureRequest != nil && draft != nil && overlap == nil && rescan == nil && review == nil && savedLotIDs == nil
+    }
+
+    private var canInspectPreviewHistory: Bool {
+        showsFailureAtPreview && historyGeneration == model.generation && model.permitsReceiptSource &&
+            model.snapshot?.state.workspaceID == draft?.workspaceID
     }
 
     private func status(_ text: String) -> some View {
@@ -305,7 +312,13 @@ struct PantryReceiptEntry: View {
                     Text(putawayText("Choose what to include from at least one receipt line."))
                         .foregroundStyle(Theme.secondary)
                 }
-                if let message, showsFailureAtPreview { status(message) }
+                if let message, showsFailureAtPreview {
+                    status(message)
+                    if canInspectPreviewHistory {
+                        Button(pantryText("Receipt history")) { inspectingHistory = true }
+                            .accessibilityIdentifier("receipt.preview.history")
+                    }
+                }
                 Button(displayed.tracksPutaway ? putawayText("Preview receipt changes") : pantryText("Review selected food")) {
                     guard storeIssue == nil else { return }
                     prepare(value.wrappedValue)
@@ -437,6 +450,14 @@ struct PantryReceiptEntry: View {
             do { try await Task.sleep(for: .milliseconds(180)) } catch { return }
             let matches = try? await model.receiptAliases(merchant: merchant, language: language)
             if !Task.isCancelled, scope == aliasScope { aliases = matches ?? [] }
+        }
+        .onChange(of: canInspectPreviewHistory) { _, permitted in
+            if !permitted { inspectingHistory = false }
+        }
+        .sheet(isPresented: $inspectingHistory) {
+            if canInspectPreviewHistory {
+                NavigationStack { PantryReceiptHistory(model: model, isReadOnly: true) }
+            }
         }
         .sheet(item: $assistance) { basis in
             AssistedCaptureLineReview(line: basis.line, sourceImage: reviewedSourceImage, authorized: { assistanceCurrent(basis) }, checkSource: verifySource) { suggestion, input, received in
@@ -605,6 +626,7 @@ struct PantryReceiptEntry: View {
         guard !working else { return }
         field = nil
         resultFocused = false
+        historyGeneration = nil
         working = true
         Task {
             defer { working = false }
@@ -659,7 +681,11 @@ struct PantryReceiptEntry: View {
                 guard model.permitsReceiptSource, draft?.draftID == proposed.draftID else { return }
                 if rescan != nil, case PantryReceiptError.changedEvidence = error {
                     message = pantryText("The printed wording, quantity, price or storage differs from the original. Open the original for corrections, edit your selections, or review a separate purchase.")
-                } else { message = receiptError(error) }
+                } else {
+                    message = receiptError(error)
+                    if case PantryReceiptError.changedEvidence = error { historyGeneration = model.generation }
+                    if (error as? ComparisonStoreError) == .payloadTooLarge { historyGeneration = model.generation }
+                }
                 previewFailureRequest = UUID()
             }
         }
@@ -1248,6 +1274,7 @@ struct PantryReceiptHistory: View {
     var receiptID: UUID? = nil
     var permittedLines: Set<UUID>? = nil
     var showsDone = true
+    var isReadOnly = false
     @State private var hasPutaway = false
     @State private var lastReadID: UUID?
     @State private var facts: [ReceiptAcquisition] = []
@@ -1271,7 +1298,7 @@ struct PantryReceiptHistory: View {
             if loading && facts.isEmpty { ProgressView(pantryText("Working…")) }
             if hasPutaway, receiptID == nil, permittedLines == nil, model.canEdit {
                 NavigationLink {
-                    PutawayHistory(model: model)
+                    PutawayHistory(model: model, isReadOnly: isReadOnly)
                 } label: {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(putawayText("Reviewed purchases"))
@@ -1283,7 +1310,7 @@ struct PantryReceiptHistory: View {
             if facts.isEmpty && !hasPutaway && !loading && !hasMore && model.phase == .ready {
                 Section {
                     Text(pantryText("No confirmed receipt lines yet.")).font(.headline)
-                    if receiptID == nil, model.canEdit {
+                    if !isReadOnly, receiptID == nil, model.canEdit {
                         Button { newReceipt = true } label: { Label(pantryText("Review a receipt"), systemImage: pantryReceiptSymbol) }
                             .accessibilityIdentifier("receipt.history.start")
                     }
@@ -1306,18 +1333,20 @@ struct PantryReceiptHistory: View {
                     if let paid = row.paidLineTotal { Text(pantryFormat("Paid line total %@", receiptMoney(paid))) }
                     else { Text(pantryText("Paid price unknown")) }
                     Text(pantryFormat("Receipt revision %@", String(row.revision)))
-                    if model.supportsReceiptAliases {
-                        Button(pantryText("Remember this product spelling")) { learning = row }
-                            .buttonStyle(.borderless).disabled(!model.canEdit || busy)
-                    }
-                    Button(pantryText("Correct this paid total")) {
-                        Task {
-                            do {
-                                correcting = try await model.latestReceiptRevision(row)
-                                price = ""; correctionMessage = nil; reviewedState = model.snapshot?.state
-                            } catch { message = receiptError(error) }
+                    if !isReadOnly {
+                        if model.supportsReceiptAliases {
+                            Button(pantryText("Remember this product spelling")) { learning = row }
+                                .buttonStyle(.borderless).disabled(!model.canEdit || busy)
                         }
-                    }.buttonStyle(.borderless).disabled(!model.canEdit || busy)
+                        Button(pantryText("Correct this paid total")) {
+                            Task {
+                                do {
+                                    correcting = try await model.latestReceiptRevision(row)
+                                    price = ""; correctionMessage = nil; reviewedState = model.snapshot?.state
+                                } catch { message = receiptError(error) }
+                            }
+                        }.buttonStyle(.borderless).disabled(!model.canEdit || busy)
+                    }
                 }
                 .listRowBackground(Theme.surface)
             }

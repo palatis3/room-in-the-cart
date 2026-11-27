@@ -2360,6 +2360,20 @@ import XCTest
         XCTAssertFalse(app.buttons["receipt.commit"].exists)
         capture("Conflicting paid evidence at the receipt preview action")
 
+        receiptTap(app.buttons["receipt.preview.history"])
+        let historyBar = app.navigationBars["Receipt history"]
+        XCTAssertTrue(historyBar.waitForExistence(timeout: 8))
+        assertText("Paid price unknown")
+        assertText("Receipt revision 1")
+        XCTAssertFalse(app.buttons["Correct this paid total"].exists)
+        XCTAssertFalse(app.buttons["receipt.history.start"].exists)
+        receiptTap(historyBar.buttons["Done"])
+        XCTAssertTrue(receiptBar.waitForExistence(timeout: 8))
+        let proposedPrice = app.textFields["Confirmed paid line total in USD, optional"]
+        reveal(proposedPrice, initiallyUpward: false)
+        XCTAssertEqual(proposedPrice.value as? String, "4.20")
+        XCTAssertFalse(app.buttons["receipt.commit"].exists)
+
         receiptTap(receiptBar.buttons["Close"])
         receiptTap(app.alerts.buttons["Discard draft"])
         let oats = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS[c] %@", "pantry.lot.", "Oats"))

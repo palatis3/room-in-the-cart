@@ -178,6 +178,7 @@ struct PutawayOverlapReview: View {
 
 struct PutawayHistory: View {
     @ObservedObject var model: PantryModel
+    var isReadOnly = false
     @State private var headers: [ReviewedReceiptHeader] = []
     @State private var more = true
     @State private var busy = false
@@ -187,7 +188,7 @@ struct PutawayHistory: View {
         List {
             if model.canEdit {
                 ForEach(headers) { header in
-                    NavigationLink { PutawayHistoryDetail(model: model, header: header) } label: {
+                    NavigationLink { PutawayHistoryDetail(model: model, header: header, isReadOnly: isReadOnly) } label: {
                         ReviewedReceiptHeading(header: header)
                     }
                     .listRowBackground(Theme.surface)
@@ -220,6 +221,7 @@ struct PutawayHistory: View {
 struct PutawayHistoryDetail: View {
     @ObservedObject var model: PantryModel
     let header: ReviewedReceiptHeader
+    var isReadOnly = false
     @State private var rows: [ReviewedReceiptDecision] = []
     @State private var more = true
     @State private var activeLoad: UUID?
@@ -233,7 +235,7 @@ struct PutawayHistoryDetail: View {
         List {
             if model.canEdit, let state = model.snapshot?.state {
                 ReviewedReceiptHeading(header: header).listRowBackground(Theme.surface)
-                if pageState == state, model.permitsReceiptCopy(header), !rows.isEmpty {
+                if !isReadOnly, pageState == state, model.permitsReceiptCopy(header), !rows.isEmpty {
                     Button {
                         copyScope = ReceiptCopyScope(id: model.generation, inventory: state)
                     } label: {
@@ -241,10 +243,12 @@ struct PutawayHistoryDetail: View {
                     }
                     .accessibilityIdentifier("receipt.copy.choose")
                 }
-                let token = model.generation
-                ReceiptCouponReviewLink(source: .purchase(model, header), pickupID: nil, authorize: {
-                    model.permitsReceiptSource && model.generation == token
-                })
+                if !isReadOnly {
+                    let token = model.generation
+                    ReceiptCouponReviewLink(source: .purchase(model, header), pickupID: nil, authorize: {
+                        model.permitsReceiptSource && model.generation == token
+                    })
+                }
                 if pageState == state {
                     ForEach(rows.sorted { $0.ordinal < $1.ordinal }) { row in
                         PutawayDecisionLabel(row: row, currencyCode: header.currencyCode).listRowBackground(Theme.surface)
@@ -252,7 +256,7 @@ struct PutawayHistoryDetail: View {
                 }
                 if rows.contains(where: { $0.lotID != nil }) {
                     NavigationLink(putawayText("Pantry quantities and price revisions")) {
-                        PantryReceiptHistory(model: model, receiptID: header.id, showsDone: false)
+                        PantryReceiptHistory(model: model, receiptID: header.id, showsDone: false, isReadOnly: isReadOnly)
                     }
                 }
                 if failed { Text(putawayText("Could not load receipt decisions.")) }
