@@ -182,6 +182,13 @@ async function reportGate(extra={}){
     WHERE NOT withdrawn OR to_jsonb(a)->>'step_text' IS NOT NULL LIMIT 1`)).rowCount;
  if(dinnerInvitation.rowCount || repeatWeek || savedWeek || adultCheck)
   throw Error('Retire restored dinner invitations, unfinished week changes and shared adult questions before reopening');
+ const consent=(await owner.query('SELECT FROM ritc.consent WHERE revoked_at IS NULL LIMIT 1')).rowCount;
+ const hasEnrollment=(await owner.query("SELECT to_regclass('ritc.guardian_enrollment') IS NOT NULL AS installed")).rows[0].installed;
+ const pending=hasEnrollment && (await owner.query(`SELECT FROM ritc.guardian_enrollment
+     WHERE state NOT IN ('withdrawn','cancelled','expired') LIMIT 1`)).rowCount;
+ const childSession=(await owner.query(`SELECT FROM ritc.web_session s JOIN ritc.member m USING(household_id,member_id)
+     WHERE m.kind='child' AND s.revoked_at IS NULL LIMIT 1`)).rowCount;
+ if(consent || pending || childSession)throw Error('Retire restored child consent and pairing authority before reopening');
  console.log(JSON.stringify({runId,localAppErasureApplied:true,syntheticProbePermitted:true,providerReconciliationRequired:true,productionReady:false,...extra}));
 }
 
