@@ -39,7 +39,7 @@ test('every public page renders both languages, one main, named navigation and a
     assert.ok(root.querySelector('label[for="public-language"]'));
     assert.equal(root.querySelector('.public-skip').hash, '#public-main');
     if (key === 'help') assert.equal(root.querySelector('[role=note]'), null);
-    if (key === 'terms' || key === 'privacy') assert.equal(root.querySelector('[role=note]').textContent, publicPages[key].notice[language]);
+    assert.equal(root.querySelector('.public-contents') !== null, publicPages[key].sections.length > 0);
     const page = publicPages[key];
     for (const copy of [page.title, page.lead, ...page.sections.flatMap(section => [section.title, ...section.paragraphs]), ...(page.notice ? [page.notice] : [])]) {
       assert.deepEqual(Object.keys(copy).sort(), ['en', 'es']);
@@ -48,7 +48,7 @@ test('every public page renders both languages, one main, named navigation and a
   }
 });
 
-for (const route of ['help','about']) test('public ' + route + ' never calls account APIs, reads credentials or opens browser storage', t => {
+for (const route of ['help', 'about', 'privacy', 'terms', 'support']) test('public ' + route + ' never calls account APIs, reads credentials or opens browser storage', t => {
   const dom = new JSDOM('<div id="app"></div>', { url: 'https://review.grocery-app.com/' + route + '?token=query-secret#token=fragment-secret' });
   dom.window.fetch = () => { throw new Error('Public pages must not fetch'); };
   const previousFetch = globalThis.fetch;
@@ -76,22 +76,46 @@ test('language selection updates public links, text and address without losing f
   assert.equal(dom.window.localStorage.length, 0);
 });
 
-test('privacy and terms disclose remaining operator gates and support uses the supplied address', () => {
-  assert.match(setup('/privacy').root.textContent, /not a complete operator-approved release privacy policy/);
-  assert.match(setup('/privacy').root.textContent, /Existing local feedback, grocery text, prices and member names are not sent/);
-  assert.match(setup('/privacy').root.textContent, /select and review them/);
-  assert.match(setup('/terms').root.textContent, /Operator-approved release terms.*pending/);
+test('policy bookmarks open the published policy or Apple license and retain a safe route back', () => {
+  const config = JSON.parse(readFileSync(new URL('../../config/public-contact.json', import.meta.url), 'utf8'));
+  for (const language of ['en', 'es']) for (const route of ['privacy', 'terms']) {
+    const { root, dom } = setup('/' + route + '?token=private&lang=' + language + '#public-section-4');
+    const resource = root.querySelector('main .public-resource');
+    assert.equal(resource.href, route === 'privacy'
+      ? config.releaseSupportPagesOrigin + '/privacy?lang=' + language
+      : 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/');
+    assert.equal(resource.rel, 'noreferrer');
+    assert.equal(resource.target, '');
+    assert.equal(dom.window.location.search, '?lang=' + language);
+    assert.equal(dom.window.location.hash, '');
+    assert.ok(root.querySelector('main a[href="/support?lang=' + language + '"]'));
+    assert.equal(root.querySelector('footer a').getAttribute('href'), '/requests?lang=' + language);
+    assert.doesNotMatch(root.textContent, /still pending|staging hosting|siguen pendientes|alojamiento de pruebas/i);
+    const select = root.querySelector('select');
+    const other = language === 'en' ? 'es' : 'en';
+    select.value = other; select.dispatchEvent(new dom.window.Event('change'));
+    assert.equal(root.querySelector('main .public-resource').search, route === 'privacy' ? '?lang=' + other : '');
+    assert.equal(dom.window.document.activeElement.id, 'public-language');
+  }
+});
+
+test('support offers the configured address and the published bilingual support page', () => {
   const support = setup('/support').root;
   assert.equal(support.querySelector('.public-contact').href, 'mailto:hello@roominthecart.com');
   assert.equal(support.querySelector('.public-contact').textContent, 'Email support · hello@roominthecart.com');
   assert.equal(support.querySelector('[role=note]'), null);
   assert.doesNotMatch(support.textContent, /support destination has not been configured|guaranteed savings|successful purchase/);
   const unconfigured = setup('/support', 'en-US', { operatorSupportURL: null }).root;
-  assert.match(unconfigured.querySelector('[role=note]').textContent, /support destination has not been configured/);
+  assert.match(unconfigured.querySelector('[role=note]').textContent, /visit the support website/);
+  for (const language of ['en', 'es']) for (const configuration of [undefined, { operatorSupportURL: null }]) {
+    const resource = setup('/support?lang=' + language, 'en-US', configuration).root.querySelector('.public-resource');
+    assert.equal(resource.href, 'https://help.roominthecart.com/support?lang=' + language);
+    assert.equal(resource.rel, 'noreferrer');
+  }
   assert.equal(unconfigured.querySelector('.public-contact'), null);
 });
 
-test('native and public privacy explain reviewed household and online actions in each language', () => {
+test('offline native privacy retains translated explanations of reviewed household and online actions', () => {
   const catalog = JSON.parse(readFileSync(new URL('../../ios/Features/Help/Help.xcstrings', import.meta.url), 'utf8')).strings;
   const native = readFileSync(new URL('../../ios/Features/Help/HelpView.swift', import.meta.url), 'utf8');
   const privacy = native.slice(native.indexOf('struct HelpPrivacyView'), native.indexOf('struct HelpSupportView'));
@@ -102,14 +126,16 @@ test('native and public privacy explain reviewed household and online actions in
     'The household service counts online', 'Deleting your account erases', 'If Apple requires an age range',
     'If Apple tells Room in the Cart', 'When Resend delivers'];
   for (const language of ['en', 'es']) {
-    const text = setup('/privacy?lang=' + language).root.textContent;
+    const translated = [];
     for (const scope of scopes) {
       const key = Object.keys(catalog).find(value => value.startsWith(scope));
       assert.ok(key && privacy.includes('helpText("' + key + '")'), scope);
       const unit = catalog[key].localizations[language].stringUnit;
       assert.equal(unit.state, 'translated');
-      assert.ok(text.includes(unit.value), language + ' ' + scope);
+      assert.ok(unit.value.trim(), language + ' ' + scope);
+      translated.push(unit.value);
     }
+    const text = translated.join(' ');
     assert.match(text, language === 'en'
       ? /visitor IP addresses and logs for three years/
       : /direcciones IP de los visitantes y los registros de visitas durante tres años/);

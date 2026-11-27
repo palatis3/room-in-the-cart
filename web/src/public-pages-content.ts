@@ -1,5 +1,3 @@
-// Source-based English and US-Spanish draft copy. Human language, operator
-// policy/terms and production retention review remain release requirements.
 export type PublicLanguage = 'en' | 'es';
 export type PublicPageKey = 'help' | 'privacy' | 'terms' | 'support';
 export type PublicCopy = Readonly<Record<PublicLanguage, string>>;
@@ -247,207 +245,11 @@ export const publicPages = {
       "es": "Privacidad y datos"
     },
     "lead": {
-      "en": "Implementation disclosures · updated November 20, 2026.",
-      "es": "Información de la implementación · actualizada el 20 de noviembre de 2026."
+      "en": "The Room in the Cart privacy policy explains what the app collects, how your information is used and how to request deletion.",
+      "es": "La política de privacidad de Room in the Cart explica qué datos recopila la app, cómo se usa tu información y cómo solicitar que se elimine."
     },
-    "notice": {
-      "en": "Operator policy review and production retention details are still pending. This implementation guide is not a complete operator-approved release privacy policy. The Support page has the supplied support email address.",
-      "es": "La revisión de la política por el operador y los detalles de retención en producción siguen pendientes. Esta guía de la implementación no es una política de privacidad de lanzamiento completa y aprobada por el operador. La página de Soporte tiene la dirección de correo de soporte proporcionada."
-    },
-    "sections": [
-      {
-        "title": {
-          "en": "Your private workspace",
-          "es": "Tu espacio privado"
-        },
-        "paragraphs": [
-          {
-            "en": "Private comparisons, lists, dinners, capture reviews and pickup records are stored on this iPhone. Joining a household does not upload that existing work. An owner export can include private content and recipient history.",
-            "es": "Las comparaciones privadas, listas, cenas, revisiones de captura y registros de recogida se guardan en este iPhone. Unirte a un hogar no sube ese trabajo existente. Una exportación para el propietario puede incluir contenido privado e historial de destinatarios."
-          },
-          {
-            "en": "Local records remain until you change or delete their scope. Recovery files and messages you save or share are separate copies. This source inventory does not establish provider backup retention or a production retention period.",
-            "es": "Los registros locales permanecen hasta que cambies o elimines su alcance. Los archivos de recuperación y mensajes que guardas o compartes son copias separadas. Este inventario del código no establece la retención de copias de seguridad de proveedores ni un plazo de retención en producción."
-          },
-          {
-            "en": "If Apple requires an age range and the regional check is enabled, the app asks whether you’ll share it. The app uses the response on this iPhone to decide whether to open your workspace. It keeps the check result in memory and sends no age range to your household.",
-            "es": "Si Apple requiere un rango de edad y la comprobación regional está activada, la app te pregunta si quieres compartirlo. La app usa la respuesta en este iPhone para decidir si abre tu espacio de trabajo. Mantiene el resultado de la comprobación en memoria y no envía el rango de edad a tu hogar."
-          },
-          {
-            "en": "You can search the USDA FoodKeeper guide offline. In My Pantry, you can save a date to check food quality and choose a daily reminder. The reminder can appear on your Lock Screen. It asks you to open My Pantry and omits food names.",
-            "es": "Puedes consultar la guía FoodKeeper del USDA sin conexión. En Mi despensa puedes guardar una fecha para revisar la calidad de un alimento y activar un recordatorio diario. El recordatorio puede aparecer en la pantalla bloqueada. Te pide que abras Mi despensa y omite los nombres de los alimentos."
-          }
-        ]
-      },
-      {
-        "title": {
-          "en": "Connected information",
-          "es": "Información conectada"
-        },
-        "paragraphs": [
-          {
-            "en": "Optional connected features use the information needed for the action you review: account email and identity, member aliases, enrolled device/session identifiers, household requests and instructions, shared-shop budget and price evidence, and Apple membership transaction evidence. Permissions limit what each person can read or change.",
-            "es": "Las funciones conectadas opcionales usan la información necesaria para la acción que revisas: correo e identidad de la cuenta, alias de miembros, identificadores de dispositivo o sesión inscritos, solicitudes e instrucciones del hogar, presupuesto y pruebas de precios de compras compartidas, y pruebas de transacciones de membresía de Apple. Los permisos limitan lo que cada persona puede leer o cambiar."
-          },
-          {
-            "en": "If you report household content, the service records your reason, which item and version you reported, your member ID and the sender’s ID when known. You can submit the report without sharing the wording, or choose up to 1,000 characters for the review team to read. Reports expire after the period the operator sets for review. Blocking a sender in your household sends no message text.",
-            "es": "Si reportas contenido del hogar, el servicio guarda el motivo, qué elemento y versión reportaste, tu identificador de miembro y el de quien lo envió, si se conoce. Puedes enviar el reporte sin compartir el texto o elegir hasta 1,000 caracteres para que los lea el equipo de revisión. Los reportes vencen al terminar el plazo de revisión que establece el operador. Al bloquear en tu hogar a quien lo envió, no se comparte el texto del mensaje."
-          },
-          {
-            "en": "If last calls are available, the shopper can set a cutoff that eligible adults see in the app. The service records your response and whether you mute the invitation. Requests after the cutoff go to the next trip.",
-            "es": "Si están disponibles los avisos antes de la compra, quien hace la compra puede fijar una hora límite que las personas adultas con permiso ven en la app. El servicio registra tu respuesta y si silencias el aviso. Las solicitudes posteriores a la hora límite pasan a la siguiente compra."
-          },
-          {
-            "en": "If you request a private review of your authority to delete a child’s account, the service uses the details you provide to verify your request. It keeps a case number, account or enrollment references, status and dates. You can check the case and its expiry in Guardian controls. A separate deletion receipt confirms when the account has been erased.",
-            "es": "Si solicitas una revisión privada para verificar que tienes autoridad para eliminar la cuenta de un menor, el servicio usa los datos que proporcionas para verificar la solicitud. Guarda un número de caso, referencias de la cuenta o de la inscripción, el estado y las fechas. En los controles del tutor puedes consultar el caso y su fecha de vencimiento. Un comprobante de eliminación por separado confirma cuándo se eliminó la cuenta."
-          },
-          {
-            "en": "The household service saves a shopper’s question with the contributor’s request. When you save shared instructions for a cook, it stores the wording and your member ID. If you mark the instructions as sent, it also saves the recipient you entered and the time.",
-            "es": "El servicio del hogar guarda la pregunta de quien hace la compra junto con la solicitud de quien la envió. Cuando guardas instrucciones compartidas para quien cocina, el servicio guarda el texto y tu identificador de miembro. Si marcas las instrucciones como enviadas, también guarda el destinatario que indicaste y la hora."
-          },
-          {
-            "en": "Saving a draft during line review keeps all recognized receipt text, including unselected lines, in protected storage on this iPhone. Saving a put-away draft keeps every line in that review, including lines you skip, along with the amounts and storage choices you entered. Finish or discard the draft to remove it. To view the original photo or PDF again, select it from its source.",
-            "es": "Si guardas un borrador al revisar los renglones, todo el texto reconocido del recibo, incluidos los renglones sin seleccionar, se guarda en el almacenamiento protegido de este iPhone. Si guardas el borrador al registrar los alimentos, se conservan todos los renglones de esa revisión, incluso los que omitas, además de las cantidades, los importes y los lugares de almacenamiento que hayas indicado. El borrador se elimina cuando terminas o lo descartas. Para volver a ver la foto o el PDF original, selecciónalo desde su origen."
-          },
-          {
-            "en": "When you confirm a receipt for the household pantry, adults with pantry access can see the store, purchase date, any reference you enter, and each selected line’s original wording, food, quantities, storage location and price if entered. The original file stays on this iPhone.",
-            "es": "Al confirmar un recibo para la despensa del hogar, los adultos con acceso a la despensa pueden ver la tienda, la fecha de compra, la referencia que ingreses y, de cada renglón seleccionado, el texto original, el alimento, las cantidades, el lugar de almacenamiento y el precio si lo ingresaste. El archivo original se queda en este iPhone."
-          },
-          {
-            "en": "When you choose Read recipe for a web link, this iPhone requests the page directly from the recipe website. The site sees the page address you requested, including any query parameters, your IP address and an identifier for the app’s recipe reader. A site the link redirects you to receives the same kinds of information.",
-            "es": "Cuando eliges Leer receta para un enlace web, este iPhone solicita la página directamente al sitio de la receta. El sitio ve la dirección que solicitaste, incluidos los parámetros de consulta, tu dirección IP y un identificador del lector de recetas de la app. Si el enlace te dirige a otro sitio, ese sitio recibe el mismo tipo de información."
-          },
-          {
-            "en": "When you save a recipe in Household Tonight, you send its ingredients, portions, selected pantry batches and any reviewed restrictions or package details to the household service. Adults with pantry access can see the recipe title and ingredients when the meal appears as a suggestion.",
-            "es": "Cuando guardas una receta en «Esta noche en casa», envías al servicio del hogar los ingredientes, las porciones, los lotes que elegiste y las restricciones o los datos del paquete que hayas revisado. Los adultos con acceso a la despensa pueden ver el nombre de la receta y sus ingredientes cuando se les sugiere esa cena."
-          },
-          {
-            "en": "When you share a reaction to a meal you shopped for, the household service saves it with your member ID. For up to 90 days, Household Tonight can use your latest reaction to that version of the recipe to break ties between dinner suggestions for you. To withdraw your reactions, open Household pantry and choose Review my shared meal feedback.",
-            "es": "Cuando compartes tu opinión sobre una comida para la que hiciste la compra, el servicio del hogar la guarda con tu identificador de miembro. Durante un máximo de 90 días, «Esta noche en casa» puede usar tu opinión más reciente sobre esa versión de la receta para decidir qué cena mostrarte primero si hay un empate. Para retirar tus opiniones, abre «Despensa del hogar» y elige «Revisar mis opiniones compartidas sobre comidas»."
-          },
-          {
-            "en": "If the household receipt save is unconfirmed, this iPhone keeps a protected copy of the reviewed details. Check the household pantry before retrying the same change. Clearing the retry leaves any receipt the household already saved in place.",
-            "es": "Si no se confirma que se guardó el recibo del hogar, este iPhone conserva una copia protegida de los datos revisados. Comprueba la despensa del hogar antes de reintentar el mismo cambio. Borrar el reintento conserva cualquier recibo ya guardado en el hogar."
-          },
-          {
-            "en": "The implemented service uses Supabase for identity and PostgreSQL storage, Vercel for staging hosting, and Apple for subscription payment and verification. The app does not receive payment card or bank account numbers. Final provider settings and production retention require operator review.",
-            "es": "El servicio implementado usa Supabase para identidad y almacenamiento PostgreSQL, Vercel para alojamiento de pruebas y Apple para pagos y verificación de suscripciones. La app no recibe números de tarjetas de pago ni de cuentas bancarias. La configuración final de proveedores y la retención en producción requieren revisión del operador."
-          },
-          {
-            "en": "If Apple tells Room in the Cart that a guardian withdrew permission for an App Store download, the service saves a receipt to recognize repeated notices. The receipt contains the notice ID, the time Apple signed it and whether it came from the live or test App Store. It contains no age range, download ID or household account.",
-            "es": "Si Apple avisa a Room in the Cart de que un tutor retiró el permiso para descargar la app del App Store, el servicio guarda un comprobante para reconocer los avisos repetidos. El comprobante contiene el identificador del aviso, la hora en que Apple lo firmó y si procede del App Store o de su entorno de pruebas. No contiene el rango de edad ni identifica la descarga o la cuenta del hogar."
-          },
-          {
-            "en": "A cook link exposes only its granted fields. A static message or exported file is a separate copy under the recipient’s control. Review the destination and private fields before sharing.",
-            "es": "Un enlace para quien cocina muestra solo los campos autorizados. Un mensaje estático o un archivo exportado es una copia separada bajo el control del destinatario. Revisa el destino y los campos privados antes de compartir."
-          }
-        ]
-      },
-      {
-        "title": {
-          "en": "Photos and speech",
-          "es": "Fotos y voz"
-        },
-        "paragraphs": [
-          {
-            "en": "Ordinary dictation and photo text recognition run on this iPhone. Saved evidence photos stay in protected local storage. Readable and helper exports exclude photos. An encrypted recovery file can include evidence photos only after you select and review them. Apple may download a selected iCloud photo.",
-            "es": "El dictado habitual y el reconocimiento de texto en fotos se procesan en este iPhone. Las fotos guardadas como evidencia permanecen en el almacenamiento local protegido. Las exportaciones legibles y para ayudantes excluyen las fotos. Un archivo de recuperación cifrado puede incluirlas si las seleccionas y revisas. Apple puede descargar de iCloud una foto que elijas."
-          },
-          {
-            "en": "If product references are available, an adult can choose to share a description, brand, size or barcode with the named shopper. When photo sharing is enabled separately, the service receives only the crop you review, without location metadata. An authorized moderator reviews it before the shopper can see it. You can remove a shared reference. Access expires within seven days.",
-            "es": "Si están disponibles las referencias de productos, una persona adulta puede compartir una descripción, marca, tamaño o código de barras con la persona indicada para hacer la compra. Si además se habilita el uso de fotos, el servicio recibe solo el recorte que revises, sin metadatos de ubicación. Una persona autorizada lo revisa antes de que lo vea quien hace la compra. Puedes retirar una referencia compartida. El acceso caduca en un máximo de siete días."
-          },
-          {
-            "en": "When online assistance is available, an authorized adult can review and send a selected excerpt, a cropped image or a separate voice recording to OpenAI through Room in the Cart. Listen to the recording or inspect the crop before sending. You can keep using the local editor.",
-            "es": "Cuando la asistencia en línea está disponible, un adulto autorizado puede revisar y enviar un fragmento de texto, una imagen recortada o una grabación de voz independiente a OpenAI a través de Room in the Cart. Escucha la grabación o revisa el recorte antes de enviarlo. También puedes seguir usando el editor local."
-          },
-          {
-            "en": "The household service counts online assistance requests for your account to enforce the daily limit. It also keeps a code for each request to prevent processing it twice. The service can remove these records once they are more than 24 hours old.",
-            "es": "El servicio del hogar cuenta las solicitudes de asistencia en línea de tu cuenta para aplicar el límite diario. También guarda un código por solicitud para evitar procesarla dos veces. El servicio puede eliminar estos registros una vez que hayan pasado 24 horas."
-          },
-          {
-            "en": "Looking up a barcode in Open Food Facts sends the barcode, app version and the app’s support email to that service. It also sees your IP address. Its privacy policy says it keeps visitor IP addresses and logs for three years for security, technical analysis and measuring popularity. You can enter the product name and package size yourself.",
-            "es": "Si consultas un código de barras en Open Food Facts, se envían a ese servicio el código, la versión de la app y el correo de soporte de la app. El servicio también ve tu dirección IP. Según su política de privacidad, conserva las direcciones IP de los visitantes y los registros de visitas durante tres años por motivos de seguridad, para realizar análisis técnicos y para medir la popularidad. Puedes ingresar el nombre del producto y el tamaño del paquete manualmente."
-          },
-          {
-            "en": "For optional online language help, review what will go to OpenAI through Room in the Cart. Depending on the task, this can include your wording, possible matches, or selected meal titles and reasons. For a FoodKeeper match, you share the label wording and the names and IDs of the guide entries shown. You choose whether to use a suggestion.",
-            "es": "Para usar la ayuda de redacción o de coincidencias en línea, revisa qué se enviará a OpenAI a través de Room in the Cart. Según la tarea, puede incluir tu texto, posibles coincidencias o los títulos y motivos de las comidas seleccionadas. Para buscar una coincidencia en FoodKeeper, compartes el texto de la etiqueta y los nombres e identificadores de las entradas que se muestran. Tú decides si usas la sugerencia."
-          }
-        ]
-      },
-      {
-        "title": {
-          "en": "Optional feedback and measurement",
-          "es": "Comentarios y medición opcionales"
-        },
-        "paragraphs": [
-          {
-            "en": "Optional pickup feedback stays in your local pickup record. It is not sent to an analytics service. You can turn the prompt off in Settings and remove a saved response from its pickup.",
-            "es": "Los comentarios opcionales sobre una recogida permanecen en su registro local. No se envían a un servicio de análisis. Puedes desactivar la pregunta en Configuración y quitar una respuesta guardada desde su recogida."
-          },
-          {
-            "en": "Optional household measurement is separate. With explicit consent, the service stores the response codes you review, the shop identity, eligible week and notice version, and can match membership status to study retention. Existing local feedback, grocery text, prices and member names are not sent. Manage or withdraw that consent in Settings.",
-            "es": "La medición opcional del hogar es independiente. Con consentimiento explícito, el servicio guarda los códigos de respuesta que revises, la identidad de la compra, la semana elegible y la versión del aviso, y puede vincular el estado de membresía para estudiar la retención. No se envían los comentarios locales existentes, el texto de comestibles, los precios ni los nombres de miembros. Administra o retira ese consentimiento en Configuración."
-          }
-        ]
-      },
-      {
-        "title": {
-          "en": "Browser storage and tracking",
-          "es": "Almacenamiento del navegador y rastreo"
-        },
-        "paragraphs": [
-          {
-            "en": "These public information pages do not sign you in, call the household API, use cookies or local storage, or add analytics. The invited app uses a same-origin authenticated session. Its local request queue requires enrollment, service permission and separate explicit consent; queued is not received. Invitation secrets are removed from the address before the invited app makes requests.",
-            "es": "Estas páginas de información pública no inician sesión, no llaman a la API del hogar, no usan cookies ni almacenamiento local, y no agregan análisis. La app por invitación usa una sesión autenticada del mismo origen. Su cola local de solicitudes requiere inscripción, permiso del servicio y consentimiento explícito separado; en cola no significa recibida. Los secretos de invitación se quitan de la dirección antes de que la app por invitación haga solicitudes."
-          },
-          {
-            "en": "The native privacy manifest declares no tracking. The implementation does not add advertising identifiers or cross-site analytics. Hosting and identity providers still handle the technical information needed to serve and protect their services; their final operational settings need release review.",
-            "es": "El manifiesto de privacidad nativo declara que no hay rastreo. La implementación no agrega identificadores publicitarios ni análisis entre sitios. Los proveedores de alojamiento e identidad aún procesan la información técnica necesaria para prestar y proteger sus servicios; su configuración operativa final necesita revisión antes del lanzamiento."
-          }
-        ]
-      },
-      {
-        "title": {
-          "en": "Export and deletion",
-          "es": "Exportación y eliminación"
-        },
-        "paragraphs": [
-          {
-            "en": "Open Records, then Recovery, exports and saved records to preview an export, recover a file or review local deletion. Removing local work does not remove copies you already saved or sent.",
-            "es": "Abre Historial y luego Recuperación, exportaciones y registros guardados para revisar una exportación, recuperar un archivo o revisar una eliminación local. Quitar trabajo local no elimina las copias que ya guardaste o enviaste."
-          },
-          {
-            "en": "Household account deletion has its own scope and status. Review it in household controls. Signing out or leaving a household is separate from deleting an account, and deleting an account does not cancel an Apple subscription. Manage that subscription through Apple.",
-            "es": "La eliminación de una cuenta del hogar tiene su propio alcance y estado. Revísala en los controles del hogar. Cerrar sesión o salir de un hogar es distinto de eliminar una cuenta, y eliminar una cuenta no cancela una suscripción de Apple. Administra esa suscripción con Apple."
-          },
-          {
-            "en": "Deleting your account erases the household receipt lines you submitted. To prevent the same lines from being imported again, the service keeps receipt identification codes and the positions of the erased lines. These records omit the printed wording.",
-            "es": "Al eliminar tu cuenta se borran los renglones de recibos que enviaste para el hogar. Para evitar que vuelvan a importarse, el servicio conserva códigos que identifican el recibo y las posiciones de los renglones borrados. Estos registros omiten el texto impreso."
-          },
-          {
-            "en": "An accepted deletion request and completed provider deletion are different states. Follow the in-app status and retry instructions. The operating owner must verify provider erasure, backups and retention before release. Child enrollment remains unavailable until a real guardian verification and consent process is configured.",
-            "es": "Una solicitud de eliminación aceptada y la eliminación completada por el proveedor son estados distintos. Sigue el estado y las instrucciones de reintento de la app. El operador debe verificar el borrado del proveedor, las copias de seguridad y la retención antes del lanzamiento. La inscripción de menores sigue sin estar disponible hasta configurar un proceso real de verificación del tutor y consentimiento."
-          }
-        ]
-      },
-      {
-        "title": {
-          "en": "Support information",
-          "es": "Información de soporte"
-        },
-        "paragraphs": [
-          {
-            "en": "When Resend delivers a sign-in code, it processes the recipient’s email address and the message containing the code. If you email support, Cloudflare Email Routing forwards your address, message and any attachments to the operator’s Gmail inbox so the operator can respond.",
-            "es": "Cuando Resend entrega un código de inicio de sesión, procesa la dirección de correo del destinatario y el mensaje que contiene el código. Si escribes a soporte, Cloudflare Email Routing reenvía tu dirección, el mensaje y los archivos que adjuntes al buzón de Gmail del operador para que pueda responderte."
-          },
-          {
-            "en": "The native Support screen previews a summary containing only app version/build, iOS version, interface language, build environment and configuration-presence booleans. Nothing is sent automatically. Support does not need a private recovery file by default.",
-            "es": "La pantalla de Soporte nativa muestra un resumen que contiene solo la versión y compilación de la app, la versión de iOS, el idioma de la interfaz, el entorno de compilación y valores que indican si existe configuración. No se envía nada automáticamente. Soporte no necesita un archivo privado de recuperación de forma predeterminada."
-          }
-        ]
-      }
-    ]
+    "notice": null,
+    "sections": []
   },
   "terms": {
     "title": {
@@ -455,79 +257,11 @@ export const publicPages = {
       "es": "Términos de uso"
     },
     "lead": {
-      "en": "Product and purchase information for the current implementation.",
-      "es": "Información del producto y las compras para la implementación actual."
+      "en": "The iPhone app uses Apple’s Standard End User License Agreement.",
+      "es": "La app para iPhone utiliza el contrato de licencia estándar de Apple para el usuario final."
     },
-    "notice": {
-      "en": "Operator-approved release terms are pending. The information below describes supported behavior and does not replace those final terms.",
-      "es": "Los términos de lanzamiento aprobados por el operador siguen pendientes. La información siguiente describe el comportamiento compatible y no reemplaza los términos finales."
-    },
-    "sections": [
-      {
-        "title": {
-          "en": "What the app does",
-          "es": "Qué hace la app"
-        },
-        "paragraphs": [
-          {
-            "en": "Room in the Cart helps people compare usable grocery packs, plan meals, review household requests and record a pickup. Entered prices, quantities, availability, credits and outcomes remain the person’s reports. Review uncertain or changed information before acting.",
-            "es": "Room in the Cart ayuda a comparar paquetes aprovechables de comestibles, planificar comidas, revisar solicitudes del hogar y registrar una recogida. Los precios, cantidades, disponibilidad, créditos y resultados ingresados siguen siendo datos reportados por la persona. Revisa la información incierta o que haya cambiado antes de actuar."
-          },
-          {
-            "en": "The app does not operate a grocery marketplace, place retailer orders, provide live inventory, guarantee savings, certify allergy suitability, or provide medical or nutrition advice. You place and pay for groceries through your retailer.",
-            "es": "La app no opera un mercado de comestibles, no realiza pedidos en tiendas, no ofrece inventario en tiempo real, no garantiza ahorros, no certifica la idoneidad para alergias ni ofrece asesoría médica o nutricional. Tú realizas y pagas las compras en tu tienda."
-          }
-        ]
-      },
-      {
-        "title": {
-          "en": "Shared access",
-          "es": "Acceso compartido"
-        },
-        "paragraphs": [
-          {
-            "en": "Only the assigned shopper can commit a shared basket change. Another authorized adult can propose a change for review. A membership seat does not grant shopper authority or budget access.",
-            "es": "Solo la persona asignada para comprar puede confirmar un cambio en la cesta compartida. Otro adulto autorizado puede proponer un cambio para revisión. Una plaza de membresía no otorga autoridad de compra ni acceso al presupuesto."
-          },
-          {
-            "en": "Invitations and cook views have a specific household, role, shop and scope. Do not share account credentials or invitation secrets. Review selected fields and expiry before issuing a current view. Copies already sent or exported remain separate.",
-            "es": "Las invitaciones y vistas para quien cocina tienen un hogar, rol, compra y alcance específicos. No compartas credenciales de cuenta ni secretos de invitación. Revisa los campos seleccionados y el vencimiento antes de emitir una vista actual. Las copias ya enviadas o exportadas siguen siendo independientes."
-          }
-        ]
-      },
-      {
-        "title": {
-          "en": "Free tools and Household membership",
-          "es": "Herramientas gratuitas y membresía del hogar"
-        },
-        "paragraphs": [
-          {
-            "en": "Free covers an ordinary pickup, manual planning, one reusable dinner, saved records and exports. Household adds repeated planning tools for up to two named adults. Groceries are purchased from your retailer.",
-            "es": "El plan gratuito cubre una recogida habitual, la planificación manual, una cena reutilizable, los registros guardados y las exportaciones. Household agrega herramientas de planificación recurrente para hasta dos adultos designados. Los comestibles se compran en tu tienda."
-          },
-          {
-            "en": "The native membership screen shows Apple’s actual localized product and subscription period when configured and available. Payment is charged to the Apple Account. The subscription renews automatically unless canceled at least 24 hours before the current period ends. Use Restore Purchases and Manage Subscription in the app. No local example price is a live offer.",
-            "es": "La pantalla de membresía nativa muestra el producto localizado real de Apple y el período de suscripción cuando está configurado y disponible. El pago se carga a la cuenta de Apple. La suscripción se renueva automáticamente salvo que se cancele al menos 24 horas antes de finalizar el período actual. Usa Restaurar compras y Administrar suscripción en la app. Ningún precio de ejemplo local es una oferta vigente."
-          },
-          {
-            "en": "Restore with the original purchasing account and household. A pending or unverified purchase adds no paid access. If delivery is uncertain, retry delivery or restore rather than buying again. Ending membership preserves permitted Free work.",
-            "es": "Restaura con la cuenta compradora y el hogar originales. Una compra pendiente o sin verificar no agrega acceso de pago. Si no se confirma la entrega, reintenta la entrega o restaura la compra en vez de comprar otra vez. Al terminar la membresía se conserva el trabajo gratuito permitido."
-          }
-        ]
-      },
-      {
-        "title": {
-          "en": "Data controls",
-          "es": "Controles de datos"
-        },
-        "paragraphs": [
-          {
-            "en": "Review sharing, recovery and deletion scopes in the app. Account deletion does not cancel an Apple subscription. Exported files and static messages cannot be recalled from recipients by deleting local records. Read the privacy information and use the in-app controls before sharing private content.",
-            "es": "Revisa en la app los alcances de compartir, recuperar y eliminar. Eliminar una cuenta no cancela una suscripción de Apple. Eliminar registros locales no retira los archivos exportados ni los mensajes estáticos de sus destinatarios. Lee la información de privacidad y usa los controles de la app antes de compartir contenido privado."
-          }
-        ]
-      }
-    ]
+    "notice": null,
+    "sections": []
   },
   "support": {
     "title": {
@@ -539,8 +273,8 @@ export const publicPages = {
       "es": "Encuentra el siguiente paso sin compartir información privada de comestibles."
     },
     "notice": {
-      "en": "A monitored operator support destination has not been configured. This page does not submit a support request or upload files. Offline native help and the reviewed support summary remain available.",
-      "es": "No se ha configurado un destino de soporte supervisado por el operador. Esta página no envía solicitudes de soporte ni sube archivos. La ayuda nativa sin conexión y el resumen de soporte revisado siguen disponibles."
+      "en": "If you cannot open an email app, visit the support website. In the iPhone app you can also read Help in Settings while offline.",
+      "es": "Si no puedes abrir una app de correo, visita el sitio de soporte. En la app para iPhone también puedes consultar Ayuda en Configuración sin conexión."
     },
     "sections": [
       {
