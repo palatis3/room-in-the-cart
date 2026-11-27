@@ -522,21 +522,25 @@ private func cookUseText(_ use: CookCompletionDraft.Part.Use, lots: [InventoryLo
             (amount.map { pantryQuantity($0) } ?? cookCompletionText(recorded ? "Use was unmeasured when cooking; see any later ingredient-use correction." : "Used an unmeasured amount — remaining count becomes unknown"))
     }
 }
-private func cookNoticeText(_ notice: CookCompletionEditorModel.Notice) -> String {
+func cookNoticeText(_ notice: CookCompletionEditorModel.Notice, text: (String) -> String = cookCompletionText) -> String {
     switch notice {
-    case .unavailable: cookCompletionText("Current details could not be verified. Reopen or reload this dinner.")
-    case .invalidEntry: cookCompletionText("Review every ingredient, enter positive known amounts and servings, and confirm whether leftovers remain.")
-    case .invalidPortionHolds: cookCompletionText("Lunch and dinner portions together exceed the counted leftovers.")
-    case .reviewChanged: cookCompletionText("Counts, preferences or the dinner changed, or a unit could not be converted. Reload and review. A newer count may already include this cooking.")
-    case .insufficientStock: cookCompletionText("The measured use exceeds available stock. Review the actual count and held portions, or record the use as unmeasured or untracked.")
-    case .uncertain: cookCompletionText("This confirmation may have saved. Retry the same confirmation or check the saved completion before making another change.")
-    case .saved: cookCompletionText("Cooking and its reviewed inventory changes were saved together.")
-    case .undoChanged: cookCompletionText("Undo could not be reviewed. Counts, leftovers or holds may have changed. Reload the saved cooking record; newer food changes will not be overwritten.")
-    case .undoUncertain: cookCompletionText("Undo may have saved. Retry the same Undo or check the saved completion before recording cooking again.")
-    case .undone: cookCompletionText("Cooking was undone. Review every ingredient again before recording another completion.")
+    case .unavailable: text("Current details could not be verified. Reopen or reload this dinner.")
+    case .invalidEntry: text("Review every ingredient, enter positive known amounts and servings, and confirm whether leftovers remain.")
+    case .invalidPortionHolds: text("Lunch and dinner portions together exceed the counted leftovers.")
+    case .leftoversExceedServings(let counted, let made):
+        [text("The counted leftovers exceed the servings made. Check the portions in each leftover batch or edit the servings made, then review again."),
+         counted.map { text("Counted portions") + " · " + $0.description },
+         text("Servings made") + " · " + made.description].compactMap { $0 }.joined(separator: "\n")
+    case .reviewChanged: text("Counts, preferences or the dinner changed, or a unit could not be converted. Reload and review. A newer count may already include this cooking.")
+    case .insufficientStock: text("The measured use exceeds available stock. Review the actual count and held portions, or record the use as unmeasured or untracked.")
+    case .uncertain: text("This confirmation may have saved. Retry the same confirmation or check the saved completion before making another change.")
+    case .saved: text("Cooking and its reviewed inventory changes were saved together.")
+    case .undoChanged: text("Undo could not be reviewed. Counts, leftovers or holds may have changed. Reload the saved cooking record; newer food changes will not be overwritten.")
+    case .undoUncertain: text("Undo may have saved. Retry the same Undo or check the saved completion before recording cooking again.")
+    case .undone: text("Cooking was undone. Review every ingredient again before recording another completion.")
     case .undoIndependentCount(let name):
-        cookCompletionText("Undo is unavailable because a later physical count must be preserved. Review the current food instead.") + (name.map { " · " + $0 } ?? "")
+        text("Undo is unavailable because a later physical count must be preserved. Review the current food instead.") + (name.map { " · " + $0 } ?? "")
     case .undoAmendedInputChanged(let name):
-        cookCompletionText("A later change affected food used by this cooking. Undo cannot overwrite its current pantry record.") + (name.map { " · " + $0 } ?? "")
+        text("A later change affected food used by this cooking. Undo cannot overwrite its current pantry record.") + (name.map { " · " + $0 } ?? "")
     }
 }

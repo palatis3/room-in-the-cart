@@ -156,6 +156,68 @@ import LocalStore
         XCTAssertEqual(after.availability.lots.first { $0.id == output.id }?.held?.amount, try Rational(2))
     }
 
+    func testLeftoversAboveServingsExplainBothEntriesAndAllowCorrectionBeforeSaving() async throws {
+        let f = try await fixture(), editor = f.editor
+        explicitNoUse(editor)
+        editor.servings = "3"
+        editor.leftoverChoice = .recorded
+        editor.addLeftover()
+        editor.leftovers[0].portions = "11"
+        await editor.prepareReview()
+        let notice = try XCTUnwrap(editor.notice)
+        XCTAssertEqual(notice, .leftoversExceedServings(counted: try Rational(11), made: try Rational(3)))
+        XCTAssertNil(editor.review)
+        XCTAssertEqual(editor.leftovers[0].portions, "11")
+        XCTAssertTrue(editor.canEdit)
+        for (language, counted, made, guidance) in [
+            ("en", "Counted portions", "Servings made", "each leftover batch"),
+            ("es", "Porciones contadas", "Porciones preparadas", "cada lote")
+        ] {
+            let url = try XCTUnwrap(Bundle.main.url(forResource: language, withExtension: "lproj"))
+            let bundle = try XCTUnwrap(Bundle(url: url))
+            let message = cookNoticeText(notice) { bundle.localizedString(forKey: $0, value: nil, table: "CookCompletion") }
+            XCTAssertTrue(message.contains(counted + " · 11"), message)
+            XCTAssertTrue(message.contains(made + " · 3"), message)
+            XCTAssertTrue(message.contains(guidance), message)
+        }
+
+        editor.leftovers[0].portions = "1/2"
+        editor.addLeftover()
+        editor.leftovers[1].portions = "3"
+        await editor.prepareReview()
+        XCTAssertEqual(editor.notice, .leftoversExceedServings(counted: try Rational(7, 2), made: try Rational(3)))
+        editor.leftovers[1].portions = "2"
+        await editor.prepareReview()
+        XCTAssertNil(editor.notice)
+        XCTAssertEqual(editor.review?.draft.leftovers.count, 2)
+        let unchanged = try await f.session.load(shopID: f.shop, mealID: f.meal)
+        XCTAssertNil(unchanged.completed)
+        XCTAssertEqual(unchanged.inventory.lots.count, f.lots.count)
+    }
+
+    func testShortStockAndAChangedInventoryKeepTheirOwnCookingReviewGuidance() async throws {
+        let f = try await fixture(), editor = f.editor
+        explicitNoUse(editor)
+        editor.ingredients[0].use = .used
+        editor.ingredients[0].parts[0].use = .measured
+        editor.ingredients[0].parts[0].relation = .ingredient
+        editor.ingredients[0].parts[0].lotID = f.lots[0]
+        editor.ingredients[0].parts[0].amount = "5"
+        await editor.prepareReview()
+        XCTAssertEqual(editor.notice, .insufficientStock)
+        XCTAssertNil(editor.review)
+
+        let before = try XCTUnwrap(editor.context)
+        let repository = PantryRepository(store: f.store, mutationGate: f.gate, authorize: { true })
+        let command = InventoryCommand(id: UUID(), originID: f.store.workspaceID, lotID: f.lots[0], eventID: UUID(),
+            expectedRevision: 1, occurredAt: f.now, change: .count(.exact(try quantity(2)), observationID: UUID()))
+        _ = try await repository.apply(command, reviewedInventoryRevision: before.inventory.state.revision, at: f.now)
+        editor.ingredients[0].parts[0].amount = "1"
+        await editor.prepareReview()
+        XCTAssertEqual(editor.notice, .reviewChanged)
+        XCTAssertNil(editor.review)
+    }
+
     func testCookEditorSchedulesOnlyCountedPortionsInThePrivateDinnerCalendar() async throws {
         let f = try await fixture(), editor = f.editor
         let ledgerID = try XCTUnwrap(f.ledger.sourceWorkspaceID)

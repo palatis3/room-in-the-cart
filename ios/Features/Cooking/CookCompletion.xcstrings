@@ -1,6 +1,23 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "The counted leftovers exceed the servings made. Check the portions in each leftover batch or edit the servings made, then review again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The counted leftovers exceed the servings made. Check the portions in each leftover batch or edit the servings made, then review again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las porciones contadas que sobraron superan las porciones preparadas. Revisa las porciones de cada lote o corrige las porciones preparadas y vuelve a revisar."
+          }
+        }
+      }
+    },
     "A substitution": {
       "extractionState": "manual",
       "localizations": {
