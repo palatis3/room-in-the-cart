@@ -11,6 +11,8 @@ struct ReceiptPrintedEvidence: Equatable, Codable {
     var unit: UnitOfMeasure?
     var amount: String?
     var priceWording: String?
+    /// The selected document line, including any shopper correction. Display only.
+    private(set) var reviewedRateLine: String?
     var storage: InventoryLocation?
     var uncertain = false
     private(set) var acceptsFieldNotes = false
@@ -161,6 +163,11 @@ struct ReceiptPrintedEvidence: Equatable, Codable {
         }
         if text.contains(Self.adjustment) { kind = .adjustment; return }
         if ReceiptPrintedDate.looksLikeDate(text) { kind = .date; return }
+        let rateColumns = text.count <= 512 ? Self.printedQuantityPriceColumns(text) : nil
+        if let document = row.documentLine, document.stage != .order, rateColumns != nil,
+           row.reviewedText.utf8.count <= 4096 {
+            reviewedRateLine = row.reviewedText
+        }
         guard !text.isEmpty, text.count <= 512, text.contains(where: \.isLetter),
               !text.contains("?"), !text.contains("�"), row.uncertainOCR != true else { kind = .unclear; uncertain = true; return }
         kind = .item
@@ -176,7 +183,7 @@ struct ReceiptPrintedEvidence: Equatable, Codable {
                 return
             }
         }
-        if let item = Self.printedQuantityPriceColumns(text)?.item {
+        if let item = rateColumns?.item {
             name = item
             uncertain = true
             return

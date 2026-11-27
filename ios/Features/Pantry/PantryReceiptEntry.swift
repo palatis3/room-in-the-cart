@@ -971,9 +971,22 @@ struct PantryReceiptLineEditor: View {
                 .accessibilityIdentifier("receipt.putAway.\(line.ordinal)")
             } else if !grouped { Text(verbatim: line.name).font(.headline) }
         }
-        ReceiptPaperLine(wording: line.original, provenance: line.documentLine.map(receiptProvenance),
-                         title: permitsPutaway ? putawayText("Original wording and price") : pantryText("Printed line"))
-        if let printed = line.printed {
+        let rateWording = permitsPutaway ? line.printed?.reviewedRateLine : nil
+        if let wording = rateWording {
+            ReceiptPaperLine(wording: line.original, provenance: line.documentLine.map(receiptProvenance),
+                             title: putawayText("Original receipt reading"))
+            if wording != line.original {
+                ReceiptPaperLine(wording: wording, title: putawayText("Your corrected receipt line"))
+                    .accessibilityIdentifier("receipt.correctedRateLine.\(line.ordinal)")
+            }
+            Text(putawayText("Check these figures against the receipt. Enter what you actually received. If you know what you paid for this line, check the currency and enter that amount."))
+                .font(.subheadline)
+                .accessibilityIdentifier("receipt.reviewedRateGuidance.\(line.ordinal)")
+        } else {
+            ReceiptPaperLine(wording: line.original, provenance: line.documentLine.map(receiptProvenance),
+                             title: permitsPutaway ? putawayText("Original wording and price") : pantryText("Printed line"))
+        }
+        if let printed = line.printed, rateWording == nil {
             switch printed.kind {
             case .adjustment: Text(pantryText("Charge, credit or receipt summary. This line starts skipped.")).font(.caption)
             case .date: Text(pantryText("Receipt date wording. This line starts skipped.")).font(.caption)

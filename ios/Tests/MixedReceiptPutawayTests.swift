@@ -134,6 +134,43 @@ import XCTest
         XCTAssertNotNil(session.problem)
     }
 
+    func testPutawayShowsReviewedRateLinesWithoutInferringStockOrMoney() throws {
+        let position = ExtractedReceiptDocument.Selection(page: 1, line: 1)
+        let other = ExtractedReceiptDocument.Selection(page: 1, line: 2)
+        let original = "Tortillas de maíz"
+        let correction = "Tortillas de maíz 2 x 20.00 40.00"
+        let cheese = "Queso fresco 1 х 45.00 45.00"
+        let doc = ExtractedReceiptDocument(digest: Data(repeating: 4, count: 32),
+            pages: [.init(id: 1, method: .imageOCR, lines: [.init(id: 1, text: original, uncertain: true), .init(id: 2, text: cheese)])])
+        let target = CaptureTarget(workspaceID: UUID(), containerID: UUID(), objectID: UUID(), revision: 1, kind: .receiptEvidence)
+        let source = try doc.source(target: target, merchant: "Mercado Prueba", stage: .receipt,
+            selection: [position, other], reviewedWording: [position: correction], at: now)
+        let draft = try ReceiptImportDraft(source: source, now: now)
+        XCTAssertEqual(draft.lines.map(\.original), [original, cheese])
+        XCTAssertEqual(draft.lines.compactMap { $0.printed?.reviewedRateLine }, [correction, cheese])
+        XCTAssertTrue(draft.lines.allSatisfy { $0.received.isEmpty && $0.usable.isEmpty && $0.paid.isEmpty && $0.treatment == .skip })
+        XCTAssertTrue(draft.lines.allSatisfy { $0.printed?.quantity == nil && $0.printed?.amount == nil && $0.printed?.currencyEvidence == .unspecified })
+        XCTAssertFalse(draft.dateConfirmed)
+        XCTAssertTrue(draft.receiptTotal.isEmpty)
+        let saved = try JSONEncoder().encode(SavedReceiptDraft(payload: .putaway(draft)))
+        guard case .putaway(let decoded) = try JSONDecoder().decode(SavedReceiptDraft.self, from: saved).payload else {
+            return XCTFail("Expected put-away draft")
+        }
+        XCTAssertEqual(decoded.lines.map(\.original), [original, cheese])
+        XCTAssertEqual(decoded.lines.compactMap { $0.printed?.reviewedRateLine }, [correction, cheese])
+
+        let printed = try XCTUnwrap(draft.lines.last?.printed)
+        var old = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(printed)) as? [String: Any])
+        old.removeValue(forKey: "reviewedRateLine")
+        let legacy = try JSONDecoder().decode(ReceiptPrintedEvidence.self, from: JSONSerialization.data(withJSONObject: old))
+        XCTAssertNil(legacy.reviewedRateLine)
+        for text in ["Queso fresco", "Cupón 2 x 20.00 40.00", "Queso 2 x 20.00"] {
+            var row = ScanReceiptLine(originalText: text)
+            row.documentLine = source.receiptLines[0].documentLine
+            XCTAssertNil(ReceiptPrintedEvidence(row, knownStorage: [:]).reviewedRateLine)
+        }
+    }
+
     func testProtectedReceiptDraftPreservesAlternativesFromFourPrintedColumns() throws {
         typealias Line = ReceiptDocumentPage.Line
         let observations = [("Oats", ["Oat", "Cats"]), ("2", ["1", "3"]),
