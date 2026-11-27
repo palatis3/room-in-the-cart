@@ -299,6 +299,68 @@ import XCTest
         XCTAssertFalse(model.permitsReceiptCopy(header))
     }
 
+    func testCurrentPurchaseAndSelectiveCopyFollowPriceCorrectionAndRemovalWithoutChangingHistoryOrTotal() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let cleanup = SQLiteFixtureDirectory(directory, test: self)
+        let store = try ComparisonStore(url: directory.appendingPathComponent("pantry.sqlite"), inventoryEnabled: true)
+        cleanup.track(store)
+        let token = try await store.inventorySourceToken()
+        try await store.commitInventory(.init(workspaceID: store.workspaceID, operationID: UUID(), expectedRevision: 0,
+            request: Data([1]), mode: .activate, sourceToken: token), at: now)
+        let owner = UUID()
+        let repo = PantryRepository(store: store, aliasPersonaID: owner, authorize: { true })
+        cleanup.track(repo)
+        let model = PantryModel(repository: repo, clock: { self.now })
+        await model.load()
+        var draft = try receipt(store: store, lines: ["OAT MILK", "OAT MILK"])
+        draft.currency = .usd
+        draft.lines[0].treatment = .add
+        draft.lines[0].received = "1"; draft.lines[0].usable = "1"
+        draft.lines[1].treatment = .eaten
+        let review = try await model.reviewReceipt(draft)
+        try await model.saveReceipt(review)
+        let headers = try await model.reviewedReceiptHeaders(after: nil)
+        let header = try XCTUnwrap(headers.first)
+        let original = try XCTUnwrap(review.facts.first)
+        let firstState = try XCTUnwrap(model.snapshot?.state)
+        let originalRows = try await model.currentPurchaseDecisions(header, after: nil, expected: firstState)
+        XCTAssertEqual(originalRows.count, 2)
+        XCTAssertTrue(originalRows.allSatisfy { $0.paidMinor == nil })
+        try await model.correctReceiptPrice(original, total: Money(minorUnits: 329), reviewedState: firstState)
+        let updated = try XCTUnwrap(model.snapshot?.state)
+        let rows = try await model.currentPurchaseDecisions(header, after: nil, expected: updated)
+        XCTAssertEqual(rows.first { $0.id == original.lineID }?.paidMinor, 329)
+        XCTAssertNil(try XCTUnwrap(rows.first { $0.id != original.lineID }).paidMinor)
+        XCTAssertNil(header.totalMinor)
+        var selection = ReviewedReceiptCopySelection()
+        selection.total = true
+        XCTAssertEqual(selection.text(header: header, purchaseDay: "", rows: rows), "")
+        selection.amounts.insert(original.lineID)
+        XCTAssertEqual(selection.text(header: header, purchaseDay: "", rows: rows),
+                       pantryFormat("Paid line total %@", receiptMoney(Money(minorUnits: 329))))
+        let historical = try await model.reviewedReceiptDecisions(header.id, after: nil)
+        XCTAssertEqual(historical, originalRows)
+        let facts = try await model.receiptHistory(receiptID: header.id)
+        XCTAssertEqual(facts.map(\.revision).sorted(), [1, 2])
+        let latest = try XCTUnwrap(facts.first { $0.revision == 2 })
+        let other = PantryRepository(store: store, aliasPersonaID: UUID(), authorize: { true })
+        cleanup.track(other)
+        do {
+            _ = try await other.currentPurchaseDecisions(header, after: nil, expected: updated)
+            XCTFail("Another adult could read the corrected amount")
+        } catch PantryRepository.Failure.unauthorized {}
+        try await model.correctReceiptPrice(latest, total: nil, reviewedState: updated)
+        let afterRemoval = try XCTUnwrap(model.snapshot?.state)
+        let cleared = try await model.currentPurchaseDecisions(header, after: nil, expected: afterRemoval)
+        XCTAssertNil(try XCTUnwrap(cleared.first { $0.id == original.lineID }).paidMinor)
+        XCTAssertEqual(selection.text(header: header, purchaseDay: "", rows: cleared), "")
+        XCTAssertNil(header.totalMinor)
+        let allFacts = try await model.receiptHistory(receiptID: header.id)
+        XCTAssertEqual(allFacts.map(\.revision).sorted(), [1, 2, 3])
+        XCTAssertEqual(allFacts.first { $0.revision == 2 }?.paidLineTotal?.minorUnits, 329)
+    }
+
     func testPurchaseDayReopensAndExportsInBothLanguagesAndRescansAcrossTimeZones() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)

@@ -236,6 +236,36 @@ extension PantryRepository {
         return result
     }
 
+    /// Current purchase detail reads the append-only price trail. The original putaway
+    /// decision still identifies the line, lot and source reviewed by this owner.
+    func currentPurchaseDecisions(_ header: ReviewedReceiptHeader, after cursor: UUID?,
+                                  expected: InventoryState) async throws -> [ReviewedReceiptDecision] {
+        try requireAccess()
+        guard header.owner == receiptOwner, expected.workspaceID == originID else { throw Failure.unauthorized }
+        let decisions = try await putawayDecisions(receiptID: header.id, after: cursor)
+        let stockLines = decisions.filter { $0.lotID != nil }.map(\.id)
+        var corrections: [UUID: ReceiptAcquisition] = [:]
+        if !stockLines.isEmpty {
+            let records = try await store.acquisitionRows(receiptID: header.id, lineIDs: stockLines,
+                                                         currentOnly: true, limit: stockLines.count)
+            try requireAccess()
+            for row in records where row.revision > 1 {
+                let current = try PantryAcquisitionCodec.record(row)
+                guard current.currency.rawValue == header.currencyCode else { throw PantryReceiptError.changedEvidence }
+                corrections[current.lineID] = current
+            }
+        }
+        guard try await store.inventoryState() == expected else { throw PantryReceiptError.stale }
+        try requireAccess()
+        return try decisions.map { original in
+            guard let current = corrections[original.id] else { return original }
+            guard current.lotID == original.lotID else { throw PantryReceiptError.changedEvidence }
+            return ReviewedReceiptDecision(id: original.id, ordinal: original.ordinal, original: original.original,
+                                          name: original.name, kind: original.kind, lotID: original.lotID,
+                                          paidMinor: current.paidLineTotal?.minorUnits)
+        }
+    }
+
     func putawayDecisions(receiptID: UUID, after: UUID?) async throws -> [ReviewedReceiptDecision] {
         try requireAccess()
         let result = try await store.reviewedReceiptDecisions(receipt: receiptID, owner: receiptOwner, after: after)

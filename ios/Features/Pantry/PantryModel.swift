@@ -365,6 +365,15 @@ final class PantryModel: ObservableObject, PantryErasureObserver {
         return result
     }
 
+    func currentPurchaseDecisions(_ header: ReviewedReceiptHeader, after cursor: UUID?,
+                                  expected: InventoryState) async throws -> [ReviewedReceiptDecision] {
+        guard canEdit, snapshot?.state == expected else { throw PantryReceiptError.stale }
+        let token = generation
+        let rows = try await repository.currentPurchaseDecisions(header, after: cursor, expected: expected)
+        guard token == generation, canEdit, snapshot?.state == expected else { throw PantryReceiptError.stale }
+        return rows
+    }
+
     func receiptHistory(after: UUID? = nil, receiptID: UUID? = nil) async throws -> [ReceiptAcquisition] {
         guard canEdit else { throw PantryReceiptError.stale }
         let token = generation
