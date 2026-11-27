@@ -306,6 +306,10 @@ export const publicPages = {
             "es": "El servicio del hogar guarda la pregunta de quien hace la compra junto con la solicitud de quien la envió. Cuando guardas instrucciones compartidas para quien cocina, el servicio guarda el texto y tu identificador de miembro. Si marcas las instrucciones como enviadas, también guarda el destinatario que indicaste y la hora."
           },
           {
+            "en": "If you choose Save draft on this iPhone, your reviewed receipt text and choices stay in protected storage for your private workspace until you finish or discard the draft. To see the original photo or PDF again, select it from its source.",
+            "es": "Si eliges Guardar borrador en este iPhone, el texto revisado del recibo y tus selecciones se guardan en el espacio privado protegido hasta que termines o descartes el borrador. Para volver a ver la foto o el PDF original, selecciónalo desde su origen."
+          },
+          {
             "en": "When you confirm a receipt for the household pantry, adults with pantry access can see the store, purchase date, any reference you enter, and each selected line’s original wording, food, quantities, storage location and price if entered. The original file stays on this iPhone.",
             "es": "Al confirmar un recibo para la despensa del hogar, los adultos con acceso a la despensa pueden ver la tienda, la fecha de compra, la referencia que ingreses y, de cada renglón seleccionado, el texto original, el alimento, las cantidades, el lugar de almacenamiento y el precio si lo ingresaste. El archivo original se queda en este iPhone."
           },

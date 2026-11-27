@@ -4,7 +4,7 @@ import Foundation
 import LocalStore
 
 struct ReceiptImportDraft {
-    enum Treatment: Hashable {
+    enum Treatment: Hashable, Codable {
         case skip, add, keptSome, eaten, missing, chargeOrReturn, link(UUID)
 
         var recordsStock: Bool {
@@ -228,6 +228,7 @@ struct PantryReceiptReview: Identifiable {
     let existing: Set<UUID>
     let batch: InventoryBatch?
     var putaway: ReviewedPutawayReceipt? = nil
+    var sourceDraftID: UUID? = nil
 
     var newStockLineCount: Int {
         facts.filter { fact in

@@ -67,6 +67,8 @@ final class PantryRepository {
     /// Nil is supported for component fixtures/read-only adapters only. App-owned
     /// standalone editors must share a configured journal and mutation gate.
     let aliasPersonaID: UUID?
+    private let receiptDraftStore: ProtectedReceiptDraftStore?
+    private let receiptDraftOwner: UUID?
     let pendingStore: PantryPendingStore?
     let store: ComparisonStore
     private let archivedActions: (@MainActor (InventoryLot) async throws -> PantryArchivedActions)?
@@ -78,6 +80,7 @@ final class PantryRepository {
 
     init(store: ComparisonStore, limits: ReadLimits = .standard, mutationGate: PantryMutationGate? = nil,
          pendingStore: PantryPendingStore? = nil, aliasPersonaID: UUID? = nil,
+         receiptDraftStore: ProtectedReceiptDraftStore? = nil, receiptDraftOwner: UUID? = nil,
          archivedActions: (@MainActor (InventoryLot) async throws -> PantryArchivedActions)? = nil,
          authorize: @escaping () -> Bool) {
         self.archivedActions = archivedActions
@@ -86,6 +89,7 @@ final class PantryRepository {
         self.limits = limits
         self.mutationGate = mutationGate
         self.aliasPersonaID = aliasPersonaID
+        self.receiptDraftStore = receiptDraftStore; self.receiptDraftOwner = receiptDraftOwner
         self.pendingStore = pendingStore
     }
 
@@ -856,7 +860,7 @@ final class PantryRepository {
             expectedRevision: expected.revision, request: Data(SHA256.hash(data: PantryAcquisitionCodec.data(
                 ReceiptPutawayRequest(acquisitions: rows, bindings: bindings, review: putaway.value)))),
             writes: writes, acquisitions: rows, receiptBindings: bindings, reviewedReceipt: putaway.changed ? putaway.value : nil)
-        return .init(id: id, workspaceID: originID, revision: expected.revision, facts: facts, existing: existing, batch: batch, putaway: putaway.value)
+        return .init(id: id, workspaceID: originID, revision: expected.revision, facts: facts, existing: existing, batch: batch, putaway: putaway.value, sourceDraftID: draft.draftID)
     }
 
     func applyReceipt(_ review: PantryReceiptReview, at now: Date) async throws {
@@ -872,6 +876,10 @@ final class PantryRepository {
         guard workspaceID == originID else { throw PantryReceiptError.stale }
         let lease = try mutationGate?.beginExclusiveWrite()
         defer { if let lease { mutationGate?.endExclusiveWrite(lease) } }
+        try await commitReceiptHoldingLease(batch, revision: revision, at: now)
+    }
+
+    private func commitReceiptHoldingLease(_ batch: InventoryBatch?, revision: Int64, at now: Date) async throws {
         if let pendingStore, try pendingStore.read() != nil { throw Failure.pendingUnavailable }
         guard let batch else {
             guard try await store.inventoryState().revision == revision else { throw PantryReceiptError.stale }
@@ -880,6 +888,81 @@ final class PantryRepository {
         }
         _ = try await store.commitInventory(batch, at: now)
         try requireAccess()
+    }
+
+    var permitsPrivateReceiptDraft: Bool {
+        receiptDraftOwner != nil && receiptDraftStore != nil && mutationGate != nil && (try? requireAccess()) != nil
+    }
+
+    private func withDraftAccess<T>(_ operation: (ProtectedReceiptDraftStore, ProtectedReceiptDraftStore.Scope) async throws -> T) async throws -> T {
+        try requireAccess()
+        guard let receiptDraftStore, let receiptDraftOwner, let mutationGate else { throw Failure.unauthorized }
+        let lease = try mutationGate.beginExclusiveWrite()
+        defer { mutationGate.endExclusiveWrite(lease) }
+        let value = try await operation(receiptDraftStore, .init(origin: originID, owner: receiptDraftOwner))
+        try requireAccess()
+        return value
+    }
+
+    /// A journal marker is written only after the shopper presses final Confirm.
+    /// On recovery an exact SQLite receipt clears it; an unapplied operation returns
+    /// the editable draft, with no automatic stock or paid mutation.
+    private func reconcileDraft(_ drafts: ProtectedReceiptDraftStore, scope: ProtectedReceiptDraftStore.Scope) async throws -> SavedReceiptDraft? {
+        guard let entry = try drafts.read(scope) else { return nil }
+        guard let pending = entry.finishing else { return entry.draft }
+        let committed = try await store.inventoryCommittedOperation(id: pending.operation, request: pending.request)
+        try requireAccess()
+        if committed != nil {
+            try drafts.remove(scope, revision: entry.draft.revision, finishing: pending)
+            return nil
+        }
+        try drafts.mark(scope, revision: entry.draft.revision, expected: pending, next: nil)
+        return entry.draft
+    }
+
+    func savedReceiptDraft() async throws -> SavedReceiptDraft? {
+        try await withDraftAccess { drafts, scope in try await reconcileDraft(drafts, scope: scope) }
+    }
+
+    func saveReceiptDraft(_ payload: SavedReceiptDraft.Payload, replacing revision: UUID?) async throws -> SavedReceiptDraft {
+        try await withDraftAccess { drafts, scope in
+            _ = try await reconcileDraft(drafts, scope: scope)
+            try requireAccess()
+            return try drafts.replace(payload, expected: revision, scope: scope)
+        }
+    }
+
+    func discardReceiptDraft(revision: UUID) async throws {
+        try await withDraftAccess { drafts, scope in
+            guard let current = try await reconcileDraft(drafts, scope: scope), current.revision == revision else { throw ProtectedReceiptDraftStore.Failure.changed }
+            try requireAccess()
+            try drafts.remove(scope, revision: revision)
+        }
+    }
+
+    func applyReceipt(_ review: PantryReceiptReview, finishingDraft revision: UUID, at now: Date) async throws {
+        try await withDraftAccess { drafts, scope in
+            guard review.workspaceID == scope.origin, review.sourceDraftID != nil,
+                  review.putaway.map({ $0.header.owner == (aliasPersonaID ?? originID) }) ?? true else { throw Failure.unauthorized }
+            if let batch = review.batch,
+               try await store.inventoryCommittedOperation(id: batch.operationID, request: batch.request) != nil {
+                try requireAccess()
+                let pending = ProtectedReceiptDraftStore.Pending(operation: batch.operationID, request: batch.request)
+                if let entry = try drafts.read(scope), entry.draft.revision == revision, entry.finishing == pending {
+                    try drafts.remove(scope, revision: revision, finishing: pending)
+                }
+                return
+            }
+            try requireAccess()
+            guard let saved = try await reconcileDraft(drafts, scope: scope), saved.revision == revision,
+                  saved.payload.sourceID == review.sourceDraftID else { throw ProtectedReceiptDraftStore.Failure.changed }
+            try requireAccess()
+            let pending = review.batch.map { ProtectedReceiptDraftStore.Pending(operation: $0.operationID, request: $0.request) }
+            if let pending { try drafts.mark(scope, revision: revision, expected: nil, next: pending) }
+            try await commitReceiptHoldingLease(review.batch, revision: review.revision, at: now)
+            try requireAccess()
+            try drafts.remove(scope, revision: revision, finishing: pending)
+        }
     }
 
     func receiptAliases(merchant: String? = nil, language: String? = nil) async throws -> [InventoryReceiptAlias] {

@@ -10,6 +10,10 @@ struct PantryReceiptEntry: View {
     var didSaveReceipt: () -> Void = {}
     var initialSource: SourceMediaRecord? = nil
     var verifySource: @MainActor () async throws -> Void = {}
+    @StateObject private var draftSession = PrivateReceiptDraftSession()
+    @State private var resumedLines: ReceiptLineDraft?
+    @State private var discardVersion: UUID?
+    @State private var importedPrivateDelivery = false
     @State private var aliases: [InventoryReceiptAlias] = []
     private struct AliasScope: Equatable {
         let merchant: String?
@@ -59,6 +63,8 @@ struct PantryReceiptEntry: View {
                 proxy.scrollTo(issue.focusKey, anchor: .center)
             }
             .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { receiptViewport = $0 }
+            .environment(\.privateReceiptDraft, initialSource == nil && model.permitsPrivateReceiptDraft
+                         ? PrivateReceiptDraftContext(model: model, session: draftSession) : nil)
         }
     }
 
@@ -94,6 +100,7 @@ struct PantryReceiptEntry: View {
                     }
                 }
             } else if let review {
+                if let value = draft { privatePutawaySave(value) }
                 Section(pantryText("Confirm receipt lines")) {
                     if let putaway = review.putaway {
                         ReviewedReceiptHeading(header: putaway.header)
@@ -140,7 +147,7 @@ struct PantryReceiptEntry: View {
                     self.rescan = nil; draft?.rescanDecision = nil; message = nil
                 }.id(rescan.basis).disabled(working)
             } else if let displayed = draft {
-                if displayed.documentLayoutID != nil { UnsavedReceiptReviewNotice() }
+                privatePutawaySave(displayed)
                 // SwiftUI may read a field during removal of its form. Retain the
                 // displayed value for that transition and ignore stale setters.
                 let value = Binding(get: { draft ?? displayed }, set: { updated in
@@ -282,6 +289,30 @@ struct PantryReceiptEntry: View {
                     .disabled(working || !model.canEdit || storeIssue != nil || !displayed.dateConfirmed || displayed.selectedLines.isEmpty)
                 .accessibilityIdentifier("receipt.review")
             } else {
+                if initialSource == nil, model.permitsPrivateReceiptDraft {
+                    if let saved = draftSession.saved {
+                        Section(pantryText("Saved draft on this iPhone")) {
+                            switch saved.payload {
+                            case .lines(let value):
+                                LabeledContent(pantryText("Printed lines selected"), value: value.selection.count.formatted())
+                                if !value.merchant.isEmpty { Text(verbatim: value.merchant) }
+                            case .putaway(let value):
+                                LabeledContent(pantryText("Receipt lines to review"), value: value.lines.count.formatted())
+                                if !value.merchant.isEmpty { Text(verbatim: value.merchant) }
+                            }
+                            Text(pantryText("Resume to review it. Nothing has been added to the pantry by saving a draft."))
+                                .font(.subheadline)
+                            Button(pantryText("Resume saved receipt draft")) { resume(saved) }
+                                .accessibilityIdentifier("receipt.draft.resume")
+                            Button(pantryText("Discard saved draft"), role: .destructive) { discardVersion = saved.revision }
+                                .accessibilityIdentifier("receipt.draft.discard")
+                        }
+                    }
+                    if let problem = draftSession.problem {
+                        Text(verbatim: problem).foregroundStyle(Theme.warning)
+                        Button(pantryText("Try again")) { Task { await draftSession.load(model) } }
+                    }
+                }
                 Section {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(pantryText("Private receipt draft")).marketJournalTitle()
@@ -319,6 +350,23 @@ struct PantryReceiptEntry: View {
                 amountCorrection = nil
             }
         }
+        .disabled(draftSession.busy || (working && review != nil))
+        .task(id: model.permitsPrivateReceiptDraft) {
+            if initialSource == nil, model.permitsPrivateReceiptDraft { await draftSession.load(model) }
+        }
+        .onChange(of: model.generation) { _, _ in
+            draftSession.reset()
+            resumedLines = nil
+            discardVersion = nil
+        }
+        .confirmationDialog(pantryText("Permanently discard the saved receipt draft?"), isPresented: Binding(
+            get: { discardVersion != nil }, set: { if !$0 { discardVersion = nil } }
+        ), titleVisibility: .visible, presenting: discardVersion) { version in
+            Button(pantryText("Discard saved draft"), role: .destructive) {
+                Task { await draftSession.discard(version, model: model) }
+            }.accessibilityIdentifier("receipt.draft.confirmDiscard")
+            Button(pantryText("Cancel"), role: .cancel) {}
+        }
         .onChange(of: field) { _, focused in
             if focused != nil { correctionRequest = nil }
         }
@@ -334,8 +382,10 @@ struct PantryReceiptEntry: View {
                 }.disabled(working)
             }
         }
-        .alert(putawayText("Discard this receipt draft?"), isPresented: $discardDraft) {
-            Button(pantryText("Discard draft"), role: .destructive) { dismiss() }
+        .alert(draft.flatMap { draftSession.activeRevision(for: $0.draftID) } == nil
+               ? putawayText("Discard this receipt draft?") : pantryText("Close review and keep the last saved draft?"), isPresented: $discardDraft) {
+            Button(draft.flatMap { draftSession.activeRevision(for: $0.draftID) } == nil
+                   ? pantryText("Discard draft") : pantryText("Close review"), role: .destructive) { dismiss() }
             Button(pantryText("Cancel"), role: .cancel) {}
         }
         .interactiveDismissDisabled(working || draft != nil)
@@ -378,13 +428,13 @@ struct PantryReceiptEntry: View {
                 }
             }
         }
-        .sheet(isPresented: $fileSource) {
+        .sheet(isPresented: $fileSource, onDismiss: { resumedLines = nil }) {
             if let state = model.snapshot?.state {
                 NavigationStack {
                     PantryReceiptDocuments(model: model, target: .init(workspaceID: state.workspaceID, containerID: targetID,
                         objectID: targetID, revision: state.revision, kind: .receiptEvidence), authorize: {
                         model.permitsReceiptSource && model.snapshot?.state.workspaceID == state.workspaceID
-                    }, reviewsPrivateReceipt: true) { source, share, printedTotal in
+                    }, reviewsPrivateReceipt: true, resumedDraft: resumedLines, omittedLines: resumedLines?.omittedLines ?? []) { source, share, printedTotal in
                         accept(source, printedPaidTotal: printedTotal)
                         sharedSource = share
                     }
@@ -402,6 +452,32 @@ struct PantryReceiptEntry: View {
                         }
                 }
             }
+        }
+    }
+
+    @ViewBuilder private func privatePutawaySave(_ value: ReceiptImportDraft) -> some View {
+        if initialSource == nil, sharedSource == nil, !importedPrivateDelivery, model.permitsPrivateReceiptDraft {
+            Section {
+                PrivateReceiptDraftSave(session: draftSession, model: model, id: value.draftID,
+                                        isLineSelection: false) { .putaway(value) }
+            }
+        } else if value.documentLayoutID != nil {
+            UnsavedReceiptReviewNotice()
+        }
+    }
+
+    private func resume(_ saved: SavedReceiptDraft) {
+        guard initialSource == nil, model.permitsPrivateReceiptDraft, draft == nil, draftSession.resume(saved) else { return }
+        switch saved.payload {
+        case .lines(let source):
+            guard model.snapshot?.state.workspaceID == source.workspaceID else { return }
+            resumedLines = source
+            fileSource = true
+        case .putaway(let source):
+            guard model.snapshot?.state.workspaceID == source.workspaceID else { return }
+            draft = source
+            review = nil
+            message = nil
         }
     }
 
@@ -562,6 +638,7 @@ struct PantryReceiptEntry: View {
     private func acceptDelivery(_ source: SourceMediaRecord, original: PrivateDeliveryRevision, selected: Set<Int>) {
         accept(source)
         guard var current = draft, current.draftID == source.id else { return }
+        importedPrivateDelivery = true
         current.tracksPutaway = false
         if let currency = Currency(rawValue: original.currencyCode) { current.changeCurrency(currency) }
         current.reference = original.order
@@ -598,7 +675,12 @@ struct PantryReceiptEntry: View {
             defer { working = false }
             do {
                 try await verifySource()
-                try await model.saveReceipt(value)
+                if let id = draft?.draftID, let revision = draftSession.activeRevision(for: id) {
+                    try await model.saveReceipt(value, finishingDraft: revision)
+                    draftSession.reset()
+                } else {
+                    try await model.saveReceipt(value)
+                }
                 didSaveReceipt()
                 savedHeader = value.putaway?.header
                 savedPickupID = draft?.savedPickup?.id

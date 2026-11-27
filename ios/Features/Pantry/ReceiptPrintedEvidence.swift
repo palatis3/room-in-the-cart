@@ -3,8 +3,8 @@ import Foundation
 import LocalStore
 
 /// Proposals for one printed row. Physical receipt, usability and payment are always separate decisions.
-struct ReceiptPrintedEvidence: Equatable {
-    enum Kind { case item, adjustment, date, unclear }
+struct ReceiptPrintedEvidence: Equatable, Codable {
+    enum Kind: String, Codable { case item, adjustment, date, unclear }
     let kind: Kind
     var name: String?
     var quantity: String?

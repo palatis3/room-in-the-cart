@@ -40,6 +40,8 @@ struct PantryReceiptDocuments: View {
     var reviewsPrivateReceipt = false
     var initialInput: ReceiptDocumentBytes? = nil
     var initialDocument: ExtractedReceiptDocument? = nil
+    var resumedDraft: ReceiptLineDraft? = nil
+    @Environment(\.privateReceiptDraft) private var draftContext
     var sectionPreviews: [Data?] = []
     var omittedLines: Set<ExtractedReceiptDocument.Selection> = []
     var backToSections: (() -> Void)? = nil
@@ -75,6 +77,7 @@ struct PantryReceiptDocuments: View {
     @State private var linkedAmountItems = Set<ExtractedReceiptDocument.Selection>()
     @State private var storeFocusRequest: UUID?
     @State private var stage: ReceiptAcquisition.DocumentLine.Stage = .receipt
+    @State private var restoringStage: ReceiptAcquisition.DocumentLine.Stage?
     @State private var merchant = ""
     @State private var confirmed = false
     @State private var error: String?
@@ -120,7 +123,16 @@ struct PantryReceiptDocuments: View {
                     })
                 }
                 Section(pantryText("Receipt source")) {
-                    UnsavedReceiptReviewNotice()
+                    if let context = draftContext, reviewsPrivateReceipt, openedShare == nil,
+                       context.model.permitsPrivateReceiptDraft {
+                        let snapshot = ReceiptLineDraft(workspaceID: target.workspaceID, document: document, merchant: merchant,
+                            stage: stage, selection: selection, linkedAmountItems: linkedAmountItems,
+                            reviewedWording: reviewedWording, omittedLines: omittedLines)
+                        PrivateReceiptDraftSave(session: context.session, model: context.model, id: snapshot.receiptID,
+                                                isLineSelection: true) { .lines(snapshot) }
+                    } else {
+                        UnsavedReceiptReviewNotice()
+                    }
                     let name = captureText("Store or receipt name (required)")
                     WorkingField(name) {
                         TextField(name, text: $merchant, prompt: Text(""))
@@ -152,6 +164,10 @@ struct PantryReceiptDocuments: View {
                         LabeledContent(pantryText("Date wording on the receipt")) {
                             Text(verbatim: dateWording).font(.system(.subheadline, design: .monospaced))
                         }
+                    }
+                    if resumedDraft != nil {
+                        Text(pantryText("The original photo or file is unavailable in a saved draft."))
+                            .font(.footnote).foregroundStyle(Theme.secondary)
                     }
                     if let changePhoto {
                         Menu {
@@ -230,7 +246,7 @@ struct PantryReceiptDocuments: View {
                     }.buttonStyle(PrimaryAction()).disabled(!authorize() || changePhoto?.busy == true || (!reviewsEvidenceOnly && !confirmed) || selection.isEmpty || storeIssue != nil)
                         .accessibilityIdentifier("receipt.document.accept")
                     if let backToSections { Button(captureText("Back to receipt sections"), action: backToSections) }
-                    if initialDocument == nil { Button(pantryText("Choose another document")) { cancel() } }
+                    if initialDocument == nil && resumedDraft == nil { Button(pantryText("Choose another document")) { cancel() } }
                 }
             } else {
                 if let model, !inbox.isEmpty {
@@ -317,7 +333,11 @@ struct PantryReceiptDocuments: View {
             documentDateWording = Set(dates.map(\.text)).count == 1 ? dates.first?.text : nil
         }
         .onChange(of: merchant) { _, _ in confirmed = false }
-        .onChange(of: stage) { _, _ in confirmed = false; linkedAmountItems = [] }
+        .onChange(of: stage) { _, newStage in
+            confirmed = false
+            if restoringStage == newStage { restoringStage = nil }
+            else { linkedAmountItems = [] }
+        }
         .onChange(of: scenePhase) { _, phase in if phase == .background { cancel() } }
         .alert(item: $discard) { item in
             Alert(title: Text(pantryText("Discard this shared receipt?")),
@@ -335,7 +355,19 @@ struct PantryReceiptDocuments: View {
             if changePhoto == nil && openedSavedReceipt == nil { cancel() }
             inbox = []
         }
-        .task { if let initialDocument { document = initialDocument } else { await loadInbox() } }
+        .task {
+            guard authorize() else { return }
+            if let resumedDraft, resumedDraft.workspaceID == target.workspaceID {
+                document = resumedDraft.document
+                merchant = resumedDraft.merchant
+                restoringStage = stage == resumedDraft.stage ? nil : resumedDraft.stage
+                stage = resumedDraft.stage
+                selection = resumedDraft.selection
+                linkedAmountItems = resumedDraft.linkedAmountItems
+                reviewedWording = resumedDraft.reviewedWording
+                confirmed = false
+            } else if let initialDocument { document = initialDocument } else { await loadInbox() }
+        }
         .task { if let initialInput, document == nil, job == nil { start { initialInput } } }
     }
 

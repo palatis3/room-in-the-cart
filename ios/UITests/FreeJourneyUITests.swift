@@ -1820,11 +1820,94 @@ import XCTest
         XCTAssertTrue(choose.waitForExistence(timeout: 8))
         XCTAssertFalse(notice.exists)
         XCTAssertFalse(store.exists)
+        XCTAssertFalse(app.buttons["receipt.draft.resume"].exists)
         choose.tap()
         try SimulatorPhotosFixture(app: app).chooseNewestSourcePhoto()
         XCTAssertTrue(notice.waitForExistence(timeout: 25))
         XCTAssertNotEqual(store.value as? String, "Mercado Familiar")
         XCTAssertEqual(app.switches["receipt.document.line.1.1"].value as? String, "0")
+    }
+
+    func testPrivateReceiptLineDraftSurvivesRelaunchAndCanBeDiscarded() throws {
+        try openReceiptScreenshotFromPhotos()
+        let store = app.textFields["receipt.document.store"]
+        XCTAssertTrue(store.waitForExistence(timeout: 25))
+        fill("Park Market", into: "receipt.document.store", control: store)
+        enableSwitch("receipt.document.line.1.1")
+        receiptTap(app.buttons["receipt.draft.save"])
+        waitForReceiptDraftSave(spanish: false)
+        XCUIDevice.shared.press(.home)
+        app.terminate()
+        launch(reset: false)
+        reopenPrivateReceiptEntry()
+        receiptTap(app.buttons["receipt.draft.resume"])
+        XCTAssertTrue(store.waitForExistence(timeout: 8))
+        XCTAssertEqual(store.value as? String, "Park Market")
+        XCTAssertEqual(app.switches["receipt.document.line.1.1"].value as? String, "1")
+        XCTAssertEqual(app.switches["receipt.document.line.1.2"].value as? String, "0")
+        XCTAssertFalse(app.buttons["receipt.commit"].exists)
+        receiptTap(app.buttons["receipt.document.close"])
+        let discard = app.buttons["receipt.draft.discard"]
+        receiptTap(discard)
+        receiptTap(app.buttons["receipt.draft.confirmDiscard"])
+        XCTAssertTrue(app.buttons["receipt.draft.resume"].waitForNonExistence(timeout: 8))
+    }
+
+    func testSpanishSavedPutawayDraftReopensForReviewBeforeConfirmation() throws {
+        try openReceiptScreenshotFromPhotos(spanish: true)
+        let store = app.textFields["receipt.document.store"]
+        XCTAssertTrue(store.waitForExistence(timeout: 25))
+        fill("Mercado Familiar", into: "receipt.document.store", control: store)
+        enableSwitch("receipt.document.line.1.2")
+        receiptTap(app.buttons["receipt.draft.save"])
+        waitForReceiptDraftSave(spanish: true)
+        receiptTap(app.buttons["receipt.document.accept"])
+        let reference = app.textFields["receipt.transactionReference"]
+        enterReceiptField("FAMILIA27", id: "receipt.transactionReference")
+        enableSwitch("receipt.purchaseDateConfirmation")
+        receiptTap(app.buttons["receipt.action.1"])
+        receiptTap(app.buttons["Cargo, ajuste o devolución"])
+        receiptTap(app.buttons["receipt.review"])
+        XCTAssertTrue(app.buttons["receipt.commit"].waitForExistence(timeout: 8))
+        let update = app.buttons["receipt.draft.save"]
+        XCTAssertEqual(update.label, "Actualizar el borrador guardado")
+        receiptTap(update)
+        waitForReceiptDraftSave(spanish: true)
+        XCUIDevice.shared.press(.home)
+        app.terminate()
+        launch(reset: false, spanish: true)
+        reopenPrivateReceiptEntry()
+        receiptTap(app.buttons["receipt.draft.resume"])
+        XCTAssertTrue(reference.waitForExistence(timeout: 8))
+        XCTAssertEqual(reference.value as? String, "FAMILIA27")
+        XCTAssertEqual(app.textFields["receipt.store"].value as? String, "Mercado Familiar")
+        XCTAssertEqual(app.switches["receipt.purchaseDateConfirmation"].value as? String, "0")
+        XCTAssertFalse(app.buttons["receipt.commit"].exists)
+        enableSwitch("receipt.purchaseDateConfirmation")
+        receiptTap(app.buttons["receipt.review"])
+        let confirm = app.buttons["receipt.commit"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 8))
+        receiptTap(confirm)
+        XCTAssertTrue(app.staticTexts["receipt.status"].waitForExistence(timeout: 8))
+        receiptTap(app.buttons["Listo"])
+        reopenPrivateReceiptEntry()
+        XCTAssertTrue(app.buttons["receipt.chooseScreenshot"].waitForExistence(timeout: 8))
+        XCTAssertFalse(app.buttons["receipt.draft.resume"].exists)
+    }
+
+    private func reopenPrivateReceiptEntry() {
+        let start = app.buttons["pantry.receipt"]
+        if !start.waitForExistence(timeout: 2) {
+            receiptTap(app.shopToolButton("shop.myPantry"))
+        }
+        receiptTap(start)
+    }
+
+    private func waitForReceiptDraftSave(spanish: Bool) {
+        let status = app.staticTexts["receipt.draft.saved"]
+        let text = spanish ? "Borrador guardado en este iPhone." : "Draft saved on this iPhone."
+        let saved = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND label == %@", text), object: status)
+        XCTAssertEqual(XCTWaiter.wait(for: [saved], timeout: 10), .completed)
     }
 
     func testSystemPhotosReceiptKeepsRecognizedLinesUnselected() throws {

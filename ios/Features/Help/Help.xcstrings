@@ -1,6 +1,22 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "If you choose Save draft on this iPhone, your reviewed receipt text and choices stay in protected storage for your private workspace until you finish or discard the draft. To see the original photo or PDF again, select it from its source.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you choose Save draft on this iPhone, your reviewed receipt text and choices stay in protected storage for your private workspace until you finish or discard the draft. To see the original photo or PDF again, select it from its source."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si eliges Guardar borrador en este iPhone, el texto revisado del recibo y tus selecciones se guardan en el espacio privado protegido hasta que termines o descartes el borrador. Para volver a ver la foto o el PDF original, selecciónalo desde su origen."
+          }
+        }
+      }
+    },
     "Choose US dollars (USD) or Mexican pesos (MXN) before entering prices. Use the same currency for both packs. A saved comparison keeps its original currency.": {
       "localizations": {
         "en": {

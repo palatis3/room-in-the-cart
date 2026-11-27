@@ -293,6 +293,7 @@ typealias PantryNotificationPresenter = @MainActor (PantryNotificationRequest) a
                                 })
     }()
     let recipeProductMemory: TonightProductMemory
+    let receiptDrafts: ProtectedReceiptDraftStore
     let packMemory: PantryPackMemory
     let packageDates: PantryPackageDateStore
     let shelfPhotos: PantryShelfPhotoStore
@@ -310,6 +311,7 @@ typealias PantryNotificationPresenter = @MainActor (PantryNotificationRequest) a
         self.invalidateHome = invalidateHome
         self.folder = folder; self.scheduler = scheduler; self.now = now
         recipeProductMemory = TonightProductMemory(folder: folder.appendingPathComponent("RecipeProducts", isDirectory: true))
+        receiptDrafts = ProtectedReceiptDraftStore(directory: folder.appendingPathComponent("ReceiptDrafts", isDirectory: true))
         packMemory = PantryPackMemory(folder: folder.appendingPathComponent("ConfirmedPacks", isDirectory: true))
         packageDates = PantryPackageDateStore(folder: folder.appendingPathComponent("PrintedDates", isDirectory: true))
         shelfPhotos = PantryShelfPhotoStore(folder: folder.appendingPathComponent("ShelfPhotos", isDirectory: true))
@@ -518,6 +520,8 @@ typealias PantryNotificationPresenter = @MainActor (PantryNotificationRequest) a
 
     /// Called from the receipt-bound erasure cleanup, including recovery after process death.
     func erase(origin: UUID, whole: Bool, inventory: ComparisonStore) async throws {
+        // Even a partial erasure may concern one of the unfinished receipt’s lines.
+        try receiptDrafts.erase(origin: origin)
         if whole { try shelfPhotos.erase(origin: origin) }
         for kind in AdultFoodSummaryKind.allCases { try invalidateHome(kind, origin, whole) }
         try await recipeProductMemory.erasePantry(origin, whole: whole) {

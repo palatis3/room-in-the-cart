@@ -1,6 +1,363 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Draft saved on this iPhone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Draft saved on this iPhone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borrador guardado en este iPhone."
+          }
+        }
+      }
+    },
+    "Printed lines selected": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Printed lines selected"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renglones impresos seleccionados"
+          }
+        }
+      }
+    },
+    "Receipt lines to review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt lines to review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renglones del recibo por revisar"
+          }
+        }
+      }
+    },
+    "The saved draft could not be opened. Try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The saved draft could not be opened. Try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo abrir el borrador guardado. Vuelve a intentarlo."
+          }
+        }
+      }
+    },
+    "The draft could not be saved. Your review is still open. Try again or reopen the saved draft.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The draft could not be saved. Your review is still open. Try again or reopen the saved draft."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo guardar el borrador. La revisión sigue abierta. Vuelve a intentarlo o abre de nuevo el borrador guardado."
+          }
+        }
+      }
+    },
+    "The saved draft could not be discarded. Reopen it and try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The saved draft could not be discarded. Reopen it and try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo descartar el borrador guardado. Ábrelo de nuevo y vuelve a intentarlo."
+          }
+        }
+      }
+    },
+    "There are changes since the last saved draft. Update it to keep them.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There are changes since the last saved draft. Update it to keep them."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hay cambios desde la última vez que guardaste el borrador. Actualízalo para conservarlos."
+          }
+        }
+      }
+    },
+    "The draft keeps all recognized text, the store, your wording and line choices. The photo or file is excluded.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The draft keeps all recognized text, the store, your wording and line choices. The photo or file is excluded."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El borrador conserva todo el texto reconocido, la tienda, tus correcciones y los renglones que elegiste. La foto o el archivo quedan fuera."
+          }
+        }
+      }
+    },
+    "The draft keeps selected text, store, date, entered amounts and storage choices. Recheck the date, package and any linked purchases when you return. The original image or file is excluded.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The draft keeps selected text, store, date, entered amounts and storage choices. Recheck the date, package and any linked purchases when you return. The original image or file is excluded."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El borrador conserva el texto seleccionado, la tienda, la fecha, las cantidades e importes que ingresaste y el lugar de almacenamiento. Al regresar, revisa la fecha, el envase y las compras vinculadas. La imagen o el archivo original quedan fuera."
+          }
+        }
+      }
+    },
+    "Update saved draft": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update saved draft"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar el borrador guardado"
+          }
+        }
+      }
+    },
+    "Save draft on this iPhone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save draft on this iPhone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar borrador en este iPhone"
+          }
+        }
+      }
+    },
+    "Another receipt draft is saved. Resume or discard it from Review a receipt before saving a different one.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Another receipt draft is saved. Resume or discard it from Review a receipt before saving a different one."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya hay otro borrador de recibo guardado. Retómalo o descártalo en Revisar un recibo antes de guardar otro."
+          }
+        }
+      }
+    },
+    "Try again": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try again"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a intentar"
+          }
+        }
+      }
+    },
+    "The original photo or file is unavailable in a saved draft.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The original photo or file is unavailable in a saved draft."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La foto o el archivo original no están disponibles en un borrador guardado."
+          }
+        }
+      }
+    },
+    "Saved draft on this iPhone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved draft on this iPhone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borrador guardado en este iPhone"
+          }
+        }
+      }
+    },
+    "Resume to review it. Nothing has been added to the pantry by saving a draft.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resume to review it. Nothing has been added to the pantry by saving a draft."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retómalo para revisarlo. Guardar un borrador no agrega nada a la despensa."
+          }
+        }
+      }
+    },
+    "Resume saved receipt draft": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resume saved receipt draft"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retomar el borrador del recibo"
+          }
+        }
+      }
+    },
+    "Discard saved draft": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard saved draft"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descartar el borrador guardado"
+          }
+        }
+      }
+    },
+    "Permanently discard the saved receipt draft?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permanently discard the saved receipt draft?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Descartar definitivamente el borrador del recibo?"
+          }
+        }
+      }
+    },
+    "Close review and keep the last saved draft?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close review and keep the last saved draft?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Cerrar la revisión y conservar la última versión guardada?"
+          }
+        }
+      }
+    },
+    "Close review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrar la revisión"
+          }
+        }
+      }
+    },
     "Not recorded yet": {
       "extractionState": "manual",
       "localizations": {

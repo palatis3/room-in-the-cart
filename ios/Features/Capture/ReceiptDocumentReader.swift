@@ -8,7 +8,7 @@ import PDFKit
 import UniformTypeIdentifiers
 
 enum ReceiptDocumentKind: String, Codable, Sendable { case pdf, image, text }
-enum ReceiptDocumentFailure: Error, Equatable, Sendable { case size, pages, pixels, characters, lineLimit, selection, locked, unsupported, unavailable, timeout, duplicateSection }
+enum ReceiptDocumentFailure: String, Error, Codable, Sendable { case size, pages, pixels, characters, lineLimit, selection, locked, unsupported, unavailable, timeout, duplicateSection }
 
 enum ReceiptPhotoSelection: Sendable, Transferable {
     case selected(ReceiptDocumentBytes)
@@ -73,10 +73,10 @@ struct ReceiptDocumentBytes: Sendable {
     }
 }
 
-struct ReceiptDocumentPage: Identifiable, Sendable {
+struct ReceiptDocumentPage: Identifiable, Equatable, Codable, Sendable {
     let id: Int
     let method: ReceiptAcquisition.DocumentLine.Method
-    struct Line: Identifiable, Sendable {
+    struct Line: Identifiable, Equatable, Codable, Sendable {
         let id: Int
         let text: String
         var uncertain = false
@@ -88,18 +88,18 @@ struct ReceiptDocumentPage: Identifiable, Sendable {
     var skipped: ReceiptDocumentFailure? = nil
 }
 
-struct ExtractedReceiptDocument: Sendable {
+struct ExtractedReceiptDocument: Equatable, Codable, Sendable {
     let digest: Data
     let pages: [ReceiptDocumentPage]
     var firstSectionDigest: Data? = nil
 
-    struct Selection: Hashable, Identifiable {
+    struct Selection: Hashable, Identifiable, Codable, Sendable {
         let page: Int
         let line: Int
         var id: Self { self }
     }
 
-    struct PrintedPaidTotal: Equatable, Sendable {
+    struct PrintedPaidTotal: Equatable, Codable, Sendable {
         let wording: String
         let amount: String
     }

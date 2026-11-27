@@ -1,7 +1,7 @@
 import Foundation
 
 /// Draft values from selected image text. Original wording remains the source of a reviewed price.
-public enum PrintedCurrencyEvidence: Equatable, Sendable {
+public enum PrintedCurrencyEvidence: Equatable, Codable, Sendable {
     case unspecified, explicit(Currency), conflicting
 
     private static let isoCodes = Set(Locale.Currency.isoCurrencies.map(\.identifier)).subtracting(["USD", "MXN"])
