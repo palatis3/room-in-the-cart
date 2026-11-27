@@ -1,18 +1,18 @@
 {
   "sourceLanguage": "en",
   "strings": {
-    "If you choose Save draft on this iPhone, your reviewed receipt text and choices stay in protected storage for your private workspace until you finish or discard the draft. To see the original photo or PDF again, select it from its source.": {
+    "Saving a draft during line review keeps all recognized receipt text, including unselected lines, in protected storage on this iPhone. Saving at put-away keeps your selected details and choices. Finish or discard the draft to remove it. To view the original photo or PDF again, select it from its source.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "If you choose Save draft on this iPhone, your reviewed receipt text and choices stay in protected storage for your private workspace until you finish or discard the draft. To see the original photo or PDF again, select it from its source."
+            "value": "Saving a draft during line review keeps all recognized receipt text, including unselected lines, in protected storage on this iPhone. Saving at put-away keeps your selected details and choices. Finish or discard the draft to remove it. To view the original photo or PDF again, select it from its source."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Si eliges Guardar borrador en este iPhone, el texto revisado del recibo y tus selecciones se guardan en el espacio privado protegido hasta que termines o descartes el borrador. Para volver a ver la foto o el PDF original, selecciónalo desde su origen."
+            "value": "Si guardas un borrador al revisar los renglones, todo el texto reconocido del recibo, incluidos los renglones sin seleccionar, se guarda en el almacenamiento protegido de este iPhone. Si lo guardas al registrar los alimentos, se conservan los datos y las opciones que seleccionaste. El borrador se elimina cuando terminas o lo descartas. Para volver a ver la foto o el PDF original, selecciónalo desde su origen."
           }
         }
       }
