@@ -126,7 +126,9 @@ private struct PantryPriceDetail: View {
                             LabeledContent(pantryText("Page"), value: String(line.page))
                             LabeledContent(pantryText("Line"), value: String(line.line))
                         }
-                    } else { Text(verbatim: row.sourceText) }
+                    } else if !row.sourceText.isEmpty, row.sourceText != priceSource(row) {
+                        Text(verbatim: row.sourceText).accessibilityIdentifier("prices.sourceNote")
+                    }
                 }
                 if Currency(rawValue: row.currencyCode) != nil, row.shelfCurrencyMatches, row.amountMinor != nil, row.isPaidPrice || row.source == .shelf || row.source == .currentQuote,
                    let scope = household.projection, scope.enrolled, scope.grantId == nil, !household.locked, household.identity != nil {

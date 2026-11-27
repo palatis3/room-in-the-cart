@@ -1445,6 +1445,7 @@ import XCTest
         XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Quoted cashews")).firstMatch.exists)
         tap(paid)
         XCTAssertTrue(app.staticTexts["Manually confirmed paid price"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["prices.sourceNote"].exists, "A default source should be shown once in price detail.")
         tap(app.tabBars.buttons["Shop"])
         tap(app.shopToolButton("shop.myPantry"))
         XCTAssertTrue(app.buttons["pantry.add"].waitForExistence(timeout: 8))
