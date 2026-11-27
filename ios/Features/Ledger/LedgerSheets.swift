@@ -53,6 +53,10 @@ struct LedgerImportView: View {
     let onSaved: ((UUID) -> Void)?
     let authorizeEntry: @MainActor () -> Bool
     private let prefill: String
+    private var singleGroceryReview: Bool {
+        quickDraft != nil && !directDictation && !prefill.isEmpty && !original.isEmpty
+            && !original.contains(where: \.isNewline) && incomingWording == nil
+    }
     private let opensListAfterSave: Bool
     private let pantryFoodPrefill: Bool
     private let pantrySuggestedAmount: Quantity?
@@ -188,7 +192,7 @@ struct LedgerImportView: View {
                     }
                 } else {
                     Section {
-                        Text(ledgerText("Type or paste your list")).marketJournalTitle(.title2)
+                        Text(singleGroceryReview ? quickGroceryText("Check the grocery name and amount") : ledgerText("Type or paste your list")).marketJournalTitle(.title2)
                         TextEditor(text: $original)
                             .frame(height: min(importEditorHeight, 240))
                             .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Theme.controlEdge).allowsHitTesting(false))
@@ -246,7 +250,7 @@ struct LedgerImportView: View {
                 form
             }
                 .background(Theme.canvas)
-                .navigationTitle(ledgerText("Bring the list"))
+                .navigationTitle(singleGroceryReview ? quickGroceryText("Review grocery") : ledgerText("Bring the list"))
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbarBackground(Theme.canvas, for: .navigationBar)
                 .toolbarBackground(.visible, for: .navigationBar)
