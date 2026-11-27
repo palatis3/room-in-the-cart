@@ -124,9 +124,7 @@ struct TonightEntry: View {
                 }
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
-                        Button(tonightText("Add recipe")) { manual = true }
-                            .accessibilityHint(dinnerText("Enter your own recipe"))
-                            .accessibilityIdentifier("tonight.addRecipe")
+                        if !showsEmptyLibrary { addRecipeButton }
                     }
                 }
             }
@@ -217,6 +215,12 @@ struct TonightEntry: View {
         List {
             Group {
                 if choosing == nil, !filtering { plannedMeals }
+                if showsEmptyLibrary {
+                    Section(tonightText("Recipe library")) {
+                        Text(tonightText("Save a recipe you cook. You can then see which ingredients are in My Pantry and which you need."))
+                        addRecipeButton
+                    }
+                }
                 if model.input != nil {
                     Section {
                         PrivateRecipeSearchField(query: $query)
@@ -313,11 +317,7 @@ struct TonightEntry: View {
                         Button(tonightText("Cancel")) { self.choosing = nil }
                     }
                 }
-                if !filtering, model.input != nil, model.savedRecipes.isEmpty, !model.busy {
-                    Section(tonightText("Save a reviewed recipe")) {
-                        Text(tonightText("No reviewed recipes are available. Add a familiar recipe or review a saved import’s servings and ingredient amounts. Browsing does not start a pickup."))
-                    }
-                }
+
                 if !filtering { matchedRecipes }
                 if let original = scope, let ledgerID = ledger.sourceWorkspaceID {
                     if model.suggestions.contains(where: canChoose) {
@@ -348,6 +348,16 @@ struct TonightEntry: View {
             }.listRowBackground(Theme.surface)
         }.listStyle(.insetGrouped).workingSurface()
     }
+    private var showsEmptyLibrary: Bool {
+        !filtering && model.input != nil && model.savedRecipes.isEmpty && !model.busy
+    }
+
+    private var addRecipeButton: some View {
+        Button(tonightText("Add recipe")) { manual = true }
+            .accessibilityHint(dinnerText("Enter your own recipe"))
+            .accessibilityIdentifier("tonight.addRecipe")
+    }
+
     private var filtering: Bool { pinnedOnly || !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
 
     @ViewBuilder private var matchedRecipes: some View {

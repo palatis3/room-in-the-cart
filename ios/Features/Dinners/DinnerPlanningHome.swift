@@ -300,7 +300,7 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
 
     private var tonightLabel: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Label(dinnerText("Find a dinner from the pantry"), systemImage: "carrot")
+            Label(dinnerText("Match my recipes to My Pantry"), systemImage: "carrot")
             if needsPantrySetup { Text(dinnerText("Set up My Pantry to use food you have at home.")).font(.footnote).foregroundStyle(Theme.secondary) }
         }
     }

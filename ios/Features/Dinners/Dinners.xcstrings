@@ -13693,18 +13693,18 @@
         }
       }
     },
-    "Find a dinner from the pantry": {
+    "Match my recipes to My Pantry": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Find a dinner from the pantry"
+            "value": "Match my recipes to My Pantry"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Buscar una cena con lo que hay en la despensa"
+            "value": "Comparar mis recetas con Mi despensa"
           }
         }
       }

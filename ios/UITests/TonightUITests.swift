@@ -401,7 +401,7 @@ import XCTest
         tap(app.buttons["pantry.setup.apply"])
         tap(app.buttons["pantry.tonight"])
         XCTAssertTrue(app.navigationBars["Tonight"].waitForExistence(timeout: 12))
-        let empty = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "No reviewed recipes are available.")).firstMatch
+        let empty = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Save a recipe you cook.")).firstMatch
         XCTAssertTrue(empty.waitForExistence(timeout: 12))
         tap(app.buttons["tonight.addRecipe"])
         XCTAssertTrue(app.navigationBars["Enter a recipe"].waitForExistence(timeout: 8))
