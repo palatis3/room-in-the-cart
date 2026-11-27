@@ -167,13 +167,16 @@ import XCTest
             let review = language == "en" ? "review the message before choosing a recipient" :
                 "revisa el mensaje antes de elegir un destinatario"
             XCTAssertTrue(sharing.label.contains(review))
-            let paid = language == "en" ? "Household is a paid subscription. Choose your household" :
-                "La membresía del hogar es una suscripción de pago. Elige tu hogar"
-            let price = membership.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", paid)).firstMatch
+            let price = membership.staticTexts["membership.priceGuidance"]
             reveal(price, hitTarget: false, searchTowardStart: true, in: membership)
-            let priceCondition = language == "en" ? "App Store price if an offer is available" :
+            let cadence = language == "en" ? "annual subscription" : "suscripción anual"
+            let signIn = language == "en" ? "Open adult household setup to sign in" :
+                "Abre la configuración del hogar para adultos e inicia sesión"
+            let conditionalPrice = language == "en" ? "App Store price if an offer is available" :
                 "precio del App Store si hay una oferta disponible"
-            XCTAssertTrue(price.label.contains(priceCondition))
+            XCTAssertTrue(price.label.contains(cadence))
+            XCTAssertTrue(price.label.contains(signIn))
+            XCTAssertTrue(price.label.contains(conditionalPrice))
             reveal(membership.buttons["membership.offlinePrivacy"], in: membership)
             XCTAssertFalse(app.buttons["membership.subscribe"].exists)
             capture("Signed-out membership and privacy in " + language)

@@ -7,6 +7,19 @@ import StoreKit
     let now = Date(timeIntervalSince1970: 1_800_000_000)
     let context = MembershipContext(purchaserID: "adult-one", purchaserName: "Mia", householdID: "household-one", householdName: "Home", appAccountToken: UUID(uuidString: "33333333-3333-4333-8333-333333333333")!)
 
+    func testMembershipPriceGuidanceUsesTheAvailableAdultRoute() {
+        for signedIn in [false, true] {
+            for emailSignIn in [false, true] {
+                XCTAssertEqual(MembershipEntryRoute(configured: false, signedIn: signedIn, emailSignInEnabled: emailSignIn), .unavailable)
+            }
+        }
+        XCTAssertEqual(MembershipEntryRoute(configured: true, signedIn: false, emailSignInEnabled: false), .savedAccountOnly)
+        XCTAssertEqual(MembershipEntryRoute(configured: true, signedIn: false, emailSignInEnabled: true), .signIn)
+        for emailSignIn in [false, true] {
+            XCTAssertEqual(MembershipEntryRoute(configured: true, signedIn: true, emailSignInEnabled: emailSignIn), .chooseHousehold)
+        }
+    }
+
     func testDinnerHandoffAcceptsOnlyAnOpaqueInvitationIDForThisApp() throws {
         let id = UUID().uuidString.lowercased()
         let route = "roominthecart://invitation-dinner/" + id

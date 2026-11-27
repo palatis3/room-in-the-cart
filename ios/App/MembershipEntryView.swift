@@ -73,25 +73,20 @@ struct MembershipEntryView: View {
     }
 
     @ViewBuilder private var householdEntry: some View {
-        if household.configured && (household.identity != nil || household.emailOTPEnabled) {
-            MembershipHeading(title: tr("Choose your household first"), symbol: "house")
+        switch household.membershipEntryRoute {
+        case .signIn, .chooseHousehold:
+            MembershipHeading(title: household.identity == nil ? ht("Adult sign-in") : tr("Choose your household first"), symbol: "house")
             householdSetup(mtr("Open adult household setup")).buttonStyle(PrimaryAction())
             freeButton.buttonStyle(MembershipReturnButtonStyle())
-        } else {
+        case .savedAccountOnly, .unavailable:
             MembershipHeading(title: mtr("Free planning"), symbol: "list.bullet")
             freeButton.buttonStyle(PrimaryAction())
-            if household.configured {
+            if household.membershipEntryRoute == .savedAccountOnly {
                 householdSetup(mtr("Saved adult account options")).buttonStyle(MembershipReturnButtonStyle())
-                Text(mtr("You can use an adult account already saved on this iPhone. Email sign-in is unavailable."))
-            } else {
-                Text(mtr("Your private lists and dinners work without an account. Household sign-in is unavailable on this iPhone."))
-                Text(helpText("Household is a paid subscription. The App Store price is unavailable on this iPhone."))
-                    .foregroundStyle(Theme.secondary)
             }
         }
-        if household.configured {
-            Text(helpText("Household is a paid subscription. Choose your household to check planning access and see the App Store price if an offer is available."))
-        }
+        Text(household.membershipEntryRoute.priceGuidance)
+            .accessibilityIdentifier("membership.priceGuidance")
     }
 
     private func householdSetup(_ title: String) -> some View {
@@ -115,7 +110,35 @@ struct MembershipEntryView: View {
     }
 }
 
+enum MembershipEntryRoute {
+    case unavailable, savedAccountOnly, signIn, chooseHousehold
+
+    init(configured: Bool, signedIn: Bool, emailSignInEnabled: Bool) {
+        if !configured { self = .unavailable }
+        else if signedIn { self = .chooseHousehold }
+        else if emailSignInEnabled { self = .signIn }
+        else { self = .savedAccountOnly }
+    }
+
+    var priceGuidance: String {
+        switch self {
+        case .unavailable:
+            helpText("Household is an annual subscription. Household sign-in and the App Store price are unavailable on this iPhone. You can keep planning for free.")
+        case .savedAccountOnly:
+            helpText("Household is an annual subscription. Email sign-in is unavailable. If you have an adult account saved on this iPhone, resume it in Saved adult account options to check for an App Store offer. Without a saved account, the price is unavailable here.")
+        case .signIn:
+            helpText("Household is an annual subscription. Open adult household setup to sign in. Once you open your household, you can see the App Store price if an offer is available.")
+        case .chooseHousehold:
+            helpText("Household is an annual subscription. Open adult household setup to review your household options. You can see the App Store price if an offer is available for your household.")
+        }
+    }
+}
+
 extension HouseholdModel: MembershipSessionSource {
+    var membershipEntryRoute: MembershipEntryRoute {
+        MembershipEntryRoute(configured: configured, signedIn: identity != nil, emailSignInEnabled: emailOTPEnabled)
+    }
+
     var canOpenMembership: Bool {
         guard !guardianChildOnly, !locked else { return false }
         guard let projection else { return true }

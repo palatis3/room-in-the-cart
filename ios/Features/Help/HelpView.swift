@@ -175,10 +175,9 @@ private struct MembershipHelpAccess: View {
         if household.canOpenMembership && child?.presented != true {
             if let model = membership.model(for: household.membershipSession) {
                 MembershipHelpControls(model: model)
-            } else if !household.configured {
-                Text(mtr("Your private lists and dinners work without an account. Household sign-in is unavailable on this iPhone."))
             } else if household.membershipSession == nil {
-                Text(helpText("Household is a paid subscription. Choose your household to check planning access and see the App Store price if an offer is available."))
+                Text(household.membershipEntryRoute.priceGuidance)
+                    .accessibilityIdentifier("help.membershipPriceGuidance")
             } else {
                 Text(helpText("Open Household membership to check your current access."))
             }

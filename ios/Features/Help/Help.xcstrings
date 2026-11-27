@@ -2846,34 +2846,66 @@
         }
       }
     },
-    "Household is a paid subscription. The App Store price is unavailable on this iPhone.": {
+    "Household is an annual subscription. Household sign-in and the App Store price are unavailable on this iPhone. You can keep planning for free.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Household is a paid subscription. The App Store price is unavailable on this iPhone."
+            "value": "Household is an annual subscription. Household sign-in and the App Store price are unavailable on this iPhone. You can keep planning for free."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "La membresía del hogar es una suscripción de pago. El precio del App Store no está disponible en este iPhone."
+            "value": "La membresía del hogar es una suscripción anual. En este iPhone no se puede iniciar sesión en el hogar ni consultar el precio del App Store. Puedes seguir planificando gratis."
           }
         }
       }
     },
-    "Household is a paid subscription. Choose your household to check planning access and see the App Store price if an offer is available.": {
+    "Household is an annual subscription. Email sign-in is unavailable. If you have an adult account saved on this iPhone, resume it in Saved adult account options to check for an App Store offer. Without a saved account, the price is unavailable here.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Household is a paid subscription. Choose your household to check planning access and see the App Store price if an offer is available."
+            "value": "Household is an annual subscription. Email sign-in is unavailable. If you have an adult account saved on this iPhone, resume it in Saved adult account options to check for an App Store offer. Without a saved account, the price is unavailable here."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "La membresía del hogar es una suscripción de pago. Elige tu hogar para comprobar tu acceso a la planificación y ver el precio del App Store si hay una oferta disponible."
+            "value": "La membresía del hogar es una suscripción anual. No se puede iniciar sesión por correo. Si tienes una cuenta de adulto guardada en este iPhone, retómala en «Opciones de la cuenta de adulto guardada» para consultar si hay una oferta del App Store. Sin una cuenta guardada, aquí no puedes consultar el precio."
+          }
+        }
+      }
+    },
+    "Household is an annual subscription. Open adult household setup to sign in. Once you open your household, you can see the App Store price if an offer is available.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household is an annual subscription. Open adult household setup to sign in. Once you open your household, you can see the App Store price if an offer is available."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La membresía del hogar es una suscripción anual. Abre la configuración del hogar para adultos e inicia sesión. Al entrar a tu hogar, podrás ver el precio del App Store si hay una oferta disponible."
+          }
+        }
+      }
+    },
+    "Household is an annual subscription. Open adult household setup to review your household options. You can see the App Store price if an offer is available for your household.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household is an annual subscription. Open adult household setup to review your household options. You can see the App Store price if an offer is available for your household."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La membresía del hogar es una suscripción anual. Abre la configuración del hogar para adultos y revisa las opciones de tu hogar. Podrás ver el precio del App Store si hay una oferta disponible para tu hogar."
           }
         }
       }

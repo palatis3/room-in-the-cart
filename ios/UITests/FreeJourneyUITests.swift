@@ -42,6 +42,10 @@ import XCTest
             if existingAccountsOnly {
                 XCTAssertEqual(account.label, "Saved adult account options")
                 XCTAssertLessThan(free.frame.maxY, account.frame.minY, "Free should come first when new accounts cannot sign in.")
+                let guidance = app.staticTexts["membership.priceGuidance"]
+                XCTAssertTrue(guidance.waitForExistence(timeout: 5))
+                XCTAssertTrue(guidance.label.contains("annual subscription"))
+                XCTAssertTrue(guidance.label.contains("Without a saved account, the price is unavailable here."))
             }
         }
 
