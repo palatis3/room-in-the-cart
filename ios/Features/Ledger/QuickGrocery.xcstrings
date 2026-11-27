@@ -705,18 +705,18 @@
         }
       }
     },
-    "Add a grocery to start your “%@” list. Works offline without an account.": {
+    "List: %@. Works offline without an account.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add a grocery to start your “%@” list. Works offline without an account."
+            "value": "List: %@. Works offline without an account."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El primer producto crea la lista «%@». Funciona sin conexión y sin cuenta."
+            "value": "Lista: %@. Funciona sin conexión y sin cuenta."
           }
         }
       }

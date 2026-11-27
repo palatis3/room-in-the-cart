@@ -592,6 +592,8 @@ final class RoomInTheCartUITests: XCTestCase {
             let firstDestination = app.staticTexts["quickGrocery.firstDestination"]
             XCTAssertTrue(firstDestination.waitForExistence(timeout: 10))
             XCTAssertTrue(firstDestination.label.contains(destination))
+            XCTAssertLessThanOrEqual(firstDestination.frame.maxY, add.frame.minY,
+                                     "Show the list destination before optional entry methods.")
             XCTAssertEqual(add.label, language == "en" ? "Add several items" : "Añadir varios artículos")
             tap(add)
             let close = app.buttons[language == "en" ? "Close" : "Cerrar"]

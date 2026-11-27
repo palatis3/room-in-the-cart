@@ -612,11 +612,6 @@ struct ShopView: View {
                     }
                     Label(quickGroceryText("Private on this iPhone"), systemImage: "lock")
                         .font(.footnote).foregroundStyle(Theme.secondary)
-                    if ledger.shop == nil {
-                        Text(quickGroceryFormat("Add a grocery to start your “%@” list. Works offline without an account.", ledgerText("Pickup")))
-                            .accessibilityIdentifier("quickGrocery.firstDestination")
-                            .font(.footnote).foregroundStyle(Theme.secondary)
-                    }
                 }
                 tripSummary
                 shopTools
