@@ -243,7 +243,7 @@ struct TonightRecipeReview: View {
                                         .accessibilityIdentifier("tonight.recipe.amountError")
                                 }
                                 Toggle(tonightText("Use without a measured amount"), isOn: row.checkedWithoutAmount)
-                                    .toggleStyle(DinnerRowToggleStyle())
+                                    .toggleStyle(LabeledRowToggleStyle())
                                     .accessibilityLabel(ingredient.name.isEmpty ? tonightText("Use without a measured amount") :
                                         ingredient.name + ", " + tonightText("Use without a measured amount"))
                                     .accessibilityIdentifier("tonight.recipe.manual." + ingredient.id.uuidString)

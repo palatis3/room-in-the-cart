@@ -2221,7 +2221,14 @@ import XCTest
         label.typeText("Market")
         if app.buttons["scan.sourceDone"].exists { app.buttons["scan.sourceDone"].tap() }
         receiptTap(app.buttons["Review printed lines"])
-        checkReceiptSwitch("I checked the printed lines.")
+        let checked = app.switches["I checked the printed lines."]
+        let labelSide = CGVector(dx: 0.25, dy: 0.5)
+        reveal(checked, requiredHit: labelSide)
+        XCTAssertEqual(checked.value as? String, "0")
+        checked.coordinate(withNormalizedOffset: labelSide).tap()
+        let on = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "1"), object: checked)
+        XCTAssertEqual(XCTWaiter.wait(for: [on], timeout: 5), .completed,
+                       "Tapping the printed-lines label must confirm once, even away from the switch thumb.")
         receiptTap(app.buttons["scan.receipt.review"])
 
         checkReceiptSwitch("I checked the purchase date.")
