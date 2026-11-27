@@ -100,7 +100,6 @@ struct PantryReceiptEntry: View {
                     }
                 }
             } else if let review {
-                if let value = draft { privatePutawaySave(value) }
                 Section(pantryText("Confirm receipt lines")) {
                     if let putaway = review.putaway {
                         ReviewedReceiptHeading(header: putaway.header)
@@ -126,8 +125,9 @@ struct PantryReceiptEntry: View {
                     }
                     Text(pantryText("Saving receipt evidence does not post a payment."))
                         .font(.footnote).foregroundStyle(Theme.secondary)
-                    Button(review.putaway.map { _ in putawayActionTitle(review.newStockLineCount) } ?? pantryText("Confirm pantry changes")) { commit(review) }.buttonStyle(PrimaryAction()).disabled(working || !model.canEdit)
+                    Button(review.putaway.map { _ in putawayActionTitle(review.newStockLineCount) } ?? pantryText("Confirm pantry changes")) { commit(review) }.buttonStyle(PrimaryAction()).disabled(working || draftSession.busy || !model.canEdit)
                         .accessibilityIdentifier("receipt.commit")
+                    if let value = draft { privatePutawaySave(value, atConfirmation: true).disabled(working) }
                     Button(pantryText("Edit receipt lines")) { self.review = nil; message = nil }.disabled(working)
                 }
             } else if let overlap, let proposed = draft {
@@ -147,7 +147,7 @@ struct PantryReceiptEntry: View {
                     self.rescan = nil; draft?.rescanDecision = nil; message = nil
                 }.id(rescan.basis).disabled(working)
             } else if let displayed = draft {
-                privatePutawaySave(displayed)
+                Section { privatePutawaySave(displayed) }
                 // SwiftUI may read a field during removal of its form. Retain the
                 // displayed value for that transition and ignore stale setters.
                 let value = Binding(get: { draft ?? displayed }, set: { updated in
@@ -456,12 +456,10 @@ struct PantryReceiptEntry: View {
         }
     }
 
-    @ViewBuilder private func privatePutawaySave(_ value: ReceiptImportDraft) -> some View {
+    @ViewBuilder private func privatePutawaySave(_ value: ReceiptImportDraft, atConfirmation: Bool = false) -> some View {
         if initialSource == nil, sharedSource == nil, !importedPrivateDelivery, model.permitsPrivateReceiptDraft {
-            Section {
-                PrivateReceiptDraftSave(session: draftSession, model: model, id: value.draftID,
-                                        isLineSelection: false) { .putaway(value) }
-            }
+            PrivateReceiptDraftSave(session: draftSession, model: model, id: value.draftID,
+                                    isLineSelection: false, atConfirmation: atConfirmation) { .putaway(value) }
         } else if value.documentLayoutID != nil {
             UnsavedReceiptReviewNotice()
         }
@@ -672,6 +670,7 @@ struct PantryReceiptEntry: View {
         catch { message = receiptError(error) }
     }
     private func commit(_ value: PantryReceiptReview) {
+        guard !working, !draftSession.busy, model.canEdit else { return }
         working = true
         Task {
             defer { working = false }

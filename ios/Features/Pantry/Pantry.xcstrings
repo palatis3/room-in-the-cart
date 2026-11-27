@@ -1,6 +1,57 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "The draft keeps selected text, store, date, amounts and storage choices. Resume opens the editable lines for a new confirmation. The photo or file is excluded.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The draft keeps selected text, store, date, amounts and storage choices. Resume opens the editable lines for a new confirmation. The photo or file is excluded."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El borrador conserva el texto seleccionado, la tienda, la fecha, las cantidades, los importes y los lugares de almacenamiento. Al retomarlo, puedes editar las líneas y volver a confirmar. La foto o el archivo quedan fuera."
+          }
+        }
+      }
+    },
+    "Leaving keeps only the last saved draft. Update it to keep these changes.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leaving keeps only the last saved draft. Update it to keep these changes."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al salir, solo se conserva el último borrador guardado. Actualízalo para conservar estos cambios."
+          }
+        }
+      }
+    },
+    "Leaving the app clears this review unless you save a draft.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leaving the app clears this review unless you save a draft."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al salir de la app se borra esta revisión, a menos que guardes un borrador."
+          }
+        }
+      }
+    },
     "This saved draft is no longer available.": {
       "extractionState": "manual",
       "localizations": {

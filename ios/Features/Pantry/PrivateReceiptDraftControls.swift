@@ -194,29 +194,30 @@ struct PrivateReceiptDraftSave: View {
     let model: PantryModel
     let id: UUID
     let isLineSelection: Bool
+    var atConfirmation = false
     let payload: () -> SavedReceiptDraft.Payload
 
     var body: some View {
         if model.permitsPrivateReceiptDraft {
             let active = session.activeRevision(for: id) != nil
             if active {
-                Text(pantryText(session.matchesLastSave(payload())
-                    ? "Draft saved on this iPhone."
-                    : "There are changes since the last saved draft. Update it to keep them."))
+                let changedMessage = atConfirmation
+                    ? "Leaving keeps only the last saved draft. Update it to keep these changes."
+                    : "There are changes since the last saved draft. Update it to keep them."
+                Text(pantryText(session.matchesLastSave(payload()) ? "Draft saved on this iPhone." : changedMessage))
                     .accessibilityIdentifier("receipt.draft.saved")
+            } else if atConfirmation && session.ready && session.saved == nil {
+                Text(pantryText("Leaving the app clears this review unless you save a draft."))
+                    .font(.subheadline).foregroundStyle(Theme.secondary)
+                    .accessibilityIdentifier("receipt.unsavedReviewNotice")
             } else {
                 UnsavedReceiptReviewNotice()
             }
             if session.saved == nil || active {
-                Text(pantryText(isLineSelection
-                    ? "The draft keeps all recognized text, the store, your wording and line choices. The photo or file is excluded."
-                    : "The draft keeps selected text, store, date, entered amounts and storage choices. Recheck the date, package and any linked purchases when you return. The original image or file is excluded."))
+                if atConfirmation { saveButton(active: active) }
+                Text(pantryText(draftContents))
                     .font(.footnote).foregroundStyle(Theme.secondary)
-                Button(pantryText(active ? "Update saved draft" : "Save draft on this iPhone")) {
-                    let value = payload()
-                    Task { await session.write(value, id: id, model: model) }
-                }.disabled(!session.ready || session.busy)
-                    .accessibilityIdentifier("receipt.draft.save")
+                if !atConfirmation { saveButton(active: active) }
             } else {
                 Text(pantryText("Another receipt draft is saved. Resume or discard it from Review a receipt before saving a different one."))
                     .font(.footnote).foregroundStyle(Theme.secondary)
@@ -228,5 +229,23 @@ struct PrivateReceiptDraftSave: View {
                 }
             }
         }
+    }
+
+    private var draftContents: String {
+        if isLineSelection {
+            return "The draft keeps all recognized text, the store, your wording and line choices. The photo or file is excluded."
+        }
+        if atConfirmation {
+            return "The draft keeps selected text, store, date, amounts and storage choices. Resume opens the editable lines for a new confirmation. The photo or file is excluded."
+        }
+        return "The draft keeps selected text, store, date, entered amounts and storage choices. Recheck the date, package and any linked purchases when you return. The original image or file is excluded."
+    }
+
+    private func saveButton(active: Bool) -> some View {
+        Button(pantryText(active ? "Update saved draft" : "Save draft on this iPhone")) {
+            let value = payload()
+            Task { await session.write(value, id: id, model: model) }
+        }.disabled(!session.ready || session.busy)
+            .accessibilityIdentifier("receipt.draft.save")
     }
 }

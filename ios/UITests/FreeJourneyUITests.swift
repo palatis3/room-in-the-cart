@@ -1853,29 +1853,48 @@ import XCTest
         XCTAssertTrue(app.buttons["receipt.draft.resume"].waitForNonExistence(timeout: 8))
     }
 
+    func testEnglishFirstDraftAtFinalPutawayReopensBeforeConfirmation() throws {
+        try checkDraftAtFinalConfirmation(spanish: false, saveAtLineSelection: false)
+    }
+
     func testSpanishSavedPutawayDraftReopensForReviewBeforeConfirmation() throws {
-        try openReceiptScreenshotFromPhotos(spanish: true)
+        try checkDraftAtFinalConfirmation(spanish: true, saveAtLineSelection: true)
+    }
+
+    private func checkDraftAtFinalConfirmation(spanish: Bool, saveAtLineSelection: Bool) throws {
+        try openReceiptScreenshotFromPhotos(spanish: spanish)
         let store = app.textFields["receipt.document.store"]
         XCTAssertTrue(store.waitForExistence(timeout: 25))
         fill("Mercado Familiar", into: "receipt.document.store", control: store)
         enableSwitch("receipt.document.line.1.2")
-        receiptTap(app.buttons["receipt.draft.save"])
-        waitForReceiptDraftSave(spanish: true)
+        if saveAtLineSelection {
+            receiptTap(app.buttons["receipt.draft.save"])
+            waitForReceiptDraftSave(spanish: spanish)
+        }
         receiptTap(app.buttons["receipt.document.accept"])
         let reference = app.textFields["receipt.transactionReference"]
         enterReceiptField("FAMILIA27", id: "receipt.transactionReference")
         enableSwitch("receipt.purchaseDateConfirmation")
         receiptTap(app.buttons["receipt.action.1"])
-        receiptTap(app.buttons["Cargo, ajuste o devolución"])
+        receiptTap(app.buttons[spanish ? "Cargo, ajuste o devolución" : "Fee, adjustment or return"])
         receiptTap(app.buttons["receipt.review"])
-        XCTAssertTrue(app.buttons["receipt.commit"].waitForExistence(timeout: 8))
-        let update = app.buttons["receipt.draft.save"]
-        XCTAssertEqual(update.label, "Actualizar el borrador guardado")
-        receiptTap(update)
-        waitForReceiptDraftSave(spanish: true)
+        let commit = app.buttons["receipt.commit"]
+        reveal(commit)
+        let save = app.buttons["receipt.draft.save"]
+        reveal(save)
+        let status = app.staticTexts[saveAtLineSelection ? "receipt.draft.saved" : "receipt.unsavedReviewNotice"]
+        XCTAssertEqual(status.label, saveAtLineSelection
+            ? "Al salir, solo se conserva el último borrador guardado. Actualízalo para conservar estos cambios."
+            : "Leaving the app clears this review unless you save a draft.")
+        XCTAssertEqual(save.label, saveAtLineSelection ? "Actualizar el borrador guardado" : "Save draft on this iPhone")
+        XCTAssertGreaterThanOrEqual(status.frame.minY, commit.frame.maxY - 1)
+        XCTAssertGreaterThanOrEqual(save.frame.minY, status.frame.maxY - 1)
+        XCTAssertLessThan(save.frame.minY - commit.frame.maxY, 200, "The shopper must see the draft choice beside the final action")
+        receiptTap(save)
+        waitForReceiptDraftSave(spanish: spanish)
         XCUIDevice.shared.press(.home)
         app.terminate()
-        launch(reset: false, spanish: true)
+        launch(reset: false, spanish: spanish)
         reopenPrivateReceiptEntry()
         receiptTap(app.buttons["receipt.draft.resume"])
         XCTAssertTrue(reference.waitForExistence(timeout: 8))
@@ -1889,7 +1908,7 @@ import XCTest
         XCTAssertTrue(confirm.waitForExistence(timeout: 8))
         receiptTap(confirm)
         XCTAssertTrue(app.staticTexts["receipt.status"].waitForExistence(timeout: 8))
-        receiptTap(app.buttons["Listo"])
+        receiptTap(app.buttons[spanish ? "Listo" : "Done"])
         reopenPrivateReceiptEntry()
         XCTAssertTrue(app.buttons["receipt.chooseScreenshot"].waitForExistence(timeout: 8))
         XCTAssertFalse(app.buttons["receipt.draft.resume"].exists)
