@@ -123,11 +123,18 @@ struct ReceiptPrintedEvidence: Equatable, Codable {
         return isPlainColumnItem(name) ? (name, match.3) : nil
     }
 
+    private static let promotionalWords: Set<String> = [
+        "saving", "savings", "rebate", "rebates", "promotion", "promocion", "ahorro", "ahorros", "bonificacion"
+    ]
+
     static func isPlainColumnItem(_ name: String) -> Bool {
-        name.contains(where: \.isLetter)
+        let words = name.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: Locale(identifier: "en_US_POSIX"))
+            .split(whereSeparator: { !$0.isLetter }).map(String.init)
+        return name.contains(where: \.isLetter)
             && name.allSatisfy { $0.isLetter || $0.isWhitespace || "-'’".contains($0) }
             && !name.contains(nonItem) && !name.contains(mixed) && !name.contains(adjustment)
-            && !name.contains(#/(?i)\b(?:savings?|rebates?|special offer|promotion|promoci[oó]n|ahorros?|bonificaci[oó]n)\b/#)
+            && promotionalWords.isDisjoint(with: words)
+            && !zip(words, words.dropFirst()).contains { $0 == "special" && $1 == "offer" }
             && !isVoidedOrUnreceived(name)
     }
 

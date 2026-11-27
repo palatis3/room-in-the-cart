@@ -305,7 +305,7 @@ import XCTest
             XCTAssertEqual(output.map(\.text), input.map(\.text), file: file, line: line)
         }
         staysSeparate(row)
-        for label in ["TOTAL", "LOYALTY SAVINGS", "Cupón", "BAG FEE", "VOID BEANS"] {
+        for label in ["TOTAL", "LOYALTY SAVINGS", "Ahorro", "BONIFICACIÓN", "Special Offer", "Cupón", "BAG FEE", "VOID BEANS"] {
             staysSeparate([cell(1, label, 0.05, 0.70, 0.3), count, price] + peer)
         }
         staysSeparate([item, cell(2, "1", 0.36, 0.70, 0.04), price] + peer)
