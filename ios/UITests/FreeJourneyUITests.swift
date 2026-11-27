@@ -862,6 +862,34 @@ import XCTest
         XCTAssertGreaterThanOrEqual(frame.height + 2, required.height, "The visible hint must contain the entire unit example")
     }
 
+    func testLargestTypePantryLocationUsesFullWidthAndAmountRowCenterAcceptsInput() {
+        launch(reset: true, region: "CA", contentSize: .accessibilityExtraExtraExtraLarge)
+        tap(app.tabBars.buttons["Pantry"])
+        tap(app.buttons["pantry.setup.apply"])
+        tap(app.buttons["pantry.add"])
+        fill("Sandwich bread", into: "pantry.foodName", useVisibleCenter: true)
+        let location = app.buttons["pantry.foodLocation"]
+        reveal(location)
+        XCTAssertEqual(location.label, "Storage location")
+        XCTAssertEqual(location.value as? String, "Cupboard")
+        // On the 375-point SE the compressed two-column control was 271.5 points tall.
+        XCTAssertLessThan(location.frame.height, 250)
+        tap(location)
+        tap(app.buttons["Freezer"])
+        XCTAssertEqual(location.value as? String, "Freezer")
+        fill("2", into: "pantry.amount", useVisibleCenter: true)
+        XCTAssertEqual(app.textFields["pantry.amount"].value as? String, "2")
+        tap(app.buttons["pantry.review"])
+
+        let readout = element("pantry.reviewLocation")
+        reveal(readout)
+        let description = readout.label + " " + (readout.value as? String ?? "")
+        XCTAssertTrue(description.contains("Storage location"))
+        XCTAssertTrue(description.contains("Freezer"))
+        XCTAssertLessThan(readout.frame.height, 250)
+        capture("AX5 pantry reviewed location")
+    }
+
     func testPrivatePantryFromEmptyShopSavesFoodAndReopensAfterRelaunch() throws {
         launch(reset: true)
         var pantry: XCUIElement { app.shopToolButton("shop.myPantry") }

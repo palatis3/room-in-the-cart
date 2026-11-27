@@ -635,7 +635,7 @@ private struct PantryLotView: View {
                     } label: {
                         JournalSourceLabel(kind: .pantryCount, title: pantryText("Last count update"))
                     }
-                    LabeledContent(pantryText("Storage location"), value: pantryPlacePath(lot.location, lot.namedPlace))
+                    PantryStorageReadout(value: pantryPlacePath(lot.location, lot.namedPlace))
                     if let source = lot.spreadsheetRow { PantrySpreadsheetEvidenceView(evidence: source) }
                     if let opened = lot.openedAt {
                         LabeledContent(pantryText("Opened"), value: opened.formatted(date: .abbreviated, time: .shortened))
@@ -738,6 +738,26 @@ private struct PantryLotView: View {
     }
 }
 
+private struct PantryStorageReadout: View {
+    let value: String
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    var body: some View {
+        let title = pantryText("Storage location")
+        if typeSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title).font(.subheadline).foregroundStyle(Theme.secondary)
+                Text(verbatim: value)
+            }
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityElement(children: .combine)
+        } else {
+            LabeledContent(title, value: value)
+        }
+    }
+}
+
 private struct PantryFoodEditor: View {
     @ObservedObject var model: PantryModel
     let lotID: UUID?
@@ -754,7 +774,9 @@ private struct PantryFoodEditor: View {
     @State private var amount = ""
     @State private var unit = UnitOfMeasure.count
     @State private var location = InventoryLocation.cupboard
-    @FocusState private var editing: Bool
+    private enum Field { case name, amount }
+    @FocusState private var editing: Field?
+    @Environment(\.dynamicTypeSize) private var typeSize
     private var lot: InventoryLot? { lotID.flatMap { id in model.snapshot?.lots.first { $0.id == id } } }
     private var foods: [InventoryLot] {
         var seen = Set<UUID>()
@@ -768,6 +790,20 @@ private struct PantryFoodEditor: View {
     }
     private var scanProductsLabel: some View {
         Label(pantryText("Scan products"), systemImage: "barcode.viewfinder")
+    }
+
+    @ViewBuilder private var storagePicker: some View {
+        let title = pantryText("Storage location")
+        let picker = Picker(title, selection: $location) {
+            ForEach(InventoryLocation.allCases, id: \.self) { Text(pantryLocationName($0)).tag($0) }
+        }
+        if typeSize.isAccessibilitySize {
+            journalStackedMenu(title, value: pantryLocationName(location), id: "pantry.foodLocation") {
+                picker.pickerStyle(.inline)
+            }
+        } else {
+            picker.accessibilityIdentifier("pantry.foodLocation")
+        }
     }
 
     var body: some View {
@@ -800,14 +836,14 @@ private struct PantryFoodEditor: View {
                                 WorkingField(pantryText("Food name")) {
                                     TextField("", text: $name)
                                         .textFieldStyle(WorkingInputStyle())
-                                        .focused($editing)
+                                        .focused($editing, equals: .name)
                                         .accessibilityIdentifier("pantry.foodName")
                                 }
+                                .contentShape(Rectangle())
+                                .simultaneousGesture(TapGesture().onEnded { editing = .name })
                             }
                         }
-                        Picker(pantryText("Storage location"), selection: $location) {
-                            ForEach(InventoryLocation.allCases, id: \.self) { Text(pantryLocationName($0)).tag($0) }
-                        }
+                        storagePicker
                     } footer: {
                         if !foods.isEmpty && reviewedFood == nil {
                             Text(pantryText("Choose the same food to add another batch of it."))
@@ -818,18 +854,19 @@ private struct PantryFoodEditor: View {
                     Section {
                         Text(purchase.reviewedFood.name).font(.headline)
                         LabeledContent(pantryText("Received quantity"), value: pantryQuantity(purchase.received))
-                        Picker(pantryText("Storage location"), selection: $location) {
-                            ForEach(InventoryLocation.allCases, id: \.self) { Text(pantryLocationName($0)).tag($0) }
-                        }
+                        storagePicker
                     }
                 }
                 Section {
                     WorkingField(pantryText(purchase == nil ? "Amount, if known" : "Amount remaining")) {
                         TextField("", text: $amount)
                             .textFieldStyle(WorkingInputStyle())
-                            .focused($editing)
+                            .focused($editing, equals: .amount)
                             .accessibilityIdentifier("pantry.amount")
                     }
+                    // iOS 17 includes the caption in the editable row’s accessibility frame.
+                    .contentShape(Rectangle())
+                    .simultaneousGesture(TapGesture().onEnded { editing = .amount })
                     if purchase != nil {
                         LabeledContent(pantryText("Unit"), value: pantryUnit(unit))
                     } else {
@@ -850,7 +887,7 @@ private struct PantryFoodEditor: View {
             }
             ToolbarItem(placement: .confirmationAction) {
                 Button(pantryText("Review")) {
-                    editing = false
+                    editing = nil
                     Task {
                         if let purchase { await model.prepareRecentPurchase(purchase, amount: amount, location: location) }
                         else if let lotID { await model.prepare(lotID: lotID, action: .recount(amount, unit)) }
@@ -888,7 +925,8 @@ private struct PantryReviewView: View {
                     PantryLotSummary(lot: review.proposedLot,
                         availability: review.proposedAvailability.lots.first { $0.id == review.command.lotID },
                         availabilityNeedsReview: availabilityNeedsReview)
-                    LabeledContent(pantryText("Storage location"), value: pantryLocationName(review.proposedLot.location))
+                    PantryStorageReadout(value: pantryLocationName(review.proposedLot.location))
+                        .accessibilityIdentifier("pantry.reviewLocation")
                     if let opened = review.proposedLot.openedAt {
                         LabeledContent(pantryText("Opened"), value: opened.formatted(date: .abbreviated, time: .shortened))
                     }
