@@ -565,7 +565,8 @@ struct ReceiptPrintedLineInspector: View {
             ToolbarItem(placement: .confirmationAction) {
                 if hasEdit, !showSource, let edited, let apply {
                     Button(pantryText("Done")) { apply(edited) }
-                        .accessibilityLabel(captureText("Use reviewed wording"))
+                        .accessibilityHint(captureText("Use reviewed wording"))
+                        .accessibilityInputLabels([Text(pantryText("Done")), Text(captureText("Use reviewed wording"))])
                         .accessibilityIdentifier("receipt.reading.apply")
                         .disabled(edited.trimmingCharacters(in: .whitespaces).isEmpty
                             || edited.contains(where: \.isNewline) || edited.utf8.count > 2048)

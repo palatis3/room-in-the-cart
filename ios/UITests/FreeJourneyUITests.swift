@@ -1756,6 +1756,7 @@ import XCTest
         field.tap()
         field.typeText(" organic")
         let apply = app.buttons["receipt.reading.apply"]
+        XCTAssertEqual(apply.label, "Done", "The visible confirmation must be available by its spoken name.")
         tap(apply)
         XCTAssertTrue(inspect.waitForExistence(timeout: 5))
         XCTAssertEqual(inspect.label, original)
