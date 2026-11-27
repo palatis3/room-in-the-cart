@@ -403,6 +403,8 @@ struct SavedDinnerHandoffView: View {
         } label: {
             Label(dinnerText(ledger.shop == nil ? "Choose a shopping list" : "Change list"),
                   systemImage: "chevron.up.chevron.down")
+                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                .contentShape(Rectangle())
         }
         .disabled(busy || ledger.saving || ledger.hasPendingSave)
         .accessibilityIdentifier("dinner.handoff.pickup")
