@@ -1877,7 +1877,13 @@ import XCTest
         receiptTap(app.buttons["receipt.document.close"])
         let discard = app.buttons["receipt.draft.discard"]
         receiptTap(discard)
-        receiptTap(app.buttons["receipt.draft.confirmDiscard"])
+        let dialog = app.sheets["Permanently discard the saved receipt draft?"]
+        XCTAssertTrue(dialog.waitForExistence(timeout: 8))
+        let confirmID = "receipt.draft.confirmDiscard"
+        let action = dialog.buttons.matching(identifier: confirmID).firstMatch
+        // Some runtimes expose the destructive action as a button inside an identically named button.
+        let nestedButton = action.children(matching: .button).matching(identifier: confirmID).firstMatch
+        receiptTap(nestedButton.exists ? nestedButton : action)
         XCTAssertTrue(app.buttons["receipt.draft.resume"].waitForNonExistence(timeout: 8))
     }
 
