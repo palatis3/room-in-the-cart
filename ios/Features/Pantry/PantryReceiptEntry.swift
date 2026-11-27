@@ -302,7 +302,8 @@ struct PantryReceiptEntry: View {
                             }
                             Text(pantryText("Resume to review it. Nothing has been added to the pantry by saving a draft."))
                                 .font(.subheadline)
-                            Button(pantryText("Resume saved receipt draft")) { resume(saved) }
+                            Button(pantryText("Resume saved receipt draft")) { Task { await resume(revision: saved.revision) } }
+                                .disabled(!draftSession.ready)
                                 .accessibilityIdentifier("receipt.draft.resume")
                             Button(pantryText("Discard saved draft"), role: .destructive) { discardVersion = saved.revision }
                                 .accessibilityIdentifier("receipt.draft.discard")
@@ -466,8 +467,9 @@ struct PantryReceiptEntry: View {
         }
     }
 
-    private func resume(_ saved: SavedReceiptDraft) {
-        guard initialSource == nil, model.permitsPrivateReceiptDraft, draft == nil, draftSession.resume(saved) else { return }
+    private func resume(revision: UUID) async {
+        guard initialSource == nil, draft == nil, let saved = await draftSession.resume(revision: revision, model: model),
+              model.permitsPrivateReceiptDraft, draft == nil else { return }
         switch saved.payload {
         case .lines(let source):
             guard model.snapshot?.state.workspaceID == source.workspaceID else { return }
@@ -1054,7 +1056,7 @@ struct PantryReceiptLineEditor: View {
     @ViewBuilder private var receivedFields: some View {
         let received = labeledField(pantryText("Amount actually received"), text: $line.received, focusKey: "received-\(line.ordinal)",
                                     identifier: "receipt.received.\(line.ordinal)", keyboard: .numbersAndPunctuation,
-                                    stacked: line.printed?.quantity != nil && line.printed?.unit != nil)
+                                    stacked: true)
         if let printed = line.printed, let quantity = printed.quantity, let unit = printed.unit {
             let layout = typeSize.isAccessibilitySize
                 ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8))
@@ -1103,7 +1105,7 @@ struct PantryReceiptLineEditor: View {
                          focusKey: "name-\(line.ordinal)", identifier: "receipt.name.\(line.ordinal)", axis: .vertical)
             receivedFields
             labeledField(line.treatment == .keptSome ? putawayText("Usable portion taken home") : pantryText("Amount usable"), text: $line.usable, focusKey: "usable-\(line.ordinal)",
-                         identifier: "receipt.usable.\(line.ordinal)", keyboard: .numbersAndPunctuation)
+                         identifier: "receipt.usable.\(line.ordinal)", keyboard: .numbersAndPunctuation, stacked: true)
                 .id("usable-\(line.ordinal)")
                 .listRowBackground(Theme.selection)
             Picker(pantryText("Unit"), selection: $line.unit) { ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pantryUnit($0)).tag($0) } }
@@ -1112,9 +1114,13 @@ struct PantryReceiptLineEditor: View {
                     LabeledContent(pantryText("Suggested storage to check"), value: pantryLocationName(storage))
                 } else if line.treatment == .keptSome { Text(putawayText("Choose where you stored the portion you kept.")).font(.caption) }
                 else { Text(pantryText("Choose where you put this food. The initial selection is cupboard.")).font(.caption) }
-                Picker(putawayText("Destination in My Pantry"), selection: $line.location) {
-                    ForEach(InventoryLocation.allCases, id: \.self) { Text(pantryLocationName($0)).tag($0) }
-                }.accessibilityIdentifier("receipt.storage.\(line.ordinal)")
+                let destination = putawayText("Destination in My Pantry")
+                journalStackedMenu(destination, value: pantryLocationName(line.location), id: "receipt.storage.\(line.ordinal)") {
+                    Picker(destination, selection: $line.location) {
+                        ForEach(InventoryLocation.allCases, id: \.self) { Text(pantryLocationName($0)).tag($0) }
+                    }
+                    .pickerStyle(.inline)
+                }
             }
             if permitsPutaway, line.treatment == .add, !line.selectedIntact, line.usable.isEmpty,
                let received = try? ComparisonModel.quantity(line.received, line.unit), received.amount > .zero {

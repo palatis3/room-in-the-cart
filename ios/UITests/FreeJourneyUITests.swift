@@ -2172,8 +2172,14 @@ import XCTest
         XCTAssertGreaterThanOrEqual(received.frame.height, 44)
         enterReceiptField(usableAmount, id: "receipt.usable.0")
         if let storage {
-            receiptTap(app.buttons["receipt.storage.0"])
+            let destination = app.buttons["receipt.storage.0"]
+            reveal(destination)
+            XCTAssertEqual(destination.label, "Destination in My Pantry")
+            XCTAssertEqual(destination.value as? String, "Cupboard")
+            receiptTap(destination)
             receiptTap(app.buttons[storage])
+            XCTAssertEqual(destination.value as? String, storage)
+            XCTAssertEqual(received.value as? String, "3")
         }
         let printedPrice = app.buttons["receipt.printedPrice.0"]
         reveal(printedPrice)
