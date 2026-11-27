@@ -138,6 +138,9 @@ private struct PantryReservationEditor: View {
                     TextField(ht("Amount to set aside"), text: $amount).focused($editing)
                         .accessibilityIdentifier("pantry.reserveAmount")
                     LabeledContent(ht("Unit"), value: dinnerUnit(review.unit))
+                    if let proposed {
+                        LabeledContent(ht("New total set aside"), value: deliveryQuantityText(proposed))
+                    }
                 }
                 if review.head?.quantity != nil {
                     Button(ht("Release this reservation"), role: .destructive) { editing = false; releasing = true }
@@ -153,11 +156,14 @@ private struct PantryReservationEditor: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button(ht("Cancel")) { dismiss() }.disabled(model.busy) }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(ht("Save")) {
+                    Button(ht(review.head?.quantity == nil ? "Set aside" : "Update total")) {
                         guard let quantity = proposed else { return }
                         editing = false
                         Task { await save(quantity) }
-                    }.disabled(proposed == nil || model.busy).accessibilityIdentifier("pantry.saveReservation")
+                    }
+                    .accessibilityLabel(ht(review.head?.quantity == nil ? "Set aside for this group" : "Update total set aside"))
+                    .accessibilityIdentifier("pantry.saveReservation")
+                    .disabled(proposed == nil || model.busy)
                 }
             }
             .interactiveDismissDisabled(model.busy)

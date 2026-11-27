@@ -564,6 +564,7 @@ import XCTest
         tap(app.buttons["pantry.ingredient." + lunch + "." + lunchIngredient])
         tap(app.buttons["pantry.group." + lunchGroup])
         enter("2", in: app.textFields["pantry.reserveAmount"])
+        XCTAssertEqual(app.buttons["pantry.saveReservation"].label, "Set aside for this group")
         tap(app.buttons["pantry.saveReservation"])
         back(from: "Tortillas")
         back(from: "Meal ingredient matches")
@@ -747,7 +748,8 @@ import XCTest
         tap(ingredient)
         tap(reviewReservation)
         enter("2", in: app.textFields["delivery.reservation.amount"])
-        tap(app.buttons["Save amount set aside"])
+        XCTAssertEqual(app.buttons["delivery.reservation.save"].label, "Set aside for this group")
+        tap(app.buttons["delivery.reservation.save"])
         // Saving dismisses the whole review stack asynchronously. The delivery
         // button can already exist underneath it before hit testing is ready.
         let matchSheet = app.navigationBars.matching(NSPredicate(format: "identifier IN %@",
@@ -853,10 +855,13 @@ import XCTest
         let reserve = app.buttons["Review amount to set aside for School lunch"]
         tap(matches); tap(ingredient); tap(reserve)
         enter("2", in: app.textFields["delivery.reservation.amount"])
-        tap(app.buttons["Save amount set aside"])
+        XCTAssertEqual(app.buttons["delivery.reservation.save"].label, "Set aside for this group")
+        tap(app.buttons["delivery.reservation.save"])
         tap(matches); tap(ingredient); tap(reserve)
         enter(XCUIKeyboardKey.delete.rawValue + "1", in: app.textFields["delivery.reservation.amount"])
-        tap(app.buttons["Save amount set aside"])
+        XCTAssertEqual(app.buttons["delivery.reservation.save"].label, "Update total set aside")
+        capture("Household-update-existing-total")
+        tap(app.buttons["delivery.reservation.save"])
         tap(app.buttons["Delivered food by meal"])
         assertFact("Uncovered by deliveries", "0 units")
         assertFact("Amount set aside", "1 unit")
@@ -895,22 +900,24 @@ import XCTest
         tap(record)
         enter("0,5", in: amount)
         tap(save)
-        XCTAssertTrue(hasUsable("1/2 unidades"))
+        XCTAssertTrue(hasUsable("1/2 de unidad"))
         let matches = app.buttons["Correspondencias con ingredientes de las comidas"]
         let ingredient = app.buttons.containing(.staticText, identifier: "Tortillas").firstMatch
         tap(matches); tap(ingredient); tap(app.buttons["Vincular este ingrediente"])
         tap(matches); tap(ingredient)
         tap(app.buttons["Revisar cuánto apartar para School lunch"])
         enter("0,25", in: app.textFields["delivery.reservation.amount"])
-        tap(app.buttons["Guardar cantidad apartada"])
+        XCTAssertEqual(app.buttons["delivery.reservation.save"].label, "Apartar para este grupo")
+        capture("Household-set-aside-Spanish-fractional-total")
+        tap(app.buttons["delivery.reservation.save"])
         tap(record)
         enter(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 3) + "0", in: amount)
         tap(save)
         XCTAssertTrue(hasUsable("0 unidades"))
         tap(app.buttons["Alimentos entregados por comida"])
-        assertFact("Cantidad apartada", "1/4 unidades")
+        assertFact("Cantidad apartada", "1/4 de unidad")
         assertFact("Cantidad que aún cubre esta entrega", "0 unidades")
-        checkCookCopy(in: "Avisar a quien cocina", fragments: ["Lunch wraps", "School lunch", "Tortillas de maíz", "Cantidad apartada: 1/4 unidades",
+        checkCookCopy(in: "Avisar a quien cocina", fragments: ["Lunch wraps", "School lunch", "Tortillas de maíz", "Cantidad apartada: 1/4 de unidad",
                        "Cantidad que aún cubre esta entrega: 0 unidades", "peanuts", "sesame"])
         tap(app.buttons["Listo"])
         tap(record)

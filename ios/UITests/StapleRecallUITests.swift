@@ -362,6 +362,11 @@ import XCTest
         app.navigationBars["Item details"].buttons["Done"].tap()
         let check = app.buttons["inStoreCheck-" + rowID]; show(check)
         XCTAssertTrue((check.value as? String)?.contains("Blue lid") == true)
+        app.buttons["inStoreSearch"].tap()
+        enter("blue lid\n", in: app.textFields["inStoreSearchQuery"])
+        XCTAssertTrue(check.waitForExistence(timeout: 8))
+        XCTAssertTrue((check.value as? String)?.contains("Matching photo cue, Blue lid") == true)
+        XCTAssertTrue(app.buttons["tripDetails-" + rowID].label.contains("Blue lid"))
     }
 
     func testSpanishTripReasonAndPackedJugStaySeparateAcrossRelaunch() {
@@ -411,6 +416,62 @@ import XCTest
         XCTAssertEqual(XCTWaiter.wait(for: [result], timeout: 8), .completed)
     }
 
+    func testSavedPlaceReturnsToExactCurrentStopGroceryWithoutPicking() {
+        continueAfterFailure = false
+        openLongCurrentStop()
+        app.buttons["inStoreSearch"].tap()
+        enter("cafe", in: app.textFields["inStoreSearchQuery"])
+        let variants = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label == %@", "inStoreCheck-", "Check Café"))
+        let ground = variants.matching(NSPredicate(format: "value CONTAINS %@", "Molido")).firstMatch
+        XCTAssertTrue(ground.waitForExistence(timeout: 8))
+        let id = String(ground.identifier.dropFirst("inStoreCheck-".count))
+        app.buttons["tripDetails-" + id].tap()
+        let save = app.buttons["inStorePlace.save"]
+        show(save)
+        XCTAssertTrue(save.isHittable)
+        save.tap()
+        XCTAssertTrue(app.buttons["inStorePlace.clear"].waitForExistence(timeout: 8))
+        app.navigationBars["Item details"].buttons["Done"].tap()
+        app.buttons["inStoreClearSearch"].tap()
+
+        // A new process recreates the signed-in adult, ledger and view graph on the same fixture enrollment.
+        app.terminate()
+        app.launchArguments.removeAll { $0 == "--reset-test-workspace" }
+        app.launch()
+        XCTAssertTrue(app.buttons["ledgerListOptions"].waitForExistence(timeout: 30))
+        let inStore = app.buttons["ledgerInStore"]
+        show(inStore)
+        inStore.tap()
+        let resume = app.buttons["inStorePlace.return"]
+        for _ in 0..<10 where !resume.isHittable { app.swipeDown() }
+        XCTAssertTrue(resume.waitForExistence(timeout: 8))
+        XCTAssertTrue(resume.label.contains("Café"))
+        XCTAssertTrue(resume.label.contains("Molido"))
+        XCUIDevice.shared.press(.home)
+        app.activate()
+        XCTAssertTrue(resume.waitForExistence(timeout: 10))
+        resume.tap()
+        let clear = app.buttons["inStorePlace.clear"]
+        show(clear)
+        clear.tap()
+        app.alerts.buttons["Cancel"].tap()
+        XCTAssertTrue(clear.isHittable)
+        app.navigationBars["Item details"].buttons["Done"].tap()
+        let check = app.buttons["inStoreCheck-" + id]
+        let returned = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"), object: check)
+        XCTAssertEqual(XCTWaiter.wait(for: [returned], timeout: 8), .completed)
+        XCTAssertFalse(app.buttons["inStoreUncheck-" + id].exists)
+
+        app.buttons["tripDetails-" + id].tap()
+        show(clear)
+        clear.tap()
+        app.alerts.buttons["Clear saved place"].tap()
+        XCTAssertTrue(save.waitForExistence(timeout: 8))
+        app.navigationBars["Item details"].buttons["Done"].tap()
+        for _ in 0..<4 { app.swipeDown() }
+        XCTAssertFalse(resume.exists)
+    }
+
     func testCurrentStopSearchRestoresAisleAndChecksOnlySelectedCoffee() {
         continueAfterFailure = false
         openLongCurrentStop()
@@ -432,6 +493,150 @@ import XCTest
         let restored = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"), object: original)
         XCTAssertEqual(XCTWaiter.wait(for: [restored], timeout: 6), .completed)
         XCTAssertFalse(app.buttons["inStoreCheck-" + id].exists)
+    }
+
+    func testEmptyCurrentStopHidesMountedAisleActionsDuringSearch() {
+        continueAfterFailure = false
+        openLongCurrentStop(fixture: "--empty-current-stop-fixture")
+        let nextStore = app.buttons["tripNextStore"]
+        XCTAssertTrue(nextStore.waitForExistence(timeout: 8))
+        app.buttons["inStoreSearch"].tap()
+        enter("coffee\n", in: app.textFields["inStoreSearchQuery"])
+        let results = app.collectionViews["inStoreSearchResults"]
+        XCTAssertTrue(results.staticTexts["No matching groceries at this stop."].waitForExistence(timeout: 8))
+        XCTAssertFalse(nextStore.exists)
+        app.buttons["inStoreClearSearch"].tap()
+        XCTAssertTrue(app.collectionViews["inStoreAisle"].buttons["tripNextStore"].waitForExistence(timeout: 8))
+    }
+
+    func testCurrentStopSearchShowsSoldOutNoteAndSeparateNameMatch() throws {
+        try assertSearchSourceContext(spanish: false)
+    }
+
+    func testLongMatchedNoteOpensCompleteWordingInItemDetails() {
+        continueAfterFailure = false
+        openLongCurrentStop(fixture: "--search-source-fixture")
+        app.buttons["inStoreSearch"].tap()
+        enter("green tea\n", in: app.textFields["inStoreSearchQuery"])
+        let ending = "The green tea sold out. I bought the black tea."
+        let check = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "inStoreCheck-")).firstMatch
+        XCTAssertTrue(check.waitForExistence(timeout: 8))
+        let spoken = check.value as? String ?? ""
+        XCTAssertTrue(spoken.contains("Matching list note, Read the full text in Item details."))
+        XCTAssertFalse(spoken.contains(ending))
+        let id = String(check.identifier.dropFirst("inStoreCheck-".count))
+        app.buttons["tripDetails-" + id].tap()
+        XCTAssertTrue(app.navigationBars["Item details"].waitForExistence(timeout: 8))
+        let fullNote = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@ AND label CONTAINS %@",
+                                                                           "Compare the wording on the tin.", ending)).firstMatch
+        XCTAssertTrue(fullNote.waitForExistence(timeout: 8))
+    }
+
+    func testSpanishCurrentStopSearchKeepsEnglishNoteAtLargestType() throws {
+        try assertSearchSourceContext(spanish: true)
+    }
+
+    private func assertSearchSourceContext(spanish: Bool) throws {
+        continueAfterFailure = false
+        openLongCurrentStop(largeSpanish: spanish, fixture: "--search-source-fixture")
+        let note = "The sugar-free carton sold out. I bought the sweetened one."
+        let noteCaption = spanish ? "Nota de la lista" : "List note"
+        let matchedNote = spanish ? "Coincide con la nota de la lista" : "Matching list note"
+        let matchedName = spanish ? "Coincide con el nombre del artículo" : "Matching item name"
+        let buttons = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "inStoreCheck-"))
+        let substitute = buttons.matching(NSPredicate(format: "value CONTAINS %@", note)).firstMatch
+        XCTAssertTrue(substitute.waitForExistence(timeout: 8))
+        let id = String(substitute.identifier.dropFirst("inStoreCheck-".count))
+        XCTAssertTrue((substitute.value as? String)?.contains(noteCaption) == true)
+
+        app.buttons["inStoreSearch"].tap()
+        let input = app.textFields["inStoreSearchQuery"]
+        enter("sugar-free\n", in: input)
+        let results = app.collectionViews["inStoreSearchResults"]
+        XCTAssertTrue(results.waitForExistence(timeout: 8))
+        let resultButtons = results.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "inStoreCheck-"))
+        let check = results.buttons["inStoreCheck-" + id]
+        XCTAssertTrue(check.waitForExistence(timeout: 8))
+        XCTAssertTrue((check.value as? String)?.contains(matchedNote + ", " + note) == true)
+        if !spanish { XCTAssertEqual(resultButtons.count, 2) }
+        // Only the active list can expose this grocery's actionable checkbox.
+        XCTAssertEqual(app.buttons.matching(identifier: "inStoreCheck-" + id).count, 1)
+        let detail = results.buttons["tripDetails-" + id]
+        XCTAssertTrue(detail.label.contains(note))
+        XCTAssertTrue(detail.label.contains(matchedNote))
+        let frame = XCTAttachment(screenshot: app.screenshot())
+        frame.name = spanish ? "es-MX large text saved note search" : "Saved note search"
+        frame.lifetime = .keepAlways
+        add(frame)
+        detail.tap()
+        let detailBar = app.navigationBars[spanish ? "Detalles del artículo" : "Item details"]
+        XCTAssertTrue(detailBar.waitForExistence(timeout: 8))
+        // Native sheets can leave their presenting window in the diagnostic tree.
+        // The background grocery must not be actionable while its detail is frontmost.
+        let coveredCheck = app.buttons["inStoreCheck-" + id]
+        let covered = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == false"), object: coveredCheck)
+        XCTAssertEqual(XCTWaiter.wait(for: [covered], timeout: 6), .completed)
+        let explanation = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@ AND label CONTAINS %@", matchedNote, note)).firstMatch
+        XCTAssertTrue(explanation.waitForExistence(timeout: 8))
+        let detailFrame = XCTAttachment(screenshot: app.screenshot())
+        detailFrame.name = spanish ? "es-MX large text full note in Item details" : "Full note in Item details"
+        detailFrame.lifetime = .keepAlways
+        add(detailFrame)
+        if !spanish, #available(iOS 27, *) { try assertModalSourceSpeech() }
+        detailBar.buttons[spanish ? "Listo" : "Done"].tap()
+        XCTAssertTrue(detailBar.waitForNonExistence(timeout: 8))
+        XCTAssertTrue(detail.waitForExistence(timeout: 8))
+
+        // A full note can consume the entire largest-type viewport. Reach the
+        // second result before asking XCTest about its separate source and identity.
+        let named = resultButtons.matching(NSPredicate(format: "value CONTAINS %@", matchedName)).firstMatch
+        for _ in 0..<5 {
+            if named.exists && named.isHittable { break }
+            results.swipeUp()
+        }
+        XCTAssertTrue(named.isHittable)
+        XCTAssertNotEqual(named.identifier, "inStoreCheck-" + id)
+        app.buttons["inStoreClearSearch"].tap()
+        XCTAssertTrue(input.waitForNonExistence(timeout: 8))
+        let returned = app.collectionViews["inStoreAisle"].buttons["inStoreCheck-" + id]
+        XCTAssertTrue((returned.value as? String)?.contains(noteCaption + ", " + note) == true)
+        XCTAssertFalse(app.buttons["inStoreUncheck-" + id].exists)
+    }
+
+    @available(iOS 27, *)
+    private func assertModalSourceSpeech() throws {
+        let service = XCUIDevice.shared.voiceOverService
+        let wasEnabled = service.isEnabled
+        if !wasEnabled {
+            addTeardownBlock {
+                if XCUIDevice.shared.voiceOverService.isEnabled { try XCUIDevice.shared.voiceOverService.disable() }
+            }
+            try service.enable()
+        }
+        // The service returned a 64-character prefix in this sheet. The complete
+        // literal is checked on the actual detail element before this traversal.
+        func isMatchingSource(_ utterance: String) -> Bool {
+            utterance.localizedCaseInsensitiveContains("Matching list note")
+                && utterance.localizedCaseInsensitiveContains("The sugar-free carton sold out.")
+        }
+        var utterances = [try service.currentSpeech().utterance]
+        for _ in 0..<16 {
+            if utterances.contains(where: isMatchingSource) { break }
+            utterances.append(try service.moveForward().utterance)
+        }
+        // Finish and verify cleanup before an XCTest assertion can end this case.
+        if !wasEnabled { try service.disable() }
+        let restored = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            XCUIDevice.shared.voiceOverService.isEnabled == wasEnabled
+        }, object: nil)
+        let restorationResult = XCTWaiter.wait(for: [restored], timeout: 5)
+        let speech = XCTAttachment(data: try JSONEncoder().encode(utterances), uniformTypeIdentifier: "public.json")
+        speech.name = "Item details VoiceOver source traversal"
+        speech.lifetime = .keepAlways
+        add(speech)
+        XCTAssertEqual(restorationResult, .completed, "VoiceOver must return to its original setting.")
+        XCTAssertTrue(utterances.contains(where: isMatchingSource))
+        XCTAssertFalse(utterances.contains { $0.localizedCaseInsensitiveContains("Check Oat drink") || $0.localizedCaseInsensitiveContains("Check Sugar-free oat drink") })
     }
 
     func testLargestTypeCanUndoLastPickFromCurrentViewport() {
@@ -490,8 +695,8 @@ import XCTest
         XCTAssertEqual(XCTWaiter.wait(for: [saved], timeout: 8), .completed)
     }
 
-    private func openLongCurrentStop(largeSpanish: Bool = false) {
-        app.launchArguments = ["--ui-testing", "--staple-recall-fixture", "--long-current-stop-fixture", "--reset-test-workspace",
+    private func openLongCurrentStop(largeSpanish: Bool = false, fixture: String = "--long-current-stop-fixture") {
+        app.launchArguments = ["--ui-testing", "--staple-recall-fixture", fixture, "--reset-test-workspace",
                                "-AppleLanguages", largeSpanish ? "(es)" : "(en)", "-AppleLocale", largeSpanish ? "es_MX" : "en_US",
                                "-UIPreferredContentSizeCategoryName", largeSpanish ? "UICTContentSizeCategoryAccessibilityXXXL" : "UICTContentSizeCategoryL"]
         app.launch()

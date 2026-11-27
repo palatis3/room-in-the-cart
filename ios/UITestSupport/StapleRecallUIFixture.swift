@@ -36,7 +36,19 @@ struct StapleRecallUIFixture: View {
                         let tea = try west.addManualLine(name: "Tea", quantity: nil, at: past)
                         try west.approveStaple(lineID: tea, purpose: "School lunches", at: past)
                         var current = ShoppingLedger(title: "This trip", basis: .init(branch: "North market"))
-                        if ProcessInfo.processInfo.arguments.contains("--long-current-stop-fixture") {
+                        if ProcessInfo.processInfo.arguments.contains("--empty-current-stop-fixture") {
+                            current = ShoppingLedger(title: "This trip", basis: .init(branch: "North market", mode: .inStore))
+                        } else if ProcessInfo.processInfo.arguments.contains("--search-source-fixture") {
+                            current = ShoppingLedger(title: "This trip", basis: .init(branch: "North market", mode: .inStore))
+                            try current.addManualLine(name: "Oat drink", quantity: nil,
+                                                      notes: "The sugar-free carton sold out. I bought the sweetened one.")
+                            try current.addManualLine(name: "Sugar-free oat drink", quantity: nil)
+                            let fullNote = String(repeating: "Compare the wording on the tin. ", count: 7) +
+                                "The green tea sold out. I bought the black tea."
+                            try current.addManualLine(name: "Tea tin", quantity: nil, notes: fullNote)
+                            let elsewhere = try current.addManualLine(name: "Other carton", quantity: nil, notes: "sugar-free")
+                            try current.setPreferredStores(["West store"], lineID: elsewhere, expectedRevision: current.revisionID)
+                        } else if ProcessInfo.processInfo.arguments.contains("--long-current-stop-fixture") {
                             current = ShoppingLedger(title: "This trip", basis: .init(branch: "North market", mode: .inStore, currency: .mxn))
                             for index in 1...40 {
                                 try current.addManualLine(name: String(format: "Pasillo %02d", index), quantity: nil)

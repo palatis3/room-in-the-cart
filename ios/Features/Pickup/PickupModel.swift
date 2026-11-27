@@ -25,7 +25,12 @@ func pQuantity(_ amount: Rational, unit: UnitOfMeasure, language: String? = nil)
 }
 
 // Coverage from the shared service can contain exact fractions larger than Int64.
-func pQuantity(_ exactAmount: String, unit: UnitOfMeasure, singular: Bool, language: String?) -> String {
+func pQuantity(_ exactAmount: String, unit: UnitOfMeasure, singular: Bool, language: String?,
+               properFraction: Bool = false) -> String {
+    if properFraction && unit == .count {
+        let key = "Fractional count unit"
+        return exactAmount + " " + (language.map { pCook(key, language: $0) } ?? pTr(key))
+    }
     let label = pUnitLabel(unit, singular: singular, language: language)
     return "\(exactAmount) \(label)"
 }

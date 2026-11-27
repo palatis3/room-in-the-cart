@@ -1,0 +1,150 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Clear saved place": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear saved place"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borrar lugar guardado"
+          }
+        }
+      }
+    },
+    "Clear this saved place?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear this saved place?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Borrar este lugar guardado?"
+          }
+        }
+      }
+    },
+    "Keep my place here": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep my place here"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar mi lugar aquí"
+          }
+        }
+      }
+    },
+    "Move my saved place here": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move my saved place here"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mover aquí mi lugar guardado"
+          }
+        }
+      }
+    },
+    "Return to %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Return to %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a %@"
+          }
+        }
+      }
+    },
+    "Your saved place could not be updated. Try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your saved place could not be updated. Try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo actualizar tu lugar guardado. Vuelve a intentarlo."
+          }
+        }
+      }
+    },
+    "This saved place is no longer available.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This saved place is no longer available."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este lugar guardado ya no está disponible."
+          }
+        }
+      }
+    },
+    "Saved for up to 24 hours on this device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved for up to 24 hours on this device."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se guarda hasta por 24 horas en este dispositivo."
+          }
+        }
+      }
+    },
+    "Replace the saved place at this stop?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace the saved place at this stop?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Reemplazar el lugar guardado en esta parada?"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

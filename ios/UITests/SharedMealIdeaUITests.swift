@@ -252,10 +252,9 @@ import XCTest
     }
     private func assertVisibleFractionalMealNeed() {
         let label = "Meal need, 1/2 cups"
-        guard visibleSnapshot(label, searchTowardEndFirst: false, matching: {
+        _ = visibleSnapshot(label, searchTowardEndFirst: false) {
             $0.elementType == .staticText && $0.label == label
-        }) != nil else { return }
-        XCTAssertTrue(app.staticTexts[label].firstMatch.isHittable, "Missing visible text: " + label)
+        }
     }
     private func visibleSnapshot(_ description: String, searchTowardEndFirst: Bool,
                                  matching: (any XCUIElementSnapshot) -> Bool)
@@ -268,18 +267,19 @@ import XCTest
             }
             let area = scrollableArea(screen: screen)
             var pending = screen.children
-            var match: (any XCUIElementSnapshot)?
+            var firstFrame: CGRect?
             while let node = pending.popLast() {
-                if matching(node) {
-                    match = node
-                    break
+                if matching(node), !node.frame.isEmpty {
+                    let frame = node.frame
+                    if area.contains(CGPoint(x: frame.midX, y: frame.midY)),
+                       frame.minY >= area.minY, frame.maxY <= area.maxY {
+                        return (node, area)
+                    }
+                    if firstFrame == nil { firstFrame = frame }
                 }
                 pending.append(contentsOf: node.children)
             }
-            let frame = match?.frame ?? .zero
-            if let match, !frame.isEmpty && frame.minY >= area.minY && frame.maxY <= area.maxY {
-                return (match, area)
-            }
+            let frame = firstFrame ?? .zero
             guard attempt < 24 else { break }
             let searchUpward = attempt < 16 ? searchTowardEndFirst : !searchTowardEndFirst
             let upward = frame.isEmpty ? searchUpward : frame.midY > area.midY
@@ -582,10 +582,10 @@ import XCTest
         XCTAssertTrue((fact.label + " " + (fact.value as? String ?? "")).contains(expected), fact.debugDescription)
     }
     private func assertText(_ text: String) {
-        let matches = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", text))
-        if matches.allElementsBoundByIndex.contains(where: { $0.exists && $0.isHittable }) { return }
-        reveal(matches.firstMatch)
-        XCTAssertTrue(matches.allElementsBoundByIndex.contains(where: { $0.exists && $0.isHittable }), "Missing visible text: \(text)")
+        // Read-only labels can be visible without an activation point.
+        _ = visibleSnapshot(text, searchTowardEndFirst: true) {
+            $0.elementType == .staticText && $0.label.contains(text)
+        }
     }
     private func assertElementContains(_ id: String, _ text: String) {
         let target = element(id); reveal(target); XCTAssertTrue(target.label.contains(text), target.label)

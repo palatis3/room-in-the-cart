@@ -1,10 +1,41 @@
 import XCTest
 import PDFKit
 import UIKit
+import SwiftUI
 import CoreDomain
 @testable import RoomInTheCart
 
 @MainActor final class LedgerListLayoutTests: XCTestCase {
+    func testJournalSourceMarksRespectRoomForTheSourceWords() throws {
+        func render(_ title: String, kind: JournalSourceKind?, width: CGFloat,
+                    size: DynamicTypeSize, scheme: ColorScheme) throws -> Data {
+            let label = JournalSourceLabel(kind: kind, title: title)
+                .font(.body).foregroundStyle(Theme.ink)
+                .frame(width: width, alignment: .leading)
+                .fixedSize(horizontal: false, vertical: true)
+                .background(Theme.surface)
+                .environment(\.dynamicTypeSize, size)
+                .environment(\.colorScheme, scheme)
+            let renderer = ImageRenderer(content: label)
+            renderer.scale = 1
+            return try XCTUnwrap(renderer.uiImage?.pngData())
+        }
+
+        for scheme in [ColorScheme.light, .dark] {
+            let compact = try [.shoppingList, .pantryCount, .receipt].map { (kind: JournalSourceKind) in
+                try render("Recibo", kind: kind, width: 240, size: .large, scheme: scheme)
+            }
+            XCTAssertEqual(Set(compact).count, 3)
+            let plain = try render("Recibo", kind: nil, width: 240, size: .large, scheme: scheme)
+            XCTAssertFalse(compact.contains(plain))
+
+            let longSource = "Recuento de despensa confirmado a mano"
+            let marked = try render(longSource, kind: .pantryCount, width: 150, size: .accessibility5, scheme: scheme)
+            let words = try render(longSource, kind: nil, width: 150, size: .accessibility5, scheme: scheme)
+            XCTAssertEqual(marked, words)
+        }
+    }
+
     private func populated(_ branch: String) throws -> ShoppingLedger {
         var shop = ShoppingLedger(title: "Saturday list", basis: ShopBasis(branch: branch))
         for (name, aisle) in [("Apples", "Produce"), ("Milk", "Dairy"), ("Soap", "")] {

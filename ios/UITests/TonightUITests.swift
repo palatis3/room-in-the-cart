@@ -148,7 +148,7 @@ import XCTest
         let destination = app.descendants(matching: .any)["dinner.handoff.destination"]
         reveal(destination)
         XCTAssertTrue(destination.label.contains("Groceries for Scrambled eggs"))
-        revealPlanConfirmation(confirm)
+        revealFollowingAction(confirm)
         XCTAssertEqual(confirm.label, "Plan for tonight")
         confirm.tap()
         XCTAssertTrue(app.descendants(matching: .any)["dinner.handoff.saved"].waitForExistence(timeout: 10))
@@ -257,7 +257,10 @@ import XCTest
         fill(source, "Family pita supper\nServes 4\nPrep time: 25 minutes\n2 sweet potatoes\n4 pitas\nRoast the potatoes.")
         tap(app.buttons["dinner.recipe.reviewPaste"])
         XCTAssertTrue(app.buttons["tonight.recipe.reviewedMinutes"].exists)
-        tap(app.buttons["tonight.recipe.save"])
+        // At accessibility sizes the final Save row enters the Form's accessibility tree only after scrolling.
+        let saveRecipe = app.buttons["tonight.recipe.save"]
+        revealFollowingAction(saveRecipe)
+        saveRecipe.tap()
         tap(app.buttons["dinner.planSaved"].firstMatch)
         tap(app.buttons["dinner.handoff.editPlan"])
         tap(app.buttons["dinner.plan.tomorrow"])
@@ -265,7 +268,7 @@ import XCTest
         tap(app.buttons["dinner.handoff.startPickup"])
         tap(app.buttons["ledgerCreateShop"])
         let confirm = app.buttons["dinner.handoff.confirm"]
-        revealPlanConfirmation(confirm)
+        revealFollowingAction(confirm)
         XCTAssertEqual(confirm.label, "Plan for this day")
         confirm.tap()
         tap(app.buttons["dinner.handoff.openPlan"])
@@ -589,12 +592,12 @@ import XCTest
         else { element.tap() }
     }
 
-    private func revealPlanConfirmation(_ confirm: XCUIElement) {
+    private func revealFollowingAction(_ action: XCUIElement) {
         for _ in 0..<8 {
-            if confirm.exists && confirm.isHittable { break }
+            if action.exists && action.isHittable { return }
             app.swipeUp()
         }
-        XCTAssertTrue(confirm.exists && confirm.isHittable, app.debugDescription)
+        XCTAssertTrue(action.exists && action.isHittable, app.debugDescription)
     }
 
     private func reveal(_ element: XCUIElement) {

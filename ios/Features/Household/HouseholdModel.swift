@@ -25,6 +25,7 @@ struct DeviceReminderPersona: Equatable {
     @Published private(set) var workspaceListState: WorkspaceListState = .notLoaded
     @Published private(set) var workspaces: [WorkspaceList.Workspace] = []
     private var workspaceListRequest = UUID()
+    @Published private(set) var shoppingPlaceDeviceID: String?
     @Published private(set) var projection: HouseholdBootstrap?
     @Published private(set) var shopperInbox: HouseholdInboxModel?
     @Published private(set) var sharedShop: HouseholdShopModel?
@@ -281,6 +282,9 @@ struct DeviceReminderPersona: Equatable {
         try validateGuardianChildProjection(value)
         clearRequestPickups()
         guard let service else { throw ClientError.configuration }
+            let device = try? await service.privateShoppingDeviceID(bootstrap: value)
+            guard start == generation else { return }
+            shoppingPlaceDeviceID = device
             projection = value
             try await reconcilePickingEnrollment(value, service: service)
             guard start == generation else { return }
@@ -418,7 +422,13 @@ struct DeviceReminderPersona: Equatable {
                 nextRequestCursor = nil
             }
             // Revoke the old view as soon as authority is known, even if the request list cannot load.
+            if actorChanged { shoppingPlaceDeviceID = nil }
             projection = fresh
+            if actorChanged {
+                let device = try? await service.privateShoppingDeviceID(bootstrap: fresh)
+                guard start == generation, projection == fresh else { return }
+                shoppingPlaceDeviceID = device
+            }
             if actorChanged || destinationChanged {
                 try await reconcilePickingEnrollment(fresh, service: service)
                 guard start == generation else { return }
@@ -1081,7 +1091,7 @@ struct DeviceReminderPersona: Equatable {
         unsentOfflineRequestID = nil
         shopperInbox?.clear(); shopperInbox = nil; sharedShop?.clear(); sharedShop = nil
         clearRequestPickups()
-        projection = nil; contributorDeviceID = nil; requests = []; requestReadTimes = RequestReadTimes(); nextRequestCursor = nil; pending = nil
+        projection = nil; shoppingPlaceDeviceID = nil; contributorDeviceID = nil; requests = []; requestReadTimes = RequestReadTimes(); nextRequestCursor = nil; pending = nil
         contributorReplayWindow = nil
         delivery = .localDraft; attempts = 0; retryAfter = .distantPast; cancelEdit()
     }

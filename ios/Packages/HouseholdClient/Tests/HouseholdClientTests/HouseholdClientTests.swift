@@ -189,6 +189,38 @@ final class HouseholdClientTests: XCTestCase {
         XCTAssertNil(policy.delay(attempt: 1, error: .service(status: 409, code: "stale_base", correlationID: nil, retryAfter: nil)))
         XCTAssertNil(policy.delay(attempt: 1, error: .accessEnded))
     }
+    func testSavedShoppingPlaceEnrollmentSurvivesRelaunchButNotReplacementOrRevocation() async throws {
+        let server = EnrollmentServer(household: household, member: member)
+        server.role = "shopper"
+        MockURLProtocol.handler = server.response
+        let refresh = MemoryVault(), devices = MemoryVault()
+        let configuration = try ServiceConfiguration(baseURL: URL(string: "https://service.test")!)
+        let signedIn = try auth(refresh)
+        _ = try await signedIn.verifyEmailCode(email: "adult@example.test", code: "123456")
+        let first = HouseholdService(configuration: configuration, auth: signedIn, deviceVault: devices, transport: transport())
+        let enrolled = try await first.enroll(householdID: household)
+        let device = try await first.privateShoppingDeviceID(bootstrap: enrolled)
+
+        let restored = HouseholdService(configuration: configuration, auth: try auth(refresh), deviceVault: devices, transport: transport())
+        let checked = try await restored.enroll(householdID: household)
+        let afterRestart = try await restored.privateShoppingDeviceID(bootstrap: checked)
+        XCTAssertEqual(afterRestart, device)
+
+        // A genuinely different provider session needs a new server enrollment for this same member.
+        server.session = UUID().uuidString
+        let nextAuth = try auth(refresh)
+        _ = try await nextAuth.verifyEmailCode(email: "adult@example.test", code: "654321")
+        let replacement = HouseholdService(configuration: configuration, auth: nextAuth, deviceVault: devices, transport: transport())
+        let newEnrollment = try await replacement.enroll(householdID: household)
+        let nextDevice = try await replacement.privateShoppingDeviceID(bootstrap: newEnrollment)
+        XCTAssertNotEqual(nextDevice, device)
+        server.revoked = true
+        do {
+            _ = try await replacement.enroll(householdID: household)
+            XCTFail("Revoked enrollment accepted")
+        } catch {}
+    }
+
     func testEnrollmentResumesSameDeviceAfterClientRecreation() async throws {
         let auth = try auth(); let vault = MemoryVault(); var registrations = 0
         let config = try ServiceConfiguration(baseURL: URL(string: "https://service.test")!)
@@ -213,6 +245,7 @@ final class HouseholdClientTests: XCTestCase {
         var subject = "first-adult", session = UUID().uuidString
         struct Binding: Equatable { let subject: String; let session: String }
         var deviceSessions: [String: Binding] = [:]
+        var role = "contributor"
         var binding: Binding { .init(subject: subject, session: session) }
         var revoked = false
         init(household: String, member: String) { self.household = household; self.member = member }
@@ -236,7 +269,7 @@ final class HouseholdClientTests: XCTestCase {
                 let token = request.value(forHTTPHeaderField: "X-Device-Token") ?? ""
                 guard !revoked, deviceSessions[token] == binding else { return (401, Data()) }
                 return ok(["household": ["id": household, "label": "Home"], "memberId": member,
-                           "role": "contributor", "enrolled": true, "queueConsent": false, "capabilities": ["own_requests"]])
+                           "role": role, "enrolled": true, "queueConsent": false, "capabilities": ["own_requests"]])
             }
             XCTFail("Unexpected request at " + path); return (400, Data())
         }

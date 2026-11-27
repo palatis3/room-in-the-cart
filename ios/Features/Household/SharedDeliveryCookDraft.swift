@@ -233,6 +233,7 @@ struct SharedDeliveryCookDraft {
         quantity.flatMap { value -> String? in
             guard let unit = UnitOfMeasure(rawValue: value.unit),
                   let amount = try? Rational(Int64(value.amount.numerator), Int64(value.amount.denominator)) else { return nil }
+            if unit == .count { return deliveryCountText(amount, language: language) }
             return pQuantity(amount, unit: unit, language: language)
         } ?? label("Unknown")
     }
@@ -245,7 +246,7 @@ struct SharedDeliveryCookDraft {
 
     private func quantity(_ fraction: SharedDeliveryCoverage.Fraction?, required: SharedMealQuantity?) -> String {
         guard let fraction, let unit = required.flatMap({ UnitOfMeasure(rawValue: $0.unit) }) else { return label("Unknown") }
-        return pQuantity(fraction.formatted, unit: unit, singular: fraction.numerator == fraction.denominator, language: language)
+        return fraction.quantityText(unit: unit, language: language)
     }
 
     static func issueKey(_ code: String) -> String {

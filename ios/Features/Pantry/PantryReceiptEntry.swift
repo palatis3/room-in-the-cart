@@ -1142,7 +1142,8 @@ struct PantryReceiptHistory: View {
                     Text(row.name).font(.headline)
                     Text(row.merchant + " · " + dates.purchaseDay(row))
                         .font(.subheadline).foregroundStyle(Theme.secondary)
-                    ReceiptPaperLine(wording: row.originalLine, provenance: row.documentLine.map(receiptProvenance))
+                    ReceiptPaperLine(wording: row.originalLine, provenance: row.documentLine.map(receiptProvenance),
+                                     sourceKind: row.documentLine?.stage == .receipt ? .receipt : nil)
                     Text(pantryFormat("Received %@", pantryQuantity(row.received))).monospacedDigit()
                     Text(pantryFormat("Usable %@", pantryQuantity(row.usable))).monospacedDigit()
                     if case .added(let location) = row.stock {

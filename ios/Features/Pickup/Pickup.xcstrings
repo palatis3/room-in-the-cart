@@ -10001,6 +10001,23 @@
         }
       }
     },
+    "Fractional count unit": {
+      "comment": "Unit phrase after a positive exact fraction smaller than one, for example 1/4 de unidad.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "units"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "de unidad"
+          }
+        }
+      }
+    },
     "One count unit": {
       "extractionState": "manual",
       "localizations": {

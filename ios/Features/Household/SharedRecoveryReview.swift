@@ -178,7 +178,7 @@ struct SharedRecoveryReview: View {
 
     private func quantity(_ amount: SharedDeliveryCoverage.Fraction?, unit: String?) -> String {
         guard let amount, let unit = unit.flatMap(UnitOfMeasure.init(rawValue:)) else { return ht("Unknown") }
-        return pQuantity(amount.formatted, unit: unit, singular: amount.numerator == amount.denominator, language: nil)
+        return amount.quantityText(unit: unit)
     }
 
     private func recheck() async {

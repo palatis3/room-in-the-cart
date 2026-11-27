@@ -23,6 +23,12 @@ struct PantryProductBatchView: View {
     @State private var editingProduct: PantryProductBatch.Candidate?
     @State private var reviewingLookup = false
     @State private var review: PantryReceiptReview?
+    @State private var preparationID: UUID?
+    @State private var restoreReviewFocus = false
+    private enum ReviewFocus: Hashable { case opener, product(Int) }
+    @AccessibilityFocusState private var reviewFocus: ReviewFocus?
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var result: String?
     @State private var inputMessage: String?
     private let didFinishWithLot: ((UUID) -> Void)?
@@ -88,22 +94,60 @@ struct PantryProductBatchView: View {
     var body: some View {
         Group { content }
             .task(id: access?.scope) { inspectPending() }
+            .onChange(of: scene) { _, phase in
+                if phase == .background { invalidateReview() }
+            }
             .onChange(of: scanDraft) { _, _ in persistDraft() }
             .onChange(of: reviewingLookup) { _, editing in if !editing { persistDraft() } }
     }
 
     @ViewBuilder private var content: some View {
         if reviewingLookup, !draftChangedElsewhere, offeredDraft == nil, recovery == nil, !recoveryReadFailed, inspectedDraft, authorized, let row = batch.candidates.first {
-            candidateEditor(row, finishEditing: { reviewingLookup = false }, current: { authorized })
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) { Button(pantryText("Cancel")) { dismiss() } }
-                }
+            candidateEditor(row, finishEditing: { reviewingLookup = false }, cancelLookup: { dismiss() }, current: { authorized })
         } else {
             batchForm
         }
     }
 
     private var batchForm: some View {
+        VStack(spacing: 0) {
+            batchFields
+            if showsReviewFooter { reviewFooter }
+        }
+        .disabled(working || !authorized)
+        .navigationTitle(pantryText("Scan products"))
+        .navigationBarTitleDisplayMode(typeSize.isAccessibilitySize ? .inline : .automatic)
+        .privacySensitive().scrollDismissesKeyboard(.interactively)
+        .keyboardDoneAction(visible: focus != nil, title: pantryText("Done"), identifier: "productBatch.keyboardDone") { focus = nil }
+        .toolbar {
+            if review == nil {
+                ToolbarItem(placement: .cancellationAction) { Button(pantryText("Cancel")) { dismiss() }.disabled(working) }
+            }
+        }
+        .interactiveDismissDisabled(working)
+        .sheet(item: $editingProduct) { selection in
+            NavigationStack {
+                if authorized, let row = batch.candidates.first(where: { $0.id == selection.id }) {
+                    candidateEditor(row, focusCount: editingCount, finishEditing: { editingProduct = nil }, current: {
+                        authorized && editingProduct?.id == selection.id && batch.candidates.contains { $0.id == selection.id }
+                    })
+                }
+            }
+        }
+        .onChange(of: batch.candidates) { _, _ in confirmed = false }
+        .onChange(of: merchant) { _, _ in confirmed = false }
+        .onChange(of: date) { old, new in if !Calendar.current.isDate(old, inSameDayAs: new) { confirmed = false } }
+        .onChange(of: canPresent) { _, allowed in
+            if !allowed {
+                invalidateReview()
+                editingProduct = nil
+                let scope = catalogScope.id
+                Task { await PantryProductCatalog.shared.close(scope: scope) }
+            }
+        }
+    }
+
+    private var batchFields: some View {
         WorkingForm {
             if !canPresent {
                 if working, model.busy, model.phase == .ready, scene == .active, let initialAccess,
@@ -186,6 +230,7 @@ struct PantryProductBatchView: View {
                                 }
                                 Text(pantryLocationName(row.location))
                             }.accessibilityElement(children: .combine)
+                                .accessibilityFocused($reviewFocus, equals: .product(row.ordinal))
                         }
                     }
                     ForEach(review.facts) { row in
@@ -207,20 +252,34 @@ struct PantryProductBatchView: View {
                                 }
                             }
                         }.accessibilityElement(children: .combine)
+                            .accessibilityFocused($reviewFocus, equals: .product(row.ordinal))
                     }
                     if !atHome {
                         Text(review.facts.first?.merchant ?? "")
                         Text(date, format: .dateTime.year().month().day())
                     }
                     Button(pantryText(atHome ? "Save pantry count" : "Save received products")) { commit(review) }.buttonStyle(PrimaryAction()).accessibilityIdentifier("productBatch.commit")
-                    Button(pantryText("Edit batch")) { self.review = nil; result = nil }
+                    Button(action: cancelReview) {
+                        Text(pantryText("Cancel")).font(.headline).frame(maxWidth: .infinity, minHeight: 52)
+                    }
+                    .buttonStyle(.bordered)
+                    .accessibilityLabel(pantryText("Cancel review"))
+                    .accessibilityIdentifier("productBatch.cancelReview")
                 }.disabled(working)
+                .task(id: review.id) {
+                    guard authorized, self.review?.id == review.id else { return }
+                    if let ordinal = atHome ? batch.candidates.first(where: \.included)?.ordinal : review.facts.first?.ordinal {
+                        reviewFocus = .product(ordinal)
+                    }
+                }
+                .transition(reduceMotion ? .identity : .opacity)
             } else {
                 Section {
-                    Picker(pantryText("Package source"), selection: Binding(get: { atHome }, set: changeSource)) {
-                        Text(pantryText("Counted at home")).tag(true)
-                        Text(pantryText("Received purchase")).tag(false)
-                    }.accessibilityIdentifier("pack.source")
+                    if typeSize.isAccessibilitySize {
+                        packageSource.pickerStyle(.inline)
+                    } else {
+                        packageSource
+                    }
                 } footer: {
                     Text(pantryText("Choose Counted at home for food you already have."))
                 }
@@ -238,7 +297,7 @@ struct PantryProductBatchView: View {
                     }
                     VStack(alignment: .leading) {
                         let title = pantryText("Product name or label text")
-                        Text(title).font(.caption)
+                        Text(title).font(.caption).lineLimit(nil).fixedSize(horizontal: false, vertical: true)
                         TextEditor(text: $name)
                             .frame(minHeight: 58)
                             .focused($focus, equals: "name")
@@ -321,9 +380,6 @@ struct PantryProductBatchView: View {
                         }
                         Toggle(confirmationText, isOn: $confirmed)
                             .accessibilityIdentifier("productBatch.received")
-                        Button(pantryText(atHome ? "Review pantry count" : "Review received products")) { prepare() }
-                            .disabled(!confirmed || working || !model.canEdit || (!atHome && merchant.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
-                            .accessibilityIdentifier("productBatch.review")
                     }
                     }
                 }
@@ -334,30 +390,89 @@ struct PantryProductBatchView: View {
             }
             if authorized, let result { Text(result).accessibilityIdentifier("productBatch.status") }
         }
-        .disabled(working || !authorized)
-        .navigationTitle(pantryText("Scan products")).privacySensitive().scrollDismissesKeyboard(.interactively)
-        .keyboardDoneAction(visible: focus != nil, title: pantryText("Done"), identifier: "productBatch.keyboardDone") { focus = nil }
-        .toolbar { ToolbarItem(placement: .cancellationAction) { Button(pantryText("Cancel")) { dismiss() }.disabled(working) } }
-        .interactiveDismissDisabled(working)
-        .sheet(item: $editingProduct) { selection in
-            NavigationStack {
-                if authorized, let row = batch.candidates.first(where: { $0.id == selection.id }) {
-                    candidateEditor(row, focusCount: editingCount, finishEditing: { editingProduct = nil }, current: {
-                        authorized && editingProduct?.id == selection.id && batch.candidates.contains { $0.id == selection.id }
-                    })
-                }
+    }
+
+    private var packageSource: some View {
+        Picker(pantryText("Package source"), selection: Binding(get: { atHome }, set: changeSource)) {
+            Text(pantryText("Counted at home")).fixedSize(horizontal: false, vertical: true).tag(true)
+            Text(pantryText("Received purchase")).fixedSize(horizontal: false, vertical: true).tag(false)
+        }
+        .accessibilityIdentifier("pack.source")
+    }
+
+    private var reviewTitle: String { pantryText(atHome ? "Review pantry count" : "Review received products") }
+
+    private var visibleReviewTitle: String {
+        typeSize.isAccessibilitySize ? pantryText(atHome ? "Review count" : "Review delivery") : reviewTitle
+    }
+
+    private var showsReviewFooter: Bool {
+        let canReviewDraft = inspectedDraft || (lookupAccess == nil && initialAccess == nil && access == nil)
+        guard focus == nil, canPresent, canReviewDraft, !draftChangedElsewhere, !recoveryReadFailed,
+              recovery == nil, offeredDraft == nil, !saved, !batch.candidates.isEmpty else { return false }
+        return review != nil || batch.candidates.contains(where: \.included) ||
+            !batch.candidates.contains { $0.receiptLinkSaved && $0.existingReceipt != nil }
+    }
+
+    private var reviewFooter: some View {
+        VStack(spacing: 8) {
+            Divider()
+            if review == nil {
+                Button(visibleReviewTitle, action: prepare)
+                    .buttonStyle(PrimaryAction())
+                    .disabled(!confirmed || working || !model.canEdit || (!atHome && merchant.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
+                    .accessibilityLabel(reviewActionLabel)
+                    .accessibilityInputLabels([Text(visibleReviewTitle), Text(reviewActionLabel)])
+                    .accessibilityFocused($reviewFocus, equals: .opener)
+                    .accessibilityIdentifier("productBatch.review")
+                    .task(id: restoreReviewFocus) {
+                        guard restoreReviewFocus, authorized, review == nil else { return }
+                        restoreReviewFocus = false
+                        reviewFocus = .opener
+                    }
+            } else {
+                // Reserve the exact original control footprint outside the scrolling form.
+                // A repeated tap here cannot reach either the commit or the cancel control.
+                PrimaryActionLabel(label: Text(visibleReviewTitle)).hidden()
+                    .overlay { Text(pantryText("Not recorded yet")).font(.headline).foregroundStyle(Theme.ink) }
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(pantryText("Not recorded yet"))
+                    .accessibilityIdentifier("productBatch.reviewPending")
             }
         }
-        .onChange(of: batch.candidates) { _, _ in confirmed = false }
-        .onChange(of: merchant) { _, _ in confirmed = false }
-        .onChange(of: date) { old, new in if !Calendar.current.isDate(old, inSameDayAs: new) { confirmed = false } }
-        .onChange(of: canPresent) { _, allowed in
-            if !allowed {
-                editingProduct = nil
-                let scope = catalogScope.id
-                Task { await PantryProductCatalog.shared.close(scope: scope) }
-            }
+        .padding(.horizontal).padding(.bottom, 4).background(Theme.surface)
+    }
+
+    private var reviewActionLabel: String {
+        let included = batch.candidates.filter(\.included)
+        guard included.count == 1, let row = included.first, !row.name.isEmpty else { return reviewTitle }
+        let detail: String?
+        if !row.onePackageUnknown, let size = try? ComparisonModel.quantity(row.perPack, row.unit) {
+            detail = pantryQuantity(size)
+        } else if let barcode = row.barcode {
+            detail = barcode.displayValue
+        } else if row.onePackageUnknown {
+            detail = pantryText("One package, contents unknown")
+        } else {
+            detail = nil
         }
+        let identity = detail.map { pantryFormat("%@, %@", row.name, $0) } ?? row.name
+        return pantryFormat("%@, %@", reviewTitle, identity)
+    }
+
+    private func cancelReview() {
+        guard review != nil, authorized, !working else { return }
+        review = nil
+        result = nil
+        restoreReviewFocus = true
+    }
+
+    private func invalidateReview() {
+        preparationID = nil
+        restoreReviewFocus = false
+        review = nil
+        confirmed = false
+        reviewFocus = nil
     }
 
     private func finish(with lotID: UUID?) {
@@ -408,10 +523,10 @@ struct PantryProductBatchView: View {
     }
 
     private func candidateEditor(_ row: PantryProductBatch.Candidate, focusCount: Bool = false,
-                                 finishEditing: (() -> Void)? = nil, current: @escaping () -> Bool) -> some View {
+                                 finishEditing: (() -> Void)? = nil, cancelLookup: (() -> Void)? = nil, current: @escaping () -> Bool) -> some View {
         PantryProductCandidateEditor(row: captureDraftBinding(row, in: $batch.candidates),
             model: model, access: access, atHome: atHome, deliveries: atHome ? [] : model.productDeliveries,
-            scope: catalogScope.id, focusCount: focusCount, finishEditing: finishEditing,
+            scope: catalogScope.id, focusCount: focusCount, finishEditing: finishEditing, cancelLookup: cancelLookup,
             correctBarcode: correctBarcode, authorized: current)
     }
 
@@ -460,7 +575,10 @@ struct PantryProductBatchView: View {
     }
 
     private func prepare() {
-        guard !working, authorized else { return }
+        guard review == nil, !working, authorized, confirmed, model.canEdit else { return }
+        let request = UUID()
+        preparationID = request
+        focus = nil
         working = true
         Task {
             defer { working = false }
@@ -469,15 +587,20 @@ struct PantryProductBatchView: View {
                 let store = merchant, purchaseDate = date
                 try verifyMatches()
                 let proposal = try await atHome ? model.reviewHomePacks(batch) : model.reviewProducts(batch, merchant: store, purchaseDate: purchaseDate, confirmed: confirmed, timeZone: purchaseTimeZone)
-                guard authorized, confirmed, batch.candidates == rows, merchant == store, date == purchaseDate else { return }
-                review = proposal; result = nil
+                guard preparationID == request, authorized, confirmed, batch.candidates == rows, merchant == store, date == purchaseDate else { return }
+                withAnimation(reduceMotion ? nil : .easeOut(duration: 0.14)) { review = proposal }
+                result = nil
             } catch ProductBatchError.chooseStockAction {
+                guard preparationID == request, authorized else { return }
                 result = pantryText("Open each included product and choose a delivery or a separate physical batch.")
             } catch ProductBatchError.changedDelivery, PantryReceiptError.stale {
+                guard preparationID == request, authorized else { return }
                 await model.load()
+                guard preparationID == request, authorized else { return }
                 confirmed = false
                 result = pantryText("Review the delivery and package unit again before saving.")
             } catch {
+                guard preparationID == request, authorized else { return }
                 result = pantryText("Check the name, amount per package and whole package count for every included product.")
             }
         }
@@ -590,10 +713,11 @@ struct PantryProductBatchView: View {
     }
 
     private func commit(_ proposal: PantryReceiptReview) {
-        guard !working, authorized else { return }
+        guard !working, authorized, confirmed, review?.id == proposal.id else { return }
         working = true
         Task {
             defer { working = false }
+            guard authorized, confirmed, review?.id == proposal.id else { return }
             do {
                 try verifyMatches()
                 if let access, access.authorized(), try memory.scanDraft(access.scope)?.version != draftVersion {
@@ -656,6 +780,7 @@ private struct PantryProductCandidateEditor: View {
     let scope: UUID
     var focusCount = false
     var finishEditing: (() -> Void)? = nil
+    var cancelLookup: (() -> Void)? = nil
     @Environment(\.dismiss) private var dismiss
     let correctBarcode: (String, UUID) throws -> Void
     let authorized: () -> Bool
@@ -709,6 +834,12 @@ private struct PantryProductCandidateEditor: View {
 
     var body: some View {
         WorkingForm {
+            if let cancelLookup {
+                Button(action: cancelLookup) {
+                    Text(pantryText("Cancel")).font(.headline).frame(maxWidth: .infinity, minHeight: 52)
+                }
+                .buttonStyle(.bordered).accessibilityIdentifier("productBatch.cancelLookupReview")
+            }
             if authorized() {
                 Section {
                     Toggle(pantryText("Include this product"), isOn: $row.included)
@@ -757,7 +888,7 @@ private struct PantryProductCandidateEditor: View {
                         if row.onePackageUnknown {
                             let title = pantryText("Printed wording to review")
                             VStack(alignment: .leading) {
-                                Text(title).font(.caption)
+                                Text(title).font(.caption).lineLimit(nil).fixedSize(horizontal: false, vertical: true)
                                 TextField(pantryText("Optional"), text: Binding(
                                     get: { row.dateWordingDraft ?? row.reviewedDateWording ?? "" },
                                     set: { row.dateWordingDraft = $0 }

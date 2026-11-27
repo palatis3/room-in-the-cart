@@ -69,6 +69,10 @@
     "householdChecksAndPrivateNotesAddition": {
       "added": 6,
       "basis": "Three CoreDomain trip reminder tests, two HouseholdClient adult question tests, and one LocalStore private cooking note test passed in focused local package runs."
+    },
+    "savedShoppingPlaceEnrollmentAddition": {
+      "added": 1,
+      "basis": "The compiled HouseholdClient test passed with the same verified enrollment after client recreation, a distinct device after a replacement sign-in, and rejection after revocation."
     }
   },
   "packages": {
@@ -273,6 +277,9 @@
       "CoreDomainTests.ShoppingLedgerTests/testUnknownsStayUnresolvedAndInvalidLinkIsAtomic",
       "CoreDomainTests.ShoppingLedgerTests/testUnsupportedMeasuresAndMalformedMixedAmountsStayUnresolved",
       "CoreDomainTests.ShoppingLedgerTests/testZeroDemandCanBeConfirmedDuplicateWithoutBecomingUnknown",
+      "CoreDomainTests.ShoppingSearchEvidenceTests/testEditedNameAndNoteRetainOnlyActiveOriginalWordingWithItsOwnAttribution",
+      "CoreDomainTests.ShoppingSearchEvidenceTests/testPhraseAcrossFieldsKeepsEachParticipatingLiteralAndEffectiveDepartment",
+      "CoreDomainTests.ShoppingSearchEvidenceTests/testSoldOutSubstituteAndNameMatchKeepSeparateLiteralSourcesInSavedOrder",
       "CoreDomainTests.ShoppingTripTests/testPackagePickOnlyCountsMatchingReviewedSourcesAndReconcilesEdits",
       "CoreDomainTests.ShoppingTripTests/testReviewedCartonPickPersistsWithoutAQuantityAndCanBeCompletedDeferredAndUndone",
       "CoreDomainTests.StagedImportIdentityTests/testExternalIdentitySurvivesRestartAndExactReplay",
@@ -419,6 +426,7 @@
       "HouseholdClientTests.HouseholdClientTests/testReviewRetryReconcilesOriginalBytesAfterRevisionAdvancesAndStopsAfterAuthorityLoss",
       "HouseholdClientTests.HouseholdClientTests/testReviewStoreAtomicallyPreservesOtherIntentsAndRejectsPrePurgeEpoch",
       "HouseholdClientTests.HouseholdClientTests/testReviewTamperedStoredBytesAndWrongIdentityNeverSend",
+      "HouseholdClientTests.HouseholdClientTests/testSavedShoppingPlaceEnrollmentSurvivesRelaunchButNotReplacementOrRevocation",
       "HouseholdClientTests.HouseholdClientTests/testScopedHelperCannotUseDeviceManagementAndRevokedSessionClearsEnrollment",
       "HouseholdClientTests.HouseholdClientTests/testSelectedShopIsPinnedAcrossEnrollmentAndClearedForHouseholdOverview",
       "HouseholdClientTests.HouseholdClientTests/testServiceRetriesIdenticalBodyAndClearsRevokedScope",
