@@ -23,6 +23,16 @@ private func receiptStage(_ stage: ReceiptAcquisition.DocumentLine.Stage) -> Str
     }
 }
 
+struct UnsavedReceiptReviewNotice: View {
+    var body: some View {
+        Text(pantryText("Leaving the app clears this unsaved review. Reopen or rescan the receipt to start again."))
+            .font(.subheadline)
+            .foregroundStyle(Theme.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityIdentifier("receipt.unsavedReviewNotice")
+    }
+}
+
 struct PantryReceiptDocuments: View {
     var model: PantryModel? = nil
     let target: CaptureTarget
@@ -110,6 +120,7 @@ struct PantryReceiptDocuments: View {
                     })
                 }
                 Section(pantryText("Receipt source")) {
+                    UnsavedReceiptReviewNotice()
                     let name = captureText("Store or receipt name (required)")
                     WorkingField(name) {
                         TextField(name, text: $merchant, prompt: Text(""))

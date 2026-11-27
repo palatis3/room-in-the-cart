@@ -140,6 +140,7 @@ struct PantryReceiptEntry: View {
                     self.rescan = nil; draft?.rescanDecision = nil; message = nil
                 }.id(rescan.basis).disabled(working)
             } else if let displayed = draft {
+                if displayed.documentLayoutID != nil { UnsavedReceiptReviewNotice() }
                 // SwiftUI may read a field during removal of its form. Retain the
                 // displayed value for that transition and ignore stale setters.
                 let value = Binding(get: { draft ?? displayed }, set: { updated in

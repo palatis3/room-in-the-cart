@@ -1731,12 +1731,12 @@ import XCTest
         capture("Checkout review preserves original OCR, accepted crop and shopper amount")
     }
 
-    private func openReceiptScreenshotFromPhotos() throws {
+    private func openReceiptScreenshotFromPhotos(spanish: Bool = false) throws {
         app.launchArguments = ["--ui-testing", "--receipt-file-source-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
         SimulatorPhotosFixture(app: app).saveSourcePhoto()
         app.terminate()
-        launch(reset: true)
+        launch(reset: true, spanish: spanish)
         tap(app.shopToolButton("shop.myPantry")); tap(app.buttons["pantry.setup.apply"])
         tap(app.buttons["pantry.receipt"])
         let screenshot = app.buttons["receipt.chooseScreenshot"]
@@ -1802,8 +1802,36 @@ import XCTest
         XCTAssertEqual(inspect.label, original)
     }
 
+    func testSpanishInterruptedPhotoReviewReturnsToPantryAndRequiresReselection() throws {
+        try openReceiptScreenshotFromPhotos(spanish: true)
+        let notice = app.staticTexts["receipt.unsavedReviewNotice"]
+        XCTAssertTrue(notice.waitForExistence(timeout: 25))
+        XCTAssertEqual(notice.label, "Al salir de la app se borra esta revisión sin guardar. Para empezar de nuevo, vuelve a abrir o escanear el recibo.")
+        let store = app.textFields["receipt.document.store"]
+        receiptTap(store)
+        app.typeText("Mercado Familiar")
+        XCTAssertEqual(store.value as? String, "Mercado Familiar")
+        XCUIDevice.shared.press(.home)
+        app.activate()
+        let start = app.buttons["pantry.receipt"]
+        XCTAssertTrue(start.waitForExistence(timeout: 12))
+        receiptTap(start)
+        let choose = app.buttons["receipt.chooseScreenshot"]
+        XCTAssertTrue(choose.waitForExistence(timeout: 8))
+        XCTAssertFalse(notice.exists)
+        XCTAssertFalse(store.exists)
+        choose.tap()
+        try SimulatorPhotosFixture(app: app).chooseNewestSourcePhoto()
+        XCTAssertTrue(notice.waitForExistence(timeout: 25))
+        XCTAssertNotEqual(store.value as? String, "Mercado Familiar")
+        XCTAssertEqual(app.switches["receipt.document.line.1.1"].value as? String, "0")
+    }
+
     func testSystemPhotosReceiptKeepsRecognizedLinesUnselected() throws {
         try openReceiptScreenshotFromPhotos()
+        let notice = app.staticTexts["receipt.unsavedReviewNotice"]
+        XCTAssertTrue(notice.waitForExistence(timeout: 25))
+        XCTAssertEqual(notice.label, "Leaving the app clears this unsaved review. Reopen or rescan the receipt to start again.")
         let oats = app.switches["receipt.document.line.1.1"]
         XCTAssertTrue(oats.waitForExistence(timeout: 25), app.debugDescription)
         XCTAssertTrue(oats.label.uppercased().contains("OATS"))
@@ -5776,7 +5804,7 @@ extension FreeJourneyUITests {
     func systemPhotoPicker() throws -> XCUIElement {
         let identifiedGrid = app.scrollViews["photosView_content_scroll_view"]
         // iOS 17 presents an unlabelled grid beneath the native Photos navigation bar.
-        let photosBar = app.navigationBars["Photos"]
+        let photosBar = app.navigationBars.matching(NSPredicate(format: "identifier IN %@", ["Photos", "Fotos"])).firstMatch
         let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
             identifiedGrid.exists || photosBar.exists
         }, object: nil)
@@ -5790,7 +5818,7 @@ extension FreeJourneyUITests {
         // Its snapshot still exposes each photo's label and actual tap target.
         func firstPhoto(in node: any XCUIElementSnapshot) -> CGRect? {
             if (node.elementType == .image || node.elementType == .cell),
-               node.label.hasPrefix("Photo,"), !node.frame.isEmpty { return node.frame }
+               (node.label.hasPrefix("Photo,") || node.label.hasPrefix("Foto,")), !node.frame.isEmpty { return node.frame }
             for child in node.children {
                 if let frame = firstPhoto(in: child) { return frame }
             }
