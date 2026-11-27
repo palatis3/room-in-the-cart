@@ -318,6 +318,41 @@ import XCTest
         staysSeparate(row + [peer[0], peer[1], cell(6, "$2.75", 0.83, 0.60, 0.13)])
     }
 
+    func testCombinedItemAndRateRequiresAnIsolatedTotalOnTheSamePrintedRow() {
+        typealias Line = ReceiptDocumentPage.Line
+        func cell(_ id: Int, _ text: String, _ x: CGFloat, _ y: CGFloat = 0.65) -> Line {
+            .init(id: id, text: text, bounds: CGRect(x: x, y: y, width: 0.2, height: 0.04))
+        }
+
+        let total = cell(2, "40.00", 0.78)
+        for text in ["Tortillas de maíz 2 x 20.00", "lorta de Jamón 2 х 20.00", "Oat milk 2×$20.00"] {
+            let row = cell(1, text, 0.06)
+            let grouped = ExtractedReceiptDocument.groupingQuantityPriceColumns([total, row])
+            XCTAssertEqual(grouped.map(\.id), [1])
+            XCTAssertEqual(grouped.map(\.text), [text + " 40.00"])
+            let printed = ReceiptPrintedEvidence(.init(originalText: grouped[0].text), knownStorage: [:])
+            XCTAssertNil(printed.quantity)
+            XCTAssertNil(printed.amount)
+        }
+
+        let item = cell(1, "Tortillas de maíz 2 x 20.00", 0.06)
+        let adverse = [
+            [item, cell(2, "40.00", 0.78, 0.59)],
+            [item, cell(2, "40.00", 0.15)],
+            [item, total, cell(3, "Total", 0.45)],
+            [item, total, cell(3, "Cupón", 0.45, 0.625)],
+            [item, cell(2, "-40.00", 0.78)],
+            [cell(1, "TOTAL 2 x 20.00", 0.06), total],
+            [cell(1, "Cupón 2 x 20.00", 0.06), total],
+            [cell(1, "Coffee 2", 0.06), cell(2, "x 20.00 40.00", 0.78)]
+        ]
+        for input in adverse {
+            let result = ExtractedReceiptDocument.groupingQuantityPriceColumns(input)
+            XCTAssertEqual(result.map(\.id), input.map(\.id))
+            XCTAssertEqual(result.map(\.text), input.map(\.text))
+        }
+    }
+
     func testMercadoPhotoKeepsThePrintedQuantityRateAndTotalOnTheItem() async throws {
         let size = CGSize(width: 1050, height: 1400)
         let format = UIGraphicsImageRendererFormat()
@@ -336,9 +371,15 @@ import XCTest
         }
         let document = try await ReceiptDocumentReader().extract(.init(data: XCTUnwrap(image.pngData()), kind: .image))
         let rows = try XCTUnwrap(document.pages.first).lines.map(\.text)
-        for (name, rate, total) in [("Tortillas", "20.00", "40.00"), ("Queso", "45.00", "45.00"), ("Torta", "55.00", "55.00")] {
-            let item = try XCTUnwrap(rows.first { $0.localizedCaseInsensitiveContains(name) }, rows.joined(separator: " | "))
-            XCTAssertTrue(item.contains(rate) && item.hasSuffix(total), item)
+        // Compare each distinct food and both monetary columns. Vision may read the
+        // initial T in Torta as a lowercase l; the original observation stays intact.
+        for (name, rate, total) in [("Tortillas", "20.00", "40.00"), ("Queso", "45.00", "45.00"),
+                                    ("de jamón", "55.00", "55.00"), ("Bolsa", "2.00", "2.00")] {
+            let matching = rows.filter { $0.range(of: name, options: [.caseInsensitive, .diacriticInsensitive]) != nil }
+            XCTAssertEqual(matching.count, 1, rows.joined(separator: " | "))
+            let item = try XCTUnwrap(matching.first)
+            let columns = try XCTUnwrap(ReceiptPrintedEvidence.printedQuantityPriceColumns(item), item)
+            XCTAssertEqual(String(columns.total), total, item)
             XCTAssertEqual(item.components(separatedBy: rate).count - 1, rate == total ? 2 : 1, item)
         }
     }

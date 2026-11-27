@@ -225,7 +225,10 @@ struct ExtractedReceiptDocument: Equatable, Codable, Sendable {
                   }) else { continue }
             let wording = neighbors.map(\.text).joined(separator: " ")
             guard wording.utf8.count <= 2048 else { continue }
-            if ReceiptPrintedEvidence.itemBeforeQuantityPriceColumns(wording) == item.text {
+            // Vision sometimes includes the count and rate in the name observation.
+            // In that layout the only other cell must be the complete printed total.
+            if let fields = ReceiptPrintedEvidence.printedQuantityPriceColumns(wording),
+               fields.item == item.text || (neighbors.count == 2 && fields.total == neighbors[1].text) {
                 rateRows.append(neighbors)
             } else if neighbors.count == 3, !neighbors.contains(where: \.uncertain),
                       ReceiptPrintedEvidence.isPlainColumnItem(item.text),

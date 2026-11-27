@@ -115,12 +115,12 @@ struct ReceiptPrintedEvidence: Equatable, Codable {
     // A count × price and a final amount may be printed as separate OCR columns.
     // Preserve that wording, including a Cyrillic х read by Vision. Column layout
     // alone does not establish the amount received, a currency or a paid price.
-    private static let quantityPriceColumns = #/(?i)^(.+?)\s+([1-9][0-9]{0,3})\s*[x×х]\s*(?:[$£€]\s*)?[0-9]{1,7}[.,][0-9]{2}\s+(?:[$£€]\s*)?[0-9]{1,7}[.,][0-9]{2}$/#
+    private static let quantityPriceColumns = #/(?i)^(.+?)\s+([1-9][0-9]{0,3})\s*[x×х]\s*(?:[$£€]\s*)?[0-9]{1,7}[.,][0-9]{2}\s+((?:[$£€]\s*)?[0-9]{1,7}[.,][0-9]{2})$/#
 
-    static func itemBeforeQuantityPriceColumns(_ text: String) -> String? {
+    static func printedQuantityPriceColumns(_ text: String) -> (item: String, total: Substring)? {
         guard let match = text.wholeMatch(of: quantityPriceColumns) else { return nil }
         let name = String(match.1)
-        return isPlainColumnItem(name) ? name : nil
+        return isPlainColumnItem(name) ? (name, match.3) : nil
     }
 
     static func isPlainColumnItem(_ name: String) -> Bool {
@@ -169,7 +169,7 @@ struct ReceiptPrintedEvidence: Equatable, Codable {
                 return
             }
         }
-        if let item = Self.itemBeforeQuantityPriceColumns(text) {
+        if let item = Self.printedQuantityPriceColumns(text)?.item {
             name = item
             uncertain = true
             return
@@ -281,7 +281,7 @@ struct ReceiptPrintedEvidence: Equatable, Codable {
 
 }
 
-struct ReceiptPrintedDate: Equatable {
+struct ReceiptPrintedDate: Equatable, Codable {
     let day: Date
     let wording: String
     private static let pattern = #/(?i)^\s*(?:(?:purchase date|transaction date|sale date|purchased|date|fecha de compra|fecha de venta|fecha)\s*[:#-]?\s*)?([0-9]{4}[-\/]\d{1,2}[-\/]\d{1,2}|\d{1,2}[-\/]\d{1,2}[-\/]\d{4})(?:\s+[0-2]?\d:\d{2}(?::\d{2})?(?:\s*[ap]m)?)?\s*$/#
