@@ -48,14 +48,20 @@ enum MembershipPurchaseOutcome: Sendable {
     private var transactions: [String: StoreKit.Transaction] = [:]
     private var productID: String?
 
+    static func matchesMexicanStorefront(country: String, currency: String) -> Bool {
+        (country == "MEX") == (currency == "MXN")
+    }
+
     func load(productID: String) async throws -> MembershipOffer {
         self.productID = productID
         product = nil
+        offerCountry = nil
         guard let country = await Storefront.current?.countryCode, !country.isEmpty,
               let loaded = try await Product.products(for: [productID]).first(where: { $0.id == productID }),
               loaded.type == .autoRenewable, let subscription = loaded.subscription,
               subscription.subscriptionPeriod.unit == .year, subscription.subscriptionPeriod.value == 1,
               subscription.introductoryOffer == nil, !loaded.isFamilyShareable,
+              Self.matchesMexicanStorefront(country: country, currency: loaded.priceFormatStyle.currencyCode),
               await Storefront.current?.countryCode == country else {
             throw MembershipFailure.unavailable
         }
@@ -76,10 +82,14 @@ enum MembershipPurchaseOutcome: Sendable {
         if sandboxOnly {
             guard await isVerifiedSandboxApp() else { throw MembershipFailure.unavailable }
         }
-        guard let product, offerCountry == quotedStorefront, await Storefront.current?.countryCode == quotedStorefront,
-              stillAuthorized() else {
-            throw MembershipFailure.unavailable
-        }
+        guard let quoted = product, offerCountry == quotedStorefront else { throw MembershipFailure.unavailable }
+        // StoreKit can update its product catalog before its storefront changes.
+        // Compare a fresh product with the exact offer shown before opening payment.
+        let fresh = try await load(productID: quoted.id)
+        guard fresh.storefrontCountryCode == quotedStorefront, let product,
+              product.price == quoted.price, fresh.displayPrice == quoted.displayPrice,
+              product.priceFormatStyle.currencyCode == quoted.priceFormatStyle.currencyCode,
+              stillAuthorized() else { throw MembershipFailure.unavailable }
         switch try await product.purchase(options: [.appAccountToken(appAccountToken)]) {
         case .success(let result): return convert(result) ?? .unverified
         case .pending: return .pending

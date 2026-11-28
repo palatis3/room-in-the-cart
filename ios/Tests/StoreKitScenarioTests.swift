@@ -109,7 +109,23 @@ import StoreKitTest
         session.storefront = "MEX"
         session.locale = offerLocale
         try await AppStore.sync()
-        try await assertAnnualOffer(country: "MEX", currency: "MXN", amount: 499, name: offerName)
+        let mexicoProducts = try await Product.products(for: [productID])
+        let mexicoProduct = try XCTUnwrap(mexicoProducts.first)
+        XCTAssertEqual(mexicoProduct.priceFormatStyle.currencyCode, "MXN")
+        XCTAssertEqual(mexicoProduct.price, 499)
+        XCTAssertEqual(mexicoProduct.displayName, offerName)
+        if await Storefront.current?.countryCode == "MEX" {
+            try await assertAnnualOffer(country: "MEX", currency: "MXN", amount: 499, name: offerName)
+        } else {
+            // Some SDK versions retain the original storefront after changing SKTestSession catalogs.
+            // A live MXN catalog paired with that stale country must never become a purchasable US offer.
+            do {
+                _ = try await StoreKitMembershipStorefront().load(productID: productID)
+                XCTFail("An MXN quote with a conflicting storefront must be unavailable.")
+            } catch {
+                XCTAssertEqual(error as? MembershipFailure, .unavailable)
+            }
+        }
         do {
             _ = try await previousStore.purchase(appAccountToken: accountToken, quotedStorefront: previousOffer.storefrontCountryCode, sandboxOnly: false) { true }
             XCTFail("A US offer must be refreshed before the Mexican storefront can present a purchase.")

@@ -1786,6 +1786,13 @@ import StoreKit
         XCTAssertFalse(seatModel.showsPurchaserControls)
     }
 
+    func testMexicoStorefrontAndCurrencyMustAgreeInBothDirections() {
+        XCTAssertTrue(StoreKitMembershipStorefront.matchesMexicanStorefront(country: "MEX", currency: "MXN"))
+        XCTAssertTrue(StoreKitMembershipStorefront.matchesMexicanStorefront(country: "USA", currency: "USD"))
+        XCTAssertFalse(StoreKitMembershipStorefront.matchesMexicanStorefront(country: "USA", currency: "MXN"))
+        XCTAssertFalse(StoreKitMembershipStorefront.matchesMexicanStorefront(country: "MEX", currency: "USD"))
+    }
+
     func testMexicoRequiresExplicitVerifiedEnrollmentAndRechecksBeforeStoreKit() async {
         let service = FakeMembershipService(snapshot: snapshot(status: .free))
         let store = FakeMembershipStorefront()
