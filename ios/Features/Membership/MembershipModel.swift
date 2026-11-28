@@ -490,7 +490,10 @@ import SwiftUI
         notice = nil
         purchaseReport = .awaitingResult
         do {
-            let result = try await storefront.purchase(appAccountToken: appAccountToken, quotedStorefront: quotedOffer.storefrontCountryCode, sandboxOnly: sandboxOnly)
+            let result = try await storefront.purchase(appAccountToken: appAccountToken,
+                quotedStorefront: quotedOffer.storefrontCountryCode, sandboxOnly: sandboxOnly) {
+                session == self.generation && self.context == context && self.offer == quotedOffer && self.canStartNewPurchase
+            }
             guard session == generation else { return }
             switch result {
             case .pending: purchaseReport = .pending

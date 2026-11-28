@@ -111,7 +111,7 @@ import StoreKitTest
         try await AppStore.sync()
         try await assertAnnualOffer(country: "MEX", currency: "MXN", amount: 499, name: offerName)
         do {
-            _ = try await previousStore.purchase(appAccountToken: accountToken, quotedStorefront: previousOffer.storefrontCountryCode, sandboxOnly: false)
+            _ = try await previousStore.purchase(appAccountToken: accountToken, quotedStorefront: previousOffer.storefrontCountryCode, sandboxOnly: false) { true }
             XCTFail("A US offer must be refreshed before the Mexican storefront can present a purchase.")
         } catch {
             XCTAssertEqual(error as? MembershipFailure, .unavailable)
@@ -571,7 +571,7 @@ import StoreKitTest
         defer { model.stop() }
         try await session.setSimulatedError(.verification(.invalidSignature), forAPI: .verification)
         let quotedStorefront = try XCTUnwrap(model.offer?.storefrontCountryCode)
-        let outcome = try await storefront.purchase(appAccountToken: accountToken, quotedStorefront: quotedStorefront, sandboxOnly: false)
+        let outcome = try await storefront.purchase(appAccountToken: accountToken, quotedStorefront: quotedStorefront, sandboxOnly: false) { true }
         guard case .unverified = outcome else { return XCTFail("Simulated signature failure must remain unverified") }
         let failure = await model.receive(outcome)
         XCTAssertEqual(failure, .unverified)
@@ -704,10 +704,12 @@ import StoreKitTest
             return try await base.load(productID: productID)
         }
         func isVerifiedSandboxApp() async -> Bool { await base.isVerifiedSandboxApp() }
-        func purchase(appAccountToken: UUID, quotedStorefront: String, sandboxOnly: Bool) async throws -> MembershipPurchaseOutcome {
+        func purchase(appAccountToken: UUID, quotedStorefront: String, sandboxOnly: Bool,
+                      stillAuthorized: @MainActor () -> Bool) async throws -> MembershipPurchaseOutcome {
             trace("storefront.purchase.begin")
             defer { trace("storefront.purchase.end") }
-            return try await base.purchase(appAccountToken: appAccountToken, quotedStorefront: quotedStorefront, sandboxOnly: sandboxOnly)
+            return try await base.purchase(appAccountToken: appAccountToken, quotedStorefront: quotedStorefront,
+                                           sandboxOnly: sandboxOnly, stillAuthorized: stillAuthorized)
         }
         func currentTransactions() async -> [MembershipPurchaseOutcome] {
             trace("storefront.current.begin")

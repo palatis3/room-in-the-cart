@@ -32,7 +32,8 @@ enum MembershipPurchaseOutcome: Sendable {
 @MainActor protocol MembershipStorefront {
     func load(productID: String) async throws -> MembershipOffer
     func isVerifiedSandboxApp() async -> Bool
-    func purchase(appAccountToken: UUID, quotedStorefront: String, sandboxOnly: Bool) async throws -> MembershipPurchaseOutcome
+    func purchase(appAccountToken: UUID, quotedStorefront: String, sandboxOnly: Bool,
+                  stillAuthorized: @MainActor () -> Bool) async throws -> MembershipPurchaseOutcome
     func currentTransactions() async -> [MembershipPurchaseOutcome]
     func unfinishedTransactions() async -> [MembershipPurchaseOutcome]
     func updates(for productID: String) -> AsyncStream<MembershipPurchaseOutcome>
@@ -70,11 +71,13 @@ enum MembershipPurchaseOutcome: Sendable {
         return app.environment == .sandbox
     }
 
-    func purchase(appAccountToken: UUID, quotedStorefront: String, sandboxOnly: Bool) async throws -> MembershipPurchaseOutcome {
+    func purchase(appAccountToken: UUID, quotedStorefront: String, sandboxOnly: Bool,
+                  stillAuthorized: @MainActor () -> Bool) async throws -> MembershipPurchaseOutcome {
         if sandboxOnly {
             guard await isVerifiedSandboxApp() else { throw MembershipFailure.unavailable }
         }
-        guard let product, offerCountry == quotedStorefront, await Storefront.current?.countryCode == quotedStorefront else {
+        guard let product, offerCountry == quotedStorefront, await Storefront.current?.countryCode == quotedStorefront,
+              stillAuthorized() else {
             throw MembershipFailure.unavailable
         }
         switch try await product.purchase(options: [.appAccountToken(appAccountToken)]) {

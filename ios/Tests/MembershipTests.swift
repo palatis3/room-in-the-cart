@@ -1893,6 +1893,20 @@ import StoreKit
         XCTAssertTrue(store.lastPurchaseWasSandboxOnly)
     }
 
+    func testSignOutDuringFinalStorefrontCheckPreventsApplePaymentSheet() async {
+        let service = FakeMembershipService(snapshot: snapshot(status: .free))
+        service.contact = .init(scope: .prospective, emailVerified: true, enabled: true, dispatchEnabled: true)
+        let store = FakeMembershipStorefront()
+        store.country = "MEX"
+        let model = makeModel(service, store)
+        await model.start()
+        store.beforeAppleSheet = { [weak model] in model?.stop() }
+        await model.purchase(fromPresentedOffer: true)
+        XCTAssertTrue(model.isStopped)
+        XCTAssertEqual(store.purchaseCount, 0)
+        XCTAssertNil(model.renewalContact)
+    }
+
     func testUSCheckoutDoesNotRequireOrReadRenewalContact() async {
         let service = FakeMembershipService(snapshot: snapshot(status: .free))
         service.contactError = .deliveryPending
@@ -2007,9 +2021,12 @@ import StoreKit
     }
     var verifiedSandbox = false
     var lastPurchaseWasSandboxOnly = false
+    var beforeAppleSheet: (() -> Void)?
     func isVerifiedSandboxApp() async -> Bool { verifiedSandbox }
-    func purchase(appAccountToken: UUID, quotedStorefront: String, sandboxOnly: Bool) async throws -> MembershipPurchaseOutcome {
-        guard !sandboxOnly || verifiedSandbox else { throw MembershipFailure.unavailable }
+    func purchase(appAccountToken: UUID, quotedStorefront: String, sandboxOnly: Bool,
+                  stillAuthorized: @MainActor () -> Bool) async throws -> MembershipPurchaseOutcome {
+        beforeAppleSheet?()
+        guard (!sandboxOnly || verifiedSandbox) && stillAuthorized() else { throw MembershipFailure.unavailable }
         lastPurchaseWasSandboxOnly = sandboxOnly
         purchaseCount += 1
         let outcome: MembershipPurchaseOutcome
