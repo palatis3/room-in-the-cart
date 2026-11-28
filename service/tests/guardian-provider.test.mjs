@@ -38,7 +38,7 @@ test('documented OAuth token and PV request use fixed origins, Basic/Bearer and 
  assert.equal(calls[1].url,'https://api.kidswebservices.com/v1/verifications/send-email');assert.deepEqual(JSON.parse(calls[1].options.body),input);assert.equal(calls[1].options.headers.Authorization,'Bearer fixture-token');assert.ok(calls[1].options.headers['User-Agent']);
  assert.deepEqual(JSON.parse(calls[2].options.body),{...input,location:'MX',language:'es-MX'});
  assert.deepEqual(JSON.parse(calls[3].options.body),{...input,location:'MX',language:'en'});
- for(const location of ['CA','MX-CMX','MX\n']){
+ for(const location of ['CA','MX-CMX','MX\n','PR','US-PR','US-AS','US-GU','US-MP','US-UM','US-VI','US-ZZ','US-AA']){
   await assert.rejects(gateway.start({...input,location}),/Bounded KWS/);
  }
  assert.equal(calls.length,4);

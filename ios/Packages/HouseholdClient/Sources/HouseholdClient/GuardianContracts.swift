@@ -7,11 +7,18 @@ public enum GuardianChildCountry: String, Codable, CaseIterable, Sendable {
     case unitedStates = "US"
     case mexico = "MX"
 
+    private static let usStateAndDistrictCodes: Set<String> = [
+        "AK", "AL", "AR", "AZ", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "IA",
+        "ID", "IL", "IN", "KS", "KY", "LA", "MA", "MD", "ME", "MI", "MN", "MO", "MS",
+        "MT", "NC", "ND", "NE", "NH", "NJ", "NM", "NV", "NY", "OH", "OK", "OR", "PA",
+        "RI", "SC", "SD", "TN", "TX", "UT", "VA", "VT", "WA", "WI", "WV", "WY"
+    ]
+
     static func country(for location: String) -> Self? {
         if let country = Self(rawValue: location) { return country }
-        let bytes = location.utf8
-        guard bytes.count == 5, bytes.starts(with: "US-".utf8),
-              bytes.suffix(2).allSatisfy({ (65...90).contains($0) }) else { return nil }
+        guard location.hasPrefix("US-"), usStateAndDistrictCodes.contains(String(location.dropFirst(3))) else {
+            return nil
+        }
         return .unitedStates
     }
 }
