@@ -3,13 +3,23 @@ import {z} from 'zod';
 import type {VerifiedIdentity} from '../auth.js';
 import type {Context} from '../repository.js';
 import type {VerifiedSubscription} from './domain.js';
-import type {RenewalConfig} from './renewal-provider.js';
+import type {NoticeProvider,RenewalConfig} from './renewal-provider.js';
 import {ServiceError} from '../errors.js';
 
 export interface NoticeContactState {scope:'unavailable'|'prospective'|'bound';emailVerified:boolean;enabled:boolean;dispatchEnabled:boolean;sandboxOnly?:boolean}
 const unavailable:NoticeContactState={scope:'unavailable',emailVerified:false,enabled:false,dispatchEnabled:false};
 export const contactChange=z.object({enabled:z.boolean()}).strict();
 export const noNoticeRoute=()=>new ServiceError(409,'renewal_notice_unavailable','Keep using Free or manage your existing subscription in Apple settings.');
+export async function requireRenewalCheckout(state:NoticeContactState,provider:NoticeProvider|null){
+  if(state.scope==='unavailable'||!state.emailVerified||!state.enabled)throw noNoticeRoute();
+  if(state.sandboxOnly)return;
+  if(state.dispatchEnabled&&provider){
+    // Worker capacity is checked in the contact projection. Recheck the current
+    // sending credential immediately before a real MEX purchase context is issued.
+    try{if(await provider.ready(AbortSignal.timeout(2500)))return;}catch{/* Keep the Free path. */}
+  }
+  throw noNoticeRoute();
+}
 export async function renewalContact(ctx:Context,identity:VerifiedIdentity,config:RenewalConfig,sandbox:boolean,change?:boolean):Promise<NoticeContactState> {
   const key=[ctx.householdId,ctx.member.member_id];
   const sandboxOnly=sandbox&&config.sandboxHomes.has(ctx.householdId.toLowerCase());

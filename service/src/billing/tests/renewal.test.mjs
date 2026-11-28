@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {createHmac,randomBytes,randomUUID} from 'node:crypto';
 import {day,mexicoRenewal,nextNotice} from '../../../dist/billing/renewal-facts.js';
 import {checkSenderSession} from '../../../dist/billing/renewal-sender-health.js';
+import {requireRenewalCheckout} from '../../../dist/billing/renewal-contact.js';
 import {recordRenewalDelivery,webhookKey} from '../../../dist/billing/renewal-webhook.js';
 import {renewalConfig,ResendRenewalProvider} from '../../../dist/billing/renewal-provider.js';
 
@@ -55,6 +56,16 @@ test('scoped sender readiness authenticates over the TLS session and quits witho
   assert.deepEqual(command,['EHLO','AUTH','QUIT']);
   const denied=async function*(){yield '220 ready';yield '250 AUTH PLAIN';yield '535 denied';};
   await assert.rejects(()=>checkSenderSession(denied(),()=>{},'synthetic'));
+});
+test('final checkout rechecks the sender even after positive worker health and explicit consent',async()=>{
+  const state={scope:'prospective',emailVerified:true,enabled:true,dispatchEnabled:true};
+  let probes=0;
+  const provider={ready:async()=>{probes++;return false;}};
+  await assert.rejects(()=>requireRenewalCheckout(state,provider),e=>e.code==='renewal_notice_unavailable');
+  await assert.rejects(()=>requireRenewalCheckout({...state,enabled:false},provider));
+  await requireRenewalCheckout({...state,sandboxOnly:true,dispatchEnabled:false},null);
+  assert.equal(probes,1);
+  await requireRenewalCheckout(state,{ready:async()=>true});
 });
 test('raw signed delivery events project only opaque identifiers and outcome; replay changes no recipient or content',async()=>{
   const key=webhookKey('whsec_'+randomBytes(32).toString('base64')),time=String(Math.floor(now/1000)),id='msg_test_event';

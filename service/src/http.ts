@@ -38,7 +38,7 @@ import { z } from 'zod';
 import { type IdentityVerifier,DenyIdentityVerifier } from './auth.js';
 import { HouseholdRepository,type AuthContext } from './repository.js';
 import {recordRenewalDelivery} from './billing/renewal-webhook.js';
-import {contactChange,renewalContact,noNoticeRoute} from './billing/renewal-contact.js';
+import {contactChange,renewalContact,requireRenewalCheckout} from './billing/renewal-contact.js';
 import type {RenewalConfig} from './billing/renewal-provider.js';
 import { BillingService,billingVerifySchema,billingSeatsSchema,billingNotificationSchema } from './billing/service.js';
 import { ServiceError,accessEnded,invalid,unavailable } from './errors.js';
@@ -442,7 +442,7 @@ export function createHTTPServer(options:HTTPOptions) {
             const request=z.object({storefront:z.literal('MEX').optional()}).strict().parse(payload);
             if(request.storefront==='MEX'){
               const notice=await renewalContact(ctx,auth.identity,options.renewalNotices??{mode:'off',provider:null,sandboxHomes:new Set<string>()},options.billing.usesReviewSandbox(householdId));
-              if(!notice.emailVerified||!notice.enabled||(!notice.dispatchEnabled&&!notice.sandboxOnly))throw noNoticeRoute();
+              await requireRenewalCheckout(notice,options.renewalNotices?.provider??null);
             }
             return options.billing.prepare(ctx);
           }
