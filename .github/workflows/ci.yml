@@ -482,7 +482,7 @@ jobs:
           python3 .build/SwiftCodeQLAssertUncompiled.py
           declare -p build_args > .build/SwiftCodeQLBuildArgs.sh
       - name: Initialize Swift security analysis
-        uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        uses: github/codeql-action/init@915412ff23e8b7659517e607487dbeae018f2934 # v4.39.5
         with:
           languages: swift
           build-mode: manual
@@ -497,7 +497,7 @@ jobs:
           python3 .build/SwiftCodeQLAssertUncompiled.py
           xcodebuild "${build_args[@]}" build 2>&1 | tee .build/SwiftCodeQLBuild.log
       - name: Analyze Swift security findings
-        uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        uses: github/codeql-action/analyze@915412ff23e8b7659517e607487dbeae018f2934 # v4.39.5
         with:
           category: /language:swift
       - name: Retain Swift analysis compilation logs
