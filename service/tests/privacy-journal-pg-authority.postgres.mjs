@@ -1355,6 +1355,13 @@ test('the first unadmitted signed object starts the rotation clock and the owner
   environment.RITC_BACKUP_ADMISSION_CONFIG_SHA256=createHash('sha256').update(await readFile(admissionPath)).digest('hex');
   const priorGenerationCount=cli('journal-retirement.mjs','backup-admission',admissionPath).openGenerations;
   assert.equal(cli('journal-retirement.mjs','rotate-due',file).rotateNow,false);
+  const claimed=await register(),claimOnly=await claimed.open();
+  try {
+   const claim=await claimOnly.uncertainty.begin({scopeDigest:claimed.scope,eventId:randomUUID(),transition:'intent'},time());
+   assert.ok(claim);
+   assert.equal(cli('journal-retirement.mjs','backup-admission',admissionPath).openGenerations,priorGenerationCount+1);
+   assert.equal((await owner.query("SELECT FROM ritc_records.object WHERE split_part(object_key,'/',1)=$1",[claimed.scope])).rowCount,0);
+  } finally {await claimOnly.close();}
   const event=r.f.event(),original=Date.now()-29.5*86400000;
   event.payload.data.attestation.checkedAt=new Date(original).toISOString();
   event.payloadDigest=digest(event.payload);
@@ -1364,7 +1371,7 @@ test('the first unadmitted signed object starts the rotation clock and the owner
   const originalEnd=new Date(original+90*86400000).toISOString();
   assert.equal(cli('journal-retirement.mjs','schedule',file).dates.retireAllBy,originalEnd);
   const admission=cli('journal-retirement.mjs','backup-admission',admissionPath);
-  assert.equal(admission.openGenerations,priorGenerationCount+1);
+  assert.equal(admission.openGenerations,priorGenerationCount+2);
   assert.equal(admission.earliestReplayDeadline,originalEnd);
   const clock=join(directory,'overdue-clock.mjs');
   await writeFile(clock,`Date.now=()=>${Date.parse(originalEnd)};`,{mode:0o600});

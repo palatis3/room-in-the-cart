@@ -29,6 +29,14 @@ DO $$ DECLARE t text; n name; BEGIN
  END LOOP;
 END $$;
 
+-- A pre-installation uncertainty claim without a recorded source time cannot be
+-- re-dated to install time. Drain it under its original custody before upgrading.
+DO $$ BEGIN
+ IF EXISTS(SELECT FROM ritc_checkpoint.origin WHERE claim IS NOT NULL OR pending IS NOT NULL) THEN
+  RAISE EXCEPTION 'drain outstanding authority claims before installing original-time retention';
+ END IF;
+END $$;
+
 -- Preserve the timestamp of pre-installation objects, including orphaned intents.
 WITH objects AS (
  SELECT split_part(object_key,'/',1) AS scope,convert_from(content,'UTF8')::jsonb AS r FROM ritc_records.object
@@ -44,6 +52,12 @@ CREATE FUNCTION ritc_checkpoint.guard_rotation_deadline() RETURNS trigger
 LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $$
 BEGIN
  IF TG_RELID<>'ritc_checkpoint.origin'::regclass THEN RAISE EXCEPTION 'invalid trigger source'; END IF;
+ IF NEW.claim IS NOT NULL AND OLD.claim IS NULL THEN
+  -- Even a never-published uncertainty claim contains the event locator. The
+  -- earlier signed service capture can only lower this timestamp later.
+  INSERT INTO ritc_checkpoint.replay_clock VALUES(OLD.scope_digest,clock_timestamp())
+   ON CONFLICT(scope_digest) DO NOTHING;
+ END IF;
  IF NEW.claim#>>'{claim,transition}'='intent' AND OLD.claim IS NULL
     AND EXISTS(SELECT FROM ritc_checkpoint.replay_clock c WHERE c.scope_digest=OLD.scope_digest
        AND c.original_capture+interval '720 hours'<=clock_timestamp())
