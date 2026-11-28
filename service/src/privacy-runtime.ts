@@ -18,6 +18,10 @@ const name=z.string().min(1).max(63);
 const pem=z.string().min(1).max(262144);
 const oid=z.string().regex(/^[1-9][0-9]{0,9}$/);
 const reference=z.string().trim().min(1).max(200);
+const gatewayObserver=z.object({
+ mode:z.literal('gateway'),origin:z.string().min(1).max(512),vercelTrustedSource:z.boolean().optional(),
+ ca:pem.optional(),database:name,databaseOid:oid,observerRoleOid:oid,
+}).strict();
 const configurationSchema=z.object({
  version:z.literal(1),
  pins:durableJournalPinsSchema,
@@ -25,10 +29,10 @@ const configurationSchema=z.object({
  authorityPublicKey:pem.startsWith('-----BEGIN PUBLIC KEY-----'),
  authority:z.object({origin:z.string().max(512),writerToken:z.string().max(256),ca:pem.optional(),
   vercelTrustedSource:z.boolean().optional()}).strict(),
- observer:z.union([sourceObserverConfigurationSchema,z.object({
-  mode:z.literal('gateway'),origin:z.string().min(1).max(512),token:journalBearerTokenSchema,vercelTrustedSource:z.boolean().optional(),
-  ca:pem.optional(),database:name,databaseOid:oid,observerRoleOid:oid,
- }).strict()]),
+ observer:z.union([sourceObserverConfigurationSchema,gatewayObserver.extend({token:journalBearerTokenSchema}),
+  gatewayObserver.extend({applicationToken:journalBearerTokenSchema,operationsToken:journalBearerTokenSchema})
+   .refine(tokens=>tokens.applicationToken!==tokens.operationsToken),
+ ]),
  retentionPolicy:z.unknown(),retentionApprovalReference:reference,restoreApprovalReference:reference,
 }).strict();
 const bindingSchema=z.object({
@@ -82,13 +86,18 @@ export function createPrivacyRuntime(pool:Database,environment:NodeJS.ProcessEnv
   authority=createHTTPSJournalAuthority({pins,origin:config.authority.origin,writerToken:config.authority.writerToken,
    ...(config.authority.vercelTrustedSource?{getVercelTrustedSourceToken:()=>getVercelOidcToken()}:{}),
    ...(config.authority.ca?{ca:config.authority.ca}:{})});
+  const {databaseOid,observerRoleOid}=observer;
   const database='mode' in observer?observer.database:observer.connection.database;
   if('mode' in observer){
    if((environment.VERCEL==='1')!==(observer.vercelTrustedSource===true))throw Error('Source gateway workload identity mismatch');
-   if(observer.token===config.authority.writerToken||new URL(observer.origin).origin===new URL(config.authority.origin).origin){
+   const token='token' in observer?observer.token:observer[role==='application'?'applicationToken':'operationsToken'];
+   const writerToken=config.authority.writerToken;
+   const reused='token' in observer?observer.token===writerToken:
+    observer.applicationToken===writerToken||observer.operationsToken===writerToken;
+   if(reused||new URL(observer.origin).origin===new URL(config.authority.origin).origin){
     throw Error('Independent source and authority origins and credentials required');
    }
-   source=createHTTPSCommittedSource({pins,databaseBinding:{database,databaseOid:observer.databaseOid,observerRoleOid:observer.observerRoleOid},origin:observer.origin,token:observer.token,
+   source=createHTTPSCommittedSource({pins,databaseBinding:{database,databaseOid,observerRoleOid},origin:observer.origin,token,
     ...(observer.ca?{ca:observer.ca}:{}),...(observer.vercelTrustedSource?{getVercelTrustedSourceToken:()=>getVercelOidcToken()}:{})});
   }else{
    const {connection:{password,tls,...connection},observerRole,...observerBinding}=observer;
@@ -118,8 +127,8 @@ export function createPrivacyRuntime(pool:Database,environment:NodeJS.ProcessEnv
      ]);
      if(binding.fenced||binding.lineage!==pins.lineage||binding.schemaDigest!==pins.schemaDigest||
        binding.configurationId!==pins.configurationId||binding.sourceIdentity!==pins.sourceIdentity||
-       binding.database!==database||binding.databaseOid!==observer.databaseOid||
-       binding.observerRoleOid!==observer.observerRoleOid)throw Error('Privacy source binding mismatch');
+       binding.database!==database||binding.databaseOid!==databaseOid||
+       binding.observerRoleOid!==observerRoleOid)throw Error('Privacy source binding mismatch');
    },3000);
   }
   async function health(call:JournalCall):Promise<PrivacyHealth>{
