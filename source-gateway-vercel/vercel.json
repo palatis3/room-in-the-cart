@@ -1,0 +1,24 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "fluid": true,
+  "build": {
+    "env": {
+      "NODEJS_HELPERS": "0"
+    }
+  },
+  "installCommand": "npm --prefix ../service ci --ignore-scripts",
+  "buildCommand": "npm --prefix ../service run build",
+  "functions": {
+    "api/source.js": {
+      "maxDuration": 20,
+      "supportsCancellation": true
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/v1/source",
+      "destination": "/api/source"
+    }
+  ]
+}

@@ -1,7 +1,8 @@
 import {randomUUID,timingSafeEqual} from 'node:crypto';
-import type {IncomingMessage,RequestListener} from 'node:http';
+import type {RequestListener} from 'node:http';
 import {Agent,request} from 'node:https';
 import {z} from 'zod';
+import {journalBearerTokenSchema,readBoundedJournalJSON,trustedSourceHeaders} from './privacy-journal-http-common.js';
 import {PrivacyCall,privacyHTTPCall,privacyPhase} from './privacy-call.js';
 import {
  admittedSchema,durableJournalScopeDigest,identitySchema,inspectionSchema,journalCapacitySchema,receiptSchema,storedSchema,ticketSchema,workerKindSchema,workerKindsSchema,
@@ -15,8 +16,6 @@ import {MAX_JOURNAL_BYTES as maxRecordBytes} from './privacy-journal-limits.js';
 const path='/v1/journal';
 const maxEncodedBytes=4*Math.ceil(maxRecordBytes/3),maxBody=maxEncodedBytes+8192;
 const hash=z.string().regex(/^[0-9a-f]{64}$/);
-const tokenSchema=z.string().regex(/^[A-Za-z0-9_-]{43}$/).refine(value=>Buffer.from(value,'base64url').toString('base64url')===value);
-const oidcTokenSchema=z.string().max(8192).regex(/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/);
 const encoded=z.string().min(4).max(maxEncodedBytes);
 const operationSchema=z.object({scopeDigest:hash,eventId:z.string().uuid(),transition:z.enum(['intent','commit'])}).strict();
 const claimSchema=operationSchema.extend({claimId:z.string().uuid()});
@@ -46,24 +45,11 @@ function bytes(value:string):Buffer{
  if(data.length>maxRecordBytes||data.toString('base64')!==value)throw Error('Invalid canonical journal bytes');
  return data;
 }
-async function readJSON(message:IncomingMessage):Promise<unknown>{
- const declared=message.headers['content-length'];
- if(!declared||!/^\d+$/.test(declared)||Number(declared)>maxBody)throw Error('Bounded journal message required');
- const chunks:Buffer[]=[];let count=0;
- for await(const value of message){
-  const chunk=Buffer.isBuffer(value)?value:Buffer.from(value);count+=chunk.length;
-  if(count>maxBody)throw Error('Journal message too large');
-  chunks.push(chunk);
- }
- if(count!==Number(declared))throw Error('Incomplete journal message');
- return JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(Buffer.concat(chunks)));
-}
-
 /** Serve only on the independently operated HTTPS service, with one pinned writer credential. */
 export function journalAuthorityHandler(configuration:(Ports|{readonly loadPorts:()=>Promise<Ports>})&{
  readonly pins:DurableJournalPins;readonly writerToken:string;
 }):RequestListener{
- const credential=Buffer.from('Bearer '+tokenSchema.parse(configuration.writerToken));
+ const credential=Buffer.from('Bearer '+journalBearerTokenSchema.parse(configuration.writerToken));
  const scopeDigest=durableJournalScopeDigest(configuration.pins);
  let active=0;
  async function dispatch(command:Command,call:JournalCall):Promise<unknown>{
@@ -113,7 +99,7 @@ export function journalAuthorityHandler(configuration:(Ports|{readonly loadPorts
   const stopBody=()=>{if(!req.complete)req.destroy();};
   transport.call.signal.addEventListener('abort',stopBody,{once:true});
   try{
-   const input=await transport.run(async()=>envelopeSchema.parse(await readJSON(req)));
+   const input=await transport.run(async()=>envelopeSchema.parse(await readBoundedJournalJSON(req,maxBody)));
    if(input.scopeDigest!==scopeDigest){reject(403);return;}
    const call={attemptId:input.attemptId,deadlineUnixMs:Math.min(input.deadlineUnixMs,transport.call.deadlineUnixMs),signal:transport.call.signal};
    try{
@@ -135,7 +121,7 @@ export function createHTTPSJournalAuthority(configuration:{readonly pins:Durable
  const base=new URL(configuration.origin);
  if(base.protocol!=='https:'||base.pathname!=='/'||base.username||base.password||base.search||base.hash)throw Error('Fixed HTTPS journal origin required');
  const endpoint=new URL(path,base),scopeDigest=durableJournalScopeDigest(configuration.pins);
- const credential='Bearer '+tokenSchema.parse(configuration.writerToken);
+ const credential='Bearer '+journalBearerTokenSchema.parse(configuration.writerToken);
  const getVercelTrustedSourceToken=configuration.getVercelTrustedSourceToken;
  const agent=new Agent({keepAlive:true,maxSockets:4,rejectUnauthorized:true,minVersion:'TLSv1.2',
   ...(configuration.ca?{ca:configuration.ca}:{})});
@@ -148,22 +134,18 @@ export function createHTTPSJournalAuthority(configuration:{readonly pins:Durable
    const length=Buffer.byteLength(body);
    if(length>maxBody)throw Error('Journal message too large');
    const headers:Record<string,string|number>={Authorization:credential,'Content-Type':'application/json','Content-Length':length};
-   if(getVercelTrustedSourceToken){
-    const token=oidcTokenSchema.safeParse(await Promise.resolve().then(getVercelTrustedSourceToken).catch(()=>undefined));
-    if(!token.success)throw Error('Vercel journal identity is unavailable');
-    headers['x-vercel-trusted-oidc-idp-token']=token.data;
-   }
+   Object.assign(headers,await trustedSourceHeaders(getVercelTrustedSourceToken));
    scope.check();
    if(closed)throw Error('Journal connection closed');
    return new Promise<T>((resolve,reject)=>{
     const req=request(endpoint,{agent,method:'POST',signal:call.signal,headers},res=>{
      if(res.statusCode===409&&res.headers['content-type']==='application/json'&&canRefuseWriter(command.action)){
-      readJSON(res).then(value=>{busyResponse.parse(value);reject(new JournalWriterBusy());}).catch(reject);return;
+      readBoundedJournalJSON(res,maxBody).then(value=>{busyResponse.parse(value);reject(new JournalWriterBusy());}).catch(reject);return;
      }
      if(res.statusCode!==200||res.headers['content-type']!=='application/json'){
       res.destroy();reject(Error('Independent journal request rejected'));return;
      }
-     readJSON(res).then(value=>resolve(schema.parse(responseSchema.parse(value).value))).catch(reject);
+     readBoundedJournalJSON(res,maxBody).then(value=>resolve(schema.parse(responseSchema.parse(value).value))).catch(reject);
     });
     req.once('error',reject);req.end(body);
    });

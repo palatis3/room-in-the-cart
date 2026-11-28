@@ -109,7 +109,7 @@ Inject `PRIVACY_DELETION_JSON` into each enabled runtime. Its strict version 1 f
 | `writerPrivateKey` | Writer's PKCS#8 Ed25519 private PEM |
 | `authorityPublicKey` | Independent authority's SPKI Ed25519 public PEM |
 | `authority` | `origin`, `writerToken`, optional `ca` PEM and optional `vercelTrustedSource` boolean |
-| `observer` | `databaseOid`, `observerRoleOid`, `ownerRole`, `ownerRoleOid`, optional `observerRole`, and fixed `connection` with `host`, `port`, `database`, `user`, optional `password` and pinned `tls` with `ca` and `servername` |
+| `observer` | For a direct observer, provide `databaseOid`, `observerRoleOid`, `ownerRole`, `ownerRoleOid`, optional `observerRole`, and fixed `connection` with `host`, `port`, `database`, `user`, optional `password` and pinned `tls` with `ca` and `servername`. For a gateway, provide `mode: "gateway"`, HTTPS `origin`, a per-caller `token`, `database`, `databaseOid`, `observerRoleOid`, optional HTTPS `ca` and `vercelTrustedSource: true` on Vercel. See the [source gateway setup](../source-gateway-vercel/README.md). |
 | `retentionPolicy` | Approved integer `receiptRetentionDays`, `erasureMarkerRetentionDays` and `verifiedBackupRetentionDays` |
 | `retentionApprovalReference`, `restoreApprovalReference` | References to the owner's actual approvals |
 
