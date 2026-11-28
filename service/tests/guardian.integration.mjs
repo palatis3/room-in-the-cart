@@ -353,6 +353,38 @@ test('real privacy worker erases guardian plus child profile, retains independen
  }finally{await worker.end();}
 });
 
+test('inbound-only runtime receives a pending verification without offering new enrollment',async()=>{
+ const f=await family(),made=await create(f),sent=await start(f,made.setup);
+ const receiver=await guardianRuntime(repo,{
+  GUARDIAN_VERIFIER_DATABASE_URL:process.env.TEST_GUARDIAN_VERIFIER_DATABASE_URL,
+  KWS_ORGANIZATION_ID:config.organizationId,KWS_SCOPE:'product',KWS_PRODUCT_ID:config.productId,KWS_ENVIRONMENT:'test',
+  KWS_WEBHOOK_SECRETS_JSON:JSON.stringify([signing]),GUARDIAN_EMAIL_DIGEST_KEY:guardian.options.emailDigestKey,
+  GUARDIAN_APPROVED_NOTICES_JSON:JSON.stringify(notices),GUARDIAN_PENDING_RETENTION_HOURS:'1',
+  GUARDIAN_EVIDENCE_RETENTION_DAYS:'1',GUARDIAN_RETENTION_APPROVAL_REFERENCE:'fictional-policy'
+ },databaseConfiguration);
+ try{
+  receiver.service.attachChildSignin(bff,otpProvider);
+  assert.equal(receiver.service.notice('en').available,false);
+  assert.equal(receiver.service.notice('es').available,false);
+  const signedReceipt=raw=>{
+   const stamp=Date.now();
+   return 't='+stamp+',v1='+createHmac('sha256',signing).update(String(stamp)+'.').update(raw).digest('hex');
+  };
+  const raw=Buffer.from(event(sent.request));
+  const signature=signedReceipt(raw);
+  await assert.rejects(receiver.service.webhook(raw,undefined),{status:401,code:'provider_signature_invalid'});
+  const reference={...JSON.parse(sent.request.externalPayload),a:randomUUID()};
+  const unknown=Buffer.from(event({...sent.request,externalPayload:JSON.stringify(reference)}));
+  await assert.rejects(receiver.service.webhook(unknown,signedReceipt(unknown)),{status:404,code:'unavailable'});
+  assert.equal((await read(f,made.setup.enrollmentId)).state,'verification_pending');
+  assert.deepEqual(await receiver.service.webhook(raw,signature),{received:true});
+  const verified=await read(f,made.setup.enrollmentId);
+  assert.equal(verified.state,'verified');
+  assert.deepEqual(await receiver.service.webhook(raw,signature),{received:true});
+  assert.equal((await read(f,made.setup.enrollmentId)).revision,verified.revision);
+ }finally{await receiver.pool.end();}
+});
+
 test('production readiness cannot be enabled by flags, partial notices, missing onboarding or a combined verifier role',async()=>{
  const runtime=await createRuntime({DATABASE_URL:process.env.TEST_DATABASE_URL,CHILD_NETWORK_ENABLED:'true',KWS_ENABLED:'true'});await new Promise(resolve=>runtime.server.listen(0,'127.0.0.1',resolve));try{const reply=await fetch('http://127.0.0.1:'+runtime.server.address().port+'/v1/guardian/availability');assert.deepEqual(await reply.json(),{available:false,reason:'provider_configuration_required'});}finally{await new Promise(resolve=>runtime.server.close(resolve));await runtime.pool.end();}
  const environment={DATABASE_URL:process.env.TEST_DATABASE_URL,GUARDIAN_VERIFIER_DATABASE_URL:process.env.TEST_GUARDIAN_VERIFIER_DATABASE_URL,KWS_ORGANIZATION_ID:config.organizationId,KWS_SCOPE:'product',KWS_PRODUCT_ID:config.productId,KWS_ENVIRONMENT:'test',KWS_CLIENT_ID:'fixture-client',KWS_API_KEY:'fixture-key',KWS_SERVICE_ORIGIN:'https://api.kidswebservices.com',KWS_USER_AGENT:'fictional-local-test',KWS_WEBHOOK_SECRETS_JSON:JSON.stringify([signing]),GUARDIAN_EMAIL_DIGEST_KEY:randomBytes(32).toString('base64url'),GUARDIAN_APPROVED_NOTICES_JSON:JSON.stringify(notices),GUARDIAN_PENDING_RETENTION_HOURS:'1',GUARDIAN_EVIDENCE_RETENTION_DAYS:'1',GUARDIAN_RETENTION_APPROVAL_REFERENCE:'fictional-only-policy'};
