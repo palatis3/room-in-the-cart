@@ -379,7 +379,10 @@ export class GuardianEnrollmentService {
     if(!receipt)throw ended();return{...receipt,deviceToken:input.deviceSecret};
   }
   async webhook(raw:Buffer,signature:string|undefined){
-    if(!this.providerConfigured)throw disabled();const event=this.options.webhookVerifier!.verify(raw,signature);const db=await this.options.verifierPool!.connect();
+    const {webhookVerifier,verifierPool,emailDigestKey}=this.options;
+    if(!webhookVerifier||!verifierPool||!emailDigestKey)throw disabled();
+    const event=webhookVerifier.verify(raw,signature);
+    const db=await verifierPool.connect();
     try{await db.query('BEGIN');await db.query("SET LOCAL statement_timeout='10s'; SET LOCAL lock_timeout='3s'");await db.query("SELECT set_config('app.household_id',$1,true)",[event.householdId]);
       const attempt=(await db.query(`SELECT a.*,e.guardian_id,e.guardian_device_id,e.guardian_issuer,e.guardian_subject,e.guardian_session FROM ritc.guardian_attempt a JOIN ritc.guardian_enrollment e USING(household_id,enrollment_id) WHERE a.household_id=$1 AND a.attempt_id=$2`,[event.householdId,event.attemptId])).rows[0];
       if(!attempt||attempt.nonce_hash!==tokenHash(event.nonce)||attempt.organization_id!==event.organizationId||attempt.product_id!==event.productId||attempt.environment!==event.environment)throw unavailable();
