@@ -23,7 +23,7 @@ export function assertCaptureCurrent(captured, now = Date.now()) {
 
 // The receipt digest comes from the custodian independently of the restore inputs.
 // The original manifest binds source time to the actual dump bytes, even after copying.
-export async function restoreCapture(paths, dumpDigest, receiptPin) {
+export async function restoreCaptureProof(paths, dumpDigest, receiptPin) {
   if (!/^[0-9a-f]{64}$/.test(receiptPin ?? '')) throw Error('Independent verified backup receipt digest required');
   const receiptBytes = await readPrivateFile(paths.verifiedReceiptPath, 1024 * 1024);
   if (sha256(receiptBytes) !== receiptPin) throw Error('Verified backup receipt pin conflict');
@@ -47,7 +47,11 @@ export async function restoreCapture(paths, dumpDigest, receiptPin) {
   const captured = timestamp(source.originalSnapshotUTC);
   if (timestamp(source.restoreCutoffUTC) !== captured + 30 * day) throw Error('Verified backup recovery cutoff conflict');
   assertCaptureCurrent(captured);
-  return captured;
+  return {captured,project:source.project};
+}
+
+export async function restoreCapture(paths,dumpDigest,receiptPin) {
+  return (await restoreCaptureProof(paths,dumpDigest,receiptPin)).captured;
 }
 
 // Use the signed acceptance intent, including a subsequently rolled-back intent.

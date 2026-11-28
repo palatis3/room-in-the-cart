@@ -39,12 +39,17 @@ function publicTrust(pins:DurableJournalPins,writer:KeyObject,authority:KeyObjec
   publicKey:writer.export({type:'spki',format:'pem'}).toString()};
 }
 
-/** Independently verify the signed seal, exact v1 chain, and every restore event. */
-export function verifyIndependentRecovery(bytes:Buffer,input:unknown,pins:DurableJournalPins,writer:KeyObject,authority:KeyObject,inspect?:InspectRestoreRecords){
- const trust=publicTrust(pins,writer,authority),proof=sealSchema.parse(input);
+function verifySeal(input:unknown,pins:DurableJournalPins,authority:KeyObject) {
+ const proof=sealSchema.parse(input);
  const {authoritySignature,...body}=proof,signature=Buffer.from(authoritySignature,'base64url');
  if(proof.scopeDigest!==durableJournalScopeDigest(pins)||proof.authorityKeyId!==pins.authorityKeyId||
   signature.toString('base64url')!==authoritySignature||!verify(null,Buffer.from(journalCanonical(body)),authority,signature))throw Error('Independent recovery seal signature or scope conflict');
+ return proof;
+}
+
+/** Independently verify the signed seal, exact v1 chain, and every restore event. */
+export function verifyIndependentRecovery(bytes:Buffer,input:unknown,pins:DurableJournalPins,writer:KeyObject,authority:KeyObject,inspect?:InspectRestoreRecords){
+ const trust=publicTrust(pins,writer,authority),proof=verifySeal(input,pins,authority);
  const checked=verifyPrivacyJournal(bytes,{...trust,head:proof.head},inspect);
  if(checked.bundleDigest!==proof.bundleDigest||journalHash(checked.events.map(event=>[event.eventId,event.payloadDigest]).sort(compareIds))!==proof.sourceEventsDigest)throw Error('Independent recovery bundle or source digest conflict');
  validatePrivacyRestoreEvents(checked.events);
@@ -69,6 +74,16 @@ function verifySuccessor(input:unknown,expected:ReturnType<typeof successorBody>
  if(!equal(body,expected)||signature.toString('base64url')!==authoritySignature||
   !verify(null,Buffer.from(journalCanonical(body)),authority,signature))throw Error('Journal successor signature or archive continuity conflict');
  return proof;
+}
+
+// After retirement there is deliberately no payload left to export. These signed
+// anchors identify the closed generation for idempotent owner-side verification.
+export function verifyRetirementAnchor(seal:unknown,link:unknown,pins:DurableJournalPins,next:DurableJournalPins,writer:KeyObject,authority:KeyObject){
+ publicTrust(pins,writer,authority);
+ const proof=verifySeal(seal,pins,authority);
+ return verifySuccessor(link,successorBody(pins,proof,{
+  lineage:next.lineage,sourceIdentity:next.sourceIdentity,scopeDigest:durableJournalScopeDigest(next),
+ }),authority);
 }
 
 interface ArchiveSegment {

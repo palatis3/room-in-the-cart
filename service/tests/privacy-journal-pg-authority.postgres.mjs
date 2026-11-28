@@ -33,7 +33,7 @@ if(!process.env.TEST_POSTGRES_BIN)throw Error('Set TEST_POSTGRES_BIN to the dire
 const bin=resolve(process.env.TEST_POSTGRES_BIN),dir=await mkdtemp('/tmp/ritc-jca-');
 const data=join(dir,'data'),ownerRole='ritc_fixture_owner',objectRole='ritc_fixture_records',checkpointRole='ritc_fixture_checkpoint';
 const storeIdentity='fixture-record-store-v1';
-const environment={PATH:'/usr/bin:/bin',LANG:'C',LC_ALL:'C'};
+const environment={RITC_JOURNAL_CUSTODIAN_ID:randomUUID(),PATH:'/usr/bin:/bin',LANG:'C',LC_ALL:'C'};
 const vercel=process.env.TEST_VERCEL_JOURNAL_AUTHORITY==='1';
 const authorityDatabaseTLS=vercel&&process.env.TEST_VERCEL_JOURNAL_AUTHORITY_TLS==='1';
 const fixturePassword=randomBytes(32).toString('base64url');
@@ -71,6 +71,7 @@ before(async()=>{
  await owner.query(await readFile(new URL('../journal-authority/002_recovery.sql',import.meta.url),'utf8'));
  await owner.query(await readFile(new URL('../journal-authority/003_worker_capacity.sql',import.meta.url),'utf8'));
  await owner.query(await readFile(new URL('../journal-authority/004_successor.sql',import.meta.url),'utf8'));
+ await owner.query(await readFile(new URL('../journal-authority/005_retirement.sql',import.meta.url),'utf8'));
  await owner.query('INSERT INTO ritc_records.store(identity) VALUES($1)',[storeIdentity]);
 });
 after(async()=>{
@@ -978,7 +979,9 @@ test('overlapping HTTPS writers defer without poisoning the losing app or worker
  }
 });
 
-test('a backup from before rollover replays both journals in order and preserves unrelated members',async()=>{
+for(const retirement of [false,true])test(retirement
+ ? 'a verified successor backup retires only the closed generation after the stale window'
+ : 'a backup from before rollover replays both journals in order and preserves unrelated members',async()=>{
  const source=await sourceCluster();
  let sourceClosed=false,quarantine;
  const issuer='https://archive.fixture.invalid/auth/v1';
@@ -1038,7 +1041,7 @@ test('a backup from before rollover replays both journals in order and preserves
   const invitationsOpen=async()=> (await quarantine.query(
     'SELECT invite_id FROM ritc.invite WHERE invite_id=ANY($1::uuid[]) AND revoked_at IS NULL',
     [[laterInvitation,independentInvitation]])).rows.map(row=>row.invite_id).sort();
-  const dumpPath=join(dir,'pre-rollover.dump'),socketDirectory=source.configuration.connection.host;
+  const dumpPath=join(dir,retirement?'pre-retirement.dump':'pre-rollover.dump'),socketDirectory=source.configuration.connection.host;
   const captured=Date.now();
   pgTool('pg_dump',['-h',socketDirectory,'-p','55434','-U',ownerRole,'-d','postgres','-Fc','-f',dumpPath]);
   await chmod(dumpPath,0o600);
@@ -1060,7 +1063,27 @@ test('a backup from before rollover replays both journals in order and preserves
    assert.equal((await source.owner.query("SELECT count(*)::int AS n FROM ritc.privacy_job WHERE state<>'complete'")).rows[0].n,0);
    await assertDrainBlocked();
   }});
-  const first=await operator.sealForRollover(time());
+  let heldWriter,writerPool,writerPid;
+  if(retirement) {
+   writerPool=pool(objectRole);
+   heldWriter=await writerPool.connect();
+   await heldWriter.query('BEGIN');
+   writerPid=(await heldWriter.query('SELECT pg_backend_pid() AS pid')).rows[0].pid;
+   // A correctly admitted object retry begins on the record connection before sealing.
+   await heldWriter.query(`INSERT INTO ritc_records.object SELECT * FROM ritc_records.object
+     WHERE split_part(object_key,'/',1)=$1 LIMIT 1 ON CONFLICT DO NOTHING`,[r.scope]);
+  }
+  const sealing=operator.sealForRollover(time());
+  if(retirement) {
+   try {
+    const until=Date.now()+3000;
+    while(!(await owner.query('SELECT FROM pg_stat_activity WHERE $1=ANY(pg_blocking_pids(pid))',[writerPid])).rowCount){
+     if(Date.now()>=until)throw Error('Sealer did not wait for the concurrent record transaction');
+     await delay(10);
+    }
+   } finally {await heldWriter.query('COMMIT');heldWriter.release();await writerPool.end();}
+  }
+  const first=await sealing;
   const links=await Promise.all([registerIndependentSuccessor(linkInput,time()),registerIndependentSuccessor(linkInput,time())]);
   const [link]=links;
   assert.deepEqual(links[1],link);
@@ -1086,7 +1109,7 @@ test('a backup from before rollover replays both journals in order and preserves
    await assert.rejects(worker.query('SELECT ritc.privacy_journal_drained()'),{code:'42501'});
   }finally{await Promise.all([runtime.end(),worker.end()]);}
 
-  const output=join(dir,'successor-fixture');
+  const output=join(dir,retirement?'retirement-fixture':'successor-fixture');
   await mkdir(output,{mode:0o700});
   const endpoint=(identity,host,port)=>({connection:{host,port,database:identity.database,user:identity.owner},
    databaseOid:identity.databaseOid,ownerOid:identity.ownerOid});
@@ -1224,6 +1247,82 @@ test('a backup from before rollover replays both journals in order and preserves
    {lineage:r.f.pins.lineage,fenced:true});
   await quarantine.end();quarantine=undefined;
 
+  if(retirement) {
+   const postDump=join(output,'after-rotation.dump'),witnessTime=Date.now();
+   pgTool('pg_dump',['-h',socketDirectory,'-p','55434','-U',ownerRole,'-d','postgres','-Fc','-f',postDump]);
+   await chmod(postDump,0o600);
+   const postHash=createHash('sha256').update(await readFile(postDump)).digest('hex');
+   const postCapture=await captureFixture(output,postHash,witnessTime);
+   const retirementPath=join(output,'retire.json');
+   const setup={...publicSettings(r.f),successor:next.pins,source:sourceEndpoint,checkpoint,
+    ...postCapture.paths,dumpPath:postDump,pgRestore:join(bin,'pg_restore'),exportDirectories:[output]};
+   await writeFile(retirementPath,JSON.stringify(setup),{mode:0o600});
+   environment.RITC_RESTORE_VERIFIED_RECEIPT_SHA256=postCapture.pin;
+   assert.ok(cli('journal-retirement.mjs','schedule',retirementPath).dates.rotateBy);
+   assert.equal(cli('journal-retirement.mjs','plan',retirementPath).staleBackupsExpired,false);
+   assert.throws(()=>cli('journal-retirement.mjs','retire',retirementPath),/stale_backup_eligible/);
+
+   // Advance the clock in these disposable databases and this client only.
+   // Keep the original signed bytes, activated_at, and source receipts unchanged.
+   const future=witnessTime+31*86400000;
+   const sql=await source.owner.query("SELECT pg_get_functiondef('ritc.privacy_retire_journal_source(uuid,text,timestamptz)'::regprocedure) AS body");
+   await source.owner.query(sql.rows[0].body.replaceAll('clock_timestamp()',"(clock_timestamp()+interval '31 days')"));
+   const clockFile=join(output,'clock.mjs');
+   await writeFile(clockFile,`Date.now=()=>${future};`,{mode:0o600});
+   const retired=command=>JSON.parse(execFileSync(process.execPath,['--import',clockFile,
+    fileURLToPath(new URL('../scripts/journal-retirement.mjs',import.meta.url)),command,retirementPath],
+   {env:environment,stdio:['ignore','pipe','pipe'],timeout:15000}).toString());
+   // At the later date the original post-rotation backup is itself stale.
+   assert.throws(()=>retired('retire'),/verification_failed/);
+   // Simulate the next attended capture in the advanced calendar. Its actual dump
+   // has different bytes and is restored into two fresh databases before certification.
+   const latestDump=join(output,'latest.dump');
+   const assay=await actor('Independent healthy adult');
+   pgTool('pg_dump',['-h',socketDirectory,'-p','55434','-U',ownerRole,'-d','postgres','-Fc','-f',latestDump]);await chmod(latestDump,0o600);
+   const latestHash=createHash('sha256').update(await readFile(latestDump)).digest('hex');
+   assert.notEqual(latestHash,postHash);
+   for(let copy=0;copy<2;copy++) {
+    const dest='ritc_retirement_check_'+copy;
+    await source.owner.query('CREATE DATABASE '+dest+' TEMPLATE template0');
+    await source.owner.query('REVOKE CONNECT ON DATABASE '+dest+' FROM PUBLIC');
+    pgTool('pg_restore',['--exit-on-error','--no-owner','-h',socketDirectory,'-p','55434','-U',ownerRole,'-d',dest,latestDump]);
+    const restored=source.pool(ownerRole,dest);
+    try {
+     assert.equal((await restored.query('SELECT proof FROM ritc.privacy_journal_rotation WHERE predecessor=$1',[r.f.pins.lineage])).rows[0].proof.authoritySignature,link.authoritySignature);
+     assert.equal((await restored.query('SELECT FROM ritc.member WHERE member_id=$1 AND erased_at IS NULL',[assay.memberId])).rowCount,1);
+     assert.equal((await restored.query('SELECT FROM ritc.member WHERE member_id=$1 AND erased_at IS NOT NULL',[firstActor.memberId])).rowCount,1);
+    } finally {await restored.end();await source.owner.query('DROP DATABASE '+dest);}
+   }
+   await writeFile(retirementPath,JSON.stringify({...setup,dumpPath:latestDump}),{mode:0o600});
+   const replacement=await captureFixture(output,latestHash,future-86400000);
+   environment.RITC_RESTORE_VERIFIED_RECEIPT_SHA256=replacement.pin;
+   const surviving=await source.owner.query('SELECT count(*)::int AS count FROM ritc.privacy_journal_outbox WHERE lineage=$1',[next.pins.lineage]);
+   // Refuse an unaccounted managed export while both source stores are intact.
+   await writeFile(retirementPath,JSON.stringify({...setup,dumpPath:latestDump,exportDirectories:[]}),{mode:0o600});
+   assert.throws(()=>retired('retire'),/verification_failed/);
+   assert.ok((await source.owner.query('SELECT FROM ritc.privacy_journal_outbox WHERE lineage=$1',[r.f.pins.lineage])).rowCount);
+   await writeFile(retirementPath,JSON.stringify({...setup,dumpPath:latestDump}),{mode:0o600});
+   // An authority failure following the source commit is retried without exposing
+   // or deleting the successor. The ephemeral failure trigger exists only here.
+   await owner.query("CREATE FUNCTION ritc_records.test_fail_retire() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'fixture interrupted'; END $$");
+   await owner.query('CREATE TRIGGER test_fail_retire BEFORE DELETE ON ritc_records.object FOR EACH ROW EXECUTE FUNCTION ritc_records.test_fail_retire()');
+   try {assert.throws(()=>retired('retire'),/verification_failed/);}
+   finally {await owner.query('DROP TRIGGER test_fail_retire ON ritc_records.object');}
+   assert.equal((await source.owner.query('SELECT FROM ritc.privacy_journal_outbox WHERE lineage=$1',[r.f.pins.lineage])).rowCount,0);
+   assert.ok((await owner.query("SELECT FROM ritc_records.object WHERE split_part(object_key,'/',1)=$1",[r.scope])).rowCount);
+   const value=retired('retire');
+   assert.equal(value.sourceAndAuthorityRowsAbsent,true);
+   assert.equal(value.externalCopiesVerified,false);
+   assert.equal(retired('retire').authorityPreviouslyRetired,true);
+   assert.equal((await source.owner.query('SELECT FROM ritc.privacy_job WHERE job_id=$1',[firstJob.jobId])).rowCount,0);
+   assert.equal((await source.owner.query('SELECT FROM ritc.privacy_job WHERE job_id=$1',[secondJob.jobId])).rowCount,1);
+   assert.deepEqual((await source.owner.query('SELECT count(*)::int AS count FROM ritc.privacy_journal_outbox WHERE lineage=$1',[next.pins.lineage])).rows,surviving.rows);
+   assert.equal((await owner.query("SELECT FROM ritc_records.object WHERE split_part(object_key,'/',1)=$1",[r.scope])).rowCount,0);
+   const late=first.bytes.subarray(0,first.bytes.indexOf(10)+1);
+   await assert.rejects(owner.query('INSERT INTO ritc_records.object VALUES($1,$2,$3,$4)',
+    [r.scope+'/1/'+zero,randomUUID(),zero,late]),/scope is absent or fenced/);
+   return;
+  }
   await source.close();sourceClosed=true;
   const publicExport=join(dir,'public-successor-export');
   await mkdir(publicExport,{mode:0o700});
@@ -1234,4 +1333,55 @@ test('a backup from before rollover replays both journals in order and preserves
   assert.deepEqual(await readFile(join(publicExport,'journal.ndjson')),first.bytes);
   assert.deepEqual(await readFile(join(publicExport,'successor.json')),await readFile(incomingLinkPath));
  }finally{await quarantine?.end();if(!sourceClosed)await source.close();}
+});
+
+test('the first unadmitted signed object starts the rotation clock and the owner switches a drained source once',async()=>{
+ const source=await sourceCluster();
+ try {
+  const {r,config}=await recoveryFixture(source);
+  const next=fixture({schemaDigest:source.schemaDigest,sourceIdentity:r.f.pins.sourceIdentity,
+   keyId:'next-by-age',authorityKeyId:'next-authority-by-age',recordStoreIdentity:storeIdentity});
+  const endpoint=(identity,host,port)=>({connection:{host,port,database:identity.database,user:identity.owner},
+   databaseOid:identity.databaseOid,ownerOid:identity.ownerOid});
+  const directory=await mkdtemp(join(dir,'rotate-by-age-')),file=join(directory,'config.json'),keys=join(directory,'private.json');
+  await writeFile(keys,JSON.stringify({writerPrivateKey:pem(r.f.writerKeys.privateKey),authorityPrivateKey:pem(r.f.authorityKeys.privateKey),
+   successorWriterPublicKey:next.writerKeys.publicKeyPEM,successorAuthorityPublicKey:next.authorityKeys.publicKeyPEM}),{mode:0o600});
+  await writeFile(file,JSON.stringify({pins:r.f.pins,successor:next.pins,writerPublicKey:r.f.writerKeys.publicKeyPEM,
+   authorityPublicKey:r.f.authorityKeys.publicKeyPEM,source:endpoint(config.source.identity,source.configuration.connection.host,55434),
+   checkpoint:endpoint(config.checkpoint.identity,dir,55433),rotationKeysPath:keys,exportDirectories:[],
+   pgRestore:join(bin,'pg_restore'),dumpPath:file,verifiedReceiptPath:file,captureManifestPath:file}),{mode:0o600});
+  const admissionPath=join(directory,'backup-admission.json'),binding=JSON.parse(await readFile(file,'utf8'));
+  await writeFile(admissionPath,JSON.stringify({source:binding.source,checkpoint:binding.checkpoint,expectedSourceIdentity:r.f.pins.sourceIdentity}),{mode:0o600});
+  environment.RITC_BACKUP_ADMISSION_CONFIG_SHA256=createHash('sha256').update(await readFile(admissionPath)).digest('hex');
+  const priorGenerationCount=cli('journal-retirement.mjs','backup-admission',admissionPath).openGenerations;
+  assert.equal(cli('journal-retirement.mjs','rotate-due',file).rotateNow,false);
+  const event=r.f.event(),original=Date.now()-29.5*86400000;
+  event.payload.data.attestation.checkedAt=new Date(original).toISOString();
+  event.payloadDigest=digest(event.payload);
+  const record=signed(r.f,r.head,event,'intent');
+  await owner.query('INSERT INTO ritc_records.object VALUES($1,$2,$3,$4)',
+   [r.scope+'/1/'+record.identity.recordHash,randomUUID(),record.identity.recordHash,record.content]);
+  const originalEnd=new Date(original+90*86400000).toISOString();
+  assert.equal(cli('journal-retirement.mjs','schedule',file).dates.retireAllBy,originalEnd);
+  const admission=cli('journal-retirement.mjs','backup-admission',admissionPath);
+  assert.equal(admission.openGenerations,priorGenerationCount+1);
+  assert.equal(admission.earliestReplayDeadline,originalEnd);
+  const clock=join(directory,'overdue-clock.mjs');
+  await writeFile(clock,`Date.now=()=>${Date.parse(originalEnd)};`,{mode:0o600});
+  assert.throws(()=>execFileSync(process.execPath,['--import',clock,fileURLToPath(new URL('../scripts/journal-retirement.mjs',import.meta.url)),
+    'backup-admission',admissionPath],{env:environment,stdio:['ignore','pipe','pipe']}),error=>error.status===1 && JSON.parse(error.stdout).captureAllowed===false);
+
+  // Even an absent-from-checkpoint personal object must count, and close new
+  // admissions at day 30 without leaving a dangling uncertainty claim.
+  const guard=await owner.query("SELECT pg_get_functiondef('ritc_checkpoint.guard_rotation_deadline()'::regprocedure) AS body");
+  await owner.query(guard.rows[0].body.replaceAll('clock_timestamp()',"(clock_timestamp()+interval '1 day')"));
+  const service=await r.open();
+  try {
+   await assert.rejects(service.uncertainty.begin({scopeDigest:r.scope,eventId:randomUUID(),transition:'intent'},time()));
+   assert.equal((await owner.query('SELECT claim FROM ritc_checkpoint.origin WHERE lineage=$1',[r.f.pins.lineage])).rows[0].claim,null);
+  } finally {await service.close();await owner.query(guard.rows[0].body);}
+  assert.equal(cli('journal-retirement.mjs','rotate-due',file).changed,true);
+  assert.equal(cli('journal-retirement.mjs','rotate-due',file).changed,false);
+  assert.equal((await source.owner.query('SELECT lineage FROM ritc.privacy_journal_origin')).rows[0].lineage,next.pins.lineage);
+ } finally {await source.close();}
 });
