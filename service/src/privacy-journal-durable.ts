@@ -251,6 +251,15 @@ export function createDurablePrivacyJournal(configuration:DurablePrivacyJournalC
    throw error;
   }
  }
+ async function readJob(jobId:string,call:JournalCall){
+  await origin(call);
+  const acceptance=event(await step(call,()=>source.readCommittedAcceptance(jobId,call)));
+  if(acceptance.payload.kind!=='acceptance'||acceptance.payload.jobId!==jobId)throw Error('Requested job acceptance binding conflict');
+  validatePrivacyRestoreEvents([acceptance]);
+  const ids=z.array(uuid).max(MAX_RECORDS).parse(await step(call,()=>source.listUnacknowledgedJobEvents(jobId,call)));
+  if(new Set(ids).size!==ids.length)throw Error('Duplicate unacknowledged source event');
+  return {acceptance,ids};
+ }
  const port:DurablePrivacyJournalPort=Object.freeze({configurationId:pins.configurationId,lineage:pins.lineage,
   reserveWorkerCapacity(jobId:string,kinds:readonly WorkerJournalKind[],call:JournalCall):Promise<boolean>{
    const id=uuid.parse(jobId),requested=workerKindsSchema.parse(kinds),reserve=authority.reserveWorkerCapacity;
@@ -272,17 +281,21 @@ export function createDurablePrivacyJournal(configuration:DurablePrivacyJournalC
    try{uuid.parse(eventId);}catch(error){return Promise.reject(error);}
    return guarded(call,owned=>afterCommit(eventId,owned));
   },
+  observeJob(jobId:string,call:JournalCall):Promise<boolean>{
+   try{uuid.parse(jobId);}catch(error){return Promise.reject(error);}
+   return withOwnedCall(call,now,async owned=>{
+    const {acceptance,ids}=await readJob(jobId,owned);
+    // An unacknowledged acceptance still needs its original signed intent.
+    const proof=await find(acceptance,ids.includes(acceptance.eventId)?'intent':'commit',owned);
+    if(!proof)throw Error('Job has no durable acceptance evidence');
+    await covered(proof,owned,true);
+    return ids.length===0;
+   });
+  },
   acknowledgeJob(jobId:string,call:JournalCall):Promise<void>{
    try{uuid.parse(jobId);}catch(error){return Promise.reject(error);}
    return guarded(call,async owned=>{
-    // A read-only empty status path requires a genuine committed acceptance.
-    // No mutation claim is opened until an individual event needs observation.
-    await origin(owned);
-    const acceptance=event(await step(owned,()=>source.readCommittedAcceptance(jobId,owned)));
-    if(acceptance.payload.kind!=='acceptance'||acceptance.payload.jobId!==jobId)throw Error('Requested job acceptance binding conflict');
-    validatePrivacyRestoreEvents([acceptance]);
-    const ids=z.array(uuid).max(MAX_RECORDS).parse(await step(owned,()=>source.listUnacknowledgedJobEvents(jobId,owned)));
-    if(new Set(ids).size!==ids.length)throw Error('Duplicate unacknowledged source event');
+    const {acceptance,ids}=await readJob(jobId,owned);
     if(!ids.length){
      const proof=await find(acceptance,'commit',owned);if(!proof)throw Error('Acknowledged job has no durable acceptance');
      await covered(proof,owned,true);

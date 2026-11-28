@@ -1,26 +1,27 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
-import {PrivacyMaintenance} from '../dist/privacy.js';
+import {tokenHash} from '../dist/database.js';
+import {PrivacyMaintenance,PrivacyService} from '../dist/privacy.js';
 import {JournalWriterBusy} from '../dist/privacy-journal-durable-contract.js';
 import {fixture} from './durable-authority-fixture.mjs';
 import {call,progressEvent} from './durable-independent-fixture.mjs';
 
-async function slowWorker(t,{workerRole=true}={}) {
+async function slowWorker(t,{workerRole=true,sourceMs=720,sqlMs=45,providerMs=700}={}) {
   const state=fixture(),acceptance=state.event();
   const setup=state.adapter().port;
   await setup.beforeCommit(acceptance,call());
   state.commit(acceptance);
   await setup.afterCommit(acceptance.eventId,call());
   const target=progressEvent(acceptance),completion=progressEvent(acceptance,'source_completed');
-  const job=acceptance.payload.jobId,subject=randomUUID();
+  const job=acceptance.payload.jobId,subject=randomUUID(),receiptToken='R'.repeat(43);
   const initialLogLength=state.logs.length;
   const startedAt=Date.now();
-  let now=startedAt,erasureSteps=0,providerCalls=0,jobFinished=false;
+  let now=startedAt,erasureSteps=0,providerCalls=0,jobFinished=false,reconciliationLease=null;
   t.mock.method(Date,'now',()=>now);
   // A protected source round trip takes hundreds of milliseconds, while the
   // authority is closer. Use a virtual clock so deadline boundaries are stable.
-  const phaseMs={sourceOrigin:720,sourceRead:720,sourceAcceptance:720,sourceList:720,ack:720,
+  const phaseMs={sourceOrigin:sourceMs,sourceRead:sourceMs,sourceAcceptance:sourceMs,sourceList:sourceMs,ack:sourceMs,
     begin:220,inspect:90,readExact:150,head:90,reserve:180,put:220,publish:200,complete:140};
   for(const [phase,ms] of Object.entries(phaseMs))state.hooks[phase]=()=>{now+=ms;};
   state.authority.reserveWorkerCapacity=async (jobId,kinds)=>{
@@ -31,15 +32,31 @@ async function slowWorker(t,{workerRole=true}={}) {
     return true;
   };
   const row=(value)=>({rows:[value]});
+  const completionAcknowledged=()=>state.acknowledgements.some(entry=>entry.identity.eventId===completion.eventId);
   const pool={async connect(){return {
     release(){},
     async query(sql,args=[]){
-      now+=45;
+      now+=sqlMs;
       if(sql==='BEGIN'||sql==='COMMIT'||sql==='ROLLBACK'||sql.startsWith('SET LOCAL '))return {rows:[]};
       if(sql.startsWith('SELECT r.rolsuper'))return row({worker:workerRole,application:!workerRole});
-      if(sql.startsWith('SELECT ritc.privacy_claim_reconciliation('))return row({job_id:null});
+      if(sql.startsWith('SELECT ritc.privacy_claim_reconciliation(')){
+        if(!jobFinished||completionAcknowledged())return row({job_id:null});
+        assert.equal(reconciliationLease,null);
+        reconciliationLease=args[0];
+        return row({job_id:job});
+      }
+      if(sql.startsWith('SELECT ritc.privacy_release_reconciliation(')){
+        assert.deepEqual(args,[job,reconciliationLease]);
+        reconciliationLease=null;
+        return {rows:[]};
+      }
+      if(sql.startsWith('SELECT * FROM ritc.privacy_status_for_journal(')){
+        if(args[0]!==job||args[1]!==tokenHash(receiptToken))return {rows:[]};
+        const complete=jobFinished&&completionAcknowledged();
+        return row({archived:false,value:{status:complete?'complete':'pending',providerAccountDeleted:complete}});
+      }
       if(sql.startsWith('SELECT * FROM ritc.privacy_cleanup('))return row({receipts_cleared:0,jobs_purged:0});
-      if(sql.startsWith('SELECT * FROM ritc.privacy_claim('))return row({job_id:job,issuer:'https://fixture.invalid',subject,app_erased:false});
+      if(sql.startsWith('SELECT * FROM ritc.privacy_claim('))return jobFinished?{rows:[]}:row({job_id:job,issuer:'https://fixture.invalid',subject,app_erased:false});
       if(sql.startsWith('SELECT * FROM ritc.privacy_worker_journal_needs('))return row({target_remaining:erasureSteps===0,pending_needed:true});
       if(sql.startsWith('SELECT ritc.privacy_erase_target(')){
         assert.equal(args[0],job);
@@ -69,14 +86,16 @@ async function slowWorker(t,{workerRole=true}={}) {
     assert.equal(exact?.identity.payloadDigest,target.payloadDigest);
     assert.equal(exact?.receipt.record.transition,'commit');
     providerCalls++;
-    now+=700;
+    now+=providerMs;
   }};
-  const worker=new PrivacyMaintenance(pool,{provider,journal:state.adapter({clock:{now:()=>now}}).port});
-  return {worker,state,target,completion,read(){return {erasureSteps,providerCalls,jobFinished,elapsed:now-startedAt,log:state.logs.slice(initialLogLength)};}};
+  const journal=()=>state.adapter({clock:{now:()=>now}}).port;
+  const worker=()=>new PrivacyMaintenance(pool,{provider,journal:journal()});
+  const status=(token=receiptToken)=>new PrivacyService({pool},{journal:journal()}).status(job,token);
+  return {worker:worker(),newWorker:worker,status,state,target,completion,read(){return {erasureSteps,providerCalls,jobFinished,elapsed:now-startedAt,log:state.logs.slice(initialLogLength)};}};
 }
 
-test('one ordinary worker completes its signed deletion chain under protected source latency',async t=>{
-  const run=await slowWorker(t);
+test('one ordinary worker completes its signed deletion chain with a full final acknowledgement window',async t=>{
+  const run=await slowWorker(t,{sourceMs:400});
   const result=await run.worker.run({batchSize:1,timeBudgetMs:20_000});
   const observed=run.read();
   assert.equal(result.completed,1);
@@ -119,4 +138,38 @@ test('a non-worker database role cannot enter deletion processing',async t=>{
   assert.equal(run.read().erasureSteps,0);
   assert.equal(run.read().providerCalls,0);
   assert.equal(run.state.uncertainCount(),0);
+});
+
+
+test('slow source completion stays pending without a claim and the next worker acknowledges it without calling the provider',async t=>{
+  const run=await slowWorker(t,{sqlMs:145,providerMs:1_800});
+  const first=await run.worker.run({batchSize:1,timeBudgetMs:20_000});
+  t.diagnostic(`Modeled first worker returned at ${run.read().elapsed}ms`);
+  assert.equal(first.completed,0);
+  assert.equal(first.journalDeferred,1);
+  assert.equal(run.read().jobFinished,true);
+  assert.equal(run.read().providerCalls,1);
+  assert.equal(run.state.uncertainCount(),0);
+  assert.equal(run.state.receiptFor(run.completion.eventId,'commit'),undefined);
+  assert.deepEqual(run.state.acknowledgements.slice(1).map(entry=>entry.identity.eventId),[run.target.eventId]);
+
+  const mutations=run.state.mutations;
+  for(let attempt=0;attempt<2;attempt++)assert.deepEqual(await run.status(),{status:'pending',providerAccountDeleted:false});
+  await assert.rejects(run.status('S'.repeat(43)),error=>error.status===404);
+  assert.equal(run.state.mutations,mutations);
+  assert.equal(run.state.uncertainCount(),0);
+
+  const constrained=await run.newWorker().run({batchSize:1,timeBudgetMs:20_000,deadlineUnixMs:Date.now()+3_000});
+  assert.equal(constrained.journalDeferred,1);
+  assert.equal(run.state.uncertainCount(),0);
+  assert.equal(run.read().providerCalls,1);
+
+  const secondStarted=run.read().elapsed;
+  const second=await run.newWorker().run({batchSize:1,timeBudgetMs:20_000});
+  t.diagnostic(`Modeled follow-up worker reconciled in ${run.read().elapsed-secondStarted}ms`);
+  assert.equal(second.journalDeferred,0);
+  assert.equal(run.read().providerCalls,1);
+  assert.equal(run.state.uncertainCount(),0);
+  assert.deepEqual(run.state.acknowledgements.slice(1).map(entry=>entry.identity.eventId),[run.target.eventId,run.completion.eventId]);
+  assert.deepEqual(await run.status(),{status:'complete',providerAccountDeleted:true});
 });

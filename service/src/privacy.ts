@@ -163,6 +163,11 @@ export class PrivacyService {
   const receipt=await read();
   if(!journal||receipt.archived)return receipt.value;
   await this.options.assertSource?.(call);
+  if('observeJob' in journal){
+   const acknowledged=await privacyPhase(call,child=>journal.observeJob(jobId,child));
+   if(receipt.value.status==='complete'&&!acknowledged)throw unavailable();
+   return receipt.value;
+  }
   await privacyPhase(call,child=>journal.acknowledgeJob(jobId,child));
   return (await read()).value;
  });}finally{scope.dispose();}}
@@ -173,8 +178,9 @@ export class PrivacyService {
 }
 export class PrivacyMaintenance {
  constructor(private readonly pool:Database,private readonly options:{provider?:AccountDeletionProvider;journal?:PrivacyJournalPort|DurablePrivacyJournalPort;issuer?:string}={}){}
- private async bounded<T>(signal:AbortSignal|undefined,budgetMs:number,work:(scope:PrivacyCall)=>Promise<T>){
-  const parent=signal?{signal,deadlineUnixMs:Date.now()+budgetMs,attemptId:randomUUID()}:undefined;
+ private async bounded<T>(signal:AbortSignal|undefined,budgetMs:number,work:(scope:PrivacyCall)=>Promise<T>,deadlineUnixMs?:number){
+  const parent=signal||deadlineUnixMs!==undefined?{signal:signal??new AbortController().signal,
+   deadlineUnixMs:deadlineUnixMs??Date.now()+budgetMs,attemptId:randomUUID()}:undefined;
   const scope=new PrivacyCall(parent,budgetMs);
   try{return await scope.run(async call=>{
    await withPrivacyClient(this.pool,call,assertWorkerRole);
@@ -191,7 +197,7 @@ export class PrivacyMaintenance {
   const batch=z.number().int().min(1).max(100).parse(input.batchSize??25);
   return this.bounded(input.signal,15_000,scope=>this.retireReceipts(scope.call,batch));
  }
- async run(input:{batchSize?:number;timeBudgetMs?:number;signal?:AbortSignal}={}){
+ async run(input:{batchSize?:number;timeBudgetMs?:number;signal?:AbortSignal;deadlineUnixMs?:number}={}){
   const {journal,provider}=this.options;
   if(!journal)throw unavailable();
   const batch=z.number().int().min(1).max(100).parse(input.batchSize??25);
@@ -202,6 +208,11 @@ export class PrivacyMaintenance {
   return this.bounded(input.signal,budget,async scope=>{
    const {call}=scope;
    const result={completed:0,retryScheduled:0,leaseLost:0,capacityDeferred:0,issuerMismatch:0,journalDeferred:0,receiptsCleared:0,jobsPurged:0};
+   const deferAcknowledgement=()=>{
+    if(!lineage||call.deadlineUnixMs-Date.now()>=WORKER_ACKNOWLEDGEMENT_BUDGET_MS)return false;
+    result.journalDeferred++;
+    return true;
+   };
    const acknowledge=async(jobId:string)=>{
     // One observation traverses the protected source and independent authority.
     try{await privacyPhase(call,phase=>journal.acknowledgeJob(jobId,phase),WORKER_ACKNOWLEDGEMENT_BUDGET_MS);return true;}
@@ -217,7 +228,7 @@ export class PrivacyMaintenance {
     const lease=randomUUID();
     const {job_id:jobId}=(await privacyQuery(this.pool,call,reconciliationSQL,lineage?[lease,lineage]:[lease])).rows[0];
     if(!jobId)break;
-    const acknowledged=await acknowledge(jobId);
+    const acknowledged=!deferAcknowledgement()&&await acknowledge(jobId);
     await privacyQuery(this.pool,call,'SELECT ritc.privacy_release_reconciliation($1,$2)',[jobId,lease]);
     if(!acknowledged)break;
    }
@@ -278,12 +289,14 @@ export class PrivacyMaintenance {
      if(required.pending_needed&&!await capacity(job.job_id,['source_pending']))continue jobs;
     }
     const committed=(await privacyQuery(this.pool,call,'SELECT ritc.privacy_finish($1,$2,$3,$4) AS committed',[job.job_id,lease,deleted,failure])).rows[0].committed;
-    if(committed&&!await acknowledge(job.job_id))return result;
+    // The next reconciliation pass can observe a committed outcome without
+    // claiming the job for erasure or contacting the provider again.
+    if(committed&&(deferAcknowledgement()||!await acknowledge(job.job_id)))return result;
     if(!committed)result.leaseLost++;
     else if(deleted)result.completed++;
     else result.retryScheduled++;
    }
    return result;
-  });
+  },input.deadlineUnixMs);
  }
 }
