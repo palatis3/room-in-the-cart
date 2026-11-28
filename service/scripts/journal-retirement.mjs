@@ -3,7 +3,7 @@ import {isAbsolute} from 'node:path';
 import {z} from 'zod';
 import {durableJournalPinsSchema,durableJournalScopeDigest} from '../dist/privacy-journal-durable.js';
 import {journalCanonical} from '../dist/privacy-journal.js';
-import {activateIndependentSuccessor,createIndependentRecovery,exportIndependentRecovery,registerIndependentSuccessor,verifyRetirementAnchor} from '../dist/privacy-journal-recovery.js';
+import {activateIndependentSuccessor,assertCompleteOwnerVisibility,createIndependentRecovery,exportIndependentRecovery,registerIndependentSuccessor,verifyRetirementAnchor} from '../dist/privacy-journal-recovery.js';
 import {PrivacyCall} from '../dist/privacy-call.js';
 import {jsonFile,publicKey} from './journal-archive-window.mjs';
 import {journalDatabase,journalDatabaseSchema,readPrivateFile} from './journal-authority-config.mjs';
@@ -37,14 +37,7 @@ async function openOwner(config,relation) {
       'ritc.privacy_target','ritc.identity_erasure','ritc.privacy_source_replay_clock',
     ] : ['ritc_checkpoint.origin','ritc_checkpoint.admission','ritc_checkpoint.worker_allowance','ritc_checkpoint.recovery_seal',
       'ritc_checkpoint.successor','ritc_checkpoint.replay_clock','ritc_checkpoint.detail_export','ritc_records.object','ritc_records.store'];
-    const filtered=await pool.query(`SELECT FROM unnest($1::text[]) t(name)
-      JOIN pg_class c ON c.oid=to_regclass(t.name)
-      WHERE row_security_active(c.oid) AND (c.relowner<>session_user::regrole OR
-       NOT EXISTS(SELECT FROM pg_policy p WHERE p.polrelid=c.oid AND p.polpermissive AND p.polcmd='*'
-         AND c.relowner=ANY(p.polroles) AND pg_get_expr(p.polqual,c.oid)='true'
-         AND COALESCE(pg_get_expr(p.polwithcheck,c.oid),'true')='true')
-       OR EXISTS(SELECT FROM pg_policy p WHERE p.polrelid=c.oid AND NOT p.polpermissive)) LIMIT 1`,[tables]);
-    if(filtered.rowCount)throw Error('Recovery owner cannot see the complete protected relation');
+    await assertCompleteOwnerVisibility(pool,tables);
     return {pool,identity};
   } catch(error) {await pool.end();throw error;}
 }

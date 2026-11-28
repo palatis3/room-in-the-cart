@@ -79,6 +79,39 @@ export interface PostgresJournalAuthorityConfiguration {
  readonly recordPool:Database;
 }
 
+export async function reservedJournalCapacity(db:Transaction,lineage:string){
+ const row=(await db.query(`SELECT count(*)::int AS count,COALESCE(sum(bytes),0)::text AS bytes FROM (
+  SELECT (i.receipt->'record'->>'byteLength')::int+$2::int AS bytes FROM ritc_checkpoint.admission i
+  WHERE i.lineage=$1 AND i.transition='intent' AND NOT EXISTS(SELECT 1 FROM ritc_checkpoint.admission c
+   WHERE c.lineage=i.lineage AND c.event_id=i.event_id AND c.transition='commit')
+  UNION ALL SELECT bytes FROM ritc_checkpoint.worker_allowance WHERE lineage=$1
+ ) reserved`,[lineage,MAX_INTENT_RESOLUTION_OVERHEAD])).rows[0];
+ return {count:Number(row.count),bytes:Number(row.bytes)};
+}
+
+/** Publish an already validated, reserved record under the locked checkpoint transaction. */
+export async function publishJournalAdmission(db:Transaction,pins:DurableJournalPins,scopeDigest:string,authorityPrivateKey:KeyObject,
+ prior:AdmittedHead,ticket:AppendTicket,stored:StoredRecord,eventKind:string):Promise<AdmissionReceipt>{
+ const record=ticket.record;
+ const admitted:AdmittedHead={...prior,mode:'active',pendingOperation:null,authorityRevision:prior.authorityRevision+1,
+  head:{...prior.head,seq:record.seq,hash:record.recordHash},totalBytes:prior.totalBytes+record.byteLength};
+ const body={version:1 as const,domain:'ritc-privacy-journal-admission-v1' as const,scopeDigest,authorityKeyId:pins.authorityKeyId,
+  operationId:ticket.operationId,admitted,record,stored};
+ const receipt:AdmissionReceipt={...body,authoritySignature:sign(null,Buffer.from(journalCanonical(body)),authorityPrivateKey).toString('base64url')};
+ await db.query('INSERT INTO ritc_checkpoint.admission(lineage,operation_id,event_id,job_id,transition,event_kind,sequence,ticket,receipt) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)',
+  [pins.lineage,ticket.operationId,record.eventId,record.jobId,record.transition,eventKind,record.seq,ticket,receipt]);
+ if(ticket.workerKind){
+  const used=await db.query('DELETE FROM ritc_checkpoint.worker_allowance WHERE lineage=$1 AND job_id=$2 AND event_kind=$3 AND bytes>=$4',
+   [pins.lineage,record.jobId,ticket.workerKind,record.byteLength]);
+  if(used.rowCount!==1)throw Error('Committed worker capacity allowance changed');
+  if(ticket.workerKind==='source_completed')await db.query('DELETE FROM ritc_checkpoint.worker_allowance WHERE lineage=$1 AND job_id=$2',[pins.lineage,record.jobId]);
+ }
+ const changed=await db.query('UPDATE ritc_checkpoint.origin SET head=$2,pending=NULL WHERE lineage=$1 AND pending=$4::jsonb AND floor(extract(epoch FROM clock_timestamp())*1000)<$3::bigint',
+  [pins.lineage,admitted,ticket.authorityExpiresAtUnixMs,ticket]);
+ if(changed.rowCount!==1)throw Error('Journal reservation expired before publication');
+ return receipt;
+}
+
 /** Internal backing service. The app receives only the scoped protocol ports. */
 export async function createPostgresJournalAuthority(configuration:PostgresJournalAuthorityConfiguration):Promise<{
  readonly authority:CheckpointAuthority;readonly records:ImmutableRecordTransport;readonly uncertainty:DurableUncertaintyStore;
@@ -183,15 +216,6 @@ export async function createPostgresJournalAuthority(configuration:PostgresJourn
   }
   return event;
  }
- async function reservedCapacity(db:Transaction){
-  const row=(await db.query(`SELECT count(*)::int AS count,COALESCE(sum(bytes),0)::text AS bytes FROM (
-   SELECT (i.receipt->'record'->>'byteLength')::int+$2::int AS bytes FROM ritc_checkpoint.admission i
-   WHERE i.lineage=$1 AND i.transition='intent' AND NOT EXISTS(SELECT 1 FROM ritc_checkpoint.admission c
-    WHERE c.lineage=i.lineage AND c.event_id=i.event_id AND c.transition='commit')
-   UNION ALL SELECT bytes FROM ritc_checkpoint.worker_allowance WHERE lineage=$1
-  ) reserved`,[pins.lineage,MAX_INTENT_RESOLUTION_OVERHEAD])).rows[0];
-  return {count:Number(row.count),bytes:Number(row.bytes)};
- }
  async function assertPending(db:Transaction,state:Origin,ticket:AppendTicket,call:JournalCall){
   assertHeld(state,ticket.record,call);
   if(state.head.head.fenced||state.head.mode!=='pending'||!matches(state.pending,ticket)||
@@ -206,7 +230,7 @@ export async function createPostgresJournalAuthority(configuration:PostgresJourn
     if(intentBound!==undefined){
      const existing=await db.query("SELECT 1 FROM ritc_checkpoint.admission WHERE lineage=$1 AND event_id=$2 AND transition='intent'",[pins.lineage,operation.eventId]);
      if(!existing.rowCount){
-      const reserved=await reservedCapacity(db);
+      const reserved=await reservedJournalCapacity(db,pins.lineage);
       if(state.head.head.seq+reserved.count+2>maxRecords||state.head.totalBytes+reserved.bytes+2*intentBound+MAX_INTENT_RESOLUTION_OVERHEAD>maxBytes)return null;
      }
     }
@@ -240,7 +264,7 @@ export async function createPostgresJournalAuthority(configuration:PostgresJourn
   async readCapacity(call){
    hash.parse(call.requestNonce);
    return transaction(checkpointPool,call,async db=>{
-    const {head,pending,claim}=await load(db,'share'),reserved=await reservedCapacity(db);
+    const {head,pending,claim}=await load(db,'share'),reserved=await reservedJournalCapacity(db,pins.lineage);
     const expired=pending&&pending.authorityExpiresAtUnixMs<=await databaseClock(db);
     return envelope({mode:expired&&head.mode==='pending'?'blocked' as const:head.mode,uncertain:Boolean(claim||pending),
      usedRecords:head.head.seq,reservedRecords:reserved.count,usedBytes:head.totalBytes,reservedBytes:reserved.bytes},call);
@@ -254,7 +278,7 @@ export async function createPostgresJournalAuthority(configuration:PostgresJourn
     const existing=(await db.query('SELECT event_kind FROM ritc_checkpoint.worker_allowance WHERE lineage=$1 AND job_id=$2',[pins.lineage,jobId])).rows;
     const needed=kinds.filter(kind=>!existing.some(row=>row.event_kind===kind));
     if(!needed.length)return true;
-    const reserved=await reservedCapacity(db),bytes=needed.map(kind=>WORKER_RECORD_BUDGET[kind]);
+    const reserved=await reservedJournalCapacity(db,pins.lineage),bytes=needed.map(kind=>WORKER_RECORD_BUDGET[kind]);
     if(state.head.head.seq+reserved.count+needed.length>maxRecords||state.head.totalBytes+reserved.bytes+bytes.reduce((total,size)=>total+size,0)>maxBytes)return false;
     await db.query('INSERT INTO ritc_checkpoint.worker_allowance(lineage,job_id,event_kind,bytes) SELECT $1,$2,event_kind,bytes FROM unnest($3::text[],$4::int[]) a(event_kind,bytes)',[pins.lineage,jobId,needed,bytes]);
     return true;
@@ -293,7 +317,7 @@ export async function createPostgresJournalAuthority(configuration:PostgresJourn
     if(previous.some(prior=>prior.payloadDigest!==record.payloadDigest||prior.jobId!==record.jobId||prior.transition!=='intent'||record.transition!=='commit'))throw Error('Journal event transition conflict');
     // Every admitted intent must still fit its commit or rollback even if this
     // process dies. A progress observation cannot consume a reserved slot.
-    const {count,bytes}=await reservedCapacity(db);
+    const {count,bytes}=await reservedJournalCapacity(db,pins.lineage);
     let workerBytes=0;
     if(workerKind){
      const allowance=(await db.query('SELECT bytes FROM ritc_checkpoint.worker_allowance WHERE lineage=$1 AND job_id=$2 AND event_kind=$3',[pins.lineage,record.jobId,workerKind])).rows[0];
@@ -323,24 +347,7 @@ export async function createPostgresJournalAuthority(configuration:PostgresJourn
     await assertPending(db,state,ticket,call);
     if(ticket.objectKey!==stored.objectKey||ticket.record.recordHash!==stored.recordHash||ticket.record.byteLength!==stored.byteLength)throw Error('Reserved immutable object identity conflict');
     const event=await validateRecord(db,await exactBytes(db,stored),ticket);
-    const prior=state.head,record=ticket.record;
-    const admitted:AdmittedHead={...prior,mode:'active',pendingOperation:null,authorityRevision:prior.authorityRevision+1,
-     head:{...prior.head,seq:record.seq,hash:record.recordHash},totalBytes:prior.totalBytes+record.byteLength};
-    const body={version:1 as const,domain:'ritc-privacy-journal-admission-v1' as const,scopeDigest,authorityKeyId:pins.authorityKeyId,
-     operationId:ticket.operationId,admitted,record,stored};
-    const receipt:AdmissionReceipt={...body,authoritySignature:sign(null,Buffer.from(journalCanonical(body)),authorityPrivateKey).toString('base64url')};
-    await db.query('INSERT INTO ritc_checkpoint.admission(lineage,operation_id,event_id,job_id,transition,event_kind,sequence,ticket,receipt) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)',
-     [pins.lineage,ticket.operationId,record.eventId,record.jobId,record.transition,event.payload.kind,record.seq,ticket,receipt]);
-    if(ticket.workerKind){
-     const used=await db.query('DELETE FROM ritc_checkpoint.worker_allowance WHERE lineage=$1 AND job_id=$2 AND event_kind=$3 AND bytes>=$4',
-      [pins.lineage,record.jobId,ticket.workerKind,record.byteLength]);
-     if(used.rowCount!==1)throw Error('Committed worker capacity allowance changed');
-     if(ticket.workerKind==='source_completed')await db.query('DELETE FROM ritc_checkpoint.worker_allowance WHERE lineage=$1 AND job_id=$2',[pins.lineage,record.jobId]);
-    }
-    const changed=await db.query('UPDATE ritc_checkpoint.origin SET head=$2,pending=NULL WHERE lineage=$1 AND floor(extract(epoch FROM clock_timestamp())*1000)<$3::bigint',
-     [pins.lineage,admitted,ticket.authorityExpiresAtUnixMs]);
-    if(changed.rowCount!==1)throw Error('Journal reservation expired before publication');
-    return receipt;
+    return publishJournalAdmission(db,pins,scopeDigest,authorityPrivateKey,state.head,ticket,stored,event.payload.kind);
    });
   },
  };

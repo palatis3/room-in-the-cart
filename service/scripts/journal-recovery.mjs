@@ -15,6 +15,10 @@ import {jsonFile,publicKey,publicPins,readArchives,windowSettings} from './journ
 const endpoint=z.object({connection:journalDatabaseSchema,databaseOid:z.string(),ownerOid:z.string(),ownerRole:z.string().min(1).max(63).optional()}).strict();
 const settings=z.object({pins:z.unknown(),writerPrivateKey:z.string().min(1).max(8192),authorityPrivateKey:z.string().min(1).max(8192),
  source:endpoint,checkpoint:endpoint,exportDirectory:z.string().min(1)}).strict();
+const targetSettings=settings.omit({exportDirectory:true}).extend({observation:z.object({
+ claimId:z.string().uuid(),eventId:z.string().uuid(),jobId:z.string().uuid(),payloadDigest:z.string().regex(/^[0-9a-f]{64}$/),
+ headHash:z.string().regex(/^[0-9a-f]{64}$/),sequence:z.number().int().positive(),generation:z.number().int().positive(),
+}).strict()}).strict();
 const exportSettings=z.object({pins:z.unknown(),writerPublicKey:publicKey,authorityPublicKey:publicKey,
  checkpoint:endpoint,sourceDatabaseOid:z.string(),exportDirectory:z.string().min(1),includeSuccessor:z.boolean().optional()}).strict();
 const linkSettings=exportSettings.omit({authorityPublicKey:true,includeSuccessor:true}).extend({
@@ -38,8 +42,8 @@ async function syncDirectory(path){
 }
 async function run(){
  const [command,configPath]=process.argv.slice(2);
- if(!['fence','recover','seal-for-rollover','export','link','activate','verify-window'].includes(command)||process.argv.length!==4)
-  throw Error('Use fence, recover, seal-for-rollover, export, link, activate or verify-window with an owner configuration');
+ if(!['fence','recover','seal-for-rollover','export','link','activate','verify-window','reconcile-target'].includes(command)||process.argv.length!==4)
+  throw Error('Use fence, recover, seal-for-rollover, export, link, activate, reconcile-target or verify-window with an owner configuration');
  const input=await jsonFile(configPath);
  if(command==='verify-window'){
   const {segments,...trust}=windowSettings.parse(input);
@@ -55,6 +59,13 @@ async function run(){
  };
  const scope=new PrivacyCall(undefined,25000);
  try{
+  if(command==='reconcile-target'){
+   const config=targetSettings.parse(input);
+   const operator=createIndependentRecovery({pins:config.pins,writerPrivateKey:createPrivateKey(config.writerPrivateKey),
+    authorityPrivateKey:createPrivateKey(config.authorityPrivateKey),source:connect(config.source),checkpoint:connect(config.checkpoint)});
+   console.log(JSON.stringify(await scope.run(call=>operator.reconcileTarget(config.observation,call))));
+   return;
+  }
   if(command==='activate'){
    const config=activationSettings.parse(input);
    const result=await scope.run(call=>activateIndependentSuccessor({

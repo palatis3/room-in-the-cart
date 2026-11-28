@@ -7,10 +7,11 @@ import {
  type PrivacyJournalEvent,type PrivacyJournalHead,type InspectRestoreRecords,
 } from './privacy-journal.js';
 import {
- admittedSchema,durableJournalPinsSchema,durableJournalPublicKeyFingerprint,durableJournalScopeDigest,recordSchema,storedSchema,ticketSchema,verifyDurableAdmissionReceipt,
+ admittedSchema,durableJournalOperationId,durableJournalPinsSchema,durableJournalPublicKeyFingerprint,durableJournalScopeDigest,recordSchema,storedSchema,ticketSchema,verifyDurableAdmissionReceipt,
 } from './privacy-journal-durable.js';
+import {publishJournalAdmission,reservedJournalCapacity} from './privacy-journal-pg-authority.js';
 import type {DurableJournalPins,JournalCall,StoredRecord} from './privacy-journal-durable-contract.js';
-import {MAX_JOURNAL_BYTES as MAX_BYTES,MAX_JOURNAL_RECORDS as MAX_RECORDS,MAX_RESTORE_JSON_BYTES,MAX_SOURCE_EVENT_BYTES} from './privacy-journal-limits.js';
+import {MAX_JOURNAL_BYTES as MAX_BYTES,MAX_JOURNAL_RECORDS as MAX_RECORDS,MAX_RESTORE_JSON_BYTES,MAX_SOURCE_EVENT_BYTES,WORKER_RECORD_BUDGET} from './privacy-journal-limits.js';
 
 const hash=z.string().regex(/^[0-9a-f]{64}$/),uuid=z.string().uuid();
 const databaseOid=z.string().regex(/^[1-9][0-9]{0,9}$/).refine(value=>Number(value)<=4294967295);
@@ -148,6 +149,18 @@ async function assertOwner(db:Transaction,expected:DatabaseIdentity,schema:'ritc
  if(!row)throw Error('Fixed recovery database relation is unavailable');
  const {allowed,...actual}=row;
  if(!allowed||!equal(actual,expected))throw Error('Fixed recovery database or owner does not match');
+}
+
+/** Refuse a partial recovery inventory when FORCE RLS applies to an ordinary owner. */
+export async function assertCompleteOwnerVisibility(db:Pick<Database,'query'>,tables:readonly string[]){
+ const filtered=await db.query(`SELECT FROM unnest($1::text[]) t(name)
+      JOIN pg_class c ON c.oid=to_regclass(t.name)
+      WHERE row_security_active(c.oid) AND (c.relowner<>session_user::regrole OR
+       NOT EXISTS(SELECT FROM pg_policy p WHERE p.polrelid=c.oid AND p.polpermissive AND p.polcmd='*'
+         AND c.relowner=ANY(p.polroles) AND pg_get_expr(p.polqual,c.oid)='true'
+         AND COALESCE(pg_get_expr(p.polwithcheck,c.oid),'true')='true')
+       OR EXISTS(SELECT FROM pg_policy p WHERE p.polrelid=c.oid AND NOT p.polpermissive)) LIMIT 1`,[tables]);
+ if(filtered.rowCount)throw Error('Recovery owner cannot see the complete protected relation');
 }
 
 async function registeredSource(db:Transaction,owner:DatabaseIdentity,sourceIdentity:string,lock:'none'|'share'|'write'){
@@ -488,6 +501,83 @@ export function createIndependentRecovery(configuration:RecoveryConfiguration){
    return {bytes,proof};
   });
  }
+ // A persisted pre-reservation claim has no lease. The operator pins its exact
+ // identity and the previously verified head. Both row locks survive through
+ // publication; a racing reserve either wins first or observes a completed claim.
+ async function reconcileTarget(input:unknown,call:JournalCall){
+  const expected=z.object({claimId:uuid,eventId:uuid,jobId:uuid,payloadDigest:hash,headHash:hash,
+   sequence:z.number().int().min(2).max(MAX_RECORDS-1),generation:z.number().int().positive()}).strict().parse(input);
+  return transaction(source.pool,call,async sourceDB=>{
+   if(await sourceOrigin(sourceDB,'write'))throw Error('Source must be active');
+   await assertCompleteOwnerVisibility(sourceDB,['ritc.privacy_journal_origin','ritc.privacy_journal_source_registration','ritc.privacy_restore_run','ritc.privacy_journal_outbox','ritc.privacy_journal_ack','ritc.privacy_target','ritc.privacy_job']);
+   if((await sourceDB.query('SELECT FROM ritc.privacy_restore_run LIMIT 1')).rowCount)throw Error('Quarantine cannot authorize reconciliation');
+   const {rows}=await sourceDB.query(`SELECT e.event_id,e.job_id,e.kind,e.payload,e.payload_digest,
+    a.head_seq::int,a.head_hash,a.payload_digest AS acknowledged_digest
+    FROM ritc.privacy_journal_outbox e LEFT JOIN ritc.privacy_journal_ack a USING(event_id)
+    WHERE e.lineage=$1 AND e.job_id=$2 AND (e.kind='acceptance' OR e.event_id=$3)`,[pins.lineage,expected.jobId,expected.eventId]);
+   const sourceEvent=(kind:'target_erased'|'acceptance')=>{
+    const row=rows.find(r=>r.kind===kind);
+    const event=eventSchema.parse({eventId:row?.event_id,payloadDigest:row?.payload_digest,payload:row?.payload});
+    if(event.payload.kind!==kind||event.payload.jobId!==expected.jobId||event.payload.lineage!==pins.lineage||
+     event.payload.schemaDigest!==pins.schemaDigest||event.payload.configurationId!==pins.configurationId)throw Error('Source observation identity conflict');
+    return event;
+   };
+   const accepted=sourceEvent('acceptance'),target=sourceEvent('target_erased');
+   if(rows.length!==2||target.eventId!==expected.eventId||target.payloadDigest!==expected.payloadDigest)throw Error('Pinned target observation changed');
+   validatePrivacyRestoreEvents([accepted,target]);
+   const other=await sourceDB.query(`SELECT FROM ritc.privacy_journal_outbox e WHERE e.lineage=$1 AND e.job_id=$2
+    AND e.event_id<>$3 AND NOT EXISTS(SELECT FROM ritc.privacy_journal_ack a WHERE a.event_id=e.event_id) LIMIT 1`,
+    [pins.lineage,expected.jobId,target.eventId]);
+   if(other.rowCount)throw Error('Additional job observations need reconciliation');
+   const effect=await sourceDB.query(`SELECT FROM ritc.privacy_target t JOIN ritc.privacy_job j USING(job_id)
+    WHERE t.job_id=$1 AND t.household_id=$2 AND t.member_id=$3 AND t.erased_at=$4::timestamptz
+     AND j.state<>'complete' AND j.provider_erased_at IS NULL`,[expected.jobId,target.payload.data.householdId,target.payload.data.memberId,target.payload.data.erasedAt]);
+   if(effect.rowCount!==1)throw Error('Source target effect or unfinished job is absent');
+   const ack=rows.find(r=>r.kind==='acceptance'),targetAck=rows.find(r=>r.kind==='target_erased');
+   if(!ack?.head_seq||ack.acknowledged_digest!==accepted.payloadDigest||targetAck?.head_seq!==null)throw Error('Source acknowledgement state changed');
+   return transaction(checkpoint.pool,call,async db=>{
+    await assertCompleteOwnerVisibility(db,['ritc_checkpoint.origin','ritc_checkpoint.admission','ritc_checkpoint.worker_allowance','ritc_checkpoint.replay_clock','ritc_records.store','ritc_records.object']);
+    const {head,claim,pending}=await checkpointState(db,true,checkpoint.identity,pins,scopeDigest);
+    if(head.mode!=='active'||head.head.fenced||pending||head.head.hash!==expected.headHash||
+     head.head.seq!==expected.sequence||head.generation!==expected.generation||claim?.claim.claimId!==expected.claimId||
+     claim.claim.eventId!==target.eventId||claim.claim.transition!=='commit')throw Error('Exact active pre-reservation claim required');
+    const {proofs,content}=await admittedContent(db,pins,authority,scopeDigest),prefix=Buffer.concat(content);
+    if(prefix.length!==head.totalBytes||proofs.some(proof=>proof.admitted.generation!==head.generation))throw Error('Checkpoint prefix coverage conflict');
+    const checked=verifyPrivacyJournalPrefix(prefix,{...trust,head:head.head});
+    const acceptedRecord=checked.records[ack.head_seq-1];
+    if(!acceptedRecord||acceptedRecord.kind!=='commit'||journalHash(acceptedRecord)!==ack.head_hash||
+     !equal(acceptedRecord.event,accepted)||checked.states.has(target.eventId)||
+     !equal(proofs.at(-1)?.admitted,head)||proofs.some((proof,i)=>proof.record.recordHash!==journalHash(checked.records[i])))throw Error('Original acceptance or head is unproven');
+    if((await db.query(`SELECT FROM ritc_records.object o WHERE split_part(o.object_key,'/',1)=$1 AND
+     NOT EXISTS(SELECT FROM ritc_checkpoint.admission a WHERE a.lineage=$2 AND a.receipt->'stored'->>'objectKey'=o.object_key
+      AND a.receipt->'stored'->>'immutableVersion'=o.version::text) LIMIT 1`,[scopeDigest,pins.lineage])).rowCount)throw Error('Unadmitted record exists');
+    const allowance=await db.query("SELECT bytes FROM ritc_checkpoint.worker_allowance WHERE lineage=$1 AND job_id=$2 AND event_kind='target_erased'",[pins.lineage,expected.jobId]);
+    const body={version:1 as const,keyId:pins.keyId,seq:head.head.seq+1,previousHash:head.head.hash,kind:'commit' as const,event:target};
+    const record={...body,signature:sign(null,Buffer.from(journalCanonical(body)),writerPrivateKey).toString('base64url')};
+    const bytes=Buffer.from(journalCanonical(record)+'\n'),recordHash=journalHash(record);
+    const reservedCapacity=await reservedJournalCapacity(db,pins.lineage);
+    if(allowance.rows[0]?.bytes!==WORKER_RECORD_BUDGET.target_erased||bytes.length>WORKER_RECORD_BUDGET.target_erased||
+     record.seq+reservedCapacity.count-1>MAX_RECORDS||head.totalBytes+bytes.length+reservedCapacity.bytes-WORKER_RECORD_BUDGET.target_erased>MAX_BYTES)throw Error('Target capacity not reserved');
+    const operationId=durableJournalOperationId(scopeDigest,target.eventId,target.payloadDigest,'commit');
+    const clock=(await db.query("SELECT floor(extract(epoch FROM clock_timestamp())*1000)::text AS ms")).rows[0];
+    const ticket={operationId,generation:head.generation,expected:head,record:{seq:record.seq,previousHash:record.previousHash,
+     recordHash,byteLength:bytes.length,eventId:target.eventId,payloadDigest:target.payloadDigest,jobId:expected.jobId,transition:'commit' as const},
+     objectKey:scopeDigest+'/'+record.seq+'/'+recordHash,authorityExpiresAtUnixMs:Math.min(Number(clock.ms)+3500,call.deadlineUnixMs-1),workerKind:'target_erased' as const};
+    const reserved={...head,mode:'pending' as const,pendingOperation:operationId};
+    await db.query('UPDATE ritc_checkpoint.origin SET pending=$2,head=$3 WHERE lineage=$1',[pins.lineage,ticket,reserved]);
+    const stored=(await putTail(db,[record]))[0]!;
+    const [exact]=await storedContent(db,scopeDigest,[stored]);
+    if(!exact?.equals(bytes))throw Error('Stored target observation differs');
+    const next=verifyPrivacyJournalPrefix(Buffer.concat([prefix,exact]),{...trust,head:{...head.head,seq:record.seq,hash:recordHash}});
+    validatePrivacyRestoreEvents(next.events);
+    const proof=await publishJournalAdmission(db,pins,scopeDigest,authorityPrivateKey,reserved,ticket,stored,'target_erased');
+    verifyDurableAdmissionReceipt(proof,pins,authority);
+    const released=await db.query('UPDATE ritc_checkpoint.origin SET claim=NULL WHERE lineage=$1 AND claim=$2::jsonb AND pending IS NULL AND head=$3::jsonb',[pins.lineage,claim,proof.admitted]);
+    if(released.rowCount!==1)throw Error('Verified claim or admitted head changed');
+    return {event:'target_observation_reconciled' as const,sequence:record.seq};
+   });
+  });
+ }
  async function sealForRollover(call:JournalCall){
   // Validate both endpoint bindings before fencing the source.
   await transaction(checkpoint.pool,call,db=>checkpointState(db,false,checkpoint.identity,pins,scopeDigest));
@@ -500,5 +590,5 @@ export function createIndependentRecovery(configuration:RecoveryConfiguration){
   });
   return recover(call);
  }
- return Object.freeze({fence,recover,sealForRollover});
+ return Object.freeze({fence,recover,sealForRollover,reconcileTarget});
 }
