@@ -37,6 +37,8 @@ import { randomUUID, timingSafeEqual } from 'node:crypto';
 import { z } from 'zod';
 import { type IdentityVerifier,DenyIdentityVerifier } from './auth.js';
 import { HouseholdRepository,type AuthContext } from './repository.js';
+import {contactChange,renewalContact,noNoticeRoute} from './billing/renewal-contact.js';
+import type {RenewalConfig} from './billing/renewal-provider.js';
 import { BillingService,billingVerifySchema,billingSeatsSchema,billingNotificationSchema } from './billing/service.js';
 import { ServiceError,accessEnded,invalid,unavailable } from './errors.js';
 import {BrowserAuthService,emailStartSchema,emailVerifySchema,type BrowserIdentity} from './browser-auth.js';
@@ -57,7 +59,8 @@ import {privacyHTTPCall,type PrivacyCall} from './privacy-call.js';
 import {GuardianEnrollmentService,guardianCreateSchema,childDeletionReviewSchema,manualChildDeletionSchema,guardianActionSchema,guardianConsentSchema,guardianInvitationSchema,guardianConfirmSchema,childClaimSchema,childFinishSchema,childAuthStartSchema,childNativeStartSchema,childNativeAdmitSchema} from './guardian.js';
 import {viewReplacementSchema,proposalResolutionSchema,householdCreateSchema,inviteCreateSchema,invitePreviewSchema,inviteRedeemSchema,viewCreateSchema,viewUpdateSchema,proposalSchema,revocationSchema, parseCommand,previewSchema,uuid } from './contracts.js';
 import { SharedFallbackRegistry } from './shared-fallback-registry.js';
-export interface HTTPOptions { closedReview?:ClosedReview; repository:HouseholdRepository; receiptAssistance?:ReceiptAssistance; voiceAssistance?:VoiceAssistance; verifier?:IdentityVerifier; webOrigin?:string; maxRequestsPerMinute?:number; billing?:BillingService; browserAuth?:BrowserAuthService; privacy?:PrivacyService; guardian?:GuardianEnrollmentService; clientAddress?:(request:IncomingMessage)=>string|undefined }
+export interface HTTPOptions {
+  renewalNotices?:RenewalConfig; closedReview?:ClosedReview; repository:HouseholdRepository; receiptAssistance?:ReceiptAssistance; voiceAssistance?:VoiceAssistance; verifier?:IdentityVerifier; webOrigin?:string; maxRequestsPerMinute?:number; billing?:BillingService; browserAuth?:BrowserAuthService; privacy?:PrivacyService; guardian?:GuardianEnrollmentService; clientAddress?:(request:IncomingMessage)=>string|undefined }
 async function rawBody(req:IncomingMessage,maxBytes=65_536):Promise<Buffer> {
   if(!/^application\/json(?:\s*;|$)/i.test(req.headers['content-type']??''))throw new ServiceError(415,'json_required','Send a JSON command.');
   const chunks:Buffer[]=[];let size=0;
@@ -425,7 +428,18 @@ export function createHTTPServer(options:HTTPOptions) {
         if(options.billing){
           if(path==='/entitlements'&&method==='GET')return options.billing.snapshot(ctx);
           if(path==='/billing/seat-candidates'&&method==='GET')return options.billing.seatCandidates(ctx);
-          if(path==='/billing/purchase-context'&&method==='POST'){z.object({}).strict().parse(payload);return options.billing.prepare(ctx);}
+          if(path==='/billing/renewal-notice-contact'&&(method==='GET'||method==='PUT')) {
+            const enabled=method==='PUT'?contactChange.parse(payload).enabled:undefined;
+            return renewalContact(ctx,auth.identity,options.renewalNotices??{mode:'off',provider:null,sandboxHomes:new Set<string>()},options.billing.usesReviewSandbox(householdId),enabled);
+          }
+          if(path==='/billing/purchase-context'&&method==='POST'){
+            const request=z.object({storefront:z.literal('MEX').optional()}).strict().parse(payload);
+            if(request.storefront==='MEX'){
+              const notice=await renewalContact(ctx,auth.identity,options.renewalNotices??{mode:'off',provider:null,sandboxHomes:new Set<string>()},options.billing.usesReviewSandbox(householdId));
+              if(!notice.emailVerified||!notice.enabled||(!notice.dispatchEnabled&&!notice.sandboxOnly))throw noNoticeRoute();
+            }
+            return options.billing.prepare(ctx);
+          }
           if(path==='/billing/seats'&&method==='PUT')return options.billing.replaceSeats(ctx,billingSeatsSchema.parse(payload));
         }
         if(path==='/meal-preferences' && method==='GET')return readMealPreferences(ctx);

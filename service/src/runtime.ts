@@ -8,6 +8,7 @@ import type { PoolConfig } from 'pg';
 import {createServer,type IncomingMessage,type Server} from 'node:http';
 import {serviceAvailability,maintenanceResponse} from './service-availability.js';
 import { isIP } from 'node:net';
+import {renewalConfig} from './billing/renewal-provider.js';
 import { BillingService } from './billing/service.js';
 import { appleGatewaysFromEnvironment } from './billing/apple.js';
 import { Pool, assertRuntimeRole,type Database } from './database.js';
@@ -103,7 +104,7 @@ export async function createRuntime(environment: NodeJS.ProcessEnv = process.env
     const voiceAssistance = VoiceAssistance.configured(environment, receiptAssistance?.budget);
     const { primary, review, notifications } = appleGatewaysFromEnvironment(environment);
     const closedReview = ClosedReview.configured(environment);
-    const server = createHTTPServer({ ...(closedReview ? {closedReview} : {}), ...(voiceAssistance ? {voiceAssistance} : {}), repository, verifier, billing: new BillingService(primary, review, notifications),
+    const server = createHTTPServer({ ...(closedReview ? {closedReview} : {}), ...(voiceAssistance ? {voiceAssistance} : {}), repository, verifier, billing: new BillingService(primary, review, notifications), renewalNotices:renewalConfig(environment),
       privacy,guardian:guardian.service, ...(receiptAssistance ? { receiptAssistance } : {}),
       ...(webOrigin ? { webOrigin } : {}), ...(browserAuth ? { browserAuth } : {}), ...(clientAddress ? { clientAddress } : {}) });
     server.requestTimeout = 15_000;

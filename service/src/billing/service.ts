@@ -24,6 +24,7 @@ export const billingNotificationSchema = z.object({ signedPayload: z.string().mi
  */
 export class BillingService {
   constructor(private readonly apple: AppleBillingGateway | null, private readonly review?: ReviewBilling, private readonly notifications?: NotificationDestinations) {}
+  usesReviewSandbox(householdId:string):boolean { return this.review?.householdIDs.has(householdId.toLowerCase())===true; }
   private gateway(householdId: string): AppleBillingGateway {
     if (this.review?.householdIDs.has(householdId.toLowerCase())) return this.review.sandbox;
     if (!this.apple) throw billingUnavailable();
@@ -61,7 +62,8 @@ export class BillingService {
     if (binding.rows[0]?.purchaser_id !== ctx.member.member_id || binding.rows[0]?.app_account_token !== state.appAccountToken) throw bindingConflict();
   }
   private async apply(ctx: BillingContext, next: VerifiedSubscription): Promise<StateRow> {
-    next = { ...next, status: effectiveStatus(next, ctx.now.getTime()) };
+    const {noticeFacts: _privateDispatchFacts, autoRenewOff: _autoRenewOff, ...entitlement} = next;
+    next = { ...entitlement, status: effectiveStatus(next, ctx.now.getTime()) };
     await this.assertToken(ctx, next);
     const existing = await this.row(ctx);
     if (existing && (existing.purchaser_id !== ctx.member.member_id || existing.subscription.environment !== next.environment)) throw bindingConflict();
@@ -70,6 +72,9 @@ export class BillingService {
     if (!existing) {
       await ctx.db.query('INSERT INTO ritc.billing_state(household_id,purchaser_id,subscription,verified_at) VALUES($1,$2,$3,$4)', [ctx.householdId,ctx.member.member_id,next,ctx.now]);
       await ctx.db.query('INSERT INTO ritc.billing_seat(household_id,slot,member_id,display_name) SELECT $1,1,member_id,alias FROM ritc.member WHERE household_id=$1 AND member_id=$2', [ctx.householdId,ctx.member.member_id]);
+    } else if (existing.subscription.mxAnnual===undefined && next.mxAnnual!==undefined
+      && digest({...existing.subscription,mxAnnual:next.mxAnnual})===digest(next)) {
+      await ctx.db.query('UPDATE ritc.billing_state SET subscription=$2,verified_at=$3 WHERE household_id=$1',[ctx.householdId,next,ctx.now]);
     } else if (supersedes(next, existing.subscription)) {
       await ctx.db.query('UPDATE ritc.billing_state SET subscription=$2,verified_at=$3,revision=revision+1 WHERE household_id=$1', [ctx.householdId,next,ctx.now]);
     } else if (same) {
