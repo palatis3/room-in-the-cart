@@ -1,4 +1,4 @@
-import {createPrivateKey,createPublicKey,randomUUID} from 'node:crypto';
+import {createHash,createPrivateKey,createPublicKey,randomUUID} from 'node:crypto';
 import {constants} from 'node:fs';
 import {link,lstat,open,unlink} from 'node:fs/promises';
 import {join} from 'node:path';
@@ -8,6 +8,8 @@ import {journalCanonical,journalHash} from '../dist/privacy-journal.js';
 import {MAX_JOURNAL_BYTES} from '../dist/privacy-journal-limits.js';
 import {activateIndependentSuccessor,createIndependentRecovery,exportIndependentRecovery,registerIndependentSuccessor,verifyIndependentArchiveWindow} from '../dist/privacy-journal-recovery.js';
 import {journalDatabase,journalDatabaseSchema,readPrivateFile} from './journal-authority-config.mjs';
+import {durableJournalScopeDigest} from '../dist/privacy-journal-durable.js';
+import {registerExport,withScopeLock} from './retirement-exports.mjs';
 import {jsonFile,publicKey,publicPins,readArchives,windowSettings} from './journal-archive-window.mjs';
 
 const endpoint=z.object({connection:journalDatabaseSchema,databaseOid:z.string(),ownerOid:z.string(),ownerRole:z.string().min(1).max(63).optional()}).strict();
@@ -80,6 +82,8 @@ async function run(){
     successorScopeDigest:proof.successorScopeDigest}));
    return;
   }
+  const digest=durableJournalScopeDigest(config.pins);
+  await withScopeLock(checkpoint.pool,digest,async custody=>{
   let archive;
   if(command==='export'){
    archive=await scope.run(call=>exportIndependentRecovery({pins:config.pins,sourceDatabaseOid:config.sourceDatabaseOid,checkpoint,
@@ -94,12 +98,14 @@ async function run(){
    archive=await scope.run(command==='seal-for-rollover'?operator.sealForRollover:operator.recover);
   }
   const {bytes,proof}=archive;
+  await registerExport(custody,digest,config.exportDirectory,process.env.RITC_JOURNAL_CUSTODIAN_ID,createHash('sha256').update(bytes).digest('hex'));
   await writeExact(join(config.exportDirectory,'journal.ndjson'),bytes);
   await writeExact(join(config.exportDirectory,'head.json'),Buffer.from(journalCanonical(proof.head)+'\n'));
   await writeExact(join(config.exportDirectory,'seal.json'),Buffer.from(journalCanonical(proof)+'\n'));
   if(archive.successor)await writeExact(join(config.exportDirectory,'successor.json'),Buffer.from(journalCanonical(archive.successor)+'\n'));
   await syncDirectory(config.exportDirectory);
   console.log(JSON.stringify({event:'journal_recovery_exported',sequence:proof.head.seq,bundleDigest:proof.bundleDigest,sealDigest:journalHash(proof)}));
+  });
  }finally{scope.dispose();await Promise.all(endpoints.map(pool=>pool.end()));}
 }
 

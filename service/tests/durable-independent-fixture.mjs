@@ -19,17 +19,20 @@ export function keys() {
   return {...pair, publicKeyPEM:publicKey, fingerprint:bytesDigest(pair.publicKey.export({type:'spki',format:'der'}))};
 }
 
+const baseline=Date.now()-5*60000;
+const atOffset=ms=>new Date(baseline+ms).toISOString();
+
 export function acceptedEvent(origin, options = {}) {
   const householdId = options.householdId ?? randomUUID();
   const memberId = options.memberId ?? randomUUID();
-  const at = '2026-11-03T12:00:00.000Z';
+  const at = atOffset(0);
   const identityHash = 'a'.repeat(64);
   const binding = {household_id:householdId,member_id:memberId,kind:'adult',state:'active',organizer:true,can_contribute:true,erased_at:null,identity_hash:identityHash};
   const payload = {
     version:1,eventId:options.eventId ?? randomUUID(),...origin,jobId:options.jobId ?? randomUUID(),kind:'acceptance',
     data:{
       identityHash,receiptHash:'b'.repeat(64),requestDigest:'c'.repeat(64),acceptedAt:at,
-      receiptDays:1,markerDays:2,receiptUntil:'2026-11-04T12:00:00.000Z',markerUntil:'2026-11-05T12:00:00.000Z',
+      receiptDays:1,markerDays:2,receiptUntil:atOffset(86400000),markerUntil:atOffset(2*86400000),
       attestation:{configurationId:origin.configurationId,authenticatedAt:at,authenticatedMethod:'otp',providerAvailability:'configured_adapter_passed',appleGate:'availability_contract_passed',sqlAdultScopeCheck:'passed',policy:{receiptRetentionDays:1,erasureMarkerRetentionDays:2,verifiedBackupRetentionDays:1},sessionBindingHash:'d'.repeat(64),checkedAt:at},
       targets:[{householdId,memberId,kind:'self_adult',binding}],
       effects:[{table:'member',key:`${householdId}/${memberId}`,before:binding,after:{...binding,state:'revoked',organizer:false,can_contribute:false}}],
@@ -43,8 +46,8 @@ export function progressEvent(acceptance, kind = 'target_erased', changes = {}) 
   const payload = {
     ...acceptance.payload,eventId:randomUUID(),kind,
     data:kind === 'target_erased'
-      ? {householdId,memberId,retiredPurchases:[],erasedAt:'2026-11-03T12:01:00.000Z'}
-      : {appErasedAt:'2026-11-03T12:01:00.000Z',providerErasedAt:kind === 'source_completed' ? '2026-11-03T12:02:00.000Z' : null,completedAt:kind === 'source_completed' ? '2026-11-03T12:02:00.000Z' : null,receiptUntil:'2026-11-04T12:00:00.000Z',markerUntil:'2026-11-05T12:00:00.000Z'},
+      ? {householdId,memberId,retiredPurchases:[],erasedAt:atOffset(60000)}
+      : {appErasedAt:atOffset(60000),providerErasedAt:kind === 'source_completed' ? atOffset(120000) : null,completedAt:kind === 'source_completed' ? atOffset(120000) : null,receiptUntil:atOffset(86400000),markerUntil:atOffset(2*86400000)},
     ...changes,
   };
   return {eventId:payload.eventId,payloadDigest:digest(payload),payload};
