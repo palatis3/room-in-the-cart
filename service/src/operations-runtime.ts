@@ -76,16 +76,16 @@ export function createOperationsRuntime(environment:NodeJS.ProcessEnv=process.en
  return{pool,async close(){await Promise.all([privacyRuntime.close(),pool.end()]);},
  async run(mode:OperationsMode='run',signal:AbortSignal=AbortSignal.timeout(OPERATIONS_DEADLINE_MS)){
   if(running)throw Error('Operations already running');running=true;
-  const started=Date.now();
+  const started=Date.now(),deadlineUnixMs=started+OPERATIONS_DEADLINE_MS;
   try{
    signal.throwIfAborted();await assertWorkerRole(pool);signal.throwIfAborted();
    const authResult=mode==='run'?await auth.run({batchSize:OPERATIONS_BATCH_SIZE,timeBudgetMs:10_000,signal}):null;
    signal.throwIfAborted();
-   const privacyJournal=await privacyRuntime.health({attemptId:randomUUID(),deadlineUnixMs:started+OPERATIONS_DEADLINE_MS,signal});
+   const privacyJournal=await privacyRuntime.health({attemptId:randomUUID(),deadlineUnixMs,signal});
    const privacyJobProcessingEnabled=privacyJournal.state==='ready';
    signal.throwIfAborted();
    const options={batchSize:OPERATIONS_BATCH_SIZE,signal};
-   const deletionResult=mode==='run'&&privacyJobProcessingEnabled?await privacy.run({...options,timeBudgetMs:8000}):null;
+   const deletionResult=mode==='run'&&privacyJobProcessingEnabled?await privacy.run({...options,timeBudgetMs:20_000,deadlineUnixMs}):null;
    const privacyResult=mode==='run'?(deletionResult??await privacy.cleanup(options)):null;
    const privacyAttention=deletionResult&&(deletionResult.capacityDeferred||deletionResult.journalDeferred||deletionResult.issuerMismatch||deletionResult.leaseLost);
    signal.throwIfAborted();

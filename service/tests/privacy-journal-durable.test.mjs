@@ -58,6 +58,18 @@ test('real adapter: valid status reconciliation with zero unacknowledged events 
   assert.equal(adapter.isPoisoned(),false);
 });
 
+test('receipt observation proves an unacknowledged acceptance using its immutable signed intent', async () => {
+  const f=fixture(),acceptance=f.event(),{port}=f.adapter();
+  await port.beforeCommit(acceptance,call());
+  f.commit(acceptance);
+  const mutations=f.mutations;
+  assert.equal(await port.observeJob(acceptance.payload.jobId,call()),false);
+  assert.equal(f.mutations,mutations);
+  assert.equal(f.uncertainCount(),0);
+  await port.acknowledgeJob(acceptance.payload.jobId,call());
+  assert.equal(await port.observeJob(acceptance.payload.jobId,call()),true);
+});
+
 test('real adapter: missing job cannot pass empty status reconciliation', async () => {
   const f=fixture();
   await assert.rejects(()=>f.adapter().port.acknowledgeJob(randomUUID(),call()));

@@ -1,7 +1,8 @@
 import {captureFixture} from './restore-capture-fixture.mjs';
 import assert from 'node:assert/strict';
 import {createHash,randomUUID,randomBytes,sign} from 'node:crypto';
-import {execFileSync,spawn} from 'node:child_process';
+import {execFile,execFileSync,spawn} from 'node:child_process';
+import {promisify} from 'node:util';
 import {once} from 'node:events';
 import {chmod,mkdir,mkdtemp,readFile,rm,writeFile} from 'node:fs/promises';
 import {createServer} from 'node:https';
@@ -1394,6 +1395,99 @@ for(const retirement of [false,true])test(retirement
   assert.deepEqual(await readFile(join(publicExport,'journal.ndjson')),first.bytes);
   assert.deepEqual(await readFile(join(publicExport,'successor.json')),await readFile(incomingLinkPath));
  }finally{await quarantine?.end();if(!sourceClosed)await source.close();}
+});
+
+for(const originalReserved of [false,true])test(originalReserved
+ ? 'owner reconciliation leaves a reserved target with the original worker'
+ : 'owner reconciles one interrupted committed target and the ordinary worker completes the deletion',async()=>{
+ const source=await sourceCluster(),runtime=source.pool(source.runtime),worker=source.pool(source.worker);
+ let ports,observer;
+ const issuer='https://worker-recovery.fixture.invalid/auth/v1',subject=randomUUID(),sessionId=randomUUID(),householdId=randomUUID(),memberId=randomUUID();
+ try{
+  const {r,config,operator}=await recoveryFixture(source),{f}=r;
+  ports=await r.open();
+  observer=createPostgresCommittedSource({pins:f.pins,authorityPublicKey:f.authorityKeys.publicKey,...source.configuration});
+  const journal=()=>f.adapter({...ports,source:observer.source}).port;
+  const repo=new HouseholdRepository(runtime,{allowChildNetwork:false,noticeVersion:'fixture',sessionStatus:new SupabaseSessionVerifier(issuer)});
+  let providerCalls=0;
+  const provider={assertAvailable:async()=>{},deleteAccount:async target=>{assert.equal(target,subject);providerCalls++;}};
+  const privacy=new PrivacyService(repo,{provider,journal:journal(),policy:{receiptRetentionDays:1,erasureMarkerRetentionDays:2,verifiedBackupRetentionDays:1}});
+  await source.owner.query('INSERT INTO auth.sessions(id,user_id) VALUES($1,$2)',[sessionId,subject]);
+  await source.owner.query('INSERT INTO ritc.household(household_id,label) VALUES($1,$2)',[householdId,'Synthetic recovery']);
+  await source.owner.query(`INSERT INTO ritc.member(household_id,member_id,issuer,subject,alias,kind,state,organizer)
+   VALUES($1,$2,$3,$4,'Synthetic adult','adult','active',true)`,[householdId,memberId,issuer,subject]);
+  const identity={issuer,subject,sessionId,expiresAt:new Date(Date.now()+60_000),authenticatedAt:new Date(),authenticatedMethod:'otp'};
+  const jobId=randomUUID(),statusToken=randomBytes(32).toString('base64url');
+  const input={clientKey:jobId,statusToken,confirm:true,households:[{householdId,organizer:'archive',shops:[],eraseChildProfiles:[]}]};
+  assert.equal((await privacy.request(identity,input)).status,'pending');
+  // Drive the same ordinary lease, allowance and single-target SQL operation as the worker.
+  const lease=randomUUID();
+  assert.equal((await worker.query('SELECT job_id FROM ritc.privacy_claim($1,$2)',[lease,f.pins.lineage])).rows[0].job_id,jobId);
+  assert.equal(await journal().reserveWorkerCapacity(jobId,['target_erased'],time()),true);
+  await worker.query('SELECT ritc.privacy_erase_target($1,$2)',[jobId,lease]);
+  const eventRow=(await source.owner.query("SELECT event_id,payload_digest FROM ritc.privacy_journal_outbox WHERE job_id=$1 AND kind='target_erased'",[jobId])).rows[0];
+  const interrupted=time();
+  const held=await ports.uncertainty.begin({scopeDigest:r.scope,eventId:eventRow.event_id,transition:'commit'},interrupted);
+  const snapshot=async()=>(await owner.query('SELECT head,claim,pending FROM ritc_checkpoint.origin WHERE lineage=$1',[f.pins.lineage])).rows[0];
+  const before=await snapshot(),expected={claimId:held.claimId,eventId:eventRow.event_id,jobId,payloadDigest:eventRow.payload_digest,
+   headHash:before.head.head.hash,sequence:before.head.head.seq,generation:before.head.generation};
+  assert.equal(expected.sequence,2);
+  assert.equal(before.pending,null);
+  assert.equal(providerCalls,0);
+  await assert.rejects(journal().acknowledgeJob(jobId,time()));
+  for(const changes of [{claimId:randomUUID()},{jobId:randomUUID()},{headHash:zero},{payloadDigest:zero},{eventId:randomUUID()}]){
+   await assert.rejects(operator.reconcileTarget({...expected,...changes},time()));
+   assert.deepEqual(await snapshot(),before);
+  }
+  const target=await observer.source.readCommittedEvent(expected.eventId,time());
+  const {identity:recordIdentity,content}=signed(f,before.head,target,'commit');
+  if(originalReserved){
+   const {value:ticket}=await ports.authority.reserve(before.head,recordIdentity,nonce(interrupted),'target_erased');
+   const pending=await snapshot();
+   await assert.rejects(operator.reconcileTarget(expected,time()),/pre-reservation claim/);
+   assert.deepEqual(await snapshot(),pending);
+   const stored=await ports.records.putExact(ticket,content,interrupted);
+   const proof=await ports.authority.publish(ticket,stored,nonce(interrupted));
+   // Already published but not yet acknowledged also remains with its initial writer.
+   await assert.rejects(operator.reconcileTarget(expected,time()),/pre-reservation claim/);
+   await observer.source.acknowledge(target.eventId,target.payloadDigest,proof.record.seq,proof.record.recordHash,proof,interrupted);
+   await assert.rejects(operator.reconcileTarget(expected,time()),/acknowledgement state/);
+   await ports.uncertainty.complete(held,proof,interrupted);
+  }else{
+   // A failure at the final step must roll back the new object, receipt, consumed
+   // allowance and head together, leaving the original claim available for retry.
+   await owner.query(`CREATE FUNCTION ritc_checkpoint.test_stop_claim_release() RETURNS trigger LANGUAGE plpgsql AS $$
+    BEGIN IF OLD.claim IS NOT NULL AND NEW.claim IS NULL THEN RAISE EXCEPTION 'fixture interruption'; END IF; RETURN NEW; END $$;
+    CREATE TRIGGER test_stop_claim_release BEFORE UPDATE OF claim ON ritc_checkpoint.origin FOR EACH ROW EXECUTE FUNCTION ritc_checkpoint.test_stop_claim_release()`);
+   try{await assert.rejects(operator.reconcileTarget(expected,time()),/fixture interruption/);}
+   finally{await owner.query('DROP TRIGGER test_stop_claim_release ON ritc_checkpoint.origin; DROP FUNCTION ritc_checkpoint.test_stop_claim_release()');}
+   assert.deepEqual(await snapshot(),before);
+   const privateConfig=join(dir,'target-owner.json');
+   const endpoint=(identity,host,port)=>({connection:{user:identity.owner,database:identity.database,host,port},
+    ownerOid:identity.ownerOid,databaseOid:identity.databaseOid});
+   await writeFile(privateConfig,JSON.stringify({pins:f.pins,writerPrivateKey:pem(f.writerKeys.privateKey),
+    authorityPrivateKey:pem(f.authorityKeys.privateKey),source:endpoint(config.source.identity,source.configuration.connection.host,55434),
+    checkpoint:endpoint(config.checkpoint.identity,dir,55433),observation:expected}),{mode:0o600});
+   const command=async()=>JSON.parse((await promisify(execFile)(process.execPath,[fileURLToPath(new URL('../scripts/journal-recovery.mjs',import.meta.url)),
+    'reconcile-target',privateConfig],{env:environment,timeout:15000})).stdout);
+   const attempts=await withOrdinaryOwners(source,()=>Promise.allSettled([command(),command()]));
+   assert.deepEqual(attempts.filter(v=>v.status==='fulfilled').map(v=>v.value),[{event:'target_observation_reconciled',sequence:3}]);
+   const after=await snapshot();assert.equal(after.claim,null);assert.equal(after.pending,null);assert.equal(after.head.head.seq,3);
+   assert.equal(after.head.generation,before.head.generation);
+   assert.equal((await source.owner.query('SELECT FROM ritc.privacy_journal_ack WHERE event_id=$1',[eventRow.event_id])).rowCount,0);
+   const targetProof=(await owner.query("SELECT receipt FROM ritc_checkpoint.admission WHERE lineage=$1 AND event_kind='target_erased'",[f.pins.lineage])).rows[0].receipt;
+   verifyDurableAdmissionReceipt(targetProof,f.pins,f.authorityKeys.publicKey);
+   await assert.rejects(ports.authority.reserve(before.head,recordIdentity,nonce(interrupted),'target_erased'));
+   await assert.rejects(ports.uncertainty.complete(held,targetProof,interrupted));
+  }
+  assert.equal(providerCalls,0);
+  await source.owner.query("UPDATE ritc.privacy_job SET lease_until=clock_timestamp()-interval '1 second' WHERE job_id=$1",[jobId]);
+  const maintenance=new PrivacyMaintenance(worker,{journal:journal(),provider,issuer});
+  assert.equal((await maintenance.run({batchSize:1})).completed,1);
+  assert.equal(providerCalls,1);
+  assert.equal((await privacy.status(jobId,statusToken)).status,'complete');
+  assert.equal((await owner.query("SELECT FROM ritc_checkpoint.admission WHERE lineage=$1 AND event_kind='target_erased'",[f.pins.lineage])).rowCount,1);
+ }finally{await Promise.all([ports?.close(),observer?.close(),runtime.end(),worker.end()]);await source.close();}
 });
 
 test('the first unadmitted signed object starts the rotation clock and the owner switches a drained source once',async()=>{

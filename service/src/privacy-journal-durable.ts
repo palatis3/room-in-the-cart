@@ -154,9 +154,9 @@ export function createDurablePrivacyJournal(configuration:DurablePrivacyJournalC
   const value=originSchema.parse(await step(call,()=>source.readOrigin(call)));
   if(value.lineage!==pins.lineage||value.schemaDigest!==pins.schemaDigest||value.configurationId!==pins.configurationId||value.sourceIdentity!==pins.sourceIdentity||value.fenced)throw Error('Fixed source origin unavailable or fenced');
  }
- async function content(value:PrivacyJournalEvent,call:JournalCall):Promise<void>{
+ async function content(value:PrivacyJournalEvent,call:JournalCall,jobAcceptance?:PrivacyJournalEvent):Promise<void>{
   if(value.payload.kind==='acceptance'){validatePrivacyRestoreEvents([value]);return;}
-  const acceptance=event(await step(call,()=>source.readCommittedAcceptance(value.payload.jobId,call)));
+  const acceptance=jobAcceptance??event(await step(call,()=>source.readCommittedAcceptance(value.payload.jobId,call)));
   if(acceptance.payload.kind!=='acceptance'||acceptance.payload.jobId!==value.payload.jobId)throw Error('Requested committed acceptance binding conflict');
   validatePrivacyRestoreEvents([acceptance,value]);
   // A self-consistent source acceptance must also be the original admitted
@@ -188,7 +188,6 @@ export function createDurablePrivacyJournal(configuration:DurablePrivacyJournalC
   await storedRecord(proof,value,kind,call);return proof;
  }
  async function append(value:PrivacyJournalEvent,kind:'intent'|'commit',call:JournalCall):Promise<AdmissionReceipt>{
-  await content(value,call);
   const prior=await find(value,kind,call);if(prior)return prior;
   const head=await current(call);
   const unsigned={version:1 as const,keyId:pins.keyId,seq:head.head.seq+1,previousHash:head.head.hash,kind,event:value};
@@ -230,11 +229,11 @@ export function createDurablePrivacyJournal(configuration:DurablePrivacyJournalC
   const head=await current(call,readOnly);
   if(head.generation!==proof.admitted.generation||head.authorityRevision<proof.admitted.authorityRevision||head.head.seq<proof.record.seq||head.head.seq===proof.record.seq&&head.head.hash!==proof.record.recordHash)throw Error('Receipt is not covered by current active independent head');
  }
- async function afterCommit(eventId:string,call:JournalCall,requiredJobId?:string):Promise<void>{
+ async function afterCommit(eventId:string,call:JournalCall,jobAcceptance?:PrivacyJournalEvent):Promise<void>{
   const held=await claim(eventId,'commit',call);await origin(call);
   const value=event(await step(call,()=>source.readCommittedEvent(eventId,call)));
-  if(value.eventId!==eventId||requiredJobId!==undefined&&value.payload.jobId!==requiredJobId)throw Error('Requested committed event binding conflict');
-  await content(value,call);
+  if(value.eventId!==eventId||jobAcceptance&&value.payload.jobId!==jobAcceptance.payload.jobId)throw Error('Requested committed event binding conflict');
+  await content(value,call,jobAcceptance);
   if(value.payload.kind==='acceptance'&&!await find(value,'intent',call))throw Error('Committed acceptance lacks its original durable intent');
   const proof=await append(value,'commit',call);
   await covered(proof,call);
@@ -251,6 +250,15 @@ export function createDurablePrivacyJournal(configuration:DurablePrivacyJournalC
    if(started&&!(error instanceof JournalCapacityUnavailable||error instanceof JournalWriterBusy))poisoned=true;
    throw error;
   }
+ }
+ async function readJob(jobId:string,call:JournalCall){
+  await origin(call);
+  const acceptance=event(await step(call,()=>source.readCommittedAcceptance(jobId,call)));
+  if(acceptance.payload.kind!=='acceptance'||acceptance.payload.jobId!==jobId)throw Error('Requested job acceptance binding conflict');
+  validatePrivacyRestoreEvents([acceptance]);
+  const ids=z.array(uuid).max(MAX_RECORDS).parse(await step(call,()=>source.listUnacknowledgedJobEvents(jobId,call)));
+  if(new Set(ids).size!==ids.length)throw Error('Duplicate unacknowledged source event');
+  return {acceptance,ids};
  }
  const port:DurablePrivacyJournalPort=Object.freeze({configurationId:pins.configurationId,lineage:pins.lineage,
   reserveWorkerCapacity(jobId:string,kinds:readonly WorkerJournalKind[],call:JournalCall):Promise<boolean>{
@@ -273,22 +281,28 @@ export function createDurablePrivacyJournal(configuration:DurablePrivacyJournalC
    try{uuid.parse(eventId);}catch(error){return Promise.reject(error);}
    return guarded(call,owned=>afterCommit(eventId,owned));
   },
+  observeJob(jobId:string,call:JournalCall):Promise<boolean>{
+   try{uuid.parse(jobId);}catch(error){return Promise.reject(error);}
+   return withOwnedCall(call,now,async owned=>{
+    const {acceptance,ids}=await readJob(jobId,owned);
+    // An unacknowledged acceptance still needs its original signed intent.
+    const proof=await find(acceptance,ids.includes(acceptance.eventId)?'intent':'commit',owned);
+    if(!proof)throw Error('Job has no durable acceptance evidence');
+    await covered(proof,owned,true);
+    return ids.length===0;
+   });
+  },
   acknowledgeJob(jobId:string,call:JournalCall):Promise<void>{
    try{uuid.parse(jobId);}catch(error){return Promise.reject(error);}
    return guarded(call,async owned=>{
-    // A read-only empty status path requires a genuine committed acceptance.
-    // No mutation claim is opened until an individual event needs observation.
-    await origin(owned);
-    const acceptance=event(await step(owned,()=>source.readCommittedAcceptance(jobId,owned)));
-    if(acceptance.payload.kind!=='acceptance'||acceptance.payload.jobId!==jobId)throw Error('Requested job acceptance binding conflict');
-    validatePrivacyRestoreEvents([acceptance]);
-    const ids=z.array(uuid).max(MAX_RECORDS).parse(await step(owned,()=>source.listUnacknowledgedJobEvents(jobId,owned)));
-    if(new Set(ids).size!==ids.length)throw Error('Duplicate unacknowledged source event');
+    const {acceptance,ids}=await readJob(jobId,owned);
     if(!ids.length){
      const proof=await find(acceptance,'commit',owned);if(!proof)throw Error('Acknowledged job has no durable acceptance');
      await covered(proof,owned,true);
     }
-    for(const id of ids)await afterCommit(id,owned,jobId);
+    // The committed acceptance is immutable and scoped to this call. Each
+    // progress observation still verifies its original signed admission.
+    for(const id of ids)await afterCommit(id,owned,acceptance);
    });
   },
  });
