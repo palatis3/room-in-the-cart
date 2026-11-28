@@ -1413,6 +1413,45 @@ import StoreKit
         XCTAssertEqual(actual, expected)
     }
 
+    func testReminderHTTPAdapterSendsOnlyConsentAndMexicanCheckoutStorefront() async throws {
+        let fixture = httpFixture()
+        let householdID = UUID().uuidString
+        let service = try httpService(fixture)
+        defer { fixture.handler = nil }
+        let reply = Data(#"{"scope":"prospective","emailVerified":true,"enabled":true,"dispatchEnabled":true}"#.utf8)
+        for enabled: Bool? in [nil, true, false] {
+            fixture.handler = { request in
+                XCTAssertEqual(request.url?.path, "/v1/households/\(householdID)/billing/renewal-notice-contact")
+                XCTAssertEqual(request.httpMethod, enabled == nil ? "GET" : "PUT")
+                if let enabled {
+                    XCTAssertEqual((try? Self.jsonBody(request)) as? [String: Bool], ["enabled": enabled])
+                } else {
+                    XCTAssertNil(request.httpBody)
+                    XCTAssertNil(request.httpBodyStream)
+                }
+                return (200, reply)
+            }
+            let contact = try await service.renewalNoticeContact(householdID: householdID, settingEnabledTo: enabled)
+            XCTAssertEqual(contact.scope, .prospective)
+        }
+        for country: String? in [nil, "MEX"] {
+            fixture.handler = { request in
+                XCTAssertEqual(request.url?.path, "/v1/households/\(householdID)/billing/purchase-context")
+                XCTAssertEqual((try? Self.jsonBody(request)) as? [String: String], country.map { ["storefront": $0] } ?? [:])
+                return (200, Data(#"{"appAccountToken":"33333333-3333-4333-8333-333333333333"}"#.utf8))
+            }
+            _ = try await service.purchaseContext(householdID: householdID, checkoutStorefront: country)
+        }
+    }
+
+    private nonisolated static func jsonBody(_ request: URLRequest) throws -> Any {
+        if let body = request.httpBody { return try JSONSerialization.jsonObject(with: body) }
+        let stream = try XCTUnwrap(request.httpBodyStream)
+        stream.open()
+        defer { stream.close() }
+        return try JSONSerialization.jsonObject(with: stream)
+    }
+
     func testHTTPAdapterUsesSpecificServerFailureCodes() async throws {
         let fixture = httpFixture()
         let service = try httpService(fixture)
@@ -1421,7 +1460,7 @@ import StoreKit
             (409, "purchase_context_not_purchaser", .notPurchaser),
             (403, "access_ended", .signInRequired), (401, "session_needed", .signInRequired),
             (403, "membership_inactive", .membershipInactive),
-            (422, "billing_verification_failed", .unverified), (503, "billing_unavailable", .deliveryPending),
+            (409, "renewal_notice_unavailable", .unavailable), (422, "billing_verification_failed", .unverified), (503, "billing_unavailable", .deliveryPending),
             (503, "storage_unavailable", .deliveryPending), (429, "rate_limited", .deliveryPending)]
         defer { fixture.handler = nil }
         for (status, code, expected) in cases {
@@ -1747,6 +1786,151 @@ import StoreKit
         XCTAssertFalse(seatModel.showsPurchaserControls)
     }
 
+    func testMexicoStorefrontAndCurrencyMustAgreeInBothDirections() {
+        XCTAssertTrue(StoreKitMembershipStorefront.matchesMexicanStorefront(country: "MEX", currency: "MXN"))
+        XCTAssertTrue(StoreKitMembershipStorefront.matchesMexicanStorefront(country: "USA", currency: "USD"))
+        XCTAssertFalse(StoreKitMembershipStorefront.matchesMexicanStorefront(country: "USA", currency: "MXN"))
+        XCTAssertFalse(StoreKitMembershipStorefront.matchesMexicanStorefront(country: "MEX", currency: "USD"))
+    }
+
+    func testMexicoRequiresExplicitVerifiedEnrollmentAndRechecksBeforeStoreKit() async {
+        let service = FakeMembershipService(snapshot: snapshot(status: .free))
+        let store = FakeMembershipStorefront()
+        store.country = "MEX"
+        let model = makeModel(service, store)
+        defer { model.stop() }
+        await model.start()
+        XCTAssertEqual(model.renewalContactUse, .checkout)
+        await model.refreshRenewalContact()
+        XCTAssertFalse(model.canPurchase)
+        await model.purchase(fromPresentedOffer: true)
+        XCTAssertEqual(store.purchaseCount, 0)
+        await model.setRenewalContact(enabled: true)
+        XCTAssertTrue(model.canPurchase)
+        XCTAssertTrue(model.renewalContactSaved)
+        service.purchaseContextError = .unavailable
+        await model.purchase(fromPresentedOffer: true)
+        XCTAssertFalse(model.canPurchase)
+        XCTAssertTrue(model.renewalContactFailed)
+        XCTAssertEqual(store.purchaseCount, 0)
+        service.purchaseContextError = nil
+        service.contact = .init(scope: .prospective, emailVerified: true, enabled: true, dispatchEnabled: false)
+        await model.purchase(fromPresentedOffer: true)
+        XCTAssertEqual(store.purchaseCount, 0)
+        XCTAssertFalse(model.canPurchase)
+        await model.setRenewalContact(enabled: false)
+        XCTAssertFalse(service.contact.enabled)
+        await model.restore()
+        XCTAssertEqual(store.syncCount, 1)
+        service.contact = .init(scope: .prospective, emailVerified: true, enabled: false, dispatchEnabled: true)
+        await model.refreshRenewalContact()
+        await model.setRenewalContact(enabled: true)
+        await model.purchase(fromPresentedOffer: true)
+        XCTAssertEqual(store.purchaseCount, 1)
+        XCTAssertEqual(service.checkoutStorefront, "MEX")
+    }
+
+    func testRenewalContactIsPrivateToTheServerVerifiedPayerAndAllowsWithdrawalAfterStorefrontChange() async {
+        let service = FakeMembershipService(snapshot: snapshot())
+        service.contact = .init(scope: .bound, emailVerified: true, enabled: true, dispatchEnabled: false)
+        let store = FakeMembershipStorefront()
+        let payer = makeModel(service, store)
+        await payer.start()
+        XCTAssertEqual(payer.renewalContactUse, .existingPurchase)
+        await payer.refreshRenewalContact()
+        await payer.setRenewalContact(enabled: false)
+        XCTAssertFalse(service.contact.enabled)
+        payer.stop()
+        XCTAssertNil(payer.renewalContact)
+        let visits = service.contactRequests
+        var secondAdult = context
+        secondAdult.appAccountToken = nil
+        let reader = MembershipModel(context: secondAdult, service: service, storefront: store, clock: { self.now })
+        defer { reader.stop() }
+        await reader.start()
+        await reader.refreshRenewalContact()
+        await reader.setRenewalContact(enabled: true)
+        XCTAssertNil(reader.renewalContactUse)
+        XCTAssertNil(reader.renewalContact)
+        XCTAssertEqual(service.contactRequests, visits)
+    }
+
+    func testMexicanCheckoutStaysClosedOnUnverifiedOrUnavailableContactWithoutAffectingFreeRestore() async {
+        let service = FakeMembershipService(snapshot: snapshot(status: .free))
+        let store = FakeMembershipStorefront()
+        store.country = "MEX"
+        let model = makeModel(service, store)
+        defer { model.stop() }
+        await model.start()
+        for contact in [
+            RenewalNoticeContact(scope: .unavailable, emailVerified: true, enabled: true, dispatchEnabled: true),
+            .init(scope: .prospective, emailVerified: false, enabled: true, dispatchEnabled: true)
+        ] {
+            service.contact = contact
+            await model.refreshRenewalContact()
+            XCTAssertFalse(model.canPurchase)
+            await model.purchase(fromPresentedOffer: true)
+        }
+        service.contactError = .deliveryPending
+        await model.purchase(fromPresentedOffer: true)
+        XCTAssertTrue(model.renewalContactFailed)
+        XCTAssertEqual(store.purchaseCount, 0)
+        await model.restore()
+        XCTAssertEqual(model.notice, .restoredFree)
+        XCTAssertTrue(model.presentsAnnualOffer)
+    }
+
+    func testNoSendExceptionRequiresBothApprovedHouseholdAndVerifiedStoreKitSandbox() async {
+        let service = FakeMembershipService(snapshot: snapshot(status: .free))
+        let store = FakeMembershipStorefront()
+        store.country = "MEX"
+        let model = makeModel(service, store)
+        defer { model.stop() }
+        await model.start()
+        service.contact = .init(scope: .prospective, emailVerified: true, enabled: true, dispatchEnabled: false, sandboxOnly: true)
+        await model.purchase(fromPresentedOffer: true)
+        XCTAssertEqual(store.purchaseCount, 0)
+        store.verifiedSandbox = true
+        service.contact.sandboxOnly = false
+        await model.purchase(fromPresentedOffer: true)
+        XCTAssertEqual(store.purchaseCount, 0)
+        service.contact.sandboxOnly = true
+        await model.purchase(fromPresentedOffer: true)
+        XCTAssertEqual(store.purchaseCount, 1)
+        XCTAssertTrue(store.lastPurchaseWasSandboxOnly)
+    }
+
+    func testSignOutDuringFinalStorefrontCheckPreventsApplePaymentSheet() async {
+        let service = FakeMembershipService(snapshot: snapshot(status: .free))
+        service.contact = .init(scope: .prospective, emailVerified: true, enabled: true, dispatchEnabled: true)
+        let store = FakeMembershipStorefront()
+        store.country = "MEX"
+        let model = makeModel(service, store)
+        await model.start()
+        store.beforeAppleSheet = { [weak model] in model?.stop() }
+        await model.purchase(fromPresentedOffer: true)
+        XCTAssertTrue(model.isStopped)
+        XCTAssertEqual(store.purchaseCount, 0)
+        XCTAssertNil(model.renewalContact)
+    }
+
+    func testUSCheckoutDoesNotRequireOrReadRenewalContact() async {
+        let service = FakeMembershipService(snapshot: snapshot(status: .free))
+        service.contactError = .deliveryPending
+        let store = FakeMembershipStorefront()
+        store.country = "USA"
+        let model = makeModel(service, store)
+        defer { model.stop() }
+        await model.start()
+        await model.refreshRenewalContact()
+        XCTAssertNil(model.renewalContactUse)
+        XCTAssertTrue(model.canPurchase)
+        await model.purchase(fromPresentedOffer: true)
+        XCTAssertEqual(store.purchaseCount, 1)
+        XCTAssertEqual(service.contactRequests, 0)
+        XCTAssertNil(service.checkoutStorefront)
+    }
+
     func testMissingDeploymentConfigurationKeepsPurchaseDisabled() async {
         let model = MembershipModel(configuration: .init(productID: nil, privacyURL: nil, termsURL: nil))
         await model.purchase()
@@ -1782,9 +1966,22 @@ import StoreKit
         if let error { throw error }; return snapshot
     }
     func seatCandidates(context: MembershipContext) async throws -> [MembershipSeat] { snapshot.seats }
+    var contact = RenewalNoticeContact(scope: .prospective, emailVerified: true, enabled: false, dispatchEnabled: true)
+    var contactError: MembershipFailure?
+    var contactRequests = 0
+    func renewalNoticeContact(householdID: String, settingEnabledTo enabled: Bool?) async throws -> RenewalNoticeContact {
+        contactRequests += 1
+        if let contactError { throw contactError }
+        if let enabled {
+            contact = .init(scope: contact.scope, emailVerified: contact.emailVerified, enabled: enabled, dispatchEnabled: contact.dispatchEnabled, sandboxOnly: contact.sandboxOnly)
+        }
+        return contact
+    }
     var purchaseContextError: MembershipFailure?
     var purchaseToken = UUID(uuidString: "33333333-3333-4333-8333-333333333333")!
-    func purchaseContext(householdID: String) async throws -> UUID {
+    var checkoutStorefront: String?
+    func purchaseContext(householdID: String, checkoutStorefront: String?) async throws -> UUID {
+        self.checkoutStorefront = checkoutStorefront
         if let purchaseContextError { throw purchaseContextError }
         return purchaseToken
     }
@@ -1799,6 +1996,7 @@ import StoreKit
 }
 
 @MainActor private final class FakeMembershipStorefront: MembershipStorefront {
+    var country = "FRA"
     var finished: [String] = []
     var current: [MembershipPurchaseOutcome] = []
     var unfinished: [MembershipPurchaseOutcome] = []
@@ -1826,9 +2024,17 @@ import StoreKit
     func load(productID: String) async throws -> MembershipOffer {
         onLoad?()
         try await waitDuringLoad?()
-        return .init(productID: productID, displayName: "Test Household", displayPrice: "€51,99", periodValue: 1, periodUnit: .year)
+        return .init(productID: productID, storefrontCountryCode: country, displayName: "Test Household", displayPrice: "€51,99", periodValue: 1, periodUnit: .year)
     }
-    func purchase(appAccountToken: UUID) async throws -> MembershipPurchaseOutcome {
+    var verifiedSandbox = false
+    var lastPurchaseWasSandboxOnly = false
+    var beforeAppleSheet: (() -> Void)?
+    func isVerifiedSandboxApp() async -> Bool { verifiedSandbox }
+    func purchase(appAccountToken: UUID, quotedStorefront: String, sandboxOnly: Bool,
+                  stillAuthorized: @MainActor () -> Bool) async throws -> MembershipPurchaseOutcome {
+        beforeAppleSheet?()
+        guard (!sandboxOnly || verifiedSandbox) && stillAuthorized() else { throw MembershipFailure.unavailable }
+        lastPurchaseWasSandboxOnly = sandboxOnly
         purchaseCount += 1
         let outcome: MembershipPurchaseOutcome
         if pausePurchase { outcome = await withCheckedContinuation { purchaseContinuation = $0 } }

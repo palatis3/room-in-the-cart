@@ -1,3 +1,4 @@
+import { mexicoRenewal } from './renewal-facts.js';
 import { readFileSync } from 'node:fs';
 import { createPrivateKey, X509Certificate } from 'node:crypto';
 import {
@@ -146,6 +147,9 @@ export class OfficialAppleBillingGateway extends OfficialNotificationGateway imp
       : entry.status === Status.REVOKED ? 'revoked' : null;
     if (status === null || (status === 'grace' && !instant(renewal.gracePeriodExpiresDate))) throw invalidApple();
     return { ...transaction, environment: this.config.environment, productID: this.billing.productID,
+      mxAnnual:payload.storefront==='MEX',
+      autoRenewOff:renewal.autoRenewStatus===0,
+      noticeFacts:mexicoRenewal(payload,renewal,this.billing.productID),
       purchasedAt: payload.purchaseDate!, signedAt: Math.max(payload.signedDate!, renewal.signedDate!),
       expiresAt: payload.expiresDate!, graceExpiresAt: renewal.gracePeriodExpiresDate ?? null, status };
   }

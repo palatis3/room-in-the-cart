@@ -1,6 +1,295 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Renewal email settings saved.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renewal email settings saved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se guardó la configuración de los avisos de renovación."
+          }
+        }
+      }
+    },
+    "Use my current verified sign-in email": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use my current verified sign-in email"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar el correo verificado actual de mi cuenta"
+          }
+        }
+      }
+    },
+    "Open Support for help correcting your existing account. After its new email is verified, use it here for future renewal notices.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Support for help correcting your existing account. After its new email is verified, use it here for future renewal notices."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre Soporte para pedir ayuda y corregir tu cuenta actual. Una vez verificado tu nuevo correo, elígelo aquí para recibir los próximos avisos de renovación."
+          }
+        }
+      }
+    },
+    "Wrong sign-in email?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wrong sign-in email?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Es incorrecto tu correo de inicio de sesión?"
+          }
+        }
+      }
+    },
+    "New annual subscriptions in Mexico are unavailable right now. You can continue planning for free.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New annual subscriptions in Mexico are unavailable right now. You can continue planning for free."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las nuevas suscripciones anuales en México no están disponibles en este momento. Puedes seguir planificando gratis."
+          }
+        }
+      }
+    },
+    "This test checks renewal email settings. No email will be sent.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This test checks renewal email settings. No email will be sent."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta prueba verifica la configuración de los avisos de renovación. No se enviará ningún correo."
+          }
+        }
+      }
+    },
+    "To subscribe in Mexico, set up renewal emails first. You can continue planning for free.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To subscribe in Mexico, set up renewal emails first. You can continue planning for free."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para suscribirte en México, primero activa los avisos de renovación por correo. Puedes seguir planificando gratis."
+          }
+        }
+      }
+    },
+    "Check renewal email settings again": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check renewal email settings again"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a consultar la configuración de los avisos"
+          }
+        }
+      }
+    },
+    "Checking renewal email settings…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking renewal email settings…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consultando la configuración de los avisos…"
+          }
+        }
+      }
+    },
+    "Renewal email setup is unavailable.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renewal email setup is unavailable."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La configuración de los avisos de renovación no está disponible."
+          }
+        }
+      }
+    },
+    "Use my sign-in email for renewal notices": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use my sign-in email for renewal notices"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar mi correo de inicio de sesión para los avisos"
+          }
+        }
+      }
+    },
+    "Turning off email leaves your Apple subscription in place.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turning off email leaves your Apple subscription in place."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si desactivas los avisos, tu suscripción con Apple sigue vigente."
+          }
+        }
+      }
+    },
+    "Turn off renewal emails": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn off renewal emails"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desactivar los avisos por correo"
+          }
+        }
+      }
+    },
+    "Sign in with a verified email to receive renewal notices.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in with a verified email to receive renewal notices."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicia sesión con un correo verificado para recibir los avisos de renovación."
+          }
+        }
+      }
+    },
+    "Renewal email delivery is unavailable.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renewal email delivery is unavailable."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El envío de avisos de renovación no está disponible."
+          }
+        }
+      }
+    },
+    "If you enable renewal emails, Room in the Cart will use your verified sign-in email for these notices. We aim to email you seven days before each annual renewal, with a link to manage or cancel in Apple subscriptions.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you enable renewal emails, Room in the Cart will use your verified sign-in email for these notices. We aim to email you seven days before each annual renewal, with a link to manage or cancel in Apple subscriptions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si activas los avisos, Room in the Cart usará tu correo verificado de inicio de sesión para enviártelos. Nuestro objetivo es enviártelo siete días antes de cada renovación anual, con un enlace para administrar o cancelar tu suscripción con Apple."
+          }
+        }
+      }
+    },
+    "Annual renewal email": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annual renewal email"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aviso de renovación anual por correo"
+          }
+        }
+      }
+    },
     "You": {
       "comment": "The signed-in adult shown beside their own account or verified household role when no display name is available.",
       "extractionState": "manual",

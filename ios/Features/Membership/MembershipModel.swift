@@ -31,6 +31,12 @@ import SwiftUI
     private var inFlightTransactions: Set<String> = []
     private var started = false
     private(set) var isStopped = false
+    @Published private(set) var renewalContact: RenewalNoticeContact?
+    @Published private(set) var verifiedSandboxRenewal = false
+    @Published private(set) var savingRenewalContact = false
+    @Published private(set) var renewalContactSaved = false
+    @Published private(set) var renewalContactFailed = false
+    private var contactRequest = 0
     private var generation = 0
     private var purchaseRejection: MembershipFailure?
 
@@ -211,8 +217,72 @@ import SwiftUI
         return offer
     }
 
+    enum RenewalContactUse { case checkout, existingPurchase }
+
+    var renewalContactUse: RenewalContactUse? {
+        guard showsPurchaserControls, let context, let snapshot = state.snapshot,
+              snapshot.householdID == context.householdID, snapshot.purchaserID == context.purchaserID else { return nil }
+        if displayedAnnualOffer?.storefrontCountryCode == "MEX" { return .checkout }
+        // The original transaction's storefront can differ from the current App Store account.
+        if snapshot.status != .free { return .existingPurchase }
+        return nil
+    }
+
+    var renewalContactReady: Bool {
+        guard !renewalContactFailed, let contact = renewalContact else { return false }
+        return contact.enabled && contact.canEnroll(verifiedSandbox: verifiedSandboxRenewal)
+    }
+
+    @discardableResult
+    func refreshRenewalContact() async -> RenewalNoticeContact? {
+        guard !savingRenewalContact else { return nil }
+        return await requestRenewalContact(settingEnabledTo: nil)
+    }
+
+    func setRenewalContact(enabled: Bool) async {
+        guard !isBusy, !savingRenewalContact, !renewalContactFailed, let contact = renewalContact, contact.scope != .unavailable,
+              renewalContactUse == .checkout || contact.scope == .bound,
+              !enabled || contact.canEnroll(verifiedSandbox: verifiedSandboxRenewal) else { return }
+        savingRenewalContact = true
+        renewalContactSaved = false
+        defer { savingRenewalContact = false }
+        if let updated = await requestRenewalContact(settingEnabledTo: enabled) {
+            renewalContactSaved = updated.scope != .unavailable && updated.enabled == enabled
+            renewalContactFailed = !renewalContactSaved
+        }
+    }
+
+    @discardableResult
+    private func requestRenewalContact(settingEnabledTo enabled: Bool?) async -> RenewalNoticeContact? {
+        contactRequest += 1
+        let request = contactRequest
+        renewalContactSaved = false
+        let use = renewalContactUse
+        guard use != nil, let context else {
+            renewalContact = nil
+            verifiedSandboxRenewal = false
+            renewalContactFailed = false
+            return nil
+        }
+        do {
+            let contact = try await service.renewalNoticeContact(householdID: context.householdID, settingEnabledTo: enabled)
+            let verifiedSandbox = contact.sandboxOnly == true ? await storefront.isVerifiedSandboxApp() : false
+            guard request == contactRequest, self.context == context, use == renewalContactUse else { return nil }
+            verifiedSandboxRenewal = verifiedSandbox
+            renewalContact = contact
+            renewalContactFailed = false
+            return contact
+        } catch {
+            guard request == contactRequest, self.context == context, use == renewalContactUse else { return nil }
+            verifiedSandboxRenewal = false
+            renewalContactFailed = true
+            return nil
+        }
+    }
+
     var canPurchase: Bool {
-        !isStopped && configuration.isReady && offer != nil && !isBusy && canStartNewPurchase
+        !isStopped && configuration.isReady && offer != nil && !isBusy && !savingRenewalContact && canStartNewPurchase
+            && (offer?.storefrontCountryCode != "MEX" || (renewalContactUse == .checkout && renewalContactReady))
     }
 
     private var canStartNewPurchase: Bool {
@@ -267,6 +337,11 @@ import SwiftUI
         updatesTask = nil
         started = false
         state.clear()
+        renewalContactSaved = false
+        renewalContact = nil
+        verifiedSandboxRenewal = false
+        renewalContactFailed = false
+        contactRequest += 1
         eligibleAdults = []
         notice = nil
         purchaseRejection = nil
@@ -364,7 +439,7 @@ import SwiftUI
         guard configuration.isReady else { notice = .failed(.notConfigured); return }
         guard let context else { notice = .failed(.signInRequired); return }
         guard let appAccountToken = context.appAccountToken else { notice = .failed(.notPurchaser); return }
-        guard offer != nil else { notice = .failed(.unavailable); return }
+        guard let quotedOffer = offer, !savingRenewalContact else { notice = .failed(.unavailable); return }
         isBusy = true
         let session = generation
         defer { isBusy = false }
@@ -379,14 +454,25 @@ import SwiftUI
             return
         }
         guard canStartNewPurchase else { return }
+        let mexicoCheckout = quotedOffer.storefrontCountryCode == "MEX"
+        var sandboxOnly = false
+        if mexicoCheckout {
+            guard renewalContactUse == .checkout, let contact = await refreshRenewalContact(), renewalContactReady else { return }
+            sandboxOnly = contact.sandboxOnly == true
+        }
         // Another adult may have become the purchaser since this screen opened.
         do {
-            let currentToken = try await service.purchaseContext(householdID: context.householdID)
-            guard session == generation, canStartNewPurchase, !fromPresentedOffer || presentsAnnualOffer else { return }
+            let currentToken = try await service.purchaseContext(householdID: context.householdID, checkoutStorefront: mexicoCheckout ? "MEX" : nil)
+            guard session == generation, self.context == context, offer == quotedOffer, canStartNewPurchase,
+                  !fromPresentedOffer || presentsAnnualOffer else { return }
             guard currentToken == appAccountToken else { throw MembershipFailure.accountMismatch }
         } catch {
             guard session == generation else { return }
             let issue = error as? MembershipFailure ?? .unavailable
+            if mexicoCheckout && issue == .unavailable {
+                renewalContactFailed = true
+                return
+            }
             if issue == .notPurchaser || issue == .accountMismatch {
                 var readOnly = context
                 readOnly.appAccountToken = nil
@@ -404,7 +490,10 @@ import SwiftUI
         notice = nil
         purchaseReport = .awaitingResult
         do {
-            let result = try await storefront.purchase(appAccountToken: appAccountToken)
+            let result = try await storefront.purchase(appAccountToken: appAccountToken,
+                quotedStorefront: quotedOffer.storefrontCountryCode, sandboxOnly: sandboxOnly) {
+                session == self.generation && self.context == context && self.offer == quotedOffer && self.canStartNewPurchase
+            }
             guard session == generation else { return }
             switch result {
             case .pending: purchaseReport = .pending
@@ -429,6 +518,7 @@ import SwiftUI
             let issue = error as? MembershipFailure ?? .unavailable
             purchaseReport = .failed(issue)
             notice = .failed(issue)
+            if issue == .unavailable { await loadOffer() }
         }
     }
 

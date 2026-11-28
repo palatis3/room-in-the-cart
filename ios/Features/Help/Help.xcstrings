@@ -1,6 +1,23 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "For annual subscriptions in Mexico, the purchasing adult can enable renewal emails in Household membership. Our email provider, Resend, processes that adult’s verified sign-in address and the renewal message to deliver the notice. Other household members cannot see the address or manage these emails. Manage or cancel the subscription with Apple.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For annual subscriptions in Mexico, the purchasing adult can enable renewal emails in Household membership. Our email provider, Resend, processes that adult’s verified sign-in address and the renewal message to deliver the notice. Other household members cannot see the address or manage these emails. Manage or cancel the subscription with Apple."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para las suscripciones anuales en México, la persona adulta que realiza la compra puede activar los avisos de renovación en la membresía del hogar. Resend, nuestro proveedor de correo, procesa su dirección verificada de inicio de sesión y el mensaje de renovación para entregarle el aviso. Las demás personas del hogar no pueden ver la dirección ni administrar los avisos. Administra o cancela la suscripción con Apple."
+          }
+        }
+      }
+    },
     "To report a shared message or block its sender, look for Report or block beside the message. For a family request, the assigned shopper can look in Review family requests. Availability depends on your access and the message.": {
       "extractionState": "manual",
       "localizations": {

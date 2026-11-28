@@ -402,6 +402,12 @@ test('billing HTTP wiring remains Free and blocks delivery without configured Ap
   const f=await fixture();
   const snapshot=await f.http('Mia','GET','/entitlements');assert.equal(snapshot.status,200);assert.equal(snapshot.data.status,'free');
   const context=await f.http('Mia','POST','/billing/purchase-context',{});assert.equal(context.status,503);assert.equal(context.data.error.code,'billing_unavailable');
+  const contact=await f.http('Mia','GET','/billing/renewal-notice-contact');
+  assert.equal(contact.status,200);
+  assert.deepEqual(contact.data,{scope:'unavailable',emailVerified:false,enabled:false,dispatchEnabled:false});
+  const closed=await f.http('Mia','POST','/billing/purchase-context',{storefront:'MEX'});
+  assert.equal(closed.status,409);assert.equal(closed.data.error.code,'renewal_notice_unavailable');
+  assert.equal((await f.http('Mia','PUT','/billing/renewal-notice-contact',{enabled:true,email:'other@example.invalid'})).status,422);
   const forged=await f.http('Mia','POST','/v1/billing/verify',{householdId:f.h,signedTransactionInfo:'not-a-real-signed-transaction'});assert.equal(forged.status,503);
   assert.equal((await f.http('Sam','GET','/entitlements')).status,403);
   assert.equal((await admin.query('SELECT count(*)::int AS n FROM ritc.billing_delivery WHERE household_id=$1',[f.h])).rows[0].n,0);
