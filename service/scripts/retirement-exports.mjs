@@ -42,7 +42,7 @@ export async function registerExport(db,scope,directory,custodian,digest) {
   if(!saved.rowCount)throw Error('Export destination already belongs to different bytes');
 }
 
-export async function retireExports(db,scope,directories,custodian) {
+export async function retireExports(db,scope,directories,custodian,checkRecovery) {
   const {rows}=await db.query('SELECT locator_digest,content_digest FROM ritc_checkpoint.detail_export WHERE scope_digest=$1 AND custodian_id=$2',[scope,z.string().uuid().parse(custodian)]);
   const paths=new Map();
   for(const directory of directories) {
@@ -75,6 +75,7 @@ export async function retireExports(db,scope,directories,custodian) {
     catch(error){if(error.code!=='ENOENT')throw error;}
   }
   for(const file of files) {
+    checkRecovery();
     if(file.stat) {
       const info=await lstat(file.path);
       if(info.dev!==file.stat.dev || info.ino!==file.stat.ino || info.nlink!==1 || info.ctimeMs!==file.stat.ctimeMs)throw Error('Export changed during retirement');

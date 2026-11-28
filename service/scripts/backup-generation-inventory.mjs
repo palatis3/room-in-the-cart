@@ -1,18 +1,18 @@
+import {certifiedBackupExpiry,timestamp} from './backup-expiry.mjs';
 import {createHash} from 'node:crypto';
 import {constants} from 'node:fs';
 import {lstat,open,readdir,unlink} from 'node:fs/promises';
 import {dirname,join,relative,resolve,sep} from 'node:path';
 
-const day=86400000;
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
 
 // Entries come from independently pinned original verifier receipts. The original
 // snapshot time belongs to the ciphertext and follows it to each registered location.
 export function backupCutoff(entry,retirement) {
-  const captured=Date.parse(entry.originalSnapshotUTC);
-  const cutoff=Date.parse(entry.restoreCutoffUTC);
+  const captured=timestamp(entry.originalSnapshotUTC);
+  const cutoff=certifiedBackupExpiry(entry,captured);
   const provider=Date.parse(entry.providerExpiryUTC);
-  if(!Number.isFinite(captured) || !Number.isFinite(provider) || provider<=captured || provider>cutoff || cutoff!==captured+30*day ||
+  if(!Number.isFinite(captured) || !Number.isFinite(provider) || provider<=captured || provider>cutoff ||
      !entry.privateStore || !entry.uncachedDownloadMatched ||
      entry.sourceRestore?.rowsAndCatalogMatched!==true || entry.downloadRestore?.rowsAndCatalogMatched!==true ||
      entry.sourceRestore.rows!==entry.downloadRestore.rows || entry.sourceRestore.tables!==entry.downloadRestore.tables ||
