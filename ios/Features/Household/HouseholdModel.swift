@@ -67,7 +67,15 @@ struct DeviceReminderPersona: Equatable {
     @Published private(set) var codeSent = false
     @Published private(set) var notice: String?
     @Published private(set) var pendingSpellingCleanup: Set<String> = []
-    @Published var email = ""
+    @Published var email = "" {
+        didSet {
+            guard signInAddress != oldValue.trimmingCharacters(in: .whitespacesAndNewlines) else { return }
+            if codeSent { notice = nil }
+            codeSent = false
+            code = ""
+        }
+    }
+    private var signInAddress: String { email.trimmingCharacters(in: .whitespacesAndNewlines) }
     @Published var code = ""
     @Published var item = ""
     @Published var quantity = ""
@@ -189,14 +197,20 @@ struct DeviceReminderPersona: Equatable {
         guard let auth, !busy else { return }
         busy = true; notice = nil; defer { busy = false }
         let start = generation
-        do { try await auth.requestEmailCode(email: email.trimmingCharacters(in: .whitespacesAndNewlines))
-            guard start == generation else { return }; codeSent = true
-            notice = ht("Check your email for a sign-in code.") }
-        catch ClientError.service(let status, _, _, _) where status == 422 {
-            guard start == generation else { return }
-            notice = ht("A sign-in code could not be sent. Check the email address or continue planning for free.")
+        let address = signInAddress
+        do {
+            try await auth.requestEmailCode(email: address)
+            guard start == generation, signInAddress == address else { return }
+            codeSent = true
+            notice = ht("Check your email for a sign-in code.")
+        } catch {
+            guard start == generation, signInAddress == address else { return }
+            if case ClientError.service(422, _, _, _) = error {
+                notice = ht("A sign-in code could not be sent. Check the email address or continue planning for free.")
+            } else {
+                await show(error, start: start)
+            }
         }
-        catch { await show(error, start: start) }
     }
     var showingVerifiedHousehold: Bool {
         guard let verifiedHouseholdSubject else { return false }
@@ -216,7 +230,7 @@ struct DeviceReminderPersona: Equatable {
         busy = true; notice = nil; defer { busy = false }
         let start = generation
         do {
-            let access = try await auth.verifyEmailCode(email: email.trimmingCharacters(in: .whitespacesAndNewlines), code: code)
+            let access = try await auth.verifyEmailCode(email: signInAddress, code: code)
             guard start == generation else { return }
             verifiedHouseholdSubject = identity == nil && continueInHousehold() ? access.identity.subject : nil
             if identity?.subject != access.identity.subject { clearWorkspaceList() }

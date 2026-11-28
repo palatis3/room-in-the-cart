@@ -40,6 +40,8 @@ private final class DeletionProtocol: URLProtocol {
     private var testingMemberships = false
     private var loseNextWorkspaceRead = false
     private var duringWorkspaceRead: (() -> Void)?
+    private var codeRequestStatus = 200
+    private var duringCodeRequest: (() -> Void)?
     private var verifiedCodes = 0
     private var workspaceReads = 0
     private var deviceEnrollments = 0
@@ -69,6 +71,9 @@ private final class DeletionProtocol: URLProtocol {
         var code = 200
         var output: [String: Any] = [:]
         switch path {
+        case "/auth/v1/otp":
+            code = codeRequestStatus
+            duringCodeRequest?()
         case "/auth/v1/verify": verifiedCodes += 1; output = ["access_token":"verified","refresh_token":"rotated","expires_in":3600,"user":user]
         case "/auth/v1/user": output = user
         case "/auth/v1/logout": break
@@ -174,6 +179,47 @@ private final class DeletionProtocol: URLProtocol {
         flow.choices.shops[.init(household: house, id: shop)] = .archiveOrClose
         flow.choices.children.insert(.init(household: house, id: child))
     }
+    func testEmailCodeBelongsToTheAddressThatRequestedIt() async throws {
+        let account = try await model(signIn: false)
+        defer { DeletionProtocol.handle = nil }
+        account.email = "first@example.test"
+        codeRequestStatus = 429
+        await account.sendCode()
+        XCTAssertEqual(account.email, "first@example.test")
+        XCTAssertFalse(account.codeSent)
+        XCTAssertEqual(account.notice, ht("Too many attempts. Wait before trying again."))
+
+        codeRequestStatus = 200
+        await account.sendCode()
+        XCTAssertTrue(account.codeSent)
+        account.code = "012345"
+        account.email = " first@example.test "
+        codeRequestStatus = 429
+        await account.sendCode()
+        XCTAssertTrue(account.codeSent)
+        XCTAssertEqual(account.code, "012345")
+
+        account.email = "second@example.test"
+        XCTAssertFalse(account.codeSent)
+        XCTAssertTrue(account.code.isEmpty)
+        codeRequestStatus = 422
+        await account.sendCode()
+        XCTAssertEqual(account.email, "second@example.test")
+        XCTAssertFalse(account.codeSent)
+        XCTAssertEqual(account.notice, ht("A sign-in code could not be sent. Check the email address or continue planning for free."))
+        XCTAssertNil(account.identity)
+        XCTAssertEqual(verifiedCodes, 0)
+
+        codeRequestStatus = 200
+        duringCodeRequest = { account.email = "corrected@example.test" }
+        await account.sendCode()
+        XCTAssertFalse(account.codeSent)
+        duringCodeRequest = nil
+        await account.sendCode()
+        XCTAssertTrue(account.codeSent)
+        XCTAssertEqual(account.email, "corrected@example.test")
+    }
+
     func testVerifiedAccountRetriesHouseholdsWithoutAnotherCodeOrAutomaticEnrollment() async throws {
         testingMemberships = true
         loseNextWorkspaceRead = true
