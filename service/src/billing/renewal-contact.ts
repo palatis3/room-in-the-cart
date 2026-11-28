@@ -23,20 +23,20 @@ export async function renewalContact(ctx:Context,identity:VerifiedIdentity,confi
   const {rows:[user]}=await ctx.db.query<{address:string|null}>(
     'SELECT ritc.guardian_confirmed_email($1,$2,$3,$4,$5,$6) AS address',[...key,ctx.deviceId,identity.issuer,identity.subject,identity.sessionId]);
   const email=user?.address?.trim();
-  const entry=(await ctx.db.query<{id:string;address_digest:Buffer;original_id:string|null;sandbox_only:boolean;live:boolean}>(
-    `SELECT id,address_digest,original_id,sandbox_only,original_id IS NOT NULL OR enrolled_at>now()-interval '30 days' AS live
+  const entry=(await ctx.db.query<{id:string;address_digest:Buffer;original_id:string|null;sandbox_only:boolean;address_failed:boolean;live:boolean}>(
+    `SELECT id,address_digest,original_id,sandbox_only,address_failed,original_id IS NOT NULL OR enrolled_at>now()-interval '30 days' AS live
       FROM ritc.renewal_contact WHERE household_id=$1 AND purchaser_id=$2 FOR UPDATE`,key)).rows[0];
   const digest=(id:string)=>createHash('sha256').update(id+'\n'+email!.toLowerCase()).digest();
-  let enabled=Boolean(email&&entry?.live&&entry.sandbox_only===sandboxOnly&&entry.address_digest.equals(digest(entry.id))&&(!row||sandboxOnly||entry.original_id===row.subscription.originalTransactionID));
+  let enabled=Boolean(email&&entry?.live&&!entry.address_failed&&entry.sandbox_only===sandboxOnly&&entry.address_digest.equals(digest(entry.id))&&(!row||sandboxOnly||entry.original_id===row.subscription.originalTransactionID));
   if(change===true&&!enabled){
-    if(!email)throw noNoticeRoute();
+    if(!email||(entry?.address_failed&&entry.address_digest.equals(digest(entry.id))))throw noNoticeRoute();
     await ctx.db.query('DELETE FROM ritc.renewal_contact WHERE household_id=$1 AND purchaser_id=$2',key);
     const id=randomUUID();
-    await ctx.db.query('INSERT INTO ritc.renewal_contact(household_id,purchaser_id,id,address_digest,original_id,sandbox_only) VALUES($1,$2,$3,$4,$5,$6)',
-      [...key,id,digest(id),sandboxOnly?null:row?.subscription.originalTransactionID??null,sandboxOnly]);
+    await ctx.db.query(`INSERT INTO ritc.renewal_contact(household_id,purchaser_id,id,address_digest,original_id,sandbox_only,priority_at,next_check) VALUES($1,$2,$3,$4,$5,$6,coalesce($7::timestamptz,'9999-12-31'),coalesce(greatest(now(),$7::timestamptz-interval '7 days'),now()))`,
+      [...key,id,digest(id),sandboxOnly?null:row?.subscription.originalTransactionID??null,sandboxOnly,row&&!sandboxOnly?new Date(row.subscription.expiresAt):null]);
     enabled=true;
   }
   let ready=false;
-  if(config.provider&&!sandboxOnly){try{ready=await config.provider.ready(AbortSignal.timeout(2500));}catch{ready=false;}}
+  if(config.provider&&!sandboxOnly){try{ready=(await ctx.db.query('SELECT ritc.renewal_delivery_ready() AS ready')).rows[0]?.ready===true;}catch{ready=false;}}
   return {scope:row?'bound':'prospective',emailVerified:Boolean(email),enabled,dispatchEnabled:ready,...(sandboxOnly?{sandboxOnly:true}:{})};
 }

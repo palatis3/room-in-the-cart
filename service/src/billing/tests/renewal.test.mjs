@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {randomUUID} from 'node:crypto';
+import {createHmac,randomBytes,randomUUID} from 'node:crypto';
 import {day,mexicoRenewal,nextNotice} from '../../../dist/billing/renewal-facts.js';
+import {checkSenderSession} from '../../../dist/billing/renewal-sender-health.js';
+import {recordRenewalDelivery,webhookKey} from '../../../dist/billing/renewal-webhook.js';
 import {renewalConfig,ResendRenewalProvider} from '../../../dist/billing/renewal-provider.js';
 
 const now=Date.UTC(2027,2,10,15),product='annual',due=now+7*day;
@@ -22,38 +24,56 @@ test('daily seven-day window, corrections, stale facts and conservative cutoff u
   assert.equal(nextNotice(state,now),'reminder');
   assert.equal(nextNotice(state,now-1),'early');
   assert.equal(nextNotice({...state,noticeFacts:{...state.noticeFacts,signedAt:now+2*day}},now),'not_ready');
-  assert.equal(nextNotice({...state,noticeFacts:{...state.noticeFacts,signedAt:now-day-1}},now),'not_ready');
+  assert.equal(nextNotice({...state,noticeFacts:{...state.noticeFacts,signedAt:now-180*day}},now),'reminder');
   for(const zone of ['America/Tijuana','America/Ciudad_Juarez','America/Cancun','America/Mexico_City']){
     const localDate=ms=>Date.parse(new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'}).format(ms)+'T00:00:00Z');
     assert.ok((localDate(due)-localDate(now+day))/day>=5);
   }
-  assert.equal(nextNotice({...state,noticeFacts:{...state.noticeFacts,signedAt:now+2*day}},now+2*day),'late');
+  assert.equal(nextNotice({...state,noticeFacts:{...state.noticeFacts,signedAt:now+4*day}},now+4*day),'late');
   assert.equal(nextNotice(state,now,prior),'unchanged');
   assert.equal(nextNotice({...state,noticeFacts:{...state.noticeFacts,date:due+day}},now,prior),'correction');
   assert.equal(nextNotice(state,now,{...prior,purpose:'correction',sentAt:now-day}),'reminder');
 });
-test('Resend requires domain tracking off, one idempotent bilingual text and verified provider receipt',async()=>{
-  const domain=randomUUID(),id=randomUUID(),key=randomUUID(),calls=[];
-  let event='delivered',tracking=false;
-  const fake=async(url,init)=>{
-    calls.push({url,init});
-    assert.equal(init.redirect,'error');
-    const body=url.endsWith('/domains/'+domain)?{id:domain,name:'roominthecart.com',status:'verified',click_tracking:tracking,open_tracking:false}:
-      url.endsWith('/emails/'+id)?{id,last_event:event}:{id};
-    return Response.json(body);
-  };
-  const p=new ResendRenewalProvider('fixture','notice@roominthecart.com',domain,fake),signal=AbortSignal.timeout(3000);
-  assert.equal(await p.ready(signal),true);tracking=true;assert.equal(await p.ready(signal),false);
-  const m={date:due,amountMilli:193400,purpose:'correction'};
-  assert.equal(await p.send(key,'adult@example.invalid',m,signal),id);
-  const call=calls.at(-1).init,body=JSON.parse(call.body);
-  assert.equal(call.headers['Idempotency-Key'],'renewal/'+key);
+test('a domain-scoped send-only key needs no read permission; idempotence and opaque correlation use the same dispatch',async()=>{
+  const id=randomUUID(),key=randomUUID(),calls=[];
+  const fake=async(url,init)=>{calls.push({url,init});assert.equal(url,'https://api.resend.com/emails');return Response.json({id});};
+  const p=new ResendRenewalProvider('fixture','notice@roominthecart.com',fake,async()=>true),signal=AbortSignal.timeout(3000);
+  assert.equal(await p.ready(signal),true);assert.equal(calls.length,0);
+  assert.equal(await p.send(key,'adult@example.invalid',{date:due,amountMilli:193400,purpose:'correction'},signal),id);
+  const call=calls[0].init,body=JSON.parse(call.body);
+  assert.equal(call.method,'POST');assert.equal(call.headers['Idempotency-Key'],'renewal/'+key);
+  assert.deepEqual(body.tags,[{name:'renewal_dispatch',value:key}]);
   assert.deepEqual(body.to,['adult@example.invalid']);assert.equal('html' in body,false);
-  assert.match(body.text,/193\.40/);assert.match(body.text,/manage|Manage/);assert.match(body.text,/apps\.apple\.com\/account\/subscriptions/);
+  assert.match(body.text,/193\.40/);assert.match(body.text,/apps\.apple\.com\/account\/subscriptions/);
   assert.match(body.text,/Ciudad de México/);assert.match(body.text,/UTC:/);assert.match(body.text,/actualizan/);
-  for(const [value,expected] of [['delivered','delivered'],['bounced','failed'],['sent','accepted']]){
-    event=value;assert.equal(await p.delivery(id,signal),expected);
+});
+test('scoped sender readiness authenticates over the TLS session and quits without sending',async()=>{
+  const command=[],input=async function*(){
+    yield '220 smtp ready';yield '250-server';yield '250 AUTH PLAIN LOGIN';yield '235 authenticated';
+  };
+  assert.equal(await checkSenderSession(input(),v=>command.push(v.split(' ')[0]),'synthetic'),true);
+  assert.deepEqual(command,['EHLO','AUTH','QUIT']);
+  const denied=async function*(){yield '220 ready';yield '250 AUTH PLAIN';yield '535 denied';};
+  await assert.rejects(()=>checkSenderSession(denied(),()=>{},'synthetic'));
+});
+test('raw signed delivery events project only opaque identifiers and outcome; replay changes no recipient or content',async()=>{
+  const key=webhookKey('whsec_'+randomBytes(32).toString('base64')),time=String(Math.floor(now/1000)),id='msg_test_event';
+  const providerID=randomUUID(),dispatch=randomUUID(),effects=[],pool={query:async(_sql,params)=>effects.push(params)};
+  const signed=(type,tag=dispatch)=>{
+    const raw=Buffer.from(JSON.stringify({type,data:{email_id:providerID,tags:{renewal_dispatch:tag},to:['other@example.invalid']}}));
+    const signature=createHmac('sha256',key).update(id+'.'+time+'.').update(raw).digest('base64');
+    return {raw,headers:{'svix-id':id,'svix-timestamp':time,'svix-signature':'v1,'+signature}};
+  };
+  const e=signed('email.delivered');
+  await assert.rejects(()=>recordRenewalDelivery(pool,key,Buffer.concat([e.raw,Buffer.from(' ')]),e.headers,now));
+  await assert.rejects(()=>recordRenewalDelivery(pool,key,e.raw,e.headers,now+301000));
+  for(const event of [signed('email.opened'),signed('email.delivered','unknown')])
+    await recordRenewalDelivery(pool,key,event.raw,event.headers,now);
+  assert.deepEqual(effects,[]);
+  for(const type of ['email.sent','email.delivered','email.bounced']){
+    const event=signed(type);await recordRenewalDelivery(pool,key,event.raw,event.headers,now);
   }
+  assert.deepEqual(effects,['accepted','delivered','failed'].map(status=>[dispatch,providerID,status]));
 });
 test('live dispatch defaults to off and Sandbox can never add a household outside the verified allowlist',()=>{
   const home=randomUUID();assert.equal(renewalConfig({}).mode,'off');

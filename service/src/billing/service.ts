@@ -81,6 +81,10 @@ export class BillingService {
       await ctx.db.query('UPDATE ritc.billing_state SET verified_at=$2 WHERE household_id=$1', [ctx.householdId,ctx.now]);
     }
     const result = (await this.row(ctx))!;
+    if(_privateDispatchFacts && next.mxAnnual && next.environment==='Production' && result.subscription.signedAt===next.signedAt) {
+      await ctx.db.query('SELECT ritc.schedule_verified_renewal($1,$2,$3,$4,$5)',
+        [ctx.householdId,ctx.member.member_id,next.originalTransactionID,next.signedAt,_privateDispatchFacts.date]);
+    }
     const key = createHash('sha256').update(JSON.stringify(next)).digest('hex');
     await this.audit(ctx, 'verified', key, result.revision);
     return result;

@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {randomUUID} from 'node:crypto';
+import {randomBytes,randomUUID,createHmac} from 'node:crypto';
 import pg from 'pg';
+import {createHTTPServer} from '../dist/http.js';
 import {migrate} from '../scripts/migrate.mjs';
 import {renewalContact} from '../dist/billing/renewal-contact.js';
 import {maintainRenewalNotices} from '../dist/billing/renewal-worker.js';
@@ -21,8 +22,8 @@ test('verified payer enrollment and renewal delivery under real app/worker datab
   const payer={id:randomUUID(),subject:randomUUID(),device:randomUUID(),session:randomUUID(),kind:'adult'};
   const other={id:randomUUID(),subject:randomUUID(),device:randomUUID(),session:randomUUID(),kind:'adult'};
   const sends=[],deliveries=new Map();
-  let ambiguous=false,delivered=true;
-  const provider={ready:async()=>true,delivery:async()=>delivered?'delivered':'failed',
+  let ambiguous=false;
+  const provider={ready:async()=>true,
     send:async(key,to,msg)=>{
       if(!deliveries.has(key))deliveries.set(key,randomUUID());
       sends.push({key,to,...msg});
@@ -30,7 +31,7 @@ test('verified payer enrollment and renewal delivery under real app/worker datab
     }};
   const config={mode:'send',provider,sandboxHomes:new Set([otherHome])},dark={mode:'off',provider:null,sandboxHomes:new Set()};
   let state={environment:'Production',originalTransactionID:'9134',transactionID:'9135',productID:'annual',appAccountToken:'',
-    purchasedAt:Date.now()-day,signedAt:Date.now()-10000,expiresAt:Date.now()+6.9*day,graceExpiresAt:null,status:'active',mxAnnual:true};
+    purchasedAt:Date.now()-300*day,signedAt:Date.now()-180*day,expiresAt:Date.now()+6.9*day,graceExpiresAt:null,status:'active',mxAnnual:true};
   state.noticeFacts={date:state.expiresAt,signedAt:state.signedAt,amountMilli:193400,currency:'MXN'};
   const gateway={current:async()=>structuredClone(state),verifyTransaction:async()=>({originalTransactionID:state.originalTransactionID,
     transactionID:state.transactionID,appAccountToken:state.appAccountToken})};
@@ -64,6 +65,8 @@ test('verified payer enrollment and renewal delivery under real app/worker datab
     }
     await t.test('explicit provisional contact and isolated no-send Sandbox',async()=>{
       assert.equal((await contact(payer,undefined,dark)).scope,'unavailable');
+      assert.equal((await contact(payer,undefined)).dispatchEnabled,false);
+      await work();
       assert.equal((await contact(payer,undefined)).enabled,false);
       assert.deepEqual(await contact(payer,true),{scope:'prospective',emailVerified:true,enabled:true,dispatchEnabled:true});
       assert.equal((await contact({...payer,kind:'child'},undefined)).scope,'unavailable');
@@ -93,12 +96,16 @@ test('verified payer enrollment and renewal delivery under real app/worker datab
       const [first]=await records();
       assert.equal(first.state,'accepted');assert.equal(first.purpose,'reminder');
       assert.ok(sends.every(s=>s.to==='current@example.invalid'&&s.amountMilli===193400));
+      await app.query('SELECT ritc.apply_renewal_delivery($1,$2,$3)',[first.id,first.provider_id,'delivered']);
       await due();await work();assert.equal((await records())[0].state,'delivered');
       const originalDate=state.noticeFacts.date;
       state={...state,signedAt:Date.now(),noticeFacts:{...state.noticeFacts,signedAt:Date.now(),date:originalDate+day,amountMilli:205500}};
       await due();await work();assert.equal(deliveries.size,2);
       const [a,b]=await records();assert.equal(b.purpose,'correction');assert.equal(Number(b.amount_milli),205500);
       assert.equal(a.purge_at.getTime(),b.purge_at.getTime());
+      await app.query('SELECT ritc.apply_renewal_delivery($1,$2,$3)',[b.id,b.provider_id,'delivered']);
+      await app.query('SELECT ritc.apply_renewal_delivery($1,$2,$3)',[b.id,b.provider_id,'accepted']);
+      assert.equal((await records())[1].state,'delivered');
       await due();await work();await due();await work();assert.equal(deliveries.size,2);
     });
     await t.test('unknown provider result uses its one stable key only within the guaranteed window',async()=>{
@@ -123,6 +130,23 @@ test('verified payer enrollment and renewal delivery under real app/worker datab
       await due();await work();assert.equal(sends.length,count);
       await admin.query('DELETE FROM ritc.renewal_restore_fence');state=old;
     });
+    await t.test('signed HTTP provider delivery recovers the lost HTTP acknowledgment without another email',async()=>{
+      const entry=(await records()).at(-1),providerID=deliveries.get(entry.id),before=sends.length,key=randomBytes(32);
+      const server=createHTTPServer({repository:{pool:app},renewalNotices:{...config,webhook:key}});
+      await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+      const url='http://127.0.0.1:'+server.address().port+'/v1/renewal-notices/delivery';
+      const raw=JSON.stringify({type:'email.delivered',data:{email_id:providerID,tags:{renewal_dispatch:entry.id}}});
+      const id='msg_integration',ts=String(Math.floor(Date.now()/1000));
+      const sig=createHmac('sha256',key).update(id+'.'+ts+'.'+raw).digest('base64');
+      try{
+        const headers={'content-type':'application/json','svix-id':id,'svix-timestamp':ts};
+        assert.equal((await fetch(url,{method:'POST',headers,body:raw})).status,401);
+        for(let replay=0;replay<2;replay++)assert.equal((await fetch(url,{method:'POST',headers:{...headers,'svix-signature':'v1,'+sig},body:raw})).status,200);
+        const current=(await records()).at(-1);
+        assert.equal(current.state,'delivered');assert.equal(current.provider_id,providerID);
+        await due();await work();assert.equal(sends.length,before);
+      }finally{await new Promise(resolve=>server.close(resolve));}
+    });
     await t.test('withdrawal and provider address changes require new consent; deletion leaves only anonymous oversight',async()=>{
       const before=sends.length;
       assert.equal((await contact(payer,false)).enabled,false);await work();assert.equal(sends.length,before);
@@ -132,6 +156,18 @@ test('verified payer enrollment and renewal delivery under real app/worker datab
       assert.equal((await contact(payer,undefined)).enabled,false);
       assert.equal((await contact(payer,true)).enabled,true);
       await due();await work();assert.equal(sends.length,before);
+      const acknowledged=(await records()).at(-1);
+      // A late signed complaint for the old route must not redirect or poison a new enrollment.
+      await app.query('SELECT ritc.apply_renewal_delivery($1,$2,$3)',[acknowledged.id,acknowledged.provider_id,'failed']);
+      await due();await work();assert.equal(sends.length,before);
+      await admin.query("UPDATE auth.users SET email='newly-confirmed@example.invalid',email_confirmed_at=clock_timestamp() WHERE id=$1",[payer.subject]);
+      await contact(payer,true);
+      state={...state,noticeFacts:{...state.noticeFacts,date:Date.now()+6.5*day,signedAt:Date.now()}};
+      await due();await work();assert.equal(sends.length,before+1);assert.equal(sends.at(-1).to,'newly-confirmed@example.invalid');
+      const replacement=(await records()).at(-1);
+      await app.query('SELECT ritc.apply_renewal_delivery($1,$2,$3)',[replacement.id,replacement.provider_id,'failed']);
+      assert.equal((await contact(payer,undefined)).enabled,false);
+      await assert.rejects(()=>contact(payer,true),e=>e.code==='renewal_notice_unavailable');
       await admin.query("UPDATE ritc.member SET state='revoked' WHERE household_id=$1 AND member_id=$2",[home,payer.id]);
       assert.equal((await records()).length,0);
       assert.equal((await admin.query('SELECT * FROM ritc.renewal_contact WHERE household_id=$1',[home])).rowCount,0);
@@ -146,6 +182,38 @@ test('verified payer enrollment and renewal delivery under real app/worker datab
         VALUES($1,$2,$3,'80001','80002',1,'reminder',now()-interval '31 days',85000,now()-interval '38 days',now()-interval '1 day')`,[otherHome,other.id,randomUUID()]);
       await work(dark);assert.equal((await admin.query('SELECT * FROM ritc.renewal_contact')).rowCount,0);
       assert.equal((await records()).length,0);
+    });
+    await t.test('one run prioritizes 32 near renewals ahead of 31 distant enrollments and drains more than one page',async()=>{
+      const fixtures=new Map(),consulted=[],start=sends.length,base=Date.now(),connection=await admin.connect();
+      try {
+        await connection.query('BEGIN');
+        for(let i=0;i<63;i++){
+          const house=randomUUID(),buyer=randomUUID(),subject=randomUUID(),token=randomUUID(),enrollment=randomUUID();
+          const original=String(50000+i),isNear=i>=31,expiry=base+(isNear?6.5:183)*day;
+          const verified={...state,environment:'Production',status:'active',mxAnnual:true,transactionID:original,
+            purchasedAt:base-300*day,signedAt:base-180*day,expiresAt:expiry,appAccountToken:token,originalTransactionID:original};
+          verified.noticeFacts={date:expiry,signedAt:verified.signedAt,amountMilli:193400,currency:'MXN'};
+          fixtures.set(original,verified);
+          await connection.query("INSERT INTO ritc.household(household_id,label) VALUES($1,'Term fixture')",[house]);
+          await connection.query("INSERT INTO ritc.member(household_id,member_id,issuer,subject,alias,kind,state) VALUES($1,$2,$3,$4,'Adult','adult','active')",[house,buyer,issuer,subject]);
+          await connection.query("INSERT INTO auth.users VALUES($1,'verified@example.invalid',now())",[subject]);
+          await connection.query("INSERT INTO ritc.billing_account(household_id,purchaser_id,app_account_token) VALUES($1,$2,$3)",[house,buyer,token]);
+          await connection.query("INSERT INTO ritc.billing_binding(environment,original_transaction_id,household_id,purchaser_id,app_account_token) VALUES('Production',$1,$2,$3,$4)",[original,house,buyer,token]);
+          await connection.query("INSERT INTO ritc.renewal_contact(id,household_id,purchaser_id,address_digest) VALUES($1,$2,$3,sha256(convert_to(($1::uuid)::text||chr(10)||'verified@example.invalid','UTF8')))",[enrollment,house,buyer]);
+          const {noticeFacts,...snapshot}=verified;
+          await connection.query('INSERT INTO ritc.billing_state(household_id,purchaser_id,subscription,verified_at) VALUES($1,$2,$3,now())',[house,buyer,snapshot]);
+        }
+        await connection.query('COMMIT');
+      }catch(error){await connection.query('ROLLBACK');throw error;}finally{connection.release();}
+      assert.equal((await admin.query("SELECT count(*)::int AS n FROM ritc.renewal_contact WHERE next_check>now()+interval '100 days'")).rows[0].n,31);
+      // Simulate old routine checks already queued; near renewals still win even when paginated.
+      await admin.query("UPDATE ritc.renewal_contact SET next_check=now() WHERE next_check>now()+interval '100 days'");
+      const current=async original=>{consulted.push(original);return structuredClone(fixtures.get(original));};
+      const result=await maintainRenewalNotices(worker,config,{current},issuer,'run',AbortSignal.timeout(15000));
+      assert.equal(result.checked,63);assert.equal(result.due,0);assert.equal(sends.length-start,32);
+      assert.ok(consulted.slice(0,32).every(id=>Number(id)>=50031));
+      assert.ok(consulted.slice(32).every(id=>Number(id)<50031));
+      assert.equal((await admin.query("SELECT count(*)::int AS n FROM ritc.renewal_contact WHERE next_check>now()+interval '100 days'")).rows[0].n,31);
     });
   }finally{
     await Promise.all([admin.end(),app.end(),worker.end()]);

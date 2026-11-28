@@ -37,6 +37,7 @@ import { randomUUID, timingSafeEqual } from 'node:crypto';
 import { z } from 'zod';
 import { type IdentityVerifier,DenyIdentityVerifier } from './auth.js';
 import { HouseholdRepository,type AuthContext } from './repository.js';
+import {recordRenewalDelivery} from './billing/renewal-webhook.js';
 import {contactChange,renewalContact,noNoticeRoute} from './billing/renewal-contact.js';
 import type {RenewalConfig} from './billing/renewal-provider.js';
 import { BillingService,billingVerifySchema,billingSeatsSchema,billingNotificationSchema } from './billing/service.js';
@@ -127,6 +128,11 @@ export function createHTTPServer(options:HTTPOptions) {
       if(limits.size>=10_000&&!old){res.setHeader('Retry-After','60');throw new ServiceError(429,'rate_limited','Retry later.');}
       const bucket=old&&old.until>now?old:{count:0,until:now+60_000};bucket.count++;limits.set(ip,bucket);
       if(bucket.count>(options.maxRequestsPerMinute??120)){res.setHeader('Retry-After','60');throw new ServiceError(429,'rate_limited','Keep the operation key and retry later.');}
+      if(method==='POST'&&url.pathname==='/v1/renewal-notices/delivery'){
+        if(!options.renewalNotices?.webhook)throw new ServiceError(404,'unavailable','Unavailable.');
+        await recordRenewalDelivery(repository.pool,options.renewalNotices.webhook,await rawBody(req,16384),req.headers);
+        send(200,{accepted:true});return;
+      }
       if(method==='POST' && options.billing && ['/v1/apple/notifications','/v1/apple/notifications/sandbox'].includes(url.pathname)){
         const input = billingNotificationSchema.parse(await body(req,262_144));
         const destination = url.pathname.endsWith('/sandbox') ? 'reviewSandbox' : 'primary';

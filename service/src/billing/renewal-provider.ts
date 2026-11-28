@@ -1,4 +1,6 @@
 import {z} from 'zod';
+import {probeRenewalSender} from './renewal-sender-health.js';
+import {webhookKey} from './renewal-webhook.js';
 import {day} from './renewal-facts.js';
 
 const uuid=z.string().uuid();
@@ -7,7 +9,6 @@ export interface NoticeMessage {date:number; amountMilli:number; purpose:'remind
 export interface NoticeProvider {
   ready(signal:AbortSignal):Promise<boolean>;
   send(key:string,to:string,message:NoticeMessage,signal:AbortSignal):Promise<string>;
-  delivery(id:string,signal:AbortSignal):Promise<'accepted'|'delivered'|'failed'>;
 }
 
 export function noticeText(m:NoticeMessage) {
@@ -31,8 +32,8 @@ export function noticeText(m:NoticeMessage) {
 }
 
 export class ResendRenewalProvider implements NoticeProvider {
-  constructor(private readonly apiKey:string,private readonly address:string,private readonly domainID:string,
-    private readonly fetcher:typeof fetch=fetch){}
+  constructor(private readonly apiKey:string,private readonly address:string,
+    private readonly fetcher:typeof fetch=fetch,private readonly probe=probeRenewalSender){}
   private async call(path:string,options:RequestInit,signal:AbortSignal) {
     const response=await this.fetcher('https://api.resend.com/'+path,{...options,redirect:'error',
       headers:{Authorization:'Bearer '+this.apiKey,'Content-Type':'application/json',...options.headers},
@@ -41,23 +42,17 @@ export class ResendRenewalProvider implements NoticeProvider {
     return response.json();
   }
   async ready(signal:AbortSignal) {
-    const domain=await this.call('domains/'+this.domainID,{},signal);
-    return domain.id===this.domainID&&domain.name===this.address.split('@')[1]&&domain.status==='verified'
-      && domain.click_tracking===false&&domain.open_tracking===false;
+    // The sender uses a domain-scoped sending_access key. Operator verification
+    // of DNS and disabled tracking precedes enablement. The worker records health.
+    return this.probe(this.apiKey,signal);
   }
   async send(key:string,to:string,message:NoticeMessage,signal:AbortSignal) {
     const id=uuid.parse(key);
     const result=await this.call('emails',{method:'POST',headers:{'Idempotency-Key':'renewal/'+id},
-      body:JSON.stringify({from:'Venture House Group <'+this.address+'>',to:[z.email().parse(to)],...noticeText(message)})},signal);
+      body:JSON.stringify({from:'Venture House Group <'+this.address+'>',to:[z.email().parse(to)],tags:[{name:'renewal_dispatch',value:id}],...noticeText(message)})},signal);
     return uuid.parse(result.id);
   }
-  async delivery(id:string,signal:AbortSignal) {
-    const result=await this.call('emails/'+uuid.parse(id),{},signal);
-    if(result.id!==id)throw new Error('Unexpected renewal delivery record');
-    if(result.last_event==='delivered')return 'delivered';
-    if(['bounced','complained','failed','canceled','suppressed'].includes(result.last_event))return 'failed';
-    return 'accepted';
-  }
+
 }
 
 export function renewalConfig(env:NodeJS.ProcessEnv) {
@@ -68,15 +63,17 @@ export function renewalConfig(env:NodeJS.ProcessEnv) {
     throw Error('Sandbox preflight requires explicitly scoped review households');
   const sandboxHomes=new Set(testIDs);
   if(mode!=='off'&&mode!=='observe'&&mode!=='send')throw Error('Invalid renewal notice mode');
-  if(mode!=='send')return {mode,provider:null,sandboxHomes} as const;
-  // Provider-side log retention is a separate account/contract setting. Fail closed
-  // until the operator verifies it, in addition to the live domain tracking checks.
-  if(!/^(?:[1-9]|[12][0-9]|30)$/.test(env.MX_RENEWAL_VERIFIED_PROVIDER_RETENTION_DAYS??''))
-    throw Error('Verified provider retention of at most 30 days is required');
+  const webhook=env.MX_RENEWAL_WEBHOOK_SECRET?webhookKey(env.MX_RENEWAL_WEBHOOK_SECRET):undefined;
+  if(mode!=='send')return {mode,provider:null,sandboxHomes,webhook} as const;
   const address=z.email().parse(env.MX_RENEWAL_FROM);
   if(!/^(?:[a-z0-9-]+\.)*roominthecart\.com$/.test(address.split('@')[1]??'')||!env.MX_RENEWAL_RESEND_KEY||
-     !env.JWT_ISSUER||env.APPLE_ENVIRONMENT!=='Production')throw Error('Incomplete Production renewal configuration');
-  return {mode,sandboxHomes,provider:new ResendRenewalProvider(env.MX_RENEWAL_RESEND_KEY,address,uuid.parse(env.MX_RENEWAL_RESEND_DOMAIN_ID))} as const;
+     !webhook||env.MX_RENEWAL_TRACKING_DISABLED!=='true'||!env.JWT_ISSUER||env.APPLE_ENVIRONMENT!=='Production')throw Error('Incomplete Production renewal configuration');
+  return {mode,sandboxHomes,webhook,provider:new ResendRenewalProvider(env.MX_RENEWAL_RESEND_KEY,address)} as const;
 }
-export type RenewalConfig=ReturnType<typeof renewalConfig>;
+export interface RenewalConfig {
+  mode:'off'|'observe'|'send';
+  provider:NoticeProvider|null;
+  sandboxHomes:ReadonlySet<string>;
+  webhook?:Buffer|undefined;
+}
 export const providerRetryWindow=day-5*60_000;

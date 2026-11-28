@@ -17,15 +17,27 @@ export function mexicoRenewal(transaction:JWSTransactionDecodedPayload,renewal:J
   return {signedAt:renewal.signedDate,date:renewal.renewalDate,amountMilli:renewal.renewalPrice,currency:'MXN'};
 }
 
+const mexicanZones=['America/Tijuana','America/Hermosillo','America/Mazatlan','America/Bahia_Banderas','America/Mexico_City',
+  'America/Merida','America/Monterrey','America/Chihuahua','America/Ciudad_Juarez','America/Ojinaga','America/Matamoros','America/Cancun'];
+const zoneDates=mexicanZones.map(timeZone=>new Intl.DateTimeFormat('en-CA',{timeZone,year:'numeric',month:'2-digit',day:'2-digit'}));
+export function sufficientCalendarNotice(now:number,renewal:number):boolean {
+  if(renewal-now>=6*day)return true;
+  if(renewal-now<4*day)return false;
+  const localDay=(zone:Intl.DateTimeFormat,instant:number)=>{
+    const fields=Object.fromEntries(zone.formatToParts(instant).map(p=>[p.type,p.value]));
+    return Date.UTC(Number(fields.year),Number(fields.month)-1,Number(fields.day));
+  };
+  return zoneDates.every(zone=>localDay(zone,renewal)-localDay(zone,now)>=5*day);
+}
+
 export interface PreviousNotice {date:number;amountMilli:number;sentAt:number;purpose:'reminder'|'correction'}
 export function nextNotice(state:VerifiedSubscription,now:number,previous?:PreviousNotice) {
   const facts=state.noticeFacts;
   if(state.environment!=='Production'||state.status!=='active'||state.mxAnnual!==true||state.expiresAt<=now||!facts) return 'not_ready';
-  if(facts.signedAt>now+5*60_000||facts.signedAt<now-day)return 'not_ready';
+  if(facts.signedAt>now+5*60_000)return 'not_ready';
   const unchanged=previous?.date===facts.date&&previous.amountMilli===facts.amountMilli;
-  // The job runs daily. Six elapsed days leaves a margin above five local calendar
-  // days even across Mexican border-zone DST transitions. Do not infer the payer's zone.
-  if(now>facts.date-6*day)return unchanged?'unchanged':'late';
+  // Without the payer's residence, the smallest calendar lead across Mexico governs.
+  if(!sufficientCalendarNotice(now,facts.date))return unchanged?'unchanged':'late';
   if(previous&&!unchanged)return 'correction';
   if(unchanged){
     if(previous.purpose!=='correction'||previous.sentAt>=facts.date-7*day)return 'unchanged';

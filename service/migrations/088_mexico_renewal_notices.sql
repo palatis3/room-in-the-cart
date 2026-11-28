@@ -1,13 +1,13 @@
 -- Explicit, address-bound transactional contact. The address remains with the identity provider.
 CREATE TABLE ritc.renewal_contact (
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(), household_id uuid NOT NULL, purchaser_id uuid NOT NULL,
- sandbox_only boolean NOT NULL DEFAULT false, address_digest bytea NOT NULL CHECK(octet_length(address_digest)=32),
+ sandbox_only boolean NOT NULL DEFAULT false, address_failed boolean NOT NULL DEFAULT false, address_digest bytea NOT NULL CHECK(octet_length(address_digest)=32),
  original_id text CHECK(original_id ~ '^[0-9]{1,64}$'), enrolled_at timestamptz NOT NULL DEFAULT now(),
- next_check timestamptz NOT NULL DEFAULT now(), attention boolean NOT NULL DEFAULT false,
+ priority_at timestamptz NOT NULL DEFAULT '9999-12-31', next_check timestamptz NOT NULL DEFAULT now(), attention boolean NOT NULL DEFAULT false,
  UNIQUE(household_id,purchaser_id),
  FOREIGN KEY(household_id,purchaser_id) REFERENCES ritc.member ON DELETE CASCADE
 );
-CREATE INDEX renewal_contact_due ON ritc.renewal_contact(next_check,id) WHERE original_id IS NOT NULL;
+CREATE INDEX renewal_contact_due ON ritc.renewal_contact(priority_at,id,next_check) WHERE original_id IS NOT NULL;
 CREATE TABLE ritc.renewal_dispatch (
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(), household_id uuid NOT NULL,purchaser_id uuid NOT NULL,
  contact_id uuid NOT NULL, original_id text NOT NULL, term text NOT NULL CHECK(term ~ '^[0-9]{1,64}$'),
@@ -47,21 +47,21 @@ REVOKE ALL ON ritc.renewal_restore_fence FROM PUBLIC,ritc_app,ritc_worker;
 -- Only the bound purchaser's current confirmed address is resolved, under the same identity
 -- lock used by account erasure. No caller-supplied destination or arbitrary account lookup.
 CREATE FUNCTION ritc.renewal_worker_contact(enrollment uuid, expected_issuer text)
-RETURNS TABLE(destination text, subscription jsonb) LANGUAGE plpgsql SECURITY DEFINER
+RETURNS TABLE(destination text, verified_since timestamptz, subscription jsonb) LANGUAGE plpgsql SECURITY DEFINER
 SET search_path=pg_catalog SET row_security=off AS $$
 DECLARE identity_key text;
 BEGIN
  SELECT encode(sha256(convert_to(m.issuer||E'\n'||m.subject,'UTF8')),'hex') INTO identity_key
  FROM ritc.renewal_contact c JOIN ritc.member m ON (m.household_id,m.member_id)=(c.household_id,c.purchaser_id)
- WHERE c.id=enrollment AND NOT c.sandbox_only AND m.issuer=expected_issuer AND m.kind='adult' AND m.state='active' AND m.erased_at IS NULL;
+ WHERE c.id=enrollment AND NOT c.sandbox_only AND NOT c.address_failed AND m.issuer=expected_issuer AND m.kind='adult' AND m.state='active' AND m.erased_at IS NULL;
  IF NOT pg_try_advisory_xact_lock_shared(hashtextextended('ritc.renewal_restore_fence',0)) THEN RETURN; END IF;
  IF identity_key IS NULL OR NOT pg_try_advisory_xact_lock_shared(hashtextextended(identity_key,0)) THEN RETURN; END IF;
- RETURN QUERY SELECT trim(u.email)::text,s.subscription
+ RETURN QUERY SELECT trim(u.email)::text,u.email_confirmed_at,s.subscription
  FROM ritc.renewal_contact c JOIN ritc.member m ON (m.household_id,m.member_id)=(c.household_id,c.purchaser_id)
  JOIN auth.users u ON u.id::text=m.subject
  JOIN ritc.billing_state s ON (s.household_id,s.purchaser_id)=(c.household_id,c.purchaser_id)
  JOIN ritc.billing_binding b ON (b.household_id,b.purchaser_id)=(c.household_id,c.purchaser_id)
- WHERE c.id=enrollment AND NOT c.sandbox_only AND m.issuer=expected_issuer AND m.kind='adult' AND m.state='active' AND m.erased_at IS NULL
+ WHERE c.id=enrollment AND NOT c.sandbox_only AND NOT c.address_failed AND m.issuer=expected_issuer AND m.kind='adult' AND m.state='active' AND m.erased_at IS NULL
  AND NOT ritc.identity_blocked(m.issuer,m.subject) AND u.email_confirmed_at IS NOT NULL
  AND c.address_digest=sha256(convert_to(c.id::text||E'\n'||lower(trim(u.email)),'UTF8'))
  AND b.environment='Production' AND b.original_transaction_id=c.original_id
@@ -80,7 +80,10 @@ CREATE FUNCTION ritc.bind_renewal_contact() RETURNS trigger LANGUAGE plpgsql SEC
 SET search_path=pg_catalog SET row_security=off AS $$
 BEGIN
  IF NEW.subscription->>'environment'='Production' AND NEW.subscription->>'mxAnnual'='true' AND NEW.subscription->>'status'='active' THEN
-  UPDATE ritc.renewal_contact SET original_id=NEW.subscription->>'originalTransactionID',next_check=now()
+  UPDATE ritc.renewal_contact c SET original_id=NEW.subscription->>'originalTransactionID',
+   priority_at=to_timestamp((NEW.subscription->>'expiresAt')::double precision/1000),
+   next_check=CASE WHEN EXISTS(SELECT 1 FROM ritc.renewal_dispatch d WHERE d.contact_id=c.id)
+     THEN now() ELSE greatest(now(),to_timestamp((NEW.subscription->>'expiresAt')::double precision/1000)-interval '7 days') END
   WHERE household_id=NEW.household_id AND purchaser_id=NEW.purchaser_id AND NOT sandbox_only
     AND ((original_id IS NULL AND enrolled_at>now()-interval '30 days') OR original_id=NEW.subscription->>'originalTransactionID');
  ELSE
@@ -181,3 +184,52 @@ BEGIN
 END $$;
 REVOKE ALL ON FUNCTION ritc.renewal_housekeeping(boolean) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION ritc.renewal_housekeeping(boolean) TO ritc_worker;
+
+
+-- Signed current status can move a renewal independently of the prior expiration estimate.
+CREATE FUNCTION ritc.schedule_verified_renewal(h uuid,p uuid,series text,version_ms bigint,due_ms bigint) RETURNS void
+ LANGUAGE sql SECURITY DEFINER SET search_path=pg_catalog SET row_security=off AS $$
+ UPDATE ritc.renewal_contact c SET priority_at=to_timestamp(due_ms::double precision/1000),
+  next_check=CASE WHEN EXISTS(SELECT FROM ritc.renewal_dispatch d WHERE d.contact_id=c.id)
+   THEN now() ELSE greatest(now(),to_timestamp(due_ms::double precision/1000)-interval '7 days') END
+ FROM ritc.billing_state b WHERE h::text=current_setting('app.household_id',true)
+ AND (c.household_id,c.purchaser_id,c.original_id)=(h,p,series) AND NOT c.sandbox_only
+ AND (b.household_id,b.purchaser_id)=(h,p)
+ AND (b.subscription->>'signedAt')::bigint=version_ms AND b.subscription->>'originalTransactionID'=series
+ AND b.subscription->>'environment'='Production' AND b.subscription->>'mxAnnual'='true'
+ AND b.subscription->>'status'='active'
+$$;
+REVOKE ALL ON FUNCTION ritc.schedule_verified_renewal(uuid,uuid,text,bigint,bigint) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION ritc.schedule_verified_renewal(uuid,uuid,text,bigint,bigint) TO ritc_app;
+
+-- A signed provider status can arrive before the HTTP send acknowledgment commits.
+-- The per-dispatch opaque tag also reconciles an accepted email after a response timeout.
+CREATE FUNCTION ritc.apply_renewal_delivery(dispatch uuid,provider uuid,outcome text) RETURNS void
+ LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog SET row_security=off AS $$
+DECLARE enrollment uuid;
+BEGIN
+ IF outcome NOT IN ('accepted','delivered','failed') THEN RETURN; END IF;
+ UPDATE ritc.renewal_dispatch SET state=outcome,provider_id=provider WHERE id=dispatch AND purge_at>now()
+  AND (provider_id IS NULL OR provider_id=provider)
+  AND ((state='attempted') OR (state='accepted' AND outcome IN ('failed','delivered')) OR (state='delivered' AND outcome='failed'))
+  RETURNING contact_id INTO enrollment;
+ IF FOUND THEN UPDATE ritc.renewal_contact SET next_check=now(),attention=(outcome='failed'),address_failed=address_failed OR outcome='failed' WHERE id=enrollment; END IF;
+END $$;
+REVOKE ALL ON FUNCTION ritc.apply_renewal_delivery(uuid,uuid,text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION ritc.apply_renewal_delivery(uuid,uuid,text) TO ritc_app;
+
+-- A shopper preflight uses recent healthy worker operation without receiving an account-management key.
+CREATE TABLE ritc.renewal_worker_health(singleton boolean PRIMARY KEY CHECK(singleton),ready boolean NOT NULL,checked_at timestamptz NOT NULL);
+ALTER TABLE ritc.renewal_worker_health ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ritc.renewal_worker_health FORCE ROW LEVEL SECURITY;
+REVOKE ALL ON ritc.renewal_worker_health FROM PUBLIC,ritc_app,ritc_worker;
+CREATE FUNCTION ritc.renewal_worker_result(healthy boolean) RETURNS void LANGUAGE sql SECURITY DEFINER SET search_path=pg_catalog SET row_security=off AS $$
+ INSERT INTO ritc.renewal_worker_health VALUES(true,healthy,clock_timestamp())
+ ON CONFLICT(singleton) DO UPDATE SET ready=excluded.ready,checked_at=excluded.checked_at
+$$;
+CREATE FUNCTION ritc.renewal_delivery_ready() RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path=pg_catalog SET row_security=off AS $$
+ SELECT EXISTS(SELECT FROM ritc.renewal_worker_health WHERE ready AND checked_at>now()-interval '36 hours')
+$$;
+REVOKE ALL ON FUNCTION ritc.renewal_worker_result(boolean),ritc.renewal_delivery_ready() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION ritc.renewal_worker_result(boolean) TO ritc_worker;
+GRANT EXECUTE ON FUNCTION ritc.renewal_delivery_ready() TO ritc_app;
