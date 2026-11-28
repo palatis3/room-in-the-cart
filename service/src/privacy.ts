@@ -257,12 +257,16 @@ export class PrivacyMaintenance {
      // At most 100 target profiles per leased run. Record each committed step
      // before taking another step or contacting the account provider.
      for(let n=0;n<100&&!erased;n++){
+      let targetRemaining=true;
       if(reserve){
        const required=await needs(job.job_id,lease);
        if(!required){result.leaseLost++;continue jobs;}
-       if(required.target_remaining&&!await capacity(job.job_id,['target_erased']))continue jobs;
+       targetRemaining=required.target_remaining;
+       if(targetRemaining&&!await capacity(job.job_id,['target_erased']))continue jobs;
       }
       erased=(await privacyQuery(this.pool,call,'SELECT ritc.privacy_erase_target($1,$2) AS erased',[job.job_id,lease])).rows[0].erased;
+      // Only a step with a remaining target emits a new journal observation.
+      if(targetRemaining&&deferAcknowledgement())return result;
       if(!await acknowledge(job.job_id))return result;
      }
      if(erased){

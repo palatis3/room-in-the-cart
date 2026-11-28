@@ -17,7 +17,7 @@ async function slowWorker(t,{workerRole=true,sourceMs=720,sqlMs=45,providerMs=70
   const job=acceptance.payload.jobId,subject=randomUUID(),receiptToken='R'.repeat(43);
   const initialLogLength=state.logs.length;
   const startedAt=Date.now();
-  let now=startedAt,erasureSteps=0,providerCalls=0,jobFinished=false,reconciliationLease=null;
+  let now=startedAt,erasureSteps=0,providerCalls=0,jobState='pending',lease=null,leaseUntil=0;
   t.mock.method(Date,'now',()=>now);
   // A protected source round trip takes hundreds of milliseconds, while the
   // authority is closer. Use a virtual clock so deadline boundaries are stable.
@@ -32,7 +32,9 @@ async function slowWorker(t,{workerRole=true,sourceMs=720,sqlMs=45,providerMs=70
     return true;
   };
   const row=(value)=>({rows:[value]});
-  const completionAcknowledged=()=>state.acknowledgements.some(entry=>entry.identity.eventId===completion.eventId);
+  const acknowledged=(event)=>state.acknowledgements.some(entry=>entry.identity.eventId===event.eventId);
+  const unacknowledged=()=>erasureSteps>0&&!acknowledged(target)||jobState==='complete'&&!acknowledged(completion);
+  const claim=(value)=>{lease=value;leaseUntil=now+30_000;};
   const pool={async connect(){return {
     release(){},
     async query(sql,args=[]){
@@ -40,26 +42,33 @@ async function slowWorker(t,{workerRole=true,sourceMs=720,sqlMs=45,providerMs=70
       if(sql==='BEGIN'||sql==='COMMIT'||sql==='ROLLBACK'||sql.startsWith('SET LOCAL '))return {rows:[]};
       if(sql.startsWith('SELECT r.rolsuper'))return row({worker:workerRole,application:!workerRole});
       if(sql.startsWith('SELECT ritc.privacy_claim_reconciliation(')){
-        if(!jobFinished||completionAcknowledged())return row({job_id:null});
-        assert.equal(reconciliationLease,null);
-        reconciliationLease=args[0];
+        if(leaseUntil>now||!unacknowledged())return row({job_id:null});
+        if(jobState==='processing')jobState='pending';
+        claim(args[0]);
         return row({job_id:job});
       }
       if(sql.startsWith('SELECT ritc.privacy_release_reconciliation(')){
-        assert.deepEqual(args,[job,reconciliationLease]);
-        reconciliationLease=null;
+        assert.deepEqual(args,[job,lease]);
+        assert.notEqual(jobState,'processing');
+        lease=null;leaseUntil=0;
         return {rows:[]};
       }
       if(sql.startsWith('SELECT * FROM ritc.privacy_status_for_journal(')){
         if(args[0]!==job||args[1]!==tokenHash(receiptToken))return {rows:[]};
-        const complete=jobFinished&&completionAcknowledged();
+        const complete=jobState==='complete'&&!unacknowledged();
         return row({archived:false,value:{status:complete?'complete':'pending',providerAccountDeleted:complete}});
       }
       if(sql.startsWith('SELECT * FROM ritc.privacy_cleanup('))return row({receipts_cleared:0,jobs_purged:0});
-      if(sql.startsWith('SELECT * FROM ritc.privacy_claim('))return jobFinished?{rows:[]}:row({job_id:job,issuer:'https://fixture.invalid',subject,app_erased:false});
+      if(sql.startsWith('SELECT * FROM ritc.privacy_claim(')){
+        if(jobState==='complete'||leaseUntil>now||unacknowledged())return {rows:[]};
+        jobState='processing';
+        claim(args[0]);
+        return row({job_id:job,issuer:'https://fixture.invalid',subject,app_erased:erasureSteps===2});
+      }
       if(sql.startsWith('SELECT * FROM ritc.privacy_worker_journal_needs('))return row({target_remaining:erasureSteps===0,pending_needed:true});
       if(sql.startsWith('SELECT ritc.privacy_erase_target(')){
-        assert.equal(args[0],job);
+        assert.deepEqual(args,[job,lease]);
+        assert.equal(jobState,'processing');
         erasureSteps++;
         if(erasureSteps===1){state.commit(target);return row({erased:false});}
         assert.equal(erasureSteps,2);
@@ -70,7 +79,8 @@ async function slowWorker(t,{workerRole=true,sourceMs=720,sqlMs=45,providerMs=70
         assert.equal(args[0],job);
         assert.equal(args[2],true);
         assert.equal(providerCalls,1);
-        jobFinished=true;
+        jobState='complete';
+        lease=null;leaseUntil=0;
         state.commit(completion);
         return row({committed:true});
       }
@@ -91,7 +101,8 @@ async function slowWorker(t,{workerRole=true,sourceMs=720,sqlMs=45,providerMs=70
   const journal=()=>state.adapter({clock:{now:()=>now}}).port;
   const worker=()=>new PrivacyMaintenance(pool,{provider,journal:journal()});
   const status=(token=receiptToken)=>new PrivacyService({pool},{journal:journal()}).status(job,token);
-  return {worker:worker(),newWorker:worker,status,state,target,completion,read(){return {erasureSteps,providerCalls,jobFinished,elapsed:now-startedAt,log:state.logs.slice(initialLogLength)};}};
+  return {worker:worker(),newWorker:worker,status,state,target,completion,
+    advance(ms){now+=ms;},read(){return {erasureSteps,providerCalls,jobFinished:jobState==='complete',elapsed:now-startedAt,log:state.logs.slice(initialLogLength)};}};
 }
 
 test('one ordinary worker completes its signed deletion chain with a full final acknowledgement window',async t=>{
@@ -110,9 +121,14 @@ test('one ordinary worker completes its signed deletion chain with a full final 
   assert.equal(observed.log.filter(phase=>phase==='enter:sourceAcceptance').length,3);
 });
 
-test('a shorter caller deadline still leaves uncertain progress blocked before provider deletion',async t=>{
+test('an in-flight deadline still leaves uncertain progress blocked before provider deletion',async t=>{
   const run=await slowWorker(t);
-  await assert.rejects(run.worker.run({batchSize:1,timeBudgetMs:5_200}));
+  const origin=run.state.hooks.sourceOrigin;
+  run.state.hooks.sourceOrigin=(context)=>{
+    if(run.state.uncertainCount())run.advance(20_000);
+    else origin(context);
+  };
+  await assert.rejects(run.worker.run({batchSize:1,timeBudgetMs:20_000}));
   assert.equal(run.state.uncertainCount(),1);
   assert.equal(run.state.receiptFor(run.target.eventId,'commit'),undefined);
   assert.equal(run.state.acknowledgements.length,1);
@@ -171,5 +187,29 @@ test('slow source completion stays pending without a claim and the next worker a
   assert.equal(run.read().providerCalls,1);
   assert.equal(run.state.uncertainCount(),0);
   assert.deepEqual(run.state.acknowledgements.slice(1).map(entry=>entry.identity.eventId),[run.target.eventId,run.completion.eventId]);
+  assert.deepEqual(await run.status(),{status:'complete',providerAccountDeleted:true});
+});
+
+
+test('a target committed near the outer deadline waits for its processing lease to expire before reconciliation',async t=>{
+  const run=await slowWorker(t,{sourceMs:400,sqlMs:100});
+  const first=await run.worker.run({batchSize:1,timeBudgetMs:20_000,deadlineUnixMs:Date.now()+6_800});
+  assert.equal(first.journalDeferred,1);
+  assert.equal(run.read().erasureSteps,1);
+  assert.equal(run.read().providerCalls,0);
+  assert.equal(run.state.uncertainCount(),0);
+  assert.equal(run.state.receiptFor(run.target.eventId,'commit'),undefined);
+
+  const beforeExpiry=await run.newWorker().run({batchSize:1,timeBudgetMs:20_000});
+  assert.equal(beforeExpiry.completed,0);
+  assert.equal(run.read().providerCalls,0);
+  assert.equal(run.state.acknowledgements.length,1);
+  run.advance(30_000);
+  await run.newWorker().run({batchSize:1,timeBudgetMs:20_000});
+  assert.ok(run.state.receiptFor(run.target.eventId,'commit'));
+  assert.equal(run.state.acknowledgements.filter(entry=>entry.identity.eventId===run.target.eventId).length,1);
+  assert.equal(run.state.uncertainCount(),0);
+  await run.newWorker().run({batchSize:1,timeBudgetMs:20_000});
+  assert.equal(run.read().providerCalls,1);
   assert.deepEqual(await run.status(),{status:'complete',providerAccountDeleted:true});
 });
