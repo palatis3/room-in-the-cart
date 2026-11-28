@@ -2,6 +2,10 @@
 CREATE TABLE ritc.renewal_contact (
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(), household_id uuid NOT NULL, purchaser_id uuid NOT NULL,
  sandbox_only boolean NOT NULL DEFAULT false, address_failed boolean NOT NULL DEFAULT false, address_digest bytea NOT NULL CHECK(octet_length(address_digest)=32),
+ -- Only fresh opt-in after a verified terminal term may be used for its successor.
+ observed_purchase_ms bigint, observed_signed_ms bigint,
+ CHECK((observed_purchase_ms IS NULL)=(observed_signed_ms IS NULL)),
+ after_term text CHECK(after_term ~ '^[0-9]{1,64}$'),
  original_id text CHECK(original_id ~ '^[0-9]{1,64}$'), enrolled_at timestamptz NOT NULL DEFAULT now(),
  priority_at timestamptz NOT NULL DEFAULT '9999-12-31', next_check timestamptz NOT NULL DEFAULT now(), attention boolean NOT NULL DEFAULT false,
  UNIQUE(household_id,purchaser_id),
@@ -32,7 +36,7 @@ GRANT SELECT,INSERT,DELETE ON ritc.renewal_contact TO ritc_app;
 -- A row lock needs an UPDATE grant. Actual binding and expiry changes are owner-triggered.
 GRANT UPDATE(attention) ON ritc.renewal_contact TO ritc_app;
 GRANT SELECT ON ritc.renewal_contact TO ritc_worker;
-GRANT UPDATE(next_check,attention) ON ritc.renewal_contact TO ritc_worker;
+GRANT UPDATE(next_check,attention,observed_purchase_ms,observed_signed_ms) ON ritc.renewal_contact TO ritc_worker;
 GRANT SELECT,INSERT ON ritc.renewal_dispatch TO ritc_worker;
 GRANT UPDATE(state,provider_id) ON ritc.renewal_dispatch TO ritc_worker;
 
@@ -80,15 +84,18 @@ CREATE FUNCTION ritc.bind_renewal_contact() RETURNS trigger LANGUAGE plpgsql SEC
 SET search_path=pg_catalog SET row_security=off AS $$
 BEGIN
  IF NEW.subscription->>'environment'='Production' AND NEW.subscription->>'mxAnnual'='true' AND NEW.subscription->>'status'='active' THEN
-  UPDATE ritc.renewal_contact c SET original_id=NEW.subscription->>'originalTransactionID',
+  UPDATE ritc.renewal_contact c SET original_id=NEW.subscription->>'originalTransactionID',after_term=NULL,
    priority_at=to_timestamp((NEW.subscription->>'expiresAt')::double precision/1000),
    next_check=CASE WHEN EXISTS(SELECT 1 FROM ritc.renewal_dispatch d WHERE d.contact_id=c.id)
      THEN now() ELSE greatest(now(),to_timestamp((NEW.subscription->>'expiresAt')::double precision/1000)-interval '7 days') END
   WHERE household_id=NEW.household_id AND purchaser_id=NEW.purchaser_id AND NOT sandbox_only
-    AND ((original_id IS NULL AND enrolled_at>now()-interval '30 days') OR original_id=NEW.subscription->>'originalTransactionID');
+    AND ((original_id IS NULL AND enrolled_at>now()-interval '30 days'
+      AND after_term IS DISTINCT FROM NEW.subscription->>'transactionID') OR original_id=NEW.subscription->>'originalTransactionID');
  ELSE
   DELETE FROM ritc.renewal_contact WHERE household_id=NEW.household_id AND purchaser_id=NEW.purchaser_id
-   AND NOT sandbox_only AND original_id IS NOT NULL;
+   AND NOT sandbox_only AND original_id IS NOT NULL
+   AND (observed_purchase_ms IS NULL OR (observed_purchase_ms<=(NEW.subscription->>'purchasedAt')::bigint
+     AND observed_signed_ms<=(NEW.subscription->>'signedAt')::bigint));
  END IF;
  RETURN NEW;
 END $$;
@@ -176,8 +183,9 @@ BEGIN
   DELETE FROM ritc.renewal_contact c WHERE c.original_id IS NOT NULL AND NOT EXISTS(
    SELECT 1 FROM ritc.billing_state b WHERE (b.household_id,b.purchaser_id)=(c.household_id,c.purchaser_id)
    AND b.subscription->>'originalTransactionID'=c.original_id AND b.subscription->>'environment'='Production'
-   AND b.subscription->>'mxAnnual'='true' AND b.subscription->>'status'='active'
-   AND to_timestamp((b.subscription->>'expiresAt')::double precision/1000)>now());
+   AND b.subscription->>'mxAnnual'='true' AND (b.subscription->>'status'='active'
+    OR (b.subscription->>'purchasedAt')::bigint<c.observed_purchase_ms
+    OR (b.subscription->>'signedAt')::bigint<c.observed_signed_ms));
   DELETE FROM ritc.renewal_route_loss WHERE day<=(now() AT TIME ZONE 'UTC')::date-30;
  END IF;
  RETURN (SELECT coalesce(sum(count),0) FROM ritc.renewal_route_loss WHERE day=(now() AT TIME ZONE 'UTC')::date);
@@ -185,6 +193,32 @@ END $$;
 REVOKE ALL ON FUNCTION ritc.renewal_housekeeping(boolean) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION ritc.renewal_housekeeping(boolean) TO ritc_worker;
 
+
+-- A delayed store notification can leave the old expiry in billing_state after Apple
+-- has already renewed the same series. Only a fresh, non-regressing terminal lookup
+-- may retire that still-bound contact. No entitlement, seat or provider address changes.
+CREATE FUNCTION ritc.retire_confirmed_renewal_contact(enrollment uuid,series text,account uuid,product text,
+  purchased_ms bigint,signed_ms bigint,terminal text) RETURNS boolean
+ LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog SET row_security=off AS $$
+BEGIN
+ -- Serialize with the normal billing update before checking its version in the deletion.
+ PERFORM b.household_id FROM ritc.billing_state b JOIN ritc.renewal_contact c
+   ON (c.household_id,c.purchaser_id)=(b.household_id,b.purchaser_id)
+   WHERE c.id=enrollment AND c.original_id=series FOR SHARE OF b;
+  DELETE FROM ritc.renewal_contact c USING ritc.billing_state b,ritc.billing_binding binding
+  WHERE c.id=enrollment AND NOT c.sandbox_only AND c.original_id=series AND terminal IN ('expired','revoked')
+   AND (c.household_id,c.purchaser_id)=(b.household_id,b.purchaser_id)
+   AND (binding.household_id,binding.purchaser_id,binding.app_account_token)=(c.household_id,c.purchaser_id,account)
+   AND binding.environment='Production' AND binding.original_transaction_id=series
+   AND b.subscription->>'environment'='Production' AND b.subscription->>'originalTransactionID'=series
+   AND b.subscription->>'appAccountToken'=account::text AND b.subscription->>'productID'=product
+   AND (b.subscription->>'purchasedAt')::bigint<=purchased_ms AND (b.subscription->>'signedAt')::bigint<=signed_ms
+   AND (c.observed_purchase_ms IS NULL OR (c.observed_purchase_ms<=purchased_ms AND c.observed_signed_ms<=signed_ms));
+ RETURN FOUND;
+END
+$$;
+REVOKE ALL ON FUNCTION ritc.retire_confirmed_renewal_contact(uuid,text,uuid,text,bigint,bigint,text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION ritc.retire_confirmed_renewal_contact(uuid,text,uuid,text,bigint,bigint,text) TO ritc_worker;
 
 -- Signed current status can move a renewal independently of the prior expiration estimate.
 CREATE FUNCTION ritc.schedule_verified_renewal(h uuid,p uuid,series text,version_ms bigint,due_ms bigint) RETURNS void

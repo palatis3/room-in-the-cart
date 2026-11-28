@@ -21,14 +21,17 @@ async function transaction<T>(pool:Database,work:(db:Transaction)=>Promise<T>) {
 }
 
 async function authorized(db:Transaction,c:Enrollment,fresh:VerifiedSubscription,issuer:string):Promise<Ready|null> {
-  const live=await db.query('SELECT id FROM ritc.renewal_contact WHERE id=$1 AND original_id=$2 FOR UPDATE',[c.id,c.original_id]);
-  if(!live.rowCount)return null;
+  const live=(await db.query<{observed_purchase_ms:string|null;observed_signed_ms:string|null}>(
+    'SELECT observed_purchase_ms,observed_signed_ms FROM ritc.renewal_contact WHERE id=$1 AND original_id=$2 FOR UPDATE',[c.id,c.original_id])).rows[0];
+  if(!live||fresh.purchasedAt<Number(live.observed_purchase_ms)||fresh.signedAt<Number(live.observed_signed_ms))return null;
   const record=(await db.query<{destination:string;verified_since:Date;subscription:VerifiedSubscription}>(
     'SELECT * FROM ritc.renewal_worker_contact($1,$2)',[c.id,issuer])).rows[0];
   if(!record||fresh.environment!=='Production'||fresh.originalTransactionID!==c.original_id||
     fresh.appAccountToken!==record.subscription.appAccountToken||fresh.productID!==record.subscription.productID||
     fresh.purchasedAt<record.subscription.purchasedAt||fresh.signedAt<record.subscription.signedAt||
     (fresh.signedAt===record.subscription.signedAt&&fresh.status==='active'&&record.subscription.status!=='active'))return null;
+  if(fresh.purchasedAt!==Number(live.observed_purchase_ms)||fresh.signedAt!==Number(live.observed_signed_ms))
+    await db.query('UPDATE ritc.renewal_contact SET observed_purchase_ms=$2,observed_signed_ms=$3 WHERE id=$1',[c.id,fresh.purchasedAt,fresh.signedAt]);
   const previous=(await db.query<Dispatch>(`SELECT * FROM ritc.renewal_dispatch WHERE household_id=$1 AND purchaser_id=$2
     AND original_id=$3 AND term=$4 ORDER BY edition DESC LIMIT 1 FOR UPDATE`,
     [c.household_id,c.purchaser_id,c.original_id,fresh.transactionID])).rows[0];
@@ -94,6 +97,13 @@ async function handle(pool:Database,c:Enrollment,gateway:AppleBillingGateway,pro
   const fresh=await Promise.race([gateway.current(c.original_id),deadline]).finally(()=>limit.removeEventListener('abort',interrupted));
   signal.throwIfAborted();
   lookup.throwIfAborted();
+  if(fresh.environment==='Production'&&fresh.originalTransactionID===c.original_id&&
+     (fresh.status==='revoked'||fresh.status==='expired')){
+    const result=await pool.query('SELECT ritc.retire_confirmed_renewal_contact($1,$2,$3,$4,$5,$6,$7) AS retired',
+      [c.id,c.original_id,fresh.appAccountToken,fresh.productID,fresh.purchasedAt,fresh.signedAt,fresh.status]);
+    if(!result.rows[0]?.retired)throw Error('Renewal termination could not be reconciled');
+    return;
+  }
   const p=await plan(pool,c,fresh,issuer);
   if(p.kind==='wait')return;
   try{
