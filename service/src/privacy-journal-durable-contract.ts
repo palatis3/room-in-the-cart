@@ -176,6 +176,8 @@ export interface DurablePrivacyJournalPort {
  readonly lineage:string;
  beforeCommit(candidate:PrivacyJournalEvent,call:JournalCall):Promise<void>;
  afterCommit(eventId:string,call:JournalCall):Promise<void>;
+ /** Inspect the exact accepted authorization without claiming or acknowledging an event. */
+ observeJob(jobId:string,call:JournalCall):Promise<boolean>;
  acknowledgeJob(jobId:string,call:JournalCall):Promise<void>;
  reserveWorkerCapacity(jobId:string,kinds:readonly WorkerJournalKind[],call:JournalCall):Promise<boolean>;
 }
