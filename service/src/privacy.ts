@@ -10,6 +10,8 @@ import type {PrivacyJournalPort} from './privacy-journal.js';
 import type {DurablePrivacyJournalPort,JournalCall,WorkerJournalKind} from './privacy-journal-durable-contract.js';
 import {JournalWriterBusy} from './privacy-journal-durable-contract.js';
 import {PrivacyCall,privacyPhase,withPrivacyClient} from './privacy-call.js';
+
+const WORKER_ACKNOWLEDGEMENT_BUDGET_MS=10_000;
 const id=z.string().uuid(),secret=z.string().regex(/^[A-Za-z0-9_-]{43}$/);
 const shopChoice=z.discriminatedUnion('action',[
  z.object({shopId:id,revision:z.number().int().positive(),authorityEpoch:z.number().int().positive(),action:z.literal('close')}).strict(),
@@ -201,7 +203,8 @@ export class PrivacyMaintenance {
    const {call}=scope;
    const result={completed:0,retryScheduled:0,leaseLost:0,capacityDeferred:0,issuerMismatch:0,journalDeferred:0,receiptsCleared:0,jobsPurged:0};
    const acknowledge=async(jobId:string)=>{
-    try{await privacyPhase(call,phase=>journal.acknowledgeJob(jobId,phase));return true;}
+    // One observation traverses the protected source and independent authority.
+    try{await privacyPhase(call,phase=>journal.acknowledgeJob(jobId,phase),WORKER_ACKNOWLEDGEMENT_BUDGET_MS);return true;}
     catch(error){
      if(!(error instanceof JournalWriterBusy))throw error;
      result.journalDeferred++;
@@ -252,7 +255,8 @@ export class PrivacyMaintenance {
       if(!await acknowledge(job.job_id))return result;
      }
      if(erased){
-      if(!await acknowledge(job.job_id))return result;
+      // The loop acknowledged its last step. A resumed job skipped that loop.
+      if(job.app_erased&&!await acknowledge(job.job_id))return result;
       if(!provider)failure='provider_configuration';
       else{
        if(reserve){

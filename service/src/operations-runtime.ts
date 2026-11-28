@@ -85,7 +85,7 @@ export function createOperationsRuntime(environment:NodeJS.ProcessEnv=process.en
    const privacyJobProcessingEnabled=privacyJournal.state==='ready';
    signal.throwIfAborted();
    const options={batchSize:OPERATIONS_BATCH_SIZE,signal};
-   const deletionResult=mode==='run'&&privacyJobProcessingEnabled?await privacy.run({...options,timeBudgetMs:8000}):null;
+   const deletionResult=mode==='run'&&privacyJobProcessingEnabled?await privacy.run({...options,timeBudgetMs:20_000}):null;
    const privacyResult=mode==='run'?(deletionResult??await privacy.cleanup(options)):null;
    const privacyAttention=deletionResult&&(deletionResult.capacityDeferred||deletionResult.journalDeferred||deletionResult.issuerMismatch||deletionResult.leaseLost);
    signal.throwIfAborted();
