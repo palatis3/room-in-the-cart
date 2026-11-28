@@ -90,13 +90,14 @@ test('an aborted caller or an expired OIDC exchange cannot dispatch a source ope
 });
 
 
-test('application and operations compose a scoped gateway source and compare their own database binding',async()=>{
+test('application and operations select their own gateway bearer from a shared deployment and verify the source binding',async()=>{
  const provider='https://provider.fixture.invalid',issuer=provider+'/auth/v1';
  const policy={receiptRetentionDays:1,erasureMarkerRetentionDays:2,verifiedBackupRetentionDays:1};
  const approvals={retentionApprovalReference:'fixture-retention',restoreApprovalReference:'fixture-restore'};
  const configurationId=privacyDeploymentConfigurationId({issuer,policy,...approvals});
  const f=fixture({configurationId});
- const gateway=await startSourceGateway({pins:f.pins,source:f.source});
+ let authorization;
+ const gateway=await startSourceGateway({pins:f.pins,source:f.source,observeRequest:req=>{authorization=req.headers.authorization;}});
  const environment={PRIVACY_DELETION_ACCEPTANCE:'true',PRIVACY_DELETION_PROCESSING:'true',SUPABASE_URL:provider,
   PRIVACY_SUPABASE_ADMIN_KEY:'sb_secret_'+randomBytes(32).toString('base64url'),JWT_ISSUER:issuer,
   JWT_AUDIENCE:'authenticated',JWT_JWKS_URL:issuer+'/.well-known/jwks.json'};
@@ -104,19 +105,32 @@ test('application and operations compose a scoped gateway source and compare the
   authorityPublicKey:f.authorityKeys.publicKeyPEM,authority:{origin:'https://authority.fixture.invalid',writerToken:randomBytes(32).toString('base64url')},
   retentionPolicy:policy,...approvals};
  const binding={...f.origin,...gateway.databaseBinding,sourceIdentity:f.pins.sourceIdentity,fenced:false};
+ const observer={mode:'gateway',origin:gateway.origin,ca:gateway.ca,...gateway.databaseBinding};
+ const credentials={applicationToken:gateway.applicationToken,operationsToken:gateway.operationsToken};
+ const serialized=changes=>JSON.stringify({...config,observer:{...observer,...changes}});
+ const sharedEnvironment={...environment,PRIVACY_DELETION_JSON:serialized(credentials)};
  try{
   for(const [role,token] of [['application',gateway.applicationToken],['operations',gateway.operationsToken]]){
-   const observer={mode:'gateway',origin:gateway.origin,ca:gateway.ca,token,...gateway.databaseBinding};
-   const create=(changes={},extra={})=>createPrivacyRuntime(pool,{...environment,...extra,
-    PRIVACY_DELETION_JSON:JSON.stringify({...config,observer:{...observer,...changes}})},role);
    const allowed=role==='application'?'ritc_app':'ritc_worker';
    const pool={async connect(){return {release(){},async query(_,args){assert.equal(args[0],allowed);
     return {rows:[{binding,permitted:true,rotation_schema:true}]};}};}};
-   const runtime=create();
-   try{await runtime.options.assertSource(call());}finally{await runtime.close();}
-   const mismatch=create({databaseOid:'44'});
+   const create=(changes,extra={})=>createPrivacyRuntime(pool,{...environment,...extra,PRIVACY_DELETION_JSON:serialized(changes)},role);
+   for(const runtime of [createPrivacyRuntime(pool,sharedEnvironment,role),create({token})]){
+    authorization=undefined;
+    try{
+     await runtime.options.assertSource(call());
+     assert.ok(authorization==='Bearer '+token,'the request uses the credential for the active role');
+    }finally{await runtime.close();}
+   }
+   const mismatch=create({...credentials,databaseOid:'44'});
    try{assert.equal((await mismatch.health(call())).state,'source_unavailable');}finally{await mismatch.close();}
-   for(const invalid of [create({connection:{}}),create({token:config.authority.writerToken}),create({origin:config.authority.origin}),create({}, {VERCEL:'1'})]){
+   const invalidInputs=[
+    {token,connection:{}},{token:config.authority.writerToken},{token,origin:config.authority.origin},
+    {applicationToken:gateway.applicationToken},{operationsToken:gateway.operationsToken},{...credentials,token},
+    {...credentials,applicationToken:gateway.operationsToken},
+    {...credentials,applicationToken:config.authority.writerToken},{...credentials,operationsToken:config.authority.writerToken},
+   ];
+   for(const invalid of [...invalidInputs.map(changes=>create(changes)),create(credentials,{VERCEL:'1'})]){
     try{assert.equal((await invalid.health(call())).state,'configuration_required');}
     finally{await invalid.close();}
    }
