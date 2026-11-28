@@ -31,6 +31,7 @@ import {call,canonical,digest,gate,progressEvent,zero} from './durable-independe
 
 if(!process.env.TEST_POSTGRES_BIN)throw Error('Set TEST_POSTGRES_BIN to the directory containing PostgreSQL executables');
 const bin=resolve(process.env.TEST_POSTGRES_BIN),dir=await mkdtemp('/tmp/ritc-jca-');
+const bootstrapRole='ritc_fixture_bootstrap';
 const data=join(dir,'data'),ownerRole='ritc_fixture_owner',objectRole='ritc_fixture_records',checkpointRole='ritc_fixture_checkpoint';
 const storeIdentity='fixture-record-store-v1';
 const environment={RITC_JOURNAL_CUSTODIAN_ID:randomUUID(),PATH:'/usr/bin:/bin',LANG:'C',LC_ALL:'C'};
@@ -62,7 +63,8 @@ before(async()=>{
   await writeFile(passwordFile,fixturePassword,{mode:0o600});
   localAuth.push('--auth-host=scram-sha-256','--pwfile',passwordFile);
  }
- pgTool('initdb',['-D',data,...localAuth,'-U',ownerRole,'--no-locale','-E','UTF8']);start();
+ pgTool('initdb',['-D',data,...localAuth,'-U',bootstrapRole,'--no-locale','-E','UTF8']);start();
+ await initializeOwner(pool(bootstrapRole));
  owner=pool(ownerRole);
  await owner.query(`CREATE ROLE ritc_checkpoint_runtime NOLOGIN; CREATE ROLE ritc_record_runtime NOLOGIN;
   CREATE ROLE ${objectRole} LOGIN PASSWORD '${fixturePassword}'; CREATE ROLE ${checkpointRole} LOGIN PASSWORD '${fixturePassword}';
@@ -126,6 +128,30 @@ async function startAuthority(configPath){
   return {origin:`https://127.0.0.1:${message.port}`,stop};
  }catch(error){await stop();throw error;}finally{reader.close();}
 }
+async function initializeOwner(bootstrap) {
+ try {
+  await bootstrap.query(`CREATE ROLE ${ownerRole} SUPERUSER BYPASSRLS LOGIN PASSWORD '${fixturePassword}'`);
+  await bootstrap.query('ALTER DATABASE postgres OWNER TO '+ownerRole);
+ } finally {await bootstrap.end();}
+}
+
+// Only the disposable cluster administrators change attributes. All checks and
+// retirement operations use the independently connected, ordinary schema owners.
+async function withOrdinaryOwners(source,work) {
+ const admins=[source.pool(bootstrapRole),pool(bootstrapRole)];
+ try {
+  for(const admin of admins)await admin.query('ALTER ROLE '+ownerRole+' NOSUPERUSER NOBYPASSRLS');
+  for(const db of [source.owner,owner])assert.deepEqual((await db.query(
+   'SELECT rolsuper,rolbypassrls FROM pg_roles WHERE rolname=session_user')).rows,[{rolsuper:false,rolbypassrls:false}]);
+  return await work();
+ } finally {
+  for(const admin of admins) {
+   try {await admin.query('ALTER ROLE '+ownerRole+' SUPERUSER BYPASSRLS');}
+   finally {await admin.end();}
+  }
+ }
+}
+
 async function sourceCluster(){
  const socket=await mkdtemp('/tmp/ritc-jcs-'),cluster=join(socket,'data');
  const runtime='ritc_fixture_app',worker='ritc_fixture_worker',observer='ritc_fixture_observer';
@@ -137,8 +163,9 @@ async function sourceCluster(){
   await rm(socket,{recursive:true,force:true});
  };
  try{
-  pgTool('initdb',['-D',cluster,'-A','trust','-U',ownerRole,'--no-locale','-E','UTF8']);
+  pgTool('initdb',['-D',cluster,'-A','trust','-U',bootstrapRole,'--no-locale','-E','UTF8']);
   pgTool('pg_ctl',['-D',cluster,'-l',join(socket,'postgres.log'),'-o',`-h '' -k ${socket} -p 55434 -c unix_socket_permissions=0700`,'-w','start']);started=true;
+  await initializeOwner(sourcePool(bootstrapRole));
   sourceOwner=sourcePool(ownerRole);
   await sourceOwner.query('CREATE SCHEMA auth; CREATE TABLE auth.users(id uuid PRIMARY KEY,email text,email_confirmed_at timestamptz); CREATE TABLE auth.sessions(id uuid PRIMARY KEY,user_id uuid NOT NULL,not_after timestamptz)');
   await migrate(`postgresql://${ownerRole}@localhost/postgres?host=${encodeURIComponent(socket)}&port=55434`);
@@ -1008,7 +1035,7 @@ for(const retirement of [false,true])test(retirement
    const repo=new HouseholdRepository(runtime,{allowChildNetwork:false,noticeVersion:'fixture',sessionStatus:new SupabaseSessionVerifier(issuer)});
    let providerCalls=0;
    const provider={assertAvailable:async()=>{},deleteAccount:async target=>{assert.equal(target,subject);providerCalls++;}};
-   const policy={receiptRetentionDays:1,erasureMarkerRetentionDays:2,verifiedBackupRetentionDays:1};
+   const policy={receiptRetentionDays:1,erasureMarkerRetentionDays:retirement?90:2,verifiedBackupRetentionDays:1};
    const privacy=new PrivacyService(repo,{provider,policy,journal});
    const identity={issuer,subject,sessionId,expiresAt:new Date(Date.now()+60_000),authenticatedAt:new Date(),authenticatedMethod:'otp'};
    await beforeAcceptance?.(privacy);
@@ -1307,25 +1334,54 @@ for(const retirement of [false,true])test(retirement
    assert.throws(()=>retired('retire'),/verification_failed/);
    assert.ok((await source.owner.query('SELECT FROM ritc.privacy_journal_outbox WHERE lineage=$1',[r.f.pins.lineage])).rowCount);
    await writeFile(retirementPath,JSON.stringify({...setup,dumpPath:latestDump}),{mode:0o600});
-   // An authority failure following the source commit is retried without exposing
-   // or deleting the successor. The ephemeral failure trigger exists only here.
-   await owner.query("CREATE FUNCTION ritc_records.test_fail_retire() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'fixture interrupted'; END $$");
-   await owner.query('CREATE TRIGGER test_fail_retire BEFORE DELETE ON ritc_records.object FOR EACH ROW EXECUTE FUNCTION ritc_records.test_fail_retire()');
-   try {assert.throws(()=>retired('retire'),/verification_failed/);}
-   finally {await owner.query('DROP TRIGGER test_fail_retire ON ritc_records.object');}
-   assert.equal((await source.owner.query('SELECT FROM ritc.privacy_journal_outbox WHERE lineage=$1',[r.f.pins.lineage])).rowCount,0);
-   assert.ok((await owner.query("SELECT FROM ritc_records.object WHERE split_part(object_key,'/',1)=$1",[r.scope])).rowCount);
-   const value=retired('retire');
-   assert.equal(value.sourceAndAuthorityRowsAbsent,true);
-   assert.equal(value.externalCopiesVerified,false);
-   assert.equal(retired('retire').authorityPreviouslyRetired,true);
-   assert.equal((await source.owner.query('SELECT FROM ritc.privacy_job WHERE job_id=$1',[firstJob.jobId])).rowCount,0);
-   assert.equal((await source.owner.query('SELECT FROM ritc.privacy_job WHERE job_id=$1',[secondJob.jobId])).rowCount,1);
-   assert.deepEqual((await source.owner.query('SELECT count(*)::int AS count FROM ritc.privacy_journal_outbox WHERE lineage=$1',[next.pins.lineage])).rows,surviving.rows);
-   assert.equal((await owner.query("SELECT FROM ritc_records.object WHERE split_part(object_key,'/',1)=$1",[r.scope])).rowCount,0);
-   const late=first.bytes.subarray(0,first.bytes.indexOf(10)+1);
-   await assert.rejects(owner.query('INSERT INTO ritc_records.object VALUES($1,$2,$3,$4)',
-    [r.scope+'/1/'+zero,randomUUID(),zero,late]),/scope is absent or fenced/);
+   const admissionPath=join(output,'backup-admission.json');
+   await writeFile(admissionPath,JSON.stringify({source:sourceEndpoint,checkpoint,expectedSourceIdentity:r.f.pins.sourceIdentity}),{mode:0o600});
+   environment.RITC_BACKUP_ADMISSION_CONFIG_SHA256=createHash('sha256').update(await readFile(admissionPath)).digest('hex');
+   const baselineAdmission=cli('journal-retirement.mjs','backup-admission',admissionPath);
+   assert.ok(baselineAdmission.openGenerations>=2);
+   const valueBefore=cli('journal-retirement.mjs','schedule',retirementPath).dates.rotateBy;
+   await withOrdinaryOwners(source,async()=>{
+    assert.equal(cli('journal-retirement.mjs','schedule',retirementPath).dates.rotateBy,valueBefore);
+    assert.equal(retired('plan').staleBackupsExpired,true);
+    const ordinaryAdmission=cli('journal-retirement.mjs','backup-admission',admissionPath);
+    assert.equal(ordinaryAdmission.openGenerations,baselineAdmission.openGenerations);
+    assert.equal(ordinaryAdmission.earliestReplayDeadline,baselineAdmission.earliestReplayDeadline);
+    // Keep the later independently stored identity marker deadline at day 90.
+    await source.owner.query("UPDATE ritc.privacy_job SET marker_until=completed_at+interval '20 days' WHERE job_id=$1",[firstJob.jobId]);
+    await owner.query('CREATE POLICY fixture_filtered ON ritc_checkpoint.replay_clock AS RESTRICTIVE USING(false)');
+    try {assert.throws(()=>cli('journal-retirement.mjs','backup-admission',admissionPath),/verification_failed/);}
+    finally {await owner.query('DROP POLICY fixture_filtered ON ritc_checkpoint.replay_clock');}
+    // An authority failure following the source commit is retried without exposing
+    // or deleting the successor. The ephemeral failure trigger exists only here.
+    await owner.query("CREATE FUNCTION ritc_records.test_fail_retire() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'fixture interrupted'; END $$");
+    await owner.query('CREATE TRIGGER test_fail_retire BEFORE DELETE ON ritc_records.object FOR EACH ROW EXECUTE FUNCTION ritc_records.test_fail_retire()');
+    try {assert.throws(()=>retired('retire'),/verification_failed/);}
+    finally {await owner.query('DROP TRIGGER test_fail_retire ON ritc_records.object');}
+    assert.equal((await source.owner.query('SELECT FROM ritc.privacy_journal_outbox WHERE lineage=$1',[r.f.pins.lineage])).rowCount,0);
+    assert.ok((await owner.query("SELECT FROM ritc_records.object WHERE split_part(object_key,'/',1)=$1",[r.scope])).rowCount);
+    const value=retired('retire');
+    assert.equal(value.sourceAndAuthorityRowsAbsent,true);
+    assert.equal(value.externalCopiesVerified,false);
+    assert.equal(retired('retire').authorityPreviouslyRetired,true);
+    assert.deepEqual((await source.owner.query(`SELECT receipt_hash=repeat('0',64) AND payload_digest=repeat('0',64) AS scrubbed,
+      marker_until>$2 AS marker_live FROM ritc.privacy_job WHERE job_id=$1`,[firstJob.jobId,new Date(future)])).rows,[{scrubbed:true,marker_live:true}]);
+    assert.equal((await source.owner.query('SELECT ritc.identity_blocked($1,$2) AS blocked',[issuer,firstActor.subject])).rows[0].blocked,true);
+    assert.equal((await source.owner.query('SELECT FROM ritc.privacy_target WHERE job_id=$1',[firstJob.jobId])).rowCount,0);
+    assert.equal((await source.owner.query('SELECT FROM ritc.privacy_job WHERE job_id=$1',[secondJob.jobId])).rowCount,1);
+    const cleanup=(await source.owner.query("SELECT pg_get_functiondef('ritc.privacy_cleanup(integer)'::regprocedure) AS body")).rows[0].body;
+    await source.owner.query(cleanup.replaceAll('clock_timestamp()',"(clock_timestamp()+interval '31 days')"));
+    await source.owner.query('SELECT * FROM ritc.privacy_cleanup(100)');
+    assert.equal((await source.owner.query('SELECT ritc.identity_blocked($1,$2) AS blocked',[issuer,firstActor.subject])).rows[0].blocked,true);
+    await source.owner.query(cleanup.replaceAll('clock_timestamp()',"(clock_timestamp()+interval '91 days')"));
+    await source.owner.query('SELECT * FROM ritc.privacy_cleanup(100)');
+    assert.equal((await source.owner.query('SELECT ritc.identity_blocked($1,$2) AS blocked',[issuer,firstActor.subject])).rows[0].blocked,false);
+
+    assert.deepEqual((await source.owner.query('SELECT count(*)::int AS count FROM ritc.privacy_journal_outbox WHERE lineage=$1',[next.pins.lineage])).rows,surviving.rows);
+    assert.equal((await owner.query("SELECT FROM ritc_records.object WHERE split_part(object_key,'/',1)=$1",[r.scope])).rowCount,0);
+    const late=first.bytes.subarray(0,first.bytes.indexOf(10)+1);
+    await assert.rejects(owner.query('INSERT INTO ritc_records.object VALUES($1,$2,$3,$4)',
+     [r.scope+'/1/'+zero,randomUUID(),zero,late]),/scope is absent or fenced/);
+   });
    return;
   }
   await source.close();sourceClosed=true;

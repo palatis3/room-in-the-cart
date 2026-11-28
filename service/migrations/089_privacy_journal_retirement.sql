@@ -1,5 +1,15 @@
 -- Only the owning recovery operator may retire a drained historical generation.
 -- Ordinary mutation of these three append-only tables remains forbidden.
+-- The recovery connection must see the complete scoped inventory even when its
+-- schema owner is an ordinary NOBYPASSRLS role. These policies grant no SQL
+-- privileges and apply only to each table's existing owner.
+DO $$ DECLARE t text; owner_name name; BEGIN
+ FOREACH t IN ARRAY ARRAY['privacy_job','privacy_target','identity_erasure','privacy_journal_origin',
+   'privacy_journal_outbox','privacy_journal_target','privacy_journal_ack','privacy_restore_run','privacy_restore_job'] LOOP
+  SELECT pg_get_userbyid(relowner) INTO STRICT owner_name FROM pg_class WHERE oid=format('ritc.%I',t)::regclass;
+  EXECUTE format('CREATE POLICY journal_retirement_owner ON ritc.%I TO %I USING(true) WITH CHECK(true)',t,owner_name);
+ END LOOP;
+END $$;
 CREATE TABLE ritc.privacy_source_replay_clock(lineage uuid PRIMARY KEY, original_capture timestamptz NOT NULL);
 ALTER TABLE ritc.privacy_source_replay_clock ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ritc.privacy_source_replay_clock FORCE ROW LEVEL SECURITY;
@@ -73,7 +83,7 @@ FOR EACH ROW EXECUTE FUNCTION ritc.privacy_journal_retirement_guard();
 
 CREATE FUNCTION ritc.privacy_retire_journal_source(generation uuid, seal_digest text, recovered_capture timestamptz)
 RETURNS bigint LANGUAGE plpgsql SECURITY INVOKER SET search_path=pg_catalog AS $$
-DECLARE rotated ritc.privacy_journal_rotation; removed bigint;
+DECLARE rotated ritc.privacy_journal_rotation; removed bigint; cutoff timestamptz:=clock_timestamp();
 BEGIN
  IF current_user<>session_user OR session_user<>pg_get_userbyid((SELECT relowner FROM pg_class
    WHERE oid='ritc.privacy_journal_outbox'::regclass)) OR pg_is_in_recovery() THEN
@@ -102,11 +112,17 @@ BEGIN
  END IF;
  IF EXISTS(SELECT FROM ritc.privacy_journal_outbox a JOIN ritc.privacy_journal_outbox b USING(job_id)
    WHERE a.lineage=generation AND b.lineage<>generation) THEN RAISE EXCEPTION 'job spans generations'; END IF;
- -- Retire the same completed operational records as normal cleanup, after the original
- -- receipt window and the last recoverable pre-rotation snapshot have both expired.
+ -- Detailed replay and the anti-resurrection marker have separate lifetimes.
+ -- Retiring a lineage clears expired receipt material and detailed targets. Keep
+ -- the minimal completed job/identity marker for normal cleanup at its own clock.
  DELETE FROM ritc.privacy_target t USING ritc.privacy_journal_outbox e WHERE e.lineage=generation AND e.job_id=t.job_id;
- DELETE FROM ritc.identity_erasure i USING ritc.privacy_journal_outbox e WHERE e.lineage=generation AND e.job_id=i.job_id;
- DELETE FROM ritc.privacy_job j USING ritc.privacy_journal_outbox e WHERE e.lineage=generation AND e.job_id=j.job_id;
+ UPDATE ritc.privacy_job j SET receipt_hash=repeat('0',64),payload_digest=repeat('0',64),
+   marker_until=greatest(j.marker_until,(SELECT max(i.retain_until) FROM ritc.identity_erasure i WHERE i.job_id=j.job_id))
+ WHERE EXISTS(SELECT FROM ritc.privacy_journal_outbox e WHERE e.lineage=generation AND e.job_id=j.job_id);
+ DELETE FROM ritc.identity_erasure i USING ritc.privacy_job j WHERE i.job_id=j.job_id AND j.marker_until<=cutoff
+   AND EXISTS(SELECT FROM ritc.privacy_journal_outbox e WHERE e.lineage=generation AND e.job_id=j.job_id);
+ DELETE FROM ritc.privacy_job j WHERE j.marker_until<=cutoff
+   AND EXISTS(SELECT FROM ritc.privacy_journal_outbox e WHERE e.lineage=generation AND e.job_id=j.job_id);
  PERFORM set_config('ritc.retiring_generation',generation::text,true);
  DELETE FROM ritc.privacy_journal_target t USING ritc.privacy_journal_outbox e WHERE e.lineage=generation AND e.event_id=t.event_id;
  DELETE FROM ritc.privacy_journal_ack a USING ritc.privacy_journal_outbox e WHERE e.lineage=generation AND e.event_id=a.event_id;
