@@ -25,10 +25,21 @@ import Foundation
         }
     }
 
-    func purchaseContext(householdID: String) async throws -> UUID {
+    func purchaseContext(householdID: String, checkoutStorefront: String? = nil) async throws -> UUID {
+        struct Checkout: Encodable { let storefront: String? }
         struct Response: Decodable { let appAccountToken: UUID }
-        let response: Response = try await request(path: "v1/households/\(try identifier(householdID))/billing/purchase-context", method: "POST", body: Data("{}".utf8))
+        let response: Response = try await request(path: "v1/households/\(try identifier(householdID))/billing/purchase-context", method: "POST",
+            body: JSONEncoder().encode(Checkout(storefront: checkoutStorefront)))
         return response.appAccountToken
+    }
+
+    func renewalNoticeContact(householdID: String, settingEnabledTo enabled: Bool?) async throws -> RenewalNoticeContact {
+        let path = "v1/households/\(try identifier(householdID))/billing/renewal-notice-contact"
+        if let enabled {
+            struct Consent: Encodable { let enabled: Bool }
+            return try await request(path: path, method: "PUT", body: JSONEncoder().encode(Consent(enabled: enabled)))
+        }
+        return try await request(path: path, method: "GET")
     }
 
     func submit(_ transaction: SignedMembershipTransaction, context: MembershipContext) async throws -> MembershipDeliveryReceipt {
@@ -80,6 +91,7 @@ import Foundation
         guard (200...299).contains(response.statusCode) else {
             let code = (try? JSONDecoder().decode(MembershipErrorEnvelope.self, from: data))?.error.code
             switch code {
+            case "renewal_notice_unavailable": throw MembershipFailure.unavailable
             case "purchase_already_bound": throw MembershipFailure.wrongHousehold
             case "purchase_context_not_purchaser": throw MembershipFailure.notPurchaser
             case "session_needed", "access_ended": throw MembershipFailure.signInRequired

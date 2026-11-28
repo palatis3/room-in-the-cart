@@ -99,6 +99,8 @@ import StoreKitTest
         let offerName = session.locale.language.languageCode?.identifier == "es" ? spanishOffer : "Household (local test)"
         try await assertAnnualOffer(country: "USA", currency: "USD", amount: 49.99, name: offerName)
 
+        let previousStore = StoreKitMembershipStorefront()
+        let previousOffer = try await previousStore.load(productID: productID)
         let offerLocale = session.locale
         let mexico = try XCTUnwrap(Bundle(for: Self.self).url(forResource: "HouseholdMexicoTesting", withExtension: "storekit"))
         session = try SKTestSession(contentsOf: mexico)
@@ -108,6 +110,13 @@ import StoreKitTest
         session.locale = offerLocale
         try await AppStore.sync()
         try await assertAnnualOffer(country: "MEX", currency: "MXN", amount: 499, name: offerName)
+        do {
+            _ = try await previousStore.purchase(appAccountToken: accountToken, quotedStorefront: previousOffer.storefrontCountryCode, sandboxOnly: false)
+            XCTFail("A US offer must be refreshed before the Mexican storefront can present a purchase.")
+        } catch {
+            XCTAssertEqual(error as? MembershipFailure, .unavailable)
+        }
+        XCTAssertTrue(session.allTransactions().isEmpty)
     }
 
     private func assertAnnualOffer(country: String, currency: String, amount: Decimal, name: String) async throws {
@@ -115,6 +124,7 @@ import StoreKitTest
             await Storefront.current?.countryCode == country
         }
         let offer = try await StoreKitMembershipStorefront().load(productID: productID)
+        XCTAssertEqual(offer.storefrontCountryCode, country)
         XCTAssertEqual(offer.productID, productID)
         XCTAssertEqual(offer.periodValue, 1)
         XCTAssertEqual(offer.periodUnit, .year)
@@ -560,7 +570,8 @@ import StoreKitTest
         let (storefront, model) = try await loadedModel()
         defer { model.stop() }
         try await session.setSimulatedError(.verification(.invalidSignature), forAPI: .verification)
-        let outcome = try await storefront.purchase(appAccountToken: accountToken)
+        let quotedStorefront = try XCTUnwrap(model.offer?.storefrontCountryCode)
+        let outcome = try await storefront.purchase(appAccountToken: accountToken, quotedStorefront: quotedStorefront, sandboxOnly: false)
         guard case .unverified = outcome else { return XCTFail("Simulated signature failure must remain unverified") }
         let failure = await model.receive(outcome)
         XCTAssertEqual(failure, .unverified)
@@ -692,10 +703,11 @@ import StoreKitTest
             defer { trace("storefront.load.end") }
             return try await base.load(productID: productID)
         }
-        func purchase(appAccountToken: UUID) async throws -> MembershipPurchaseOutcome {
+        func isVerifiedSandboxApp() async -> Bool { await base.isVerifiedSandboxApp() }
+        func purchase(appAccountToken: UUID, quotedStorefront: String, sandboxOnly: Bool) async throws -> MembershipPurchaseOutcome {
             trace("storefront.purchase.begin")
             defer { trace("storefront.purchase.end") }
-            return try await base.purchase(appAccountToken: appAccountToken)
+            return try await base.purchase(appAccountToken: appAccountToken, quotedStorefront: quotedStorefront, sandboxOnly: sandboxOnly)
         }
         func currentTransactions() async -> [MembershipPurchaseOutcome] {
             trace("storefront.current.begin")
@@ -788,7 +800,8 @@ import StoreKitTest
 // StoreKit supplies real local transactions while the household delivery service is unavailable.
 @MainActor private struct LocalPurchaseContext: MembershipEntitlementService {
     let accountToken: UUID
-    func purchaseContext(householdID: String) async throws -> UUID { accountToken }
+    func renewalNoticeContact(householdID: String, settingEnabledTo enabled: Bool?) async throws -> RenewalNoticeContact { throw MembershipFailure.notConfigured }
+    func purchaseContext(householdID: String, checkoutStorefront: String?) async throws -> UUID { accountToken }
     func submit(_ transaction: SignedMembershipTransaction, context: MembershipContext) async throws -> MembershipDeliveryReceipt { throw MembershipFailure.notConfigured }
     func fetch(context: MembershipContext) async throws -> MembershipSnapshot { throw MembershipFailure.notConfigured }
     func seatCandidates(context: MembershipContext) async throws -> [MembershipSeat] { throw MembershipFailure.notConfigured }

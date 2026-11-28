@@ -221,7 +221,7 @@ enum MembershipSessionEvent: Equatable { case projection, identity, lock }
         let service = try HTTPMembershipEntitlementService(baseURL: session.serviceURL,
             deviceToken: credentials.deviceToken, token: credentials.accessToken)
         let token: UUID?
-        do { token = try await service.purchaseContext(householdID: session.householdID) }
+        do { token = try await service.purchaseContext(householdID: session.householdID, checkoutStorefront: nil) }
         catch MembershipFailure.notPurchaser { token = nil }
         let context = MembershipContext(purchaserID: session.memberID, purchaserName: session.accountName,
             householdID: session.householdID, householdName: session.householdName, appAccountToken: token)

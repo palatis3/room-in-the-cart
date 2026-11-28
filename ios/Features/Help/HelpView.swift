@@ -239,6 +239,7 @@ struct HelpPrivacyView: View {
                 Text(helpText("If the household receipt save is unconfirmed, this iPhone keeps a protected copy of the reviewed details. Check the household pantry before retrying the same change. Clearing the retry leaves any receipt the household already saved in place."))
                 Text(helpText("A cook link exposes only its granted fields. A static message or exported file is a separate copy under the recipient’s control. Review the destination and private fields before sharing."))
                 Text(helpText("If Apple tells Room in the Cart that a guardian withdrew permission for an App Store download, the service saves a receipt to recognize repeated notices. The receipt contains the notice ID, the time Apple signed it and whether it came from the live or test App Store. It contains no age range, download ID or household account."))
+                Text(helpText("For annual subscriptions in Mexico, the purchasing adult can enable renewal emails in Household membership. Our email provider, Resend, processes that adult’s verified sign-in address and the renewal message to deliver the notice. Other household members cannot see the address or manage these emails. Manage or cancel the subscription with Apple."))
                 Text(helpText("Apple handles subscription payment credentials. The app and household service use transaction evidence to deliver and restore membership; they do not receive your payment card or bank account number."))
             }
             Section(helpText("Photos and speech")) {
