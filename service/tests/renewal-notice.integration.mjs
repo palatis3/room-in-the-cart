@@ -2,9 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {randomBytes,randomUUID,createHmac} from 'node:crypto';
 import pg from 'pg';
+import {SupabaseSessionVerifier} from '../dist/auth.js';
+import {tokenHash} from '../dist/database.js';
+import {HouseholdRepository} from '../dist/repository.js';
 import {createHTTPServer} from '../dist/http.js';
 import {migrate} from '../scripts/migrate.mjs';
-import {renewalContact} from '../dist/billing/renewal-contact.js';
+import {renewalContact,requireRenewalCheckout} from '../dist/billing/renewal-contact.js';
 import {maintainRenewalNotices} from '../dist/billing/renewal-worker.js';
 import {day} from '../dist/billing/renewal-facts.js';
 import {BillingService} from '../dist/billing/service.js';
@@ -182,6 +185,101 @@ test('verified payer enrollment and renewal delivery under real app/worker datab
         VALUES($1,$2,$3,'80001','80002',1,'reminder',now()-interval '31 days',85000,now()-interval '38 days',now()-interval '1 day')`,[otherHome,other.id,randomUUID()]);
       await work(dark);assert.equal((await admin.query('SELECT * FROM ritc.renewal_contact')).rowCount,0);
       assert.equal((await records()).length,0);
+    });
+    // These routines use the same signed status, purchase context and contact methods as HTTP.
+    async function renewalFixture(series) {
+      const h=randomUUID(),now=Date.now();
+      await admin.query("INSERT INTO ritc.household(household_id,label) VALUES($1,'Renewal coverage')",[h]);
+      for(const a of [payer,other]){
+        await admin.query("INSERT INTO ritc.member(household_id,member_id,issuer,subject,alias,kind,state) VALUES($1,$2,$3,$4,'Adult','adult','active')",[h,a.id,issuer,a.subject]);
+        await admin.query("INSERT INTO ritc.device(household_id,device_id,member_id,token_hash,session_id) VALUES($1,$2,$3,$5,$4)",[h,a.device,a.id,a.session,tokenHash(a.device)]);
+      }
+      let current={...state,environment:'Production',originalTransactionID:series,transactionID:series+'1',
+        purchasedAt:now-365*day,signedAt:now-2*day,expiresAt:now+8*day,status:'active',noticeFacts:null,autoRenewOff:true};
+      const apple={current:async()=>structuredClone(current),verifyTransaction:async()=>({originalTransactionID:current.originalTransactionID,transactionID:current.transactionID,appAccountToken:current.appAccountToken})};
+      const service=new BillingService(apple),act=fn=>run(payer,fn,h);
+      current.appAccountToken=(await act(ctx=>service.prepare(ctx))).appAccountToken;
+      await act(ctx=>service.verify(ctx,'verified'));
+      return {h,current,apple,service,act,read:()=>contact(payer,undefined,config,h),change:enabled=>contact(payer,enabled,config,h),
+        entry:async()=>(await admin.query('SELECT id,original_id,after_term,next_check FROM ritc.renewal_contact WHERE household_id=$1',[h])).rows[0],
+        wake:()=>admin.query("UPDATE ritc.renewal_contact SET next_check=now()-interval '1 minute' WHERE household_id=$1",[h]),
+        verify:()=>act(ctx=>service.verify(ctx,'verified')),
+        worker:()=>maintainRenewalNotices(worker,config,apple,issuer,'run',AbortSignal.timeout(8000))};
+    }
+    for(const [index,status] of ['expired','revoked'].entries()){
+      await t.test('a confirmed '+status+' payer explicitly enrolls for a new term, without granting the old one anything',async()=>{
+        const f=await renewalFixture(String(9310+index)),{current,act,h}=f,initialSends=sends.length;
+        assert.equal((await f.change(true)).scope,'bound');
+        await f.wake();await f.worker();
+        assert.equal((await f.read()).scope,'bound');assert.equal(sends.length,initialSends); // active with auto-renew off
+        current.status=status;current.signedAt=Date.now()-4000;
+        if(status==='expired')current.expiresAt=Date.now()-5000;
+        assert.equal((await f.verify()).snapshot.status,status);
+        assert.equal((await act(ctx=>f.service.snapshot(ctx))).status,status); // restore/refresh needs no enrollment
+        assert.equal(await f.entry(),undefined);
+        const persisted=()=>admin.query('SELECT revision,subscription FROM ritc.billing_state WHERE household_id=$1',[h]).then(r=>r.rows[0]);
+        const ended=await persisted(),offer=await f.read();
+        assert.equal(offer.scope,'prospective');assert.equal(offer.enabled,false);
+        assert.equal((await contact(other,undefined,config,h)).scope,'unavailable');
+        assert.equal((await f.read()).enabled,false);assert.equal(await f.entry(),undefined);
+        await assert.rejects(()=>requireRenewalCheckout(offer,provider),e=>e.code==='renewal_notice_unavailable');
+        const opted=await f.change(true);assert.equal(opted.enabled,true);assert.equal(opted.scope,'prospective');
+        const registration=await f.entry();assert.equal(registration.original_id,null);assert.equal(registration.after_term,current.transactionID);
+        assert.deepEqual(await persisted(),ended);
+        assert.equal((await act(ctx=>f.service.prepare(ctx))).appAccountToken,current.appAccountToken);
+        const repo=new HouseholdRepository(app,{allowChildNetwork:false,noticeVersion:'fixture',sessionStatus:new SupabaseSessionVerifier(issuer)});
+        const server=createHTTPServer({repository:repo,billing:f.service,renewalNotices:config,
+          verifier:{verify:async token=>{const a=[payer,other].find(person=>person.session===token);assert.ok(a);return {issuer,subject:a.subject,sessionId:a.session,expiresAt:new Date(Date.now()+day)};}}});
+        await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+        const route=async(a,path,method='GET',body)=>fetch('http://127.0.0.1:'+server.address().port+'/v1/households/'+h+'/billing/'+path,
+          {method,headers:{'content-type':'application/json',authorization:'Bearer '+a.session,'x-device-token':a.device},...(body?{body:JSON.stringify(body)}:{})});
+        try{
+          assert.equal((await (await route(payer,'renewal-notice-contact')).json()).scope,'prospective');
+          assert.equal((await route(other,'purchase-context','POST',{storefront:'MEX'})).status,409);
+          assert.equal((await route(payer,'purchase-context','POST',{storefront:'MEX'})).status,200);
+          await route(payer,'renewal-notice-contact','PUT',{enabled:false});
+          assert.equal((await route(payer,'purchase-context','POST',{storefront:'MEX'})).status,409);
+          const again=await route(payer,'renewal-notice-contact','PUT',{enabled:true});
+          assert.deepEqual(await again.json(),opted);
+          assert.equal((await route(payer,'purchase-context','POST',{storefront:'MEX'})).status,200);
+        }finally{await new Promise(resolve=>server.close(resolve));}
+        const currentEnrollment=await f.entry();
+        await requireRenewalCheckout(await f.read(),provider);
+        await f.verify();assert.equal((await f.read()).enabled,true);assert.deepEqual(await f.entry(),currentEnrollment);
+        await f.wake();await f.worker();assert.equal(sends.length,initialSends);
+        const seatsBefore=(await admin.query('SELECT slot,member_id FROM ritc.billing_seat WHERE household_id=$1',[h])).rows;
+        current.status='active';current.purchasedAt=Date.now()-1000;current.signedAt=Date.now();
+        current.expiresAt=Date.now()+365*day;current.transactionID=current.originalTransactionID+'2';
+        assert.equal((await f.verify()).snapshot.status,'active');
+        assert.deepEqual((await admin.query('SELECT slot,member_id FROM ritc.billing_seat WHERE household_id=$1',[h])).rows,seatsBefore);
+        assert.equal((await f.entry()).id,currentEnrollment.id);assert.equal((await f.entry()).original_id,current.originalTransactionID);
+        assert.equal((await f.read()).scope,'bound');assert.equal(sends.length,initialSends);
+        await f.change(false);
+      });
+    }
+    await t.test('an elapsed cached term waits for verified Apple status; delay, outage and stale term do not erase an active payer',async()=>{
+      const f=await renewalFixture('9340'),{current,h}=f,initialSends=sends.length;
+      await f.change(true);const registration=await f.entry();
+      // Before its end this was a genuine active term. Simulate advancing the database clock past its recorded expiry.
+      await admin.query("UPDATE ritc.billing_state SET subscription=jsonb_set(subscription,'{expiresAt}',to_jsonb($2::bigint)) WHERE household_id=$1",[h,Date.now()-day]);
+      assert.equal((await f.read()).scope,'unavailable');
+      await worker.query('SELECT ritc.renewal_housekeeping(true)');assert.equal((await f.entry()).id,registration.id);
+      await f.wake();
+      const offline={current:async()=>{throw Error('Apple status temporarily unavailable');}};
+      await maintainRenewalNotices(worker,config,offline,issuer,'run',AbortSignal.timeout(8000));
+      assert.equal((await f.entry()).id,registration.id);assert.equal(sends.length,initialSends);
+      current.transactionID='93402';current.purchasedAt=Date.now()-day;current.signedAt=Date.now()-2000;current.expiresAt=Date.now()+364*day;
+      current.autoRenewOff=false;current.noticeFacts={date:current.expiresAt,signedAt:current.signedAt,amountMilli:100000,currency:'MXN'};
+      await f.wake();await f.worker();assert.equal((await f.entry()).id,registration.id);
+      assert.ok((await f.entry()).next_check.getTime()>Date.now()+350*day);assert.equal(sends.length,initialSends);
+      // The normal notification has still not arrived. This old terminal response is newer
+      // than the original cached row but older than the active successor this worker just verified.
+      const stale={...current,status:'expired',purchasedAt:Date.now()-365*day+1000,signedAt:Date.now()-day};
+      await f.wake();await maintainRenewalNotices(worker,config,{current:async()=>stale},issuer,'run',AbortSignal.timeout(8000));
+      assert.equal((await f.entry()).id,registration.id);
+      current.status='revoked';current.signedAt=Date.now();current.noticeFacts=null;
+      await f.wake();await f.worker();assert.equal(await f.entry(),undefined);
+      assert.equal(sends.length,initialSends);
     });
     await t.test('one run prioritizes 32 near renewals ahead of 31 distant enrollments and drains more than one page',async()=>{
       const fixtures=new Map(),consulted=[],start=sends.length,base=Date.now(),connection=await admin.connect();
