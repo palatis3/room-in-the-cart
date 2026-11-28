@@ -97,7 +97,9 @@ test('Mexico enrollment requires a matching bilingual approval and sends only th
   assert.equal((await call(f.adult,path,'POST',input)).data.error.code,'guardian_notice_changed');
 
   const exact={...input,noticeVersion:approved.notice.version,noticeDigest:approved.notice.digest};
-  assert.equal((await call(f.adult,path,'POST',{...exact,childLocation:'MX-CMX'})).status,422);
+  for (const childLocation of ['MX-CMX','PR','US-PR','US-VI','US-ZZ']) {
+   assert.equal((await call(f.adult,path,'POST',{...exact,childLocation})).status,422);
+ }
   const pending=ok(await call(f.adult,path,'POST',exact));
   assert.equal((await admin.query('SELECT child_location FROM ritc.guardian_enrollment WHERE enrollment_id=$1',
    [pending.enrollmentId])).rows[0].child_location,'MX');

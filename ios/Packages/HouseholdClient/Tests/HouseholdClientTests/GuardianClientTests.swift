@@ -124,6 +124,32 @@ extension HouseholdClientTests {
         XCTAssertThrowsError(try tampered.validate())
     }
 
+    func testGuardianPriorRegionDraftCanBeDiscardedWithoutBlockingAnotherEnrollmentCancellation() async throws {
+        let noticeResponse = try JSONDecoder().decode(GuardianNoticeResponse.self, from: guardianNoticeBytes())
+        let draft = try GuardianEnrollmentIntent(binding: guardianBinding(), kind: .create,
+                                                 notice: XCTUnwrap(noticeResponse.notice), childLocation: "US-PR")
+        let enrollment = try JSONDecoder().decode(GuardianEnrollment.self, from: guardianEnrollmentBytes())
+        let cancellation = try GuardianEnrollmentIntent(binding: guardianBinding(), kind: .cancel, enrollment: enrollment)
+        let vault = MemoryVault()
+        let store = GuardianIntentStore(vault: vault)
+        let epoch = await store.epoch()
+        try await store.save(draft, expectedEpoch: epoch)
+        try await store.save(cancellation, expectedEpoch: epoch)
+        let reopened = GuardianIntentStore(vault: vault)
+        let restored = try await reopened.read()
+        XCTAssertEqual(restored, [draft, cancellation])
+        let (service, _) = try guardianService()
+        do {
+            _ = try await service.executeGuardianEnrollment(draft)
+            XCTFail("Unsupported residence reached the network")
+        } catch {
+            XCTAssertEqual(error as? ClientError, .service(status: 409, code: "guardian_country_unavailable", correlationID: nil, retryAfter: nil))
+        }
+        try await reopened.complete(id: draft.id, expectedEpoch: reopened.epoch())
+        let remaining = try await reopened.read()
+        XCTAssertEqual(remaining, [cancellation])
+    }
+
     func testGuardianScopedPurgeInvalidatesLateSaveAndPreservesOtherHousehold() async throws {
         let enrollment = try JSONDecoder().decode(GuardianEnrollment.self, from: guardianEnrollmentBytes())
         let a = try GuardianEnrollmentIntent(binding: guardianBinding(), kind: .verification, enrollment: enrollment)
@@ -157,6 +183,10 @@ extension HouseholdClientTests {
         try legacy.validate(language: .en)
         XCTAssertEqual(legacy.supportedChildCountries, [.unitedStates])
         XCTAssertTrue(legacy.allowsChildLocation("US-CA"))
+        XCTAssertTrue(legacy.allowsChildLocation("US-DC"))
+        for location in ["PR", "US-PR", "US-AS", "US-GU", "US-MP", "US-UM", "US-VI", "US-ZZ", "US-AA"] {
+            XCTAssertFalse(legacy.allowsChildLocation(location), location)
+        }
         XCTAssertFalse(legacy.allowsChildLocation("MX"))
 
         let malformed: [[String]] = [[], ["US", "US"], ["US", "GB"]]

@@ -1220,36 +1220,36 @@
         }
       }
     },
-    "United States": {
+    "United States (50 states and DC)": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "United States"
+            "value": "United States (50 states and DC)"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Estados Unidos"
+            "value": "Estados Unidos (50 estados y DC)"
           }
         }
       }
     },
-    "U.S. state or territory code (optional)": {
+    "U.S. state code or DC (optional)": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "U.S. state or territory code (optional)"
+            "value": "U.S. state code or DC (optional)"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Código de estado o territorio de EE. UU. (opcional)"
+            "value": "Código de un estado de EE. UU. o DC (opcional)"
           }
         }
       }
@@ -1267,6 +1267,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cambió la disponibilidad de la configuración para menores en el país seleccionado. Actualiza el aviso y vuelve a elegir el país de residencia del menor."
+          }
+        }
+      }
+    },
+    "For a child living in a U.S. state or DC, enter US or a state code such as US-CA. U.S. territories are outside the enrollment area.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For a child living in a U.S. state or DC, enter US or a state code such as US-CA. U.S. territories are outside the enrollment area."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si el menor vive en un estado de EE. UU. o en el Distrito de Columbia, escribe US o un código como US-CA. El registro no está disponible en los territorios de EE. UU."
           }
         }
       }

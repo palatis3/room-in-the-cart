@@ -159,6 +159,8 @@ struct GuardianEnrollmentView<Withdrawal: View>: View {
     }
     @ViewBuilder private var childResidenceFields: some View {
         if model.usesLegacyChildLocation {
+            Text(GuardianCopy.text("For a child living in a U.S. state or DC, enter US or a state code such as US-CA. U.S. territories are outside the enrollment area."))
+                .font(.footnote)
             TextField(GuardianCopy.text("Child's country or region code"), text: $model.childLocation)
                 .textInputAutocapitalization(.characters).autocorrectionDisabled()
                 .accessibilityIdentifier("guardian.childLocation")
@@ -166,13 +168,13 @@ struct GuardianEnrollmentView<Withdrawal: View>: View {
             Picker(GuardianCopy.text("Child's country of residence"), selection: $model.childCountry) {
                 Text(GuardianCopy.text("Choose a country")).tag(GuardianChildCountry?.none)
                 ForEach(model.supportedChildCountries, id: \.self) { country in
-                    Text(GuardianCopy.text(country == .mexico ? "Mexico" : "United States")).tag(Optional(country))
+                    Text(GuardianCopy.text(country == .mexico ? "Mexico" : "United States (50 states and DC)")).tag(Optional(country))
                 }
             }
             .pickerStyle(.menu)
             .accessibilityIdentifier("guardian.childCountry")
             if model.childCountry == .unitedStates {
-                TextField(GuardianCopy.text("U.S. state or territory code (optional)"), text: $model.childUSRegion,
+                TextField(GuardianCopy.text("U.S. state code or DC (optional)"), text: $model.childUSRegion,
                           prompt: Text(verbatim: "CA"))
                     .textInputAutocapitalization(.characters).autocorrectionDisabled()
                     .accessibilityIdentifier("guardian.childUSRegion")

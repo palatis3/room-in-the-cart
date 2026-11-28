@@ -232,8 +232,8 @@ export const publicPages = {
             "es": "Con el permiso del tutor y un dispositivo vinculado, tu menor puede pedir un producto y ver qué pasó con sus propias solicitudes. Quien se encarga de la compra decide qué va en la cesta. El presupuesto del hogar sigue siendo privado."
           },
           {
-            "en": "On the guardian’s iPhone, open Settings, then Household requests. Select your household and open Guardian controls when enabled for your household. The guardian verifies their age, gives permission and confirms the child’s device. If setup is unavailable, you can keep using your private shopping list.",
-            "es": "En el iPhone del tutor, abre Configuración y después Solicitudes del hogar. Elige tu hogar y abre Controles del tutor si están habilitados para tu hogar. El tutor verifica su edad, da permiso y confirma el dispositivo del menor. Si la configuración no está disponible, puedes seguir usando tu lista de compras privada."
+            "en": "On the guardian’s iPhone, open Settings, then Household requests. Select your household and open Guardian controls when enabled for your household. When enrollment is offered, the child must live in Mexico or one of the 50 U.S. states or the District of Columbia. U.S. territories are outside the enrollment area. The guardian verifies their age, gives permission and confirms the child’s device. If setup is unavailable, you can keep using your private shopping list.",
+            "es": "En el iPhone del tutor, abre Configuración y después Solicitudes del hogar. Elige tu hogar y abre Controles del tutor si están habilitados para tu hogar. Cuando se ofrece el registro, el menor debe vivir en México, uno de los 50 estados de EE. UU. o el Distrito de Columbia. El registro no está disponible en los territorios de EE. UU. El tutor verifica su edad, da permiso y confirma el dispositivo del menor. Si la configuración no está disponible, puedes seguir usando tu lista de compras privada."
           }
         ]
       }
