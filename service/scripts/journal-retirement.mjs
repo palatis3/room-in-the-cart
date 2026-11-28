@@ -19,7 +19,7 @@ const settings=z.object({pins:durableJournalPinsSchema,successor:durableJournalP
   captureManifestPath:path.optional(),verifiedReceiptPath:path.optional(),dumpPath:path.optional(),pgRestore:path.optional(),exportDirectories:z.array(path).max(1024).default([]),rotationKeysPath:path.optional()}).strict();
 
 async function openOwner(config,relation) {
-  const pool=journalDatabase(config.connection,'ritc-journal-retire',{max:3,ownerReadAll:true});
+  const pool=journalDatabase(config.connection,'ritc-journal-retire',{max:3,ownerInventory:true});
   const identity={database:config.connection.database,databaseOid:config.databaseOid,
     owner:config.ownerRole ?? config.connection.user,ownerOid:config.ownerOid};
   try {
@@ -28,6 +28,23 @@ async function openOwner(config,relation) {
       FROM pg_database d,pg_roles r,pg_class c WHERE d.datname=current_database() AND r.rolname=session_user AND c.oid=$1::regclass`,[relation]);
     const {authorized,...found}=check.rows[0]??{};
     if(!authorized || journalCanonical(found)!==journalCanonical(identity))throw Error('Owner database identity conflict');
+    // A filtered SELECT could incorrectly report an empty generation. Accept active
+    // RLS only for a directly owned table with an unrestricted owner policy and
+    // no restrictive policy. Legacy installations without that proof fail closed.
+    const tables=relation==='ritc.privacy_journal_outbox' ? [
+      'ritc.privacy_journal_outbox','ritc.privacy_journal_origin','ritc.privacy_journal_rotation','ritc.privacy_journal_source_registration',
+      'ritc.privacy_journal_target','ritc.privacy_journal_ack','ritc.privacy_restore_run','ritc.privacy_restore_job','ritc.privacy_job',
+      'ritc.privacy_target','ritc.identity_erasure','ritc.privacy_source_replay_clock',
+    ] : ['ritc_checkpoint.origin','ritc_checkpoint.admission','ritc_checkpoint.worker_allowance','ritc_checkpoint.recovery_seal',
+      'ritc_checkpoint.successor','ritc_checkpoint.replay_clock','ritc_checkpoint.detail_export','ritc_records.object','ritc_records.store'];
+    const filtered=await pool.query(`SELECT FROM unnest($1::text[]) t(name)
+      JOIN pg_class c ON c.oid=to_regclass(t.name)
+      WHERE row_security_active(c.oid) AND (c.relowner<>session_user::regrole OR
+       NOT EXISTS(SELECT FROM pg_policy p WHERE p.polrelid=c.oid AND p.polpermissive AND p.polcmd='*'
+         AND c.relowner=ANY(p.polroles) AND pg_get_expr(p.polqual,c.oid)='true'
+         AND COALESCE(pg_get_expr(p.polwithcheck,c.oid),'true')='true')
+       OR EXISTS(SELECT FROM pg_policy p WHERE p.polrelid=c.oid AND NOT p.polpermissive)) LIMIT 1`,[tables]);
+    if(filtered.rowCount)throw Error('Recovery owner cannot see the complete protected relation');
     return {pool,identity};
   } catch(error) {await pool.end();throw error;}
 }

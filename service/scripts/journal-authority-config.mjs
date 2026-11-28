@@ -27,12 +27,12 @@ export async function readPrivateFile(path,maxBytes){
  }finally{await file.close();}
 }
 
-export function journalDatabase(database,applicationName,{max=4,ownerReadAll=false}={}){
+export function journalDatabase(database,applicationName,{max=4,ownerInventory=false}={}){
  const {host,port,user,password,ca}=database;
  const local=host.startsWith('/')||['127.0.0.1','localhost','::1'].includes(host);
  if(!ca&&!local)throw Error('Pinned CA required for remote journal database');
  const pool=new pg.Pool({host,port,user,password:()=>password??'',database:database.database,
-  ssl:ca?{ca,rejectUnauthorized:true}:false,options:ownerReadAll?'-c search_path=pg_catalog -c row_security=off':'-c search_path=pg_catalog',application_name:applicationName,
+  ssl:ca?{ca,rejectUnauthorized:true}:false,options:ownerInventory?'-c search_path=pg_catalog -c row_security=on':'-c search_path=pg_catalog',application_name:applicationName,
   max,connectionTimeoutMillis:2000,idleTimeoutMillis:5000,allowExitOnIdle:true});
  pool.on('error',()=>console.error(JSON.stringify({event:'journal_database_connection_error'})));
  return pool;
