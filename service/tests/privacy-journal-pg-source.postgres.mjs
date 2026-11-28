@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import {randomBytes,randomUUID,sign,createHash} from 'node:crypto';
 import {setTimeout as delay} from 'node:timers/promises';
 import pg from 'pg';
+import {sourceFixtureConnection} from './source-postgres-fixture.mjs';
 import {createPostgresCommittedSource} from '../dist/privacy-journal-pg-source.js';
 import {PrivacyMaintenance,PrivacyService} from '../dist/privacy.js';
 import {HouseholdRepository} from '../dist/repository.js';
@@ -14,8 +15,8 @@ import {fixture} from './durable-authority-fixture.mjs';
 
 const adminURL=new URL(process.env.TEST_ADMIN_DATABASE_URL),wrongURL=new URL(process.env.TEST_JOURNAL_WRONG_DATABASE_URL);
 const observer=process.env.TEST_JOURNAL_OBSERVER_ROLE;
-if(adminURL.searchParams.get('host')!=='/tmp'||adminURL.searchParams.get('port')!=='55432'||!adminURL.pathname.startsWith('/ritc_journal_pg_source_')||!wrongURL.pathname.startsWith('/ritc_journal_pg_wrong_'))throw Error('Dedicated disposable local databases required');
-const owner=new pg.Client({connectionString:adminURL.toString()}),wrongOwner=new pg.Client({connectionString:wrongURL.toString()});
+if(!/^\/ritc_journal_pg_source_[a-f0-9]{32}$/.test(adminURL.pathname)||!/^\/ritc_journal_pg_wrong_[a-f0-9]{32}$/.test(wrongURL.pathname))throw Error('Dedicated disposable local databases required');
+const owner=new pg.Client(sourceFixtureConnection(adminURL)),wrongOwner=new pg.Client(sourceFixtureConnection(wrongURL));
 await owner.connect();await wrongOwner.connect();
 const ownerRole=(await owner.query('SELECT current_user AS name,(SELECT oid::text FROM pg_roles WHERE rolname=current_user) AS oid')).rows[0];
 const observerRole=(await owner.query('SELECT oid::text FROM pg_roles WHERE rolname=$1',[observer])).rows[0];
@@ -31,11 +32,11 @@ const common=[pins.sourceIdentity,pins.lineage,pins.schemaDigest,pins.configurat
 const signatures=['binding(text,uuid,text,text,oid)','event(text,uuid,text,text,oid,uuid)','acceptance(text,uuid,text,text,oid,uuid)','unacknowledged(text,uuid,text,text,oid,uuid,integer)','acknowledge(text,uuid,text,text,oid,uuid,text,bigint,text)'];
 const openHandles=new Set();
 function configuration(changes={}){
- return {pins:clone(pins),authorityPublicKey:authority.publicKey,connection:{host:'/tmp',port:55432,database:adminURL.pathname.slice(1),user:observer},databaseOid,observerRoleOid:observerRole.oid,ownerRole:ownerRole.name,ownerRoleOid:ownerRole.oid,applicationName:'journal-source-test-'+randomUUID(),maxConnections:1,...changes};
+ return {pins:clone(pins),authorityPublicKey:authority.publicKey,connection:sourceFixtureConnection(adminURL,observer),databaseOid,observerRoleOid:observerRole.oid,ownerRole:ownerRole.name,ownerRoleOid:ownerRole.oid,applicationName:'journal-source-test-'+randomUUID(),maxConnections:1,...changes};
 }
 function adapter(changes={}){const config=configuration(changes),handle={...createPostgresCommittedSource(config),config};openHandles.add(handle);return handle;}
 async function stop(handle){await handle.close();openHandles.delete(handle);}
-async function connection(role=observer,url=adminURL){const u=new URL(url);u.username=role;u.password='';const c=new pg.Client({connectionString:u.toString()});await c.connect();return c;}
+async function connection(role=observer,url=adminURL){const c=new pg.Client(sourceFixtureConnection(url,role));await c.connect();return c;}
 async function insert(event,client=owner,createdAt='2026-11-03T12:00:00Z'){
  await client.query('INSERT INTO ritc.privacy_journal_outbox(event_id,lineage,job_id,kind,payload,payload_digest,created_at)VALUES($1,$2,$3,$4,$5::jsonb,$6,$7)',[event.eventId,event.payload.lineage,event.payload.jobId,event.payload.kind,JSON.stringify(event.payload),event.payloadDigest,createdAt]);return event;
 }
@@ -111,18 +112,18 @@ test('SQL repeats exact source, origin and database pins and refuses SET ROLE or
  }finally{await c.end();}
  const wrong=await connection(observer,wrongURL);try{await assert.rejects(async()=>wrong.query('SELECT ritc.privacy_journal_source_binding($1,$2,$3,$4,$5::oid)',common),{code:'42501'});}finally{await wrong.end();}
  await assert.rejects(async()=>owner.query('SELECT ritc.privacy_journal_source_binding($1,$2,$3,$4,$5::oid)',common),{code:'42501'});
- assert.throws(()=>adapter({connection:{host:'/tmp',port:55432,database:adminURL.pathname.slice(1),user:ownerRole.name}}),/Separate/);
+ assert.throws(()=>adapter({connection:sourceFixtureConnection(adminURL,ownerRole.name)}),/Separate/);
  for(const role of [ownerRole.name,'ritc_app','ritc_worker'])assert.throws(()=>adapter({observerRole:role}),/Separate/);
  const explicit=adapter({observerRole:observer});
  try{assert.equal((await explicit.source.readOrigin(call())).sourceIdentity,pins.sourceIdentity);}finally{await stop(explicit);}
  for(const mismatch of [{observerRole:observer+'.fixture-project'},{observerRole:'wrong_sql_observer'},
   {observerRole:observer,observerRoleOid:String(Number(observerRole.oid)+1)},
-  {observerRole:observer,connection:{host:'/tmp',port:55432,database:adminURL.pathname.slice(1),user:'ritc_test_runtime'}}]){
+  {observerRole:observer,connection:sourceFixtureConnection(adminURL,'ritc_test_runtime')}]){
   const h=adapter(mismatch);
   try{await assert.rejects(()=>h.source.readOrigin(call()),error=>
    error.cause?.message==='Restricted committed-source role or database capability conflict');}finally{await stop(h);}
  }
- for(const changes of [{pins:{...pins,sourceIdentity:'wrong-source'}},{databaseOid:String(Number(databaseOid)+1)},{connection:{host:'/tmp',port:55432,database:wrongURL.pathname.slice(1),user:observer}},{connection:{host:'/tmp',port:55432,database:adminURL.pathname.slice(1),user:'ritc_test_runtime'}}]){
+ for(const changes of [{pins:{...pins,sourceIdentity:'wrong-source'}},{databaseOid:String(Number(databaseOid)+1)},{connection:sourceFixtureConnection(wrongURL,observer)},{connection:sourceFixtureConnection(adminURL,'ritc_test_runtime')}]){
   const h=adapter(changes);try{await assert.rejects(async()=>h.source.readOrigin(call()));}finally{await stop(h);}
  }
 });
@@ -253,7 +254,7 @@ test('real COMMIT response loss reports uncertainty; late committed acknowledgem
 test('app and worker compose with the real observer and a synthetic durable authority',async()=>{
  const backing=fixture({...origin,sourceIdentity:pins.sourceIdentity});
  const h=adapter({pins:backing.pins,authorityPublicKey:backing.authorityKeys.publicKey});
- const pool=user=>new pg.Pool({host:'/tmp',port:55432,database:adminURL.pathname.slice(1),user});
+ const pool=user=>new pg.Pool(sourceFixtureConnection(adminURL,user));
  const runtime=pool('ritc_test_runtime'),worker=pool('ritc_test_worker');
  const journal=backing.adapter({source:h.source}).port;
  const subject=randomUUID(),sessionId=randomUUID(),issuer='https://durable.fixture.invalid';

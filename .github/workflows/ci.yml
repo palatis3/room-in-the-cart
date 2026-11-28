@@ -118,10 +118,18 @@ jobs:
           GRANT ritc_guardian_verifier TO ritc_guardian_test_verifier;
           CREATE ROLE ritc_test_worker LOGIN PASSWORD 'fixture-only' NOSUPERUSER NOBYPASSRLS;
           GRANT ritc_worker TO ritc_test_worker;
+          CREATE ROLE ritc_test_runtime LOGIN PASSWORD 'fixture-only' NOSUPERUSER NOBYPASSRLS IN ROLE ritc_app;
+          CREATE ROLE ritc_journal_gateway_test LOGIN PASSWORD 'fixture-only' NOINHERIT NOSUPERUSER NOBYPASSRLS;
           -- Negative readiness fixture. A verifier must reject this combined identity.
           CREATE ROLE ritc_guardian_combined_worker LOGIN PASSWORD 'fixture-only' NOSUPERUSER NOBYPASSRLS;
           GRANT ritc_guardian_verifier, ritc_worker TO ritc_guardian_combined_worker;
           SQL
+      - name: Verify direct and isolated gateway journal source against PostgreSQL
+        working-directory: service
+        env:
+          TEST_JOURNAL_OBSERVER_ROLE: ritc_guardian_test_verifier
+          TEST_JOURNAL_GATEWAY_ROLE: ritc_journal_gateway_test
+        run: npm run build && node scripts/test-privacy-journal-pg-source.mjs
       - name: Run PostgreSQL integration, billing and browser retry tests
         run: npm run test:integration
         working-directory: service
