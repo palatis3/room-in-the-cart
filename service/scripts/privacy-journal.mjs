@@ -13,7 +13,7 @@ import {MAX_JOURNAL_BYTES} from '../dist/privacy-journal-limits.js';
 import {readPrivateFile} from './journal-authority-config.mjs';
 import {jsonFile,readArchive,readArchives,windowSettings} from './journal-archive-window.mjs';
 
-import {assertCaptureCurrent,replayExpiry,restoreCapture} from './restore-capture.mjs';
+import {assertCaptureCurrent,replayExpiry,restoreCaptureProof} from './restore-capture.mjs';
 
 const [command,configurationPath]=process.argv.slice(2);
 if(!['verify','plan','replay','gate'].includes(command)||!configurationPath||process.argv.length!==4)
@@ -41,7 +41,7 @@ function inspectRecords(records){
  replayExpiresAt=Math.min(replayExpiresAt,replayExpiry(records));
 }
 function assertEligible(){
- assertCaptureCurrent(captured);
+ assertCaptureCurrent(captured,Date.now(),expires);
  if(Date.now()>=replayExpiresAt)throw Error('Detailed replay evidence reached its 90-day limit; keep quarantine closed');
 }
 
@@ -71,7 +71,7 @@ async function inspectWindow(){
 }
 
 if(await dumpDigest(configuration.dumpPath)!==configuration.dumpSHA256)throw Error('Dump manifest hash conflict');
-const captured=await restoreCapture(configuration,configuration.dumpSHA256,process.env.RITC_RESTORE_VERIFIED_RECEIPT_SHA256);
+const {captured,expires}=await restoreCaptureProof(configuration,configuration.dumpSHA256,process.env.RITC_RESTORE_VERIFIED_RECEIPT_SHA256);
 const evidence=await (isWindow?inspectWindow():inspectSingle());
 const binding=evidence.binding;
 assertEligible();

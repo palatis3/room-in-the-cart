@@ -624,7 +624,12 @@ test('operator waits for the source, seals exact intents, replays a prior backup
   const staleCapture=await captureFixture(dir,dumpSHA256,captured - 31*86400000);
   environment.RITC_RESTORE_VERIFIED_RECEIPT_SHA256=staleCapture.pin;
   for(const command of ['verify','plan','replay','gate']) {
-   assert.throws(()=>cli('privacy-journal.mjs',command,restorePath),/outside the original 720-hour recovery window/);
+   assert.throws(()=>cli('privacy-journal.mjs',command,restorePath),/outside its verified recovery window/);
+  }
+  const tighter=await captureFixture(dir,dumpSHA256,captured-120000,{version:89,expires:Date.now()-1000});
+  environment.RITC_RESTORE_VERIFIED_RECEIPT_SHA256=tighter.pin;
+  for(const command of ['verify','plan','replay','gate']) {
+   assert.throws(()=>cli('privacy-journal.mjs',command,restorePath),/outside its verified recovery window/);
   }
   const members=(await destination.query('SELECT member_id,alias,erased_at FROM ritc.member WHERE member_id IN ($1,$2)',[memberId,otherMember])).rows;
   assert.equal(members.find(member=>member.member_id===memberId).alias,'Removed member');

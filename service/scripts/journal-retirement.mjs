@@ -155,21 +155,30 @@ async function run() {
       authorityPreviouslyRetired:anchor.retired!==null};
     if(command==='plan'){console.log(JSON.stringify(schedule));return;}
     if(!schedule.staleBackupsExpired)throw Error('Recoverable pre-rotation snapshots remain');
-    const {captured:recovered,project}=await recoveredRotation(config,link,process.env.RITC_RESTORE_VERIFIED_RECEIPT_SHA256);
-    assertCaptureCurrent(recovered);
+    const {captured:recovered,expires,project}=await recoveredRotation(config,link,process.env.RITC_RESTORE_VERIFIED_RECEIPT_SHA256);
+    assertCaptureCurrent(recovered,Date.now(),expires);
     // Each store commits independently. The authority remains available if the source fails.
     // A retry revalidates the successor, authenticated recovery backup, and absence in both stores.
-    await retireExports(custody,scope,config.exportDirectories,process.env.RITC_JOURNAL_CUSTODIAN_ID);
+    await retireExports(custody,scope,config.exportDirectories,process.env.RITC_JOURNAL_CUSTODIAN_ID,()=>assertCaptureCurrent(recovered,Date.now(),expires));
     const pendingExports=await custody.query('SELECT count(*)::int AS count FROM ritc_checkpoint.detail_export WHERE scope_digest=$1',[scope]);
     if(command==='retire-exports') {
       console.log(JSON.stringify({localExportsAbsent:true,registeredExportsRemaining:pendingExports.rows[0].count}));
       return;
     }
     if(pendingExports.rows[0].count)throw Error('Another custodian must reconcile its exports');
-    await source.pool.query('SELECT ritc.privacy_retire_journal_source($1,$2,$3)',[generation,link.predecessorSealDigest,new Date(recovered)]);
+    const sourceClient=await source.pool.connect();
+    try {
+      await sourceClient.query('BEGIN');
+      assertCaptureCurrent(recovered,Date.now(),expires);
+      await sourceClient.query('SELECT ritc.privacy_retire_journal_source($1,$2,$3)',[generation,link.predecessorSealDigest,new Date(recovered)]);
+      assertCaptureCurrent(recovered,Date.now(),expires);
+      await sourceClient.query('COMMIT');
+    } catch(error){await sourceClient.query('ROLLBACK');throw error;}
+    finally{sourceClient.release();}
+
     const sourceRemaining=await source.pool.query('SELECT FROM ritc.privacy_journal_outbox WHERE lineage=$1 LIMIT 1',[generation]);
     if(sourceRemaining.rowCount)throw Error('Source details still present');
-    assertCaptureCurrent(recovered);
+    assertCaptureCurrent(recovered,Date.now(),expires);
     await checkpoint.pool.query('SELECT ritc_checkpoint.retire_details($1,$2,$3)',[generation,scope,link.predecessorSealDigest]);
     const remaining=await checkpoint.pool.query(`SELECT EXISTS(SELECT FROM ritc_records.object WHERE split_part(object_key,'/',1)=$2)
       OR EXISTS(SELECT FROM ritc_checkpoint.admission WHERE lineage=$1) OR EXISTS(SELECT FROM ritc_checkpoint.worker_allowance WHERE lineage=$1)

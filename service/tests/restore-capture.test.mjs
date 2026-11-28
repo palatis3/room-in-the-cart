@@ -1,10 +1,11 @@
+import {certifiedBackupExpiry} from '../scripts/backup-expiry.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {mkdtemp, readFile, rename, rm, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {assertCaptureCurrent,replayExpiry,restoreCapture} from '../scripts/restore-capture.mjs';
+import {assertCaptureCurrent,replayExpiry,restoreCapture,restoreCaptureProof} from '../scripts/restore-capture.mjs';
 import {captureFixture} from './restore-capture-fixture.mjs';
 
 const windowMs=720 * 3600000;
@@ -53,4 +54,32 @@ test('the earliest original intent bounds every copy even when it rolled back or
   assert.equal(replayExpiry([],now),Infinity);
   assert.throws(()=>replayExpiry([records[2]],now),/Original replay capture/);
   assert.throws(()=>replayExpiry([record('intent','future',now+1)],now),/Future/);
+});
+
+test('a shortened recovery receipt binds its 087+ scope, both restores, and the signed cutoff',async t=>{
+  const dir=await mkdtemp(join(tmpdir(),'ritc-tight-cap-'));
+  t.after(()=>rm(dir,{recursive:true}));
+  const captured=Date.now()-86400000,expires=captured+2*86400000;
+  const fixture=await captureFixture(dir,dump,captured,{version:89,expires});
+  const proof=await restoreCaptureProof(fixture.paths,dump,fixture.pin);
+  assert.deepEqual(proof,{captured,expires,project:'fixture'});
+  assert.doesNotThrow(()=>assertCaptureCurrent(captured,expires-1,proof.expires));
+  assert.throws(()=>assertCaptureCurrent(captured,expires,proof.expires),/verified recovery window/);
+  const receipt=JSON.parse(await readFile(fixture.paths.verifiedReceiptPath));
+  const source=receipt.sources.staging;
+  const manifest=JSON.parse(await readFile(fixture.paths.captureManifestPath));
+  assert.equal(certifiedBackupExpiry(source,captured,manifest),expires);
+  const maximum=new Date(captured+windowMs).toISOString();
+  assert.equal(certifiedBackupExpiry({...source,restoreCutoffUTC:maximum,journalRetentionCutoffUTC:maximum},captured,manifest),captured+windowMs);
+  for(const invalid of [
+    {...source,migrationFilesMatchedToCommit:86},
+    {...source,journalRetentionCutoffUTC:undefined},
+    {...source,scopeManifestSHA256:'0'.repeat(64)},
+    {...source,downloadRestore:{...source.downloadRestore,registryCount:88}},
+    {...source,journalRetentionCutoffUTC:maximum},
+    {...source,restoreCutoffUTC:new Date(captured+windowMs+1).toISOString(),journalRetentionCutoffUTC:new Date(captured+windowMs+1).toISOString()},
+    {...source,restoreCutoffUTC:new Date(captured).toISOString(),journalRetentionCutoffUTC:new Date(captured).toISOString()},
+  ])assert.throws(()=>certifiedBackupExpiry(invalid,captured,manifest),/cutoff conflict/);
+  assert.equal(certifiedBackupExpiry({restoreCutoffUTC:maximum,migrationFilesMatchedToCommit:86},captured),captured+windowMs);
+  assert.throws(()=>certifiedBackupExpiry({restoreCutoffUTC:new Date(expires).toISOString(),migrationFilesMatchedToCommit:86},captured),/cutoff conflict/);
 });

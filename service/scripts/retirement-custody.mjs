@@ -76,7 +76,7 @@ export async function recoveredRotation(config,link,pin) {
     if (matched !== 1 || after.size !== stat.size || after.mtimeMs !== stat.mtimeMs || after.ctimeMs !== stat.ctimeMs) {
       throw Error('Absent or unstable rotation in recovered backup');
     }
-    assertCaptureCurrent(proof.captured);
+    assertCaptureCurrent(proof.captured,Date.now(),proof.expires);
     return proof;
   } finally {if(child && child.exitCode===null)child.kill();await file.close();}
 }

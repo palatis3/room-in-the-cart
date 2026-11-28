@@ -64,3 +64,15 @@ test('a private-store adapter paginates, checks conditional deletion, and requir
   after=false;
   assert.deepEqual(await reconcileGenerations(adapter,copies,{remove:true,now}),{catalogued:2,retained:1,expiredPresent:0,expiredAbsent:1});
 });
+
+test('managed inventory expires a versioned backup at its certified shorter cutoff',async()=>{
+  const shortened=generation('tight',now-day);
+  Object.assign(shortened.entry,{migrationFilesMatchedToCommit:89,scopeManifestSHA256:'a'.repeat(64),
+    journalRetentionCutoffUTC:iso(now),restoreCutoffUTC:iso(now),providerExpiryUTC:iso(now),
+    sourceRestore:{...verified,registryCount:89},downloadRestore:{...verified,registryCount:89}});
+  assert.equal(backupCutoff(shortened.entry),now);
+  const adapter={list:async()=>({blobs:[],hasMore:false}),head:async()=>null};
+  await assert.rejects(reconcileGenerations(adapter,[shortened],{now:now-1}),/missing recoverable/);
+  assert.equal((await reconcileGenerations(adapter,[shortened],{now})).expiredAbsent,1);
+  await assert.rejects(reconcileGenerations(adapter,[{entry:{...shortened.entry,journalRetentionCutoffUTC:undefined}}],{now}),/cutoff conflict/);
+});

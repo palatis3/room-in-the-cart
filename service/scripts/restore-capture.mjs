@@ -1,23 +1,13 @@
+import {certifiedBackupExpiry, timestamp} from './backup-expiry.mjs';
 import {createHash} from 'node:crypto';
 import {readPrivateFile} from './journal-authority-config.mjs';
 
 const day = 24 * 60 * 60 * 1000;
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 
-function timestamp(value) {
-  const match = typeof value === 'string' && /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})$/.exec(value);
-  const millis = match ? Date.parse(value) : NaN;
-  // Check the calendar part in its own zone before converting an explicit offset.
-  const calendar = match ? Date.parse(match[1] + 'Z') : NaN;
-  if (!Number.isFinite(millis) || !Number.isFinite(calendar) || new Date(calendar).toISOString().slice(0,19) !== match[1]) {
-    throw Error('An original capture time with a valid offset is required');
-  }
-  return millis;
-}
-
-export function assertCaptureCurrent(captured, now = Date.now()) {
-  if (!Number.isFinite(captured) || now < captured || now >= captured + 30 * day) {
-    throw Error('Backup is outside the original 720-hour recovery window; keep quarantine closed');
+export function assertCaptureCurrent(captured, now = Date.now(), expires = captured + 30 * day) {
+  if (!Number.isFinite(captured) || !Number.isFinite(expires) || expires > captured + 30 * day || now < captured || now >= expires) {
+    throw Error('Backup is outside its verified recovery window (maximum 720 hours); keep quarantine closed');
   }
 }
 
@@ -45,9 +35,9 @@ export async function restoreCaptureProof(paths, dumpDigest, receiptPin) {
     throw Error('Backup verification, original capture or dump binding conflict');
   }
   const captured = timestamp(source.originalSnapshotUTC);
-  if (timestamp(source.restoreCutoffUTC) !== captured + 30 * day) throw Error('Verified backup recovery cutoff conflict');
-  assertCaptureCurrent(captured);
-  return {captured,project:source.project};
+  const expires=certifiedBackupExpiry(source,captured,manifest);
+  assertCaptureCurrent(captured,Date.now(),expires);
+  return {captured,expires,project:source.project};
 }
 
 export async function restoreCapture(paths,dumpDigest,receiptPin) {
