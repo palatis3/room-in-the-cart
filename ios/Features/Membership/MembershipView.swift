@@ -233,6 +233,9 @@ struct MembershipView: View {
                             .disabled(model.isBusy).accessibilityIdentifier("membership.restore")
                         Button(mtr("Manage Subscription")) { showingManage = true }
                             .accessibilityIdentifier("membership.manage")
+                        if model.renewalContactUse == .existingPurchase, model.renewalContact?.scope == .bound {
+                            renewalNoticeSection
+                        }
                         if model.canManageSeats, let snapshot = model.state.snapshot {
                             Divider()
                             seatRoster(snapshot)
@@ -259,7 +262,12 @@ struct MembershipView: View {
             if !purchaser { showingManage = false; review = nil }
         }
         .onChange(of: showingManage) { _, showing in
-            if !showing { Task { await model.refresh() } }
+            if !showing {
+                Task {
+                    await model.refresh()
+                    await model.refreshRenewalContact()
+                }
+            }
         }
         .onChange(of: model.statusMessages) { before, after in
             if !model.isStopped, let message = after.first(where: { !before.contains($0) }) {
@@ -270,6 +278,7 @@ struct MembershipView: View {
             NavigationStack { seatReview(change) }.presentationDetents([.large])
         }
         .task { await model.start() }
+        .task(id: model.renewalContactUse) { await model.refreshRenewalContact() }
     }
 
     @ViewBuilder private var annualOffer: some View {
@@ -310,6 +319,7 @@ struct MembershipView: View {
                     .accessibilityHidden(true)
             }
             MembershipSampleLink(offer: offer)
+            if model.renewalContactUse == .checkout { renewalNoticeSection }
             Button(mtr("Subscribe to Household")) {
                 guard model.presentsAnnualOffer else { return }
                 Task { await model.purchase(fromPresentedOffer: true) }
@@ -326,6 +336,56 @@ struct MembershipView: View {
             Text(mtr("Household subscription purchases are unavailable. You can keep using the free planning tools."))
         }
         if offer == nil { MembershipSampleLink() }
+    }
+
+    private var renewalNoticeSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(mtr("Annual renewal email")).font(.headline).accessibilityAddTraits(.isHeader)
+            if let contact = model.renewalContact, !model.renewalContactFailed, contact.scope != .unavailable {
+                if contact.sandboxOnly == true {
+                    Text(mtr("This test checks renewal email settings. No email will be sent."))
+                } else {
+                    Text(mtr("If you enable renewal emails, Room in the Cart will use your verified sign-in email for these notices. We aim to email you seven days before each annual renewal, with a link to manage or cancel in Apple subscriptions."))
+                }
+                if !contact.dispatchEnabled && !model.verifiedSandboxRenewal {
+                    Text(mtr("Renewal email delivery is unavailable."))
+                } else if !contact.emailVerified {
+                    Text(mtr("Sign in with a verified email to receive renewal notices."))
+                }
+                if contact.enabled {
+                    Button(mtr("Turn off renewal emails")) { Task { await model.setRenewalContact(enabled: false) } }
+                    Text(mtr("Turning off email leaves your Apple subscription in place."))
+                } else if contact.canEnroll(verifiedSandbox: model.verifiedSandboxRenewal) {
+                    Button(mtr("Use my sign-in email for renewal notices")) { Task { await model.setRenewalContact(enabled: true) } }
+                }
+                if model.renewalContactSaved { Text(mtr("Renewal email settings saved.")) }
+                DisclosureGroup(mtr("Wrong sign-in email?")) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(mtr("Open Support for help correcting your existing account. After its new email is verified, use it here for future renewal notices."))
+                        NavigationLink(helpText("Support")) { HelpSupportView() }
+                        if contact.enabled && contact.canEnroll(verifiedSandbox: model.verifiedSandboxRenewal) {
+                            Button(mtr("Use my current verified sign-in email")) { Task { await model.setRenewalContact(enabled: true) } }
+                        }
+                    }
+                }
+            } else if model.renewalContactFailed || model.renewalContact != nil {
+                Text(mtr("Renewal email setup is unavailable."))
+            } else {
+                ProgressView(mtr("Checking renewal email settings…"))
+            }
+            if model.renewalContactFailed || model.renewalContact?.canEnroll(verifiedSandbox: model.verifiedSandboxRenewal) == false {
+                Button(mtr("Check renewal email settings again")) { Task { await model.refreshRenewalContact() } }
+            }
+            if model.renewalContactUse == .checkout && !model.renewalContactReady {
+                if model.renewalContact?.canEnroll(verifiedSandbox: model.verifiedSandboxRenewal) == true && !model.renewalContactFailed {
+                    Text(mtr("To subscribe in Mexico, set up renewal emails first. You can continue planning for free."))
+                } else if model.renewalContactFailed || model.renewalContact != nil {
+                    Text(mtr("New annual subscriptions in Mexico are unavailable right now. You can continue planning for free."))
+                }
+            }
+        }
+        .disabled(model.savingRenewalContact || model.isBusy)
+        .accessibilityIdentifier("membership.renewalNotice")
     }
 
     private var returnButton: some View {

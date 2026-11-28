@@ -74,10 +74,12 @@ export function verifyPrivacyJournalPrefix(bytes:Buffer,trust:JournalTrust){
  return checked;
 }
 /** Pure verification: a valid prefix is insufficient without the pinned fenced head. */
-export function verifyPrivacyJournal(bytes:Buffer,trust:JournalTrust){
+export type InspectRestoreRecords = (records:readonly JournalRecord[])=>void;
+export function verifyPrivacyJournal(bytes:Buffer,trust:JournalTrust,inspect?:InspectRestoreRecords){
  const head=headSchema.parse(trust.head);if(!head.fenced||head.lineage!==trust.lineage||head.schemaDigest!==trust.schemaDigest||head.configurationId!==trust.configurationId)throw Error('Unknown or incompatible fenced head');
  const checked=verifyPrivacyJournalPrefix(bytes,trust);
  if([...checked.states.values()].some(s=>s.state==='intent'))throw Error('Journal prefix, unresolved intent, or head conflict');
+ inspect?.(checked.records);
  return{events:checked.events,head,bundleDigest:createHash('sha256').update(bytes).digest('hex')};
 }
 async function ownerFile(path:string,allowMissing=false){

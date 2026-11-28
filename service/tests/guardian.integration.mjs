@@ -97,7 +97,9 @@ test('Mexico enrollment requires a matching bilingual approval and sends only th
   assert.equal((await call(f.adult,path,'POST',input)).data.error.code,'guardian_notice_changed');
 
   const exact={...input,noticeVersion:approved.notice.version,noticeDigest:approved.notice.digest};
-  assert.equal((await call(f.adult,path,'POST',{...exact,childLocation:'MX-CMX'})).status,422);
+  for (const childLocation of ['MX-CMX','PR','US-PR','US-VI','US-ZZ']) {
+   assert.equal((await call(f.adult,path,'POST',{...exact,childLocation})).status,422);
+ }
   const pending=ok(await call(f.adult,path,'POST',exact));
   assert.equal((await admin.query('SELECT child_location FROM ritc.guardian_enrollment WHERE enrollment_id=$1',
    [pending.enrollmentId])).rows[0].child_location,'MX');
@@ -351,6 +353,38 @@ test('real privacy worker erases guardian plus child profile, retains independen
   const profiles=(await admin.query('SELECT state,erased_at,issuer,alias FROM ritc.member WHERE household_id=$1',[f.house.householdId])).rows;assert.ok(profiles.every(profile=>profile.erased_at&&profile.state==='revoked'&&profile.issuer==='urn:ritc:erased'));assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.guardian_enrollment WHERE household_id=$1',[f.house.householdId])).rows[0].n,0);assert.equal((await admin.query('SELECT count(*)::int n FROM auth.users WHERE id=$1',[f.child.subject])).rows[0].n,1);assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.guardian_child_principal WHERE provider_user=$1',[f.child.subject])).rows[0].n,1);
   await admin.query('DELETE FROM ritc.identity_erasure WHERE identity_hash=$1',[tokenHash(issuer+'\n'+f.child.subject)]);assert.equal((await call(f.child,'/v1/households','POST',{clientKey:randomUUID(),label:'Forbidden after profile erasure',alias:'No',adultAttestation:true})).status,503);
  }finally{await worker.end();}
+});
+
+test('inbound-only runtime receives a pending verification without offering new enrollment',async()=>{
+ const f=await family(),made=await create(f),sent=await start(f,made.setup);
+ const receiver=await guardianRuntime(repo,{
+  GUARDIAN_VERIFIER_DATABASE_URL:process.env.TEST_GUARDIAN_VERIFIER_DATABASE_URL,
+  KWS_ORGANIZATION_ID:config.organizationId,KWS_SCOPE:'product',KWS_PRODUCT_ID:config.productId,KWS_ENVIRONMENT:'test',
+  KWS_WEBHOOK_SECRETS_JSON:JSON.stringify([signing]),GUARDIAN_EMAIL_DIGEST_KEY:guardian.options.emailDigestKey,
+  GUARDIAN_APPROVED_NOTICES_JSON:JSON.stringify(notices),GUARDIAN_PENDING_RETENTION_HOURS:'1',
+  GUARDIAN_EVIDENCE_RETENTION_DAYS:'1',GUARDIAN_RETENTION_APPROVAL_REFERENCE:'fictional-policy'
+ },databaseConfiguration);
+ try{
+  receiver.service.attachChildSignin(bff,otpProvider);
+  assert.equal(receiver.service.notice('en').available,false);
+  assert.equal(receiver.service.notice('es').available,false);
+  const signedReceipt=raw=>{
+   const stamp=Date.now();
+   return 't='+stamp+',v1='+createHmac('sha256',signing).update(String(stamp)+'.').update(raw).digest('hex');
+  };
+  const raw=Buffer.from(event(sent.request));
+  const signature=signedReceipt(raw);
+  await assert.rejects(receiver.service.webhook(raw,undefined),{status:401,code:'provider_signature_invalid'});
+  const reference={...JSON.parse(sent.request.externalPayload),a:randomUUID()};
+  const unknown=Buffer.from(event({...sent.request,externalPayload:JSON.stringify(reference)}));
+  await assert.rejects(receiver.service.webhook(unknown,signedReceipt(unknown)),{status:404,code:'unavailable'});
+  assert.equal((await read(f,made.setup.enrollmentId)).state,'verification_pending');
+  assert.deepEqual(await receiver.service.webhook(raw,signature),{received:true});
+  const verified=await read(f,made.setup.enrollmentId);
+  assert.equal(verified.state,'verified');
+  assert.deepEqual(await receiver.service.webhook(raw,signature),{received:true});
+  assert.equal((await read(f,made.setup.enrollmentId)).revision,verified.revision);
+ }finally{await receiver.pool.end();}
 });
 
 test('production readiness cannot be enabled by flags, partial notices, missing onboarding or a combined verifier role',async()=>{

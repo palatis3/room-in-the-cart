@@ -64,6 +64,9 @@ extension HouseholdService {
     }
     public func executeGuardianEnrollment(_ intent: GuardianEnrollmentIntent) async throws -> GuardianEnrollment {
         try intent.validate(); guard intent.kind != .childInvitation else { throw ClientError.configuration }
+        if intent.kind == .create, let location = intent.childLocation, GuardianChildCountry.country(for: location) == nil {
+            throw ClientError.service(status: 409, code: "guardian_country_unavailable", correlationID: nil, retryAfter: nil)
+        }
         let value: GuardianEnrollment = try await guardianRequest(binding: intent.binding, path: intent.path, method: "POST", body: intent.bytes)
         try intent.validate(value); return value
     }

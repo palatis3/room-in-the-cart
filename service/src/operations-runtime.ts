@@ -4,6 +4,9 @@ import {Pool,type Database} from './database.js';
 import {AuthMaintenance,assertWorkerRole} from './maintenance.js';
 import {PrivacyMaintenance} from './privacy.js';
 import {createPrivacyRuntime} from './privacy-runtime.js';
+import {renewalConfig} from './billing/renewal-provider.js';
+import {maintainRenewalNotices} from './billing/renewal-worker.js';
+import {appleGatewaysFromEnvironment} from './billing/apple.js';
 import {guardianRetentionPolicy} from './guardian-policy.js';
 import {SupabaseEmailOTPProvider} from './browser-auth.js';
 
@@ -53,6 +56,8 @@ export function workerDatabaseConfiguration(environment:NodeJS.ProcessEnv):PoolC
 export function createOperationsRuntime(environment:NodeJS.ProcessEnv=process.env){
  const configuration=workerDatabaseConfiguration(environment);
  const guardianPolicy=guardianRetentionPolicy(environment);
+ const renewal=renewalConfig(environment);
+ const noticeGateway=renewal.mode==='send'?appleGatewaysFromEnvironment(environment).primary:null;
  let provider:SupabaseEmailOTPProvider|undefined;
  if(environment.BFF_TOKEN_ENCRYPTION_KEY){
   if(!environment.SUPABASE_URL||!environment.SUPABASE_PUBLISHABLE_KEY)throw Error('Complete logout provider and encryption configuration required');
@@ -94,11 +99,12 @@ export function createOperationsRuntime(environment:NodeJS.ProcessEnv=process.en
     ? moderation.pending||moderation.expiredUnreviewed||moderation.prunedUnreviewed||moderation.moreExpired
     : moderation!==null;
    signal.throwIfAborted();
-   return{event:'operations_result' as const,mode,durationMs:Date.now()-started,batchSize:OPERATIONS_BATCH_SIZE,
+   const notices=await maintainRenewalNotices(pool,renewal,noticeGateway,environment.JWT_ISSUER,mode,signal);
+   return{...(renewal.mode!=='off'?{renewalNotices:notices}:{}),event:'operations_result' as const,mode,durationMs:Date.now()-started,batchSize:OPERATIONS_BATCH_SIZE,
     logoutProviderConfigured:Boolean(provider),privacyJobProcessingEnabled,privacyJournal,auth:authResult,privacy:privacyResult,guardian:guardianResult?{expired:Number(guardianResult.expired),purged:Number(guardianResult.purged),retentionConfigured:Boolean(guardianPolicy)}:null,health,moderation,
     attentionRequired:Boolean(health.authDue||health.authRetryPending||health.authExpiredUnconfirmed||health.privacyPending||
      authResult?.logoutExpiredUnconfirmed||authResult?.leaseLost||privacyAttention||privacyJournal.capacity?.nearLimit||
-     moderationAttention||!['disabled','ready'].includes(privacyJournal.state)),
+     notices.attention|| (renewal.mode==='send'&&notices.due)||moderationAttention||!['disabled','ready'].includes(privacyJournal.state)),
    };
   }finally{running=false;}
  }};

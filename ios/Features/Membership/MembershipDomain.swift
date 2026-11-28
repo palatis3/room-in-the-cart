@@ -64,10 +64,26 @@ enum MembershipFailure: Error, Equatable {
     case invalidSnapshot, invalidReceipt, deliveryPending, serverRejected, accountMismatch, refreshRequired, notPurchaser, membershipInactive
 }
 
+struct RenewalNoticeContact: Decodable, Equatable {
+    enum Scope: String, Decodable { case prospective, bound, unavailable }
+    let scope: Scope
+    let emailVerified: Bool
+    let enabled: Bool
+    let dispatchEnabled: Bool
+
+    var sandboxOnly: Bool? = nil
+
+    func canEnroll(verifiedSandbox: Bool) -> Bool {
+        guard scope != .unavailable, emailVerified else { return false }
+        return sandboxOnly == true ? verifiedSandbox && !dispatchEnabled : dispatchEnabled
+    }
+}
+
 /// Implementations must verify with Apple on the server and commit before returning durable=true.
 /// The service must authenticate the caller and recheck household membership and seat authority.
 @MainActor protocol MembershipEntitlementService {
-    func purchaseContext(householdID: String) async throws -> UUID
+    func renewalNoticeContact(householdID: String, settingEnabledTo enabled: Bool?) async throws -> RenewalNoticeContact
+    func purchaseContext(householdID: String, checkoutStorefront: String?) async throws -> UUID
     func submit(_ transaction: SignedMembershipTransaction, context: MembershipContext) async throws -> MembershipDeliveryReceipt
     func fetch(context: MembershipContext) async throws -> MembershipSnapshot
     func seatCandidates(context: MembershipContext) async throws -> [MembershipSeat]
@@ -75,7 +91,8 @@ enum MembershipFailure: Error, Equatable {
 }
 
 struct UnavailableMembershipService: MembershipEntitlementService {
-    func purchaseContext(householdID: String) async throws -> UUID { throw MembershipFailure.notConfigured }
+    func renewalNoticeContact(householdID: String, settingEnabledTo enabled: Bool?) async throws -> RenewalNoticeContact { throw MembershipFailure.notConfigured }
+    func purchaseContext(householdID: String, checkoutStorefront: String?) async throws -> UUID { throw MembershipFailure.notConfigured }
     func submit(_ transaction: SignedMembershipTransaction, context: MembershipContext) async throws -> MembershipDeliveryReceipt { throw MembershipFailure.notConfigured }
     func fetch(context: MembershipContext) async throws -> MembershipSnapshot { throw MembershipFailure.notConfigured }
     func seatCandidates(context: MembershipContext) async throws -> [MembershipSeat] { throw MembershipFailure.notConfigured }

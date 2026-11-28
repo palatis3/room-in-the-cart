@@ -1,10 +1,17 @@
 import {z} from 'zod';
 import type {GuardianChildCountry} from '../../shared/contracts/guardian-enrollment-v1.js';
 
+const usStateAndDistrictCodes = new Set([
+  'AK', 'AL', 'AR', 'AZ', 'CA', 'CO', 'CT', 'DC', 'DE', 'FL', 'GA', 'HI', 'IA',
+  'ID', 'IL', 'IN', 'KS', 'KY', 'LA', 'MA', 'MD', 'ME', 'MI', 'MN', 'MO', 'MS',
+  'MT', 'NC', 'ND', 'NE', 'NH', 'NJ', 'NM', 'NV', 'NY', 'OH', 'OK', 'OR', 'PA',
+  'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VA', 'VT', 'WA', 'WI', 'WV', 'WY',
+]);
+
 export function guardianChildCountry(location: string): GuardianChildCountry | null {
- if(location==='MX')return 'MX';
- if(location==='US'||(location.length===5&&/^US-[A-Z]{2}$/.test(location)))return 'US';
- return null;
+  if (location === 'US' || location === 'MX') return location;
+  if (location.startsWith('US-') && usStateAndDistrictCodes.has(location.slice(3))) return 'US';
+  return null;
 }
 
 export interface GuardianRetentionPolicy {pendingHours:number;evidenceDays:number;approvalReference:string}

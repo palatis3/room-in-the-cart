@@ -37,6 +37,9 @@ import { randomUUID, timingSafeEqual } from 'node:crypto';
 import { z } from 'zod';
 import { type IdentityVerifier,DenyIdentityVerifier } from './auth.js';
 import { HouseholdRepository,type AuthContext } from './repository.js';
+import {recordRenewalDelivery} from './billing/renewal-webhook.js';
+import {contactChange,renewalContact,requireRenewalCheckout} from './billing/renewal-contact.js';
+import type {RenewalConfig} from './billing/renewal-provider.js';
 import { BillingService,billingVerifySchema,billingSeatsSchema,billingNotificationSchema } from './billing/service.js';
 import { ServiceError,accessEnded,invalid,unavailable } from './errors.js';
 import {BrowserAuthService,emailStartSchema,emailVerifySchema,type BrowserIdentity} from './browser-auth.js';
@@ -57,7 +60,8 @@ import {privacyHTTPCall,type PrivacyCall} from './privacy-call.js';
 import {GuardianEnrollmentService,guardianCreateSchema,childDeletionReviewSchema,manualChildDeletionSchema,guardianActionSchema,guardianConsentSchema,guardianInvitationSchema,guardianConfirmSchema,childClaimSchema,childFinishSchema,childAuthStartSchema,childNativeStartSchema,childNativeAdmitSchema} from './guardian.js';
 import {viewReplacementSchema,proposalResolutionSchema,householdCreateSchema,inviteCreateSchema,invitePreviewSchema,inviteRedeemSchema,viewCreateSchema,viewUpdateSchema,proposalSchema,revocationSchema, parseCommand,previewSchema,uuid } from './contracts.js';
 import { SharedFallbackRegistry } from './shared-fallback-registry.js';
-export interface HTTPOptions { closedReview?:ClosedReview; repository:HouseholdRepository; receiptAssistance?:ReceiptAssistance; voiceAssistance?:VoiceAssistance; verifier?:IdentityVerifier; webOrigin?:string; maxRequestsPerMinute?:number; billing?:BillingService; browserAuth?:BrowserAuthService; privacy?:PrivacyService; guardian?:GuardianEnrollmentService; clientAddress?:(request:IncomingMessage)=>string|undefined }
+export interface HTTPOptions {
+  renewalNotices?:RenewalConfig; closedReview?:ClosedReview; repository:HouseholdRepository; receiptAssistance?:ReceiptAssistance; voiceAssistance?:VoiceAssistance; verifier?:IdentityVerifier; webOrigin?:string; maxRequestsPerMinute?:number; billing?:BillingService; browserAuth?:BrowserAuthService; privacy?:PrivacyService; guardian?:GuardianEnrollmentService; clientAddress?:(request:IncomingMessage)=>string|undefined }
 async function rawBody(req:IncomingMessage,maxBytes=65_536):Promise<Buffer> {
   if(!/^application\/json(?:\s*;|$)/i.test(req.headers['content-type']??''))throw new ServiceError(415,'json_required','Send a JSON command.');
   const chunks:Buffer[]=[];let size=0;
@@ -124,6 +128,11 @@ export function createHTTPServer(options:HTTPOptions) {
       if(limits.size>=10_000&&!old){res.setHeader('Retry-After','60');throw new ServiceError(429,'rate_limited','Retry later.');}
       const bucket=old&&old.until>now?old:{count:0,until:now+60_000};bucket.count++;limits.set(ip,bucket);
       if(bucket.count>(options.maxRequestsPerMinute??120)){res.setHeader('Retry-After','60');throw new ServiceError(429,'rate_limited','Keep the operation key and retry later.');}
+      if(method==='POST'&&url.pathname==='/v1/renewal-notices/delivery'){
+        if(!options.renewalNotices?.webhook)throw new ServiceError(404,'unavailable','Unavailable.');
+        await recordRenewalDelivery(repository.pool,options.renewalNotices.webhook,await rawBody(req,16384),req.headers);
+        send(200,{accepted:true});return;
+      }
       if(method==='POST' && options.billing && ['/v1/apple/notifications','/v1/apple/notifications/sandbox'].includes(url.pathname)){
         const input = billingNotificationSchema.parse(await body(req,262_144));
         const destination = url.pathname.endsWith('/sandbox') ? 'reviewSandbox' : 'primary';
@@ -425,7 +434,18 @@ export function createHTTPServer(options:HTTPOptions) {
         if(options.billing){
           if(path==='/entitlements'&&method==='GET')return options.billing.snapshot(ctx);
           if(path==='/billing/seat-candidates'&&method==='GET')return options.billing.seatCandidates(ctx);
-          if(path==='/billing/purchase-context'&&method==='POST'){z.object({}).strict().parse(payload);return options.billing.prepare(ctx);}
+          if(path==='/billing/renewal-notice-contact'&&(method==='GET'||method==='PUT')) {
+            const enabled=method==='PUT'?contactChange.parse(payload).enabled:undefined;
+            return renewalContact(ctx,auth.identity,options.renewalNotices??{mode:'off',provider:null,sandboxHomes:new Set<string>()},options.billing.usesReviewSandbox(householdId),enabled);
+          }
+          if(path==='/billing/purchase-context'&&method==='POST'){
+            const request=z.object({storefront:z.literal('MEX').optional()}).strict().parse(payload);
+            if(request.storefront==='MEX'){
+              const notice=await renewalContact(ctx,auth.identity,options.renewalNotices??{mode:'off',provider:null,sandboxHomes:new Set<string>()},options.billing.usesReviewSandbox(householdId));
+              await requireRenewalCheckout(notice,options.renewalNotices?.provider??null);
+            }
+            return options.billing.prepare(ctx);
+          }
           if(path==='/billing/seats'&&method==='PUT')return options.billing.replaceSeats(ctx,billingSeatsSchema.parse(payload));
         }
         if(path==='/meal-preferences' && method==='GET')return readMealPreferences(ctx);

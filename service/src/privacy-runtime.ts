@@ -7,6 +7,9 @@ import {journalHash} from './privacy-journal.js';
 import {createDurablePrivacyJournal,durableJournalPinsSchema} from './privacy-journal-durable.js';
 import type {JournalCall,JournalCapacity} from './privacy-journal-durable-contract.js';
 import {createHTTPSJournalAuthority} from './privacy-journal-https.js';
+import {createHTTPSCommittedSource} from './privacy-journal-source-https.js';
+import {journalBearerTokenSchema} from './privacy-journal-http-common.js';
+import {sourceObserverConfigurationSchema} from './privacy-source-configuration.js';
 import {createPostgresCommittedSource} from './privacy-journal-pg-source.js';
 import {MAX_JOURNAL_BYTES,MAX_JOURNAL_RECORDS} from './privacy-journal-limits.js';
 import {SupabaseAccountDeletionProvider,validateDeletionPolicy,type DeletionPolicy} from './privacy.js';
@@ -15,6 +18,10 @@ const name=z.string().min(1).max(63);
 const pem=z.string().min(1).max(262144);
 const oid=z.string().regex(/^[1-9][0-9]{0,9}$/);
 const reference=z.string().trim().min(1).max(200);
+const gatewayObserver=z.object({
+ mode:z.literal('gateway'),origin:z.string().min(1).max(512),vercelTrustedSource:z.boolean().optional(),
+ ca:pem.optional(),database:name,databaseOid:oid,observerRoleOid:oid,
+}).strict();
 const configurationSchema=z.object({
  version:z.literal(1),
  pins:durableJournalPinsSchema,
@@ -22,12 +29,10 @@ const configurationSchema=z.object({
  authorityPublicKey:pem.startsWith('-----BEGIN PUBLIC KEY-----'),
  authority:z.object({origin:z.string().max(512),writerToken:z.string().max(256),ca:pem.optional(),
   vercelTrustedSource:z.boolean().optional()}).strict(),
- observer:z.object({
-  connection:z.object({
-   host:z.string().min(1).max(300),port:z.number().int().min(1).max(65535),database:name,user:z.string().min(1).max(84),
-   password:z.string().max(16384).optional(),tls:z.object({ca:pem,servername:name}).strict().optional(),
-  }).strict(),databaseOid:oid,observerRole:name.optional(),observerRoleOid:oid,ownerRole:name,ownerRoleOid:oid,
- }).strict(),
+ observer:z.union([sourceObserverConfigurationSchema,gatewayObserver.extend({token:journalBearerTokenSchema}),
+  gatewayObserver.extend({applicationToken:journalBearerTokenSchema,operationsToken:journalBearerTokenSchema})
+   .refine(tokens=>tokens.applicationToken!==tokens.operationsToken),
+ ]),
  retentionPolicy:z.unknown(),retentionApprovalReference:reference,restoreApprovalReference:reference,
 }).strict();
 const bindingSchema=z.object({
@@ -77,16 +82,31 @@ export function createPrivacyRuntime(pool:Database,environment:NodeJS.ProcessEnv
   }
   const writerPrivateKey=createPrivateKey(config.writerPrivateKey);
   const authorityPublicKey=createPublicKey(config.authorityPublicKey);
-  const {connection:{password,tls,...connection},observerRole,...observerBinding}=observer;
-  if(environment.VERCEL==='1'&&!tls)throw Error('A pinned observer TLS endpoint is required');
   if(config.authority.vercelTrustedSource&&environment.VERCEL!=='1')throw Error('Vercel journal identity requires a Vercel runtime');
   authority=createHTTPSJournalAuthority({pins,origin:config.authority.origin,writerToken:config.authority.writerToken,
    ...(config.authority.vercelTrustedSource?{getVercelTrustedSourceToken:()=>getVercelOidcToken()}:{}),
    ...(config.authority.ca?{ca:config.authority.ca}:{})});
-  source=createPostgresCommittedSource({...observerBinding,pins,authorityPublicKey,
-   ...(observerRole!==undefined?{observerRole}:{}),
-   connection:{...connection,...(password!==undefined?{password}:{}),...(tls?{tls}:{})},
-   applicationName:'ritc-privacy-'+role,maxConnections:1});
+  const {databaseOid,observerRoleOid}=observer;
+  const database='mode' in observer?observer.database:observer.connection.database;
+  if('mode' in observer){
+   if((environment.VERCEL==='1')!==(observer.vercelTrustedSource===true))throw Error('Source gateway workload identity mismatch');
+   const token='token' in observer?observer.token:observer[role==='application'?'applicationToken':'operationsToken'];
+   const writerToken=config.authority.writerToken;
+   const reused='token' in observer?observer.token===writerToken:
+    observer.applicationToken===writerToken||observer.operationsToken===writerToken;
+   if(reused||new URL(observer.origin).origin===new URL(config.authority.origin).origin){
+    throw Error('Independent source and authority origins and credentials required');
+   }
+   source=createHTTPSCommittedSource({pins,databaseBinding:{database,databaseOid,observerRoleOid},origin:observer.origin,token,
+    ...(observer.ca?{ca:observer.ca}:{}),...(observer.vercelTrustedSource?{getVercelTrustedSourceToken:()=>getVercelOidcToken()}:{})});
+  }else{
+   const {connection:{password,tls,...connection},observerRole,...observerBinding}=observer;
+   if(environment.VERCEL==='1'&&!tls)throw Error('A pinned observer TLS endpoint is required');
+   source=createPostgresCommittedSource({...observerBinding,pins,authorityPublicKey,
+    ...(observerRole!==undefined?{observerRole}:{}),
+    connection:{...connection,...(password!==undefined?{password}:{}),...(tls?{tls}:{})},
+    applicationName:'ritc-privacy-'+role,maxConnections:1});
+  }
   const observerSource=source.source;
   const journal=createDurablePrivacyJournal({pins,privateKey:writerPrivateKey,authorityPublicKey,source:observerSource,...authority});
   const allowed=role==='application'?'ritc_app':'ritc_worker';
@@ -107,8 +127,8 @@ export function createPrivacyRuntime(pool:Database,environment:NodeJS.ProcessEnv
      ]);
      if(binding.fenced||binding.lineage!==pins.lineage||binding.schemaDigest!==pins.schemaDigest||
        binding.configurationId!==pins.configurationId||binding.sourceIdentity!==pins.sourceIdentity||
-       binding.database!==connection.database||binding.databaseOid!==observer.databaseOid||
-       binding.observerRoleOid!==observer.observerRoleOid)throw Error('Privacy source binding mismatch');
+       binding.database!==database||binding.databaseOid!==databaseOid||
+       binding.observerRoleOid!==observerRoleOid)throw Error('Privacy source binding mismatch');
    },3000);
   }
   async function health(call:JournalCall):Promise<PrivacyHealth>{

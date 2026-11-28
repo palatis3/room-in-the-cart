@@ -176,8 +176,13 @@ private actor GuardianNativeFixture: GuardianEnrollmentServing {
         XCTAssertFalse(model.canStart)
 
         model.childCountry = .unitedStates
-        model.childUSRegion = "CAN"
-        XCTAssertFalse(model.canStart)
+        XCTAssertTrue(model.canStart)
+        for unsupportedRegion in ["CAN", "PR", "VI", "ZZ"] {
+            model.childUSRegion = unsupportedRegion
+            XCTAssertFalse(model.canStart, unsupportedRegion)
+        }
+        model.childUSRegion = "DC"
+        XCTAssertTrue(model.canStart)
         model.childUSRegion = "CA"
         XCTAssertTrue(model.canStart)
         model.childCountry = .mexico

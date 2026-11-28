@@ -4,7 +4,7 @@ import type {Database,Transaction} from './database.js';
 import {withPrivacyClient} from './privacy-call.js';
 import {
  journalCanonical,journalHash,validatePrivacyRestoreEvents,verifyPrivacyJournal,verifyPrivacyJournalPrefix,
- type PrivacyJournalEvent,type PrivacyJournalHead,
+ type PrivacyJournalEvent,type PrivacyJournalHead,type InspectRestoreRecords,
 } from './privacy-journal.js';
 import {
  admittedSchema,durableJournalPinsSchema,durableJournalPublicKeyFingerprint,durableJournalScopeDigest,recordSchema,storedSchema,ticketSchema,verifyDurableAdmissionReceipt,
@@ -39,13 +39,18 @@ function publicTrust(pins:DurableJournalPins,writer:KeyObject,authority:KeyObjec
   publicKey:writer.export({type:'spki',format:'pem'}).toString()};
 }
 
-/** Independently verify the signed seal, exact v1 chain, and every restore event. */
-export function verifyIndependentRecovery(bytes:Buffer,input:unknown,pins:DurableJournalPins,writer:KeyObject,authority:KeyObject){
- const trust=publicTrust(pins,writer,authority),proof=sealSchema.parse(input);
+function verifySeal(input:unknown,pins:DurableJournalPins,authority:KeyObject) {
+ const proof=sealSchema.parse(input);
  const {authoritySignature,...body}=proof,signature=Buffer.from(authoritySignature,'base64url');
  if(proof.scopeDigest!==durableJournalScopeDigest(pins)||proof.authorityKeyId!==pins.authorityKeyId||
   signature.toString('base64url')!==authoritySignature||!verify(null,Buffer.from(journalCanonical(body)),authority,signature))throw Error('Independent recovery seal signature or scope conflict');
- const checked=verifyPrivacyJournal(bytes,{...trust,head:proof.head});
+ return proof;
+}
+
+/** Independently verify the signed seal, exact v1 chain, and every restore event. */
+export function verifyIndependentRecovery(bytes:Buffer,input:unknown,pins:DurableJournalPins,writer:KeyObject,authority:KeyObject,inspect?:InspectRestoreRecords){
+ const trust=publicTrust(pins,writer,authority),proof=verifySeal(input,pins,authority);
+ const checked=verifyPrivacyJournal(bytes,{...trust,head:proof.head},inspect);
  if(checked.bundleDigest!==proof.bundleDigest||journalHash(checked.events.map(event=>[event.eventId,event.payloadDigest]).sort(compareIds))!==proof.sourceEventsDigest)throw Error('Independent recovery bundle or source digest conflict');
  validatePrivacyRestoreEvents(checked.events);
  return {...checked,proof};
@@ -71,6 +76,16 @@ function verifySuccessor(input:unknown,expected:ReturnType<typeof successorBody>
  return proof;
 }
 
+// After retirement there is deliberately no payload left to export. These signed
+// anchors identify the closed generation for idempotent owner-side verification.
+export function verifyRetirementAnchor(seal:unknown,link:unknown,pins:DurableJournalPins,next:DurableJournalPins,writer:KeyObject,authority:KeyObject){
+ publicTrust(pins,writer,authority);
+ const proof=verifySeal(seal,pins,authority);
+ return verifySuccessor(link,successorBody(pins,proof,{
+  lineage:next.lineage,sourceIdentity:next.sourceIdentity,scopeDigest:durableJournalScopeDigest(next),
+ }),authority);
+}
+
 interface ArchiveSegment {
  readonly pins:DurableJournalPins;
  readonly writerPublicKey:KeyObject;
@@ -81,14 +96,14 @@ interface ArchiveSegment {
 }
 
 /** Verify each archive in turn and retain only its plan metadata. */
-export async function inspectIndependentArchiveWindow(segments:Iterable<ArchiveSegment>|AsyncIterable<ArchiveSegment>,input:unknown){
+export async function inspectIndependentArchiveWindow(segments:Iterable<ArchiveSegment>|AsyncIterable<ArchiveSegment>,input:unknown,inspect?:InspectRestoreRecords){
  const trust=windowTrustSchema.parse(input),lineages=new Set<string>();
  let previous:{pins:DurableJournalPins;seal:RecoverySeal;authorityPublicKey:KeyObject}|undefined;
  const archives:{head:PrivacyJournalHead;bundleDigest:string;sealDigest:string;jobs:number}[]=[];
  let events=0;
  for await(const segment of segments){
   const pins=durableJournalPinsSchema.parse(segment.pins);
-  const checked=verifyIndependentRecovery(segment.bytes,segment.seal,pins,segment.writerPublicKey,segment.authorityPublicKey);
+  const checked=verifyIndependentRecovery(segment.bytes,segment.seal,pins,segment.writerPublicKey,segment.authorityPublicKey,inspect);
   if(lineages.has(pins.lineage))throw Error('Repeated journal lineage');
   if(!previous){
    if(checked.proof.scopeDigest!==trust.startScopeDigest||segment.incomingLink!==undefined)throw Error('Archive window does not start at the trusted backup scope');

@@ -128,6 +128,7 @@ struct AccountDeletionScope: View {
             Text(ht("Leaving one household only ends that membership. Account deletion applies to every household."))
             Text(ht("Your private Records stay on this phone. Copies you already shared stay with their recipients. Other members keep their own records."))
             Text(ht("If you have an App Store subscription, cancel it before deleting your account to avoid future charges. Apple can continue billing after you delete this account."))
+            Text(ht("Deleting your account also stops any renewal emails you enabled in Room in the Cart."))
             Link(ht("Manage App Store subscriptions"), destination: URL(string: "https://apps.apple.com/account/subscriptions/")!)
         }
     }

@@ -17,6 +17,7 @@ public struct GuardianEnrollmentIntent: Codable, Equatable, Identifiable, Sendab
     public let id: String; public let subject: String; public let householdID: String; public let memberID: String; public let deviceID: String
     public let kind: Kind; public let enrollmentID: String?; public let baseRevision: Int?; public let bytes: Data
     private let body: GuardianIntentBody
+    var childLocation: String? { body.childLocation }
     public var childAlias: String? { body.childAlias }
     public var childSignInEmail: String? { body.childSignInEmail }
     public var noticeVersion: String? { body.noticeVersion }
@@ -56,7 +57,7 @@ public struct GuardianEnrollmentIntent: Codable, Equatable, Identifiable, Sendab
         switch kind {
         case .create:
             guard let version = body.noticeVersion, let digest = body.noticeDigest, let location = body.childLocation,
-                  GuardianValidation.text(version, 200), GuardianValidation.text(digest, 256), GuardianChildCountry.country(for: location) != nil,
+                  GuardianValidation.text(version, 200), GuardianValidation.text(digest, 256), Self.isStoredChildLocation(location),
                   body.language != nil, body.guardianDeclaration == "parent_or_legal_guardian",
                   body.childId.map({ GuardianValidation.ids([$0]) }) ?? true else { throw ClientError.configuration }
             expected.noticeVersion = version; expected.noticeDigest = digest; expected.language = body.language
@@ -76,6 +77,13 @@ public struct GuardianEnrollmentIntent: Codable, Equatable, Identifiable, Sendab
             expected.baseRevision = baseRevision; expected.claimId = claim; expected.pairingCode = code
         }
         guard body == expected, bytes == (try encoded(expected)) else { throw ClientError.configuration }
+    }
+    // Older clients retained any two uppercase US subdivision letters. These records must
+    // remain readable so users can discard a draft or cancel other pending enrollments.
+    private static func isStoredChildLocation(_ value: String) -> Bool {
+        if GuardianChildCountry(rawValue: value) != nil { return true }
+        return value.hasPrefix("US-") && value.utf8.count == 5 &&
+            value.utf8.suffix(2).allSatisfy { (65...90).contains($0) }
     }
     var path: String {
         guard let enrollmentID else { return "guardian/enrollments" }

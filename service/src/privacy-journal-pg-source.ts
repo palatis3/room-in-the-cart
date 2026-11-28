@@ -90,6 +90,17 @@ SELECT pg_catalog.jsonb_build_object(
    WHERE acl.grantee=0 AND acl.privilege_type='EXECUTE')) FROM expected e LEFT JOIN pg_catalog.pg_proc p ON p.oid=e.oid)
 )::text AS value FROM actor a`;
 
+// The gateway connector is a different principal from a direct SQL observer.
+// Check SQL identity before invoking any definer. Migration 087 independently
+// checks the immutable registration, privileges and origin on every operation.
+const GATEWAY_IDENTITY_SQL=`SELECT (current_database()=$1::name AND session_user=$2::name
+ AND current_user=session_user AND (SELECT oid FROM pg_catalog.pg_database WHERE datname=current_database())=$3::oid
+ AND (SELECT oid FROM pg_catalog.pg_roles WHERE rolname=session_user)=$4::oid
+ AND (SELECT oid FROM pg_catalog.pg_roles WHERE rolname=$5::name)=$6::oid
+ AND (SELECT nspowner FROM pg_catalog.pg_namespace WHERE nspname='ritc_journal_source')=$6::oid
+ AND NOT pg_catalog.has_schema_privilege(current_user,'ritc','USAGE')
+ AND pg_catalog.pg_my_temp_schema()=0)::text AS value`;
+
 function freeze<T>(value:T):T{if(value&&typeof value==='object'){for(const child of Object.values(value))freeze(child);Object.freeze(value);}return value;}
 function assertCall(call:JournalCall):void{
  if(!call||typeof call.attemptId!=='string'||call.attemptId.length<1||call.attemptId.length>100||!Number.isSafeInteger(call.deadlineUnixMs)||!(call.signal instanceof AbortSignal))throw Error('Call-owned journal deadline and AbortSignal required');
@@ -105,7 +116,17 @@ function jsonResult(rows:readonly Record<string,unknown>[],maxBytes:number):unkn
  * relies on query.signal or query_timeout to cancel PostgreSQL work. No app or
  * worker role receives raw table access or an unauthenticated acknowledgement API.
  */
-export function createPostgresCommittedSource(input:PostgresCommittedSourceConfiguration):{readonly source:FixedCommittedSource;close():Promise<void>}{
+export function createPostgresCommittedSource(input:PostgresCommittedSourceConfiguration){
+ return createSource(input,'ritc');
+}
+
+/** Only compose inside the private fixed-operation gateway. The HTTP callers
+ * never receive this connector's database credentials or a general SQL channel. */
+export function createGatewayPostgresCommittedSource(input:PostgresCommittedSourceConfiguration){
+ return createSource(input,'ritc_journal_source');
+}
+
+function createSource(input:PostgresCommittedSourceConfiguration,schema:'ritc'|'ritc_journal_source'):{readonly source:FixedCommittedSource;close():Promise<void>}{
  if(process.env.NODE_PG_FORCE_NATIVE)throw Error('Pure JavaScript PostgreSQL driver required');
  // pg's package entry point may bind Pool to a different Client. Supplying our
  // private, exact JS Client keeps the reviewed socket-destruction semantics.
@@ -180,10 +201,15 @@ export function createPostgresCommittedSource(input:PostgresCommittedSourceConfi
    await dispatch('BEGIN');
    await budget();
    await dispatch("SELECT pg_catalog.set_config('search_path','pg_catalog',true)");
-   const catalog=catalogSchema.parse(jsonResult(await dispatch(CATALOG_SQL,[signatures,ownerRoleOid,ownerRole]),8192));
-   if(catalog.databaseName!==connection.database||catalog.databaseOid!==databaseOid||catalog.sessionRole!==observerRole||catalog.currentRole!==observerRole||catalog.roleOid!==observerRoleOid||!catalog.roleCanLogin||catalog.dangerousReachableRole||catalog.ownsUserObject||catalog.databaseCreate||catalog.databaseTemporary||!catalog.databaseConnect||catalog.schemaCreate||!catalog.sourceSchemaUsage||catalog.rawRelationPrivilege||catalog.extraFunctionExecute||!catalog.functionsValid)throw Error('Restricted committed-source role or database capability conflict');
+   if(schema==='ritc_journal_source'){
+    const checked=await dispatch(GATEWAY_IDENTITY_SQL,[connection.database,observerRole,databaseOid,observerRoleOid,ownerRole,ownerRoleOid]);
+    if(jsonResult(checked,32)!==true)throw Error('Fixed gateway SQL identity conflict');
+   }else{
+    const catalog=catalogSchema.parse(jsonResult(await dispatch(CATALOG_SQL,[signatures,ownerRoleOid,ownerRole]),8192));
+    if(catalog.databaseName!==connection.database||catalog.databaseOid!==databaseOid||catalog.sessionRole!==observerRole||catalog.currentRole!==observerRole||catalog.roleOid!==observerRoleOid||!catalog.roleCanLogin||catalog.dangerousReachableRole||catalog.ownsUserObject||catalog.databaseCreate||catalog.databaseTemporary||!catalog.databaseConnect||catalog.schemaCreate||!catalog.sourceSchemaUsage||catalog.rawRelationPrivilege||catalog.extraFunctionExecute||!catalog.functionsValid)throw Error('Restricted committed-source role or database capability conflict');
+   }
    await budget();
-   const binding=bindingSchema.parse(jsonResult(await dispatch('SELECT ritc.privacy_journal_source_binding($1,$2,$3,$4,$5)::text AS value',common),8192));
+   const binding=bindingSchema.parse(jsonResult(await dispatch(`SELECT ${schema}.privacy_journal_source_binding($1,$2,$3,$4,$5)::text AS value`,common),8192));
    if(binding.sourceIdentity!==pins.sourceIdentity||binding.databaseName!==connection.database||binding.databaseOid!==databaseOid||binding.observerRole!==observerRole||binding.ownerRole!==ownerRole||binding.lineage!==pins.lineage||binding.schemaDigest!==pins.schemaDigest||binding.configurationId!==pins.configurationId||binding.fenced)throw Error('Fixed committed-source origin binding conflict');
    const session:Session={
     async query(text,values,beforeDispatch){await budget();beforeDispatch?.();return dispatch(text,values);},
@@ -202,11 +228,11 @@ export function createPostgresCommittedSource(input:PostgresCommittedSourceConfi
   return freeze(value);
  }
  async function committedEvent(session:Session,eventId:string):Promise<PrivacyJournalEvent>{
-  const value=event(jsonResult(await session.query('SELECT ritc.privacy_journal_source_event($1,$2,$3,$4,$5,$6)::text AS value',[...common,eventId]),MAX_EVENT_BYTES+8192));
+  const value=event(jsonResult(await session.query(`SELECT ${schema}.privacy_journal_source_event($1,$2,$3,$4,$5,$6)::text AS value`,[...common,eventId]),MAX_EVENT_BYTES+8192));
   if(value.eventId!==eventId)throw Error('Exact committed event binding conflict');return value;
  }
  async function committedAcceptance(session:Session,jobId:string):Promise<PrivacyJournalEvent>{
-  const value=event(jsonResult(await session.query('SELECT ritc.privacy_journal_source_acceptance($1,$2,$3,$4,$5,$6)::text AS value',[...common,jobId]),MAX_EVENT_BYTES+8192));
+  const value=event(jsonResult(await session.query(`SELECT ${schema}.privacy_journal_source_acceptance($1,$2,$3,$4,$5,$6)::text AS value`,[...common,jobId]),MAX_EVENT_BYTES+8192));
   if(value.payload.kind!=='acceptance'||value.payload.jobId!==jobId)throw Error('Original committed acceptance binding conflict');
   validatePrivacyRestoreEvents([value]);return value;
  }
@@ -220,7 +246,7 @@ export function createPostgresCommittedSource(input:PostgresCommittedSourceConfi
   async readCommittedAcceptance(jobId:string,call:JournalCall):Promise<PrivacyJournalEvent>{uuid.parse(jobId);return transaction(call,false,session=>committedAcceptance(session,jobId));},
   async listUnacknowledgedJobEvents(jobId:string,call:JournalCall):Promise<readonly string[]>{
    uuid.parse(jobId);return transaction(call,false,async session=>{
-    const ids=z.array(uuid).max(MAX_EVENTS).parse(jsonResult(await session.query('SELECT pg_catalog.to_json(ritc.privacy_journal_source_unacknowledged($1,$2,$3,$4,$5,$6,$7))::text AS value',[...common,jobId,MAX_EVENTS]),MAX_EVENTS*40+8192));
+    const ids=z.array(uuid).max(MAX_EVENTS).parse(jsonResult(await session.query(`SELECT pg_catalog.to_json(${schema}.privacy_journal_source_unacknowledged($1,$2,$3,$4,$5,$6,$7))::text AS value`,[...common,jobId,MAX_EVENTS]),MAX_EVENTS*40+8192));
     if(new Set(ids).size!==ids.length)throw Error('Duplicate committed-source event');return Object.freeze(ids);
    });
   },
@@ -236,7 +262,7 @@ export function createPostgresCommittedSource(input:PostgresCommittedSourceConfi
     else validatePrivacyRestoreEvents([await committedAcceptance(session,value.payload.jobId),value]);
     // Session.query updates SQL timeouts before dispatch. The receipt is verified
     // again inside its final pre-dispatch callback, after that asynchronous I/O.
-    await session.query('SELECT ritc.privacy_journal_source_acknowledge($1,$2,$3,$4,$5,$6,$7,$8,$9)',[...common,eventId,payloadDigest,commitRecordSeq,commitRecordHash],()=>{
+    await session.query(`SELECT ${schema}.privacy_journal_source_acknowledge($1,$2,$3,$4,$5,$6,$7,$8,$9)`,[...common,eventId,payloadDigest,commitRecordSeq,commitRecordHash],()=>{
      const checked=receipt(proof,eventId,payloadDigest,commitRecordSeq,commitRecordHash);
      if(checked.record.jobId!==value.payload.jobId)throw Error('Acknowledgement receipt job conflict');
     });

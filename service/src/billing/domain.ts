@@ -2,6 +2,10 @@ import { ServiceError } from '../errors.js';
 
 export type BillingStatus = 'active' | 'grace' | 'expired' | 'revoked' | 'free' | 'billingRetry';
 export interface VerifiedSubscription {
+  mxAnnual?:boolean;
+  /** Transient verified renewal input; omitted from the entitlement stored in billing_state. */
+  autoRenewOff?:boolean;
+  noticeFacts?:import('./renewal-facts.js').RenewalFacts|null;
   environment: 'Production' | 'Sandbox';
   originalTransactionID: string;
   transactionID: string;
