@@ -39,7 +39,7 @@ test('verified payer enrollment and renewal delivery under real app/worker datab
     const db=await app.connect();
     try{
       await db.query('BEGIN');
-      await db.query("SELECT set_config('app.household_id',$1,true)",[h]);
+      await db.query("SELECT set_config('app.household_id',$1,true),set_config('app.content_viewer',$2,true)",[h,a.id]);
       await db.query('SELECT household_id FROM ritc.household WHERE household_id=$1 FOR UPDATE',[h]);
       const result=await fn({db,householdId:h,deviceId:a.device,member:{member_id:a.id,kind:a.kind},now:new Date()});
       await db.query('COMMIT');return result;
@@ -71,6 +71,9 @@ test('verified payer enrollment and renewal delivery under real app/worker datab
       assert.equal((await contact(payer,true,dry,home,true)).scope,'unavailable');
       assert.deepEqual(await contact(payer,true,dry,otherHome,true),{scope:'prospective',emailVerified:true,enabled:true,dispatchEnabled:false,sandboxOnly:true});
       assert.equal((await contact(payer,undefined,config,otherHome,false)).enabled,false);
+      assert.equal((await run(other,ctx=>ctx.db.query('SELECT id FROM ritc.renewal_contact'))).rowCount,0);
+      assert.equal((await run(other,ctx=>ctx.db.query('DELETE FROM ritc.renewal_contact WHERE purchaser_id=$1',[payer.id]))).rowCount,0);
+      await assert.rejects(()=>worker.query('DELETE FROM ritc.renewal_dispatch WHERE false'),{code:'42501'});
       await assert.rejects(()=>app.query('SELECT * FROM ritc.renewal_dispatch'),{code:'42501'});
       await assert.rejects(()=>worker.query('SELECT email FROM auth.users'),{code:'42501'});
       await assert.rejects(()=>app.query('SELECT * FROM ritc.renewal_worker_contact($1,$2)',[randomUUID(),issuer]),{code:'42501'});

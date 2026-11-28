@@ -24,15 +24,16 @@ ALTER TABLE ritc.renewal_contact FORCE ROW LEVEL SECURITY;
 ALTER TABLE ritc.renewal_dispatch ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ritc.renewal_dispatch FORCE ROW LEVEL SECURITY;
 CREATE POLICY renewal_contact_app ON ritc.renewal_contact TO ritc_app
- USING(household_id::text=current_setting('app.household_id',true))
- WITH CHECK(household_id::text=current_setting('app.household_id',true));
+ USING(household_id::text=(SELECT current_setting('app.household_id',true)) AND purchaser_id=(SELECT ritc.content_viewer()))
+ WITH CHECK(household_id::text=(SELECT current_setting('app.household_id',true)) AND purchaser_id=(SELECT ritc.content_viewer()));
 CREATE POLICY renewal_contact_worker ON ritc.renewal_contact TO ritc_worker USING(true) WITH CHECK(true);
 CREATE POLICY renewal_dispatch_worker ON ritc.renewal_dispatch TO ritc_worker USING(true) WITH CHECK(true);
 GRANT SELECT,INSERT,DELETE ON ritc.renewal_contact TO ritc_app;
-GRANT UPDATE(original_id,next_check,attention) ON ritc.renewal_contact TO ritc_app;
-GRANT SELECT,DELETE ON ritc.renewal_contact TO ritc_worker;
+-- A row lock needs an UPDATE grant. Actual binding and expiry changes are owner-triggered.
+GRANT UPDATE(attention) ON ritc.renewal_contact TO ritc_app;
+GRANT SELECT ON ritc.renewal_contact TO ritc_worker;
 GRANT UPDATE(next_check,attention) ON ritc.renewal_contact TO ritc_worker;
-GRANT SELECT,INSERT,DELETE ON ritc.renewal_dispatch TO ritc_worker;
+GRANT SELECT,INSERT ON ritc.renewal_dispatch TO ritc_worker;
 GRANT UPDATE(state,provider_id) ON ritc.renewal_dispatch TO ritc_worker;
 
 -- A backup can predate an accepted provider request. This fence contains no payer identifiers.
