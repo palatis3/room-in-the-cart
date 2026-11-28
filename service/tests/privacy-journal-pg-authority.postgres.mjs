@@ -1,3 +1,4 @@
+import {captureFixture} from './restore-capture-fixture.mjs';
 import assert from 'node:assert/strict';
 import {createHash,randomUUID,randomBytes,sign} from 'node:crypto';
 import {execFileSync,spawn} from 'node:child_process';
@@ -528,6 +529,7 @@ test('operator waits for the source, seals exact intents, replays a prior backup
    [otherHousehold,otherMember,deviceId,createHash('sha256').update(randomUUID()).digest('hex'),retained.sessionId]);
   await source.owner.query("INSERT INTO ritc.request_queue_permission VALUES($1,$2,$3,$4,now(),now()+interval '1 hour')",[otherHousehold,otherMember,deviceId,grant]);
   const socket=source.configuration.connection.host,dump=join(dir,'before-deletion.dump');
+  const captured=Date.now();
   pgTool('pg_dump',['-h',socket,'-p','55434','-U',ownerRole,'-d','postgres','-Fc','-f',dump]);await chmod(dump,0o600);
   await source.owner.query('DELETE FROM ritc.request_queue_permission WHERE grant_id=$1',[grant]); // After the backup.
   const repo=new HouseholdRepository(runtime,{allowChildNetwork:false,noticeVersion:'fixture',sessionStatus:new SupabaseSessionVerifier(issuer)});
@@ -597,8 +599,11 @@ test('operator waits for the source, seals exact intents, replays a prior backup
   destination=source.pool(ownerRole,quarantine);
   const {oid}=(await destination.query('SELECT oid FROM pg_database WHERE datname=current_database()')).rows[0];
   const restorePath=join(dir,'restore.json'),binding={database:quarantine,oid,port:55434,socketDirectory:socket};
-  const configuration={destination:{...binding,user:ownerRole},worker:{...binding,user:source.worker},runId:randomUUID(),dumpPath:dump,
-   dumpSHA256:createHash('sha256').update(await readFile(dump)).digest('hex'),headPath:join(exportDirectory,'head.json'),journalPath:join(exportDirectory,'journal.ndjson'),
+  const dumpSHA256=createHash('sha256').update(await readFile(dump)).digest('hex');
+  const capture=await captureFixture(dir,dumpSHA256,captured);
+  environment.RITC_RESTORE_VERIFIED_RECEIPT_SHA256=capture.pin;
+  const configuration={...capture.paths,destination:{...binding,user:ownerRole},worker:{...binding,user:source.worker},runId:randomUUID(),dumpPath:dump,
+   dumpSHA256,headPath:join(exportDirectory,'head.json'),journalPath:join(exportDirectory,'journal.ndjson'),
    trust:{...keys.origin,keyId:pins.keyId,publicKey:keys.writerKeys.publicKeyPEM},authoritySeal:{path:join(exportDirectory,'seal.json'),pins,authorityPublicKey:keys.authorityKeys.publicKeyPEM}};
   await writeFile(restorePath,JSON.stringify(configuration),{mode:0o600});
   assert.equal(cli('privacy-journal.mjs','verify',restorePath).events,1);
@@ -614,6 +619,12 @@ test('operator waits for the source, seals exact intents, replays a prior backup
   assert.throws(()=>cli('privacy-journal.mjs','gate',restorePath),/Restored device queue permissions/);
   assert.equal(cli('privacy-journal.mjs','plan',restorePath).quarantined,true);
   assert.deepEqual(cli('privacy-journal.mjs','gate',restorePath),{runId:configuration.runId,localAppErasureApplied:true,syntheticProbePermitted:true,providerReconciliationRequired:true,productionReady:false});
+  // Even an already replayed quarantine cannot reopen from a certified but expired source capture.
+  const staleCapture=await captureFixture(dir,dumpSHA256,captured - 31*86400000);
+  environment.RITC_RESTORE_VERIFIED_RECEIPT_SHA256=staleCapture.pin;
+  for(const command of ['verify','plan','replay','gate']) {
+   assert.throws(()=>cli('privacy-journal.mjs',command,restorePath),/outside the original 720-hour recovery window/);
+  }
   const members=(await destination.query('SELECT member_id,alias,erased_at FROM ritc.member WHERE member_id IN ($1,$2)',[memberId,otherMember])).rows;
   assert.equal(members.find(member=>member.member_id===memberId).alias,'Removed member');
   assert.ok(members.find(member=>member.member_id===memberId).erased_at);
@@ -1028,6 +1039,7 @@ test('a backup from before rollover replays both journals in order and preserves
     'SELECT invite_id FROM ritc.invite WHERE invite_id=ANY($1::uuid[]) AND revoked_at IS NULL',
     [[laterInvitation,independentInvitation]])).rows.map(row=>row.invite_id).sort();
   const dumpPath=join(dir,'pre-rollover.dump'),socketDirectory=source.configuration.connection.host;
+  const captured=Date.now();
   pgTool('pg_dump',['-h',socketDirectory,'-p','55434','-U',ownerRole,'-d','postgres','-Fc','-f',dumpPath]);
   await chmod(dumpPath,0o600);
   const next=fixture({schemaDigest:source.schemaDigest,sourceIdentity:r.f.pins.sourceIdentity,keyId:'fixture-writer-next',
@@ -1157,8 +1169,10 @@ test('a backup from before rollover replays both journals in order and preserves
   const destination={database,oid,user:ownerRole,socketDirectory,port:55434};
   const runId=randomUUID(),segmentRunIds=[randomUUID(),randomUUID()];
   const restorePath=join(output,'restore-window.json'),dumpSHA256=createHash('sha256').update(await readFile(dumpPath)).digest('hex');
+  const capture=await captureFixture(output,dumpSHA256,captured);
+  environment.RITC_RESTORE_VERIFIED_RECEIPT_SHA256=capture.pin;
   const workerSettings={...destination,user:source.worker};
-  await writeFile(restorePath,JSON.stringify({destination,worker:workerSettings,runId,segmentRunIds,dumpPath,dumpSHA256,archiveWindowPath:windowPath}),{mode:0o600});
+  await writeFile(restorePath,JSON.stringify({...capture.paths,destination,worker:workerSettings,runId,segmentRunIds,dumpPath,dumpSHA256,archiveWindowPath:windowPath}),{mode:0o600});
   const restore=command=>cli('privacy-journal.mjs',command,restorePath);
   assert.throws(()=>restore('plan'),{status:1});
   assert.equal((await quarantine.query('SELECT 1 FROM ritc.privacy_restore_window')).rowCount,0);
@@ -1184,7 +1198,7 @@ test('a backup from before rollover replays both journals in order and preserves
   assert.throws(()=>restore('replay'),{status:1});
   const checkedFirst=verifyIndependentRecovery(first.bytes,first.proof,r.f.pins,r.f.writerKeys.publicKey,r.f.authorityKeys.publicKey);
   const singlePath=join(output,'single-restore.json');
-  await writeFile(singlePath,JSON.stringify({destination,worker:workerSettings,runId:segmentRunIds[0],dumpPath,dumpSHA256,
+  await writeFile(singlePath,JSON.stringify({...capture.paths,destination,worker:workerSettings,runId:segmentRunIds[0],dumpPath,dumpSHA256,
    journalPath:segments[0].journalPath,headPath:join(output,'head.json'),
    trust:{lineage:r.f.pins.lineage,schemaDigest:r.f.pins.schemaDigest,configurationId:r.f.pins.configurationId,
     keyId:r.f.pins.keyId,publicKey:r.f.writerKeys.publicKeyPEM},

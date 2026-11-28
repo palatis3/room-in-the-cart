@@ -30,6 +30,12 @@ Normal mode refuses a fenced source or an uncheckpointed tail. `mode:'recover_fe
 
 `scripts/privacy-journal.mjs verify|plan|replay|gate OWNER_CONFIGURATION` requires an explicitly named newly owned local quarantine database, exact destination OID/owner, a hash-pinned dump, an independently supplied fenced head and pinned public key/source identity. Configuration, dump and operational files are owner-only. `verify` checks the entire journal and strict target/effect schemas before staging. Node verifies the Ed25519 signatures. The SQL registration function runs only through the trusted owner.
 
+Set `captureManifestPath` to the original attended backup's owner-only `manifest.json` and `verifiedReceiptPath` to the original owner-only daily `verified.json` that recorded both restores. Supply `RITC_RESTORE_VERIFIED_RECEIPT_SHA256` from the custodian's independently retained fingerprint of that receipt. Establish this trust anchor outside the restore input directory. Recomputing it from the candidate restore cannot establish provenance. All four commands require these inputs, including retries on a previously replayed quarantine. An older backup without this evidence stays quarantined.
+
+The command matches the dump bytes and original capture to the verified receipt. The backup becomes ineligible 720 hours after its original capture. Each signed acceptance intent also carries a service check time from before the source snapshot. The earlier of that time and the SQL acceptance time bounds the 90-day replay window, including for rolled-back intents. The earliest deadline across the supplied segments governs the restore. Copy times, rollover times and later completions do not extend either window.
+
+The restore command can prevent reuse of an overdue backup or replay archive. Physical retirement requires separate evidence for each source outbox, authority object, export, quarantine, and recoverable backup generation. The receipt status API continues to use its existing completion and expiry rules. Keep hosted erasure closed until the recovery custodian can reconcile all copies and show verified retirement before the earliest deadline.
+
 ### Backups that span journal rollover
 
 Restore the pinned dump into a separate quarantine database and apply the reviewed current migrations there before registering the first archive. The quarantine must deny effective CONNECT to application logins and have no existing application connection. Grant the reviewed replay worker its separate login.

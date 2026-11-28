@@ -13,13 +13,15 @@ import {MAX_JOURNAL_BYTES} from '../dist/privacy-journal-limits.js';
 import {readPrivateFile} from './journal-authority-config.mjs';
 import {jsonFile,readArchive,readArchives,windowSettings} from './journal-archive-window.mjs';
 
+import {assertCaptureCurrent,replayExpiry,restoreCapture} from './restore-capture.mjs';
+
 const [command,configurationPath]=process.argv.slice(2);
 if(!['verify','plan','replay','gate'].includes(command)||!configurationPath||process.argv.length!==4)
  throw Error('Usage: privacy-journal.mjs verify|plan|replay|gate OWNER_CONFIGURATION');
 const configuration=await jsonFile(configurationPath);
 const isWindow=Object.hasOwn(configuration,'archiveWindowPath');
 const journalKeys=['headPath','journalPath','trust',...(Object.hasOwn(configuration,'authoritySeal')?['authoritySeal']:[])];
-const expectedKeys=['destination','dumpPath','dumpSHA256','runId','worker',...(isWindow?['archiveWindowPath','segmentRunIds']:journalKeys)];
+const expectedKeys=['destination','dumpPath','dumpSHA256','runId','worker','captureManifestPath','verifiedReceiptPath',...(isWindow?['archiveWindowPath','segmentRunIds']:journalKeys)];
 if(Object.keys(configuration).sort().join()!==expectedKeys.sort().join())throw Error('Unknown or missing operator configuration');
 z.string().uuid().parse(configuration.runId);
 
@@ -34,10 +36,19 @@ async function dumpDigest(path){
  }finally{await file.close();}
 }
 
+let replayExpiresAt=Infinity;
+function inspectRecords(records){
+ replayExpiresAt=Math.min(replayExpiresAt,replayExpiry(records));
+}
+function assertEligible(){
+ assertCaptureCurrent(captured);
+ if(Date.now()>=replayExpiresAt)throw Error('Detailed replay evidence reached its 90-day limit; keep quarantine closed');
+}
+
 async function inspectSingle(){
  const head=await jsonFile(configuration.headPath,8192);
  const bytes=await readPrivateFile(configuration.journalPath,MAX_JOURNAL_BYTES);
- const verified=verifyPrivacyJournal(bytes,{...configuration.trust,head});
+ const verified=verifyPrivacyJournal(bytes,{...configuration.trust,head},inspectRecords);
  validatePrivacyRestoreEvents(verified.events);
  if(!configuration.authoritySeal)return {verified};
  const {path,pins,authorityPublicKey}=configuration.authoritySeal;
@@ -51,7 +62,7 @@ async function inspectSingle(){
 
 async function inspectWindow(){
  const {segments,...trust}=windowSettings.parse(await jsonFile(configuration.archiveWindowPath));
- const checked=await inspectIndependentArchiveWindow(readArchives(segments),trust);
+ const checked=await inspectIndependentArchiveWindow(readArchives(segments),trust,inspectRecords);
  const runIds=z.array(z.string().uuid()).length(segments.length).parse(configuration.segmentRunIds);
  if(new Set([configuration.runId,...runIds]).size!==runIds.length+1)throw Error('Distinct window and segment run IDs required');
  const entries=checked.archives.map((segment,index)=>({...segment,runId:runIds[index],position:index+1}));
@@ -60,8 +71,10 @@ async function inspectWindow(){
 }
 
 if(await dumpDigest(configuration.dumpPath)!==configuration.dumpSHA256)throw Error('Dump manifest hash conflict');
+const captured=await restoreCapture(configuration,configuration.dumpSHA256,process.env.RITC_RESTORE_VERIFIED_RECEIPT_SHA256);
 const evidence=await (isWindow?inspectWindow():inspectSingle());
 const binding=evidence.binding;
+assertEligible();
 if(command==='verify'){
  const summary=isWindow?{events:evidence.events,segments:evidence.entries.length,manifestDigest:evidence.digest}:
   {events:evidence.verified.events.length,bundleDigest:evidence.verified.bundleDigest,head:evidence.verified.head};
@@ -94,7 +107,7 @@ const owner=pool(destination,'owner');
 let worker;
 async function transaction(work){
  const db=await owner.connect();
- try{await db.query('BEGIN');const result=await work(db);await db.query('COMMIT');return result;}
+ try{await db.query('BEGIN');const result=await work(db);assertEligible();await db.query('COMMIT');return result;}
  catch(error){await db.query('ROLLBACK').catch(()=>{});throw error;}
  finally{db.release();}
 }
@@ -134,10 +147,12 @@ async function replay(id){
  await assertWorkerRole(worker);
  const started=Date.now();let applied=0;
  while(Date.now()-started<25000){
+  assertEligible();
   const lease=randomUUID();
   const job=(await worker.query('SELECT ritc.privacy_restore_claim($1,$2) AS job',[id,lease])).rows[0].job;
   if(!job)break;
   for(let n=0;n<100&&Date.now()-started<25000;n++){
+   assertEligible();
    const value=(await worker.query('SELECT ritc.privacy_restore_erase_next($1,$2,$3) AS value',[id,job,lease])).rows[0].value;
    if(value.applied)applied++;
    if(!value.applied||value.done)break;
@@ -191,6 +206,7 @@ async function reportGate(extra={}){
  const childSession=(await owner.query(`SELECT FROM ritc.web_session s JOIN ritc.member m USING(household_id,member_id)
      WHERE m.kind='child' AND s.revoked_at IS NULL LIMIT 1`)).rowCount;
  if(consent || pending || childSession)throw Error('Retire restored child consent and pairing authority before reopening');
+ assertEligible();
  console.log(JSON.stringify({runId,localAppErasureApplied:true,syntheticProbePermitted:true,providerReconciliationRequired:true,productionReady:false,...extra}));
 }
 
